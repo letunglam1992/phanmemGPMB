@@ -10,6 +10,7 @@ import { THU_TU_TRANG_THAI, TT_GPMB, homNayIso, mocTienDo, thongKe, trangThaiHo,
 import { HopTaoDuAn } from "./TongQuan";
 import { xuatExcelDuAn } from "../xuat-excel";
 import { BanDoNho } from "../thanh-phan/BanDoNho";
+import { ThePhuongAn } from "../thanh-phan/PhuongAn";
 
 export function ManDuAn({ duAnId }: { duAnId: string }) {
   const { dsDuAn, hoCua, di, chinhSach, xoaDuAn } = useUngDung();
@@ -99,6 +100,8 @@ export function ManDuAn({ duAnId }: { duAnId: string }) {
         </div>
         </div>
       </div>
+
+      <ThePhuongAn duAn={duAn} kq={kq} />
 
       <div className="the">
         <div className="the-dau">

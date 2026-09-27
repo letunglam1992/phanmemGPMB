@@ -178,6 +178,8 @@ export interface DuAn {
   vanBan?: Record<string, string>;
   /** Kế hoạch hoàn thành từng bước (ngày ISO) do cán bộ nhập để theo dõi, cảnh báo chậm tiến độ. */
   keHoach?: Record<string, string>;
+  /** Các phiên bản phương án đã chốt/phê duyệt (src/phuong-an.ts). */
+  phuongAn?: import("./phuong-an").PhienBanPA[];
   taoLuc: string;
 }
 
