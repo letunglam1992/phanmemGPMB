@@ -1,67 +1,86 @@
 # 02. Ma trận nghiệp vụ sơ bộ
 
-**Phạm vi**: chỉ từ tài liệu đã nhận (TL-01…TL-05). **Chưa phải quy tắc đã xác nhận**: mọi dòng ở trạng thái `Chờ xác nhận` cho đến khi người dùng duyệt. Cột "Cần xác nhận" dẫn chiếu sổ vướng mắc (VM-xx, docs/03).
+**Cập nhật đợt 2** — căn cứ theo văn bản **đang có hiệu lực tại 27/9/2026**. Mọi dòng ở trạng thái `Chờ xác nhận`. Cột "Cần xác nhận" dẫn chiếu sổ vướng mắc (VM-xx, docs/03).
 
-Viết tắt: PLII = Phụ lục II QĐ 106/2025/QĐ-UBND; PLV, PLVIII tương tự; QĐ32 = QĐ 32/2025/QĐ-UBND; NĐ88 = NĐ 88/2024/NĐ-CP; GXDM = giá trị xây dựng mới; ĐG = đơn giá.
+Viết tắt: **LĐĐ** = Luật Đất đai 2024 (bản gốc); **NĐ88** = NĐ 88/2024/NĐ-CP (bản gốc); **PLII/PLV/PLVIII** = Phụ lục QĐ 106/2025/QĐ-UBND; **QĐ14** = QĐ 14/2026/QĐ-UBND; **QĐ32** = QĐ 32/2025/QĐ-UBND; **NQ152** = NQ 152/2025/NQ-HĐND; **GXDM (G1)** = giá trị xây dựng mới; **ĐG** = đơn giá; **TB** = thông báo thu hồi đất.
+
+> Lưu ý phiên bản: Đ9, Đ17, k5 Đ19 PLII **hết hiệu lực từ 31/3/2026**; nội dung tương ứng nay tại Đ3, Đ6 QĐ14. Dự án có PA duyệt trước 31/3/2026 giữ theo PA đã duyệt (Đ7 QĐ14).
 
 ## A. Bồi thường, hỗ trợ về tài sản
 
-| Mã | Nghiệp vụ | Điều kiện áp dụng | Dữ liệu đầu vào | Cách tính / xử lý (sơ bộ) | Đầu ra | Căn cứ | Cần xác nhận |
-|---|---|---|---|---|---|---|---|
-| NV-A01 | BT nhà, công trình đủ tiêu chuẩn kỹ thuật | Nhà, công trình hợp pháp trên đất đủ ĐK bồi thường; thuộc K1 Đ14 NĐ88 | Loại nhà (mã ĐG QĐ32), đại lượng (m²xd / m²sàn / m³ / m dài / cái), giá trị hiện có | Mức BT = GT hiện có + 20% × GT hiện có; chặn dưới 60% GXDM, chặn trên 100% GXDM; GXDM = khối lượng × ĐG QĐ32 | Tiền BT từng hạng mục | Đ6.1 PLII; K1 Đ14 NĐ88; Đ3, PL I–III QĐ32 | VM-05, VM-06 |
-| NV-A02 | BT nhà, công trình **không đủ** tiêu chuẩn kỹ thuật | Điểm d K1 Đ14 NĐ88 | Như trên | Có trong ĐG tỉnh: 100% ĐG; không có: nhập giá trị theo dự toán được thẩm định (nhập tay, bắt buộc số/ngày văn bản thẩm định) | Tiền BT | Đ6.2 PLII | — |
-| NV-A03 | Hạng mục chưa có / khác biệt so với ĐG | Nhà, công trình không có trong QĐ32 hoặc khác biệt | Dự toán do tư vấn lập / bù trừ theo PL II QĐ32 | Không tự tính: nhập giá trị đã thẩm định + căn cứ; hoặc bù trừ theo công tác xây dựng PL II QĐ32 | Tiền BT | Đ4 QĐ32; Đ6.2.b, Đ17.4.4 PLII | VM-07 |
-| NV-A04 | Hỗ trợ nhà, công trình trên đất đủ ĐK BT nhưng **sai mục đích** (xây trên đất NN) | Có đất đủ ĐK BT; công trình trên đất NN; không có biên bản vi phạm (nếu có → NV-A06) | Ngày xây dựng, ĐG cùng loại | Trước 01/7/2004: 100%; 01/7/2004–trước 01/7/2014: 80%; từ 01/7/2014–trước ngày TB thu hồi: 30% × ĐG | Tiền HT | Đ17.4.1 PLII | VM-08 (xác định ngày xây) |
-| NV-A05 | Hỗ trợ nhà, công trình trên đất **không đủ ĐK BT** | Đất không đủ ĐK BT | Ngày xây dựng | Trước 15/10/1993: 100%; 15/10/1993–trước 01/7/2004: 70%; 01/7/2004–trước 01/7/2014: 50%; "sau 01/7/2014"–trước TB thu hồi: 30% | Tiền HT | Đ17.4.2 PLII | **VM-09** (ngày 01/7/2014) |
-| NV-A06 | Hỗ trợ tháo dỡ khi có biên bản vi phạm | Trường hợp A04/A05 có biên bản đình chỉ/yêu cầu tháo dỡ | Ngày xây, biên bản | Trước 01/7/2004: 30% ĐG; "từ sau" 01/7/2004: không HT | Tiền HT | Đ17.4.3 PLII | **VM-09** (ngày 01/7/2004) |
-| NV-A07 | Công trình phục vụ sinh hoạt nằm ngoài cọc GPMB | Thu hồi đất ở, phải di chuyển nhà | Hạng mục, ĐG | ≤ 100% ĐG cùng loại (mức cụ thể do Chủ tịch UBND xã quyết định) | Tiền HT | Đ17.5 PLII | Tỷ lệ cụ thể: nhập tay + căn cứ |
-| NV-A08 | Cây hàng năm | Tạo lập trước TB thu hồi | Loại cây, diện tích (m²) | Diện tích × ĐG Biểu 01 | Tiền BT | Đ4.1, Đ5.1 PLVIII | VM-02 (bản gốc) |
-| NV-A09 | Cây lâu năm, cây lâm nghiệp | Như trên | Loại cây, giai đoạn/đường kính/chu vi/tuổi, số cây, diện tích | Số cây ≤ mật độ quy định × 150% × diện tích: 100% ĐG; phần vượt: 30% ĐG; mật độ thấp hơn: theo thực tế; tre trúc ≤ 500 bụi/ha | Tiền BT | Đ5.4, Đ5.5 PLVIII; Biểu 02, 03 | **VM-10**, VM-02 |
-| NV-A10 | Cây chưa có trong biểu giá / cây di chuyển được | — | Giá do UBND xã quyết định | Nhập tay + số QĐ | Tiền BT | Đ5.2, Đ5.3 PLVIII | — |
-| NV-A11 | Chọn đơn giá chuyển tiếp cây lâu năm | Dự án đã thống kê, kiểm đếm trước ngày PLVIII có hiệu lực, chưa duyệt PA | Ngày hoàn thành kiểm đếm | Dùng Biểu ĐG PL II QĐ 48/2025 thay Biểu 02 | Bộ chính sách áp dụng | Đ6.3 PLVIII | TL-20, TL-22 |
-| NV-A12 | Rừng trồng thuộc dự án lâm nghiệp; hỗ trợ công chăm sóc bảo vệ rừng | Hợp đồng giao khoán với Nhà nước | Số năm giao, số năm đã CS, diện tích | (Số năm giao − số năm đã CS) × 500.000 đ/ha/năm × **diện tích (ha)** | Tiền HT | Biểu 03 mục VII, VIII PLVIII | VM-11 |
-| NV-A13 | Thủy sản | Thiệt hại thực tế, không vượt định mức kỹ thuật | Loại nuôi, diện tích ao, diện tích thu hồi, kg | Ao hỗn hợp < 1.000 m²: toàn bộ theo kg; > 1.000 m² & thu hồi > 2/3: toàn bộ theo m²; > 1.000 m² & < 2/3: phần thu hồi theo m²; thâm canh 1 loài: theo kg | Tiền BT | Đ3 PLVIII; Biểu 04 | **VM-12** |
-| NV-A14 | Hỗ trợ di dời vật nuôi | Khu vực không dịch bệnh; di dời đến nơi đủ ĐK Luật Chăn nuôi | Loại vật nuôi, khối lượng (tấn/kg), quãng đường (km, số lẻ quy đổi), loại đường | ≤ 5 km: KL × km × ĐG mục I; phần > 5 km: KL × (km − 5) × ĐG mục II; cộng lại | Tiền HT | Đ3 PLV; Biểu kèm theo | **VM-01**, VM-02 |
-| NV-A15 | Di chuyển mồ mả | Có mộ phải di chuyển | Loại mộ | Mộ xây 25.000.000; mộ không xây 15.000.000 đ/mộ; mộ quy mô lớn: theo dự toán thẩm định | Tiền BT | Đ8 PLII | — |
-| NV-A16 | Nhà, công trình trong hành lang an toàn lưới điện ≤ 220 kV (không phải di dời) | Xây trên đất đủ ĐK BT trước TB thu hồi | Diện tích phần trong hành lang, ĐG | 70% × GT phần nhà trong hành lang theo ĐG xây mới; trên đất không đủ ĐK: 70% × mức HT Đ17.4.2/17.4.3 | Tiền BT/HT | Đ7.3 PLII | — |
+| Mã | Nghiệp vụ | Điều kiện | Đầu vào | Cách tính / xử lý (sơ bộ) | Căn cứ | Cần xác nhận |
+|---|---|---|---|---|---|---|
+| A01 | BT nhà ở, công trình phục vụ đời sống của hộ, cá nhân | Phải tháo dỡ, phá dỡ | Hạng mục QĐ32, khối lượng | = GXDM có tiêu chuẩn kỹ thuật tương đương = khối lượng × ĐG QĐ32 | k1 Đ102 LĐĐ; QĐ32 | VM-02 |
+| A02 | BT nhà, công trình khác (không phải A01) – phần còn lại không đảm bảo TCKT | Phá dỡ toàn bộ/một phần | Như trên | = GXDM | điểm a k2 Đ102 LĐĐ | — |
+| A03 | BT nhà, công trình khác – thiệt hại thực tế | Không thuộc A02 | G1, T (khấu hao), T1 (đã sử dụng) | Tgt = G1 − G1 × T1/T *(công thức dạng ảnh, cần khôi phục)*; Mức BT = Tgt + 20% × Tgt, **không thấp hơn 60% G1, không quá 100% G1** | điểm b k2 Đ102 LĐĐ; Đ14 k1 a, b NĐ88; Đ6 k1 PLII | **VM-05, VM-06, VM-22** |
+| A04 | Nhà, công trình không đủ tiêu chuẩn kỹ thuật | điểm d k1 Đ14 NĐ88 | Hạng mục | Có trong ĐG tỉnh: 100% ĐG; không có: dự toán được thẩm định (nhập tay + số văn bản) | Đ6 k2 PLII | — |
+| A05 | Hạng mục chưa có / khác biệt ĐG | — | Dự toán tư vấn / bù trừ PL II QĐ32 | Nhập giá trị đã thẩm định; không tự tính | Đ4 QĐ32; Đ6 k2 b PLII; Đ6 k3.4 QĐ14 | VM-07 |
+| A06 | **Sửa chữa phần nhà còn lại** | Phá dỡ một phần, phần còn lại vẫn đảm bảo TCKT | Dự toán do UBND xã lập | Bồi thường chi phí sửa chữa theo thực tế (dự toán được duyệt trong PA) | điểm c k1 Đ14 NĐ88; **Đ5 QĐ14** | — |
+| A07 | Phần còn lại không sử dụng được | Sau giải tỏa một phần | Toàn bộ phần còn lại | Kiểm đếm, bồi thường toàn bộ; chỉ chi trả sau khi bàn giao phá dỡ | Mục XXI.5 Sổ tay | — |
+| A08 | HT nhà, công trình trên đất đủ ĐK BT nhưng sai mục đích (đất NN) | Không có biên bản vi phạm | Ngày xây dựng | < 01/7/2004: 100%; 01/7/2004–< 01/7/2014: 80%; 01/7/2014–< TB: 30% × ĐG | **Đ6 k3.1 QĐ14** | — |
+| A09 | HT nhà, công trình trên đất không đủ ĐK BT | Như trên | Ngày xây dựng | < 15/10/1993: 100%; 15/10/1993–< 01/7/2004: 70%; 01/7/2004–< 01/7/2014: 50%; "sau" 01/7/2014–< TB: 30% | **Đ6 k3.2 QĐ14** | **VM-09** |
+| A10 | HT tháo dỡ khi có biên bản vi phạm | A08/A09 có biên bản đình chỉ/buộc tháo dỡ | Ngày xây dựng | < 01/7/2004: 30%; "từ sau" 01/7/2004: không HT | **Đ6 k3.3 QĐ14** | **VM-09** |
+| A11 | Công trình sinh hoạt nằm ngoài cọc GPMB | Thu hồi đất ở, phải di chuyển nhà | Hạng mục | ≤ 100% ĐG (mức cụ thể do Chủ tịch UBND xã quyết) | **Đ6 k4 QĐ14** | Nhập tay + căn cứ |
+| A12 | Nhà, công trình trong hành lang lưới điện ≤ 220 kV (không di dời) | Xây trước TB, trên đất đủ ĐK BT | DT phần trong hành lang | 70% × GT phần nhà theo ĐG xây mới; đất không đủ ĐK: 70% × mức HT k3.2, k3.3 Đ6 QĐ14 | Đ7 k3 PLII | VM-24 (dẫn chiếu cũ) |
+| A13 | Cây hàng năm | Trước TB | Loại cây, DT | DT × ĐG Biểu 01 | Đ103 k1 LĐĐ; Đ4, Đ5 PLVIII | VM-02 |
+| A14 | Cây lâu năm, lâm nghiệp | Trước TB | Loại cây, giai đoạn, số cây, DT | ≤ 150% mật độ: 100% ĐG; phần vượt: 30%; mật độ thấp: theo thực tế; tre trúc ≤ 500 bụi/ha | Đ103 k2 LĐĐ; Đ5 k4, k5 PLVIII | VM-10 |
+| A15 | Cây trồng không đủ ĐK BT | Trước TB, không có biên bản xử phạt | Loại đất | Đất đủ ĐK BT sai mục đích: 100% ĐG; đất không đủ ĐK: 80% (trừ TH 9.1) | **Đ6 k7 QĐ14** | — |
+| A16 | Chọn ĐG cây lâu năm chuyển tiếp | Đã kiểm đếm trước 06/10/2025, chưa duyệt PA | Ngày hoàn thành kiểm đếm | Dùng PL II QĐ 48/2025 | Đ2 QĐ106; k3 Đ6 PLVIII | TL-22 |
+| A17 | Rừng trồng dự án lâm nghiệp; công chăm sóc bảo vệ rừng | Hợp đồng với Nhà nước | Số năm, DT (ha) | (Năm giao − năm đã CS) × 500.000 × DT | Biểu 03 mục VII, VIII PLVIII | VM-11 |
+| A18 | Thủy sản | Thiệt hại thực tế ≤ định mức | Loại nuôi, DT ao, DT thu hồi, kg | Theo 4 trường hợp Đ3 PLVIII | Đ103 k4 LĐĐ; Đ3 PLVIII; Biểu 04 | VM-12 |
+| A19 | Di dời vật nuôi | Không dịch bệnh | KL, km, loại đường | ≤ 5 km theo mục I; phần > 5 km theo mục II | Đ21 k1 NĐ88; PLV | VM-01 |
+| A20 | Di chuyển mồ mả | — | Loại mộ | Xây 25 tr; không xây 15 tr/mộ; quy mô lớn: dự toán | Đ15 NĐ88; Đ8 PLII | — |
+| A21 | Chi phí di chuyển tài sản (máy móc, dây chuyền) | Phải di chuyển | — | UBND tỉnh quy định mức | Đ104 LĐĐ | **Chưa có văn bản tỉnh** |
 
 ## B. Bồi thường, hỗ trợ về đất
 
-| Mã | Nghiệp vụ | Điều kiện áp dụng | Dữ liệu đầu vào | Cách tính / xử lý (sơ bộ) | Đầu ra | Căn cứ | Cần xác nhận |
-|---|---|---|---|---|---|---|---|
-| NV-B01 | BT về đất bằng tiền | Đủ ĐK BT (Đ95 LĐĐ, Đ5 NĐ88) | Loại đất, vị trí, diện tích, **giá đất BT** | Diện tích × giá đất BT | Tiền BT | **Chưa có tài liệu** | **Câu hỏi 2**, TL-11, TL-12 |
-| NV-B02 | BT bằng đất khác mục đích / nhà ở | Tổng DT đất NN (không phải lâm nghiệp) thu hồi trong cùng dự án ≥ 1.000 m² (phường) / ≥ 1.500 m² (xã) … | DT thu hồi theo hộ, địa bàn, nguyện vọng | Kiểm tra điều kiện, đề xuất 01 thửa/căn/lô — **không tính tiền** | Danh sách đủ ĐK | Đ5 PLII | VM-13 |
-| NV-B03 | Chi phí đầu tư vào đất còn lại (không có giấy tờ) | Không có giấy tờ K3 Đ17 NĐ88, có đầu tư thực tế | Dự toán được duyệt, hoặc giá đất bảng giá; tỷ lệ thời hạn còn lại (tổ chức) | Có dự toán: theo dự toán; không đủ căn cứ: 1 × giá bảng giá × (tỷ lệ thời hạn còn lại – với tổ chức) × DT | Tiền BT | Đ3 PLII | — |
-| NV-B04 | Đất trong hành lang bảo vệ lưới điện | Không đổi mục đích nhưng hạn chế sử dụng | Loại đất, DT trong hành lang, giá đất cụ thể | Đất ở & đất cùng thửa, đất PNN: 80%; cây lâu năm, rừng trồng SX: 50%; cây hàng năm: 30% × giá đất cụ thể × DT | Tiền BT | Đ7.1 PLII | — |
-| NV-B05 | Đất trong hành lang công trình khác | Như trên | Như trên | 50% giá trị BT (trừ đất trồng cây hàng năm) | Tiền BT | Đ7.2 PLII | **VM-14** |
-| NV-B06 | Hỗ trợ đất có nguồn gốc nông, lâm trường | Các trường hợp 10.1.a/b/c, 10.2 | Nguồn gốc, thời điểm sử dụng, DT, hạn mức | Tổ hợp nhiều khoản (đất, cây, nhà, ổn định đời sống, chuyển nghề) | Nhiều khoản | Đ17.10 PLII | **VM-15**; đề xuất đưa sang phiên bản 2 |
-| NV-B07 | Đất rừng dùng SX NN; đất NN sai mục đích ghi trên GCN | Đ17.9, Đ17.11 | Giá đất 2 loại, DT, hạn mức | Chênh lệch giá đất × DT (≤ hạn mức); chuyển nghề theo chênh lệch × hệ số Đ14 | Tiền HT | Đ17.9, Đ17.11 PLII | TL-23, TL-24 |
+| Mã | Nghiệp vụ | Điều kiện | Đầu vào | Cách tính / xử lý (sơ bộ) | Căn cứ | Cần xác nhận |
+|---|---|---|---|---|---|---|
+| B01 | BT đất bằng tiền | Đủ ĐK (Đ95 LĐĐ; Đ5 NĐ88) | Loại đất, DT, **giá đất BT** | DT × giá đất BT. Bản LĐĐ đã nhận: **giá đất cụ thể** tại thời điểm phê duyệt PA | k2 Đ91, điểm e k1 Đ160 LĐĐ (bản gốc) | **VM-20** |
+| B02 | Xác định DT bồi thường khi đo thực tế ≠ GCN | — | DT GCN, DT đo | Nhỏ hơn: theo đo thực tế; lớn hơn, không tranh chấp: theo đo thực tế | Đ6 NĐ88 | — |
+| B03 | BT đất ở không giấy tờ (theo mốc 18/12/1980; 15/10/1993; 01/7/2014) | k1 Đ5 NĐ88 | Thời điểm sử dụng, DT thu hồi, DT xây dựng, hạn mức | Phân bổ DT: đất ở (≤ hạn mức công nhận / hạn mức giao), đất SXKD, phần còn lại theo đất NN | Đ8 NĐ88 | TL-24 (hạn mức) |
+| B04 | BT đất ở có vi phạm trước 01/7/2014; giao sai thẩm quyền | k2, k3 Đ5 NĐ88 | Như trên | Theo Đ9, Đ10 NĐ88 | Đ9, Đ10 NĐ88 | TL-24 |
+| B05 | BT đất nông nghiệp của hộ, cá nhân | Các TH Đ12 NĐ88 | DT, nguồn gốc, hạn mức Đ176 | ≤ hạn mức giao đất NN; phần vượt: hỗ trợ khác do tỉnh quyết | Đ12 NĐ88; Đ176 LĐĐ | — |
+| B06 | BT đất PNN không phải đất ở có thời hạn, bằng tiền | k7 Đ13 NĐ88 | G, S, T1, T2 | Tbt = G × S × T2/T1 *(công thức dạng ảnh, cần khôi phục)* | Đ13 NĐ88 | VM-22 |
+| B07 | Chi phí đầu tư vào đất còn lại | Có/không có chứng từ | P1..P4, T1, T2 hoặc giá bảng giá | Có chứng từ: P = (P1+P2+P3+P4)/T1 × T2 *(ảnh)*; không chứng từ: dự toán hoặc 1 × giá bảng giá × tỷ lệ thời hạn còn lại (tổ chức) | Đ17 NĐ88; Đ3 PLII | VM-22 |
+| B08 | Đất trong hành lang lưới điện | Không đổi mục đích, hạn chế sử dụng | Loại đất, DT, giá đất cụ thể | 80% / 50% / 30% × giá đất cụ thể × DT | Đ18 k1 c NĐ88; Đ7 k1 PLII | — |
+| B09 | Đất trong hành lang công trình khác | Như trên | Như trên | 50% (trừ đất cây hàng năm) | Đ7 k2 PLII | VM-14 |
+| B10 | Hành lang làm đổi mục đích sử dụng | Đổi đất ở → PNN/NN; PNN → NN | G1..G4, S | Tbt = (G1 − G2) × S; Tbt = (G3 − G4) × S | Đ18 k1 a, b NĐ88 | — |
+| B11 | BT bằng đất khác mục đích / nhà ở | DT đất NN thu hồi ≥ 1.000 m² (phường) / 1.500 m² (xã) | DT, địa bàn | Kiểm tra điều kiện; chênh lệch giá trị xử lý theo Đ4 k2 NĐ88 | Đ4 NĐ88; Đ5 PLII | VM-13 |
+| B12 | Trừ nghĩa vụ tài chính chưa thực hiện | Còn nợ tiền SDĐ, tiền thuê | Số tiền nợ | Chỉ trừ vào tiền BT đất + chi phí đầu tư vào đất còn lại; **không** trừ vào BT tài sản, hỗ trợ | Đ94 k6 LĐĐ; Đ25 k1 NĐ88 | — |
+| B13 | HT đất nông, lâm trường | TH 9.1, 9.2 | Nguồn gốc, thời điểm, hạn mức | Tổ hợp nhiều khoản | **Đ6 k9 QĐ14** | VM-15; đề xuất v2 |
+| B14 | Đất rừng dùng SX NN; đất NN sai mục đích GCN | k8, k10 Đ6 QĐ14 | Giá đất 2 loại, DT, hạn mức | Chênh lệch giá đất × DT (≤ hạn mức) | **Đ6 k8, k10 QĐ14** | TL-24 |
 
 ## C. Hỗ trợ và tái định cư
 
-| Mã | Nghiệp vụ | Điều kiện áp dụng | Dữ liệu đầu vào | Cách tính / xử lý (sơ bộ) | Đầu ra | Căn cứ | Cần xác nhận |
-|---|---|---|---|---|---|---|---|
-| NV-C01 | Ổn định đời sống (thu hồi < 30% đất NN) | Hộ bị thu hồi 10%–< 30% DT đất NN đang sử dụng | Tỷ lệ % thu hồi, có di chuyển chỗ ở, nơi đến (khó khăn/ĐBKK), số nhân khẩu, giá gạo | Số tháng: 10–<20%: 2/3/6; 20–<30%: 3/6/9 (không di chuyển / di chuyển / đến địa bàn khó khăn–ĐBKK); tiền = 30 kg × giá gạo × nhân khẩu × tháng | Tiền HT | Đ12 PLII; K2 Đ19 NĐ88; K4 Đ2 NĐ 226/2025 | TL-25, TL-26 |
-| NV-C02 | Ổn định đời sống (≥ 30%) | Thu hồi ≥ 30% | — | Theo K1 Đ19 NĐ88 | Tiền HT | K1 Đ19 NĐ88 | **Chưa có văn bản** (TL-12) |
-| NV-C03 | Ổn định SX (bồi thường bằng đất NN) | Được BT bằng đất NN | DT, loại cây, định mức giống | Cây hàng năm: 100% giống, vật tư 2 vụ; cây lâu năm: 50% chi phí năm đầu, ≤ 1 ha/hộ | Tiền HT | Đ13.1, Đ17.6 PLII | Cần bảng định mức → giai đoạn đầu nhập tay |
-| NV-C04 | Ổn định SXKD phi NN | Có ĐKKD, phải ngừng SXKD | Thu nhập sau thuế bình quân 3 năm / doanh thu | Ngừng hẳn: 30% × 1 năm thu nhập sau thuế BQ; ngừng tạm: 50% mức đó; hộ không thực hiện kế toán: DT ≤ 100 tr: 2.400.000; > 100 tr: 4.800.000 đ/cơ sở | Tiền HT | Đ13.2, 13.3 PLII | — |
-| NV-C05 | Trợ cấp ngừng việc người lao động | Có HĐLĐ | Theo pháp luật lao động | ≤ 6 tháng | Tiền HT | Đ13.4 PLII | Cần căn cứ pháp luật lao động |
-| NV-C06 | Đào tạo, chuyển đổi nghề, tìm việc làm | Đối tượng K1 Đ109 LĐĐ | Loại đất NN, DT thu hồi, giá đất NN bảng giá, hạn mức, địa bàn | Hệ số × giá đất NN cùng loại (bảng giá) × min(DT thu hồi, hạn mức); hệ số: phường 5; nhóm xã liệt kê 4; còn lại 3 | Tiền HT | Đ14 PLII | VM-04, TL-23, TL-24 |
-| NV-C07 | Hỗ trợ thuê nhà chờ TĐC | Chưa bố trí TĐC; tự thuê nhà; không ở nhà tạm NN | Nhân khẩu, địa bàn, ngày bàn giao, ngày giao đất/nhà TĐC | Mức/tháng theo nhóm địa bàn & nhân khẩu × số tháng (+ 6 tháng nếu TĐC bằng đất) | Tiền HT | Đ9 PLII | **VM-03**, VM-04 |
-| NV-C08 | Hỗ trợ tự lo chỗ ở | Đủ ĐK TĐC (K8 Đ111 LĐĐ), tự lo chỗ ở | Địa bàn | 100 tr / 80 tr / 60 tr đồng/hộ theo nhóm địa bàn | Tiền HT | Đ10 PLII | VM-04 |
-| NV-C09 | Người đang thuê nhà thuộc sở hữu NN | Phải phá dỡ, không còn chỗ ở khác trong xã | Nhân khẩu, số tháng thuê thực tế | Thuê nhà ≤ 6 tháng (2,0 / 3,5 tr + 0,5 tr/khẩu tăng thêm so với điểm b); tự lo chỗ ở: 50% mức Đ10 | Tiền HT | Đ11 PLII | — |
-| NV-C10 | Suất TĐC tối thiểu | Tính HT theo K8, K10 Đ111 LĐĐ | Địa bàn, giá đất nơi TĐC | Đất ở: 40 m² (phường) / 60 m² (xã); nhà ở: 40 m²; bằng tiền = giá đất khu TĐC × DT suất tối thiểu bằng đất | Số tiền/suất | Đ16 PLII | — |
-| NV-C11 | Thưởng bàn giao mặt bằng trước hạn | Tự nguyện bàn giao trong các mốc thời gian | Ngày bàn giao, các mốc (hoàn thành kiểm đếm, niêm yết, hạn bàn giao), tổng BT đất + tài sản (không tính HT) | Mốc 1: 10%, tối đa 20.000.000; mốc 2: 10%, tối đa 15.000.000 (TH nông lâm trường: 10% giá trị hỗ trợ khác) | Tiền thưởng | Đ15 PLII | VM-16 |
-| NV-C12 | Hỗ trợ hộ có đối tượng chính sách phải di chuyển chỗ ở | Có xác nhận phòng chuyên môn | Loại đối tượng | 6,0 / 5,5 / 5,0 / 4,5 / 3,0 tr/hộ; nhiều tiêu chuẩn → **chỉ mức cao nhất** | Tiền HT | Đ17.1 PLII | — |
-| NV-C13 | Hộ nghèo | Có giấy chứng nhận hộ nghèo; di chuyển chỗ ở hoặc ngừng SXKD | — | 4.000.000 đ/hộ | Tiền HT | Đ17.2 PLII | Cộng dồn với C12? (VM-17) |
-| NV-C14 | Thủ tục về nhà mới | Phải di chuyển chỗ ở | — | 2.000.000 đ/hộ | Tiền HT | Đ17.3 PLII | — |
-| NV-C15 | Ổn định đời sống khi xây lại nhà | Nhà phải phá dỡ, làm lại ở nơi khác | Nhân khẩu, giá gạo | 30 kg × giá gạo × nhân khẩu × 6 tháng | Tiền HT | Đ17.7 PLII | TL-26 |
-| NV-C16 | Cây trồng không đủ ĐK BT | Tạo lập trước TB thu hồi; không có biên bản xử phạt | Loại đất, cây | Đất đủ ĐK BT nhưng sai mục đích: 100% ĐG; đất không đủ ĐK: 80% ĐG (trừ TH 10.1) | Tiền HT | Đ17.8 PLII | — |
-| NV-C17 | Hỗ trợ khác do UBND xã quyết định | Theo từng dự án | Nội dung, mức | Nhập tay, bắt buộc số/ngày văn bản | Tiền HT | Đ17.13 PLII; K2 Đ108 LĐĐ | — |
+| Mã | Nghiệp vụ | Điều kiện | Đầu vào | Cách tính / xử lý (sơ bộ) | Căn cứ | Cần xác nhận |
+|---|---|---|---|---|---|---|
+| C01 | Ổn định đời sống – thu hồi 10% đến < 30% đất NN | Đủ ĐK BT về đất | %, di chuyển, nơi đến, nhân khẩu, giá gạo | Tháng: 10–<20%: 2/3/6; 20–<30%: 3/6/9; tiền = 30 kg × giá gạo × khẩu × tháng | Đ19 k2 NĐ88; Đ12 PLII | VM-19, TL-25, TL-26 |
+| C02 | Ổn định đời sống – thu hồi ≥ 30% đất NN | Như trên | Như trên | 30–70%: 6/12/tối đa 24 tháng; > 70%: 12/24/tối đa 36 tháng; 30 kg gạo/khẩu/tháng; DT tính theo xã, theo từng dự án, không cộng dồn | **Đ19 k1 NĐ88** | VM-19; NĐ 226/2025 có sửa? |
+| C03 | Ổn định sản xuất (BT bằng đất NN) | — | DT, loại cây, định mức | 100% giống, vật tư 2 vụ (cây hàng năm); 50% chi phí năm đầu, ≤ 1 ha (cây lâu năm) | Đ13 k1 PLII; Đ6 k5 QĐ14 | Cần định mức → nhập tay |
+| C04 | Ổn định SXKD phi NN | Có ĐKKD, ngừng SXKD | Thu nhập sau thuế BQ 3 năm / doanh thu | 30% (ngừng hẳn) / 15% (ngừng tạm); hộ không kế toán: 2,4 tr / 4,8 tr | Đ20 NĐ88; Đ13 k2, k3 PLII | — |
+| C05 | Trợ cấp ngừng việc người lao động | Có HĐLĐ | — | ≤ 6 tháng, theo pháp luật lao động | Đ20 k4 NĐ88; Đ13 k4 PLII | — |
+| C06 | Đào tạo, chuyển đổi nghề | Đ22 k1, k2 NĐ88 (loại trừ CBCCVC, hưu trí...) | Loại đất, DT, giá bảng giá NQ152, hạn mức, địa bàn | Hệ số × giá đất NN cùng loại × min(DT, hạn mức); **hiệu lực: 5/4/3 theo phường / 12 xã / còn lại (Đ14 PLII)**; dự thảo: theo tổ, thôn, bản | Đ22 NĐ88; Đ14 PLII; TL-DT1 | VM-04, VM-29 |
+| C07 | **Hỗ trợ tạm cư** (chờ TĐC) | Không bố trí được nhà tạm hoặc tự lo chỗ ở; TĐC tại chỗ qua chuyển mục đích | Nhân khẩu, địa bàn, ngày bàn giao, ngày giao đất/nhà TĐC | Mức/tháng theo 3 nhóm địa bàn × số tháng; +6 tháng nếu TĐC bằng đất; TĐC tại chỗ: 6 tháng | **Đ3 QĐ14; Đ6 k12 QĐ14** | **VM-03**, VM-04 |
+| C08 | Hỗ trợ tự lo chỗ ở | Đủ ĐK TĐC, tự lo | Địa bàn | 100 / 80 / 60 tr/hộ | Đ23 NĐ88; Đ10 PLII | VM-04 |
+| C09 | Người thuê nhà thuộc sở hữu NN | Phải phá dỡ, không còn chỗ ở | Nhân khẩu, tháng | Thuê ≤ 6 tháng; tự lo: 50% mức Đ10 | Đ24 k2 NĐ88; Đ11 PLII | — |
+| C10 | Suất TĐC tối thiểu | Tính HT TĐC | Địa bàn, giá đất khu TĐC | Đất: 40 m² (phường) / 60 m² (xã); nhà: 40 m²; tiền = giá đất × DT suất | Đ24 k1 NĐ88; Đ16 PLII | — |
+| C11 | **Hỗ trợ 20% tiền SDĐ thửa TĐC** | Thu hồi đất ở, TĐC bằng đất ở | Tiền SDĐ phải nộp của thửa TĐC | 20% × tiền SDĐ phải nộp (dự thảo bổ sung loại trừ TH k4 Đ111 LĐĐ) | **Đ6 k11 QĐ14**; TL-DT1 | VM-28 |
+| C12 | Ghi nợ tiền SDĐ khi giao đất TĐC | Tiền BT đất < tiền SDĐ | Giá bảng giá tại thời điểm duyệt PA | Nợ = tiền SDĐ − giá trị BT về đất | Đ26 NĐ88 | — |
+| C13 | Thưởng bàn giao mặt bằng trước hạn | Tự nguyện bàn giao trong các mốc | Ngày bàn giao, các mốc, tổng BT đất + tài sản | Mốc 1: 10%, ≤ 20 tr; mốc 2: 10%, ≤ 15 tr | Đ15 PLII; Mục XV.3 Sổ tay | VM-16 |
+| C14 | Hộ có đối tượng chính sách phải di chuyển | Có xác nhận phòng chuyên môn | Loại đối tượng | 6,0/5,5/5,0/4,5/3,0 tr; chỉ **mức cao nhất** | **Đ6 k1 QĐ14** | — |
+| C15 | Hộ nghèo | Di chuyển chỗ ở / ngừng SXKD | — | 4.000.000 đ/hộ | **Đ6 k2 QĐ14** | VM-17 |
+| C16 | Ổn định đời sống khi xây lại nhà | Nhà phá dỡ, làm lại nơi khác | Nhân khẩu, giá gạo | 30 kg × giá gạo × khẩu × 6 tháng | **Đ6 k6 QĐ14** | TL-26 |
+| C17 | Hỗ trợ khác do UBND xã quyết | Theo dự án, có hồ sơ kiến nghị | Nội dung, mức | Nhập tay + số QĐ | k2 Đ108 LĐĐ; Đ6 k13, k14 QĐ14; Mục XI.2 Sổ tay | — |
+| C18 | **Lưu ý:** Hỗ trợ thủ tục về nhà mới 2.000.000 đ/hộ (Đ17 k3 PLII cũ) **không còn** trong QĐ14 | — | — | Chỉ áp dụng cho PA theo bộ chính sách trước 31/3/2026 | Đ2 k2 QĐ14 | Xác nhận |
 
-## D. Quy trình và thẩm quyền
+## D. Quy trình, thẩm quyền, kinh phí tổ chức
 
-| Mã | Nghiệp vụ | Điều kiện | Đầu vào | Xử lý | Đầu ra | Căn cứ | Cần xác nhận |
-|---|---|---|---|---|---|---|---|
-| NV-D01 | Xác định cấp có thẩm quyền | Theo loại thu hồi, thời điểm | Căn cứ thu hồi (Đ78, 79, 81, 82 LĐĐ), ngày | Tra bảng thẩm quyền theo hiệu lực: Chủ tịch UBND xã: TB thu hồi, QĐ thu hồi (Đ78, 79, 82 và 81 trừ TH ủy quyền), thành lập Hội đồng, Ban cưỡng chế kiểm đếm, **phê duyệt PA BT-HT-TĐC**, giá bán nhà TĐC trong xã; Chủ tịch UBND tỉnh: giá bán nhà TĐC ở xã khác | Chức danh ký trên biểu mẫu | QĐ 27/2026 PL I mục II, PL II mục I, II | **VM-18** (hết hiệu lực 01/3/2027) |
-| NV-D02 | Chọn bộ chính sách chuyển tiếp | Dự án có QĐ thu hồi/PA trước ngày văn bản mới có hiệu lực | Ngày QĐ thu hồi, ngày phê duyệt PA, ngày kiểm đếm, có Khung chính sách của TTg | Đề xuất bộ chính sách, **người dùng xác nhận** | Bộ chính sách của dự án | Đ19 PLII; Đ6 PLVIII; Đ5 QĐ32 | — |
+| Mã | Nghiệp vụ | Xử lý | Căn cứ |
+|---|---|---|---|
+| D01 | Thẩm quyền | Chủ tịch UBND xã: TB, QĐ thu hồi, Hội đồng BT, kiểm đếm bắt buộc, cưỡng chế, **phê duyệt PA**, giá bán nhà TĐC trong xã; Chủ tịch UBND tỉnh: giá bán nhà TĐC khác xã | NĐ 151/2025; QĐ 27/2026; Phần I Sổ tay |
+| D02 | Quy trình 16 bước, thời hạn, 22 mẫu biểu | Xem docs/05 | Đ87 LĐĐ; Sổ tay |
+| D03 | Chọn bộ chính sách chuyển tiếp | Đề xuất theo ngày QĐ thu hồi / ngày duyệt PA / ngày kiểm đếm; **người dùng xác nhận** | Đ31 NĐ88; Đ19 PLII; Đ6 PLVIII; Đ5 QĐ32; Đ7 QĐ14 |
+| D04 | Điều chỉnh PA có thay đổi giá | Giá tại thời điểm QĐ điều chỉnh; nếu thấp hơn thì giữ giá PA đã duyệt | Đ94 k5 LĐĐ |
+| D05 | Chi trả chậm | Cộng tiền chậm trả theo mức tiền chậm nộp Luật Quản lý thuế × số tiền × thời gian | Đ94 k3 b LĐĐ |
+| D06 | **Dự toán chi phí tổ chức thực hiện** | Người-ngày × 200.000 đ (thuê nhân công 300.000 đ); các khoản khác theo thực tế | Đ27 NĐ88; QĐ 03/2025 |

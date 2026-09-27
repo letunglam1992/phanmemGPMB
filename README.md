@@ -14,3 +14,4 @@
 | [docs/02-ma-tran-nghiep-vu-so-bo.md](docs/02-ma-tran-nghiep-vu-so-bo.md) | Bảng nghiệp vụ — điều kiện — đầu vào — cách tính — đầu ra — căn cứ — cần xác nhận (sơ bộ, từ tài liệu đã nhận) |
 | [docs/03-so-vuong-mac.md](docs/03-so-vuong-mac.md) | Sổ theo dõi điểm thiếu, mâu thuẫn, chưa rõ cách áp dụng |
 | [docs/04-pham-vi-kien-truc-lo-trinh.md](docs/04-pham-vi-kien-truc-lo-trinh.md) | Phạm vi phiên bản 1, hướng giao diện, kiến trúc sơ bộ, lộ trình |
+| [docs/05-quy-trinh-thoi-han.md](docs/05-quy-trinh-thoi-han.md) | 16 bước, thời hạn luật định, 22 mẫu biểu (Sổ tay QĐ 1966/QĐ-UBND) |

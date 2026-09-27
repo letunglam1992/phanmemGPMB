@@ -1,51 +1,68 @@
 # 01. Danh mục tài liệu
 
-Ký hiệu: ✅ đã nhận | ⚠️ đã nhận nhưng thiếu/lỗi chuyển đổi, cần bản gốc | ❌ chưa có
+Ký hiệu: ✅ dùng được | ⚠️ dùng được một phần, cần bản gốc/bản hợp nhất | 📝 dự thảo, chưa có hiệu lực | ❌ chưa có
 
-## A. Tài liệu đã nhận (27/9/2026)
+Cập nhật: đợt 2 (27/9/2026).
+
+## A. Tài liệu đã nhận
+
+### A1. Văn bản trung ương
 
 | Mã | Văn bản | Tình trạng | Ghi chú kiểm kê |
 |---|---|---|---|
-| TL-01 | QĐ 106/2025/QĐ-UBND ngày 06/10/2025 – **Phụ lục II** (một số nội dung BT, HT, TĐC) | ⚠️ | Đủ Điều 1–19. Chưa có phần thân Quyết định (ngày hiệu lực, điều khoản thay thế) |
-| TL-02 | QĐ 106/2025/QĐ-UBND – **Phụ lục V** (hỗ trợ di dời vật nuôi) | ⚠️ | Bảng đơn giá bị lệch dòng do chuyển đổi PDF→MD; ví dụ tính trong Ghi chú có sai số học (VM-01) |
-| TL-03 | QĐ 106/2025/QĐ-UBND – **Phụ lục VIII** (cây trồng, thủy sản) | ⚠️ | Biểu 01 đủ; **Biểu 02 mất khoảng mục 1–15** (chỉ còn từ giữa mục 15); Biểu 03 lệch cột mật độ; Biểu 04 lệch cột; đơn vị "m²" bị mất chỉ số |
-| TL-04 | QĐ 32/2025/QĐ-UBND ngày 23/3/2025 – đơn giá BT nhà, nhà ở, công trình (hiệu lực 01/4/2025) | ⚠️ | **Thiếu nhiều nhóm**: PL I mục I–III, 5.1, 6.1–6.9, 11.2–16.5; PL II phần lớn công tác xây dựng (mục I). Nhiều dòng gộp 2 hạng mục/2 đơn giá |
-| TL-05 | QĐ 27/2026/QĐ-UBND ngày 30/6/2026 – phân cấp, ủy quyền lĩnh vực đất đai | ✅ | Hiệu lực 30/6/2026 → **hết hiệu lực 01/3/2027** |
+| TL-10 | Luật Đất đai số 31/2024/QH15 (.docx) | ⚠️ | **Bản gốc 2024, chưa hợp nhất** các luật sửa đổi 43, 47, 58/2024; 71, 84, 93, 95, 146, 147/2025 (vẫn ghi "cấp huyện") — VM-21 |
+| TL-12 | NĐ 88/2024/NĐ-CP (.docx) | ⚠️ | **Bản gốc, chưa gồm sửa đổi của NĐ 226/2025**; công thức tại Đ13 k7, Đ14 k1 điểm b, Đ17 k4 là **hình ảnh, bị mất** khi chuyển đổi — VM-22 |
 
-## B. Tài liệu cần cung cấp
+### A2. Văn bản của tỉnh (đang có hiệu lực)
 
-### B1. Văn bản trung ương (bản hợp nhất nếu có)
+| Mã | Văn bản | Hiệu lực | Tình trạng | Ghi chú |
+|---|---|---|---|---|
+| TL-20 | QĐ 106/2025/QĐ-UBND ngày 06/10/2025 – phần thân | 06/10/2025 | ✅ | Thay thế 8 QĐ, trong đó QĐ 36/2024 (BT-HT-TĐC cũ), QĐ 25/2025 (vật nuôi), QĐ 48/2025 (cây trồng, thủy sản – trừ chuyển tiếp k3 Đ6 PL VIII) |
+| TL-01 | QĐ 106/2025 – **Phụ lục II** | 06/10/2025 | ⚠️ | **Đ9, Đ17, k5 Đ19 hết hiệu lực từ 31/3/2026** (QĐ 14/2026) |
+| TL-02 | QĐ 106/2025 – Phụ lục V (vật nuôi) | 06/10/2025 | ⚠️ | Bảng lệch dòng; ví dụ sai số học (VM-01) |
+| TL-03 | QĐ 106/2025 – Phụ lục VIII (cây trồng, thủy sản) | 06/10/2025 | ⚠️ | Mất Biểu 02 mục 1–15; lệch cột Biểu 03, 04 (VM-02) |
+| TL-04 | QĐ 32/2025/QĐ-UBND – đơn giá nhà, công trình | 01/4/2025 | ⚠️ | Thiếu nhiều nhóm hạng mục (VM-02) |
+| TL-05 | QĐ 27/2026/QĐ-UBND – phân cấp, ủy quyền | 30/6/2026 → **hết 01/3/2027** | ✅ | VM-18 |
+| TL-06 | **QĐ 14/2026/QĐ-UBND** ngày 31/3/2026 – chi tiết NQ 254/2025/QH15 | 31/3/2026 | ✅ | Thay Đ9, Đ17, k5 Đ19 PL II; thêm tạm cư, sửa chữa phần nhà còn lại, hỗ trợ 20% tiền SDĐ TĐC |
+| TL-07 | **QĐ 1966/QĐ-UBND** ngày 05/8/2025 – Sổ tay trình tự, thủ tục BT-HT-TĐC, thu hồi đất | Từ ngày ký | ✅ | 16 bước, 22 mẫu biểu tham khảo → docs/05 |
+| TL-08 | **QĐ 03/2025/QĐ-UBND** – mức chi tổ chức thực hiện BT-HT-TĐC, cưỡng chế + Phụ lục | 01/2025 (ngày cụ thể cần đối chiếu) | ⚠️ | Dùng cho dự toán chi phí tổ chức thực hiện (NĐ 88 Đ27) |
+| TL-09 | **NQ 152/2025/NQ-HĐND** ngày 29/12/2025 – Bảng giá đất | 01/01/2026 | ⚠️ | Phần thân Quy định **lỗi OCR nặng** (mất dấu) — cần bản gốc; Bảng 01–08 đọc được (VM-27) |
 
-| Mã | Văn bản | Dùng cho | Ưu tiên |
+### A3. Văn bản dự thảo
+
+| Mã | Văn bản | Tình trạng | Xử lý trong phần mềm |
 |---|---|---|---|
-| TL-10 | Luật Đất đai 2024 và các luật sửa đổi (43, 47, 58/2024; 71, 84, 93, 95, 146, 147/2025/QH15) | Điều 91–111 (điều kiện BT, HT, TĐC), Điều 176 (hạn mức) | Cao |
-| TL-11 | Nghị quyết 254/2025/QH15 | Cơ chế tháo gỡ; giá đất bồi thường (nếu có thay đổi) | **Rất cao** |
-| TL-12 | NĐ 88/2024/NĐ-CP (BT, HT, TĐC) + NĐ 226/2025/NĐ-CP (sửa đổi) | Đ14 (nhà), Đ17 (chi phí đầu tư vào đất), Đ19 (ổn định đời sống ≥30%), Đ20, Đ22, Đ23, Đ24 | **Rất cao** |
-| TL-13 | NĐ 49/2026/NĐ-CP | Trình tự thủ tục mới, thẩm quyền | Cao |
-| TL-14 | NĐ 102/2024/NĐ-CP (và sửa đổi) – trình tự thu hồi đất, **mẫu biểu** | Quy trình, mẫu văn bản | Cao |
-| TL-15 | NĐ 71/2024/NĐ-CP (giá đất) và sửa đổi | Giá đất cụ thể | Trung bình |
-| TL-16 | NĐ 151/2025/NĐ-CP (phân định thẩm quyền chính quyền 2 cấp) | Thẩm quyền | Trung bình |
+| TL-DT1 | Dự thảo QĐ sửa đổi QĐ 106/2025 và QĐ 14/2026 (Điều 13 PL I – tách thửa; Điều 14 PL II – hỗ trợ chuyển đổi nghề theo tổ/thôn/bản; khoản 11 Điều 6 QĐ 14) | 📝 | Nhập thành bộ chính sách trạng thái **"Dự thảo – không được chốt phương án"**; kích hoạt khi có số, ngày hiệu lực |
 
-### B2. Văn bản của tỉnh
+## B. Dòng thời gian hiệu lực (phục vụ quản lý phiên bản chính sách)
 
-| Mã | Văn bản | Dùng cho | Ưu tiên |
+```
+01/04/2025  QĐ 32/2025 (đơn giá nhà, công trình) có hiệu lực
+01/07/2025  Chính quyền 2 cấp; thẩm quyền chuyển về cấp xã (NĐ 151/2025)
+05/08/2025  QĐ 1966/QĐ-UBND – Sổ tay trình tự, thủ tục
+06/10/2025  QĐ 106/2025 có hiệu lực (PL II, V, VIII...) – thay QĐ 36/2024, 25/2025, 48/2025...
+01/01/2026  NQ 152/2025/NQ-HĐND – Bảng giá đất áp dụng
+31/03/2026  QĐ 14/2026 có hiệu lực – bãi bỏ Đ9, Đ17, k5 Đ19 PL II QĐ 106
+30/06/2026  QĐ 27/2026 (phân cấp, ủy quyền) có hiệu lực
+01/03/2027  QĐ 27/2026 hết hiệu lực  ← phần mềm cảnh báo trước
+(chưa rõ)   Dự thảo sửa đổi QĐ 106 & QĐ 14
+```
+
+## C. Tài liệu còn thiếu (ưu tiên giảm dần)
+
+| Mã | Tài liệu | Dùng cho | Ưu tiên |
 |---|---|---|---|
-| TL-20 | QĐ 106/2025/QĐ-UBND – **phần thân QĐ và Phụ lục I, III, IV, VI, VII** | Xác định đủ bộ chính sách tỉnh; hiệu lực | **Rất cao** |
-| TL-21 | **Bản gốc PDF/Excel** của TL-02, TL-03, TL-04 (ưu tiên Excel đơn giá nếu Sở Xây dựng/Sở NN&MT có) | Nhập bảng đơn giá chính xác | **Rất cao** |
-| TL-22 | QĐ 48/2025/QĐ-UBND – Phụ lục II (đơn giá cây lâu năm cũ) | Chuyển tiếp theo khoản 3 Điều 6 PL VIII | Cao |
-| TL-23 | Bảng giá đất tỉnh Sơn La hiện hành (và bảng trước đó nếu còn dự án chuyển tiếp) | Đ14, Đ17, Đ3 PL II; chi phí đầu tư vào đất | Cao |
-| TL-24 | Quy định hạn mức giao đất ở, hạn mức giao/công nhận đất nông nghiệp, hạn mức công nhận đất ở trước 15/10/1993 | Đ14, Đ17.9–17.11 PL II | Cao |
-| TL-25 | Danh mục đơn vị hành chính cấp xã sau sắp xếp (xã/phường) + danh mục xã có điều kiện KT-XH khó khăn / đặc biệt khó khăn | Phân nhóm địa bàn Đ9, Đ10, Đ14, Đ12 PL II; Đ5 PL II | Cao |
-| TL-26 | Văn bản/hướng dẫn giá gạo tẻ trung bình (Sở Tài chính) | Đ12, Đ17.7 PL II | Cao |
-| TL-27 | Hướng dẫn xác định giá trị hiện có / khấu hao nhà, công trình (Sở Tài chính) | Đ6.1 PL II | Cao |
-| TL-28 | Xác nhận QĐ 32/2025 còn là văn bản đơn giá nhà hiện hành, hoặc văn bản thay thế/điều chỉnh | Đơn giá nhà | Cao |
-| TL-29 | Quy trình nội bộ (nếu có) và quy định trình tự thủ tục của tỉnh theo NĐ 49/2026 | Module quy trình | Trung bình |
-
-### B3. Hồ sơ thực tế (đã ẩn thông tin cá nhân)
-
-| Mã | Tài liệu | Dùng cho |
-|---|---|---|
-| TL-30 | 2–3 **phương án đã phê duyệt** (bảng chi tiết từng hộ + tổng hợp, file Excel gốc) | Bộ ca kiểm thử "vàng" để đối chiếu |
-| TL-31 | Mẫu biên bản điều tra, kiểm đếm; mẫu tờ khai; mẫu Excel kiểm đếm đang dùng | Thiết kế nhập liệu, mẫu import |
-| TL-32 | Mẫu Word: thông báo thu hồi đất, dự thảo phương án, tờ trình, quyết định phê duyệt, quyết định thu hồi | Module biểu mẫu |
-| TL-33 | Dữ liệu địa chính mẫu (nếu định tích hợp): danh sách thửa, trích đo (Excel/shape/dgn) | Đánh giá phạm vi nhập dữ liệu thửa |
+| TL-11 | **Nghị quyết 254/2025/QH15** | Giá đất bồi thường; tạm cư; các cơ chế tháo gỡ | **Rất cao** |
+| TL-13 | **NĐ 49/2026/NĐ-CP** | Hướng dẫn NQ 254; chuyển tiếp (Điều 19) | **Rất cao** |
+| TL-12b | **NĐ 226/2025/NĐ-CP** (hoặc NĐ 88 hợp nhất) | Sửa đổi Đ19 NĐ 88 và các điều khác | **Rất cao** |
+| TL-12c | NĐ 88/2024 **bản PDF** | Khôi phục công thức dạng ảnh (VM-22) | Cao |
+| TL-09b | NQ 152/2025 – **bản PDF/Word gốc phần thân Quy định** | Quy tắc vị trí, tăng/giảm %, phân lớp chiều sâu | Cao |
+| TL-21 | Bản gốc (ưu tiên Excel) PL V, PL VIII QĐ 106; QĐ 32/2025 | Nhập bảng đơn giá chính xác | **Rất cao** |
+| TL-22 | QĐ 48/2025 – Phụ lục II (đơn giá cây lâu năm cũ) | Chuyển tiếp k3 Đ6 PL VIII | Cao |
+| TL-24 | QĐ 106/2025 – **Phụ lục I** (hạn mức công nhận đất ở, hạn mức giao đất, tách thửa) | NĐ 88 Đ8, Đ9, Đ12; Đ14 PL II; QĐ 14 Đ6 | Cao |
+| TL-25 | Danh mục xã/thôn/bản thuộc vùng KT-XH khó khăn, ĐBKK | NĐ 88 Đ8 k4, Đ19; Đ12 PL II | Cao |
+| TL-26 | Văn bản giá gạo tẻ trung bình (Sở Tài chính) | Ổn định đời sống | Cao |
+| TL-27 | Hướng dẫn **thời gian khấu hao (T)** nhà, công trình (Sở Tài chính) | NĐ 88 Đ14 k1 điểm b | Cao |
+| TL-16 | NĐ 151/2025, NĐ 102/2024 | Thẩm quyền, thủ tục (đã được Sổ tay dẫn chiếu) | Trung bình |
+| TL-30 | 2–3 **phương án đã phê duyệt** (Excel gốc, ẩn danh) | Ca kiểm thử vàng | **Rất cao** |
+| TL-31 | Mẫu Excel kiểm đếm, bảng tính chi tiết đang dùng thực tế | Mẫu nhập/xuất | Cao |

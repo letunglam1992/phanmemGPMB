@@ -8,10 +8,10 @@
 |---|---|---|
 | Hồ sơ | Dự án; người có đất thu hồi / chủ sở hữu (cá nhân, hộ, đồng sở hữu); thửa (loại đất, DT thửa, DT thu hồi, nguồn gốc, thời điểm sử dụng); tài sản; giấy tờ; tệp đính kèm | Tổ chức (doanh nghiệp, đơn vị sự nghiệp); bản đồ/GIS |
 | Kiểm đếm | Nhà, công trình (QĐ32); cây trồng (PLVIII Biểu 01–03); thủy sản (Biểu 04); vật nuôi di dời (PLV); mồ mả | Dự toán tư vấn chi tiết theo công tác (chỉ nhập kết quả đã thẩm định) |
-| Tính toán | Các nghiệp vụ nhóm A, C (trừ C02, C03 khi chưa có văn bản), B01 với **giá đất do người dùng nhập theo QĐ phê duyệt giá**, B03–B05 | B06 (nông lâm trường), B07; tái định cư chi tiết (bố trí lô, bốc thăm, thu tiền SDĐ) |
+| Tính toán | Nhóm A (trừ A21 chưa có văn bản tỉnh), nhóm C (C03 nhập tay theo định mức), B01–B02, B05, B07–B12; giá đất BT **nhập theo văn bản phê duyệt giá** cho đến khi xác nhận VM-20; tra cứu giá bảng giá NQ152 (đất NN, đất ở, TMDV, SXKD, KCN) phục vụ C06, C11, C12, B07 | B03–B04, B06 (cần hạn mức, công thức gốc), B13 (nông lâm trường), B14; tái định cư chi tiết (bố trí lô, bốc thăm) |
 | Phương án | Phiên bản phương án (Tạm tính → Đã kiểm tra → Đã chốt → Đã phê duyệt); đóng băng kết quả; so sánh 2 phiên bản; điều chỉnh thủ công có phân quyền, lý do | Theo dõi chi trả, khấu trừ nghĩa vụ tài chính |
-| Quy trình | Danh mục bước theo quy trình được cung cấp; người phụ trách; ngày; cảnh báo quá hạn (chỉ với thời hạn có căn cứ); cảnh báo thiếu dữ liệu, trùng | Luồng khiếu nại, cưỡng chế |
-| Xuất | Excel: bảng chi tiết từng hộ, bảng tổng hợp dự án (theo mẫu người dùng); Word: 2–3 mẫu ưu tiên; PDF từ bản xem trước | Toàn bộ hệ thống biểu mẫu |
+| Quy trình | 16 bước theo Sổ tay QĐ 1966/QĐ-UBND (docs/05); người phụ trách; ngày; cảnh báo quá hạn theo thời hạn luật định (phân biệt ngày / ngày làm việc); cảnh báo thiếu dữ liệu, trùng; dự toán chi phí tổ chức thực hiện (QĐ 03/2025) | Luồng kiểm đếm bắt buộc, cưỡng chế, khiếu nại (chỉ theo dõi mốc ngày) |
+| Xuất | Excel: bảng chi tiết từng hộ (đủ nội dung k2 Đ3 NĐ88), bảng tổng hợp dự án; Word: Mẫu 03, 04, 09/10, 14, 15, 16, 20/21 của Sổ tay (chờ xác nhận); PDF từ bản xem trước | 13 mẫu còn lại của Sổ tay |
 | Nhập | Excel theo mẫu (hộ, thửa, kiểm đếm), xem trước, báo lỗi theo dòng/cột, phát hiện trùng | Nhập từ phần mềm địa chính; AI đọc hồ sơ |
 | Quản trị | Tài khoản, 4 vai trò, nhật ký, sao lưu tự động/thủ công, phục hồi, quản lý bộ chính sách | Đa người dùng mạng LAN |
 
