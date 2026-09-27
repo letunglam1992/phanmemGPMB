@@ -2,7 +2,7 @@
 
 Ứng dụng Windows (cài đặt bằng `.exe`) hỗ trợ công tác thu hồi đất, bồi thường, hỗ trợ, tái định cư trên địa bàn tỉnh Sơn La.
 
-> **Trạng thái: Giai đoạn 1 – Khảo sát, kiểm kê tài liệu, xác định phạm vi.**
+> **Trạng thái: Giai đoạn 2 – Phân tích nghiệp vụ, dữ liệu chính sách, lõi tính toán.**
 > Chưa lập trình công thức hoặc điều kiện pháp lý. Mọi quy tắc nghiệp vụ chỉ được mã hóa sau khi có văn bản và cách áp dụng đã được xác nhận.
 
 ## Tài liệu giai đoạn 1
@@ -15,3 +15,10 @@
 | [docs/03-so-vuong-mac.md](docs/03-so-vuong-mac.md) | Sổ theo dõi điểm thiếu, mâu thuẫn, chưa rõ cách áp dụng |
 | [docs/04-pham-vi-kien-truc-lo-trinh.md](docs/04-pham-vi-kien-truc-lo-trinh.md) | Phạm vi phiên bản 1, hướng giao diện, kiến trúc sơ bộ, lộ trình |
 | [docs/05-quy-trinh-thoi-han.md](docs/05-quy-trinh-thoi-han.md) | 16 bước, thời hạn luật định, 22 mẫu biểu (Sổ tay QĐ 1966/QĐ-UBND) |
+| [docs/06-quyet-dinh-nghiep-vu.md](docs/06-quyet-dinh-nghiep-vu.md) | Quyết định nghiệp vụ đã được người dùng xác nhận |
+| [docs/07-du-lieu-chinh-sach.md](docs/07-du-lieu-chinh-sach.md) | Dữ liệu đơn giá, bảng giá đất đã trích xuất; quy tắc giá đất NQ 152 |
+
+## Dữ liệu và công cụ
+
+- `policy/nguon/` – dữ liệu chính sách trích xuất từ văn bản gốc (chờ đối chiếu trước khi kích hoạt)
+- `tools/extract/` – script trích xuất (Python + PyMuPDF), chạy lại được khi có văn bản mới
