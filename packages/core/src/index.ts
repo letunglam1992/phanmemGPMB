@@ -8,3 +8,4 @@ export * from "./ho-tro";
 export * from "./tong-hop";
 export * from "./gia-dat";
 export * from "./cay-xen";
+export { dong } from "./dong";

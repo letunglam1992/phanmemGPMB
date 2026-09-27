@@ -1,0 +1,279 @@
+/**
+ * Điều phối tính toán cho một hộ/đối tượng: gọi các hàm của lõi (@gpmb/core) theo dữ liệu hồ sơ,
+ * nhóm kết quả theo cấu trúc biểu áp giá (A. Bồi thường, B. Hỗ trợ) và theo thửa.
+ * Không chứa quy tắc pháp lý riêng — mọi mức, hệ số lấy từ bộ chính sách.
+ */
+import {
+  boiThuongDat,
+  cayTrong,
+  cayTrongXenCanh,
+  chuyenDoiNghe,
+  D,
+  diDoiVatNuoi,
+  dinhDang,
+  dong,
+  giaTriXayMoi,
+  moMa,
+  nhaCongTrinhThietHaiThucTe,
+  onDinhDoiSong,
+  tamCu,
+  tongHo,
+  type BoChinhSach,
+  type DongCayXen,
+  type DongTinh,
+  type TongHo,
+} from "@gpmb/core";
+import type Decimal from "decimal.js";
+import { thuTinh } from "./bieu-thuc";
+import type { DuAn, Ho, TaiSan, Thua } from "./mo-hinh";
+
+export const LOAI_DAT_NN = ["LUC", "LUK", "LUN", "BHK", "NHK", "HNK", "CLN", "RSX", "RPH", "RDD", "NTS", "NKH", "LNP"];
+export const laDatNN = (ma: string) => LOAI_DAT_NN.includes(ma.toUpperCase());
+
+/** Cột của biểu "TH GIÁ TRỊ TRÌNH DUYỆT" mà dòng tính được cộng vào. */
+export type CotTongHop = "BT_DAT" | "BT_CAY" | "BT_TAI_SAN" | "HT_DAT" | "HT_TAI_SAN" | "HT_CAY" | "HT_CDN" | "HT_KHAC";
+
+export const TEN_COT: Record<CotTongHop, string> = {
+  BT_DAT: "Bồi thường đất",
+  BT_CAY: "Bồi thường cây trồng, vật nuôi",
+  BT_TAI_SAN: "Bồi thường nhà, công trình",
+  HT_DAT: "Hỗ trợ đất",
+  HT_TAI_SAN: "Hỗ trợ tài sản, vật kiến trúc",
+  HT_CAY: "Hỗ trợ cây cối, hoa màu",
+  HT_CDN: "Hỗ trợ chuyển đổi nghề",
+  HT_KHAC: "Hỗ trợ khác (ổn định đời sống, tạm cư, di dời)",
+};
+
+export interface DongKetQua {
+  dong: DongTinh;
+  cot: CotTongHop;
+  thuaId?: string;
+  taiSanId?: string;
+}
+
+export interface NhomKetQua {
+  ma: string;
+  ten: string;
+  dong: DongKetQua[];
+}
+
+export interface KetQuaHo {
+  nhom: NhomKetQua[];
+  tatCa: DongKetQua[];
+  tong: TongHo;
+  theoCot: Record<CotTongHop, Decimal>;
+  tongBoiThuong: Decimal;
+  tongHoTro: Decimal;
+  khauTru: Decimal;
+  conLai: Decimal;
+}
+
+const thieu = (ma: string, noiDung: string, canhBao: string, canCu = "Hồ sơ"): DongTinh =>
+  dong({
+    ma,
+    noiDung,
+    congThuc: "—",
+    thanhTien: null,
+    canCu: [{ vanBan: canCu, viTri: "" }],
+    trangThai: "THIEU_CAN_CU",
+    canhBao: [canhBao],
+  });
+
+function soLuong(ts: { ten: string }, vao: string, ma: string): { v: Decimal | null; loi: DongTinh | null } {
+  const r = thuTinh(vao);
+  if (r.loi) return { v: null, loi: thieu(ma, ts.ten, `Khối lượng/số lượng: ${r.loi}`) };
+  return { v: r.giaTri, loi: null };
+}
+
+const nhanThua = (t: Thua) => `Thửa ${t.soThua}, tờ ${t.soTo}`;
+
+function dongDat(duAn: DuAn, t: Thua): DongTinh {
+  if (!t.gia) return thieu("B01", `Bồi thường về đất – ${t.loaiDat} (${nhanThua(t)})`, "Chưa chọn giá đất từ bảng giá", "NQ 152/2025/NQ-HĐND");
+  const hs = duAn.heSoGiaDat && !D(duAn.heSoGiaDat.heSo).eq(1) ? { heSo: duAn.heSoGiaDat.heSo, vanBan: duAn.heSoGiaDat.vanBan } : undefined;
+  const d = boiThuongDat({
+    loaiDat: `${t.loaiDat} (${nhanThua(t)})`,
+    dienTichM2: t.dienTichThuHoi || "0",
+    giaBangGiaNghinDong: t.gia.giaNghinDong,
+    nguonGia: t.gia.nguon,
+    heSoDuAn: hs,
+    canCu: [{ vanBan: "NQ 152/2025/NQ-HĐND", viTri: t.gia.nguon }, { vanBan: "Quyết định nghiệp vụ QD-02", viTri: "docs/06" }],
+  });
+  return d;
+}
+
+function dongNhaCongTrinh(cs: BoChinhSach, ts: Extract<TaiSan, { loai: "NHA_CT" }>): DongTinh {
+  const kl = soLuong(ts, ts.khoiLuong, "A03");
+  if (kl.loi) return kl.loi;
+  const canCu = [{ vanBan: "QĐ 32/2025/QĐ-UBND", viTri: `${ts.maDonGia}${ts.canCu ? " – " + ts.canCu : ""}` }];
+  const xm = giaTriXayMoi({ ten: ts.ten, khoiLuong: kl.v!, donVi: ts.donVi, donGia: ts.donGia, maDonGia: ts.maDonGia, canCu });
+  if (ts.cachTinh === "HE_SO") {
+    const hs = D(ts.heSo || "1");
+    return dong({
+      ma: ts.phan === "BOI_THUONG" ? "A03" : "A11",
+      noiDung: `${ts.phan === "BOI_THUONG" ? "Bồi thường" : "Hỗ trợ"} – ${ts.ten}`,
+      thamSo: { ...xm.thamSo, "Hệ số / mức hỗ trợ": dinhDang(hs, 2) },
+      congThuc: "Khối lượng × Hệ số × Đơn giá",
+      thanhTien: xm.thanhTien!.mul(hs),
+      canCu,
+    });
+  }
+  if (!ts.T || !ts.T1) {
+    return dong({
+      ...xm,
+      ma: "A03",
+      noiDung: `Bồi thường nhà, công trình – ${ts.ten}`,
+      thanhTien: null,
+      trangThai: "CAN_XAC_NHAN",
+      canhBao: ["Chưa nhập thời gian khấu hao T / thời gian đã sử dụng T1 (QD-11)"],
+    });
+  }
+  const d = nhaCongTrinhThietHaiThucTe(cs, { ten: ts.ten, G1: xm.thanhTien!, T: ts.T, T1: ts.T1, canCuKhauHao: ts.canCuKhauHao || "chưa ghi căn cứ" });
+  return { ...d, thamSo: { ...xm.thamSo, ...d.thamSo }, canCu: [...canCu, ...d.canCu] };
+}
+
+function dongCayThua(cs: BoChinhSach, t: Thua, cay: Extract<TaiSan, { loai: "CAY" }>[]): DongKetQua[] {
+  const out: DongKetQua[] = [];
+  const theoMatDo: { ts: (typeof cay)[number]; dong: DongCayXen }[] = [];
+  for (const c of cay) {
+    const sl = soLuong(c, c.soLuong, "A14");
+    if (sl.loi) {
+      out.push({ dong: sl.loi, cot: "BT_CAY", thuaId: t.id, taiSanId: c.id });
+      continue;
+    }
+    const donViCay = c.donVi !== "m²" && c.donVi !== "m";
+    if (donViCay && c.matDoHa) {
+      theoMatDo.push({ ts: c, dong: { ten: c.ten, maDonGia: c.maDonGia, donVi: c.donVi, donGia: c.donGia, soLuong: sl.v!, matDoHa: c.matDoHa } });
+    } else {
+      const d = cayTrong(cs, { ten: c.ten, maDonGia: c.maDonGia, donVi: (c.donVi as "cây" | "m²" | "trụ" | "m") ?? "cây", donGia: c.donGia, soLuong: sl.v! });
+      out.push({ dong: d, cot: "BT_CAY", thuaId: t.id, taiSanId: c.id });
+    }
+  }
+  if (theoMatDo.length) {
+    const tuy = t.cayXen;
+    const ds = theoMatDo.map((x) => x.dong);
+    const kq = cayTrongXenCanh(cs, {
+      dienTichM2: t.dienTichThuHoi || "0",
+      dienTichTruM2: tuy?.dienTichTru || 0,
+      lyDoTru: tuy?.lyDoTru,
+      cachXep: tuy?.cachXep,
+      thuTuChuSoHuu: ds,
+      cay: ds,
+    });
+    kq.dong.forEach((d, i) => out.push({ dong: d, cot: "BT_CAY", thuaId: t.id, taiSanId: theoMatDo[i]!.ts.id }));
+  }
+  return out;
+}
+
+export function tinhHo(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
+  const nhom: NhomKetQua[] = [
+    { ma: "A.I", ten: "Bồi thường về đất", dong: [] },
+    { ma: "A.II", ten: "Bồi thường nhà, công trình, vật kiến trúc", dong: [] },
+    { ma: "A.III", ten: "Bồi thường cây trồng, vật nuôi", dong: [] },
+    { ma: "B.II", ten: "Hỗ trợ tài sản, vật kiến trúc", dong: [] },
+    { ma: "B.IV", ten: "Hỗ trợ đào tạo, chuyển đổi nghề và tìm kiếm việc làm", dong: [] },
+    { ma: "B.V", ten: "Hỗ trợ ổn định đời sống, tạm cư, di dời", dong: [] },
+  ];
+  const n = (ma: string) => nhom.find((x) => x.ma === ma)!;
+
+  for (const t of ho.thua) {
+    if (D(t.dienTichThuHoi || "0").gt(0)) n("A.I").dong.push({ dong: dongDat(duAn, t), cot: "BT_DAT", thuaId: t.id });
+    const tsThua = ho.taiSan.filter((x) => x.thuaId === t.id);
+    for (const ts of tsThua) {
+      if (ts.loai === "NHA_CT") {
+        const d = dongNhaCongTrinh(cs, ts);
+        if (ts.phan === "BOI_THUONG") n("A.II").dong.push({ dong: d, cot: "BT_TAI_SAN", thuaId: t.id, taiSanId: ts.id });
+        else n("B.II").dong.push({ dong: d, cot: "HT_TAI_SAN", thuaId: t.id, taiSanId: ts.id });
+      } else if (ts.loai === "KHAC") {
+        const kl = soLuong(ts, ts.khoiLuong, "A03");
+        const d =
+          kl.loi ??
+          dong({
+            ma: ts.phan === "BOI_THUONG" ? "A03" : "A11",
+            noiDung: `${ts.phan === "BOI_THUONG" ? "Bồi thường" : "Hỗ trợ"} – ${ts.ten}`,
+            thamSo: {
+              "Khối lượng": `${dinhDang(kl.v!, 2)} ${ts.donVi}`,
+              "Hệ số / mức hỗ trợ": dinhDang(D(ts.heSo || "1"), 2),
+              "Đơn giá": `${dinhDang(D(ts.donGia || "0"))} đ/${ts.donVi}`,
+            },
+            congThuc: "Khối lượng × Hệ số × Đơn giá",
+            thanhTien: kl.v!.mul(ts.heSo || "1").mul(ts.donGia || "0"),
+            canCu: [{ vanBan: ts.canCu || "Chưa ghi căn cứ", viTri: "" }],
+            trangThai: ts.canCu ? "TAM_TINH" : "CAN_XAC_NHAN",
+            canhBao: ts.canCu ? ["Đơn giá ngoài danh mục: cán bộ kiểm tra căn cứ"] : ["Đơn giá ngoài danh mục chưa ghi căn cứ"],
+          });
+        if (ts.phan === "BOI_THUONG") n("A.II").dong.push({ dong: d, cot: "BT_TAI_SAN", thuaId: t.id, taiSanId: ts.id });
+        else n("B.II").dong.push({ dong: d, cot: "HT_TAI_SAN", thuaId: t.id, taiSanId: ts.id });
+      } else if (ts.loai === "VAT_NUOI") {
+        const kl = soLuong(ts, ts.khoiLuong, "C09");
+        const d = kl.loi ?? diDoiVatNuoi(cs, { loaiDuong: ts.loaiDuong, loaiVatNuoi: ts.loaiVatNuoi, khoiLuong: kl.v!, quangDuongKm: ts.quangDuongKm || "0" });
+        n("B.V").dong.push({ dong: d, cot: "HT_KHAC", thuaId: t.id, taiSanId: ts.id });
+      }
+    }
+    const cay = tsThua.filter((x): x is Extract<TaiSan, { loai: "CAY" }> => x.loai === "CAY");
+    if (cay.length) n("A.III").dong.push(...dongCayThua(cs, t, cay));
+
+    if (ho.hoTro.chuyenDoiNghe && laDatNN(t.loaiDat) && D(t.dienTichThuHoi || "0").gt(0)) {
+      let d: DongTinh;
+      if (!duAn.hanMucNN) d = thieu("C06", `Hỗ trợ chuyển đổi nghề – ${t.loaiDat} (${nhanThua(t)})`, "Chưa nhập hạn mức giao đất nông nghiệp của dự án (PL I QĐ 106 – TL-24)");
+      else if (!t.gia) d = thieu("C06", `Hỗ trợ chuyển đổi nghề – ${t.loaiDat} (${nhanThua(t)})`, "Chưa chọn giá đất nông nghiệp cùng loại");
+      else
+        d = chuyenDoiNghe(cs, {
+          xa: duAn.xa,
+          loaiDat: `${t.loaiDat} (${nhanThua(t)})`,
+          dienTichThuHoiM2: t.dienTichThuHoi,
+          hanMucM2: duAn.hanMucNN.m2,
+          canCuHanMuc: duAn.hanMucNN.canCu,
+          giaDatNNNghinDong: t.gia.giaNghinDong,
+        });
+      n("B.IV").dong.push({ dong: d, cot: "HT_CDN", thuaId: t.id });
+    }
+  }
+
+  if (ho.hoTro.moMa && ho.hoTro.moMa.xay + ho.hoTro.moMa.khongXay > 0)
+    n("A.II").dong.push({ dong: moMa(cs, { soMoXay: ho.hoTro.moMa.xay, soMoKhongXay: ho.hoTro.moMa.khongXay }), cot: "BT_TAI_SAN" });
+
+  const od = ho.hoTro.onDinh;
+  if (od) {
+    const dtNN = ho.thua.filter((t) => laDatNN(t.loaiDat)).reduce((s, t) => s.plus(t.dienTichThuHoi || "0"), D(0));
+    let d: DongTinh;
+    if (!duAn.giaGao) d = thieu("C01", "Hỗ trợ ổn định đời sống", "Chưa nhập giá gạo tẻ trung bình (TL-26)");
+    else if (!od.dienTichNNDangSuDung || D(od.dienTichNNDangSuDung).lte(0)) d = thieu("C01", "Hỗ trợ ổn định đời sống", "Chưa nhập diện tích đất NN đang sử dụng");
+    else if (ho.nhanKhau.length === 0) d = thieu("C01", "Hỗ trợ ổn định đời sống", "Chưa có nhân khẩu");
+    else
+      d = onDinhDoiSong(cs, {
+        dienTichNNThuHoi: dtNN,
+        dienTichNNDangSuDung: od.dienTichNNDangSuDung,
+        diChuyen: od.diChuyen,
+        nhanKhau: ho.nhanKhau.length,
+        giaGaoDongKg: duAn.giaGao.dongKg,
+        nguonGiaGao: duAn.giaGao.nguon,
+        chonNhom: od.chonNhom,
+      });
+    n("B.V").dong.push({ dong: d, cot: "HT_KHAC" });
+  }
+  if (ho.hoTro.tamCu && ho.hoTro.tamCu.soThang > 0)
+    n("B.V").dong.push({
+      dong: tamCu(cs, { xa: duAn.xa, nhanKhau: Math.max(ho.nhanKhau.length, 1), soThang: ho.hoTro.tamCu.soThang, tdcBangDat: ho.hoTro.tamCu.tdcBangDat }),
+      cot: "HT_KHAC",
+    });
+
+  const tatCa = nhom.flatMap((x) => x.dong);
+  const tong = tongHo(cs, tatCa.map((x) => x.dong));
+  const theoCot = Object.fromEntries(Object.keys(TEN_COT).map((k) => [k, D(0)])) as Record<CotTongHop, Decimal>;
+  for (const x of tatCa) if (x.dong.trangThai === "TAM_TINH" && x.dong.thanhTien) theoCot[x.cot] = theoCot[x.cot].plus(x.dong.thanhTien);
+  const tongBoiThuong = theoCot.BT_DAT.plus(theoCot.BT_CAY).plus(theoCot.BT_TAI_SAN);
+  const tongHoTro = theoCot.HT_DAT.plus(theoCot.HT_TAI_SAN).plus(theoCot.HT_CAY).plus(theoCot.HT_CDN).plus(theoCot.HT_KHAC);
+  const khauTru = D(ho.khauTru || "0");
+  return {
+    nhom: nhom.filter((x) => x.dong.length),
+    tatCa,
+    tong,
+    theoCot,
+    tongBoiThuong,
+    tongHoTro,
+    khauTru,
+    conLai: tong.tongLamTron.minus(khauTru),
+  };
+}
+
+export const SO_NGUYEN = (d: Decimal | null | undefined, le = 0) => (d ? dinhDang(d, le) : "—");

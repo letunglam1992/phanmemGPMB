@@ -25,7 +25,7 @@ Mã nguồn: `packages/gis` (TypeScript thuần, chạy trong ứng dụng, **kh
 | 13 | Nhãn thửa: gộp "LOẠI SỐ/DT" hoặc tách rời | `1L654/119.3`; `2L` · `659` · `27.9` |
 | 4 | Số thửa | `654` |
 | 5 | Số tờ | `7` |
-| 6 | Chủ sử dụng (TCVN3) | `§inh V¨n ThiÖu` → Đinh Văn Thiệu |
+| 6 | Chủ sử dụng (TCVN3) | `§inh V¨n A` → Đinh Văn A (ví dụ) |
 | 30 | Ranh GPMB (2 nét song song + 1 vùng khép kín nhỏ) | |
 
 - **692 thửa** (> 5 m²); **484 thửa** gắn đủ nhãn, không có cờ. Cờ còn lại: thiếu nhãn diện tích 146, thiếu loại đất 178, lệch diện tích > 5% 21 (chủ yếu thửa chứa phần đất ở "T" ~400 m² không có ranh riêng trên lớp 10, và thửa tách a/b), nhiều số thửa 21, nhiều số tờ 22 (tờ cũ/tờ trích đo).
