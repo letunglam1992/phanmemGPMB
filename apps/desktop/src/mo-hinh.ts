@@ -145,6 +145,8 @@ export interface Ho {
   khauTru: string;
   tienDo: Record<string, BuocHo>;
   nhatKy: NhatKy[];
+  /** Vướng mắc cần ưu tiên xử lý (khiếu nại, chưa nhận tiền, tranh chấp…), do cán bộ ghi. */
+  vuongMac?: { noiDung: string; ngay: string } | null;
 }
 
 export interface BanDoDuAn {
@@ -166,6 +168,8 @@ export interface DuAn {
   hanMucNN: { m2: string; canCu: string } | null;
   heSoGiaDat: { heSo: string; vanBan: string } | null;
   banDo: BanDoDuAn | null;
+  /** Kế hoạch hoàn thành từng bước (ngày ISO) do cán bộ nhập để theo dõi, cảnh báo chậm tiến độ. */
+  keHoach?: Record<string, string>;
   taoLuc: string;
 }
 

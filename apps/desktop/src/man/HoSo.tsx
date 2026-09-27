@@ -52,7 +52,7 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
       <div className="dong-tieu-de">
         <div>
           <h1>{h.ma} · {h.ten}</h1>
-          <div className="mo-ta">{TEN_DOI_TUONG[h.loai]} · {h.diaChi || "Chưa có địa chỉ"} · {h.thua.length} thửa · {h.nhanKhau.length} nhân khẩu</div>
+          <div className="mo-ta">{h.vuongMac && <span className="nhan nhan-do" style={{ marginRight: 6 }}>! Vướng mắc: {h.vuongMac.noiDung}</span>}{TEN_DOI_TUONG[h.loai]} · {h.diaChi || "Chưa có địa chỉ"} · {h.thua.length} thửa · {h.nhanKhau.length} nhân khẩu</div>
         </div>
         <div className="phai" style={{ alignItems: "center" }}>
           <div style={{ textAlign: "right", marginRight: 8 }}>
@@ -127,6 +127,12 @@ function TabThongTin({ h, doi }: Tab) {
         <O nhan={h.loai === "TO_CHUC" ? "Mã số thuế / QĐ thành lập" : "Số định danh cá nhân"} goiY="Thông tin cá nhân chỉ lưu trên máy này"><input value={h.soDinhDanh} onChange={s("soDinhDanh")} /></O>
         <O nhan="Điện thoại"><input value={h.dienThoai} onChange={s("dienThoai")} /></O>
         <O nhan="Địa chỉ thường trú / trụ sở"><input value={h.diaChi} onChange={s("diaChi")} /></O>
+        <O nhan="Vướng mắc cần ưu tiên xử lý" style={{ gridColumn: "1/-1" }} goiY="Khiếu nại, chưa nhận tiền, tranh chấp, chưa bàn giao… Hồ sơ có vướng mắc được tô đỏ trên bản đồ và đưa vào cảnh báo.">
+          <div className="nhom-nut">
+            <input style={{ flex: 1 }} value={h.vuongMac?.noiDung ?? ""} placeholder="Để trống nếu không có" onChange={(e) => doi({ ...h, vuongMac: e.target.value ? { noiDung: e.target.value, ngay: h.vuongMac?.ngay ?? new Date().toISOString().slice(0, 10) } : null })} />
+            {h.vuongMac && <button className="nut" onClick={() => doi({ ...h, vuongMac: null })}>Đã giải quyết</button>}
+          </div>
+        </O>
       </div>
     </div>
   );

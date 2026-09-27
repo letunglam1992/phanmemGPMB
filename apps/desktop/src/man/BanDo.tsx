@@ -17,6 +17,9 @@ import { useUngDung } from "../ung-dung";
 import { taoId, type DuAn, type Ho } from "../mo-hinh";
 import { HopThoai } from "../thanh-phan/chung";
 import { hoMoi } from "./DuAn";
+import { tinhHo } from "../tinh-ho";
+import { THU_TU_TRANG_THAI, TT_GPMB, homNayIso, trangThaiHo, type TrangThaiGpmb } from "../trang-thai";
+import { PhanBoTrangThai } from "../thanh-phan/BieuDo";
 
 interface DuLieuBanDo {
   ban: KetQuaDocDgn;
@@ -25,6 +28,18 @@ interface DuLieuBanDo {
 }
 
 const boNho = new Map<string, DuLieuBanDo>();
+
+/** Nạp bản đồ đã lưu của dự án (dùng lại bộ nhớ đệm) — cho bản đồ nhỏ ở màn Dự án. */
+export async function napBanDoDuAn(kho: { docBanDo(id: string): Promise<Uint8Array | null> }, duAnId: string): Promise<DuLieuBanDo | null> {
+  const co = boNho.get(duAnId);
+  if (co) return co;
+  const b = await kho.docBanDo(duAnId);
+  if (!b) return null;
+  const d = phanTich(b, CAU_HINH_MAC_DINH);
+  boNho.set(duAnId, d);
+  return d;
+}
+export type { DuLieuBanDo };
 
 const TEN_CO: Record<string, string> = {
   THIEU_SO_THUA: "Thiếu số thửa",
@@ -60,7 +75,7 @@ function phanTich(bytes: Uint8Array, ch: CauHinhLop): DuLieuBanDo {
 }
 
 export function BanDo({ duAnId }: { duAnId: string }) {
-  const { dsDuAn, kho, luuDuAn, hoCua, di } = useUngDung();
+  const { dsDuAn, kho, luuDuAn, hoCua, di, chinhSach } = useUngDung();
   const duAn = dsDuAn.find((d) => d.id === duAnId);
   const [dl, setDl] = useState<DuLieuBanDo | null>(boNho.get(duAnId) ?? null);
   const [loi, setLoi] = useState<string | null>(null);
@@ -92,6 +107,16 @@ export function BanDo({ duAnId }: { duAnId: string }) {
   const khoaThua = (t: ThuaBanDo) => t.ma + "#" + dl!.kq.thua.indexOf(t);
 
   const hos = hoCua(duAnId);
+  const ttThua = useMemo(() => {
+    const m = new Map<string, TrangThaiGpmb>();
+    if (!duAn) return m;
+    const homNay = homNayIso();
+    for (const h of hos) {
+      const tt = trangThaiHo(duAn, h, tinhHo(chinhSach(duAn), duAn, h), homNay);
+      for (const t of h.thua) if (t.maBanDo) m.set(t.maBanDo, tt);
+    }
+    return m;
+  }, [hos, duAn, chinhSach]);
   const daLienKet = useMemo(() => {
     const m = new Map<string, Ho>();
     for (const h of hos) for (const t of h.thua) if (t.maBanDo) m.set(t.maBanDo, h);
@@ -155,7 +180,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
       )}
       {dl && (
         <div className="ban-do-khung">
-          <KhungVe dl={dl} vungChon={vung?.ma ?? null} thuHoi={thuHoi} khoaThua={khoaThua} chon={chon} setChon={setChon} daLienKet={daLienKet} />
+          <KhungVe dl={dl} vungChon={vung?.ma ?? null} thuHoi={thuHoi} khoaThua={khoaThua} chon={chon} setChon={setChon} daLienKet={daLienKet} ttThua={ttThua} />
           <div className="ben-phai">
             <div className="the">
               <div className="the-dau"><h3>Ranh giải phóng mặt bằng</h3></div>
@@ -172,6 +197,18 @@ export function BanDo({ duAnId }: { duAnId: string }) {
                 ))}
                 {dl.kq.vungGpmb.length === 0 && <div className="thong-bao thong-bao-vang">Không có vùng khép kín trên lớp ranh GPMB.</div>}
                 {vung && <TomTatThuHoi thuHoi={thuHoi} />}
+                {vung && (() => {
+                  const trong = dl.kq.thua.filter((t) => (thuHoi.get(khoaThua(t))?.phamVi ?? "NGOAI") !== "NGOAI");
+                  const dem = Object.fromEntries(THU_TU_TRANG_THAI.map((t) => [t, 0])) as Record<TrangThaiGpmb, number>;
+                  let chuaHoSo = 0;
+                  for (const t of trong) { const tt = ttThua.get(t.ma); if (tt) dem[tt]++; else chuaHoSo++; }
+                  return (
+                    <div style={{ marginTop: 8, borderTop: "1px solid var(--vien)", paddingTop: 8 }}>
+                      <div className="chu-nho mo" style={{ marginBottom: 4 }}>Hiện trạng GPMB theo thửa trong ranh ({trong.length} thửa; {chuaHoSo} thửa chưa lập hồ sơ)</div>
+                      <PhanBoTrangThai dem={dem} tong={trong.length - chuaHoSo} donVi="thửa" />
+                    </div>
+                  );
+                })()}
               </div>
             </div>
             <div className="the" style={{ flex: 1 }}>
@@ -256,8 +293,11 @@ function KhungVe(p: {
   chon: ThuaBanDo | null;
   setChon: (t: ThuaBanDo | null) => void;
   daLienKet: Map<string, Ho>;
+  ttThua: Map<string, TrangThaiGpmb>;
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
+  const [cheDo, setCheDo] = useState<"HIEN_TRANG" | "PHAM_VI">("HIEN_TRANG");
+  const [lop, setLop] = useState({ nen: true, thua: true, to: true, ranh: true, nhan: true, diaDanh: true });
   const [nhin, setNhin] = useState<{ cx: number; cy: number; tyLe: number } | null>(null);
   const [toaDo, setToaDo] = useState<string>("");
   const keo = useRef<{ x: number; y: number; cx: number; cy: number; di: boolean } | null>(null);
@@ -309,16 +349,22 @@ function KhungVe(p: {
       ctx.lineWidth = 0.6;
       ctx.strokeStyle = "#c9d2ce";
       ctx.beginPath();
-      for (const e of nen) if (e.lop !== 10) duong(e.diem);
+      if (lop.nen) for (const e of nen) if (e.lop !== 10) duong(e.diem);
       ctx.stroke();
       // thửa
       for (const t of p.dl.kq.thua) {
+        if (!lop.thua) break;
         const th = p.thuHoi.get(p.khoaThua(t));
-        const lk = p.daLienKet.get(t.ma);
+        const trongRanh = th && th.phamVi !== "NGOAI";
         let to: string | null = null;
-        if (lk) to = "rgba(31,138,76,0.28)";
-        else if (th?.phamVi === "TOAN_BO") to = "rgba(192,57,43,0.20)";
-        else if (th?.phamVi === "MOT_PHAN") to = "rgba(230,140,20,0.26)";
+        if (lop.to && cheDo === "HIEN_TRANG") {
+          const tt = p.ttThua.get(t.ma);
+          if (tt) to = TT_GPMB[tt].nen;
+          else if (trongRanh) to = "rgba(170,181,176,0.22)";
+        } else if (lop.to) {
+          if (th?.phamVi === "TOAN_BO") to = "rgba(192,57,43,0.20)";
+          else if (th?.phamVi === "MOT_PHAN") to = "rgba(230,140,20,0.26)";
+        }
         ctx.beginPath();
         for (const vg of t.vong) {
           duong(vg);
@@ -333,7 +379,7 @@ function KhungVe(p: {
         ctx.stroke();
       }
       // ranh GPMB
-      for (const vg of p.dl.kq.vungGpmb) {
+      for (const vg of lop.ranh ? p.dl.kq.vungGpmb : []) {
         const laChon = vg.ma === p.vungChon;
         ctx.beginPath();
         duong(vg.vong[0]!);
@@ -356,7 +402,7 @@ function KhungVe(p: {
         ctx.stroke();
       }
       // nhãn
-      if (v.tyLe > 1.2) {
+      if (lop.nhan && v.tyLe > 1.2) {
         ctx.font = `${Math.min(13, 7 + v.tyLe * 1.2)}px Segoe UI, sans-serif`;
         ctx.textAlign = "center";
         ctx.fillStyle = "#23302b";
@@ -375,7 +421,7 @@ function KhungVe(p: {
       ctx.font = "italic 11px Segoe UI, sans-serif";
       ctx.textAlign = "center";
       ctx.fillStyle = "#5a6f9a";
-      for (const c of diaDanh) ctx.fillText(c.chu, sx(c.x), sy(c.y));
+      if (lop.diaDanh) for (const c of diaDanh) ctx.fillText(c.chu, sx(c.x), sy(c.y));
       // thước tỷ lệ
       const m = [5, 10, 20, 50, 100, 200, 500].find((m) => m * v.tyLe > 70) ?? 1000;
       ctx.fillStyle = "#23302b";
@@ -388,7 +434,7 @@ function KhungVe(p: {
     const ro = new ResizeObserver(ve);
     ro.observe(cv);
     return () => ro.disconnect();
-  }, [nhin, nen, diaDanh, p.dl, p.thuHoi, p.vungChon, p.chon, p.daLienKet, p.khoaThua, pham]);
+  }, [nhin, nen, diaDanh, p.dl, p.thuHoi, p.vungChon, p.chon, p.ttThua, p.khoaThua, pham, lop, cheDo]);
 
   const doiToaDo = (e: React.MouseEvent) => {
     const cv = ref.current!;
@@ -435,10 +481,41 @@ function KhungVe(p: {
         <button className="nut" title="Thu nhỏ" onClick={() => nhin && setNhin({ ...nhin, tyLe: nhin.tyLe / 1.4 })}>－</button>
         <button className="nut" title="Toàn bộ" onClick={() => setNhin(null)}>⤢</button>
       </div>
+      <div className="lop-ban-do">
+        <b>Lớp bản đồ</b>
+        {([
+          ["ranh", "Ranh GPMB"],
+          ["thua", "Thửa đất"],
+          ["to", "Tô màu"],
+          ["nhan", "Nhãn thửa"],
+          ["nen", "Nền địa hình, hạ tầng"],
+          ["diaDanh", "Địa danh"],
+        ] as const).map(([k, ten]) => (
+          <label key={k}><input type="checkbox" checked={lop[k]} onChange={(e) => setLop({ ...lop, [k]: e.target.checked })} /> {ten}</label>
+        ))}
+        <label className="mo" title="Cần kết nối Internet tới máy chủ bản đồ ngoài — tắt theo yêu cầu không gửi dữ liệu ra ngoài"><input type="checkbox" disabled /> Ảnh vệ tinh (trực tuyến – tắt)</label>
+        <select value={cheDo} onChange={(e) => setCheDo(e.target.value as typeof cheDo)} style={{ marginTop: 4 }}>
+          <option value="HIEN_TRANG">Tô theo hiện trạng GPMB</option>
+          <option value="PHAM_VI">Tô theo phạm vi thu hồi</option>
+        </select>
+      </div>
+      <svg className="mui-ten-bac" width={40} height={52} viewBox="0 0 40 52" aria-label="Hướng Bắc">
+        <circle cx={20} cy={30} r={17} fill="rgba(255,255,255,0.92)" stroke="#c4ccc8" />
+        <path d="M20 14l7 22-7-5-7 5z" fill="#23302b" />
+        <text x={20} y={10} textAnchor="middle" fontSize={11} fontWeight={700} fill="#23302b">B</text>
+      </svg>
       <div className="chu-giai">
-        <span><i style={{ background: "rgba(192,57,43,0.35)" }} />Thu hồi toàn bộ</span>
-        <span><i style={{ background: "rgba(230,140,20,0.4)" }} />Thu hồi một phần</span>
-        <span><i style={{ background: "rgba(31,138,76,0.4)" }} />Đã có hồ sơ</span>
+        {cheDo === "HIEN_TRANG" ? (
+          <>
+            {THU_TU_TRANG_THAI.map((t) => <span key={t}><i style={{ background: TT_GPMB[t].nen }} />{TT_GPMB[t].bieuTuong} {TT_GPMB[t].ten}</span>)}
+            <span><i style={{ background: "rgba(170,181,176,0.22)" }} />Trong ranh, chưa lập hồ sơ</span>
+          </>
+        ) : (
+          <>
+            <span><i style={{ background: "rgba(192,57,43,0.35)" }} />Thu hồi toàn bộ</span>
+            <span><i style={{ background: "rgba(230,140,20,0.4)" }} />Thu hồi một phần</span>
+          </>
+        )}
         <span><i style={{ background: "#fff", borderColor: "#c0392b", borderWidth: 2 }} />Ranh GPMB đã chọn</span>
         <span><i style={{ background: "#fff", borderColor: "#6a3fb5", borderStyle: "dashed" }} />Ranh ứng viên</span>
       </div>

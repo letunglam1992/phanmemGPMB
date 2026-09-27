@@ -2,7 +2,9 @@ import { useMemo, useState } from "react";
 import { D } from "@gpmb/core";
 import { useUngDung } from "../ung-dung";
 import { tinhHo } from "../tinh-ho";
-import { CAC_BUOC, buocHienTai, taoId, type DuAn } from "../mo-hinh";
+import { taoId, type DuAn } from "../mo-hinh";
+import { CAC_CHANG, THU_TU_TRANG_THAI, TT_GPMB, canhBaoChung, canhBaoDuAn, homNayIso, thongKe, type TrangThaiGpmb } from "../trang-thai";
+import { BieuTuong, DaiChang, PhanBoTrangThai, TheChiSo, VongTienDo } from "../thanh-phan/BieuDo";
 import { taoDuAnMau } from "../du-lieu-mau";
 import { DANH_MUC_XA } from "../du-lieu";
 import { HopThoai, O, ngayVN, tien } from "../thanh-phan/chung";
@@ -10,23 +12,14 @@ import { HopThoai, O, ngayVN, tien } from "../thanh-phan/chung";
 export function TongQuan() {
   const { dsDuAn, hoCua, di, chinhSach, luuDuAn, kho, dangTai } = useUngDung();
   const [taoMoi, setTaoMoi] = useState(false);
+  const homNay = homNayIso();
 
-  const thongKe = useMemo(() => {
+  const duLieu = useMemo(() => {
     return dsDuAn.map((d) => {
-      const hos = hoCua(d.id);
-      const kq = hos.map((h) => ({ h, k: tinhHo(chinhSach(d), d, h) }));
-      return {
-        d,
-        soHo: hos.length,
-        tong: kq.reduce((s, x) => s.plus(x.k.tong.tongLamTron), D(0)),
-        canXacNhan: kq.reduce((s, x) => s + x.k.tong.soDongCanXacNhan + x.k.tong.soDongThieuCanCu, 0),
-        buoc: hos.length ? Math.min(...hos.map(buocHienTai)) : 0,
-        dangCho: kq.filter((x) => Object.values(x.h.tienDo).some((b) => b.trangThai === "CHO_DUYET")),
-        viec: kq.filter((x) => !x.k.tong.duocChot),
-        dtThuHoi: hos.flatMap((h) => h.thua).reduce((s, t) => s.plus(t.dienTichThuHoi || "0"), D(0)),
-      };
+      const ds = hoCua(d.id).map((h) => ({ h, k: tinhHo(chinhSach(d), d, h) }));
+      return { d, ds, tk: thongKe(d, ds, homNay), cb: canhBaoDuAn(d, ds, homNay), tong: ds.reduce((s, x) => s.plus(x.k.tong.tongLamTron), D(0)) };
     });
-  }, [dsDuAn, hoCua, chinhSach]);
+  }, [dsDuAn, hoCua, chinhSach, homNay]);
 
   const napMau = async () => {
     const { duAn, ho } = taoDuAnMau();
@@ -35,81 +28,94 @@ export function TongQuan() {
     await luuDuAn(duAn);
   };
 
-  const tongHo = thongKe.reduce((s, x) => s + x.soHo, 0);
-  const tongTien = thongKe.reduce((s, x) => s.plus(x.tong), D(0));
-  const tongViec = thongKe.reduce((s, x) => s + x.canXacNhan, 0);
-  const tongDt = thongKe.reduce((s, x) => s.plus(x.dtThuHoi), D(0));
+  const cong = (f: (x: (typeof duLieu)[number]) => number) => duLieu.reduce((s, x) => s + f(x), 0);
+  const soHo = cong((x) => x.tk.soHo);
+  const dem = Object.fromEntries(THU_TU_TRANG_THAI.map((t) => [t, cong((x) => x.tk.theoTrangThai[t])])) as Record<TrangThaiGpmb, number>;
+  const tienDo = soHo ? cong((x) => x.tk.tienDoChung * x.tk.soHo) / soHo : 0;
+  const chang = CAC_CHANG.map((c, i) => ({ ten: c.ten, soHo: cong((x) => x.tk.chang[i]!.soHo) }));
+  const canhBao = [...canhBaoChung(homNay).map((c) => ({ ...c, muc: "CAO" as const, duAnId: "", hoId: undefined })), ...duLieu.flatMap((x) => x.cb)];
+  const capNhat = duLieu.map((x) => x.tk.capNhatCuoi).filter(Boolean).sort().at(-1);
+  const tongTien = duLieu.reduce((s, x) => s.plus(x.tong), D(0));
 
   return (
     <div className="trang">
       <div className="dong-tieu-de">
         <div>
           <h1>Tổng quan công tác bồi thường, GPMB</h1>
-          <div className="mo-ta">Theo dõi dự án, hồ sơ từng hộ và các khoản cần xác nhận trước khi trình duyệt.</div>
+          <div className="mo-ta">Hiện trạng từng hồ sơ, tiến độ theo quy trình Sổ tay QĐ 1966 và các cảnh báo cần xử lý.</div>
         </div>
-        <div className="phai">
-          {dsDuAn.length === 0 && !dangTai && (
-            <button className="nut" onClick={napMau}>Nạp dữ liệu mẫu (ẩn danh)</button>
-          )}
+        <div className="phai" style={{ alignItems: "center" }}>
+          <span className="cap-nhat"><BieuTuong ten="dongHo" co={16} />Cập nhật cuối: {capNhat ? new Date(capNhat).toLocaleString("vi-VN") : "—"}</span>
+          {dsDuAn.length === 0 && !dangTai && <button className="nut" onClick={napMau}>Nạp dữ liệu mẫu (ẩn danh)</button>}
           <button className="nut nut-chinh" onClick={() => setTaoMoi(true)}>+ Dự án mới</button>
         </div>
       </div>
 
       <div className="luoi luoi-4" style={{ marginBottom: 14 }}>
-        <div className="the chi-so"><div className="nhan-chi-so">Dự án đang thực hiện</div><div className="gia-tri">{dsDuAn.length}</div></div>
-        <div className="the chi-so"><div className="nhan-chi-so">Hộ, cá nhân, tổ chức</div><div className="gia-tri">{tongHo}</div></div>
-        <div className="the chi-so"><div className="nhan-chi-so">Diện tích thu hồi (m²)</div><div className="gia-tri">{tien(tongDt)}</div></div>
-        <div className="the chi-so"><div className="nhan-chi-so">Giá trị tạm tính (đồng)</div><div className="gia-tri">{tien(tongTien)}</div></div>
+        <TheChiSo bieuTuong="nguoi" nhan="Hộ đã hoàn thành GPMB" giaTri={dem.HOAN_THANH} mauSo={soHo} mau="#1f8a4c" phu="Đã xác nhận chi trả (bước 12)" />
+        <TheChiSo bieuTuong="hoSo" nhan="Hồ sơ đang xử lý" giaTri={dem.DANG_XU_LY} mauSo={soHo} mau="#b98400" phu="Từ lập phương án đến chi trả" />
+        <TheChiSo bieuTuong="canhBao" nhan="Vướng mắc cần ưu tiên" giaTri={dem.VUONG_MAC} mauSo={soHo} mau="#c0392b" phu="Ghi vướng mắc, thiếu căn cứ, quá hạn" />
+        <TheChiSo bieuTuong="thua" nhan="Thửa đất đã kiểm đếm" giaTri={cong((x) => x.tk.soThuaDaKiemDem)} mauSo={cong((x) => x.tk.soThua)} mau="#2f6fb8" phu={`Giá trị tạm tính: ${tien(tongTien)} đ`} />
       </div>
 
-      <div className="luoi luoi-chinh">
-        <div className="the">
-          <div className="the-dau"><h2>Dự án</h2></div>
-          <div className="the-than luoi luoi-2">
-            {thongKe.length === 0 && <div className="trong" style={{ gridColumn: "1/-1" }}>{dangTai ? "Đang tải…" : "Chưa có dự án. Tạo dự án mới hoặc nạp dữ liệu mẫu để xem thử."}</div>}
-            {thongKe.map(({ d, soHo, tong, buoc, canXacNhan, dtThuHoi }) => (
+      <div className="the" style={{ marginBottom: 14 }}>
+        <div className="the-dau"><h2>Quy trình bồi thường, GPMB</h2><span className="mo chu-nho">Số hộ đã hoàn thành từng chặng</span></div>
+        <DaiChang chang={chang} soHo={soHo} bieuTuong={["hoSo", "kiemDem", "phuongAn", "pheDuyet", "chiTra", "banGiao"]} />
+      </div>
+
+      <div className="luoi" style={{ gridTemplateColumns: "340px minmax(0,1fr) 360px" }}>
+        <div className="luoi" style={{ alignContent: "start" }}>
+          <div className="the">
+            <div className="the-dau"><h3>Hiện trạng hồ sơ</h3><span className="mo chu-nho">{soHo} hộ</span></div>
+            <div className="the-than"><PhanBoTrangThai dem={dem} tong={soHo} /></div>
+          </div>
+          <div className="the">
+            <div className="the-dau"><h3>Tiến độ chung</h3></div>
+            <div className="the-than"><VongTienDo tyLe={tienDo} nhan="Số bước đã xong / tổng số bước của mọi hộ" /></div>
+          </div>
+        </div>
+
+        <div className="the" style={{ alignSelf: "start" }}>
+          <div className="the-dau"><h2>Dự án</h2><span className="mo chu-nho">{dsDuAn.length}</span></div>
+          <div className="the-than luoi">
+            {duLieu.length === 0 && <div className="trong">{dangTai ? "Đang tải…" : "Chưa có dự án. Tạo dự án mới hoặc nạp dữ liệu mẫu để xem thử."}</div>}
+            {duLieu.map(({ d, tk, tong, cb }) => (
               <div key={d.id} className="the the-du-an" onClick={() => di({ ten: "du-an", duAnId: d.id })}>
-                <h3>{d.ten}</h3>
-                <div className="dong"><span>{d.xa}</span><span>TB thu hồi: {ngayVN(d.ngayThongBao) || "—"}</span></div>
-                <div className="dong"><span>{soHo} hộ · {tien(dtThuHoi)} m²</span><b style={{ color: "var(--chu)" }}>{tien(tong)} đ</b></div>
-                <div className="thanh-tien-do" title={`Bước chậm nhất: ${CAC_BUOC[buoc]?.ten ?? "Hoàn thành"}`}>
-                  {CAC_BUOC.map((b, i) => <span key={b.ma} className={i < buoc ? "xong" : i === buoc ? "dang" : ""} />)}
+                <div className="bang-dk-dau">
+                  <h3 style={{ flex: 1 }}>{d.ten}</h3>
+                  {cb.some((c) => c.muc === "CAO") && <span className="nhan nhan-do">{cb.filter((c) => c.muc === "CAO").length} cảnh báo</span>}
                 </div>
-                <div className="dong">
-                  <span>Bước: {CAC_BUOC[buoc] ? `${CAC_BUOC[buoc]!.ma}. ${CAC_BUOC[buoc]!.ten}` : "Hoàn thành"}</span>
-                  {canXacNhan > 0 ? <span className="nhan nhan-vang">{canXacNhan} khoản cần xử lý</span> : <span className="nhan nhan-xanh">Đủ căn cứ</span>}
-                </div>
+                <div className="dong"><span>{d.xa} · {tk.soHo} hộ · {tk.soThua} thửa</span><b style={{ color: "var(--chu)" }}>{tien(tong)} đ</b></div>
+                <PhanBoTrangThaiGon dem={tk.theoTrangThai} tong={tk.soHo} />
+                <div className="dong"><span>Tiến độ chung {Math.round(tk.tienDoChung * 100)}%</span><span>TB thu hồi: {ngayVN(d.ngayThongBao) || "—"}</span></div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="the">
-          <div className="the-dau"><h2>Việc cần xử lý</h2><div className="phai"><span className="nhan nhan-vang">{tongViec}</span></div></div>
+        <div className="the" style={{ alignSelf: "start" }}>
+          <div className="the-dau"><h3>Cảnh báo tự động</h3><div className="phai"><span className="nhan nhan-do">{canhBao.filter((c) => c.muc === "CAO").length}</span><span className="nhan nhan-vang">{canhBao.filter((c) => c.muc !== "CAO").length}</span></div></div>
           <div className="bang-cuon" style={{ maxHeight: 520 }}>
-            <table className="bang">
-              <tbody>
-                {thongKe.flatMap(({ d, viec, dangCho }) => [
-                  ...dangCho.map(({ h }) => (
-                    <tr key={"c" + h.id} className="co-the-chon" onClick={() => di({ ten: "ho", duAnId: d.id, hoId: h.id, tab: "tien-do" })}>
-                      <td><span className="nhan nhan-tim">Chờ duyệt</span></td>
-                      <td>{h.ma} · {h.ten}<div className="mo chu-nho">{d.ten}</div></td>
-                    </tr>
-                  )),
-                  ...viec.map(({ h, k }) => (
-                    <tr key={h.id} className="co-the-chon" onClick={() => di({ ten: "ho", duAnId: d.id, hoId: h.id, tab: "tinh" })}>
-                      <td><span className={`nhan ${k.tong.soDongThieuCanCu ? "nhan-do" : "nhan-vang"}`}>{k.tong.soDongThieuCanCu + k.tong.soDongCanXacNhan} khoản</span></td>
-                      <td>{h.ma} · {h.ten}<div className="mo chu-nho">{k.tong.soDongThieuCanCu ? `${k.tong.soDongThieuCanCu} thiếu căn cứ` : ""}{k.tong.soDongThieuCanCu && k.tong.soDongCanXacNhan ? ", " : ""}{k.tong.soDongCanXacNhan ? `${k.tong.soDongCanXacNhan} cần xác nhận` : ""}</div></td>
-                    </tr>
-                  )),
-                ])}
-                {tongViec === 0 && <tr><td className="trong">Không có việc tồn đọng.</td></tr>}
-              </tbody>
-            </table>
+            {canhBao.map((c, i) => (
+              <div key={i} className="canh-bao-dong" onClick={() => c.duAnId && (c.hoId ? di({ ten: "ho", duAnId: c.duAnId, hoId: c.hoId, tab: "tien-do" }) : di({ ten: "du-an", duAnId: c.duAnId }))}>
+                <span className={`cb-bt cb-${c.muc}`}>{c.muc === "THONG_TIN" ? "i" : "!"}</span>
+                <div>{c.noiDung}{c.canCu && <div className="can-cu">{c.canCu}</div>}</div>
+              </div>
+            ))}
+            {canhBao.length === 0 && <div className="trong">Không có cảnh báo.</div>}
           </div>
         </div>
       </div>
       {taoMoi && <HopTaoDuAn dong={() => setTaoMoi(false)} />}
+    </div>
+  );
+}
+
+function PhanBoTrangThaiGon({ dem, tong }: { dem: Record<TrangThaiGpmb, number>; tong: number }) {
+  return (
+    <div className="thanh-xep" style={{ height: 8, margin: "10px 0 6px" }} title={THU_TU_TRANG_THAI.map((t) => `${TT_GPMB[t].ten}: ${dem[t]}`).join(" · ")}>
+      {tong === 0 && <span style={{ flex: 1, background: "#e3e8e6" }} />}
+      {THU_TU_TRANG_THAI.filter((t) => dem[t] > 0).map((t) => <span key={t} style={{ flex: dem[t], background: TT_GPMB[t].mau }} />)}
     </div>
   );
 }

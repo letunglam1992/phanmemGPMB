@@ -192,3 +192,47 @@ table.bang { width: 100%; border-collapse: collapse; font-size: 13px; }
 .nhom-nut { display: flex; gap: 6px; flex-wrap: wrap; }
 .tach { flex: 1; }
 .chu-nho { font-size: 12px; }
+
+/* ---------- Bảng điều khiển ---------- */
+.the-chi-so { padding: 14px 16px; }
+.the-chi-so-dau { display: flex; align-items: center; gap: 10px; }
+.the-chi-so-bt { width: 34px; height: 34px; border-radius: 8px; display: grid; place-items: center; flex: none; }
+.the-chi-so-pt { margin-left: auto; font-weight: 700; font-size: 13px; color: var(--chu-phu); }
+.the-chi-so .gia-tri { font-size: 26px; font-weight: 700; margin: 8px 0 8px; font-variant-numeric: tabular-nums; }
+.the-chi-so .gia-tri small { font-size: 14px; color: var(--chu-mo); font-weight: 500; }
+.thanh-do { height: 6px; border-radius: 3px; background: #e5ebe8; overflow: hidden; }
+.thanh-do span { display: block; height: 100%; border-radius: 3px; }
+.thanh-xep { display: flex; gap: 2px; height: 16px; border-radius: 4px; overflow: hidden; margin: 4px 0 12px; }
+.thanh-xep span { min-width: 3px; }
+.chu-giai-tt { display: grid; gap: 7px; font-size: 12.5px; }
+.chu-giai-tt > div { display: grid; grid-template-columns: 20px 1fr auto 42px; gap: 8px; align-items: center; }
+.chu-giai-tt i { width: 18px; height: 18px; border-radius: 4px; color: #fff; font-style: normal; font-size: 11px; font-weight: 700; display: grid; place-items: center; }
+.chu-giai-tt b { font-variant-numeric: tabular-nums; }
+.chu-giai-tt .mo { text-align: right; font-variant-numeric: tabular-nums; }
+.vong-tien-do { display: flex; align-items: center; gap: 18px; }
+.dai-chang { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0; }
+.chang { position: relative; padding: 10px 12px; text-align: center; }
+.chang + .chang::before { content: "›"; position: absolute; left: -6px; top: 18px; color: var(--chu-mo); font-size: 20px; }
+.chang-bt { width: 42px; height: 42px; margin: 0 auto 6px; border-radius: 50%; display: grid; place-items: center; background: var(--chinh-nhat); color: var(--chinh); }
+.chang-ten { font-weight: 600; font-size: 12.5px; }
+.chang-so { font-size: 12px; color: var(--chu-phu); margin: 2px 0 6px; }
+.dong-moc { list-style: none; margin: 0; padding: 0; position: relative; }
+.dong-moc::before { content: ""; position: absolute; left: 14px; top: 8px; bottom: 8px; width: 2px; background: var(--vien); }
+.dong-moc li { position: relative; display: grid; grid-template-columns: 30px 1fr; gap: 10px; padding: 7px 4px; cursor: pointer; border-radius: 6px; }
+.dong-moc li:hover { background: var(--be-mat-2); }
+.moc-cham { position: relative; z-index: 1; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; background: #fff; border: 2px solid var(--vien-dam); color: var(--chu-phu); }
+.moc-HOAN_THANH .moc-cham { background: var(--xanh); border-color: var(--xanh); color: #fff; }
+.moc-DANG_XU_LY .moc-cham { border-color: #e0a106; color: #9a6b00; }
+.moc-QUA_HAN .moc-cham { background: var(--do); border-color: var(--do); color: #fff; }
+.moc-ten { font-weight: 600; font-size: 13px; margin: 1px 0 3px; }
+.canh-bao-dong { display: grid; grid-template-columns: 22px 1fr; gap: 8px; padding: 8px 12px; border-bottom: 1px solid #edf0ef; font-size: 12.5px; cursor: pointer; }
+.canh-bao-dong:hover { background: var(--be-mat-2); }
+.canh-bao-dong .cb-bt { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 11px; font-weight: 700; }
+.cb-CAO { background: var(--do); }
+.cb-TRUNG_BINH { background: #e0a106; }
+.cb-THONG_TIN { background: var(--tim); }
+.bang-dk-dau { display: flex; align-items: center; gap: 10px; }
+.cap-nhat { font-size: 12px; color: var(--chu-phu); display: flex; align-items: center; gap: 6px; }
+.lop-ban-do { position: absolute; left: 10px; top: 40px; background: rgba(255, 255, 255, 0.95); border: 1px solid var(--vien); border-radius: 6px; padding: 8px 10px; font-size: 12px; display: grid; gap: 3px; box-shadow: var(--bong); }
+.lop-ban-do label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.mui-ten-bac { position: absolute; right: 56px; top: 10px; }
