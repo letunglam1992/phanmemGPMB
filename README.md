@@ -3,7 +3,7 @@
 Ứng dụng Windows (cài đặt bằng `.exe`) hỗ trợ công tác thu hồi đất, bồi thường, hỗ trợ, tái định cư trên địa bàn tỉnh Sơn La.
 
 > **Trạng thái: Giai đoạn 2 – Phân tích nghiệp vụ, dữ liệu chính sách, lõi tính toán.**
-> Chưa lập trình công thức hoặc điều kiện pháp lý. Mọi quy tắc nghiệp vụ chỉ được mã hóa sau khi có văn bản và cách áp dụng đã được xác nhận.
+> Chỉ các quy tắc đã có văn bản và cách áp dụng được người dùng xác nhận (docs/06) mới được mã hóa trong lõi tính toán.
 
 ## Tài liệu giai đoạn 1
 
@@ -21,7 +21,8 @@
 ## Dữ liệu và công cụ
 
 - `policy/nguon/` – dữ liệu chính sách trích xuất từ văn bản gốc (chờ đối chiếu trước khi kích hoạt)
-- `tools/extract/` – script trích xuất (Python + PyMuPDF), chạy lại được khi có văn bản mới
+- `tools/extract/` – script trích xuất (Python + PyMuPDF, python-docx), chạy lại được khi có văn bản mới
+- `templates/nguon/` – văn bản gốc dùng dựng mẫu biểu (Sổ tay QĐ 1966/QĐ-UBND)
 
 ## Lõi tính toán (`packages/core`)
 

@@ -36,6 +36,15 @@ export interface BoChinhSach {
     phanNhom: Record<string, string[]>;
     thangThemTdcBangDat: number;
   };
+  giaDat: {
+    canCu: CanCu[];
+    thuTuDieuChinh: string;
+    phanLop: Record<"DAT_O" | "PNN", { mocMet: number[]; tyLeSoVoiLopTruoc: string; canCu: string }>;
+    matTiepGiap: { tyLeMoiMat: Record<LoaiMatTiepGiap, string>; haiMatDuong: string; toiDa: string; canCu: string; ghiChu: string };
+    giamChenhCao: { nguongMet: string; heSo: string; canCu: string };
+    duongDat: { heSo: string; apDungViTri: number[]; canCu: string };
+    datNNXenKep: { heSo: string; canCu: string };
+  };
   chuyenDoiNghe: {
     canCu: CanCu[];
     heSoMacDinh: string;
@@ -49,6 +58,7 @@ export interface BangMoc {
   moc: KhoangThoiGian<string>[];
 }
 
+export type LoaiMatTiepGiap = "DUONG" | "NGO" | "NGACH" | "HEM";
 export type LoaiDuong = "CUNG_HOA" | "DUONG_DAT";
 export type LoaiVatNuoi = "TRAU_BO_NGUA" | "LON" | "DE_CUU_HUOU_CHO_THO_NHIM" | "GIA_CAM" | "CON_TRUNG_SINH_VAT_NHO";
 export type DiChuyen = "KHONG_DI_CHUYEN" | "DI_CHUYEN" | "DEN_VUNG_KHO_KHAN";

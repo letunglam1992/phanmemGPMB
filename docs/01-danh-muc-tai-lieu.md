@@ -24,9 +24,9 @@ Cập nhật: đợt 2 (27/9/2026).
 | TL-04 | QĐ 32/2025/QĐ-UBND – đơn giá nhà, công trình | 01/4/2025 | ⚠️ | Thiếu nhiều nhóm hạng mục (VM-02) |
 | TL-05 | QĐ 27/2026/QĐ-UBND – phân cấp, ủy quyền | 30/6/2026 → **hết 01/3/2027** | ✅ | VM-18 |
 | TL-06 | **QĐ 14/2026/QĐ-UBND** ngày 31/3/2026 – chi tiết NQ 254/2025/QH15 | 31/3/2026 | ✅ | Thay Đ9, Đ17, k5 Đ19 PL II; thêm tạm cư, sửa chữa phần nhà còn lại, hỗ trợ 20% tiền SDĐ TĐC |
-| TL-07 | **QĐ 1966/QĐ-UBND** ngày 05/8/2025 – Sổ tay trình tự, thủ tục BT-HT-TĐC, thu hồi đất | Từ ngày ký | ✅ | 16 bước, 22 mẫu biểu tham khảo → docs/05 |
+| TL-07 | **QĐ 1966/QĐ-UBND** ngày 05/8/2025 – Sổ tay trình tự, thủ tục BT-HT-TĐC, thu hồi đất | Từ ngày ký | ✅ | **Quy trình chính thức của phần mềm** (QD-07); có bản Word để dựng mẫu biểu → docs/05 |
 | TL-08 | **QĐ 03/2025/QĐ-UBND** – mức chi tổ chức thực hiện BT-HT-TĐC, cưỡng chế + Phụ lục | 01/2025 (ngày cụ thể cần đối chiếu) | ⚠️ | Dùng cho dự toán chi phí tổ chức thực hiện (NĐ 88 Đ27) |
-| TL-09 | **NQ 152/2025/NQ-HĐND** ngày 29/12/2025 – Bảng giá đất | 01/01/2026 | ⚠️ | Phần thân Quy định **lỗi OCR nặng** (mất dấu) — cần bản gốc; Bảng 01–08 đọc được (VM-27) |
+| TL-09 | **NQ 152/2025/NQ-HĐND** ngày 29/12/2025 – Bảng giá đất | 01/01/2026 | ✅ | Đủ bản quét phần thân (PDF) và **bản Word** toàn văn Bảng 01–08 |
 
 ### A3. Văn bản dự thảo
 

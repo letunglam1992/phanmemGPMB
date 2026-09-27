@@ -9,11 +9,11 @@ Toàn bộ dữ liệu nằm trong `policy/nguon/`, sinh lại được bằng c
 | `qd32-2025-don-gia-nha-cong-trinh.json` | QĐ 32/2025 – PDF gốc có lớp chữ (52 trang) | Theo đường kẻ bảng; ghép ô TT gộp nhiều hàng, nối dòng bị ngắt trang | **786** (PL I: 662; PL II: 124) | Số ô giá = số dòng xuất (786 = 786); 11 loại đơn vị |
 | `qd106-2025-pl5-di-doi-vat-nuoi.json` | PL V – PDF gốc | find_tables | **20** | Khớp đủ 4 nhóm × 5 loại vật nuôi |
 | `qd106-2025-pl8-cay-trong-thuy-san.json` | PL VIII – PDF gốc | find_tables, cây phân cấp | **311** (Biểu 01: 53; 02: 192; 03: 56; 04: 10) | Mọi ô giá đều được xuất; 7 ô "mật độ" ở dòng tiêu đề Biểu 03 được lưu làm mật độ nhóm; **đã khôi phục Biểu 02 mục 1–15** |
-| `nq152-2025-bang-gia-dat.json` | NQ 152/2025 – Bảng 01–08 (bản Markdown) | Phân tích bảng, chuẩn hóa tên xã theo tiêu đề Bảng 05 | Đất NN: **376**; đất ở: **1.784**; TMDV: **1.761**; SXKD: **1.771**; KCN/CCN: **3** | 75/75 xã, phường; **319 dòng gắn cờ** → `policy/nguon/nq152-can-doi-chieu.md` |
+| `nq152-2025-bang-gia-dat.json` | NQ 152/2025 – Bảng 01–08 (**bản Word**, đợt 4) | Đọc trực tiếp bảng Word, giữ đúng vị trí ô trống | Đất NN: **376**; đất ở: **1.795**; TMDV: **1.793**; SXKD: **1.797**; KCN/CCN: **3** | 75/75 xã, phường; 26 dòng **đúng văn bản** nhưng bất thường (giá vị trí sau cao hơn, bỏ trống vị trí) → `policy/nguon/nq152-can-doi-chieu.md` |
 
 ### Lưu ý chất lượng
 
-- **Bảng 05–07 NQ 152** được trích từ bản chuyển đổi Markdown (không phải PDF), có lỗi gộp hàng, tiêu đề xã lọt vào ô, cột trống. Các dòng gắn cờ gồm: STT bất thường (có thể gộp 2 hàng), số mức giá khác 1 hoặc 5, giá vị trí sau cao hơn vị trí trước. **Đề nghị cung cấp PDF gốc Bảng 05–07** để trích lại theo đường kẻ bảng như QĐ 32.
+- **Bảng 05–07 NQ 152**: đã thay nguồn Markdown bằng bản Word (đầy đủ hơn 11–32 dòng mỗi bảng, đúng vị trí ô trống). Script: `tools/extract/nq152_docx.py`.
 - Nhóm "Cây Mơ, Đào, Mai anh đào (800 cây/ha), táo (625 cây/ha)" có 2 mật độ → để trống mật độ, người dùng chọn theo loài khi kiểm đếm.
 - Tên xã: văn bản gốc có "TàHộc" (thiếu dấu cách) → chuẩn hóa "Xã Tà Hộc".
 
@@ -62,4 +62,4 @@ GiaDat {
 | GD-24 | Đất chưa sử dụng = 20% giá đất NN liền kề cao nhất | Đ8 |
 | GD-25 | Giá đất có thời hạn tương ứng 70 năm (trừ đất NN giao theo hạn mức) | Đ9 k1 |
 
-**Cách áp dụng trong phần mềm:** vị trí, mặt tiếp giáp, chênh cao, loại mặt đường, chiều sâu là **dữ liệu nhập của thửa**; phần mềm đề xuất giá theo GD-01…25, hiển thị từng bước điều chỉnh, người dùng xác nhận. Thứ tự áp dụng các điều chỉnh (GD-09, 10, 11, 12, 19) chưa được văn bản quy định rõ → **mặc định: giá vị trí → phân lớp → tăng mặt tiếp giáp → giảm chênh cao/đường đất**, cấu hình được (VM-31).
+**Cách áp dụng trong phần mềm:** vị trí, mặt tiếp giáp, chênh cao, loại mặt đường, chiều sâu là **dữ liệu nhập của thửa**; phần mềm đề xuất giá theo GD-01…25, hiển thị từng bước điều chỉnh, người dùng xác nhận. Thứ tự áp dụng các điều chỉnh (GD-09, 10, 11, 12, 19) đã được xác nhận (QD-18): **giá vị trí → phân lớp → tăng mặt tiếp giáp (≤ 20%) → giảm chênh cao/đường đất → hệ số dự án**. Đã lập trình tại `packages/core/src/gia-dat.ts`.

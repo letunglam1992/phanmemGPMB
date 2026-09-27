@@ -23,6 +23,11 @@ describe("Bộ chính sách khớp dữ liệu trích xuất từ văn bản g�
       });
     }
   });
+  it("bảng giá đất (bản Word): đủ 75 xã, phường cho mỗi loại đất nông nghiệp; mỗi bảng 05–07 phủ đủ 75 đơn vị", () => {
+    const r = nq152 as unknown as { dat_nong_nghiep: { loai_dat: string }[]; dat_o: { xa: string }[]; dat_tmdv: { xa: string }[]; dat_skc: { xa: string }[] };
+    for (const l of ["LUC", "LUK", "HNK", "CLN", "NTS"]) expect(r.dat_nong_nghiep.filter((x) => x.loai_dat === l)).toHaveLength(75);
+    for (const b of [r.dat_o, r.dat_tmdv, r.dat_skc]) expect(new Set(b.map((x) => x.xa)).size).toBe(75);
+  });
   it("tên xã trong các bảng phân nhóm đều có trong danh mục 75 xã, phường (NQ 152)", () => {
     const dm = new Set((nq152 as { danh_muc_xa: string[] }).danh_muc_xa);
     expect(dm.size).toBe(75);

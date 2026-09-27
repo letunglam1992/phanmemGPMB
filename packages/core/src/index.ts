@@ -6,3 +6,4 @@ export * from "./tai-san";
 export * from "./dat";
 export * from "./ho-tro";
 export * from "./tong-hop";
+export * from "./gia-dat";

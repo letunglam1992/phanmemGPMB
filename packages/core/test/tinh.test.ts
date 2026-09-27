@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import cs0 from "../../../policy/goi/sonla-2026-03-31.json";
 import {
   type BoChinhSach, boiThuongDat, cayTrong, chiPhiDauTuConLai, chonTheoMoc, chuyenDoiNghe, D, datPnnCoThoiHan,
-  diDoiVatNuoi, giaTriXayMoi, hoTroTheoMocXayDung, lamTronDienTich, lamTronTien, moMa, nhaCongTrinhThietHaiThucTe,
+  diDoiVatNuoi, dieuChinhDatNNXenKep, dieuChinhGiaDatPnn, giaTriXayMoi, hoTroTheoMocXayDung, lamTronDienTich, lamTronTien, moMa, nhaCongTrinhThietHaiThucTe,
   onDinhDoiSong, tamCu, tongHo,
 } from "../src";
 
@@ -18,6 +18,14 @@ describe("Làm tròn (QD-03)", () => {
     expect(lamTronTien("847500").toString()).toBe("848000");
     expect(lamTronTien("847499").toString()).toBe("847000");
     expect(lamTronTien("847500", 1000, "XUONG").toString()).toBe("847000");
+    expect(lamTronTien("847001", 1000, "LEN").toString()).toBe("848000");
+    expect(lamTronTien("847000", 1000, "LEN").toString()).toBe("847000");
+  });
+  it("bộ chính sách dùng làm tròn lên ở cấp hộ (QD-03)", () => {
+    expect(cs.lamTron.cach).toBe("LEN");
+    const d = diDoiVatNuoi(cs, { loaiDuong: "CUNG_HOA", loaiVatNuoi: "LON", khoiLuong: "0.001", quangDuongKm: 1 });
+    expect(tien(d)).toBe("150");
+    expect(tongHo(cs, [d]).tongLamTron.toString()).toBe("1000");
   });
 });
 
@@ -146,6 +154,11 @@ describe("Hỗ trợ", () => {
     const d = tamCu(cs, { xa: "Phường Chiềng An", nhanKhau: 6, soThang: 4, tdcBangDat: true });
     expect(tien(d)).toBe(String((3_500_000 + 2 * 500_000) * 10));
   });
+  it("tạm cư: người dùng chỉnh mức/tháng có lý do (QD-17)", () => {
+    const d = tamCu(cs, { xa: "Xã Đoàn Kết", nhanKhau: 3, soThang: 2, tdcBangDat: false, mucThangTuyChinh: { soTien: 2_500_000, lyDo: "UBND xã quyết định" } });
+    expect(tien(d)).toBe("5000000");
+    expect(d.luaChon[0]!.ma).toBe("QD-17");
+  });
   it("mồ mả", () => {
     expect(tien(moMa(cs, { soMoXay: 2, soMoKhongXay: 1 }))).toBe("65000000");
   });
@@ -159,5 +172,39 @@ describe("Tổng hộ", () => {
     expect(t.tongChuaLamTron.toString()).toBe("847500");
     expect(t.duocChot).toBe(false);
     expect(t.soDongCanXacNhan).toBe(1);
+  });
+});
+
+describe("Giá đất NQ 152 – thứ tự điều chỉnh đã xác nhận (VM-31)", () => {
+  it("phân lớp đất ở: 100 m² lớp 1 + 100 m² lớp 2 → hệ số 0,8", () => {
+    const r = dieuChinhGiaDatPnn(cs, { loai: "DAT_O", viTri: 1, giaViTriNghinDong: 1000, dienTichTheoLop: [100, 100] });
+    expect(r.dieuChinh[0]!.heSo).toBe("0.8");
+  });
+  it("phân lớp không thấp hơn giá vị trí thấp nhất của tuyến", () => {
+    const r = dieuChinhGiaDatPnn(cs, { loai: "DAT_O", viTri: 1, giaViTriNghinDong: 200, dienTichTheoLop: [10, 10, 10, 10, 200], giaThapNhatTuyenNghinDong: 150 });
+    expect(r.dieuChinh).toHaveLength(2);
+    const d = boiThuongDat({ loaiDat: "ONT", dienTichM2: 240, giaBangGiaNghinDong: r.giaCoSoNghinDong, nguonGia: "x", dieuChinh: r.dieuChinh, canCu: [] });
+    expect(tien(d)).toBe(String(240 * 150000));
+  });
+  it("lô đấu giá đất ở không phân lớp", () => {
+    expect(dieuChinhGiaDatPnn(cs, { loai: "DAT_O", viTri: 1, giaViTriNghinDong: 1000, dienTichTheoLop: [100, 100], laLoDauGia: true }).dieuChinh).toHaveLength(0);
+  });
+  it("mặt tiếp giáp: 2 đường +15%; đường + ngõ +12%; 3 đường bị chặn 20%", () => {
+    const h = (m: ("DUONG" | "NGO" | "NGACH" | "HEM")[]) => dieuChinhGiaDatPnn(cs, { loai: "DAT_O", viTri: 1, giaViTriNghinDong: 1000, matTiepGiap: m }).dieuChinh[0]!.heSo;
+    expect(h(["DUONG", "DUONG"])).toBe("1.15");
+    expect(h(["DUONG", "NGO"])).toBe("1.12");
+    expect(h(["NGO", "NGO"])).toBe("1.08");
+    expect(h(["DUONG", "DUONG", "DUONG"])).toBe("1.2");
+  });
+  it("thứ tự: phân lớp → mặt tiếp giáp → chênh cao → đường đất", () => {
+    const r = dieuChinhGiaDatPnn(cs, { loai: "PNN", viTri: 2, giaViTriNghinDong: 1000, dienTichTheoLop: [100, 100], matTiepGiap: ["NGO", "NGO"], chenhCaoMet: "-1.6", matDuongLaDuongDat: true });
+    expect(r.dieuChinh.map((x) => x.heSo)).toEqual(["0.75", "1.08", "0.7", "0.7"]);
+  });
+  it("đường đất không áp cho vị trí 1", () => {
+    expect(dieuChinhGiaDatPnn(cs, { loai: "PNN", viTri: 1, giaViTriNghinDong: 1000, matDuongLaDuongDat: true }).dieuChinh).toHaveLength(0);
+  });
+  it("đất NN xen kẹt đất ở +50%", () => {
+    const d = boiThuongDat({ loaiDat: "CLN", dienTichM2: 100, giaBangGiaNghinDong: 68, nguonGia: "B02", dieuChinh: [dieuChinhDatNNXenKep(cs)], canCu: [] });
+    expect(tien(d)).toBe(String(100 * 68000 * 1.5));
   });
 });

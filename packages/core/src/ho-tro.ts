@@ -94,7 +94,10 @@ export function chuyenDoiNghe(
 }
 
 /** C07 – hỗ trợ tạm cư (Đ3 QĐ 14/2026). Hộ ≥ 5 khẩu: theo QD-17 (mặc định, chờ xác nhận). */
-export function tamCu(cs: BoChinhSach, p: { xa: string; nhanKhau: number; soThang: number; tdcBangDat: boolean }): DongTinh {
+export function tamCu(
+  cs: BoChinhSach,
+  p: { xa: string; nhanKhau: number; soThang: number; tdcBangDat: boolean; mucThangTuyChinh?: { soTien: SoVao; lyDo: string } },
+): DongTinh {
   const k = cs.tamCu;
   const nhom = nhomDiaBan(k.phanNhom, p.xa, "XA_CON_LAI");
   const muc = k.nhomDiaBan[nhom]!;
@@ -103,6 +106,11 @@ export function tamCu(cs: BoChinhSach, p: { xa: string; nhanKhau: number; soThan
   if (p.nhanKhau > k.mocKhauCoSo) {
     mucThang = mucThang.plus(D(k.congThemMoiKhau).mul(p.nhanKhau - k.mocKhauCoSo));
     canhBao.push(k.ghiChuCachTinh);
+  }
+  const luaChon: LuaChon[] = [];
+  if (p.mucThangTuyChinh) {
+    luaChon.push({ ma: "QD-17", giaTri: `${dinhDang(p.mucThangTuyChinh.soTien)} đ/tháng (mặc định ${dinhDang(mucThang)} đ)`, lyDo: p.mucThangTuyChinh.lyDo });
+    mucThang = D(p.mucThangTuyChinh.soTien);
   }
   const thang = p.soThang + (p.tdcBangDat ? k.thangThemTdcBangDat : 0);
   return dong({
@@ -118,5 +126,6 @@ export function tamCu(cs: BoChinhSach, p: { xa: string; nhanKhau: number; soThan
     thanhTien: mucThang.mul(thang),
     canCu: k.canCu,
     canhBao,
+    luaChon,
   });
 }

@@ -6,38 +6,40 @@ Mức độ: 🔴 ảnh hưởng số tiền | 🟠 ảnh hưởng điều kiệ
 
 Cập nhật đợt 2 (27/9/2026): đổi căn cứ sang QĐ 14/2026 nơi Phụ lục II đã bị thay thế; bổ sung VM-21 → VM-30.
 Cập nhật đợt 3: ghi nhận quyết định của người dùng (docs/06); bổ sung VM-31, VM-32.
+Cập nhật đợt 4: ghi nhận QD-17, 18, 19; bổ sung VM-33.
 
 | Mã | Mức | Vị trí | Nội dung | Đề xuất xử lý (chờ xác nhận) | Trạng thái |
 |---|---|---|---|---|---|
 | VM-01 | 🔴 | PLV – ví dụ Ghi chú | "750.000 + 97.500 = 847.000" — đúng phải là **847.500** | Tính theo công thức; quy tắc làm tròn theo câu hỏi 3 | Đã xử lý – QD-03 (phần mềm ra 848.000 đ) |
-| VM-02 | 🔴 | PLV, PLVIII Biểu 02–04, QĐ32 (.md) | Lệch dòng/cột, mất Biểu 02 mục 1–15, thiếu nhóm QĐ32 | Nhập từ bản gốc (ưu tiên Excel), đối chiếu 2 lượt | Đã xử lý PL V, PL VIII, QĐ 32 (PDF gốc); còn Bảng 05–07 NQ 152 |
-| VM-03 | 🔴 | **Đ3 k4 QĐ14** (trước đây Đ9 k3 PLII) | "Hộ từ 05 nhân khẩu trở lên, mỗi nhân khẩu tăng thêm 500.000" — không nói **so với mức nào** (Đ11 PLII ghi rõ "so với điểm b") | Mức nhóm ≤ 4 khẩu + 500.000 × (số khẩu − 4) | Mặc định linh động – chờ xác nhận (QD-17) |
+| VM-02 | 🔴 | PLV, PLVIII Biểu 02–04, QĐ32 (.md) | Lệch dòng/cột, mất Biểu 02 mục 1–15, thiếu nhóm QĐ32 | Nhập từ bản gốc (ưu tiên Excel), đối chiếu 2 lượt | Đã xử lý – đủ bản gốc (NQ 152 bản Word) |
+| VM-03 | 🔴 | **Đ3 k4 QĐ14** (trước đây Đ9 k3 PLII) | "Hộ từ 05 nhân khẩu trở lên, mỗi nhân khẩu tăng thêm 500.000" — không nói **so với mức nào** (Đ11 PLII ghi rõ "so với điểm b") | Mức nhóm ≤ 4 khẩu + 500.000 × (số khẩu − 4) | Đã xử lý – QD-17 |
 | VM-04 | 🟠 | Đ3 k4 QĐ14; Đ10, Đ14 PLII | (i) Danh sách xã khác nhau giữa các Điều (Đ3 QĐ14 & Đ10: 10 xã có Vân Hồ; Đ14: 12 xã có Lóng Sập, Chiềng Sơn, Tân Yên, không có Vân Hồ). (ii) Đ10 k1 liệt kê 9 phường có **"Quyết Tâm"** — **không có** trong danh mục 75 xã, phường của NQ152 (chỉ có 8 phường) | Mỗi Điều một bảng phân nhóm riêng, nhập đúng văn bản; danh mục chuẩn lấy theo NQ152; "Quyết Tâm" cần xác nhận | Đã xử lý – QD-14 |
 | VM-05 | 🔴 | Đ6 k1 PLII; Đ14 k1 a NĐ88 | NĐ88 đã xác nhận cấu trúc: Mức BT = Tgt + tỷ lệ % × Tgt, **trần** 100% G1. PLII thêm **sàn** 60% G1 | Mức BT = min(max(1,2 × Tgt; 60% G1); 100% G1) — cần xác nhận | Đã xử lý – QD-10 |
 | VM-06 | 🔴 | Đ14 k1 b NĐ88; Đ18 k2 c PLII | Tgt = G1 − G1 × T1/T; **T (thời gian khấu hao)** chưa có bảng (Sở Tài chính hướng dẫn); cách xác định T1 (năm đã sử dụng, làm tròn năm/tháng?) | Cần TL-27; tạm thời nhập tay T và T1 có căn cứ | Đã xử lý – QD-11 |
-| VM-07 | 🔴 | QĐ32 PL III k9 | Tường rào "nội suy theo chiều cao" — chưa rõ phương pháp | Tuyến tính theo tỷ lệ chiều cao thực tế/chuẩn — cần xác nhận | Mở |
+| VM-07 | 🔴 | QĐ32 PL III k9 | Tường rào "nội suy theo chiều cao" — chưa rõ phương pháp | Tuyến tính theo tỷ lệ chiều cao thực tế/chuẩn — cần xác nhận | Linh động – QD-19 |
 | VM-08 | 🔴 | Chung | Quy tắc làm tròn DT, khối lượng, tiền từng dòng/hộ/tổng | Câu hỏi 3 | Đã xử lý – QD-03 |
 | VM-09 | 🔴 | **Đ6 k3.2 (c, d) và k3.3 (a, b) QĐ14** | Khoảng trống: ngày **01/7/2014** (c: "trước", d: "sau") và **01/7/2004** (a: "trước", b: "từ sau") không thuộc mức nào — **QĐ14 giữ nguyên lỗi của PLII** | Đánh dấu "Cần xác nhận" khi ngày xây trùng mốc | Đã xử lý – QD-12 |
-| VM-10 | 🔴 | PLVIII Đ5 k4, k5 | Giới hạn trên phần vượt 150% mật độ; DT tính mật độ; cây không quy định mật độ | Hỏi | Mở |
+| VM-10 | 🔴 | PLVIII Đ5 k4, k5 | Giới hạn trên phần vượt 150% mật độ; DT tính mật độ; cây không quy định mật độ | Hỏi | Linh động – QD-19 |
 | VM-11 | 🟡 | PLVIII Biểu 03 mục VIII | Công thức thiếu diện tích dù đơn vị đồng/ha/năm | × DT (ha) | Mở |
 | VM-12 | 🔴 | PLVIII Đ3 | Ao đúng 1.000 m² / thu hồi đúng 2/3 không thuộc khoản nào; cách tính "không vượt định mức kỹ thuật" | Hỏi | Đã xử lý – QD-15 |
-| VM-13 | 🟠 | Đ5 k2 PLII | Hộ có đất NN thu hồi ở cả phường và xã trong cùng dự án | Hỏi khi phát sinh | Mở |
-| VM-14 | 🔴 | Đ7 k2 PLII | Hành lang công trình khác: đất cây hàng năm không có mức | "Thiếu căn cứ" | Mở |
+| VM-13 | 🟠 | Đ5 k2 PLII | Hộ có đất NN thu hồi ở cả phường và xã trong cùng dự án | Hỏi khi phát sinh | Linh động – QD-19 |
+| VM-14 | 🔴 | Đ7 k2 PLII | Hành lang công trình khác: đất cây hàng năm không có mức | "Thiếu căn cứ" | Linh động – QD-19 |
 | VM-15 | 🟠 | **Đ6 k9.1 b QĐ14** (trước đây Đ17 k10.1 b PLII) | Dẫn chiếu "Điều 15 phụ lục II" (cơ chế thưởng) cho hỗ trợ chuyển đổi nghề — các điểm a, c dẫn **Điều 14**. **QĐ14 giữ nguyên lỗi** | Hiểu là Điều 14 — cần xác nhận | Đã xử lý – QD-13 |
-| VM-16 | 🔴 | Đ15 PLII | Cơ sở tính thưởng có gồm cây trồng, vật nuôi, mồ mả? Trần theo hộ hay theo người đồng sử dụng? | Hỏi | Mở |
-| VM-17 | 🟠 | **Đ6 k1, k2 QĐ14** | Hộ vừa có đối tượng chính sách vừa là hộ nghèo: cộng hai khoản? ("mức cao nhất" chỉ nêu trong k1) | Hỏi | Mở |
+| VM-16 | 🔴 | Đ15 PLII | Cơ sở tính thưởng có gồm cây trồng, vật nuôi, mồ mả? Trần theo hộ hay theo người đồng sử dụng? | Hỏi | Linh động – QD-19 |
+| VM-17 | 🟠 | **Đ6 k1, k2 QĐ14** | Hộ vừa có đối tượng chính sách vừa là hộ nghèo: cộng hai khoản? ("mức cao nhất" chỉ nêu trong k1) | Hỏi | Linh động – QD-19 |
 | VM-18 | 🟠 | QĐ 27/2026 Đ6 | Hết hiệu lực 01/3/2027 | Bảng thẩm quyền có hiệu lực đến 28/02/2027, cảnh báo trước 60 ngày | Mở |
 | VM-19 | 🟠 | Đ19 k1 a NĐ88; Đ12 PLII; **Đ6 k9 QĐ14** | Ngưỡng **đúng 30%**: NĐ88 "từ 30% đến 70%" (thuộc k1); Đ12 PLII "dưới 30%"; nhưng Đ6 k9 QĐ14 dùng "trên 30%" và "từ 10% đến 30%" → 30% rơi vào nhóm dưới | Theo NĐ88 (văn bản cấp trên) — cần xác nhận | Đã xử lý – QD-16 |
 | VM-20 | 🔴 | k2 Đ91, điểm e k1 Đ160 LĐĐ (bản gốc) | Bản LĐĐ đã nhận quy định BT theo **giá đất cụ thể**; chưa có NQ 254/2025 và NĐ 49/2026 để biết có thay đổi hay không | Câu hỏi 2; cần TL-11, TL-13 | Đã xử lý – QD-02 |
 | VM-21 | 🟠 | TL-10, TL-12 | Luật Đất đai và NĐ 88 đã nhận là **bản gốc chưa hợp nhất** (còn "cấp huyện"; NĐ88 chưa có sửa đổi của NĐ 226/2025) | Cần bản hợp nhất hoặc các văn bản sửa đổi | Mở |
 | VM-22 | 🔴 | NĐ88 Đ13 k7, Đ14 k1 b, Đ17 k4 | Công thức là **hình ảnh**, bị mất khi chuyển .docx → văn bản | Cần bản PDF để khôi phục đúng nguyên văn trước khi lập trình | Đã xử lý – docs/06 §4 |
 | VM-23 | 🟡 | Sổ tay – Phần III | Bảng danh mục ghi Mẫu 14 = QĐ thu hồi đất, Mẫu 15 = QĐ phê duyệt PA; **nội dung thực tế ngược lại** (Mẫu 14 = QĐ phê duyệt PA, Mẫu 15 = QĐ thu hồi, khớp với mục XII.2). Mục XV.3 ghi "02 (ba) ngày" (2 lần) | Theo nội dung mẫu; thời hạn thưởng dùng "02 ngày"? — cần xác nhận | Mở |
-| VM-24 | 🟠 | Đ7 k3 b PLII | Dẫn chiếu "điểm 4.2 và 4.3 khoản 4 Điều 17" — Điều 17 **đã hết hiệu lực** 31/3/2026 | Hiểu là k3.2, k3.3 Đ6 QĐ14 — cần xác nhận | Mở |
+| VM-24 | 🟠 | Đ7 k3 b PLII | Dẫn chiếu "điểm 4.2 và 4.3 khoản 4 Điều 17" — Điều 17 **đã hết hiệu lực** 31/3/2026 | Hiểu là k3.2, k3.3 Đ6 QĐ14 — cần xác nhận | Linh động – QD-19 |
 | VM-25 | 🟠 | Sổ tay | Thời hạn lúc tính "ngày", lúc "ngày làm việc" | Phần mềm phân biệt 2 loại; cần danh mục ngày nghỉ lễ hằng năm | Mở |
 | VM-26 | 🟡 | QĐ 03/2025 | Ngày ký/hiệu lực đọc từ bản quét không rõ ("06/01/2025", "16/01/2025"?) | Đối chiếu bản gốc | Mở |
 | VM-27 | 🔴 | NQ152 – phần thân Quy định | OCR mất dấu, trộn cột: quy tắc vị trí 1–5, giảm 30% chênh cao ≥ 1,5 m, 70% đường đất, tăng theo mặt tiếp giáp (tối đa 20%), phân lớp chiều sâu, tăng 50% đất NN xen kẽ | **Không mã hóa từ bản lỗi**; cần PDF/Word gốc | Đã xử lý – docs/07 §3 |
-| VM-28 | 🔴 | Đ6 k11 QĐ14 | "20% tiền sử dụng phải nộp của thửa đất được giao TĐC" — tính trên tiền SDĐ trước hay sau khi trừ ghi nợ/miễn giảm? | Hỏi | Mở |
+| VM-28 | 🔴 | Đ6 k11 QĐ14 | "20% tiền sử dụng phải nộp của thửa đất được giao TĐC" — tính trên tiền SDĐ trước hay sau khi trừ ghi nợ/miễn giảm? | Hỏi | Linh động – QD-19 |
 | VM-29 | 🟠 | Dự thảo sửa QĐ106 | Chưa có số, ngày hiệu lực; Phụ lục trùng STT "1" | Bộ chính sách "Dự thảo" | Mở |
-| VM-30 | 🟠 | Tên tệp NQ152 Bảng 01–08 có chữ "du_thao" | Nội dung ghi "Ban hành kèm theo NQ 152/2025" | Xác nhận là bản chính thức | Mở |
-| VM-31 | 🔴 | NQ 152 Đ4 k3–k6, Đ6 k1 | Văn bản không quy định **thứ tự** áp dụng các điều chỉnh giá đất (phân lớp, tăng mặt tiếp giáp, giảm chênh cao 30%, đường đất 70%, +50% đất NN xen kẹt) — thứ tự khác nhau cho kết quả khác nhau khi có trần 20% và sàn giá thấp nhất | Mặc định: giá vị trí → phân lớp → tăng mặt tiếp giáp (≤ 20%) → giảm chênh cao/đường đất; cấu hình được | Mở |
-| VM-32 | 🟠 | QD-03 | Cách làm tròn đến nghìn đồng: nửa lên (≥ 500 đ lên) hay làm tròn xuống? | Mặc định nửa lên, cấu hình được | Mở |
+| VM-30 | 🟠 | Tên tệp NQ152 Bảng 01–08 có chữ "du_thao" | Nội dung ghi "Ban hành kèm theo NQ 152/2025" | Xác nhận là bản chính thức | Đã xử lý – dùng bản Word NQ 152 |
+| VM-31 | 🔴 | NQ 152 Đ4 k3–k6, Đ6 k1 | Văn bản không quy định **thứ tự** áp dụng các điều chỉnh giá đất (phân lớp, tăng mặt tiếp giáp, giảm chênh cao 30%, đường đất 70%, +50% đất NN xen kẹt) — thứ tự khác nhau cho kết quả khác nhau khi có trần 20% và sàn giá thấp nhất | Mặc định: giá vị trí → phân lớp → tăng mặt tiếp giáp (≤ 20%) → giảm chênh cao/đường đất; cấu hình được | Đã xử lý – QD-18 |
+| VM-32 | 🟠 | QD-03 | Cách làm tròn đến nghìn đồng: nửa lên (≥ 500 đ lên) hay làm tròn xuống? | Mặc định nửa lên, cấu hình được | Đã xử lý – QD-03 (làm tròn lên) |
+| VM-33 | 🟠 | NQ 152 k5 Đ4 | Tăng giá theo mặt tiếp giáp: văn bản nêu 2 mặt đường +15%, 2 ngõ +8%, 2 ngách +4%, 2 hẻm +2%; mặt khác loại cộng theo 8/4/2/1% — chưa rõ có tính cả mặt chính hay không | Mặc định: cộng tỷ lệ tất cả các mặt (kể cả mặt chính), có ≥ 2 mặt đường thì cặp đó tính 15%; tối đa 20% (khớp các ví dụ 8%, 4%, 2% của văn bản) | Linh động – QD-19 |
