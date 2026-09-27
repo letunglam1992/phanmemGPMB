@@ -44,8 +44,18 @@ export const TEN_COT: Record<CotTongHop, string> = {
   HT_KHAC: "Hỗ trợ khác (ổn định đời sống, tạm cư, di dời)",
 };
 
+/** Dòng hiển thị theo cột biểu mẫu: ĐVT | Khối lượng | Hệ số/mức | Đơn giá (thành tiền = tích). */
+export interface DongBieu {
+  ghiChu?: string;
+  dvt: string;
+  kl: Decimal;
+  heSo: Decimal | null;
+  donGia: Decimal;
+}
+
 export interface DongKetQua {
   dong: DongTinh;
+  bieu?: DongBieu[];
   cot: CotTongHop;
   thuaId?: string;
   taiSanId?: string;
@@ -145,7 +155,8 @@ function dongCayThua(cs: BoChinhSach, t: Thua, cay: Extract<TaiSan, { loai: "CAY
       theoMatDo.push({ ts: c, dong: { ten: c.ten, maDonGia: c.maDonGia, donVi: c.donVi, donGia: c.donGia, soLuong: sl.v!, matDoHa: c.matDoHa } });
     } else {
       const d = cayTrong(cs, { ten: c.ten, maDonGia: c.maDonGia, donVi: (c.donVi as "cây" | "m²" | "trụ" | "m") ?? "cây", donGia: c.donGia, soLuong: sl.v! });
-      out.push({ dong: d, cot: "BT_CAY", thuaId: t.id, taiSanId: c.id });
+      const kl = c.donVi === "m²" ? sl.v!.toDecimalPlaces(2) : sl.v!;
+      out.push({ dong: d, bieu: [{ dvt: c.donVi, kl, heSo: D(1), donGia: D(c.donGia) }], cot: "BT_CAY", thuaId: t.id, taiSanId: c.id });
     }
   }
   if (theoMatDo.length) {
@@ -159,7 +170,17 @@ function dongCayThua(cs: BoChinhSach, t: Thua, cay: Extract<TaiSan, { loai: "CAY
       thuTuChuSoHuu: ds,
       cay: ds,
     });
-    kq.dong.forEach((d, i) => out.push({ dong: d, cot: "BT_CAY", thuaId: t.id, taiSanId: theoMatDo[i]!.ts.id }));
+    kq.dong.forEach((d, i) => {
+      const pc = kq.phanChia[i];
+      const x = theoMatDo[i]!;
+      const bieu = pc
+        ? [
+            ...(pc.du.gt(0) || pc.vuot.isZero() ? [{ dvt: x.dong.donVi, kl: pc.du, heSo: D(1), donGia: D(x.dong.donGia) }] : []),
+            ...(pc.vuot.gt(0) ? [{ ghiChu: "Vượt mật độ quy định", dvt: x.dong.donVi, kl: pc.vuot, heSo: D(cs.cayTrong.tyLePhanVuot), donGia: D(x.dong.donGia) }] : []),
+          ]
+        : undefined;
+      out.push({ dong: d, bieu, cot: "BT_CAY", thuaId: t.id, taiSanId: x.ts.id });
+    });
   }
   return out;
 }
@@ -176,13 +197,22 @@ export function tinhHo(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
   const n = (ma: string) => nhom.find((x) => x.ma === ma)!;
 
   for (const t of ho.thua) {
-    if (D(t.dienTichThuHoi || "0").gt(0)) n("A.I").dong.push({ dong: dongDat(duAn, t), cot: "BT_DAT", thuaId: t.id });
+    if (D(t.dienTichThuHoi || "0").gt(0)) {
+      const d = dongDat(duAn, t);
+      const hs = duAn.heSoGiaDat && !D(duAn.heSoGiaDat.heSo).eq(1) ? D(duAn.heSoGiaDat.heSo) : D(1);
+      const bieu = t.gia && d.thanhTien ? [{ dvt: "m²", kl: D(t.dienTichThuHoi).toDecimalPlaces(2), heSo: hs, donGia: D(t.gia.giaNghinDong).mul(1000) }] : undefined;
+      n("A.I").dong.push({ dong: d, bieu, cot: "BT_DAT", thuaId: t.id });
+    }
     const tsThua = ho.taiSan.filter((x) => x.thuaId === t.id);
     for (const ts of tsThua) {
       if (ts.loai === "NHA_CT") {
         const d = dongNhaCongTrinh(cs, ts);
-        if (ts.phan === "BOI_THUONG") n("A.II").dong.push({ dong: d, cot: "BT_TAI_SAN", thuaId: t.id, taiSanId: ts.id });
-        else n("B.II").dong.push({ dong: d, cot: "HT_TAI_SAN", thuaId: t.id, taiSanId: ts.id });
+        const kl = thuTinh(ts.khoiLuong).giaTri;
+        const bieu = kl && d.thanhTien
+          ? [{ dvt: ts.donVi, kl: kl.toDecimalPlaces(2), heSo: ts.cachTinh === "HE_SO" ? D(ts.heSo || "1") : null, donGia: D(ts.donGia || "0"), ghiChu: ts.cachTinh === "THIET_HAI_THUC_TE" ? "Thiệt hại thực tế (T, T1)" : undefined }]
+          : undefined;
+        if (ts.phan === "BOI_THUONG") n("A.II").dong.push({ dong: d, bieu, cot: "BT_TAI_SAN", thuaId: t.id, taiSanId: ts.id });
+        else n("B.II").dong.push({ dong: d, bieu, cot: "HT_TAI_SAN", thuaId: t.id, taiSanId: ts.id });
       } else if (ts.loai === "KHAC") {
         const kl = soLuong(ts, ts.khoiLuong, "A03");
         const d =
@@ -201,8 +231,9 @@ export function tinhHo(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
             trangThai: ts.canCu ? "TAM_TINH" : "CAN_XAC_NHAN",
             canhBao: ts.canCu ? ["Đơn giá ngoài danh mục: cán bộ kiểm tra căn cứ"] : ["Đơn giá ngoài danh mục chưa ghi căn cứ"],
           });
-        if (ts.phan === "BOI_THUONG") n("A.II").dong.push({ dong: d, cot: "BT_TAI_SAN", thuaId: t.id, taiSanId: ts.id });
-        else n("B.II").dong.push({ dong: d, cot: "HT_TAI_SAN", thuaId: t.id, taiSanId: ts.id });
+        const bieu = kl.v ? [{ dvt: ts.donVi, kl: kl.v, heSo: D(ts.heSo || "1"), donGia: D(ts.donGia || "0") }] : undefined;
+        if (ts.phan === "BOI_THUONG") n("A.II").dong.push({ dong: d, bieu, cot: "BT_TAI_SAN", thuaId: t.id, taiSanId: ts.id });
+        else n("B.II").dong.push({ dong: d, bieu, cot: "HT_TAI_SAN", thuaId: t.id, taiSanId: ts.id });
       } else if (ts.loai === "VAT_NUOI") {
         const kl = soLuong(ts, ts.khoiLuong, "C09");
         const d = kl.loi ?? diDoiVatNuoi(cs, { loaiDuong: ts.loaiDuong, loaiVatNuoi: ts.loaiVatNuoi, khoiLuong: kl.v!, quangDuongKm: ts.quangDuongKm || "0" });
@@ -225,7 +256,14 @@ export function tinhHo(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
           canCuHanMuc: duAn.hanMucNN.canCu,
           giaDatNNNghinDong: t.gia.giaNghinDong,
         });
-      n("B.IV").dong.push({ dong: d, cot: "HT_CDN", thuaId: t.id });
+      let bieu: DongBieu[] | undefined;
+      if (d.thanhTien && duAn.hanMucNN && t.gia) {
+        const dt = D(t.dienTichThuHoi).toDecimalPlaces(2);
+        const dtTinh = dt.lt(duAn.hanMucNN.m2) ? dt : D(duAn.hanMucNN.m2);
+        const gia = D(t.gia.giaNghinDong).mul(1000);
+        bieu = [{ dvt: "m²", kl: dtTinh, heSo: d.thanhTien.div(dtTinh.mul(gia)), donGia: gia }];
+      }
+      n("B.IV").dong.push({ dong: d, bieu, cot: "HT_CDN", thuaId: t.id });
     }
   }
 

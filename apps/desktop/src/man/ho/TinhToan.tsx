@@ -6,8 +6,6 @@ import type { DongKetQua, KetQuaHo } from "../../tinh-ho";
 import { GiaiTrinh, NhanDong, lopDong, tien } from "../../thanh-phan/chung";
 import { xuatExcelHo } from "../../xuat-excel";
 
-const LA_MA = ["I", "II", "III", "IV", "V", "VI"];
-
 export function TabTinhToan({ h, duAn, kq }: { h: Ho; duAn: DuAn; kq: KetQuaHo }) {
   const [chon, setChon] = useState<DongKetQua | null>(kq.tatCa.find((x) => x.dong.trangThai !== "TAM_TINH") ?? kq.tatCa[0] ?? null);
   const chonHienTai = chon && kq.tatCa.find((x) => x.dong.noiDung === chon.dong.noiDung && x.taiSanId === chon.taiSanId && x.thuaId === chon.thuaId);
@@ -22,11 +20,11 @@ export function TabTinhToan({ h, duAn, kq }: { h: Ho; duAn: DuAn; kq: KetQuaHo }
   const veNhom = (ds: typeof kq.nhom, chu: string, ten: string) => (
     <>
       <tr className="nhom"><td>{chu}</td><td colSpan={2}>{ten}</td><td className="so">{tien(cong(ds.flatMap((n) => n.dong)))}</td><td colSpan={2} /></tr>
-      {ds.map((n, i) => {
+      {ds.map((n) => {
         const theoThua = [...new Set(n.dong.map((x) => x.thuaId))];
         return (
           <Fragment key={n.ma}>
-            <tr className="nhom-con"><td>{LA_MA[i]}</td><td colSpan={2}>{n.ten}</td><td className="so">{tien(cong(n.dong))}</td><td colSpan={2} /></tr>
+            <tr className="nhom-con"><td>{n.ma.split(".")[1]}</td><td colSpan={2}>{n.ten}</td><td className="so">{tien(cong(n.dong))}</td><td colSpan={2} /></tr>
             {theoThua.map((tid) => (
               <Fragment key={tid ?? "chung"}>
                 {theoThua.length > 1 || tid ? <tr><td /><td colSpan={5} className="chu-nho mo" style={{ paddingTop: 8 }}>{tenThua(tid)}</td></tr> : null}

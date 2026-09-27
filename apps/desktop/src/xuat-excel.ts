@@ -31,9 +31,10 @@ function dongKe(r: ExcelJS.Row, tu: number, den: number) {
 function trangHo(wb: ExcelJS.Workbook, duAn: DuAn, h: Ho, kq: KetQuaHo, ten: string) {
   const ws = wb.addWorksheet(ten, { pageSetup: { paperSize: 9, orientation: "portrait", fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
   ws.properties.defaultRowHeight = 16;
-  ws.columns = [{ width: 6 }, { width: 44 }, { width: 46 }, { width: 17 }, { width: 30 }, { width: 14 }];
+  ws.columns = [{ width: 6 }, { width: 44 }, { width: 8 }, { width: 12 }, { width: 10 }, { width: 13 }, { width: 16 }, { width: 30 }, { width: 13 }, { width: 44 }];
+  const N = 10;
   const tieuDe = (text: string, r: number, dam = true, co = 12) => {
-    ws.mergeCells(r, 1, r, 6);
+    ws.mergeCells(r, 1, r, 10);
     const c = ws.getCell(r, 1);
     c.value = text;
     c.font = { name: FONT, bold: dam, size: co };
@@ -41,15 +42,15 @@ function trangHo(wb: ExcelJS.Workbook, duAn: DuAn, h: Ho, kq: KetQuaHo, ten: str
   };
   ws.getCell("A1").value = `UBND ${duAn.xa.toUpperCase()}`;
   ws.getCell("A1").font = { name: FONT, bold: true };
-  ws.getCell("E1").value = kq.tong.duocChot ? "" : "DỰ THẢO – CHƯA CHỐT";
-  ws.getCell("E1").font = { name: FONT, bold: true, color: { argb: "FFC00000" } };
+  ws.getCell("H1").value = kq.tong.duocChot ? "" : "DỰ THẢO – CHƯA CHỐT";
+  ws.getCell("H1").font = { name: FONT, bold: true, color: { argb: "FFC00000" } };
   tieuDe("PHƯƠNG ÁN CHI TIẾT BỒI THƯỜNG, HỖ TRỢ, TÁI ĐỊNH CƯ", 3, true, 13);
   tieuDe(`Dự án: ${duAn.ten}`, 4, false);
   let r = 6;
   const dong = (nhan: string, giaTri: string) => {
     ws.getCell(r, 1).value = nhan;
     ws.getCell(r, 1).font = { name: FONT, bold: true };
-    ws.mergeCells(r, 2, r, 6);
+    ws.mergeCells(r, 2, r, 10);
     ws.getCell(r, 2).value = giaTri;
     ws.getCell(r, 2).font = { name: FONT };
     r++;
@@ -58,56 +59,71 @@ function trangHo(wb: ExcelJS.Workbook, duAn: DuAn, h: Ho, kq: KetQuaHo, ten: str
   dong("", `Địa chỉ: ${h.diaChi || "…"}   ·   Số định danh: ${h.soDinhDanh || "…"}   ·   Nhân khẩu: ${h.nhanKhau.length}`);
   dong("2.", "Thửa đất bị thu hồi:");
   const dau2 = ws.getRow(r);
-  ["TT", "Tờ / thửa", "Loại đất · nguồn gốc", "DT thửa (m²)", "DT thu hồi (m²)", ""].forEach((v, i) => (dau2.getCell(i + 1).value = v));
+  dau2.values = ["TT", "Tờ / thửa", "Loại đất", "DT thửa (m²)", "", "DT thu hồi (m²)", "", "Nguồn gốc sử dụng"];
   dau2.font = { name: FONT, bold: true };
-  dongKe(dau2, 1, 5);
+  dongKe(dau2, 1, 8);
   r++;
   h.thua.forEach((t, i) => {
     const row = ws.getRow(r++);
-    row.values = [i + 1, `Tờ ${t.soTo}, thửa ${t.soThua}`, `${t.loaiDat} · ${t.nguonGoc || ""}`, Number(t.dienTich) || null, Number(t.dienTichThuHoi) || null];
+    row.values = [i + 1, `Tờ ${t.soTo}, thửa ${t.soThua}`, t.loaiDat, Number(t.dienTich) || null, "", Number(t.dienTichThuHoi) || null, "", t.nguonGoc || ""];
     row.getCell(4).numFmt = "#,##0.00";
-    row.getCell(5).numFmt = "#,##0.00";
+    row.getCell(6).numFmt = "#,##0.00";
     row.font = { name: FONT };
-    dongKe(row, 1, 5);
+    dongKe(row, 1, 8);
   });
   r++;
   dong("3.", "Giá trị bồi thường, hỗ trợ:");
   const dau = ws.getRow(r++);
-  dau.values = ["STT", "Danh mục", "Diễn giải tính", "Thành tiền (đồng)", "Căn cứ pháp lý", "Trạng thái"];
+  dau.values = ["STT", "Danh mục", "ĐVT", "Khối lượng", "Hệ số / mức hỗ trợ", "Đơn giá (đồng)", "Thành tiền (đồng)", "Căn cứ pháp lý", "Trạng thái", "Diễn giải tính"];
   dau.font = { name: FONT, bold: true };
   dau.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
-  dongKe(dau, 1, 6);
-  const LA_MA = ["I", "II", "III", "IV", "V", "VI"];
+  dau.height = 32;
+  dongKe(dau, 1, N);
   const cong = (ds: KetQuaHo["tatCa"]) => ds.reduce((s, x) => (x.dong.trangThai === "TAM_TINH" && x.dong.thanhTien ? s.plus(x.dong.thanhTien) : s), D(0));
   const phan = (chu: string, tenPhan: string, dsNhom: KetQuaHo["nhom"]) => {
     if (!dsNhom.length) return;
     const rp = ws.getRow(r++);
-    rp.values = [chu, tenPhan, "", so(cong(dsNhom.flatMap((n) => n.dong)))];
+    rp.values = [chu, tenPhan, "", "", "", "", so(cong(dsNhom.flatMap((n) => n.dong)))];
     rp.font = { name: FONT, bold: true };
-    rp.getCell(4).numFmt = DINH_DANG_TIEN;
-    dongKe(rp, 1, 6);
-    dsNhom.forEach((n, i) => {
+    rp.getCell(7).numFmt = DINH_DANG_TIEN;
+    dongKe(rp, 1, N);
+    dsNhom.forEach((n) => {
       const rn = ws.getRow(r++);
-      rn.values = [LA_MA[i], n.ten, "", so(cong(n.dong))];
+      rn.values = [n.ma.split(".")[1], n.ten, "", "", "", "", so(cong(n.dong))];
       rn.font = { name: FONT, bold: true, italic: true };
-      rn.getCell(4).numFmt = DINH_DANG_TIEN;
-      dongKe(rn, 1, 6);
+      rn.getCell(7).numFmt = DINH_DANG_TIEN;
+      dongKe(rn, 1, N);
       n.dong.forEach((x, j) => {
         const t = h.thua.find((y) => y.id === x.thuaId);
-        const rw = ws.getRow(r++);
-        rw.values = [
-          j + 1,
-          x.dong.noiDung + (t && !x.dong.noiDung.includes(`Thửa ${t.soThua}`) ? ` (thửa ${t.soThua}, tờ ${t.soTo})` : ""),
-          [x.dong.congThuc, ...Object.entries(x.dong.thamSo).map(([k, v]) => `${k}: ${v}`)].join("\n"),
-          so(x.dong.thanhTien),
-          x.dong.canCu.map((c) => [c.vanBan, c.viTri].filter(Boolean).join(", ")).join("; "),
-          x.dong.trangThai === "TAM_TINH" ? (x.dong.luaChon.length ? "Có lựa chọn" : "Tạm tính") : x.dong.trangThai === "CAN_XAC_NHAN" ? "Cần xác nhận" : "Thiếu căn cứ",
-        ];
-        rw.font = { name: FONT, size: 11 };
-        rw.alignment = { vertical: "top", wrapText: true };
-        rw.getCell(4).numFmt = DINH_DANG_TIEN;
-        if (x.dong.trangThai !== "TAM_TINH") rw.getCell(6).font = { name: FONT, size: 11, color: { argb: "FFC00000" } };
-        dongKe(rw, 1, 6);
+        const tenDong = x.dong.noiDung + (t && !x.dong.noiDung.includes(`Thửa ${t.soThua}`) ? ` (thửa ${t.soThua}, tờ ${t.soTo})` : "");
+        const trangThai = x.dong.trangThai === "TAM_TINH" ? (x.dong.luaChon.length ? "Có lựa chọn" : "Tạm tính") : x.dong.trangThai === "CAN_XAC_NHAN" ? "Cần xác nhận" : "Thiếu căn cứ";
+        const canCu = x.dong.canCu.map((c) => [c.vanBan, c.viTri].filter(Boolean).join(", ")).join("; ");
+        const dienGiai = [x.dong.congThuc, ...Object.entries(x.dong.thamSo).map(([k, v]) => `${k}: ${v}`)].join("\n");
+        const dsBieu = x.bieu && x.bieu.length ? x.bieu : [null];
+        dsBieu.forEach((b, k) => {
+          const rw = ws.getRow(r++);
+          const thanhTien = b ? (b.heSo ? b.kl.mul(b.heSo).mul(b.donGia) : x.dong.thanhTien) : x.dong.thanhTien;
+          rw.values = [
+            k === 0 ? j + 1 : "",
+            k === 0 ? tenDong + (b?.ghiChu ? ` – ${b.ghiChu}` : "") : `   ${b?.ghiChu ?? ""}`,
+            b?.dvt ?? "",
+            b ? b.kl.toNumber() : null,
+            b?.heSo ? b.heSo.toDecimalPlaces(4).toNumber() : null,
+            b ? so(b.donGia) : null,
+            x.dong.trangThai === "TAM_TINH" ? so(thanhTien) : null,
+            k === 0 ? canCu : "",
+            k === 0 ? trangThai : "",
+            k === 0 ? dienGiai : "",
+          ];
+          rw.font = { name: FONT, size: 11 };
+          rw.alignment = { vertical: "top", wrapText: true };
+          rw.getCell(4).numFmt = "#,##0.##";
+          rw.getCell(6).numFmt = DINH_DANG_TIEN;
+          rw.getCell(7).numFmt = DINH_DANG_TIEN;
+          rw.getCell(10).font = { name: FONT, size: 9, color: { argb: "FF555555" } };
+          if (x.dong.trangThai !== "TAM_TINH") rw.getCell(9).font = { name: FONT, size: 11, color: { argb: "FFC00000" } };
+          dongKe(rw, 1, N);
+        });
       });
     });
   };
@@ -115,10 +131,10 @@ function trangHo(wb: ExcelJS.Workbook, duAn: DuAn, h: Ho, kq: KetQuaHo, ten: str
   phan("B", "GIÁ TRỊ HỖ TRỢ", kq.nhom.filter((n) => n.ma.startsWith("B")));
   const tongDong = (nhan: string, v: Decimal) => {
     const rt = ws.getRow(r++);
-    rt.values = ["", nhan, "", so(v)];
+    rt.values = ["", nhan, "", "", "", "", so(v)];
     rt.font = { name: FONT, bold: true };
-    rt.getCell(4).numFmt = DINH_DANG_TIEN;
-    dongKe(rt, 1, 6);
+    rt.getCell(7).numFmt = DINH_DANG_TIEN;
+    dongKe(rt, 1, N);
   };
   tongDong("TỔNG CỘNG (A + B)", kq.tong.tongChuaLamTron);
   tongDong("Làm tròn (lên đến nghìn đồng)", kq.tong.tongLamTron);
@@ -133,7 +149,7 @@ function trangHo(wb: ExcelJS.Workbook, duAn: DuAn, h: Ho, kq: KetQuaHo, ten: str
   if (luaChon.length) dong("Lựa chọn:", [...new Set(luaChon)].join("\n"));
   r += 1;
   ws.getCell(r, 2).value = "NGƯỜI LẬP";
-  ws.getCell(r, 5).value = "ĐẠI DIỆN HỘ / TỔ CHỨC";
+  ws.getCell(r, 8).value = "ĐẠI DIỆN HỘ / TỔ CHỨC";
   ws.getRow(r).font = { name: FONT, bold: true };
 }
 

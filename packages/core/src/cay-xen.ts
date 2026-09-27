@@ -26,6 +26,8 @@ export interface DongCayXen {
 
 export interface KetQuaCayXen {
   dong: DongTinh[];
+  /** Số cây hưởng 100% / phần vượt của từng dòng (cùng thứ tự với dong); null khi không xếp vào quỹ. */
+  phanChia: ({ du: Decimal; vuot: Decimal } | null)[];
   quyM2: Decimal;
   daDungM2: Decimal;
   thuTu: DongCayXen[];
@@ -80,6 +82,7 @@ export function cayTrongXenCanh(
   if (quy.lt(0)) quy = D(0);
   const tongQuy = quy;
   const out: DongTinh[] = [];
+  const phanChia: KetQuaCayXen["phanChia"] = [];
 
   for (const c of thuTu) {
     const dg = D(c.donGia);
@@ -98,6 +101,7 @@ export function cayTrongXenCanh(
           canhBao: ["Loại cây không có mật độ quy định: cán bộ xác định cách tính (VM-10)"],
         }),
       );
+      phanChia.push(null);
       continue;
     }
     const m2MotCay = D(10000).div(c.matDoHa);
@@ -107,6 +111,7 @@ export function cayTrongXenCanh(
     if (vuot.gt(0)) daVuot = true;
     quy = quy.minus(du.mul(m2MotCay));
     const tien = du.mul(dg).plus(vuot.mul(dg).mul(k.tyLePhanVuot));
+    phanChia.push({ du, vuot });
     out.push(
       dong({
         ma: "A14",
@@ -128,5 +133,5 @@ export function cayTrongXenCanh(
       }),
     );
   }
-  return { dong: out, quyM2: tongQuy, daDungM2: tongQuy.minus(quy), thuTu };
+  return { dong: out, phanChia, quyM2: tongQuy, daDungM2: tongQuy.minus(quy), thuTu };
 }

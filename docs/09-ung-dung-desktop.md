@@ -30,7 +30,7 @@ Ký hiệu: **Đã kiểm thử** = có kiểm thử tự động đạt · **Đ
 | Tiến độ 16 bước (Sổ tay QĐ 1966), gửi duyệt/xác nhận, nhật ký | Đã chạy | **Hạn chế:** chưa phân quyền người gửi/người duyệt; chưa tính hạn, cảnh báo quá hạn |
 | Bản đồ: nạp DGN, vẽ, chọn ranh GPMB, bảng thửa, cờ nghi vấn | Đã chạy (tệp thật) | Lõi **đã kiểm thử** (docs/08) |
 | Tạo hồ sơ từ thửa trong ranh (nhóm theo chủ sử dụng) | Đã chạy (tệp thật: 75 hồ sơ / 501 thửa) | Loại đất giữ ký hiệu bản đồ (1L, 2L…) để cán bộ đổi |
-| Xuất Excel: TH ĐẤT, TH GIÁ TRỊ TRÌNH DUYỆT, trang từng hộ | **Đã kiểm thử** (đọc lại tệp, đối chiếu số) | **Hạn chế:** trang hộ dùng cột "Diễn giải tính" thay cho các cột Khối lượng / Hệ số / Đơn giá riêng của biểu mẫu; chưa tách dòng 100%/30% cây trồng thành 2 dòng như biểu mẫu |
+| Xuất Excel: TH ĐẤT, TH GIÁ TRỊ TRÌNH DUYỆT, trang từng hộ | **Đã kiểm thử** (đọc lại tệp, đối chiếu số) | Trang hộ theo cột biểu mẫu: ĐVT, Khối lượng, Hệ số/mức, Đơn giá, Thành tiền, Căn cứ; dòng cây vượt mật độ tách riêng hệ số 0,3; số La Mã nhóm cố định như biểu mẫu. **Hạn chế:** chưa chép định dạng, chữ ký, tiêu đề đúng từng ô của tệp mẫu |
 | Tra cứu: QĐ 32, PL VIII, PL V, NQ 152, bộ chính sách | Đã chạy | |
 | Xuất Word (Báo cáo thẩm định, QĐ thu hồi, Tờ trình, 22 mẫu Sổ tay) | **Chưa làm** | Giai đoạn 4 |
 | Sao lưu/khôi phục, nhiều người dùng mạng nội bộ | **Chưa làm** | |
@@ -40,7 +40,7 @@ Ký hiệu: **Đã kiểm thử** = có kiểm thử tự động đạt · **Đ
 
 - Cấu hình: `apps/desktop/src-tauri` (Tauri 2, NSIS, cài theo người dùng, kèm bộ cài WebView2).
 - Build tự động: `.github/workflows/build-windows.yml` chạy trên `windows-latest` → tải bộ cài ở mục Artifacts của lần chạy.
-- Môi trường phát triển hiện tại là Linux: **không build được `.exe` tại đây**. Chỉ build được bản Linux để kiểm tra vỏ Rust (xem kết quả trong báo cáo tiến độ). Bộ cài chỉ được coi là có khi workflow Windows chạy xong và đã được cài thử trên Windows 10/11.
+- Môi trường phát triển hiện tại là Linux: **không build được `.exe` tại đây**. Đã build bản Linux (.deb 2,2 MB) và chạy thử trong màn hình ảo: cửa sổ mở, giao diện nạp đúng với CSP chặn mạng ngoài → vỏ Rust và cấu hình Tauri hợp lệ. Bộ cài chỉ được coi là có khi workflow Windows chạy xong và đã được cài thử trên Windows 10/11.
 - Chưa kiểm tra trên WebView2: tải tệp Excel (thẻ `<a download>`), thư mục lưu IndexedDB khi gỡ/cài lại.
 
 ## 4. Chạy thử trên máy phát triển
