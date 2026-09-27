@@ -2,7 +2,7 @@
 
 Ứng dụng Windows (cài đặt bằng `.exe`) hỗ trợ công tác thu hồi đất, bồi thường, hỗ trợ, tái định cư trên địa bàn tỉnh Sơn La.
 
-> **Trạng thái: Giai đoạn 2 – Phân tích nghiệp vụ, dữ liệu chính sách, lõi tính toán.**
+> **Trạng thái: Giai đoạn 3 – Bản đồ, giao diện mẫu và một luồng nghiệp vụ đầy đủ (đang làm).**
 > Chỉ các quy tắc đã có văn bản và cách áp dụng được người dùng xác nhận (docs/06) mới được mã hóa trong lõi tính toán.
 
 ## Tài liệu giai đoạn 1
@@ -17,12 +17,17 @@
 | [docs/05-quy-trinh-thoi-han.md](docs/05-quy-trinh-thoi-han.md) | 16 bước, thời hạn luật định, 22 mẫu biểu (Sổ tay QĐ 1966/QĐ-UBND) |
 | [docs/06-quyet-dinh-nghiep-vu.md](docs/06-quyet-dinh-nghiep-vu.md) | Quyết định nghiệp vụ đã được người dùng xác nhận |
 | [docs/07-du-lieu-chinh-sach.md](docs/07-du-lieu-chinh-sach.md) | Dữ liệu đơn giá, bảng giá đất đã trích xuất; quy tắc giá đất NQ 152 |
+| [docs/08-ban-do-dgn.md](docs/08-ban-do-dgn.md) | Bản đồ DGN: đọc V7, TCVN3, khép thửa, gắn nhãn, diện tích thu hồi |
 
 ## Dữ liệu và công cụ
 
 - `policy/nguon/` – dữ liệu chính sách trích xuất từ văn bản gốc (chờ đối chiếu trước khi kích hoạt)
 - `tools/extract/` – script trích xuất (Python + PyMuPDF, python-docx), chạy lại được khi có văn bản mới
 - `templates/nguon/` – văn bản gốc dùng dựng mẫu biểu (Sổ tay QĐ 1966/QĐ-UBND)
+
+## Bản đồ (`packages/gis`)
+
+Đọc DGN MicroStation V7, giải mã TCVN3, khép thửa, gắn nhãn, tính diện tích thu hồi theo ranh GPMB do cán bộ chọn. Xem docs/08.
 
 ## Lõi tính toán (`packages/core`)
 

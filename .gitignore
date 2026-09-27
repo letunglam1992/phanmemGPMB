@@ -2,3 +2,8 @@ node_modules/
 dist/
 *.log
 __pycache__/
+
+# Dữ liệu thật của người dùng (có thông tin cá nhân) – không đưa vào kho
+*.dgn
+*.DGN
+du-lieu-that/
