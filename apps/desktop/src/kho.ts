@@ -13,19 +13,27 @@ export interface Kho {
   xoaHo(id: string): Promise<void>;
   luuBanDo(duAnId: string, bytes: Uint8Array): Promise<void>;
   docBanDo(duAnId: string): Promise<Uint8Array | null>;
+  /** Mẫu văn bản do cán bộ tự chỉnh (thay mẫu gốc). */
+  luuMau(ma: string, bytes: Uint8Array, tenTep: string): Promise<void>;
+  docMau(ma: string): Promise<{ bytes: Uint8Array; tenTep: string; luc: string } | null>;
+  xoaMau(ma: string): Promise<void>;
+  dsMauTuy(): Promise<string[]>;
 }
 
 const TEN_CSDL = "gpmb-sonla";
-const PHIEN_BAN = 1;
+const PHIEN_BAN = 2;
 
 function mo(): Promise<IDBDatabase> {
   return new Promise((ok, loi) => {
     const r = indexedDB.open(TEN_CSDL, PHIEN_BAN);
-    r.onupgradeneeded = () => {
+    r.onupgradeneeded = (e) => {
       const db = r.result;
-      db.createObjectStore("duAn", { keyPath: "id" });
-      db.createObjectStore("ho", { keyPath: "id" }).createIndex("duAnId", "duAnId");
-      db.createObjectStore("banDo");
+      if (e.oldVersion < 1) {
+        db.createObjectStore("duAn", { keyPath: "id" });
+        db.createObjectStore("ho", { keyPath: "id" }).createIndex("duAnId", "duAnId");
+        db.createObjectStore("banDo");
+      }
+      if (e.oldVersion < 2) db.createObjectStore("mauVanBan");
     };
     r.onsuccess = () => ok(r.result);
     r.onerror = () => loi(r.error);
@@ -70,6 +78,18 @@ export function taoKhoIndexedDb(): Kho {
     async docBanDo(duAnId) {
       return ((await yc((await store("banDo")).get(duAnId))) as Uint8Array | undefined) ?? null;
     },
+    async luuMau(ma, bytes, tenTep) {
+      await yc((await store("mauVanBan", "readwrite")).put({ bytes, tenTep, luc: new Date().toISOString() }, ma));
+    },
+    async docMau(ma) {
+      return ((await yc((await store("mauVanBan")).get(ma))) as { bytes: Uint8Array; tenTep: string; luc: string } | undefined) ?? null;
+    },
+    async xoaMau(ma) {
+      await yc((await store("mauVanBan", "readwrite")).delete(ma));
+    },
+    async dsMauTuy() {
+      return ((await yc((await store("mauVanBan")).getAllKeys())) as string[]) ?? [];
+    },
   };
 }
 
@@ -78,6 +98,7 @@ export function taoKhoBoNho(): Kho {
   const duAn = new Map<string, DuAn>();
   const ho = new Map<string, Ho>();
   const banDo = new Map<string, Uint8Array>();
+  const mau = new Map<string, { bytes: Uint8Array; tenTep: string; luc: string }>();
   return {
     async dsDuAn() {
       return [...duAn.values()];
@@ -104,6 +125,18 @@ export function taoKhoBoNho(): Kho {
     },
     async docBanDo(id) {
       return banDo.get(id) ?? null;
+    },
+    async luuMau(ma, bytes, tenTep) {
+      mau.set(ma, { bytes, tenTep, luc: new Date().toISOString() });
+    },
+    async docMau(ma) {
+      return mau.get(ma) ?? null;
+    },
+    async xoaMau(ma) {
+      mau.delete(ma);
+    },
+    async dsMauTuy() {
+      return [...mau.keys()];
     },
   };
 }

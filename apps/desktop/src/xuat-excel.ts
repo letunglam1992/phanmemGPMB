@@ -9,6 +9,7 @@ import type ExcelJS from "exceljs";
 import { D } from "@gpmb/core";
 import type Decimal from "decimal.js";
 import type { DuAn, Ho } from "./mo-hinh";
+import { tenTep } from "./ten-tep";
 import { TEN_COT, type CotTongHop, type KetQuaHo } from "./tinh-ho";
 
 const FONT = "Times New Roman";
@@ -251,16 +252,19 @@ async function taiVe(wb: ExcelJS.Workbook, tenTep: string) {
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = tenTep;
+  a.style.display = "none";
+  document.body.appendChild(a);
   a.click();
+  a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 5000);
 }
 
-const tenAnToan = (s: string) => s.replace(/[\\/:*?"<>|]/g, "_").slice(0, 80);
+const tenAnToan = (s: string) => tenTep(s, 80);
 
 export async function xuatExcelDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[]) {
-  await taiVe(await taoWorkbook(duAn, ds), `Phuong an - ${tenAnToan(duAn.ten)}.xlsx`);
+  await taiVe(await taoWorkbook(duAn, ds), `Phuong-an_${tenAnToan(duAn.ten)}.xlsx`);
 }
 
 export async function xuatExcelHo(duAn: DuAn, h: Ho, k: KetQuaHo) {
-  await taiVe(await taoWorkbook(duAn, [{ h, k }]), `Phuong an chi tiet - ${tenAnToan(h.ma + " " + h.ten)}.xlsx`);
+  await taiVe(await taoWorkbook(duAn, [{ h, k }]), `Phuong-an-chi-tiet_${tenAnToan(h.ma + " " + h.ten)}.xlsx`);
 }

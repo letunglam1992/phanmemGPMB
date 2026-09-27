@@ -145,6 +145,8 @@ export interface Ho {
   khauTru: string;
   tienDo: Record<string, BuocHo>;
   nhatKy: NhatKy[];
+  /** Số, ngày các văn bản đã tạo cho hộ (tb_thu_hoi_so, qd_thu_hoi_ngay…) — làm căn cứ cho mẫu sau. */
+  vanBan?: Record<string, string>;
   /** Vướng mắc cần ưu tiên xử lý (khiếu nại, chưa nhận tiền, tranh chấp…), do cán bộ ghi. */
   vuongMac?: { noiDung: string; ngay: string } | null;
 }
@@ -168,6 +170,8 @@ export interface DuAn {
   hanMucNN: { m2: string; canCu: string } | null;
   heSoGiaDat: { heSo: string; vanBan: string } | null;
   banDo: BanDoDuAn | null;
+  /** Thông tin dùng chung khi soạn văn bản (cơ quan, người ký, căn cứ, thành phần…) và số, ngày văn bản cấp dự án. */
+  vanBan?: Record<string, string>;
   /** Kế hoạch hoàn thành từng bước (ngày ISO) do cán bộ nhập để theo dõi, cảnh báo chậm tiến độ. */
   keHoach?: Record<string, string>;
   taoLuc: string;

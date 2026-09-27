@@ -36,7 +36,7 @@ Ký hiệu: **Đã kiểm thử** = có kiểm thử tự động đạt · **Đ
 | Tạo hồ sơ từ thửa trong ranh (nhóm theo chủ sử dụng) | Đã chạy (tệp thật: 75 hồ sơ / 501 thửa) | Loại đất giữ ký hiệu bản đồ (1L, 2L…) để cán bộ đổi |
 | Xuất Excel: TH ĐẤT, TH GIÁ TRỊ TRÌNH DUYỆT, trang từng hộ | **Đã kiểm thử** (đọc lại tệp, đối chiếu số) | Trang hộ theo cột biểu mẫu: ĐVT, Khối lượng, Hệ số/mức, Đơn giá, Thành tiền, Căn cứ; dòng cây vượt mật độ tách riêng hệ số 0,3; số La Mã nhóm cố định như biểu mẫu. **Hạn chế:** chưa chép định dạng, chữ ký, tiêu đề đúng từng ô của tệp mẫu |
 | Tra cứu: QĐ 32, PL VIII, PL V, NQ 152, bộ chính sách | Đã chạy | |
-| Xuất Word (Báo cáo thẩm định, QĐ thu hồi, Tờ trình, 22 mẫu Sổ tay) | **Chưa làm** | Giai đoạn 4 |
+| Soạn văn bản theo 22 mẫu Sổ tay QĐ 1966 (tự điền, xuất .docx/.zip, cán bộ thay mẫu riêng) | **Đã kiểm thử** (điền đủ 22 mẫu), đã chạy giao diện | docs/10. Mẫu riêng địa phương (.doc người dùng gửi) chưa dựng |
 | Sao lưu/khôi phục, nhiều người dùng mạng nội bộ, "cập nhật thời gian thực" giữa nhiều máy | **Chưa làm** | Bản hiện tại lưu trên một máy; nhiều người dùng cần máy chủ nội bộ (QD-01) |
 | Bộ cài Windows `.exe` | **Đã build** trên GitHub Actions (windows-latest), **chưa cài thử** trên Windows 10/11 | Xem §3 |
 

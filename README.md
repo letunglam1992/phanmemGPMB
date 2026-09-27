@@ -18,6 +18,7 @@
 | [docs/06-quyet-dinh-nghiep-vu.md](docs/06-quyet-dinh-nghiep-vu.md) | Quyết định nghiệp vụ đã được người dùng xác nhận |
 | [docs/07-du-lieu-chinh-sach.md](docs/07-du-lieu-chinh-sach.md) | Dữ liệu đơn giá, bảng giá đất đã trích xuất; quy tắc giá đất NQ 152 |
 | [docs/08-ban-do-dgn.md](docs/08-ban-do-dgn.md) | Bản đồ DGN: đọc V7, TCVN3, khép thửa, gắn nhãn, diện tích thu hồi |
+| [docs/10-mau-van-ban.md](docs/10-mau-van-ban.md) | 22 mẫu văn bản Sổ tay QĐ 1966: dựng mẫu, dữ liệu tự điền, tự chỉnh mẫu |
 | [docs/09-ung-dung-desktop.md](docs/09-ung-dung-desktop.md) | Ứng dụng desktop 0.1: kiến trúc, **tình trạng từng chức năng**, đóng gói Windows |
 
 ## Dữ liệu và công cụ

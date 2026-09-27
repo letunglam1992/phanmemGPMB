@@ -4,6 +4,7 @@ import { ManDuAn } from "./man/DuAn";
 import { HoSo } from "./man/HoSo";
 import { BanDo } from "./man/BanDo";
 import { TraCuu } from "./man/TraCuu";
+import { VanBan } from "./man/VanBan";
 
 export function UngDung() {
   const { man, di, dsDuAn } = useUngDung();
@@ -12,6 +13,7 @@ export function UngDung() {
     { ten: "Tổng quan", chon: man.ten === "tong-quan", bam: () => di({ ten: "tong-quan" }) },
     { ten: "Dự án & hồ sơ", chon: man.ten === "du-an" || man.ten === "ho", bam: () => duAnId && di({ ten: "du-an", duAnId }), tat: !duAnId },
     { ten: "Bản đồ", chon: man.ten === "ban-do", bam: () => duAnId && di({ ten: "ban-do", duAnId }), tat: !duAnId },
+    { ten: "Văn bản", chon: man.ten === "van-ban", bam: () => duAnId && di({ ten: "van-ban", duAnId }), tat: !duAnId },
     { ten: "Tra cứu đơn giá, giá đất", chon: man.ten === "tra-cuu", bam: () => di({ ten: "tra-cuu" }) },
   ];
   return (
@@ -42,6 +44,7 @@ export function UngDung() {
         {man.ten === "ho" && <HoSo duAnId={man.duAnId} hoId={man.hoId} tabDau={man.tab} />}
         {man.ten === "ban-do" && <BanDo duAnId={man.duAnId} />}
         {man.ten === "tra-cuu" && <TraCuu />}
+        {man.ten === "van-ban" && <VanBan key={`${man.duAnId}-${man.ma}-${man.hoId}`} duAnId={man.duAnId} maDau={man.ma} hoIdDau={man.hoId} />}
       </main>
       <footer className="chan">
         <span>Bộ chính sách: Sơn La, hiệu lực 31/3/2026 (QĐ 106/2025, QĐ 14/2026, QĐ 32/2025, NQ 152/2025)</span>

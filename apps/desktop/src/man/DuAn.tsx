@@ -46,6 +46,7 @@ export function ManDuAn({ duAnId }: { duAnId: string }) {
         <div className="phai">
           <button className="nut" onClick={() => setSua(true)}>Thông tin dự án</button>
           <button className="nut" onClick={() => di({ ten: "ban-do", duAnId })}>Bản đồ</button>
+          <button className="nut" onClick={() => di({ ten: "van-ban", duAnId })}>Soạn văn bản</button>
           <button className="nut" disabled={dangXuat || kq.length === 0} onClick={async () => { setDangXuat(true); try { await xuatExcelDuAn(duAn, kq); } finally { setDangXuat(false); } }}>
             {dangXuat ? "Đang xuất…" : "Xuất Excel phương án"}
           </button>

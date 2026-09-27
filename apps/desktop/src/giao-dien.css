@@ -236,3 +236,11 @@ table.bang { width: 100%; border-collapse: collapse; font-size: 13px; }
 .lop-ban-do { position: absolute; left: 10px; top: 40px; background: rgba(255, 255, 255, 0.95); border: 1px solid var(--vien); border-radius: 6px; padding: 8px 10px; font-size: 12px; display: grid; gap: 3px; box-shadow: var(--bong); }
 .lop-ban-do label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
 .mui-ten-bac { position: absolute; right: 56px; top: 10px; }
+
+/* ---------- Văn bản ---------- */
+.muc-mau { display: grid; grid-template-columns: 30px 1fr auto; gap: 8px; align-items: start; padding: 7px 12px; cursor: pointer; font-size: 12.5px; border-left: 3px solid transparent; }
+.muc-mau:hover { background: var(--be-mat-2); }
+.muc-mau.chon { background: var(--chinh-nhat); border-left-color: var(--chinh); font-weight: 600; }
+.so-mau { font-variant-numeric: tabular-nums; color: var(--chinh); font-weight: 700; }
+.ds-chon-ho { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 2px 12px; max-height: 180px; overflow: auto; border: 1px solid var(--vien); border-radius: 5px; padding: 6px 10px; font-size: 12.5px; }
+.ds-chon-ho label { display: flex; gap: 6px; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

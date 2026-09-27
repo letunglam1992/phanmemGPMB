@@ -6,6 +6,7 @@ import { NhanDong, O, ThanhBuoc, ngayVN, tien } from "../thanh-phan/chung";
 import { TabThua } from "./ho/Thua";
 import { TabKiemDem } from "./ho/KiemDem";
 import { TabTinhToan } from "./ho/TinhToan";
+import { DANH_MUC_MAU } from "../van-ban/danh-muc";
 import type { DiChuyen } from "@gpmb/core";
 
 const CAC_TAB = [
@@ -83,7 +84,7 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
       {tab === "kiem-dem" && <TabKiemDem h={h} doi={doi} />}
       {tab === "ho-tro" && <TabHoTro h={h} doi={doi} />}
       {tab === "tinh" && <TabTinhToan h={h} duAn={duAn} kq={kq} />}
-      {tab === "tien-do" && <TabTienDo h={h} doi={doi} luuNgay={async (moi, nk) => { setH(moi); await luuHo(moi, nk); setDaSua(false); }} />}
+      {tab === "tien-do" && <TabTienDo h={h} doi={doi} soanMau={(ma) => di({ ten: "van-ban", duAnId, ma, hoId: h.id })} luuNgay={async (moi, nk) => { setH(moi); await luuHo(moi, nk); setDaSua(false); }} />}
       {tab === "nhat-ky" && (
         <div className="the">
           <table className="bang">
@@ -112,9 +113,18 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
 
 type Tab = { h: Ho; doi: (h: Ho) => void };
 
+const VB_DA_BAN_HANH = [
+  ["tb_thu_hoi", "Thông báo thu hồi đất (Mẫu 01)"],
+  ["qd_kiem_dem", "QĐ kiểm đếm bắt buộc (Mẫu 06)"],
+  ["qd_thu_hoi", "QĐ thu hồi đất (Mẫu 15)"],
+  ["tb_gui_tien", "TB gửi tiền vào tài khoản (Mẫu 18)"],
+] as const;
+
 function TabThongTin({ h, doi }: Tab) {
   const s = (k: keyof Ho) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => doi({ ...h, [k]: e.target.value });
+  const vb = h.vanBan ?? {};
   return (
+    <div className="luoi">
     <div className="the the-than">
       <div className="luoi luoi-3">
         <O nhan="Mã hồ sơ"><input value={h.ma} onChange={s("ma")} /></O>
@@ -134,6 +144,22 @@ function TabThongTin({ h, doi }: Tab) {
           </div>
         </O>
       </div>
+    </div>
+    <div className="the">
+      <div className="the-dau"><h3>Văn bản đã ban hành cho hộ</h3><span className="mo chu-nho">Tự ghi khi tạo văn bản có số; dùng làm căn cứ cho mẫu sau</span></div>
+      <table className="bang">
+        <thead><tr><th>Văn bản</th><th style={{ width: 220 }}>Số, ký hiệu</th><th style={{ width: 180 }}>Ngày</th></tr></thead>
+        <tbody>
+          {VB_DA_BAN_HANH.map(([k, ten]) => (
+            <tr key={k}>
+              <td>{ten}</td>
+              <td><input value={vb[`${k}_so`] ?? ""} placeholder="vd. 12/QĐ-UBND" onChange={(e) => doi({ ...h, vanBan: { ...vb, [`${k}_so`]: e.target.value } })} /></td>
+              <td><input value={vb[`${k}_ngay`] ?? ""} placeholder="dd/mm/yyyy" onChange={(e) => doi({ ...h, vanBan: { ...vb, [`${k}_ngay`]: e.target.value } })} /></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
     </div>
   );
 }
@@ -220,7 +246,7 @@ function TabHoTro({ h, doi }: Tab) {
   );
 }
 
-function TabTienDo({ h, doi, luuNgay }: Tab & { luuNgay: (h: Ho, nk: string) => Promise<void> }) {
+function TabTienDo({ h, doi, luuNgay, soanMau }: Tab & { luuNgay: (h: Ho, nk: string) => Promise<void>; soanMau: (ma: string) => void }) {
   const [chon, setChon] = useState(CAC_BUOC[Math.max(0, CAC_BUOC.findIndex((b) => h.tienDo[b.ma]?.trangThai !== "XONG"))]!.ma);
   const b = CAC_BUOC.find((x) => x.ma === chon)!;
   const bh = h.tienDo[chon] ?? { trangThai: "CHUA" as TrangThaiBuoc };
@@ -264,6 +290,16 @@ function TabTienDo({ h, doi, luuNgay }: Tab & { luuNgay: (h: Ho, nk: string) => 
             <button className="nut" disabled={bh.trangThai === "CHO_DUYET" || bh.trangThai === "XONG"} onClick={() => doiTrangThai("CHO_DUYET", `Gửi duyệt bước ${b.ma}. ${b.ten}`)}>Gửi duyệt</button>
             <button className="nut nut-chinh" disabled={bh.trangThai === "XONG"} onClick={() => doiTrangThai("XONG", `Xác nhận hoàn thành bước ${b.ma}. ${b.ten}`)}>Xác nhận hoàn thành</button>
           </div>
+          {DANH_MUC_MAU.some((m) => m.buoc === b.ma) && (
+            <div>
+              <div className="chu-nho" style={{ fontWeight: 600, marginBottom: 4 }}>Soạn mẫu biểu của bước</div>
+              <div className="nhom-nut">
+                {DANH_MUC_MAU.filter((m) => m.buoc === b.ma).map((m) => (
+                  <button key={m.ma} className="nut nut-nho" title={m.ten} onClick={() => soanMau(m.ma)}>Mẫu {m.ma}</button>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="mo chu-nho">Bản thử nghiệm một người dùng: chưa phân quyền người gửi/người duyệt.</div>
         </div>
       </div>
