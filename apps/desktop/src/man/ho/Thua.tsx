@@ -66,13 +66,31 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
                       )}
                     </td>
                     <td style={{ whiteSpace: "nowrap" }}>
-                      <button className="nut nut-chu nut-nho" title="Phân lớp đất, tùy chọn cây trồng xen" onClick={() => setMoRong(moRong === t.id ? null : t.id)}>⋯</button>
+                      <button className="nut nut-chu nut-nho" title="Giấy chứng nhận, phân lớp đất, tùy chọn cây trồng xen" onClick={() => setMoRong(moRong === t.id ? null : t.id)}>⋯</button>
                       <button className="nut nut-chu nut-nguy nut-nho" onClick={() => { if (h.taiSan.some((x) => x.thuaId === t.id) && !confirm("Thửa có tài sản kiểm đếm. Xóa cả tài sản?")) return; doi({ ...h, thua: h.thua.filter((x) => x.id !== t.id), taiSan: h.taiSan.filter((x) => x.thuaId !== t.id) }); }}>✕</button>
                     </td>
                   </tr>
                   {moRong === t.id && (
                     <tr>
                       <td colSpan={8} style={{ background: "var(--be-mat-2)" }}>
+                        <div style={{ marginBottom: 12, paddingBottom: 12, borderBottom: "1px solid var(--vien)" }}>
+                          <div className="nhom-nut" style={{ alignItems: "center", marginBottom: 6 }}>
+                            <b className="chu-nho">Giấy chứng nhận, danh sách thu hồi</b>
+                            <label className="chu-nho"><input type="checkbox" checked={!!t.khongBoiThuong} onChange={(e) => sua(t.id, { khongBoiThuong: e.target.checked })} /> Diện tích thu hồi <b>không được bồi thường, hỗ trợ</b> về đất</label>
+                            <span className="mo chu-nho">(dùng cho diễn giải diện tích trong tờ trình, quyết định thu hồi)</span>
+                          </div>
+                          <div className="luoi" style={{ gridTemplateColumns: "150px 90px 90px 130px 110px 150px 130px 1fr" }}>
+                            {([
+                              ["seri", "Số sêri GCN"], ["soTo", "Tờ (GCN)"], ["soThua", "Thửa (GCN)"], ["dienTich", "DT thửa GCN (m²)"], ["loaiDat", "Loại đất GCN"], ["dtThuHoiCoGcn", "DT thu hồi có GCN"], ["loaiDatThuHoi", "Loại đất thu hồi"],
+                            ] as const).map(([k, nhan]) => (
+                              <div key={k} className="o-nhap"><label>{nhan}</label>
+                                <input className={k === "dienTich" || k === "dtThuHoiCoGcn" ? "o-so" : ""} value={t.gcn?.[k] ?? ""} onChange={(e) => sua(t.id, { gcn: { seri: "", soTo: "", soThua: "", dienTich: "", loaiDat: "", dtThuHoiCoGcn: "", loaiDatThuHoi: "", ...t.gcn, [k]: e.target.value } })} />
+                              </div>
+                            ))}
+                            <div className="o-nhap"><label>Ghi chú (danh sách)</label><input value={t.ghiChu ?? ""} onChange={(e) => sua(t.id, { ghiChu: e.target.value })} /></div>
+                          </div>
+                          <div className="mo chu-nho" style={{ marginTop: 4 }}>DT không có trong GCN = DT thu hồi − DT thu hồi có GCN (tự tính).</div>
+                        </div>
                         {(t.phanLop || !laDatNN(t.loaiDat)) && (
                           <div style={{ marginBottom: 12, paddingBottom: 12, borderBottom: "1px solid var(--vien)" }}>
                             <PhanLop t={t} cs={cs} sua={(p) => sua(t.id, p)} moChonTuyen={() => setChonTuyen(t.id)} />

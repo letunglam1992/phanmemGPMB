@@ -48,6 +48,23 @@
 - Ô để trống → in "…………" để viết tay; số và ngày ký để trống → chừa khoảng cho văn thư.
 - Tạo cho nhiều hộ: nhập số bắt đầu → tự tăng; kết quả đóng gói `.zip`; mỗi hồ sơ được ghi nhật ký.
 
+## 3a. Mẫu riêng của xã (R1–R3), song song với mẫu Sổ tay
+
+Dựng từ 03 tệp người dùng gửi (Tờ trình đề nghị thu hồi đất, Báo cáo thẩm định, QĐ thu hồi đất theo đợt) bằng `tools/mau-van-ban/mau-rieng.py`: giữ thể thức, bố cục, bảng danh sách 17 cột (có cột giấy chứng nhận) của bản gốc; thay nội dung cụ thể bằng trường tự điền.
+
+| Mã | Mẫu | Cơ quan ban hành | Phạm vi | Ghi lại sau khi tạo |
+|---|---|---|---|---|
+| R1 | Tờ trình đề nghị thu hồi đất (bước 13) | Phòng chuyên môn | Theo đợt (chọn hộ) | Số tờ trình vào dự án |
+| R2 | Báo cáo thẩm định hồ sơ thu hồi đất | Phòng chuyên môn | Theo đợt | — |
+| R3 | Quyết định thu hồi đất theo đợt | UBND xã | Theo đợt | Số QĐ thu hồi vào từng hộ trong đợt |
+
+- **Ẩn danh hóa:** đã xóa toàn bộ tên người, số văn bản, địa danh cụ thể, **ảnh chữ ký tay** có trong tệp gốc, thông tin tác giả (email) trong thuộc tính tệp. Kịch bản dựng tự kiểm tra lại và dừng nếu còn sót.
+- **Theo đợt:** chọn các hộ trong đợt (mặc định tất cả) → một văn bản chung; diện tích, danh sách thửa, số đối tượng tính trên các hộ được chọn. Trường `pham_vi_dot` (ví dụ "đợt 1") in trong ngoặc sau tên dự án nếu có.
+- **Diện tích được / không được bồi thường:** phần mềm **không tự xác định** thửa nào không được bồi thường. Cán bộ đánh dấu ô "Diện tích thu hồi không được bồi thường, hỗ trợ về đất" ở từng thửa (màn Hồ sơ → Thửa đất → mở rộng dòng); thửa không đánh dấu được tính vào diện tích được bồi thường, tách hộ gia đình, cá nhân / tổ chức và theo loại đất.
+- **Cột giấy chứng nhận** (số phát hành, tờ, thửa, diện tích, loại đất, diện tích thu hồi có GCN): nhập ở cùng mục mở rộng của thửa; bỏ trống thì ô bảng để trống (không in dấu chấm). Diện tích không có GCN = diện tích thu hồi − diện tích thu hồi có GCN.
+- **Người ký theo cơ quan ban hành:** mẫu của phòng dùng "TRƯỞNG PHÒNG" + người ký của phòng; mẫu của đơn vị bồi thường dùng "GIÁM ĐỐC"; mẫu của UBND dùng người ký UBND — sửa trong "Thông tin chung → Ký".
+- Mẫu Sổ tay và mẫu riêng dùng chung dữ liệu; cán bộ chọn mẫu phù hợp thực tế của xã.
+
 ## 4. Cán bộ tự chỉnh mẫu
 
 1. Màn **Văn bản** → chọn mẫu → **Tải mẫu** (tệp có các trường `{…}`).
@@ -58,10 +75,11 @@
 
 - `apps/desktop/test/van-ban.test.ts`: điền đủ 22 mẫu với dữ liệu mẫu ẩn danh, không còn trường chưa thay; kiểm tra số liệu Mẫu 14 (diện tích theo loại đất, bằng chữ, căn cứ, nơi nhận), Mẫu 15 (diện tích, mô tả thửa, lý do), cộng chi phí tổ chức vào tổng giá trị, ô trống in dấu chấm.
 - `apps/desktop/test/doc-so.test.ts`: đọc số tiền thành chữ (linh, mốt, tư, lăm, không trăm…).
+- Mẫu riêng R1–R3: điền với 1 hộ + 1 tổ chức, 1 thửa đánh dấu không bồi thường; kiểm tra phạm vi đợt, số đối tượng, diện tích được/không được bồi thường theo loại đất, dòng GCN, nơi nhận, người ký theo cơ quan; không còn tên thật trong tệp.
 - Chạy thử giao diện: tạo Mẫu 15 cho 2 hộ (số tự tăng 25, 26), Mẫu 14 cho dự án; đã mở tệp kiểm tra nội dung; kết xuất PDF bằng LibreOffice để xem thể thức.
 
 ## 6. Hạn chế
 
 - Văn bản xuất ra là **dự thảo**: cán bộ kiểm tra, chỉnh sửa trước khi trình ký.
-- Chưa xuất các mẫu riêng của địa phương (Báo cáo thẩm định, QĐ thu hồi, Tờ trình dạng .doc người dùng gửi) — có thể nạp làm "mẫu riêng" nếu gắn trường `{…}`, hoặc dựng thêm khi được yêu cầu.
+- Mẫu riêng R1–R3: kết luận thẩm định mặc định "Đủ điều kiện thu hồi đất…" chỉ là câu gợi ý — cán bộ thẩm định phải sửa theo kết quả thực tế. Tệp gốc chuyển từ .doc có một số lỗi cấu trúc (đánh số, kiểu đoạn) sẵn có; Word/LibreOffice mở bình thường.
 - Danh sách hỗ trợ bàn giao mặt bằng sớm (Mẫu 20, 21) chưa có dữ liệu tính trong phần mềm → bảng để trống điền tay.

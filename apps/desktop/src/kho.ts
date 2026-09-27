@@ -18,6 +18,9 @@ export interface Kho {
   docMau(ma: string): Promise<{ bytes: Uint8Array; tenTep: string; luc: string } | null>;
   xoaMau(ma: string): Promise<void>;
   dsMauTuy(): Promise<string[]>;
+  dsBanDo(): Promise<string[]>;
+  /** Xóa toàn bộ dữ liệu (dùng khi khôi phục kiểu thay thế). */
+  xoaTatCa(): Promise<void>;
 }
 
 const TEN_CSDL = "gpmb-sonla";
@@ -90,6 +93,12 @@ export function taoKhoIndexedDb(): Kho {
     async dsMauTuy() {
       return ((await yc((await store("mauVanBan")).getAllKeys())) as string[]) ?? [];
     },
+    async dsBanDo() {
+      return ((await yc((await store("banDo")).getAllKeys())) as string[]) ?? [];
+    },
+    async xoaTatCa() {
+      for (const ten of ["duAn", "ho", "banDo", "mauVanBan"]) await yc((await store(ten, "readwrite")).clear());
+    },
   };
 }
 
@@ -137,6 +146,15 @@ export function taoKhoBoNho(): Kho {
     },
     async dsMauTuy() {
       return [...mau.keys()];
+    },
+    async dsBanDo() {
+      return [...banDo.keys()];
+    },
+    async xoaTatCa() {
+      duAn.clear();
+      ho.clear();
+      banDo.clear();
+      mau.clear();
     },
   };
 }

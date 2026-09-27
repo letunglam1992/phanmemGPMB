@@ -18,8 +18,13 @@ export interface MauVanBan {
   ma: string;
   ten: string;
   buoc: string;
-  /** DU_AN: một văn bản cho cả dự án; HO: mỗi hộ/tổ chức một văn bản. */
-  phamVi: "DU_AN" | "HO";
+  /** DU_AN: một văn bản cho cả dự án; HO: mỗi hộ/tổ chức một văn bản; DOT: một văn bản cho nhóm hộ được chọn (một đợt). */
+  phamVi: "DU_AN" | "HO" | "DOT";
+  /** SO_TAY: mẫu của Sổ tay QĐ 1966; RIENG: mẫu riêng của xã (giữ định dạng văn bản đang dùng). */
+  nguon?: "SO_TAY" | "RIENG";
+  /** Tệp mẫu trong public/mau-van-ban (mặc định mau-{ma}.docx). */
+  tep?: string;
+  moTa?: string;
   /** Văn bản do ai ban hành → gợi ý quyền hạn ký. */
   coQuan: "UBND" | "PHONG" | "DON_VI_BT" | "BIEN_BAN" | "NGUOI_DAN";
   /** Sau khi tạo, số/ngày văn bản được ghi lại làm căn cứ cho các mẫu sau. */
@@ -99,4 +104,30 @@ function PHUONG_AN(): TruongNhap[] {
   ];
 }
 
+const TRUONG_DOT: TruongNhap[] = [
+  { truong: "pham_vi_dot", nhan: "Phạm vi, đợt (in trong ngoặc sau tên dự án)", goiY: "vd. Phạm vi tuyến đường thuộc bản …, xã … đợt 10. Để trống nếu không có — lưu cho dự án" },
+];
+
+/** Mẫu riêng của xã (người dùng cung cấp): giữ nguyên định dạng, tự điền số liệu. */
+DANH_MUC_MAU.push(
+  {
+    ma: "R1", ten: "Tờ trình đề nghị thu hồi đất (mẫu của xã)", buoc: "13", phamVi: "DOT", coQuan: "PHONG", nguon: "RIENG", tep: "rieng-to-trinh-thu-hoi.docx",
+    moTa: "Phòng chuyên môn trình Chủ tịch UBND xã; kèm danh sách thu hồi đất 17 cột (có thông tin Giấy chứng nhận).",
+    ghiLai: { khoa: "to_trinh", capDo: "DU_AN", kyHieu: "TTr-{ky_hieu_phong}" },
+    nhapThem: [...TRUONG_DOT, { truong: "tt_don_vi_so", nhan: "Tờ trình của đơn vị bồi thường số" }, { truong: "tt_don_vi_ngay", nhan: "ngày" }, { truong: "noi_nhan", nhan: "Nơi nhận (mỗi dòng một nơi)", nhieuDong: true, macDinh: "UBND xã\nĐơn vị thực hiện nhiệm vụ bồi thường, GPMB\nLưu: VT" }],
+  },
+  {
+    ma: "R2", ten: "Báo cáo thẩm định thu hồi đất (mẫu của xã)", buoc: "13", phamVi: "DOT", coQuan: "PHONG", nguon: "RIENG", tep: "rieng-bao-cao-tham-dinh.docx",
+    moTa: "Phòng chuyên môn báo cáo kết quả thẩm định hồ sơ đề nghị thu hồi đất.",
+    nhapThem: [...TRUONG_DOT, { truong: "tt_don_vi_so", nhan: "Tờ trình của đơn vị bồi thường số" }, { truong: "tt_don_vi_ngay", nhan: "ngày" }, { truong: "ket_luan_tham_dinh", nhan: "Kết luận thẩm định", macDinh: "Đủ điều kiện thu hồi đất để thực hiện dự án." }, { truong: "can_bo_tham_dinh", nhan: "Cán bộ thẩm định (họ tên)" }, { truong: "noi_nhan", nhan: "Nơi nhận (mỗi dòng một nơi)", nhieuDong: true, macDinh: "Như trên\nChủ tịch, PCT UBND xã\nLưu: VT" }],
+  },
+  {
+    ma: "R3", ten: "Quyết định thu hồi đất theo đợt (mẫu của xã)", buoc: "13", phamVi: "DOT", coQuan: "UBND", nguon: "RIENG", tep: "rieng-qd-thu-hoi.docx",
+    moTa: "Một quyết định thu hồi đất cho nhiều hộ trong đợt, kèm danh sách thu hồi đất.",
+    ghiLai: { khoa: "qd_thu_hoi", capDo: "HO", kyHieu: "QĐ-UBND" },
+    nhapThem: [...TRUONG_DOT, { truong: "chuc_danh_de_nghi", nhan: "Chức danh người đề nghị", goiY: "Để trống = Trưởng + tên phòng" }, { truong: "dia_diem_niem_yet_qd", nhan: "Nơi niêm yết quyết định", goiY: "vd. nhà văn hóa bản …" }, { truong: "co_quan_chinh_ly", nhan: "Cơ quan chỉnh lý hồ sơ địa chính", goiY: "vd. Chi nhánh Văn phòng Đăng ký đất đai khu vực …" }, HIEU_LUC, { truong: "noi_nhan", nhan: "Nơi nhận (mỗi dòng một nơi)", nhieuDong: true, macDinh: "Như Điều 3\nThường trực Đảng ủy xã\nThường trực HĐND xã\nChủ tịch, PCT UBND xã\nLưu: VT" }],
+  },
+);
+
 export const mauTheoMa = (ma: string) => DANH_MUC_MAU.find((m) => m.ma === ma)!;
+export const tepMau = (m: MauVanBan) => m.tep ?? `mau-${m.ma}.docx`;

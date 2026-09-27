@@ -2,10 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useUngDung } from "../ung-dung";
 import { tinhHo } from "../tinh-ho";
 import { CAC_BUOC, type Ho } from "../mo-hinh";
-import { DANH_MUC_MAU, mauTheoMa, type MauVanBan, type TruongNhap } from "../van-ban/danh-muc";
+import { DANH_MUC_MAU, mauTheoMa, tepMau, type MauVanBan, type TruongNhap } from "../van-ban/danh-muc";
 import { ghepDuLieu, ngayChu, thongTinChungMacDinh } from "../van-ban/du-lieu";
 import { dienMau, dongGoiZip, truongTrongMau } from "../van-ban/dien-mau";
 import { HopThoai, O } from "../thanh-phan/chung";
+import { taiXuong } from "../tai-xuong";
 import { tenTep } from "../ten-tep";
 
 /** Thông tin chung của dự án dùng khi soạn văn bản (lưu vào DuAn.vanBan). */
@@ -17,8 +18,12 @@ const TRUONG_CHUNG: (TruongNhap & { nhom: string })[] = [
   { nhom: "Cơ quan", truong: "ky_hieu_phong", nhan: "Chữ viết tắt tên phòng" },
   { nhom: "Cơ quan", truong: "co_quan_tham_dinh", nhan: "Cơ quan chủ trì thẩm định phương án" },
   { nhom: "Cơ quan", truong: "co_quan_dang_tai", nhan: "Cơ quan đăng tải trên trang thông tin điện tử" },
-  { nhom: "Ký", truong: "quyen_han", nhan: "Quyền hạn, chức vụ người ký", nhieuDong: true, goiY: "vd. CHỦ TỊCH hoặc hai dòng: KT. CHỦ TỊCH / PHÓ CHỦ TỊCH" },
-  { nhom: "Ký", truong: "nguoi_ky", nhan: "Họ tên người ký" },
+  { nhom: "Ký", truong: "quyen_han", nhan: "UBND xã — quyền hạn, chức vụ người ký", nhieuDong: true, goiY: "vd. CHỦ TỊCH hoặc hai dòng: KT. CHỦ TỊCH / PHÓ CHỦ TỊCH" },
+  { nhom: "Ký", truong: "nguoi_ky", nhan: "UBND xã — họ tên người ký" },
+  { nhom: "Ký", truong: "quyen_han_phong", nhan: "Phòng chuyên môn — quyền hạn, chức vụ", nhieuDong: true, goiY: "vd. TRƯỞNG PHÒNG hoặc KT. TRƯỞNG PHÒNG / PHÓ TRƯỞNG PHÒNG" },
+  { nhom: "Ký", truong: "nguoi_ky_phong", nhan: "Phòng chuyên môn — họ tên người ký" },
+  { nhom: "Ký", truong: "quyen_han_don_vi", nhan: "Đơn vị bồi thường — quyền hạn, chức vụ", nhieuDong: true },
+  { nhom: "Ký", truong: "nguoi_ky_don_vi", nhan: "Đơn vị bồi thường — họ tên người ký" },
   { nhom: "Dự án", truong: "ly_do_thu_hoi", nhan: "Lý do thu hồi đất", goiY: "Ghi rõ mục đích thu hồi đất theo Điều 78, Điều 79 Luật Đất đai" },
   { nhom: "Dự án", truong: "dia_diem_du_an", nhan: "Địa điểm" },
   { nhom: "Dự án", truong: "ban_khu_dan_cu", nhan: "Bản/khu dân cư nơi có đất" },
@@ -37,7 +42,7 @@ const TRUONG_CHUNG: (TruongNhap & { nhom: string })[] = [
   { nhom: "Thành phần", truong: "tp_khac", nhan: "Thành phần khác", nhieuDong: true },
 ];
 
-const URL_MAU = (ma: string) => `${import.meta.env.BASE_URL}mau-van-ban/mau-${ma}.docx`;
+const URL_MAU = (ma: string) => `${import.meta.env.BASE_URL}mau-van-ban/${tepMau(mauTheoMa(ma))}`;
 
 async function napMauGoc(ma: string): Promise<Uint8Array> {
   const r = await fetch(URL_MAU(ma));
@@ -45,16 +50,6 @@ async function napMauGoc(ma: string): Promise<Uint8Array> {
   return new Uint8Array(await r.arrayBuffer());
 }
 
-function taiXuong(bytes: Uint8Array, ten: string, loai: string) {
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([bytes as Uint8Array<ArrayBuffer>], { type: loai }));
-  a.download = ten;
-  a.style.display = "none";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-}
 const DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 const tenAnToan = (s: string) => tenTep(s, 70);
 
@@ -83,7 +78,8 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
     if (duAn) setChung({ ...thongTinChungMacDinh(duAn), ...(duAn.vanBan ?? {}) });
   }, [duAn?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
-    setRieng(Object.fromEntries(mau.nhapThem.map((t) => [t.truong, t.macDinh ?? ""])));
+    setRieng(Object.fromEntries(mau.nhapThem.map((t) => [t.truong, (t.truong !== "noi_nhan" && duAn?.vanBan?.[t.truong]) || t.macDinh || ""])));
+    if (mau.phamVi === "DOT" && chonHo.size === 0) setChonHo(new Set(hoCua(duAnId).map((h) => h.id)));
     setSo("");
     setThongBao(null);
   }, [ma]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -94,10 +90,13 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
   if (!duAn) return <div className="trang trong">Chọn dự án trước.</div>;
 
   const dsMau = DANH_MUC_MAU.filter((m) => !tim || `${m.ma} ${m.ten}`.toLowerCase().includes(tim.toLowerCase()));
-  const theoBuoc = CAC_BUOC.map((b) => ({ b, ds: dsMau.filter((m) => m.buoc === b.ma) })).filter((x) => x.ds.length);
+  const theoBuoc = [
+    ...CAC_BUOC.map((b) => ({ tieuDe: `Bước ${b.ma}. ${b.ten}`, ds: dsMau.filter((m) => m.buoc === b.ma && m.nguon !== "RIENG") })),
+    { tieuDe: "Mẫu riêng của xã", ds: dsMau.filter((m) => m.nguon === "RIENG") },
+  ].filter((x) => x.ds.length);
   const dsHoChon = ds.filter(({ h }) => chonHo.has(h.id));
   const hoXemTruoc = mau.phamVi === "HO" ? dsHoChon[0] : undefined;
-  const duLieuXem = ghepDuLieu({ mau, duAn, ds, ho: hoXemTruoc, chung, rieng, so, ngayKy });
+  const duLieuXem = ghepDuLieu({ mau, duAn, ds: mau.phamVi === "DOT" ? dsHoChon : ds, ho: hoXemTruoc, chung, rieng, so, ngayKy });
 
   const napMau = async () => (await kho.docMau(ma))?.bytes ?? (await napMauGoc(ma));
 
@@ -108,10 +107,25 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
       const mauBytes = await napMau();
       const soSo = /^\d+$/.test(so.trim()) ? Number(so.trim()) : null;
       await luuDuAn({ ...duAn, vanBan: { ...(duAn.vanBan ?? {}), ...chung } });
-      if (mau.phamVi === "DU_AN") {
+      const luuRieng = Object.fromEntries(mau.nhapThem.filter((t) => t.truong !== "noi_nhan" && rieng[t.truong]).map((t) => [t.truong, rieng[t.truong]!]));
+      const kyHieu = (mau.ghiLai?.kyHieu ?? "").replace("{ky_hieu_phong}", chung.ky_hieu_phong || "");
+      if (mau.phamVi === "DOT") {
+        if (!dsHoChon.length) throw new Error("Chọn các hộ, tổ chức trong đợt.");
+        const out = dienMau(mauBytes, ghepDuLieu({ mau, duAn, ds: dsHoChon, chung, rieng, so, ngayKy }));
+        taiXuong(out, `Mau-${ma}_${tenAnToan(mau.ten)}_${dsHoChon.length}-ho.docx`, DOCX);
+        const vbMoi: Record<string, string> = { ...(duAn.vanBan ?? {}), ...chung, ...luuRieng };
+        if (mau.ghiLai?.capDo === "DU_AN" && so.trim()) Object.assign(vbMoi, { [`${mau.ghiLai.khoa}_so`]: `${so.trim()}/${kyHieu}`, [`${mau.ghiLai.khoa}_ngay`]: ngayChu(ngayKy) });
+        await luuDuAn({ ...duAn, vanBan: vbMoi });
+        for (const x of dsHoChon) {
+          const ghi: Partial<Ho> = { nhatKy: [...x.h.nhatKy, { luc: new Date().toISOString(), nguoi: "Cán bộ xã", noiDung: `Có tên trong văn bản ${mau.ten}${so.trim() ? ` số ${so.trim()}/${kyHieu}` : ""}` }] };
+          if (mau.ghiLai?.capDo === "HO" && so.trim()) ghi.vanBan = { ...(x.h.vanBan ?? {}), [`${mau.ghiLai.khoa}_so`]: `${so.trim()}/${kyHieu}`, [`${mau.ghiLai.khoa}_ngay`]: ngayChu(ngayKy) };
+          await luuHo({ ...x.h, ...ghi });
+        }
+        setThongBao({ loai: "xanh", noiDung: `Đã tạo ${mau.ten} cho ${dsHoChon.length} hộ, tổ chức.` });
+      } else if (mau.phamVi === "DU_AN") {
         const out = dienMau(mauBytes, ghepDuLieu({ mau, duAn, ds, chung, rieng, so, ngayKy }));
         taiXuong(out, `Mau-${ma}_${tenAnToan(mau.ten)}_${tenAnToan(duAn.ten)}.docx`, DOCX);
-        if (mau.ghiLai && so.trim()) await luuDuAn({ ...duAn, vanBan: { ...(duAn.vanBan ?? {}), ...chung, [`${mau.ghiLai.khoa}_so`]: `${so.trim()}/${mau.ghiLai.kyHieu}`, [`${mau.ghiLai.khoa}_ngay`]: ngayChu(ngayKy) } });
+        if (mau.ghiLai && so.trim()) await luuDuAn({ ...duAn, vanBan: { ...(duAn.vanBan ?? {}), ...chung, [`${mau.ghiLai.khoa}_so`]: `${so.trim()}/${kyHieu}`, [`${mau.ghiLai.khoa}_ngay`]: ngayChu(ngayKy) } });
         setThongBao({ loai: "xanh", noiDung: `Đã tạo Mẫu ${ma} cho dự án.` });
       } else {
         if (!dsHoChon.length) throw new Error("Chọn ít nhất một hộ, tổ chức.");
@@ -121,7 +135,7 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
           const noiDung = dienMau(mauBytes, ghepDuLieu({ mau, duAn, ds, ho: x, chung, rieng, so: soHo, ngayKy }));
           tep.push({ ten: `Mau-${ma}_${tenAnToan(x.h.ma + " " + x.h.ten)}.docx`, noiDung });
           const ghi: Partial<Ho> = { nhatKy: [...x.h.nhatKy, { luc: new Date().toISOString(), nguoi: "Cán bộ xã", noiDung: `Tạo văn bản Mẫu ${ma} – ${mau.ten}${soHo.trim() ? ` số ${soHo}` : ""}` }] };
-          if (mau.ghiLai && soHo.trim()) ghi.vanBan = { ...(x.h.vanBan ?? {}), [`${mau.ghiLai.khoa}_so`]: `${soHo.trim()}/${mau.ghiLai.kyHieu}`, [`${mau.ghiLai.khoa}_ngay`]: ngayChu(ngayKy) };
+          if (mau.ghiLai && soHo.trim()) ghi.vanBan = { ...(x.h.vanBan ?? {}), [`${mau.ghiLai.khoa}_so`]: `${soHo.trim()}/${kyHieu}`, [`${mau.ghiLai.khoa}_ngay`]: ngayChu(ngayKy) };
           await luuHo({ ...x.h, ...ghi });
         }
         if (tep.length === 1) taiXuong(tep[0]!.noiDung, tep[0]!.ten, DOCX);
@@ -156,6 +170,7 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
   const xem: [string, unknown][] = [
     ["ten_du_an", duLieuXem.ten_du_an],
     ...(mau.phamVi === "HO" ? ([["ho_ten", duLieuXem.ho_ten], ["dia_chi", duLieuXem.dia_chi], ["dt_thu_hoi", `${duLieuXem.dt_thu_hoi} m²`], ["thua_mo_ta", duLieuXem.thua_mo_ta], ["tong_tien", `${duLieuXem.tong_tien} đ`], ["tong_tien_chu", duLieuXem.tong_tien_chu]] as [string, unknown][]) : ([["tong_dt_thu_hoi", `${duLieuXem.tong_dt_thu_hoi} m²`], ["so_doi_tuong", duLieuXem.so_doi_tuong], ["tong_gia_tri", `${duLieuXem.tong_gia_tri} đ`], ["tong_gia_tri_chu", duLieuXem.tong_gia_tri_chu]] as [string, unknown][])),
+    ...(mau.phamVi === "DOT" ? ([["so_doi_tuong_mo_ta", duLieuXem.so_doi_tuong_mo_ta], ["dt_duoc_bt", `${duLieuXem.dt_duoc_bt} m²`], ["dt_khong_bt", `${duLieuXem.dt_khong_bt} m²`], ["ds_thua_thu_hoi", `${(duLieuXem.ds_thua_thu_hoi as unknown[]).length} dòng`], ["tong_dt_co_gcn", `${duLieuXem.tong_dt_co_gcn} m²`]] as [string, unknown][]) : []),
     ["tb_thu_hoi_so", duLieuXem.tb_thu_hoi_so],
     ["tb_thu_hoi_ngay", duLieuXem.tb_thu_hoi_ngay],
     ["can_cu", `${(duLieuXem.can_cu as string[]).length} căn cứ`],
@@ -182,14 +197,14 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
         <div className="the" style={{ position: "sticky", top: 10 }}>
           <div className="the-dau"><input placeholder="Tìm mẫu…" value={tim} onChange={(e) => setTim(e.target.value)} style={{ width: "100%" }} /></div>
           <div className="bang-cuon" style={{ maxHeight: "calc(100vh - 250px)" }}>
-            {theoBuoc.map(({ b, ds: dm }) => (
-              <div key={b.ma}>
-                <div className="chu-nho mo" style={{ padding: "8px 12px 2px", fontWeight: 600 }}>Bước {b.ma}. {b.ten}</div>
+            {theoBuoc.map(({ tieuDe, ds: dm }) => (
+              <div key={tieuDe}>
+                <div className="chu-nho mo" style={{ padding: "8px 12px 2px", fontWeight: 600 }}>{tieuDe}</div>
                 {dm.map((m) => (
                   <div key={m.ma} className={`muc-mau ${m.ma === ma ? "chon" : ""}`} onClick={() => setMa(m.ma)}>
                     <span className="so-mau">{m.ma}</span>
                     <span>{m.ten}{mauTuy.includes(m.ma) && <span className="nhan nhan-tim" style={{ marginLeft: 6 }}>Mẫu riêng</span>}</span>
-                    <span className="mo chu-nho">{m.phamVi === "HO" ? "Từng hộ" : "Dự án"}</span>
+                    <span className="mo chu-nho">{m.phamVi === "HO" ? "Từng hộ" : m.phamVi === "DOT" ? "Theo đợt" : "Dự án"}</span>
                   </div>
                 ))}
               </div>
@@ -200,7 +215,7 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
         <div className="luoi">
           <div className="the">
             <div className="the-dau">
-              <h2>Mẫu số {mau.ma}. {mau.ten}</h2>
+              <h2>{mau.nguon === "RIENG" ? "" : "Mẫu số "}{mau.ma}. {mau.ten}</h2>
               <div className="phai">
                 <button className="nut nut-nho" onClick={async () => taiXuong(await napMau(), `Mau-${ma}_${tenAnToan(mau.ten)}_mau-trong.docx`, DOCX)} title="Tải mẫu (có các trường {…}) để chỉnh trong Word">Tải mẫu</button>
                 <label className="nut nut-nho">Thay mẫu…<input type="file" accept=".docx" style={{ display: "none" }} onChange={(e) => e.target.files?.[0] && thayMau(e.target.files[0])} /></label>
@@ -210,10 +225,11 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
             </div>
             <div className="the-than luoi">
               {thongBao && <div className={`thong-bao thong-bao-${thongBao.loai}`} style={{ marginBottom: 0 }}>{thongBao.noiDung}</div>}
-              {mau.phamVi === "HO" && (
+              {mau.moTa && <div className="mo chu-nho">{mau.moTa}</div>}
+              {(mau.phamVi === "HO" || mau.phamVi === "DOT") && (
                 <div>
                   <div className="nhom-nut" style={{ alignItems: "center", marginBottom: 6 }}>
-                    <b className="chu-nho">Chọn hộ, tổ chức ({chonHo.size}/{ds.length})</b>
+                    <b className="chu-nho">{mau.phamVi === "DOT" ? "Hộ, tổ chức trong đợt" : "Chọn hộ, tổ chức"} ({chonHo.size}/{ds.length})</b>
                     <input placeholder="Lọc…" value={locHo} onChange={(e) => setLocHo(e.target.value)} style={{ width: 200 }} />
                     <button className="nut nut-nho" onClick={() => setChonHo(new Set(ds.filter(({ h }) => !locHo || `${h.ma} ${h.ten}`.toLowerCase().includes(locHo.toLowerCase())).map(({ h }) => h.id)))}>Chọn tất cả (theo lọc)</button>
                     <button className="nut nut-nho" onClick={() => setChonHo(new Set())}>Bỏ chọn</button>
@@ -251,8 +267,8 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
                 </div>
               )}
               <div className="nhom-nut">
-                <button className="nut nut-chinh" disabled={dangTao || (mau.phamVi === "HO" && chonHo.size === 0)} onClick={tao}>
-                  {dangTao ? "Đang tạo…" : mau.phamVi === "HO" ? `Tạo văn bản cho ${chonHo.size} hộ` : "Tạo văn bản (.docx)"}
+                <button className="nut nut-chinh" disabled={dangTao || (mau.phamVi !== "DU_AN" && chonHo.size === 0)} onClick={tao}>
+                  {dangTao ? "Đang tạo…" : mau.phamVi === "HO" ? `Tạo văn bản cho ${chonHo.size} hộ` : mau.phamVi === "DOT" ? `Tạo văn bản cho đợt (${chonHo.size} hộ)` : "Tạo văn bản (.docx)"}
                 </button>
                 <button className="nut" onClick={() => setMoChung(!moChung)}>{moChung ? "Ẩn" : "Sửa"} thông tin chung của dự án</button>
               </div>

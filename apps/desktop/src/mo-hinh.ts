@@ -45,6 +45,10 @@ export interface Thua {
   nguonGoc: string;
   gia: GiaThua | null;
   phanLop?: PhanLopThua;
+  /** Thông tin Giấy chứng nhận (dùng cho danh sách thu hồi đất theo mẫu của xã). */
+  gcn?: { seri: string; soTo: string; soThua: string; dienTich: string; loaiDat: string; dtThuHoiCoGcn: string; loaiDatThuHoi: string };
+  /** Diện tích thu hồi thuộc loại không được bồi thường, hỗ trợ về đất (cán bộ xác định, vd. đất rừng phòng hộ do cộng đồng quản lý, đất chưa sử dụng). */
+  khongBoiThuong?: boolean;
   /** Mã thửa trên bản đồ (T{tờ}-{thửa}), nếu tạo từ bản đồ. */
   maBanDo?: string;
   dienTichBanDo?: number;

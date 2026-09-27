@@ -52,6 +52,8 @@ a { color: var(--chinh); }
 .thanh-tren .phai { margin-left: auto; display: flex; align-items: center; gap: 14px; font-size: 12px; opacity: 0.9; }
 .cham-luu { display: inline-flex; align-items: center; gap: 6px; }
 .cham-luu::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #6fd3a8; }
+.nut-tren { background: transparent; color: #fff; border: 1px solid rgba(255, 255, 255, 0.45); border-radius: 5px; padding: 4px 10px; font-size: 12px; cursor: pointer; }
+.nut-tren:hover { background: rgba(255, 255, 255, 0.12); }
 .noi-dung { overflow: auto; }
 .trang { max-width: 1480px; margin: 0 auto; padding: 18px 22px 40px; }
 .chan { font-size: 11.5px; color: var(--chu-mo); padding: 5px 20px; border-top: 1px solid var(--vien); background: var(--be-mat); display: flex; gap: 18px; }

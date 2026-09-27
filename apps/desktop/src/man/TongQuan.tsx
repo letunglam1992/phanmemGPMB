@@ -3,6 +3,7 @@ import { D } from "@gpmb/core";
 import { useUngDung } from "../ung-dung";
 import { tinhHo } from "../tinh-ho";
 import { taoId, type DuAn } from "../mo-hinh";
+import { canhBaoSaoLuu } from "../sao-luu";
 import { CAC_CHANG, THU_TU_TRANG_THAI, TT_GPMB, canhBaoChung, canhBaoDuAn, homNayIso, thongKe, type TrangThaiGpmb } from "../trang-thai";
 import { BieuTuong, DaiChang, PhanBoTrangThai, TheChiSo, VongTienDo } from "../thanh-phan/BieuDo";
 import { taoDuAnMau } from "../du-lieu-mau";
@@ -10,7 +11,7 @@ import { DANH_MUC_XA } from "../du-lieu";
 import { HopThoai, O, ngayVN, tien } from "../thanh-phan/chung";
 
 export function TongQuan() {
-  const { dsDuAn, hoCua, di, chinhSach, luuDuAn, kho, dangTai } = useUngDung();
+  const { dsDuAn, hoCua, di, chinhSach, luuDuAn, kho, dangTai, lanSaoLuu, moSaoLuu } = useUngDung();
   const [taoMoi, setTaoMoi] = useState(false);
   const homNay = homNayIso();
 
@@ -33,7 +34,12 @@ export function TongQuan() {
   const dem = Object.fromEntries(THU_TU_TRANG_THAI.map((t) => [t, cong((x) => x.tk.theoTrangThai[t])])) as Record<TrangThaiGpmb, number>;
   const tienDo = soHo ? cong((x) => x.tk.tienDoChung * x.tk.soHo) / soHo : 0;
   const chang = CAC_CHANG.map((c, i) => ({ ten: c.ten, soHo: cong((x) => x.tk.chang[i]!.soHo) }));
-  const canhBao = [...canhBaoChung(homNay).map((c) => ({ ...c, muc: "CAO" as const, duAnId: "", hoId: undefined })), ...duLieu.flatMap((x) => x.cb)];
+  const nhacSaoLuu = canhBaoSaoLuu(lanSaoLuu, homNay, dsDuAn.length > 0);
+  const canhBao = [
+    ...canhBaoChung(homNay).map((c) => ({ ...c, muc: "CAO" as const, duAnId: "", hoId: undefined, saoLuu: false })),
+    ...(nhacSaoLuu ? [{ noiDung: nhacSaoLuu, canCu: "Bấm để mở Sao lưu, khôi phục", muc: "TRUNG_BINH" as const, duAnId: "", hoId: undefined, saoLuu: true }] : []),
+    ...duLieu.flatMap((x) => x.cb),
+  ];
   const capNhat = duLieu.map((x) => x.tk.capNhatCuoi).filter(Boolean).sort().at(-1);
   const tongTien = duLieu.reduce((s, x) => s.plus(x.tong), D(0));
 
@@ -97,7 +103,7 @@ export function TongQuan() {
           <div className="the-dau"><h3>Cảnh báo tự động</h3><div className="phai"><span className="nhan nhan-do">{canhBao.filter((c) => c.muc === "CAO").length}</span><span className="nhan nhan-vang">{canhBao.filter((c) => c.muc !== "CAO").length}</span></div></div>
           <div className="bang-cuon" style={{ maxHeight: 520 }}>
             {canhBao.map((c, i) => (
-              <div key={i} className="canh-bao-dong" onClick={() => c.duAnId && (c.hoId ? di({ ten: "ho", duAnId: c.duAnId, hoId: c.hoId, tab: "tien-do" }) : di({ ten: "du-an", duAnId: c.duAnId }))}>
+              <div key={i} className="canh-bao-dong" onClick={() => ("saoLuu" in c && c.saoLuu ? moSaoLuu(true) : c.duAnId && (c.hoId ? di({ ten: "ho", duAnId: c.duAnId, hoId: c.hoId, tab: "tien-do" }) : di({ ten: "du-an", duAnId: c.duAnId })))}>
                 <span className={`cb-bt cb-${c.muc}`}>{c.muc === "THONG_TIN" ? "i" : "!"}</span>
                 <div>{c.noiDung}{c.canCu && <div className="can-cu">{c.canCu}</div>}</div>
               </div>

@@ -7,3 +7,6 @@ __pycache__/
 *.dgn
 *.DGN
 du-lieu-that/
+
+# cấu hình thay thế chứa tên người, số văn bản của hồ sơ gốc (tools/mau-van-ban/mau-rieng.py)
+thay-the.json

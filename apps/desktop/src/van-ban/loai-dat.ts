@@ -1,0 +1,26 @@
+/** Tên loại đất theo ký hiệu (dùng khi diễn giải diện tích trong văn bản). Ký hiệu lạ giữ nguyên. */
+export const TEN_LOAI_DAT: Record<string, string> = {
+  LUC: "Đất chuyên trồng lúa",
+  LUK: "Đất trồng lúa còn lại",
+  LUN: "Đất trồng lúa nương",
+  BHK: "Đất bằng trồng cây hàng năm khác",
+  NHK: "Đất nương rẫy trồng cây hàng năm khác",
+  HNK: "Đất trồng cây hàng năm khác",
+  CLN: "Đất trồng cây lâu năm",
+  RSX: "Đất rừng sản xuất",
+  RPH: "Đất rừng phòng hộ",
+  RDD: "Đất rừng đặc dụng",
+  NTS: "Đất nuôi trồng thủy sản",
+  NKH: "Đất nông nghiệp khác",
+  ONT: "Đất ở tại nông thôn",
+  ODT: "Đất ở tại đô thị",
+  TMD: "Đất thương mại, dịch vụ",
+  SKC: "Đất cơ sở sản xuất phi nông nghiệp",
+  DGT: "Đất giao thông",
+  NTD: "Đất nghĩa trang, nhà tang lễ, cơ sở hỏa táng",
+  DCS: "Đất đồi núi chưa sử dụng",
+  BCS: "Đất bằng chưa sử dụng",
+  NCS: "Núi đá không có rừng cây",
+  CSD: "Đất chưa sử dụng",
+};
+export const tenLoaiDat = (ma: string) => TEN_LOAI_DAT[ma.toUpperCase()] ?? ma;

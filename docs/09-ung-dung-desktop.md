@@ -36,8 +36,9 @@ Ký hiệu: **Đã kiểm thử** = có kiểm thử tự động đạt · **Đ
 | Tạo hồ sơ từ thửa trong ranh (nhóm theo chủ sử dụng) | Đã chạy (tệp thật: 75 hồ sơ / 501 thửa) | Loại đất giữ ký hiệu bản đồ (1L, 2L…) để cán bộ đổi |
 | Xuất Excel: TH ĐẤT, TH GIÁ TRỊ TRÌNH DUYỆT, trang từng hộ | **Đã kiểm thử** (đọc lại tệp, đối chiếu số) | Trang hộ theo cột biểu mẫu: ĐVT, Khối lượng, Hệ số/mức, Đơn giá, Thành tiền, Căn cứ; dòng cây vượt mật độ tách riêng hệ số 0,3; số La Mã nhóm cố định như biểu mẫu. **Hạn chế:** chưa chép định dạng, chữ ký, tiêu đề đúng từng ô của tệp mẫu |
 | Tra cứu: QĐ 32, PL VIII, PL V, NQ 152, bộ chính sách | Đã chạy | |
-| Soạn văn bản theo 22 mẫu Sổ tay QĐ 1966 (tự điền, xuất .docx/.zip, cán bộ thay mẫu riêng) | **Đã kiểm thử** (điền đủ 22 mẫu), đã chạy giao diện | docs/10. Mẫu riêng địa phương (.doc người dùng gửi) chưa dựng |
-| Sao lưu/khôi phục, nhiều người dùng mạng nội bộ, "cập nhật thời gian thực" giữa nhiều máy | **Chưa làm** | Bản hiện tại lưu trên một máy; nhiều người dùng cần máy chủ nội bộ (QD-01) |
+| Soạn văn bản theo 22 mẫu Sổ tay QĐ 1966 (tự điền, xuất .docx/.zip, cán bộ thay mẫu riêng) | **Đã kiểm thử** (điền đủ 22 mẫu), đã chạy giao diện | docs/10. Kèm 03 mẫu riêng của xã R1–R3 (Tờ trình, Báo cáo thẩm định, QĐ thu hồi theo đợt) — **đã kiểm thử** điền, đã chạy giao diện (R3 cho 2 hộ) |
+| Sao lưu, khôi phục dữ liệu (tệp `.gpmb`: dự án, hồ sơ, bản đồ, mẫu tự chỉnh; mã SHA-256; thay thế toàn bộ hoặc gộp; tự tải bản sao lưu dữ liệu hiện có trước khi thay thế; nhắc khi > 7 ngày chưa sao lưu) | **Đã kiểm thử** (khứ hồi, phát hiện tệp bị sửa/sai định dạng/phiên bản mới hơn); đã chạy giao diện (sao lưu → xóa → khôi phục) | Tệp sao lưu **không mã hóa**, chứa thông tin cá nhân → cất giữ theo quy chế bảo mật của cơ quan. Không tự sao lưu định kỳ; không gửi ra ngoài. Mốc "lần sao lưu cuối" lưu theo máy |
+| Nhiều người dùng mạng nội bộ, "cập nhật thời gian thực" giữa nhiều máy | **Chưa làm** | Bản hiện tại lưu trên một máy; chuyển dữ liệu giữa máy bằng tệp sao lưu. Nhiều người dùng cần máy chủ nội bộ (QD-01) |
 | Bộ cài Windows `.exe` | **Đã build** trên GitHub Actions (windows-latest), **chưa cài thử** trên Windows 10/11 | Xem §3 |
 
 ## 3. Đóng gói Windows

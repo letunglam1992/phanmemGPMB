@@ -3,6 +3,7 @@ import type { BoChinhSach } from "@gpmb/core";
 import { BO_CHINH_SACH } from "./du-lieu";
 import { taoKhoIndexedDb, type Kho } from "./kho";
 import type { DuAn, Ho } from "./mo-hinh";
+import { docLanSaoLuu, ghiLanSaoLuu } from "./sao-luu";
 
 export type Man =
   | { ten: "tong-quan" }
@@ -25,6 +26,12 @@ interface NguCanh {
   chinhSach: (d: DuAn) => BoChinhSach;
   dangTai: boolean;
   nguoiDung: string;
+  /** Nạp lại toàn bộ dữ liệu từ kho (sau khôi phục). */
+  taiLai: () => Promise<void>;
+  hopSaoLuu: boolean;
+  moSaoLuu: (mo: boolean) => void;
+  lanSaoLuu: string | null;
+  datLanSaoLuu: (luc: string) => void;
 }
 
 const Ctx = createContext<NguCanh | null>(null);
@@ -42,6 +49,8 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
   const [man, setMan] = useState<Man>({ ten: "tong-quan" });
   const [dangTai, setDangTai] = useState(true);
   const nguoiDung = "Cán bộ xã";
+  const [hopSaoLuu, moSaoLuu] = useState(false);
+  const [lanSaoLuu, setLanSaoLuu] = useState<string | null>(() => docLanSaoLuu());
 
   const taiLai = useCallback(async () => {
     const da = await kho.dsDuAn();
@@ -81,6 +90,14 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
     chinhSach: (d) => BO_CHINH_SACH[d.boChinhSach] ?? BO_CHINH_SACH["sonla-2026-03-31"]!,
     dangTai,
     nguoiDung,
+    taiLai,
+    hopSaoLuu,
+    moSaoLuu,
+    lanSaoLuu,
+    datLanSaoLuu: (luc) => {
+      ghiLanSaoLuu(luc);
+      setLanSaoLuu(luc);
+    },
   };
   return <Ctx.Provider value={giaTri}>{children}</Ctx.Provider>;
 }

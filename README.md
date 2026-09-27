@@ -29,7 +29,7 @@
 
 ## Ứng dụng desktop (`apps/desktop`)
 
-React + TypeScript, vỏ Tauri 2 → bộ cài Windows (NSIS) build trên GitHub Actions. `npm run dev` để chạy thử trong trình duyệt. Tình trạng từng chức năng: docs/09.
+React + TypeScript, vỏ Tauri 2 → bộ cài Windows (NSIS) build trên GitHub Actions. `npm run dev` để chạy thử trong trình duyệt. Có sao lưu, khôi phục dữ liệu ra tệp `.gpmb` (nút trên thanh tiêu đề). Tình trạng từng chức năng: docs/09.
 
 ## Bản đồ (`packages/gis`)
 

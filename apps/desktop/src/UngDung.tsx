@@ -5,9 +5,10 @@ import { HoSo } from "./man/HoSo";
 import { BanDo } from "./man/BanDo";
 import { TraCuu } from "./man/TraCuu";
 import { VanBan } from "./man/VanBan";
+import { HopSaoLuu } from "./thanh-phan/HopSaoLuu";
 
 export function UngDung() {
-  const { man, di, dsDuAn } = useUngDung();
+  const { man, di, dsDuAn, hopSaoLuu, moSaoLuu } = useUngDung();
   const duAnId = "duAnId" in man ? man.duAnId : dsDuAn[0]?.id;
   const muc: { ten: string; chon: boolean; bam: () => void; tat?: boolean }[] = [
     { ten: "Tổng quan", chon: man.ten === "tong-quan", bam: () => di({ ten: "tong-quan" }) },
@@ -35,6 +36,7 @@ export function UngDung() {
         </nav>
         <div className="phai">
           <span className="cham-luu">Dữ liệu lưu trên máy này</span>
+          <button className="nut-tren" onClick={() => moSaoLuu(true)}>Sao lưu, khôi phục</button>
           <span>Cán bộ xã</span>
         </div>
       </header>
@@ -51,6 +53,7 @@ export function UngDung() {
         <span>Phần mềm hỗ trợ tính toán — cán bộ có thẩm quyền kiểm tra, phê duyệt</span>
         <span style={{ marginLeft: "auto" }}>Bản thử nghiệm 0.1</span>
       </footer>
+      {hopSaoLuu && <HopSaoLuu />}
     </div>
   );
 }

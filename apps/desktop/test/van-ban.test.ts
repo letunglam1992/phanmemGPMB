@@ -5,31 +5,33 @@ import cs0 from "../../../policy/goi/sonla-2026-03-31.json";
 import type { BoChinhSach } from "@gpmb/core";
 import { tinhHo } from "../src/tinh-ho";
 import { taoDuAnMau } from "../src/du-lieu-mau";
-import { DANH_MUC_MAU } from "../src/van-ban/danh-muc";
+import { DANH_MUC_MAU, tepMau } from "../src/van-ban/danh-muc";
 import { ghepDuLieu, thongTinChungMacDinh } from "../src/van-ban/du-lieu";
 import { dienMau, truongTrongMau } from "../src/van-ban/dien-mau";
 
 const cs = cs0 as unknown as BoChinhSach;
 const { duAn, ho } = taoDuAnMau();
 const ds = ho.map((h) => ({ h, k: tinhHo(cs, duAn, h) }));
-const docMau = (ma: string) => readFileSync(new URL(`../public/mau-van-ban/mau-${ma}.docx`, import.meta.url));
+const docMau = (ma: string) => readFileSync(new URL(`../public/mau-van-ban/${tepMau(DANH_MUC_MAU.find((m) => m.ma === ma)!)}`, import.meta.url));
 const vanBan = (u8: Uint8Array) => new PizZip(u8).file("word/document.xml")!.asText().replace(/<w:p[ >]/g, "\n<w:p ").replace(/<[^>]+>/g, "");
 
 describe("22 mẫu văn bản QĐ 1966/QĐ-UBND", () => {
-  it("đủ 22 mẫu, mỗi mẫu có tệp và trường hợp lệ", () => {
-    expect(DANH_MUC_MAU.map((m) => m.ma)).toEqual(Array.from({ length: 22 }, (_, i) => String(i + 1).padStart(2, "0")));
+  it("đủ 22 mẫu Sổ tay + 3 mẫu riêng, mỗi mẫu có tệp và trường hợp lệ", () => {
+    expect(DANH_MUC_MAU.filter((m) => m.nguon !== "RIENG").map((m) => m.ma)).toEqual(Array.from({ length: 22 }, (_, i) => String(i + 1).padStart(2, "0")));
+    expect(DANH_MUC_MAU.filter((m) => m.nguon === "RIENG").map((m) => m.ma)).toEqual(["R1", "R2", "R3"]);
     for (const m of DANH_MUC_MAU) expect(truongTrongMau(docMau(m.ma)).length).toBeGreaterThan(3);
   });
 
   for (const m of DANH_MUC_MAU) {
     it(`Mẫu ${m.ma} – ${m.ten}: điền được, không còn trường {…}`, () => {
       const rieng = Object.fromEntries(m.nhapThem.map((t) => [t.truong, t.macDinh ?? ""]));
-      const du = ghepDuLieu({ mau: m, duAn, ds, ho: m.phamVi === "HO" ? ds[0] : undefined, chung: { ...thongTinChungMacDinh(duAn), ten_don_vi_bt: "Ban Quản lý dự án mẫu", nguoi_ky: "Nguyễn Văn Mẫu" }, rieng, so: "12", ngayKy: "2026-09-27" });
+      const du = ghepDuLieu({ mau: m, duAn, ds, ho: m.phamVi === "HO" ? ds[0] : undefined, chung: { ...thongTinChungMacDinh(duAn), ten_don_vi_bt: "Ban Quản lý dự án mẫu", nguoi_ky: "Lê Văn Mẫu" }, rieng, so: "12", ngayKy: "2026-09-27" });
       const t = vanBan(dienMau(docMau(m.ma), du));
       expect(t).not.toMatch(/\{[#/]?[\w.]+\}/);
-      expect(t).toContain("CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM");
+      expect(t).toMatch(/CỘNG HO(À|À) XÃ HỘI CHỦ NGHĨA VIỆT NAM|CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM/);
       if (m.phamVi === "HO") expect(t).toContain("Hộ mẫu 01");
       if (m.coQuan === "UBND") expect(t).toMatch(/Số: 12\//);
+      if (m.nguon === "RIENG") expect(t).not.toMatch(/Vân Hồ|Hòa Bình|UBND XÃ VÂN/i);
     });
   }
 
@@ -59,6 +61,35 @@ describe("22 mẫu văn bản QĐ 1966/QĐ-UBND", () => {
     const du = ghepDuLieu({ mau: m, duAn, ds, chung: thongTinChungMacDinh(duAn), rieng: { chi_phi_to_chuc: "50.000.000" }, so: "", ngayKy: "" });
     expect(du.tong_gia_tri).toBe((tong + 50000000).toLocaleString("vi-VN"));
     expect(du.tien_bthttdc).toBe(tong.toLocaleString("vi-VN"));
+  });
+
+  it("mẫu riêng: diện tích theo nhóm, danh sách thu hồi, căn cứ gạch đầu dòng, phạm vi đợt", () => {
+    const hoTc = { ...ds[1]!.h, loai: "TO_CHUC" as const, thua: ds[1]!.h.thua.map((t, i) => (i === 0 ? { ...t, khongBoiThuong: true } : t)) };
+    const ds2 = [{ ...ds[0]!, h: { ...ds[0]!.h, thua: ds[0]!.h.thua.map((t, i) => (i === 0 ? { ...t, gcn: { seri: "AB 000001", soTo: "5", soThua: "85", dienTich: "9222.1", loaiDat: "CLN", dtThuHoiCoGcn: "9000", loaiDatThuHoi: "CLN" } } : t)) } }, { h: hoTc, k: tinhHo(cs, duAn, hoTc) }];
+    for (const ma of ["R1", "R2", "R3"]) {
+      const m = DANH_MUC_MAU.find((x) => x.ma === ma)!;
+      const du = ghepDuLieu({ mau: m, duAn, ds: ds2, chung: { ...thongTinChungMacDinh(duAn), ten_don_vi_bt: "Ban Quản lý dự án mẫu", ly_do_thu_hoi: "Xây dựng khu công nghiệp" }, rieng: { pham_vi_dot: "Phạm vi bản mẫu, đợt 1", noi_nhan: "Như trên\nLưu: VT" }, so: "", ngayKy: "" });
+      const t = vanBan(dienMau(docMau(ma), du));
+      expect(t).toContain("(Phạm vi bản mẫu, đợt 1)");
+      if (ma !== "R2") expect(t).toContain("1 hộ gia đình, cá nhân và 1 tổ chức");
+      // Hộ 01: CLN 9.665,30 (được BT); tổ chức: HNK 600 (không được BT), ONT 150,50 (được BT)
+      expect(t).toContain("* Diện tích đất được bồi thường, hỗ trợ: 9.815,80 m2.");
+      expect(t).toContain("- Đất của hộ gia đình, cá nhân: 9.665,30 m2, gồm:");
+      expect(t).toContain("+ Đất trồng cây lâu năm: 9.665,30 m2.");
+      expect(t).toContain("- Đất của tổ chức: 150,50 m2, gồm:");
+      expect(t).toContain("+ Đất ở tại nông thôn: 150,50 m2.");
+      expect(t).toContain("* Tổng diện tích đất không được bồi thường, hỗ trợ: 600,00 m2, gồm:");
+      expect(t).toContain("+ Đất trồng cây hàng năm khác: 600,00 m2.");
+      if (ma !== "R3") expect(t).toContain("TRƯỞNG PHÒNG");
+      expect(t).toContain("- Như trên;");
+      expect(t).toContain("- Lưu: VT.");
+      if (ma !== "R2") {
+        expect(t).toContain("AB 000001");
+        expect(t).toContain("9.000,00");
+      }
+      if (ma === "R2") expect(t).toContain("- Luật Tổ chức chính quyền địa phương số 72/2025/QH15;");
+      else expect(t).toContain("Căn cứ Luật Tổ chức chính quyền địa phương số 72/2025/QH15;");
+    }
   });
 
   it("trường bỏ trống in thành dấu chấm", () => {
