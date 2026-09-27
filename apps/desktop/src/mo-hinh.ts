@@ -125,6 +125,9 @@ export interface BuocHo {
   trangThai: TrangThaiBuoc;
   ngay?: string;
   ghiChu?: string;
+  /** Tài khoản gửi duyệt / xác nhận hoàn thành (tách người lập – người duyệt). */
+  guiBoi?: string;
+  duyetBoi?: string;
 }
 
 export interface NhatKy {

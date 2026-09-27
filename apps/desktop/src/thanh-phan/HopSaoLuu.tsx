@@ -9,7 +9,7 @@ const ngayGio = (iso: string) => new Date(iso).toLocaleString("vi-VN", { hour12:
 
 /** Hộp thoại sao lưu, khôi phục dữ liệu. Tệp chỉ tạo/đọc trên máy, không gửi ra ngoài. */
 export function HopSaoLuu() {
-  const { kho, moSaoLuu, lanSaoLuu, datLanSaoLuu, taiLai, di, dsDuAn, hoCua } = useUngDung();
+  const { kho, moSaoLuu, lanSaoLuu, datLanSaoLuu, taiLai, di, dsDuAn, hoCua, quyen, ghiNhatKy } = useUngDung();
   const [dangLam, setDangLam] = useState(false);
   const [thongBao, setThongBao] = useState<{ loai: "ok" | "loi"; noiDung: string } | null>(null);
   const [ban, setBan] = useState<{ ten: string; ban: BanSaoLuu } | null>(null);
@@ -29,6 +29,7 @@ export function HopSaoLuu() {
     try {
       const tt = await saoLuu();
       datLanSaoLuu(tt.luc);
+      await ghiNhatKy("Tạo bản sao lưu", `${tt.soDuAn} dự án, ${tt.soHo} hồ sơ, ${tt.soBanDo} bản đồ, ${tt.soMau} mẫu`);
       setThongBao({ loai: "ok", noiDung: `Đã tạo bản sao lưu: ${tt.soDuAn} dự án, ${tt.soHo} hồ sơ, ${tt.soBanDo} bản đồ, ${tt.soMau} mẫu tự chỉnh. Hãy cất tệp .gpmb ra thiết bị khác (USB, ổ mạng nội bộ).` });
     } catch (e) {
       setThongBao({ loai: "loi", noiDung: `Không tạo được bản sao lưu: ${(e as Error).message}` });
@@ -50,14 +51,16 @@ export function HopSaoLuu() {
   };
 
   const khoiPhucNgay = async () => {
-    if (!ban) return;
+    if (!ban || !quyen("KHOI_PHUC")) return;
     setDangLam(true);
     setThongBao(null);
     try {
       // bản sao lưu an toàn của dữ liệu hiện có trước khi thay thế
       if (cheDo === "THAY_THE" && dsDuAn.length) await saoLuu("GPMB-truoc-khoi-phuc");
+      await ghiNhatKy("Khôi phục dữ liệu – bắt đầu", `${ban.ten} (${cheDo === "THAY_THE" ? "thay thế" : "gộp"}); sao lưu lúc ${ban.ban.thongTin.luc}`);
       await khoiPhuc(kho, ban.ban, cheDo);
       await taiLai();
+      await ghiNhatKy("Khôi phục dữ liệu – xong", `${ban.ban.thongTin.soDuAn} dự án, ${ban.ban.thongTin.soHo} hồ sơ`);
       di({ ten: "tong-quan" });
       const t = ban.ban.thongTin;
       setThongBao({ loai: "ok", noiDung: `Đã khôi phục ${t.soDuAn} dự án, ${t.soHo} hồ sơ, ${t.soBanDo} bản đồ, ${t.soMau} mẫu tự chỉnh (${cheDo === "THAY_THE" ? "thay thế toàn bộ" : "gộp vào dữ liệu hiện có"}).` });
@@ -77,7 +80,7 @@ export function HopSaoLuu() {
         Toàn bộ dữ liệu (dự án, hồ sơ hộ, bản đồ đã nạp, mẫu văn bản tự chỉnh) được đóng thành một tệp <b>.gpmb</b> trên máy này. Phần mềm không gửi tệp đi đâu; cán bộ tự cất giữ tệp theo quy định bảo mật của cơ quan (tệp có thông tin cá nhân của người có đất thu hồi).
       </p>
 
-      <div className="the" style={{ padding: 14, marginBottom: 12 }}>
+      {quyen("SAO_LUU") && <div className="the" style={{ padding: 14, marginBottom: 12 }}>
         <h3 style={{ marginTop: 0 }}>Tạo bản sao lưu</h3>
         <div className="mo-ta">
           Dữ liệu hiện có: {dsDuAn.length} dự án, {soHoHienCo} hồ sơ. Lần sao lưu gần nhất: <b>{lanSaoLuu ? ngayGio(lanSaoLuu) : "chưa có"}</b>.
@@ -85,9 +88,10 @@ export function HopSaoLuu() {
         <button className="nut nut-chinh" style={{ marginTop: 10 }} disabled={dangLam || !dsDuAn.length} onClick={taoBan}>
           Tạo bản sao lưu (.gpmb)
         </button>
-      </div>
+      </div>}
 
-      <div className="the" style={{ padding: 14 }}>
+      {!quyen("KHOI_PHUC") && <p className="mo chu-nho">Khôi phục dữ liệu chỉ dành cho tài khoản Quản trị.</p>}
+      {quyen("KHOI_PHUC") && <div className="the" style={{ padding: 14 }}>
         <h3 style={{ marginTop: 0 }}>Khôi phục từ tệp sao lưu</h3>
         <input type="file" accept=".gpmb,application/zip" aria-label="Chọn tệp sao lưu" disabled={dangLam} onChange={(e) => void chonTep(e.target.files?.[0])} />
         {ban && (
@@ -117,7 +121,7 @@ export function HopSaoLuu() {
             </button>
           </div>
         )}
-      </div>
+      </div>}
 
       {thongBao && (
         <div className={`nhan ${thongBao.loai === "ok" ? "nhan-xanh" : "nhan-do"}`} role="status" style={{ display: "block", marginTop: 12, padding: "8px 10px", whiteSpace: "normal", lineHeight: 1.5 }}>

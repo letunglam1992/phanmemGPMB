@@ -9,7 +9,7 @@ const XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 /** Nhập hồ sơ từ Excel: tải mẫu → chọn tệp → xem kiểm tra → nhập (chỉ khi không còn lỗi). */
 export function HopNhapExcel({ duAn, dong }: { duAn: DuAn; dong: () => void }) {
-  const { kho, hoCua, taiLai } = useUngDung();
+  const { kho, hoCua, taiLai, quyen, ghiNhatKy, nguoiDung } = useUngDung();
   const [kq, setKq] = useState<{ ten: string; kq: KetQuaNhap } | null>(null);
   const [dang, setDang] = useState(false);
   const [xong, setXong] = useState("");
@@ -23,17 +23,18 @@ export function HopNhapExcel({ duAn, dong }: { duAn: DuAn; dong: () => void }) {
     if (!f) return;
     setDang(true);
     try {
-      setKq({ ten: f.name, kq: await docTepNhap(new Uint8Array(await f.arrayBuffer()), duAn, hoCua(duAn.id), f.name) });
+      setKq({ ten: f.name, kq: await docTepNhap(new Uint8Array(await f.arrayBuffer()), duAn, hoCua(duAn.id), f.name, nguoiDung) });
     } finally {
       setDang(false);
     }
   };
   const nhap = async () => {
-    if (!kq || chan) return;
+    if (!kq || chan || !quyen("SUA_HO_SO")) return;
     setDang(true);
     try {
       for (const h of [...kq.kq.hoMoi, ...kq.kq.hoBoSung]) await kho.luuHo(h);
       await taiLai();
+      await ghiNhatKy("Nhập hồ sơ từ Excel", `${duAn.ten} – tệp ${kq.ten}: ${kq.kq.hoMoi.length} hồ sơ mới, bổ sung ${kq.kq.hoBoSung.length}; ${kq.kq.dem.thua} thửa, ${kq.kq.dem.kiemDem} dòng kiểm đếm`);
       const d = kq.kq.dem;
       setXong(`Đã nhập: ${kq.kq.hoMoi.length} hồ sơ mới, bổ sung ${kq.kq.hoBoSung.length} hồ sơ đã có (${d.nhanKhau} nhân khẩu, ${d.thua} thửa, ${d.kiemDem} dòng kiểm đếm). Giá đất và các khoản hỗ trợ chọn tiếp trong từng hồ sơ.`);
       setKq(null);

@@ -11,7 +11,7 @@ import { DANH_MUC_XA } from "../du-lieu";
 import { HopThoai, O, ngayVN, tien } from "../thanh-phan/chung";
 
 export function TongQuan() {
-  const { dsDuAn, hoCua, di, chinhSach, luuDuAn, kho, dangTai, lanSaoLuu, moSaoLuu } = useUngDung();
+  const { dsDuAn, hoCua, di, chinhSach, luuDuAn, kho, dangTai, lanSaoLuu, moSaoLuu, quyen } = useUngDung();
   const [taoMoi, setTaoMoi] = useState(false);
   const homNay = homNayIso();
 
@@ -23,6 +23,7 @@ export function TongQuan() {
   }, [dsDuAn, hoCua, chinhSach, homNay]);
 
   const napMau = async () => {
+    if (!quyen("SUA_HO_SO")) return;
     const { duAn, ho } = taoDuAnMau();
     await kho.luuDuAn(duAn);
     for (const h of ho) await kho.luuHo(h);
@@ -34,7 +35,7 @@ export function TongQuan() {
   const dem = Object.fromEntries(THU_TU_TRANG_THAI.map((t) => [t, cong((x) => x.tk.theoTrangThai[t])])) as Record<TrangThaiGpmb, number>;
   const tienDo = soHo ? cong((x) => x.tk.tienDoChung * x.tk.soHo) / soHo : 0;
   const chang = CAC_CHANG.map((c, i) => ({ ten: c.ten, soHo: cong((x) => x.tk.chang[i]!.soHo) }));
-  const nhacSaoLuu = canhBaoSaoLuu(lanSaoLuu, homNay, dsDuAn.length > 0);
+  const nhacSaoLuu = quyen("SAO_LUU") ? canhBaoSaoLuu(lanSaoLuu, homNay, dsDuAn.length > 0) : null;
   const canhBao = [
     ...canhBaoChung(homNay).map((c) => ({ ...c, muc: "CAO" as const, duAnId: "", hoId: undefined, saoLuu: false })),
     ...(nhacSaoLuu ? [{ noiDung: nhacSaoLuu, canCu: "Bấm để mở Sao lưu, khôi phục", muc: "TRUNG_BINH" as const, duAnId: "", hoId: undefined, saoLuu: true }] : []),
@@ -52,8 +53,8 @@ export function TongQuan() {
         </div>
         <div className="phai" style={{ alignItems: "center" }}>
           <span className="cap-nhat"><BieuTuong ten="dongHo" co={16} />Cập nhật cuối: {capNhat ? new Date(capNhat).toLocaleString("vi-VN") : "—"}</span>
-          {dsDuAn.length === 0 && !dangTai && <button className="nut" onClick={napMau}>Nạp dữ liệu mẫu (ẩn danh)</button>}
-          <button className="nut nut-chinh" onClick={() => setTaoMoi(true)}>+ Dự án mới</button>
+          {dsDuAn.length === 0 && !dangTai && quyen("SUA_HO_SO") && <button className="nut" onClick={napMau}>Nạp dữ liệu mẫu (ẩn danh)</button>}
+          {quyen("SUA_HO_SO") && <button className="nut nut-chinh" onClick={() => setTaoMoi(true)}>+ Dự án mới</button>}
         </div>
       </div>
 

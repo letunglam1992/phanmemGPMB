@@ -15,7 +15,7 @@ import { HopNhapExcel } from "../thanh-phan/HopNhapExcel";
 export { hoMoi };
 
 export function ManDuAn({ duAnId }: { duAnId: string }) {
-  const { dsDuAn, hoCua, di, chinhSach, xoaDuAn } = useUngDung();
+  const { dsDuAn, hoCua, di, chinhSach, xoaDuAn, quyen } = useUngDung();
   const duAn = dsDuAn.find((d) => d.id === duAnId);
   const [sua, setSua] = useState(false);
   const [them, setThem] = useState(false);
@@ -54,8 +54,8 @@ export function ManDuAn({ duAnId }: { duAnId: string }) {
           <button className="nut" disabled={dangXuat || kq.length === 0} onClick={async () => { setDangXuat(true); try { await xuatExcelDuAn(duAn, kq); } finally { setDangXuat(false); } }}>
             {dangXuat ? "Đang xuất…" : "Xuất Excel phương án"}
           </button>
-          <button className="nut" onClick={() => setNhapExcel(true)}>Nhập Excel…</button>
-          <button className="nut nut-chinh" onClick={() => setThem(true)}>+ Thêm hộ, tổ chức</button>
+          {quyen("SUA_HO_SO") && <button className="nut" onClick={() => setNhapExcel(true)}>Nhập Excel…</button>}
+          {quyen("SUA_HO_SO") && <button className="nut nut-chinh" onClick={() => setThem(true)}>+ Thêm hộ, tổ chức</button>}
         </div>
       </div>
 
@@ -166,7 +166,7 @@ export function ManDuAn({ duAnId }: { duAnId: string }) {
         </div>
       </div>
       <div style={{ marginTop: 14 }}>
-        <button className="nut nut-chu nut-nguy nut-nho" onClick={async () => { if (confirm(`Xóa dự án "${duAn.ten}" và toàn bộ hồ sơ? Không thể hoàn tác.`)) { await xoaDuAn(duAn.id); di({ ten: "tong-quan" }); } }}>Xóa dự án</button>
+        {quyen("XOA_DU_AN") && <button className="nut nut-chu nut-nguy nut-nho" onClick={async () => { if (confirm(`Xóa dự án "${duAn.ten}" và toàn bộ hồ sơ? Không thể hoàn tác.`)) { await xoaDuAn(duAn.id); di({ ten: "tong-quan" }); } }}>Xóa dự án</button>}
       </div>
       {sua && <HopTaoDuAn duAn={duAn} dong={() => setSua(false)} />}
       {keHoach && <HopKeHoach duAn={duAn} dong={() => setKeHoach(false)} />}

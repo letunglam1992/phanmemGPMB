@@ -6,9 +6,15 @@ import { BanDo } from "./man/BanDo";
 import { TraCuu } from "./man/TraCuu";
 import { VanBan } from "./man/VanBan";
 import { HopSaoLuu } from "./thanh-phan/HopSaoLuu";
+import { useState } from "react";
+import { HopDoiMatKhau, HopNhatKy, HopQuanLyTaiKhoan, ManDangNhap, ThongBaoNhanh } from "./thanh-phan/TaiKhoan";
+import { TEN_VAI_TRO } from "./tai-khoan";
 
 export function UngDung() {
-  const { man, di, dsDuAn, hopSaoLuu, moSaoLuu } = useUngDung();
+  const { man, di, dsDuAn, hopSaoLuu, moSaoLuu, taiKhoan, quyen, dangXuat } = useUngDung();
+  const [menu, setMenu] = useState(false);
+  const [hop, setHop] = useState<null | "mat-khau" | "tai-khoan" | "nhat-ky">(null);
+  if (!taiKhoan) return (<><ManDangNhap /><ThongBaoNhanh /></>);
   const duAnId = "duAnId" in man ? man.duAnId : dsDuAn[0]?.id;
   const muc: { ten: string; chon: boolean; bam: () => void; tat?: boolean }[] = [
     { ten: "Tổng quan", chon: man.ten === "tong-quan", bam: () => di({ ten: "tong-quan" }) },
@@ -36,8 +42,21 @@ export function UngDung() {
         </nav>
         <div className="phai">
           <span className="cham-luu">Dữ liệu lưu trên máy này</span>
-          <button className="nut-tren" onClick={() => moSaoLuu(true)}>Sao lưu, khôi phục</button>
-          <span>Cán bộ xã</span>
+          {(quyen("SAO_LUU") || quyen("KHOI_PHUC")) && <button className="nut-tren" onClick={() => moSaoLuu(true)}>Sao lưu, khôi phục</button>}
+          <div className="menu-nguoi">
+            <button className="nut-tren" aria-haspopup="menu" aria-expanded={menu} onClick={() => setMenu(!menu)}>
+              {taiKhoan.hoTen} · {TEN_VAI_TRO[taiKhoan.vaiTro]} ▾
+            </button>
+            {menu && (
+              <div className="menu-tha" role="menu" onMouseLeave={() => setMenu(false)}>
+                <div className="mo chu-nho" style={{ padding: "6px 12px" }}>Đăng nhập: {taiKhoan.ten}</div>
+                <button role="menuitem" onClick={() => { setHop("mat-khau"); setMenu(false); }}>Đổi mật khẩu</button>
+                {quyen("TAI_KHOAN") && <button role="menuitem" onClick={() => { setHop("tai-khoan"); setMenu(false); }}>Quản lý tài khoản</button>}
+                {quyen("XEM_NHAT_KY") && <button role="menuitem" onClick={() => { setHop("nhat-ky"); setMenu(false); }}>Nhật ký hệ thống</button>}
+                <button role="menuitem" onClick={() => { setMenu(false); void dangXuat(); }}>Đăng xuất</button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
       <main className="noi-dung">
@@ -53,7 +72,12 @@ export function UngDung() {
         <span>Phần mềm hỗ trợ tính toán — cán bộ có thẩm quyền kiểm tra, phê duyệt</span>
         <span style={{ marginLeft: "auto" }}>Bản thử nghiệm 0.1</span>
       </footer>
+      {!quyen("SUA_HO_SO") && <div className="dai-chi-xem">Tài khoản chỉ xem: không sửa được dữ liệu</div>}
       {hopSaoLuu && <HopSaoLuu />}
+      {(hop === "mat-khau" || taiKhoan.phaiDoiMatKhau) && <HopDoiMatKhau batBuoc={taiKhoan.phaiDoiMatKhau} dong={() => setHop(null)} />}
+      {hop === "tai-khoan" && <HopQuanLyTaiKhoan dong={() => setHop(null)} />}
+      {hop === "nhat-ky" && <HopNhatKy dong={() => setHop(null)} />}
+      <ThongBaoNhanh />
     </div>
   );
 }

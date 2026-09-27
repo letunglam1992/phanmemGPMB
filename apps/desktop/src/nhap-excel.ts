@@ -166,7 +166,7 @@ function docTrang(wb: ExcelJS.Workbook, ten: string): { dong: number; o: Record<
 }
 
 /** Đọc, kiểm tra tệp nhập. Không ghi gì vào kho. */
-export async function docTepNhap(bytes: Uint8Array | ArrayBuffer, duAn: DuAn, hienCo: Ho[], tenTep = "tệp Excel"): Promise<KetQuaNhap> {
+export async function docTepNhap(bytes: Uint8Array | ArrayBuffer, duAn: DuAn, hienCo: Ho[], tenTep = "tệp Excel", nguoi = ""): Promise<KetQuaNhap> {
   const E = await excel();
   const wb = new E.Workbook();
   const loi: LoiNhap[] = [];
@@ -187,7 +187,7 @@ export async function docTepNhap(bytes: Uint8Array | ArrayBuffer, duAn: DuAn, hi
     });
   }
 
-  const nhatKy = { luc: new Date().toISOString(), nguoi: "Cán bộ xã", noiDung: `Nhập từ Excel (${tenTep})` };
+  const nhatKy = { luc: new Date().toISOString(), nguoi, noiDung: `Nhập từ Excel (${tenTep})` };
   const theoMaCu = new Map(hienCo.map((h) => [h.ma.toLowerCase(), h]));
   const moi = new Map<string, Ho>();
   const boSung = new Map<string, Ho>();

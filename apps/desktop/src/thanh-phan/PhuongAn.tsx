@@ -30,7 +30,7 @@ const TEN_LOAI: Record<LoaiThayDoi, [string, string]> = { THEM: ["Thêm", "nhan-
 
 /** Thẻ "Phương án – phiên bản" trên màn Dự án. */
 export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo }[] }) {
-  const { chinhSach, luuDuAn, luuHo, nguoiDung } = useUngDung();
+  const { chinhSach, luuDuAn, luuHo, nguoiDung, quyen, ghiNhatKy } = useUngDung();
   const ds = useMemo(() => [...(duAn.phuongAn ?? [])].sort((a, b) => b.so - a.so), [duAn.phuongAn]);
   const [hop, setHop] = useState<null | { loai: "chot" } | { loai: "duyet" | "huy" | "xem"; p: PhienBanPA } | { loai: "so-sanh"; a?: string; b?: string }>(null);
   const [toanVen, setToanVen] = useState<Record<string, boolean>>({});
@@ -45,7 +45,7 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
     };
   }, [ds]);
 
-  const capNhat = async (p: PhienBanPA) => luuDuAn({ ...duAn, phuongAn: (duAn.phuongAn ?? []).map((x) => (x.id === p.id ? p : x)) });
+  const capNhat = async (p: PhienBanPA) => luuDuAn({ ...duAn, phuongAn: (duAn.phuongAn ?? []).map((x) => (x.id === p.id ? p : x)) }, "HUY_PA");
 
   const xuat = async (p: PhienBanPA) => {
     setLoi("");
@@ -64,7 +64,7 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
         <span className="mo chu-nho">Chốt để đóng băng số liệu; phê duyệt ghi theo quyết định; mọi thay đổi sau đó lập bản điều chỉnh</span>
         <div className="phai">
           <button className="nut" disabled={ds.length === 0} onClick={() => setHop({ loai: "so-sanh" })}>So sánh</button>
-          <button className="nut nut-chinh" disabled={kq.length === 0} onClick={() => setHop({ loai: "chot" })}>Chốt phương án…</button>
+          {quyen("CHOT_PA") && <button className="nut nut-chinh" disabled={kq.length === 0} onClick={() => setHop({ loai: "chot" })}>Chốt phương án…</button>}
         </div>
       </div>
       {lech.length > 0 && (
@@ -99,8 +99,8 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
                     <button className="nut nut-nho" onClick={() => void xuat(p)}>Excel</button>{" "}
                     {p.trangThai === "DA_CHOT" && (
                       <>
-                        <button className="nut nut-nho nut-chinh" disabled={!toanVen[p.id]} onClick={() => setHop({ loai: "duyet", p })}>Phê duyệt…</button>{" "}
-                        <button className="nut nut-nho nut-nguy" onClick={() => setHop({ loai: "huy", p })}>Hủy…</button>
+                        {quyen("PHE_DUYET_PA") && <><button className="nut nut-nho nut-chinh" disabled={!toanVen[p.id]} onClick={() => setHop({ loai: "duyet", p })}>Phê duyệt…</button>{" "}</>}
+                        {quyen("HUY_PA") && <button className="nut nut-nho nut-nguy" onClick={() => setHop({ loai: "huy", p })}>Hủy…</button>}
                       </>
                     )}
                   </td>
@@ -119,7 +119,8 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
           luu={async (qd, ghiVanBan) => {
             const d = pheDuyet(hop.p, qd, nguoiDung);
             const vanBan = ghiVanBan ? { ...(duAn.vanBan ?? {}), qd_phe_duyet_so: d.pheDuyet!.so, qd_phe_duyet_ngay: ngayChu(d.pheDuyet!.ngay) } : duAn.vanBan;
-            await luuDuAn({ ...duAn, vanBan, phuongAn: (duAn.phuongAn ?? []).map((x) => (x.id === d.id ? d : x)) });
+            await luuDuAn({ ...duAn, vanBan, phuongAn: (duAn.phuongAn ?? []).map((x) => (x.id === d.id ? d : x)) }, "PHE_DUYET_PA");
+            await ghiNhatKy("Ghi nhận phê duyệt phương án", `${duAn.ten} – bản ${d.so}: ${d.pheDuyet!.so} ngày ${ngayVN(d.pheDuyet!.ngay)}; ${d.ho.length} hộ, ${dong(d.tong)} đ`);
             for (const x of d.ho) {
               const h = kq.find((y) => y.h.id === x.hoId)?.h;
               if (h) await luuHo(h, `Phương án bản ${d.so} được phê duyệt: ${d.pheDuyet!.so} ngày ${ngayVN(d.pheDuyet!.ngay)}; giá trị ${dong(x.tong)} đ`);
@@ -127,7 +128,7 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
           }}
         />
       )}
-      {hop?.loai === "huy" && <HopHuy p={hop.p} dong={() => setHop(null)} luu={(lyDo) => capNhat(huyBan(hop.p, lyDo, nguoiDung))} />}
+      {hop?.loai === "huy" && <HopHuy p={hop.p} dong={() => setHop(null)} luu={async (lyDo) => { await capNhat(huyBan(hop.p, lyDo, nguoiDung)); await ghiNhatKy("Hủy bản phương án", `${duAn.ten} – bản ${hop.p.so}: ${lyDo}`); }} />}
       {hop?.loai === "xem" && <HopXem p={hop.p} dong={() => setHop(null)} />}
       {hop?.loai === "so-sanh" && <HopSoSanh ds={ds} kq={kq} dong={() => setHop(null)} />}
     </div>
@@ -135,7 +136,7 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
 }
 
 function HopChot({ duAn, kq, dong: dongHop }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo }[]; dong: () => void }) {
-  const { chinhSach, luuDuAn, nguoiDung } = useUngDung();
+  const { chinhSach, luuDuAn, nguoiDung, ghiNhatKy } = useUngDung();
   const chua = useMemo(() => new Map(hoChuaDuDieuKien(kq).map((x) => [x.h.id, x.lyDo])), [kq]);
   const daDuyet = useMemo(() => hoDaPheDuyet(duAn.phuongAn ?? []), [duAn.phuongAn]);
   const [chon, setChon] = useState<Set<string>>(() => new Set(kq.filter(({ h }) => !chua.has(h.id)).map(({ h }) => h.id)));
@@ -152,7 +153,8 @@ function HopChot({ duAn, kq, dong: dongHop }: { duAn: DuAn; kq: { h: Ho; k: KetQ
     setLoi("");
     try {
       const p = await chotPhuongAn(chinhSach(duAn), duAn, dsChon.map((x) => x.h), { ten, lyDo, nguoi: nguoiDung });
-      await luuDuAn({ ...duAn, phuongAn: [...(duAn.phuongAn ?? []), p] });
+      await luuDuAn({ ...duAn, phuongAn: [...(duAn.phuongAn ?? []), p] }, "CHOT_PA");
+      await ghiNhatKy("Chốt phương án", `${duAn.ten} – bản ${p.so} "${p.ten}": ${p.ho.length} hộ, ${dong(p.tong)} đ${p.lyDo ? `; lý do: ${p.lyDo}` : ""}`);
       dongHop();
     } catch (e) {
       setLoi((e as Error).message);

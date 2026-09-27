@@ -54,7 +54,11 @@ const DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.doc
 const tenAnToan = (s: string) => tenTep(s, 70);
 
 export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: string; hoIdDau?: string }) {
-  const { dsDuAn, hoCua, chinhSach, luuDuAn, luuHo, kho, di } = useUngDung();
+  const { dsDuAn, hoCua, chinhSach, luuDuAn: luuDuAnGoc, luuHo: luuHoGoc, kho, di, quyen, nguoiDung } = useUngDung();
+  // Tài khoản chỉ xem vẫn tạo được bản dự thảo nhưng không ghi số, ngày, nhật ký vào hồ sơ.
+  const coGhi = quyen("SOAN_VAN_BAN");
+  const luuDuAn: typeof luuDuAnGoc = coGhi ? luuDuAnGoc : async () => undefined;
+  const luuHo: typeof luuHoGoc = coGhi ? luuHoGoc : async () => undefined;
   const duAn = dsDuAn.find((d) => d.id === duAnId);
   const [ma, setMa] = useState(maDau ?? "01");
   const [tim, setTim] = useState("");
@@ -117,7 +121,7 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
         if (mau.ghiLai?.capDo === "DU_AN" && so.trim()) Object.assign(vbMoi, { [`${mau.ghiLai.khoa}_so`]: `${so.trim()}/${kyHieu}`, [`${mau.ghiLai.khoa}_ngay`]: ngayChu(ngayKy) });
         await luuDuAn({ ...duAn, vanBan: vbMoi });
         for (const x of dsHoChon) {
-          const ghi: Partial<Ho> = { nhatKy: [...x.h.nhatKy, { luc: new Date().toISOString(), nguoi: "Cán bộ xã", noiDung: `Có tên trong văn bản ${mau.ten}${so.trim() ? ` số ${so.trim()}/${kyHieu}` : ""}` }] };
+          const ghi: Partial<Ho> = { nhatKy: [...x.h.nhatKy, { luc: new Date().toISOString(), nguoi: nguoiDung, noiDung: `Có tên trong văn bản ${mau.ten}${so.trim() ? ` số ${so.trim()}/${kyHieu}` : ""}` }] };
           if (mau.ghiLai?.capDo === "HO" && so.trim()) ghi.vanBan = { ...(x.h.vanBan ?? {}), [`${mau.ghiLai.khoa}_so`]: `${so.trim()}/${kyHieu}`, [`${mau.ghiLai.khoa}_ngay`]: ngayChu(ngayKy) };
           await luuHo({ ...x.h, ...ghi });
         }
@@ -134,14 +138,15 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
           const soHo = soSo !== null ? String(soSo + i) : so;
           const noiDung = dienMau(mauBytes, ghepDuLieu({ mau, duAn, ds, ho: x, chung, rieng, so: soHo, ngayKy }));
           tep.push({ ten: `Mau-${ma}_${tenAnToan(x.h.ma + " " + x.h.ten)}.docx`, noiDung });
-          const ghi: Partial<Ho> = { nhatKy: [...x.h.nhatKy, { luc: new Date().toISOString(), nguoi: "Cán bộ xã", noiDung: `Tạo văn bản Mẫu ${ma} – ${mau.ten}${soHo.trim() ? ` số ${soHo}` : ""}` }] };
+          const ghi: Partial<Ho> = { nhatKy: [...x.h.nhatKy, { luc: new Date().toISOString(), nguoi: nguoiDung, noiDung: `Tạo văn bản Mẫu ${ma} – ${mau.ten}${soHo.trim() ? ` số ${soHo}` : ""}` }] };
           if (mau.ghiLai && soHo.trim()) ghi.vanBan = { ...(x.h.vanBan ?? {}), [`${mau.ghiLai.khoa}_so`]: `${soHo.trim()}/${kyHieu}`, [`${mau.ghiLai.khoa}_ngay`]: ngayChu(ngayKy) };
           await luuHo({ ...x.h, ...ghi });
         }
         if (tep.length === 1) taiXuong(tep[0]!.noiDung, tep[0]!.ten, DOCX);
         else taiXuong(dongGoiZip(tep), `Mau-${ma}_${tep.length}-ho_${tenAnToan(duAn.ten)}.zip`, "application/zip");
-        setThongBao({ loai: "xanh", noiDung: `Đã tạo ${tep.length} văn bản Mẫu ${ma}${tep.length > 1 ? " (tệp .zip)" : ""}; đã ghi nhật ký hồ sơ.` });
+        setThongBao({ loai: "xanh", noiDung: `Đã tạo ${tep.length} văn bản Mẫu ${ma}${tep.length > 1 ? " (tệp .zip)" : ""}${coGhi ? "; đã ghi nhật ký hồ sơ." : "."}` });
       }
+      if (!coGhi) setThongBao({ loai: "xanh", noiDung: "Đã tạo bản dự thảo. Tài khoản chỉ xem: không ghi số, ngày văn bản và nhật ký vào hồ sơ." });
     } catch (e) {
       const err = e as Error & { chiTiet?: string[] };
       setThongBao({ loai: "do", noiDung: `${err.message}${err.chiTiet?.length ? ": " + err.chiTiet.join("; ") : ""}` });
@@ -157,6 +162,7 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
       const goc = truongTrongMau(await napMauGoc(ma));
       const thieu = goc.filter((t) => !truong.includes(t) && !t.startsWith("#") && !t.startsWith("/"));
       dienMau(bytes, duLieuXem); // kiểm tra điền thử
+      if (!quyen("THAY_MAU")) throw new Error("Tài khoản không có quyền thay mẫu văn bản");
       await kho.luuMau(ma, bytes, f.name);
       setMauTuy(await kho.dsMauTuy());
       setThongBao({ loai: "xanh", noiDung: `Đã thay Mẫu ${ma} bằng "${f.name}".${thieu.length ? ` Lưu ý: mẫu mới không dùng các trường: ${thieu.join(", ")}.` : ""}` });
@@ -218,8 +224,8 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
               <h2>{mau.nguon === "RIENG" ? "" : "Mẫu số "}{mau.ma}. {mau.ten}</h2>
               <div className="phai">
                 <button className="nut nut-nho" onClick={async () => taiXuong(await napMau(), `Mau-${ma}_${tenAnToan(mau.ten)}_mau-trong.docx`, DOCX)} title="Tải mẫu (có các trường {…}) để chỉnh trong Word">Tải mẫu</button>
-                <label className="nut nut-nho">Thay mẫu…<input type="file" accept=".docx" style={{ display: "none" }} onChange={(e) => e.target.files?.[0] && thayMau(e.target.files[0])} /></label>
-                {mauTuy.includes(ma) && <button className="nut nut-nho" onClick={async () => { await kho.xoaMau(ma); setMauTuy(await kho.dsMauTuy()); setThongBao({ loai: "xanh", noiDung: "Đã khôi phục mẫu gốc." }); }}>Khôi phục mẫu gốc</button>}
+                {quyen("THAY_MAU") && <label className="nut nut-nho">Thay mẫu…<input type="file" accept=".docx" style={{ display: "none" }} onChange={(e) => e.target.files?.[0] && thayMau(e.target.files[0])} /></label>}
+                {mauTuy.includes(ma) && quyen("THAY_MAU") && <button className="nut nut-nho" onClick={async () => { await kho.xoaMau(ma); setMauTuy(await kho.dsMauTuy()); setThongBao({ loai: "xanh", noiDung: "Đã khôi phục mẫu gốc." }); }}>Khôi phục mẫu gốc</button>}
                 <button className="nut nut-nho" onClick={async () => setXemTruong(truongTrongMau(await napMau()))}>Các trường</button>
               </div>
             </div>

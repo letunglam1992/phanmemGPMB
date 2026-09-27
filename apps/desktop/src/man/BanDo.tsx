@@ -75,7 +75,7 @@ function phanTich(bytes: Uint8Array, ch: CauHinhLop): DuLieuBanDo {
 }
 
 export function BanDo({ duAnId }: { duAnId: string }) {
-  const { dsDuAn, kho, luuDuAn, hoCua, di, chinhSach } = useUngDung();
+  const { dsDuAn, kho, luuDuAn, hoCua, di, chinhSach, quyen, bao } = useUngDung();
   const duAn = dsDuAn.find((d) => d.id === duAnId);
   const [dl, setDl] = useState<DuLieuBanDo | null>(boNho.get(duAnId) ?? null);
   const [loi, setLoi] = useState<string | null>(null);
@@ -126,6 +126,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
   if (!duAn) return <div className="trang trong">Không tìm thấy dự án.</div>;
 
   const napTep = async (f: File) => {
+    if (!quyen("SUA_HO_SO")) return bao("Tài khoản không có quyền nạp bản đồ", "loi");
     setDangDoc(true);
     setLoi(null);
     try {
@@ -535,7 +536,7 @@ function HopTaoHo(p: {
   soHo: number;
   dong: () => void;
 }) {
-  const { kho, luuDuAn, di } = useUngDung();
+  const { kho, luuDuAn, di, quyen, bao, nguoiDung } = useUngDung();
   const nhom = useMemo(() => {
     const m = new Map<string, { ten: string; thua: { t: ThuaBanDo; th: DienTichThuHoi }[] }>();
     for (const t of p.dl.kq.thua) {
@@ -552,6 +553,7 @@ function HopTaoHo(p: {
   const [dangTao, setDangTao] = useState(false);
 
   const tao = async () => {
+    if (!quyen("SUA_HO_SO")) return bao("Tài khoản không có quyền tạo hồ sơ", "loi");
     setDangTao(true);
     let i = p.soHo;
     for (const g of nhom) {
@@ -570,7 +572,7 @@ function HopTaoHo(p: {
         dienTichBanDo: th.dienTichThuHoi,
         ghiChu: t.co.length ? `Nghi vấn khi đọc bản đồ: ${t.co.map((c) => TEN_CO[c]).join(", ")}` : undefined,
       }));
-      h.nhatKy = [{ luc: new Date().toISOString(), nguoi: "Cán bộ xã", noiDung: `Tạo từ bản đồ ${p.duAn.banDo?.tenTep ?? ""}: ${h.thua.length} thửa` }];
+      h.nhatKy = [{ luc: new Date().toISOString(), nguoi: nguoiDung, noiDung: `Tạo từ bản đồ ${p.duAn.banDo?.tenTep ?? ""}: ${h.thua.length} thửa` }];
       await kho.luuHo(h);
     }
     await luuDuAn(p.duAn);

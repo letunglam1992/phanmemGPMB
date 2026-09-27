@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { kiemTraDuyetBuoc } from "../tai-khoan";
 import { useUngDung } from "../ung-dung";
 import { tinhHo } from "../tinh-ho";
 import { CAC_BUOC, TEN_DOI_TUONG, TEN_TRANG_THAI_BUOC, taoId, type Ho, type LoaiDoiTuong, type TrangThaiBuoc } from "../mo-hinh";
@@ -21,7 +22,8 @@ const CAC_TAB = [
 ] as const;
 
 export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; tabDau?: string }) {
-  const { dsDuAn, hoCua, di, luuHo, chinhSach, xoaHo } = useUngDung();
+  const { dsDuAn, hoCua, di, luuHo, chinhSach, xoaHo, quyen } = useUngDung();
+  const choSua = quyen("SUA_HO_SO");
   const duAn = dsDuAn.find((d) => d.id === duAnId);
   const goc = hoCua(duAnId).find((h) => h.id === hoId);
   const [h, setH] = useState<Ho | undefined>(goc);
@@ -61,8 +63,8 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
             <div style={{ fontSize: 20, fontWeight: 700 }}>{tien(kq.tong.tongLamTron)} đ</div>
           </div>
           {daSua && <span className="nhan nhan-vang">Chưa lưu</span>}
-          <button className="nut" disabled={!daSua} onClick={() => { setH(goc); setDaSua(false); }}>Hoàn tác</button>
-          <button className="nut nut-chinh" disabled={!daSua} onClick={() => luu()}>Lưu hồ sơ</button>
+          {choSua && <button className="nut" disabled={!daSua} onClick={() => { setH(goc); setDaSua(false); }}>Hoàn tác</button>}
+          {choSua && <button className="nut nut-chinh" disabled={!daSua} onClick={() => luu()}>Lưu hồ sơ</button>}
         </div>
       </div>
       <div className="the" style={{ padding: "10px 14px", marginBottom: 14 }}>
@@ -78,11 +80,14 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
         ))}
       </div>
 
+      {/* tài khoản không có quyền sửa: khóa các ô nhập của các thẻ nhập liệu */}
+      <fieldset className="khung-quyen" disabled={!choSua}>
       {tab === "thong-tin" && <TabThongTin h={h} doi={doi} />}
       {tab === "nhan-khau" && <TabNhanKhau h={h} doi={doi} />}
       {tab === "thua" && <TabThua h={h} duAn={duAn} doi={doi} />}
       {tab === "kiem-dem" && <TabKiemDem h={h} doi={doi} />}
       {tab === "ho-tro" && <TabHoTro h={h} doi={doi} />}
+      </fieldset>
       {tab === "tinh" && <TabTinhToan h={h} duAn={duAn} kq={kq} />}
       {tab === "tien-do" && <TabTienDo h={h} doi={doi} soanMau={(ma) => di({ ten: "van-ban", duAnId, ma, hoId: h.id })} luuNgay={async (moi, nk) => { setH(moi); await luuHo(moi, nk); setDaSua(false); }} />}
       {tab === "nhat-ky" && (
@@ -250,9 +255,19 @@ function TabTienDo({ h, doi, luuNgay, soanMau }: Tab & { luuNgay: (h: Ho, nk: st
   const [chon, setChon] = useState(CAC_BUOC[Math.max(0, CAC_BUOC.findIndex((b) => h.tienDo[b.ma]?.trangThai !== "XONG"))]!.ma);
   const b = CAC_BUOC.find((x) => x.ma === chon)!;
   const bh = h.tienDo[chon] ?? { trangThai: "CHUA" as TrangThaiBuoc };
-  const datBuoc = (p: Partial<typeof bh>) => doi({ ...h, tienDo: { ...h.tienDo, [chon]: { ...bh, ...p } } });
-  const doiTrangThai = (tt: TrangThaiBuoc, nk: string) =>
-    luuNgay({ ...h, tienDo: { ...h.tienDo, [chon]: { ...bh, trangThai: tt, ngay: bh.ngay || new Date().toISOString().slice(0, 10) } } }, nk);
+  const { taiKhoan, quyen, bao } = useUngDung();
+  const loiDuyet = taiKhoan ? kiemTraDuyetBuoc(taiKhoan.vaiTro, taiKhoan.ten, bh) : "Chưa đăng nhập";
+  const datBuoc = (p: Partial<typeof bh>) => {
+    if (p.trangThai === "XONG" && bh.trangThai !== "XONG") return void doiTrangThai("XONG", `Xác nhận hoàn thành bước ${b.ma}. ${b.ten}`);
+    if (p.trangThai === "CHO_DUYET" && bh.trangThai !== "CHO_DUYET") return void doiTrangThai("CHO_DUYET", `Gửi duyệt bước ${b.ma}. ${b.ten}`);
+    if (bh.trangThai === "XONG" && p.trangThai && p.trangThai !== "XONG" && !quyen("DUYET_BUOC")) return bao("Chỉ người có quyền duyệt mới mở lại bước đã hoàn thành", "loi");
+    doi({ ...h, tienDo: { ...h.tienDo, [chon]: { ...bh, ...p } } });
+  };
+  const doiTrangThai = (tt: TrangThaiBuoc, nk: string) => {
+    if (tt === "XONG" && loiDuyet) return bao(loiDuyet, "loi");
+    const ghi = tt === "XONG" ? { duyetBoi: taiKhoan!.ten } : tt === "CHO_DUYET" ? { guiBoi: taiKhoan!.ten, duyetBoi: undefined } : {};
+    return luuNgay({ ...h, tienDo: { ...h.tienDo, [chon]: { ...bh, ...ghi, trangThai: tt, ngay: bh.ngay || new Date().toISOString().slice(0, 10) } } }, nk);
+  };
   return (
     <div className="luoi luoi-chinh">
       <div className="the">
@@ -287,8 +302,8 @@ function TabTienDo({ h, doi, luuNgay, soanMau }: Tab & { luuNgay: (h: Ho, nk: st
           <O nhan="Ngày thực hiện / hoàn thành"><input type="date" value={bh.ngay ?? ""} onChange={(e) => datBuoc({ ngay: e.target.value })} /></O>
           <O nhan="Nội dung thực hiện, ghi chú, số văn bản"><textarea rows={4} value={bh.ghiChu ?? ""} onChange={(e) => datBuoc({ ghiChu: e.target.value })} /></O>
           <div className="nhom-nut">
-            <button className="nut" disabled={bh.trangThai === "CHO_DUYET" || bh.trangThai === "XONG"} onClick={() => doiTrangThai("CHO_DUYET", `Gửi duyệt bước ${b.ma}. ${b.ten}`)}>Gửi duyệt</button>
-            <button className="nut nut-chinh" disabled={bh.trangThai === "XONG"} onClick={() => doiTrangThai("XONG", `Xác nhận hoàn thành bước ${b.ma}. ${b.ten}`)}>Xác nhận hoàn thành</button>
+            <button className="nut" disabled={bh.trangThai === "CHO_DUYET" || bh.trangThai === "XONG" || !quyen("GUI_DUYET")} onClick={() => doiTrangThai("CHO_DUYET", `Gửi duyệt bước ${b.ma}. ${b.ten}`)}>Gửi duyệt</button>
+            <button className="nut nut-chinh" disabled={bh.trangThai === "XONG" || !!loiDuyet} title={loiDuyet ?? undefined} onClick={() => doiTrangThai("XONG", `Xác nhận hoàn thành bước ${b.ma}. ${b.ten}`)}>Xác nhận hoàn thành</button>
           </div>
           {DANH_MUC_MAU.some((m) => m.buoc === b.ma) && (
             <div>
@@ -300,7 +315,11 @@ function TabTienDo({ h, doi, luuNgay, soanMau }: Tab & { luuNgay: (h: Ho, nk: st
               </div>
             </div>
           )}
-          <div className="mo chu-nho">Bản thử nghiệm một người dùng: chưa phân quyền người gửi/người duyệt.</div>
+          <div className="mo chu-nho">
+            {bh.guiBoi && <>Gửi duyệt: <b>{bh.guiBoi}</b>. </>}
+            {bh.duyetBoi && <>Xác nhận: <b>{bh.duyetBoi}</b>. </>}
+            {bh.trangThai !== "XONG" && loiDuyet && <>{loiDuyet}.</>}
+          </div>
         </div>
       </div>
     </div>

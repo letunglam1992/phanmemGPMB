@@ -3,6 +3,8 @@
  * Giao diện Kho tách khỏi cách lưu để thay bằng SQLite (tauri-plugin-sql) mà không đổi màn hình.
  */
 import type { DuAn, Ho } from "./mo-hinh";
+import type { NguoiDung } from "./tai-khoan";
+import { taoDong, type DongNhatKy } from "./nhat-ky";
 
 export interface Kho {
   dsDuAn(): Promise<DuAn[]>;
@@ -19,12 +21,17 @@ export interface Kho {
   xoaMau(ma: string): Promise<void>;
   dsMauTuy(): Promise<string[]>;
   dsBanDo(): Promise<string[]>;
-  /** Xóa toàn bộ dữ liệu (dùng khi khôi phục kiểu thay thế). */
+  /** Xóa toàn bộ dữ liệu nghiệp vụ (dùng khi khôi phục kiểu thay thế). Không xóa tài khoản, nhật ký hệ thống. */
   xoaTatCa(): Promise<void>;
+  dsNguoiDung(): Promise<NguoiDung[]>;
+  luuNguoiDung(u: NguoiDung): Promise<void>;
+  /** Ghi nối tiếp một dòng nhật ký hệ thống (chuỗi băm). */
+  ghiNhatKy(e: { nguoi: string; hoTen: string; hanhDong: string; chiTiet?: string }): Promise<DongNhatKy>;
+  dsNhatKy(): Promise<DongNhatKy[]>;
 }
 
 const TEN_CSDL = "gpmb-sonla";
-const PHIEN_BAN = 2;
+const PHIEN_BAN = 3;
 
 function mo(): Promise<IDBDatabase> {
   return new Promise((ok, loi) => {
@@ -37,6 +44,10 @@ function mo(): Promise<IDBDatabase> {
         db.createObjectStore("banDo");
       }
       if (e.oldVersion < 2) db.createObjectStore("mauVanBan");
+      if (e.oldVersion < 3) {
+        db.createObjectStore("nguoiDung", { keyPath: "ten" });
+        db.createObjectStore("nhatKyHT", { keyPath: "stt" });
+      }
     };
     r.onsuccess = () => ok(r.result);
     r.onerror = () => loi(r.error);
@@ -99,6 +110,29 @@ export function taoKhoIndexedDb(): Kho {
     async xoaTatCa() {
       for (const ten of ["duAn", "ho", "banDo", "mauVanBan"]) await yc((await store(ten, "readwrite")).clear());
     },
+    async dsNguoiDung() {
+      return yc((await store("nguoiDung")).getAll()) as Promise<NguoiDung[]>;
+    },
+    async luuNguoiDung(u) {
+      await yc((await store("nguoiDung", "readwrite")).put(u));
+    },
+    async ghiNhatKy(e) {
+      // tính băm ngoài giao dịch (giao dịch IndexedDB tự đóng khi chờ crypto); add() lỗi nếu trùng stt → thử lại
+      for (let lan = 0; lan < 5; lan++) {
+        const c = await yc((await store("nhatKyHT")).openCursor(null, "prev"));
+        const d = await taoDong((c?.value as DongNhatKy | undefined) ?? null, e);
+        try {
+          await yc((await store("nhatKyHT", "readwrite")).add(d));
+          return d;
+        } catch {
+          /* dòng khác vừa ghi — thử lại */
+        }
+      }
+      throw new Error("Không ghi được nhật ký hệ thống");
+    },
+    async dsNhatKy() {
+      return yc((await store("nhatKyHT")).getAll()) as Promise<DongNhatKy[]>;
+    },
   };
 }
 
@@ -108,6 +142,8 @@ export function taoKhoBoNho(): Kho {
   const ho = new Map<string, Ho>();
   const banDo = new Map<string, Uint8Array>();
   const mau = new Map<string, { bytes: Uint8Array; tenTep: string; luc: string }>();
+  const nguoi = new Map<string, NguoiDung>();
+  const nk: DongNhatKy[] = [];
   return {
     async dsDuAn() {
       return [...duAn.values()];
@@ -155,6 +191,20 @@ export function taoKhoBoNho(): Kho {
       ho.clear();
       banDo.clear();
       mau.clear();
+    },
+    async dsNguoiDung() {
+      return [...nguoi.values()].map((u) => structuredClone(u));
+    },
+    async luuNguoiDung(u) {
+      nguoi.set(u.ten, structuredClone(u));
+    },
+    async ghiNhatKy(e) {
+      const d = await taoDong(nk.at(-1) ?? null, e);
+      nk.push(d);
+      return d;
+    },
+    async dsNhatKy() {
+      return nk.map((d) => ({ ...d }));
     },
   };
 }
