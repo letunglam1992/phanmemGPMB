@@ -4,13 +4,25 @@ import cs0 from "../../../policy/goi/sonla-2026-03-31.json";
 import type { BoChinhSach } from "@gpmb/core";
 import { tinhHo } from "../src/tinh-ho";
 import { taoDuAnMau } from "../src/du-lieu-mau";
-import { taoWorkbook } from "../src/xuat-excel";
+import { taoPhieuDoiChieu, taoWorkbook } from "../src/xuat-excel";
 import danhMuc from "../src/danh-muc-xa.json";
 import nq152 from "../../../policy/nguon/nq152-2025-bang-gia-dat.json";
 
 const cs = cs0 as unknown as BoChinhSach;
 
 describe("Xuất Excel theo cấu trúc biểu mẫu", () => {
+  it("phiếu đối chiếu nghiệm thu: mỗi khoản một dòng, dòng tổng hộ, công thức chênh lệch", async () => {
+    const { duAn, ho } = taoDuAnMau();
+    const ds = ho.map((h) => ({ h, k: tinhHo(cs, duAn, h) }));
+    const doc = new ExcelJS.Workbook();
+    await doc.xlsx.load((await (await taoPhieuDoiChieu(duAn, ds)).xlsx.writeBuffer()) as ArrayBuffer);
+    const ws = doc.worksheets[0]!;
+    const soDong = ds.reduce((s, x) => s + x.k.tatCa.length + 1, 0);
+    expect(ws.getRow(4 + soDong).getCell(4).value).toMatch(/TỔNG HỘ/);
+    expect(ws.getRow(4 + ds[0]!.k.tatCa.length + 1).getCell(6).value).toBe(ds[0]!.k.tong.tongLamTron.toNumber());
+    expect((ws.getRow(5).getCell(8).value as { formula: string }).formula).toBe('IF(G5="","",G5-F5)');
+  });
+
   it("bản phương án: in dòng trạng thái, số QĐ phê duyệt trên các trang", async () => {
     const { duAn, ho } = taoDuAnMau();
     const ds = [{ h: ho[0]!, k: tinhHo(cs, duAn, ho[0]!) }];

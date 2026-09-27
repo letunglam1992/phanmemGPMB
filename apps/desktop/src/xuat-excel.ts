@@ -307,6 +307,59 @@ export async function taoWorkbookChiTra(duAn: DuAn, hos: Ho[], tyLe: GiaiDoanTyL
   return wb;
 }
 
+/**
+ * Phiếu đối chiếu nghiệm thu: số phần mềm tính (từng hộ, từng khoản) — cán bộ nhập số của phương án đã được
+ * phê duyệt thực tế vào cột "Theo PA đã duyệt"; công thức tính chênh lệch; ghi nguyên nhân.
+ */
+export async function taoPhieuDoiChieu(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[]): Promise<ExcelJS.Workbook> {
+  const { default: Excel } = await import("exceljs");
+  const wb = new Excel.Workbook();
+  wb.creator = "GPMB Sơn La";
+  const ws = wb.addWorksheet("DOI CHIEU", { views: [{ state: "frozen", ySplit: 4 }] });
+  const cot = ["Mã hộ", "Họ tên", "Mã khoản", "Nội dung khoản", "Trạng thái phần mềm", "Phần mềm tính (đ)", "Theo PA đã duyệt (đ)", "Chênh lệch (đ)", "Chênh lệch (%)", "Nguyên nhân / ghi chú"];
+  ws.columns = [10, 24, 9, 52, 16, 17, 17, 15, 11, 40].map((w) => ({ width: w }));
+  ws.mergeCells(1, 1, 1, cot.length);
+  ws.getCell(1, 1).value = `PHIẾU ĐỐI CHIẾU KẾT QUẢ TÍNH VỚI PHƯƠNG ÁN ĐÃ PHÊ DUYỆT – ${duAn.ten}`;
+  ws.getCell(1, 1).font = { name: FONT, bold: true, size: 13 };
+  ws.getCell(1, 1).alignment = { horizontal: "center" };
+  ws.mergeCells(2, 1, 2, cot.length);
+  ws.getCell(2, 1).value = "Nhập số của phương án đã được phê duyệt vào cột G (ô màu vàng). Cột H, I tự tính. Dòng TỔNG HỘ là tổng sau làm tròn cấp hộ.";
+  ws.getCell(2, 1).font = { name: FONT, italic: true };
+  const hd = ws.getRow(4);
+  hd.values = cot;
+  hd.font = { name: FONT, bold: true };
+  hd.alignment = { wrapText: true, vertical: "middle", horizontal: "center" };
+  hd.height = 34;
+  dongKe(hd, 1, cot.length);
+  const TT: Record<string, string> = { TAM_TINH: "Tạm tính", CAN_XAC_NHAN: "Cần xác nhận", THIEU_CAN_CU: "Thiếu căn cứ" };
+  let r = 5;
+  const vang = { type: "pattern" as const, pattern: "solid" as const, fgColor: { argb: "FFFFF2CC" } };
+  const dongSo = (row: ExcelJS.Row, dam = false) => {
+    row.getCell(8).value = { formula: `IF(G${row.number}="","",G${row.number}-F${row.number})` };
+    row.getCell(9).value = { formula: `IF(OR(G${row.number}="",G${row.number}=0),"",H${row.number}/G${row.number})` };
+    row.getCell(6).numFmt = row.getCell(7).numFmt = row.getCell(8).numFmt = DINH_DANG_TIEN;
+    row.getCell(9).numFmt = "0.00%";
+    row.getCell(7).fill = vang;
+    row.font = { name: FONT, bold: dam };
+    dongKe(row, 1, cot.length);
+  };
+  for (const { h, k } of ds) {
+    for (const x of k.tatCa) {
+      const row = ws.getRow(r++);
+      row.values = [h.ma, h.ten, x.dong.ma, x.dong.noiDung, TT[x.dong.trangThai] ?? x.dong.trangThai, x.dong.thanhTien ? so(x.dong.thanhTien) : null];
+      dongSo(row);
+    }
+    const t = ws.getRow(r++);
+    t.values = [h.ma, h.ten, "", "TỔNG HỘ (làm tròn; chỉ cộng khoản Tạm tính)", k.tong.duocChot ? "" : "Chưa đủ căn cứ", so(k.tong.tongLamTron)];
+    dongSo(t, true);
+  }
+  return wb;
+}
+
+export async function xuatPhieuDoiChieu(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[]) {
+  await taiVe(await taoPhieuDoiChieu(duAn, ds), `Phieu-doi-chieu_${tenAnToan(duAn.ten)}.xlsx`);
+}
+
 export async function xuatExcelChiTra(duAn: DuAn, hos: Ho[], tyLe: GiaiDoanTyLe[], homNay: string) {
   await taiVe(await taoWorkbookChiTra(duAn, hos, tyLe, homNay), `Theo-doi-chi-tra_${tenAnToan(duAn.ten)}.xlsx`);
 }

@@ -4,7 +4,7 @@ import { useUngDung } from "../ung-dung";
 import type { KetQuaHo } from "../tinh-ho";
 import type { DuAn, Ho } from "../mo-hinh";
 import { HopThoai, O, ngayVN } from "./chung";
-import { xuatExcelChiTra, xuatExcelDuAn } from "../xuat-excel";
+import { xuatExcelChiTra, xuatExcelDuAn, xuatPhieuDoiChieu } from "../xuat-excel";
 import { homNayIso } from "../trang-thai";
 import { ngayChu } from "../van-ban/du-lieu";
 import {
@@ -65,6 +65,7 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
         <h2>Phương án – phiên bản</h2>
         <span className="mo chu-nho">Chốt để đóng băng số liệu; phê duyệt ghi theo quyết định; mọi thay đổi sau đó lập bản điều chỉnh</span>
         <div className="phai">
+          <button className="nut" disabled={kq.length === 0} title="Nghiệm thu: số phần mềm tính từng khoản, cột nhập số phương án đã được phê duyệt thực tế, tự tính chênh lệch" onClick={() => void xuatPhieuDoiChieu(duAn, kq)}>Phiếu đối chiếu</button>
           <button className="nut" disabled={!ds.some((p) => p.trangThai === "DA_PHE_DUYET")} title="Phải trả, đã chi, còn lại, tiền chậm trả tạm tính theo bản đã phê duyệt" onClick={() => void xuatExcelChiTra(duAn, kq.map((x) => x.h), tyLeCham, homNayIso())}>Theo dõi chi trả (Excel)</button>
           <button className="nut" disabled={ds.length === 0} onClick={() => setHop({ loai: "so-sanh" })}>So sánh</button>
           {quyen("CHOT_PA") && <button className="nut nut-chinh" disabled={kq.length === 0} onClick={() => setHop({ loai: "chot" })}>Chốt phương án…</button>}

@@ -46,7 +46,7 @@ Ký hiệu: **Đã kiểm thử** = có kiểm thử tự động đạt · **Đ
 | Sao lưu, khôi phục dữ liệu (tệp `.gpmb`: dự án, hồ sơ, bản đồ, mẫu tự chỉnh; mã SHA-256; thay thế toàn bộ hoặc gộp; tự tải bản sao lưu dữ liệu hiện có trước khi thay thế; nhắc khi > 7 ngày chưa sao lưu) | **Đã kiểm thử** (khứ hồi, phát hiện tệp bị sửa/sai định dạng/phiên bản mới hơn); đã chạy giao diện (sao lưu → xóa → khôi phục) | Tệp sao lưu **không mã hóa**, chứa thông tin cá nhân → cất giữ theo quy chế bảo mật của cơ quan. Không tự sao lưu định kỳ; không gửi ra ngoài. Mốc "lần sao lưu cuối" lưu theo máy |
 | Tự động sao lưu định kỳ (bản cài Windows): chu kỳ theo ngày, giữ N bản mới nhất, thư mục mặc định Documents\GPMB Son La\Sao luu hoặc đường dẫn cán bộ chọn (ổ mạng nội bộ, USB); "Sao lưu ngay", "Mở thư mục"; ghi nhật ký hệ thống | **Đã kiểm thử** phần lõi: lịch chạy, tên tệp (TypeScript); ghi tệp qua tệp tạm + chỉ giữ N bản, giải mã đường dẫn có dấu (Rust `cargo test`). **Chưa chạy thử trong bản cài** trên Windows | Mặc định **bật** (1 ngày/lần, giữ 10 bản). Chỉ chạy khi phần mềm đang mở và đã đăng nhập; lỗi thì chờ 6 giờ thử lại. Tệp không mã hóa. Bản cùng ổ đĩa không thay được việc cất ra thiết bị khác (nhắc sao lưu thủ công vẫn giữ) |
 | Nhiều người dùng qua mạng nội bộ (docs/11): chế độ máy đơn / máy chủ / máy trạm; máy chủ HTTPS tự ký + SQLite; máy trạm ghim vân tay; máy chủ kiểm tra lại quyền và quy tắc (tách người gửi – duyệt, khóa bản phương án đã duyệt); khóa lạc quan chống ghi đè; máy trạm tự cập nhật mỗi 4 giây; đưa dữ liệu máy đơn lên máy chủ | **Đã kiểm thử**: máy chủ đầu–cuối (Rust, HTTPS thật), kho máy trạm (TS), nối thật mã giao diện ↔ máy chủ Rust. **Chưa chạy thử trên nhiều máy Windows thật** | Máy chủ là phần mềm đang mở (chưa là dịch vụ nền); nhập IP tay; tường lửa có thể cần quyền quản trị máy; xung đột theo cả hồ sơ; tài khoản + nhật ký hệ thống nằm trong CSDL máy chủ, không trong tệp .gpmb |
-| Bộ cài Windows `.exe` | **Đã build** trên GitHub Actions (windows-latest), **chưa cài thử** trên Windows 10/11 | Xem §3 |
+| Bộ cài Windows `.exe` | **Đã build** trên GitHub Actions (windows-latest); **người dùng đã cài thử, mở được, đăng nhập được** (27/9/2026, Windows) | Chưa có chữ ký số (Windows có thể cảnh báo khi cài). Các mục nghiệm thu còn lại: docs/12 |
 
 ## 3. Đóng gói Windows
 
@@ -54,7 +54,7 @@ Ký hiệu: **Đã kiểm thử** = có kiểm thử tự động đạt · **Đ
 - Build tự động: `.github/workflows/build-windows.yml` chạy trên `windows-latest` → tải bộ cài ở mục Artifacts của lần chạy.
 - Môi trường phát triển hiện tại là Linux: **không build được `.exe` tại đây**. Đã build bản Linux (.deb 2,2 MB) và chạy thử trong màn hình ảo: cửa sổ mở, giao diện nạp đúng với CSP chặn mạng ngoài → vỏ Rust và cấu hình Tauri hợp lệ. Bộ cài chỉ được coi là có khi workflow Windows chạy xong và đã được cài thử trên Windows 10/11.
 - Lần build đầu (27/9/2026): workflow chạy thành công, bộ cài NSIS ~3,7 MB (nén zip) tải ở mục Artifacts `gpmb-sonla-windows-setup` (lưu 90 ngày).
-- Chưa kiểm tra trên WebView2: tải tệp Excel (thẻ `<a download>`), thư mục lưu IndexedDB khi gỡ/cài lại.
+- Người dùng đã cài thử trên Windows và vào được phần mềm (27/9/2026). Chưa kiểm tra có hệ thống trên WebView2: tải tệp Excel, giữ dữ liệu khi cài đè bản mới — nằm trong kịch bản nghiệm thu docs/12 (A3, A4).
 
 ## 4. Chạy thử trên máy phát triển
 
