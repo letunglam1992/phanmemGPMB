@@ -214,6 +214,14 @@ export function taoId(): string {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 }
 
+/** Hồ sơ trống cho hộ, cá nhân, tổ chức mới. */
+export function hoMoi(duAnId: string, ma: string, ten: string, loai: LoaiDoiTuong = "HO_GIA_DINH"): Ho {
+  return {
+    id: taoId(), duAnId, ma, loai, ten, diaChi: "", soDinhDanh: "", dienThoai: "", nhanKhau: [], thua: [], taiSan: [],
+    hoTro: { chuyenDoiNghe: loai !== "TO_CHUC" }, khauTru: "0", tienDo: {}, nhatKy: [],
+  };
+}
+
 /** Bước hiện tại của hộ: bước đầu tiên chưa hoàn thành. */
 export function buocHienTai(ho: Ho): number {
   const i = CAC_BUOC.findIndex((b) => ho.tienDo[b.ma]?.trangThai !== "XONG");

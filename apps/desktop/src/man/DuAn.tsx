@@ -3,7 +3,7 @@ import { D } from "@gpmb/core";
 import type Decimal from "decimal.js";
 import { useUngDung } from "../ung-dung";
 import { tinhHo } from "../tinh-ho";
-import { CAC_BUOC, TEN_DOI_TUONG, buocHienTai, taoId, type DuAn, type Ho, type LoaiDoiTuong } from "../mo-hinh";
+import { CAC_BUOC, TEN_DOI_TUONG, buocHienTai, hoMoi, taoId, type DuAn, type Ho, type LoaiDoiTuong } from "../mo-hinh";
 import { HopThoai, O, ngayVN, tien } from "../thanh-phan/chung";
 import { BieuTuong, DaiChang, DongMoc, PhanBoTrangThai, TheChiSo, VongTienDo } from "../thanh-phan/BieuDo";
 import { THU_TU_TRANG_THAI, TT_GPMB, homNayIso, mocTienDo, thongKe, trangThaiHo, type TrangThaiGpmb } from "../trang-thai";
@@ -11,12 +11,15 @@ import { HopTaoDuAn } from "./TongQuan";
 import { xuatExcelDuAn } from "../xuat-excel";
 import { BanDoNho } from "../thanh-phan/BanDoNho";
 import { ThePhuongAn } from "../thanh-phan/PhuongAn";
+import { HopNhapExcel } from "../thanh-phan/HopNhapExcel";
+export { hoMoi };
 
 export function ManDuAn({ duAnId }: { duAnId: string }) {
   const { dsDuAn, hoCua, di, chinhSach, xoaDuAn } = useUngDung();
   const duAn = dsDuAn.find((d) => d.id === duAnId);
   const [sua, setSua] = useState(false);
   const [them, setThem] = useState(false);
+  const [nhapExcel, setNhapExcel] = useState(false);
   const [loc, setLoc] = useState("");
   const [dangXuat, setDangXuat] = useState(false);
   const [keHoach, setKeHoach] = useState(false);
@@ -51,6 +54,7 @@ export function ManDuAn({ duAnId }: { duAnId: string }) {
           <button className="nut" disabled={dangXuat || kq.length === 0} onClick={async () => { setDangXuat(true); try { await xuatExcelDuAn(duAn, kq); } finally { setDangXuat(false); } }}>
             {dangXuat ? "Đang xuất…" : "Xuất Excel phương án"}
           </button>
+          <button className="nut" onClick={() => setNhapExcel(true)}>Nhập Excel…</button>
           <button className="nut nut-chinh" onClick={() => setThem(true)}>+ Thêm hộ, tổ chức</button>
         </div>
       </div>
@@ -167,15 +171,9 @@ export function ManDuAn({ duAnId }: { duAnId: string }) {
       {sua && <HopTaoDuAn duAn={duAn} dong={() => setSua(false)} />}
       {keHoach && <HopKeHoach duAn={duAn} dong={() => setKeHoach(false)} />}
       {them && <HopThemHo duAnId={duAnId} soHo={hos.length} dong={() => setThem(false)} />}
+      {nhapExcel && <HopNhapExcel duAn={duAn} dong={() => setNhapExcel(false)} />}
     </div>
   );
-}
-
-export function hoMoi(duAnId: string, ma: string, ten: string, loai: LoaiDoiTuong = "HO_GIA_DINH"): Ho {
-  return {
-    id: taoId(), duAnId, ma, loai, ten, diaChi: "", soDinhDanh: "", dienThoai: "", nhanKhau: [], thua: [], taiSan: [],
-    hoTro: { chuyenDoiNghe: loai !== "TO_CHUC" }, khauTru: "0", tienDo: {}, nhatKy: [],
-  };
 }
 
 function HopThemHo({ duAnId, soHo, dong }: { duAnId: string; soHo: number; dong: () => void }) {
