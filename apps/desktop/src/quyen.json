@@ -1,0 +1,39 @@
+{
+  "QUAN_TRI": [
+    "SUA_HO_SO",
+    "XOA_DU_AN",
+    "SOAN_VAN_BAN",
+    "THAY_MAU",
+    "GUI_DUYET",
+    "DUYET_BUOC",
+    "CHOT_PA",
+    "PHE_DUYET_PA",
+    "HUY_PA",
+    "SAO_LUU",
+    "KHOI_PHUC",
+    "TAI_KHOAN",
+    "XEM_NHAT_KY",
+    "CAI_DAT"
+  ],
+  "LANH_DAO": [
+    "SUA_HO_SO",
+    "SOAN_VAN_BAN",
+    "GUI_DUYET",
+    "SAO_LUU",
+    "XOA_DU_AN",
+    "THAY_MAU",
+    "DUYET_BUOC",
+    "CHOT_PA",
+    "PHE_DUYET_PA",
+    "HUY_PA",
+    "XEM_NHAT_KY",
+    "CAI_DAT"
+  ],
+  "CAN_BO": [
+    "SUA_HO_SO",
+    "SOAN_VAN_BAN",
+    "GUI_DUYET",
+    "SAO_LUU"
+  ],
+  "XEM": []
+}

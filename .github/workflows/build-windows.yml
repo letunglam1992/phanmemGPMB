@@ -36,6 +36,9 @@ jobs:
       - name: Build bộ cài NSIS (.exe)
         working-directory: apps/desktop
         run: npx tauri build --bundles nsis
+      - name: Kiểm thử vỏ Rust (sao lưu tự động, máy chủ mạng nội bộ đầu–cuối)
+        working-directory: apps/desktop/src-tauri
+        run: cargo test
       - uses: actions/upload-artifact@v4
         with:
           name: gpmb-sonla-windows-setup

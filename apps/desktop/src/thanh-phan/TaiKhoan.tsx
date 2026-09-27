@@ -16,6 +16,8 @@ import {
   type VaiTro,
 } from "../tai-khoan";
 import { kiemTraChuoi, type DongNhatKy } from "../nhat-ky";
+import { HopKetNoi, moTaCheDo } from "./KetNoi";
+import { docCheDo, laKhoMang } from "../kho-mang";
 
 const ngayGio = (iso?: string) => (iso ? new Date(iso).toLocaleString("vi-VN", { hour12: false }) : "—");
 
@@ -29,6 +31,7 @@ export function ManDangNhap() {
   const [chucVu, setChucVu] = useState("");
   const [loi, setLoi] = useState("");
   const [dang, setDang] = useState(false);
+  const [ketNoi, setKetNoi] = useState(false);
   const khoiTao = coTaiKhoan === false;
 
   const gui = async (e: React.FormEvent) => {
@@ -62,7 +65,9 @@ export function ManDangNhap() {
         <p className="mo chu-nho" style={{ marginTop: 0 }}>
           {khoiTao
             ? "Máy này chưa có tài khoản. Tài khoản quản trị tạo các tài khoản cán bộ, lãnh đạo. Nên tạo thêm ít nhất một tài khoản quản trị dự phòng: nếu quên mật khẩu quản trị duy nhất sẽ không vào được phần mềm."
-            : "Tài khoản lưu trên máy này; phần mềm không kết nối máy chủ ngoài."}
+            : docCheDo().cheDo === "MAY_TRAM"
+              ? "Đăng nhập bằng tài khoản trên máy chủ mạng nội bộ."
+              : "Tài khoản lưu trên máy này; phần mềm không kết nối máy chủ ngoài."}
         </p>
         <div className="luoi">
           <O nhan="Tên đăng nhập"><input autoFocus value={ten} autoComplete="username" onChange={(e) => setTen(e.target.value)} placeholder={khoiTao ? "vd. quantri" : ""} /></O>
@@ -77,7 +82,12 @@ export function ManDangNhap() {
         </div>
         {loi && <div className="thong-bao thong-bao-do" role="alert" style={{ marginTop: 12, marginBottom: 0 }}>{loi}</div>}
         <button className="nut nut-chinh" type="submit" style={{ marginTop: 14, width: "100%" }} disabled={dang || !ten || !mk}>{khoiTao ? "Tạo tài khoản và vào phần mềm" : "Đăng nhập"}</button>
+        <div className="mo chu-nho" style={{ marginTop: 12, display: "flex", justifyContent: "space-between", gap: 8 }}>
+          <span>{moTaCheDo(docCheDo())}</span>
+          <button type="button" className="nut nut-chu nut-nho" onClick={() => setKetNoi(true)}>Kết nối…</button>
+        </div>
       </form>
+      {ketNoi && <HopKetNoi dong={() => setKetNoi(false)} />}
     </div>
   );
 }
@@ -92,10 +102,17 @@ export function HopDoiMatKhau({ dong, batBuoc }: { dong: () => void; batBuoc?: b
   if (!taiKhoan) return null;
   const luu = async () => {
     setLoi("");
-    if (!(await dungMatKhau(taiKhoan, cu))) return setLoi("Mật khẩu hiện tại không đúng");
     if (moi !== moi2) return setLoi("Hai lần nhập mật khẩu mới không khớp");
     if (moi === cu) return setLoi("Mật khẩu mới phải khác mật khẩu hiện tại");
     try {
+      if (laKhoMang(kho)) {
+        const u = await datMatKhau({ ...taiKhoan, phaiDoiMatKhau: false }, moi);
+        capNhatTaiKhoan(await kho.doiMatKhau(u, cu));
+        await ghiNhatKy("Đổi mật khẩu");
+        bao("Đã đổi mật khẩu");
+        return dong();
+      }
+      if (!(await dungMatKhau(taiKhoan, cu))) return setLoi("Mật khẩu hiện tại không đúng");
       const u = await datMatKhau({ ...taiKhoan, phaiDoiMatKhau: false }, moi);
       await kho.luuNguoiDung(u);
       capNhatTaiKhoan(u);

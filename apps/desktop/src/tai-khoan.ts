@@ -5,6 +5,8 @@
  * người thực hiện. Dữ liệu trên máy không mã hóa; người có quyền quản trị Windows/đọc được thư mục dữ liệu
  * vẫn có thể can thiệp ngoài phần mềm (nhật ký hệ thống có mã băm nối tiếp để PHÁT HIỆN sửa, không ngăn được).
  */
+import MA_TRAN from "./quyen.json";
+
 export type VaiTro = "QUAN_TRI" | "LANH_DAO" | "CAN_BO" | "XEM";
 
 export const TEN_VAI_TRO: Record<VaiTro, string> = {
@@ -54,14 +56,8 @@ export const TEN_QUYEN: Record<Quyen, string> = {
   CAI_DAT: "Cài đặt chung (lịch ngày nghỉ, tự động sao lưu)",
 };
 
-const CAN_BO: Quyen[] = ["SUA_HO_SO", "SOAN_VAN_BAN", "GUI_DUYET", "SAO_LUU"];
-const LANH_DAO: Quyen[] = [...CAN_BO, "XOA_DU_AN", "THAY_MAU", "DUYET_BUOC", "CHOT_PA", "PHE_DUYET_PA", "HUY_PA", "XEM_NHAT_KY", "CAI_DAT"];
-export const QUYEN_THEO_VAI_TRO: Record<VaiTro, Quyen[]> = {
-  QUAN_TRI: Object.keys(TEN_QUYEN) as Quyen[],
-  LANH_DAO,
-  CAN_BO,
-  XEM: [],
-};
+/** Ma trận quyền dùng chung với máy chủ mạng nội bộ (src-tauri đọc cùng tệp). */
+export const QUYEN_THEO_VAI_TRO = MA_TRAN as Record<VaiTro, Quyen[]>;
 
 export const coQuyen = (vt: VaiTro | undefined | null, q: Quyen) => !!vt && QUYEN_THEO_VAI_TRO[vt].includes(q);
 

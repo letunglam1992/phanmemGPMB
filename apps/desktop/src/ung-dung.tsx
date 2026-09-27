@@ -3,6 +3,7 @@ import { KHOA_TU_DONG, MAC_DINH_TU_DONG, coVoWindows, denHan, saoLuuTuDong, type
 import type { BoChinhSach } from "@gpmb/core";
 import { BO_CHINH_SACH } from "./du-lieu";
 import { taoKhoIndexedDb, type Kho } from "./kho";
+import { LoiMayChu, docCheDo, laKhoMang } from "./kho-mang";
 import type { DuAn, Ho } from "./mo-hinh";
 import { docLanSaoLuu, ghiLanSaoLuu } from "./sao-luu";
 import { LICH_TRONG, type LichLamViec } from "./lich-lam-viec";
@@ -62,6 +63,13 @@ interface NguCanh {
 
 const Ctx = createContext<NguCanh | null>(null);
 
+/** Lỗi đã báo cho người dùng (xung đột, không có quyền trên máy chủ…) — người gọi không cần xử lý thêm. */
+export class DaBaoLoi extends Error {}
+if (typeof window !== "undefined")
+  window.addEventListener("unhandledrejection", (e) => {
+    if (e.reason instanceof DaBaoLoi) e.preventDefault();
+  });
+
 export function useUngDung(): NguCanh {
   const c = useContext(Ctx);
   if (!c) throw new Error("Thiếu NguCanh");
@@ -102,8 +110,11 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
   const [lanSaoLuu, setLanSaoLuu] = useState<string | null>(() => docLanSaoLuu());
 
   const taiLai = useCallback(async () => {
+    if (laKhoMang(kho) && !kho.coPhien()) return; // máy chủ: chỉ tải sau khi đăng nhập
     const l = await kho.docCaiDat<LichLamViec>(KHOA_LICH);
     if (l) setLich(l);
+    const td = await kho.docCaiDat<CaiDatTuDong>(KHOA_TU_DONG);
+    if (td) setTuDong({ ...MAC_DINH_TU_DONG, ...td });
     const da = await kho.dsDuAn();
     const hos = (await Promise.all(da.map((d) => kho.dsHo(d.id)))).flat();
     setDsDuAn(da.sort((a, b) => b.taoLuc.localeCompare(a.taoLuc)));
@@ -111,17 +122,60 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
     setDangTai(false);
   }, [kho]);
 
+  /** Ghi qua máy chủ: báo lỗi (xung đột, quyền, quy tắc) và tải lại bản mới nhất; ném DaBaoLoi để màn hình giữ bản nháp. */
+  const ghi = async (f: () => Promise<void>) => {
+    try {
+      await f();
+    } catch (e) {
+      if (!(e instanceof LoiMayChu)) throw e;
+      bao(e.message, "loi");
+      if (e.ma === 401) setTaiKhoan(null);
+      else await taiLai().catch(() => undefined);
+      throw new DaBaoLoi(e.message);
+    }
+  };
+  // Máy chủ: hỏi thay đổi định kỳ, tải lại khi người khác vừa cập nhật
+  const seq = useRef<number | null>(null);
+  useEffect(() => {
+    if (!laKhoMang(kho) || !taiKhoan) return;
+    let dung = false;
+    const hoi = async () => {
+      try {
+        const r = await kho.thayDoi(seq.current);
+        const cuaNguoiKhac = r.ds.filter((x) => x.boi !== taiKhoan.ten);
+        const lanDau = seq.current === null;
+        seq.current = r.seq;
+        if (!lanDau && cuaNguoiKhac.length && !dung) {
+          await taiLai();
+          const ai = [...new Set(cuaNguoiKhac.map((x) => x.boi))].join(", ");
+          bao(`Dữ liệu vừa được cập nhật bởi ${ai}`);
+        }
+      } catch (e) {
+        if (e instanceof LoiMayChu && e.ma === 401) {
+          setTaiKhoan(null);
+          bao("Phiên đăng nhập đã hết — đăng nhập lại", "loi");
+        }
+      }
+    };
+    void hoi();
+    const t = setInterval(() => void hoi(), 4000);
+    return () => {
+      dung = true;
+      clearInterval(t);
+    };
+  }, [kho, taiKhoan, taiLai, bao]);
+
   useEffect(() => {
     void taiLai();
-    void kho.dsNguoiDung().then((ds) => setCoTaiKhoan(ds.length > 0));
-    void kho.docCaiDat<LichLamViec>(KHOA_LICH).then((l) => l && setLich(l));
-    void kho.docCaiDat<CaiDatTuDong>(KHOA_TU_DONG).then((c) => c && setTuDong({ ...MAC_DINH_TU_DONG, ...c }));
-  }, [taiLai, kho]);
+    if (laKhoMang(kho)) void kho.trangThai().then((t) => setCoTaiKhoan(t.coTaiKhoan), (e) => bao(String((e as Error).message ?? e), "loi"));
+    else void kho.dsNguoiDung().then((ds) => setCoTaiKhoan(ds.length > 0));
+  }, [taiLai, kho, bao]);
 
   const chayTuDong = useCallback(
     async (epBuoc: boolean): Promise<CaiDatTuDong> => {
       const c = { ...MAC_DINH_TU_DONG, ...((await kho.docCaiDat<CaiDatTuDong>(KHOA_TU_DONG)) ?? {}) };
-      if (dangTuDong.current || !coVoWindows()) return c;
+      // máy trạm không tự sao lưu (máy chủ hoặc máy đơn đảm nhận)
+      if (dangTuDong.current || !coVoWindows() || docCheDo().cheDo === "MAY_TRAM") return c;
       if (!epBuoc && (!denHan(c) || (await kho.dsDuAn()).length === 0)) return c;
       dangTuDong.current = true;
       try {
@@ -154,26 +208,26 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
     di: setMan,
     luuDuAn: async (d, q = "SUA_HO_SO") => {
       if (chan(q)) return;
-      await kho.luuDuAn(d);
+      await ghi(() => kho.luuDuAn(d));
       await taiLai();
     },
     luuHo: async (h, nk) => {
       if (chan("SUA_HO_SO")) return;
       const ban = nk ? { ...h, nhatKy: [...h.nhatKy, { luc: new Date().toISOString(), nguoi: nguoiDung, noiDung: nk }] } : h;
-      await kho.luuHo(ban);
+      await ghi(() => kho.luuHo(ban));
       await taiLai();
     },
     xoaHo: async (id) => {
       if (chan("SUA_HO_SO")) return;
       const h = dsHo.find((x) => x.id === id);
       await ghiNhatKy("Xóa hồ sơ", h ? `${h.ma} · ${h.ten}` : id);
-      await kho.xoaHo(id);
+      await ghi(() => kho.xoaHo(id));
       await taiLai();
     },
     xoaDuAn: async (id) => {
       if (chan("XOA_DU_AN")) return;
       await ghiNhatKy("Xóa dự án", dsDuAn.find((d) => d.id === id)?.ten ?? id);
-      await kho.xoaDuAn(id);
+      await ghi(() => kho.xoaDuAn(id));
       await taiLai();
     },
     chinhSach: (d) => BO_CHINH_SACH[d.boChinhSach] ?? BO_CHINH_SACH["sonla-2026-03-31"]!,
@@ -191,6 +245,17 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
     coTaiKhoan,
     quyen,
     dangNhap: async (ten, matKhau) => {
+      if (laKhoMang(kho)) {
+        try {
+          const u = await kho.dangNhap(ten.trim().toLowerCase(), matKhau);
+          setTaiKhoan(u);
+          setDangTai(true);
+          await taiLai();
+          return null;
+        } catch (e) {
+          return (e as Error).message;
+        }
+      }
       if (Date.now() < sai.den) return `Nhập sai nhiều lần — thử lại sau ${Math.ceil((sai.den - Date.now()) / 1000)} giây`;
       const u = (await kho.dsNguoiDung()).find((x) => x.ten === ten.trim().toLowerCase());
       const dung = !!u && u.hoatDong && (await dungMatKhau(u, matKhau));
@@ -208,11 +273,19 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
       return null;
     },
     dangXuat: async () => {
-      if (taiKhoan) await ghiNhatKy("Đăng xuất");
+      if (laKhoMang(kho)) await kho.dangXuat().catch(() => undefined);
+      else if (taiKhoan) await ghiNhatKy("Đăng xuất");
       setTaiKhoan(null);
       setMan({ ten: "tong-quan" });
     },
     khoiTaoQuanTri: async (v) => {
+      if (laKhoMang(kho)) {
+        const u = await kho.khoiTao(await taoTaiKhoan([], { ...v, vaiTro: "QUAN_TRI" as VaiTro }));
+        setCoTaiKhoan(true);
+        setTaiKhoan(u);
+        await taiLai();
+        return;
+      }
       if ((await kho.dsNguoiDung()).length) throw new Error("Đã có tài khoản — đăng nhập để tiếp tục");
       const u = await taoTaiKhoan([], { ...v, vaiTro: "QUAN_TRI" as VaiTro });
       await kho.luuNguoiDung(u);

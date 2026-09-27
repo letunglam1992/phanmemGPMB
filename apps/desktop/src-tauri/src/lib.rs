@@ -2,6 +2,9 @@
 //! vỏ Rust chỉ mở cửa sổ WebView2 và ghi tệp sao lưu tự động vào thư mục trên máy.
 //! Không mở cổng mạng, không gửi dữ liệu ra ngoài.
 
+pub mod ket_noi;
+pub mod may_chu;
+
 use std::fs;
 use std::path::PathBuf;
 use tauri::ipc::{InvokeBody, Request};
@@ -111,10 +114,88 @@ fn mo_thu_muc_sao_luu(app: tauri::AppHandle, rieng: String) -> Result<(), String
     Ok(())
 }
 
+// ---------------- Mạng nội bộ ----------------
+
+#[derive(Default)]
+struct TrangThaiMayChu(tokio::sync::Mutex<Option<may_chu::DangChay>>);
+
+fn thong_tin(d: &may_chu::DangChay) -> serde_json::Value {
+    serde_json::json!({ "cong": d.cong, "vanTay": d.van_tay, "diaChi": may_chu::dia_chi_noi_bo() })
+}
+
+/// Bật chế độ máy chủ trên máy này (dữ liệu: thư mục dữ liệu ứng dụng\may-chu).
+#[tauri::command]
+async fn bat_may_chu(app: tauri::AppHandle, tt: tauri::State<'_, TrangThaiMayChu>, cong: u16) -> Result<serde_json::Value, String> {
+    let mut g = tt.0.lock().await;
+    if let Some(d) = g.as_ref() {
+        return Ok(thong_tin(d));
+    }
+    let dir = app.path().app_local_data_dir().map_err(|e| e.to_string())?.join("may-chu");
+    let d = may_chu::khoi_dong(dir, cong).await?;
+    let v = thong_tin(&d);
+    *g = Some(d);
+    Ok(v)
+}
+
+#[tauri::command]
+async fn tat_may_chu(tt: tauri::State<'_, TrangThaiMayChu>) -> Result<(), String> {
+    if let Some(d) = tt.0.lock().await.take() {
+        d.handle.graceful_shutdown(Some(std::time::Duration::from_secs(3)));
+    }
+    Ok(())
+}
+
+#[tauri::command]
+async fn trang_thai_may_chu(tt: tauri::State<'_, TrangThaiMayChu>) -> Result<Option<serde_json::Value>, String> {
+    Ok(tt.0.lock().await.as_ref().map(thong_tin))
+}
+
+#[tauri::command]
+async fn doc_van_tay_may_chu(dia_chi: String) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(move || ket_noi::doc_van_tay(&dia_chi)).await.map_err(|e| e.to_string())?
+}
+
+/// Chuyển tiếp yêu cầu của giao diện tới máy chủ (HTTPS ghim vân tay).
+/// Trả về: 2 byte mã trạng thái, 4 byte độ dài meta, meta, thân.
+#[tauri::command]
+async fn goi_may_chu(request: Request<'_>) -> Result<tauri::ipc::Response, String> {
+    let h = |k: &str| request.headers().get(k).and_then(|v| v.to_str().ok()).map(|s| s.to_string());
+    let dia_chi = h("x-dia-chi").ok_or("Thiếu địa chỉ máy chủ")?;
+    let van_tay = h("x-van-tay").ok_or("Thiếu vân tay máy chủ")?;
+    let phuong_thuc = h("x-phuong-thuc").unwrap_or_else(|| "GET".into());
+    let duong_dan = h("x-duong-dan").ok_or("Thiếu đường dẫn")?;
+    let token = h("x-token");
+    let meta = h("x-meta");
+    let than = match request.body() {
+        InvokeBody::Raw(b) => b.clone(),
+        InvokeBody::Json(_) => Vec::new(),
+    };
+    let r = tauri::async_runtime::spawn_blocking(move || ket_noi::goi(&dia_chi, &van_tay, &phuong_thuc, &duong_dan, token.as_deref(), meta.as_deref(), &than))
+        .await
+        .map_err(|e| e.to_string())??;
+    let mut out = Vec::with_capacity(6 + r.meta.len() + r.than.len());
+    out.extend_from_slice(&r.ma.to_be_bytes());
+    out.extend_from_slice(&(r.meta.len() as u32).to_be_bytes());
+    out.extend_from_slice(r.meta.as_bytes());
+    out.extend_from_slice(&r.than);
+    Ok(tauri::ipc::Response::new(out))
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    let _ = rustls::crypto::ring::default_provider().install_default();
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![ghi_sao_luu, thu_muc_sao_luu, mo_thu_muc_sao_luu])
+        .manage(TrangThaiMayChu::default())
+        .invoke_handler(tauri::generate_handler![
+            ghi_sao_luu,
+            thu_muc_sao_luu,
+            mo_thu_muc_sao_luu,
+            bat_may_chu,
+            tat_may_chu,
+            trang_thai_may_chu,
+            doc_van_tay_may_chu,
+            goi_may_chu
+        ])
         .run(tauri::generate_context!())
         .expect("không khởi động được ứng dụng");
 }
