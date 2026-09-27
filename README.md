@@ -2,10 +2,10 @@
 
 Ứng dụng Windows (cài đặt bằng `.exe`) hỗ trợ công tác thu hồi đất, bồi thường, hỗ trợ, tái định cư trên địa bàn tỉnh Sơn La.
 
-> **Trạng thái: Giai đoạn 3 – Bản đồ, giao diện mẫu và một luồng nghiệp vụ đầy đủ (đang làm).**
+> **Trạng thái: đã xong phạm vi phiên bản 1; đang kiểm thử nghiệm thu (Giai đoạn 5, docs/12) và chuẩn bị bàn giao (Giai đoạn 6).**
 > Chỉ các quy tắc đã có văn bản và cách áp dụng được người dùng xác nhận (docs/06) mới được mã hóa trong lõi tính toán.
 
-## Tài liệu giai đoạn 1
+## Tài liệu
 
 | Tệp | Nội dung |
 |---|---|
@@ -20,6 +20,11 @@
 | [docs/08-ban-do-dgn.md](docs/08-ban-do-dgn.md) | Bản đồ DGN: đọc V7, TCVN3, khép thửa, gắn nhãn, diện tích thu hồi |
 | [docs/10-mau-van-ban.md](docs/10-mau-van-ban.md) | 22 mẫu văn bản Sổ tay QĐ 1966: dựng mẫu, dữ liệu tự điền, tự chỉnh mẫu |
 | [docs/09-ung-dung-desktop.md](docs/09-ung-dung-desktop.md) | Ứng dụng desktop 0.1: kiến trúc, **tình trạng từng chức năng**, đóng gói Windows |
+| [docs/11-mang-noi-bo.md](docs/11-mang-noi-bo.md) | Nhiều người dùng qua mạng nội bộ: thiết lập, an toàn, kiểm thử |
+| [docs/12-kich-ban-nghiem-thu.md](docs/12-kich-ban-nghiem-thu.md) | Kịch bản kiểm thử nghiệm thu, biên bản kết quả |
+| [docs/13-huong-dan-su-dung.md](docs/13-huong-dan-su-dung.md) | Hướng dẫn sử dụng theo vai trò và luồng công việc |
+| [docs/14-huong-dan-quan-tri.md](docs/14-huong-dan-quan-tri.md) | Hướng dẫn quản trị: cài đặt, tài khoản, sao lưu, mạng nội bộ |
+| [docs/15-cap-nhat-bo-chinh-sach.md](docs/15-cap-nhat-bo-chinh-sach.md) | Cập nhật bộ chính sách khi có văn bản mới |
 
 ## Dữ liệu và công cụ
 
