@@ -34,13 +34,14 @@ Ký hiệu: **Đã kiểm thử** = có kiểm thử tự động đạt · **Đ
 | Tra cứu: QĐ 32, PL VIII, PL V, NQ 152, bộ chính sách | Đã chạy | |
 | Xuất Word (Báo cáo thẩm định, QĐ thu hồi, Tờ trình, 22 mẫu Sổ tay) | **Chưa làm** | Giai đoạn 4 |
 | Sao lưu/khôi phục, nhiều người dùng mạng nội bộ | **Chưa làm** | |
-| Bộ cài Windows `.exe` | **Chưa có** | Xem §3 |
+| Bộ cài Windows `.exe` | **Đã build** trên GitHub Actions (windows-latest), **chưa cài thử** trên Windows 10/11 | Xem §3 |
 
 ## 3. Đóng gói Windows
 
 - Cấu hình: `apps/desktop/src-tauri` (Tauri 2, NSIS, cài theo người dùng, kèm bộ cài WebView2).
 - Build tự động: `.github/workflows/build-windows.yml` chạy trên `windows-latest` → tải bộ cài ở mục Artifacts của lần chạy.
 - Môi trường phát triển hiện tại là Linux: **không build được `.exe` tại đây**. Đã build bản Linux (.deb 2,2 MB) và chạy thử trong màn hình ảo: cửa sổ mở, giao diện nạp đúng với CSP chặn mạng ngoài → vỏ Rust và cấu hình Tauri hợp lệ. Bộ cài chỉ được coi là có khi workflow Windows chạy xong và đã được cài thử trên Windows 10/11.
+- Lần build đầu (27/9/2026): workflow chạy thành công, bộ cài NSIS ~3,7 MB (nén zip) tải ở mục Artifacts `gpmb-sonla-windows-setup` (lưu 90 ngày).
 - Chưa kiểm tra trên WebView2: tải tệp Excel (thẻ `<a download>`), thư mục lưu IndexedDB khi gỡ/cài lại.
 
 ## 4. Chạy thử trên máy phát triển
