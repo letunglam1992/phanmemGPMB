@@ -1,0 +1,136 @@
+{
+  "ma": "SONLA-BTHTTDC-2026-03-31",
+  "ten": "Bộ chính sách BT-HT-TĐC tỉnh Sơn La áp dụng từ 31/3/2026",
+  "hieuLucTu": "2026-03-31",
+  "hieuLucDen": null,
+  "trangThai": "CHO_DUYET",
+  "vanBan": [
+    "Luật Đất đai 2024",
+    "NĐ 88/2024/NĐ-CP",
+    "QĐ 106/2025/QĐ-UBND (PL II, V, VIII)",
+    "QĐ 14/2026/QĐ-UBND",
+    "QĐ 32/2025/QĐ-UBND",
+    "NQ 152/2025/NQ-HĐND"
+  ],
+  "lamTron": {
+    "dienTichSoLe": 2,
+    "tienBuoc": 1000,
+    "cach": "NUA_LEN",
+    "capLamTron": "HO",
+    "canCu": [{ "vanBan": "Quyết định nghiệp vụ", "viTri": "QD-03 (docs/06)" }]
+  },
+  "nhaCongTrinh": {
+    "tyLeCongThem": "0.2",
+    "san": "0.6",
+    "tran": "1",
+    "canCu": [
+      { "vanBan": "NĐ 88/2024/NĐ-CP", "viTri": "điểm a, b khoản 1 Điều 14" },
+      { "vanBan": "QĐ 106/2025/QĐ-UBND", "viTri": "khoản 1 Điều 6 Phụ lục II" }
+    ]
+  },
+  "hoTroNhaDatDuDieuKienSaiMucDich": {
+    "canCu": [{ "vanBan": "QĐ 14/2026/QĐ-UBND", "viTri": "điểm 3.1 khoản 3 Điều 6" }],
+    "moc": [
+      { "den": "2004-07-01", "baoGomDen": false, "giaTri": "1", "moTa": "Xây dựng trước ngày 01/7/2004: 100%" },
+      { "tu": "2004-07-01", "baoGomTu": true, "den": "2014-07-01", "baoGomDen": false, "giaTri": "0.8", "moTa": "Từ 01/7/2004 đến trước 01/7/2014: 80%" },
+      { "tu": "2014-07-01", "baoGomTu": true, "den": "TB", "baoGomDen": false, "giaTri": "0.3", "moTa": "Từ 01/7/2014 đến trước ngày thông báo thu hồi đất: 30%" }
+    ]
+  },
+  "hoTroNhaDatKhongDuDieuKien": {
+    "canCu": [{ "vanBan": "QĐ 14/2026/QĐ-UBND", "viTri": "điểm 3.2 khoản 3 Điều 6" }],
+    "moc": [
+      { "den": "1993-10-15", "baoGomDen": false, "giaTri": "1", "moTa": "Xây dựng trước 15/10/1993: 100%" },
+      { "tu": "1993-10-15", "baoGomTu": true, "den": "2004-07-01", "baoGomDen": false, "giaTri": "0.7", "moTa": "Từ 15/10/1993 đến trước 01/7/2004: 70%" },
+      { "tu": "2004-07-01", "baoGomTu": true, "den": "2014-07-01", "baoGomDen": false, "giaTri": "0.5", "moTa": "Từ 01/7/2004 đến trước 01/7/2014: 50%" },
+      { "tu": "2014-07-01", "baoGomTu": false, "den": "TB", "baoGomDen": false, "giaTri": "0.3", "moTa": "Sau 01/7/2014 đến trước ngày thông báo thu hồi đất: 30%" }
+    ]
+  },
+  "hoTroThaoDoCoViPham": {
+    "canCu": [{ "vanBan": "QĐ 14/2026/QĐ-UBND", "viTri": "điểm 3.3 khoản 3 Điều 6" }],
+    "moc": [
+      { "den": "2004-07-01", "baoGomDen": false, "giaTri": "0.3", "moTa": "Xây dựng trước 01/7/2004: 30%" },
+      { "tu": "2004-07-01", "baoGomTu": false, "giaTri": "0", "moTa": "Từ sau 01/7/2004: không hỗ trợ" }
+    ]
+  },
+  "vatNuoi": {
+    "nguongKm": "5",
+    "canCu": [
+      { "vanBan": "NĐ 88/2024/NĐ-CP", "viTri": "khoản 1 Điều 21" },
+      { "vanBan": "QĐ 106/2025/QĐ-UBND", "viTri": "Điều 3 và Biểu kèm theo Phụ lục V" }
+    ],
+    "donGia": {
+      "CUNG_HOA": {
+        "TRAU_BO_NGUA": { "donVi": "tấn", "den5km": "140000", "tren5km": "6000" },
+        "LON": { "donVi": "tấn", "den5km": "150000", "tren5km": "6500" },
+        "DE_CUU_HUOU_CHO_THO_NHIM": { "donVi": "tấn", "den5km": "160000", "tren5km": "7500" },
+        "GIA_CAM": { "donVi": "tấn", "den5km": "170000", "tren5km": "8000" },
+        "CON_TRUNG_SINH_VAT_NHO": { "donVi": "kg", "den5km": "190", "tren5km": "8.0" }
+      },
+      "DUONG_DAT": {
+        "TRAU_BO_NGUA": { "donVi": "tấn", "den5km": "150000", "tren5km": "7000" },
+        "LON": { "donVi": "tấn", "den5km": "160000", "tren5km": "7500" },
+        "DE_CUU_HUOU_CHO_THO_NHIM": { "donVi": "tấn", "den5km": "170000", "tren5km": "8000" },
+        "GIA_CAM": { "donVi": "tấn", "den5km": "180000", "tren5km": "8500" },
+        "CON_TRUNG_SINH_VAT_NHO": { "donVi": "kg", "den5km": "200", "tren5km": "8.5" }
+      }
+    }
+  },
+  "cayTrong": {
+    "tyLeVuotMatDo": "1.5",
+    "tyLePhanVuot": "0.3",
+    "tyLeTreTrucBuiToiDa": "500",
+    "canCu": [{ "vanBan": "QĐ 106/2025/QĐ-UBND", "viTri": "khoản 4, khoản 5 Điều 5 Phụ lục VIII" }]
+  },
+  "moMa": {
+    "canCu": [{ "vanBan": "QĐ 106/2025/QĐ-UBND", "viTri": "khoản 1 Điều 8 Phụ lục II" }],
+    "mucXay": "25000000",
+    "mucKhongXay": "15000000"
+  },
+  "onDinhDoiSong": {
+    "kgGaoNhanKhauThang": "30",
+    "canCu": [
+      { "vanBan": "NĐ 88/2024/NĐ-CP", "viTri": "khoản 1 Điều 19" },
+      { "vanBan": "QĐ 106/2025/QĐ-UBND", "viTri": "Điều 12 Phụ lục II" }
+    ],
+    "nhom": [
+      { "ma": "DUOI_10", "tu": "0", "baoGomTu": true, "den": "10", "baoGomDen": false, "thang": { "KHONG_DI_CHUYEN": 0, "DI_CHUYEN": 0, "DEN_VUNG_KHO_KHAN": 0 }, "canCu": "điểm a khoản 1 Điều 12 PL II QĐ 106/2025" },
+      { "ma": "10_20", "tu": "10", "baoGomTu": true, "den": "20", "baoGomDen": false, "thang": { "KHONG_DI_CHUYEN": 2, "DI_CHUYEN": 3, "DEN_VUNG_KHO_KHAN": 6 }, "canCu": "điểm a khoản 1 Điều 12 PL II QĐ 106/2025" },
+      { "ma": "20_30", "tu": "20", "baoGomTu": true, "den": "30", "baoGomDen": false, "thang": { "KHONG_DI_CHUYEN": 3, "DI_CHUYEN": 6, "DEN_VUNG_KHO_KHAN": 9 }, "canCu": "điểm a khoản 1 Điều 12 PL II QĐ 106/2025" },
+      { "ma": "30_70", "tu": "30", "baoGomTu": true, "den": "70", "baoGomDen": true, "thang": { "KHONG_DI_CHUYEN": 6, "DI_CHUYEN": 12, "DEN_VUNG_KHO_KHAN": 24 }, "toiDa": true, "canCu": "điểm a khoản 1 Điều 19 NĐ 88/2024" },
+      { "ma": "TREN_70", "tu": "70", "baoGomTu": false, "den": "100", "baoGomDen": true, "thang": { "KHONG_DI_CHUYEN": 12, "DI_CHUYEN": 24, "DEN_VUNG_KHO_KHAN": 36 }, "toiDa": true, "canCu": "điểm a khoản 1 Điều 19 NĐ 88/2024" }
+    ],
+    "nguongTuyChinh": [{ "giaTri": "30", "nhomLuaChon": ["20_30", "30_70"], "macDinh": "30_70", "ghiChu": "QD-16: đúng 30% – NĐ 88 xếp vào nhóm 30–70%; Đ6 k9 QĐ 14/2026 xếp vào nhóm 10–30%" }]
+  },
+  "tamCu": {
+    "canCu": [{ "vanBan": "QĐ 14/2026/QĐ-UBND", "viTri": "khoản 3, khoản 4 Điều 3" }],
+    "congThemMoiKhau": "500000",
+    "mocKhauCoSo": 4,
+    "cachTinhTuNamKhau": "MUC_4_KHAU_CONG_THEM",
+    "ghiChuCachTinh": "QD-17 (mặc định, chờ xác nhận): hộ ≥ 5 khẩu = mức hộ ≤ 4 khẩu + 500.000 × (số khẩu − 4)",
+    "nhomDiaBan": {
+      "PHUONG": { "den2Khau": "2000000", "den4Khau": "3500000" },
+      "XA_NHOM_1": { "den2Khau": "1500000", "den4Khau": "3000000" },
+      "XA_CON_LAI": { "den2Khau": "1000000", "den4Khau": "2000000" }
+    },
+    "phanNhom": {
+      "PHUONG": ["Phường Tô Hiệu", "Phường Chiềng An", "Phường Chiềng Cơi", "Phường Chiềng Sinh", "Phường Mộc Châu", "Phường Mộc Sơn", "Phường Vân Sơn", "Phường Thảo Nguyên"],
+      "XA_NHOM_1": ["Xã Quỳnh Nhai", "Xã Thuận Châu", "Xã Mường La", "Xã Bắc Yên", "Xã Phù Yên", "Xã Yên Châu", "Xã Mai Sơn", "Xã Sông Mã", "Xã Sốp Cộp", "Xã Vân Hồ"]
+    },
+    "thangThemTdcBangDat": 6
+  },
+  "chuyenDoiNghe": {
+    "canCu": [
+      { "vanBan": "NĐ 88/2024/NĐ-CP", "viTri": "Điều 22" },
+      { "vanBan": "QĐ 106/2025/QĐ-UBND", "viTri": "Điều 14 Phụ lục II" }
+    ],
+    "heSoMacDinh": "3",
+    "heSoTheoNhom": {
+      "PHUONG": "5",
+      "XA_NHOM_DIEU_14": "4"
+    },
+    "phanNhom": {
+      "PHUONG": ["Phường Tô Hiệu", "Phường Chiềng An", "Phường Chiềng Cơi", "Phường Chiềng Sinh", "Phường Mộc Châu", "Phường Mộc Sơn", "Phường Vân Sơn", "Phường Thảo Nguyên"],
+      "XA_NHOM_DIEU_14": ["Xã Lóng Sập", "Xã Chiềng Sơn", "Xã Tân Yên", "Xã Quỳnh Nhai", "Xã Thuận Châu", "Xã Mường La", "Xã Bắc Yên", "Xã Phù Yên", "Xã Yên Châu", "Xã Mai Sơn", "Xã Sông Mã", "Xã Sốp Cộp"]
+    }
+  }
+}

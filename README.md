@@ -22,3 +22,13 @@
 
 - `policy/nguon/` – dữ liệu chính sách trích xuất từ văn bản gốc (chờ đối chiếu trước khi kích hoạt)
 - `tools/extract/` – script trích xuất (Python + PyMuPDF), chạy lại được khi có văn bản mới
+
+## Lõi tính toán (`packages/core`)
+
+TypeScript thuần, số thập phân chính xác (`decimal.js`), không phụ thuộc giao diện/CSDL. Mỗi khoản tính trả về **dòng tính có giải trình** (tham số, công thức, căn cứ, trạng thái, lựa chọn của người dùng). Tham số lấy từ bộ chính sách `policy/goi/*.json`.
+
+```bash
+npm install
+npm test          # kiểm thử lõi tính toán + đối chiếu dữ liệu với văn bản gốc
+npm run typecheck
+```

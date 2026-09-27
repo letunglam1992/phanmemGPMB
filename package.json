@@ -1,0 +1,9 @@
+{
+  "name": "phanmem-gpmb",
+  "private": true,
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "test": "npm -w @gpmb/core test",
+    "typecheck": "npm -w @gpmb/core run typecheck"
+  }
+}
