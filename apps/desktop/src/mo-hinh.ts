@@ -28,6 +28,12 @@ export interface GiaThua {
   nguon: string;
 }
 
+/** Tính đất theo phân lớp (QD-21): cán bộ nhập từng lớp; phần mềm điền giá vị trí × tỷ lệ theo lớp. */
+export interface PhanLopThua {
+  tuyen: { bang: string; stt: string; xa: string; tuyen: string; vt: (number | null)[] };
+  lop: { id: string; lop: number; viTri: number; dienTich: string; giaTuyChinh?: string; lyDo?: string }[];
+}
+
 export interface Thua {
   id: string;
   soTo: string;
@@ -38,6 +44,7 @@ export interface Thua {
   dienTichThuHoi: string;
   nguonGoc: string;
   gia: GiaThua | null;
+  phanLop?: PhanLopThua;
   /** Mã thửa trên bản đồ (T{tờ}-{thửa}), nếu tạo từ bản đồ. */
   maBanDo?: string;
   dienTichBanDo?: number;

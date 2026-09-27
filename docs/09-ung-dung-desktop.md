@@ -23,7 +23,8 @@ Ký hiệu: **Đã kiểm thử** = có kiểm thử tự động đạt · **Đ
 |---|---|---|
 | Tổng quan: thẻ dự án, tiến độ 16 bước, việc cần xử lý | Đã chạy | |
 | Dự án: thông tin (xã, giá gạo, hạn mức, hệ số giá đất có văn bản), danh sách hộ | Đã chạy | Hệ số ≠ 1 bắt buộc ghi văn bản |
-| Hồ sơ hộ: thông tin, nhân khẩu, thửa đất, chọn giá NQ 152 | Đã chạy | Giá điều chỉnh (phân lớp, mặt tiếp giáp…) nhập tay kèm căn cứ; **chưa** nối giao diện với `gia-dat.ts` |
+| Hồ sơ hộ: thông tin, nhân khẩu, thửa đất, chọn giá NQ 152 | Đã chạy | Điều chỉnh khác (mặt tiếp giáp, chênh cao…) nhập giá tay kèm căn cứ |
+| Tính đất theo phân lớp (QD-21): cán bộ thêm lớp, vị trí, DT; phần mềm điền giá VT × tỷ lệ lớp | **Đã kiểm thử** (lõi + điều phối), đã chạy giao diện | Cảnh báo khi tổng DT lớp ≠ DT thu hồi; giá sửa tay bắt buộc lý do; không tự áp sàn giá |
 | Kiểm đếm theo thửa, theo đợt; chọn đơn giá QĐ 32 / PL VIII; ngoài danh mục có căn cứ | Đã chạy | Khối lượng dạng biểu thức (=10*9.8) — **đã kiểm thử** |
 | Tính toán, giải trình từng khoản, trạng thái màu | **Đã kiểm thử** (điều phối) | Hộ mẫu khớp biểu mẫu: đất 521.926.200 đ; CĐN thửa 85 1.493.980.200 đ; cây trồng khớp đến đồng |
 | Làm tròn lên nghìn đồng ở cấp hộ; khấu trừ; chỉ cộng khoản "Tạm tính" | **Đã kiểm thử** | |

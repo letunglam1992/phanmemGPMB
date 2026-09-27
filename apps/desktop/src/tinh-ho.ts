@@ -7,6 +7,7 @@ import {
   boiThuongDat,
   cayTrong,
   cayTrongXenCanh,
+  datTheoPhanLop,
   chuyenDoiNghe,
   D,
   diDoiVatNuoi,
@@ -94,6 +95,9 @@ function soLuong(ts: { ten: string }, vao: string, ma: string): { v: Decimal | n
   if (r.loi) return { v: null, loi: thieu(ma, ts.ten, `Khối lượng/số lượng: ${r.loi}`) };
   return { v: r.giaTri, loi: null };
 }
+
+/** Bảng 05 (đất ở) → tỷ lệ phân lớp đất ở; Bảng 06, 07 (TMDV, SXKD) → tỷ lệ đất PNN. */
+export const nhomPhanLop = (bang: string): "DAT_O" | "PNN" => (bang === "05" ? "DAT_O" : "PNN");
 
 const nhanThua = (t: Thua) => `Thửa ${t.soThua}, tờ ${t.soTo}`;
 
@@ -198,10 +202,37 @@ export function tinhHo(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
 
   for (const t of ho.thua) {
     if (D(t.dienTichThuHoi || "0").gt(0)) {
-      const d = dongDat(duAn, t);
-      const hs = duAn.heSoGiaDat && !D(duAn.heSoGiaDat.heSo).eq(1) ? D(duAn.heSoGiaDat.heSo) : D(1);
-      const bieu = t.gia && d.thanhTien ? [{ dvt: "m²", kl: D(t.dienTichThuHoi).toDecimalPlaces(2), heSo: hs, donGia: D(t.gia.giaNghinDong).mul(1000) }] : undefined;
-      n("A.I").dong.push({ dong: d, bieu, cot: "BT_DAT", thuaId: t.id });
+      const hs = duAn.heSoGiaDat && !D(duAn.heSoGiaDat.heSo).eq(1) ? { heSo: duAn.heSoGiaDat.heSo, vanBan: duAn.heSoGiaDat.vanBan } : undefined;
+      if (t.phanLop && t.phanLop.lop.length) {
+        const pl = t.phanLop;
+        const kq = datTheoPhanLop(cs, {
+          loaiDat: `${t.loaiDat} (${nhanThua(t)})`,
+          nhom: nhomPhanLop(pl.tuyen.bang),
+          nguonTuyen: `Bảng ${pl.tuyen.bang}, ${pl.tuyen.xa}, STT ${pl.tuyen.stt} (${pl.tuyen.tuyen})`,
+          dienTichThuHoiM2: t.dienTichThuHoi,
+          heSoDuAn: hs,
+          lop: pl.lop.map((l) => ({
+            lop: l.lop,
+            viTri: l.viTri,
+            giaViTriNghinDong: pl.tuyen.vt[l.viTri - 1] ?? 0,
+            dienTichM2: l.dienTich || "0",
+            giaTuyChinhNghinDong: l.giaTuyChinh,
+            lyDo: l.lyDo,
+          })),
+        });
+        const bieu = kq.chiTiet.map((x) => ({
+          ghiChu: `Lớp ${x.lop}, VT${x.viTri}`,
+          dvt: "m²",
+          kl: x.dienTich,
+          heSo: x.giaViTri.isZero() ? null : x.giaApDung.div(x.giaViTri).mul(hs ? D(hs.heSo) : 1),
+          donGia: x.giaViTri,
+        }));
+        n("A.I").dong.push({ dong: kq.dong, bieu, cot: "BT_DAT", thuaId: t.id });
+      } else {
+        const d = dongDat(duAn, t);
+        const bieu = t.gia && d.thanhTien ? [{ dvt: "m²", kl: D(t.dienTichThuHoi).toDecimalPlaces(2), heSo: hs ? D(hs.heSo) : D(1), donGia: D(t.gia.giaNghinDong).mul(1000) }] : undefined;
+        n("A.I").dong.push({ dong: d, bieu, cot: "BT_DAT", thuaId: t.id });
+      }
     }
     const tsThua = ho.taiSan.filter((x) => x.thuaId === t.id);
     for (const ts of tsThua) {

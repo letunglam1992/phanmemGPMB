@@ -27,6 +27,8 @@ Ghi nhận theo trả lời của người dùng ngày 27/9/2026 (đợt 1 và �
 | QD-16 | VM-19: ngưỡng đúng 30% đất nông nghiệp | **Người dùng tùy chỉnh** (mặc định theo NĐ 88: 30% thuộc nhóm "từ 30% đến 70%"), ghi lý do nếu chọn khác |
 | QD-17 | Tạm cư – hộ từ 5 khẩu (VM-03) | **Mặc định**: mức hộ ≤ 4 khẩu + 500.000 × (số khẩu − 4); **người dùng được chỉnh** mức/tháng, có lý do (xác nhận đợt 4) |
 | QD-18 | Thứ tự điều chỉnh giá đất (VM-31) | **Xác nhận**: giá vị trí → phân lớp chiều sâu → tăng mặt tiếp giáp (≤ 20%) → giảm chênh cao / đường đất → hệ số dự án |
+| QD-20 | VM-34: cây trồng nhiều loài trên cùng diện tích | **Nhất trí theo biểu mẫu** (xác nhận 27/9/2026): quỹ = DT × 1,5 − DT công trình (trừ DT công trình là tùy chọn, bắt buộc lý do); xếp theo thứ tự chủ sở hữu chọn; khi đã vượt quỹ, các dòng sau hưởng 30% |
+| QD-21 | Tính tiền đất theo phân lớp (k6 Đ4 NQ 152) | **Người dùng tự thêm lớp**, chọn vị trí trong bảng giá, nhập diện tích từng lớp; phần mềm **chỉ** điền giá tương ứng vị trí và tỷ lệ giảm dần theo lớp (đất ở: lớp sau 60% lớp trước; đất PNN: 50%). Không tự chia lớp theo chiều sâu, không tự áp sàn giá; giá lớp sửa tay phải có lý do |
 | QD-19 | Các điểm còn mở VM-07, 10, 13, 14, 16, 17, 24, 28, 33 | **Nhất trí xử lý linh động** theo §3: mặc định theo văn bản/cách hiểu đề xuất trong sổ vướng mắc, người dùng được chỉnh kèm lý do |
 
 ## 3. Nguyên tắc chung cho mọi điểm "linh động"

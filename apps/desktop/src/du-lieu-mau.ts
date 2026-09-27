@@ -80,7 +80,20 @@ export function taoDuAnMau(): { duAn: DuAn; ho: Ho[] } {
     soDinhDanh: "",
     dienThoai: "",
     nhanKhau: [{ id: taoId(), hoTen: "Chủ hộ mẫu 02", quanHe: "Chủ hộ" }],
-    thua: [{ id: t12, soTo: "5", soThua: "12", loaiDat: "HNK", dienTich: "850.5", dienTichThuHoi: "600", nguonGoc: "Nhà nước giao", gia: null }],
+    thua: [
+      { id: t12, soTo: "5", soThua: "12", loaiDat: "HNK", dienTich: "850.5", dienTichThuHoi: "600", nguonGoc: "Nhà nước giao", gia: null },
+      {
+        id: taoId(), soTo: "5", soThua: "13", loaiDat: "ONT", dienTich: "150.5", dienTichThuHoi: "150.5", nguonGoc: "Công nhận đất ở",
+        gia: null,
+        phanLop: {
+          tuyen: { bang: "05", stt: "1.1", xa: "Xã Chiềng Mung", tuyen: "Từ hết địa phận xã Mai Sơn đến ngã ba đường rẽ vào khu công nghiệp Mai Sơn", vt: [3300, 2750, 1930, 1320, 930] },
+          lop: [
+            { id: taoId(), lop: 1, viTri: 1, dienTich: "100" },
+            { id: taoId(), lop: 2, viTri: 1, dienTich: "50.5" },
+          ],
+        },
+      },
+    ],
     taiSan: [
       { id: taoId(), thuaId: t12, dot: 1, loai: "NHA_CT", ten: "Nhà tạm (mẫu)", maDonGia: "QĐ32 – chọn đơn giá", donVi: "m²", donGia: "1500000", khoiLuong: "=6*4.5", cachTinh: "THIET_HAI_THUC_TE", phan: "BOI_THUONG", canCu: "" },
     ],

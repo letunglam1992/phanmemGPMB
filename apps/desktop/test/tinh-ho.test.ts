@@ -44,6 +44,14 @@ describe("Tính hộ mẫu (từ biểu áp giá thửa 85, ẩn danh)", () => {
     expect(kq.tong.tongLamTron.gte(kq.tong.tongChuaLamTron)).toBe(true);
     expect(kq.tong.duocChot).toBe(true);
   });
+  it("hộ 2: thửa đất ở tính theo phân lớp (QD-21) — lớp 2 = 60% giá VT1", () => {
+    const k2 = tinhHo(cs, duAn, ho[1]!);
+    const d = k2.tatCa.find((x) => x.dong.noiDung.includes("phân lớp"))!;
+    // 100 × 3.300.000 + 50,5 × 1.980.000
+    expect(d.dong.thanhTien!.toString()).toBe(String(330000000 + 99990000));
+    expect(d.dong.trangThai).toBe("TAM_TINH");
+    expect(d.bieu!.map((b) => [b.kl.toString(), b.heSo!.toString(), b.donGia.toString()])).toEqual([["100", "1", "3300000"], ["50.5", "0.6", "3300000"]]);
+  });
   it("hộ 2: thiếu giá đất, thiếu T/T1, thiếu giá gạo → không được chốt, có giải thích", () => {
     const k2 = tinhHo(cs, duAn, ho[1]!);
     expect(k2.tong.duocChot).toBe(false);
