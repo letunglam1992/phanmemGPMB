@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { kiemTraDuyetBuoc } from "../tai-khoan";
+import { hanCuaBuoc, tinhHanBuoc } from "../han-buoc";
+import { homNayIso } from "../trang-thai";
 import { useUngDung } from "../ung-dung";
 import { tinhHo } from "../tinh-ho";
 import { CAC_BUOC, TEN_DOI_TUONG, TEN_TRANG_THAI_BUOC, taoId, type Ho, type LoaiDoiTuong, type TrangThaiBuoc } from "../mo-hinh";
@@ -255,7 +257,9 @@ function TabTienDo({ h, doi, luuNgay, soanMau }: Tab & { luuNgay: (h: Ho, nk: st
   const [chon, setChon] = useState(CAC_BUOC[Math.max(0, CAC_BUOC.findIndex((b) => h.tienDo[b.ma]?.trangThai !== "XONG"))]!.ma);
   const b = CAC_BUOC.find((x) => x.ma === chon)!;
   const bh = h.tienDo[chon] ?? { trangThai: "CHUA" as TrangThaiBuoc };
-  const { taiKhoan, quyen, bao } = useUngDung();
+  const { taiKhoan, quyen, bao, lich } = useUngDung();
+  const han = hanCuaBuoc(chon);
+  const th = han ? tinhHanBuoc(h, han, homNayIso(), lich) : null;
   const loiDuyet = taiKhoan ? kiemTraDuyetBuoc(taiKhoan.vaiTro, taiKhoan.ten, bh) : "Chưa đăng nhập";
   const datBuoc = (p: Partial<typeof bh>) => {
     if (p.trangThai === "XONG" && bh.trangThai !== "XONG") return void doiTrangThai("XONG", `Xác nhận hoàn thành bước ${b.ma}. ${b.ten}`);
@@ -294,6 +298,26 @@ function TabTienDo({ h, doi, luuNgay, soanMau }: Tab & { luuNgay: (h: Ho, nk: st
         <div className="the-dau"><h3>Bước {b.ma}. {b.ten}</h3></div>
         <div className="the-than luoi">
           <div className="chu-nho"><b>Căn cứ:</b> {b.canCu}<br /><b>Thời hạn:</b> {b.thoiHan ?? "—"}<br /><b>Mẫu biểu (Sổ tay QĐ 1966):</b> {b.mau ?? "—"}</div>
+          {han && th && (
+            <div className={`thong-bao ${th.trangThai === "QUA_HAN" || th.trangThai === "XONG_QUA_HAN" ? "thong-bao-do" : th.trangThai === "SAP_HET" ? "thong-bao-vang" : "thong-bao-xanh"}`} style={{ marginBottom: 0 }}>
+              <b>Thời hạn:</b> {han.soNgay} {han.loai === "NLV" ? "ngày làm việc" : "ngày"} kể từ {han.moc.nhan.charAt(0).toLowerCase() + han.moc.nhan.slice(1)} ({han.canCu}).
+              {han.moc.loai === "NHAP" && (
+                <div style={{ marginTop: 6 }}>
+                  <label className="chu-nho">Ngày mốc: <input type="date" value={bh.mocHan ?? ""} onChange={(e) => datBuoc({ mocHan: e.target.value || undefined })} /></label>
+                </div>
+              )}
+              <div style={{ marginTop: 4 }}>
+                {th.trangThai === "CHUA_CO_MOC" && (han.moc.loai === "NHAP" ? "Chưa nhập ngày mốc — chưa tính hạn." : `Chưa có ${han.moc.nhan} — chưa tính hạn.`)}
+                {th.hanChot && <>Hạn chót: <b>{ngayVN(th.hanChot)}</b>. </>}
+                {th.trangThai === "CON_HAN" && `Còn ${th.conLai} ${han.loai === "NLV" ? "ngày làm việc" : "ngày"}.`}
+                {th.trangThai === "SAP_HET" && `Sắp hết hạn: còn ${th.conLai} ${han.loai === "NLV" ? "ngày làm việc" : "ngày"}.`}
+                {th.trangThai === "QUA_HAN" && "Đã quá hạn."}
+                {th.trangThai === "XONG_DUNG_HAN" && "Hoàn thành trong hạn."}
+                {th.trangThai === "XONG_QUA_HAN" && "Hoàn thành sau hạn."}
+                {th.thieuLich.length > 0 && <div className="chu-nho">Chưa xác nhận lịch ngày nghỉ năm {th.thieuLich.join(", ")} — hạn chỉ trừ thứ Bảy, Chủ nhật (Cài đặt chung → Lịch ngày nghỉ).</div>}
+              </div>
+            </div>
+          )}
           <O nhan="Trạng thái">
             <select value={bh.trangThai} onChange={(e) => datBuoc({ trangThai: e.target.value as TrangThaiBuoc })}>
               {Object.entries(TEN_TRANG_THAI_BUOC).map(([k, v]) => <option key={k} value={k}>{v}</option>)}

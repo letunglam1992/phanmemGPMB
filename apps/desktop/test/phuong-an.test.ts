@@ -3,7 +3,7 @@ import cs0 from "../../../policy/goi/sonla-2026-03-31.json";
 import type { BoChinhSach } from "@gpmb/core";
 import { tinhHo } from "../src/tinh-ho";
 import { taoDuAnMau } from "../src/du-lieu-mau";
-import { chotPhuongAn, chupHo, hoChuaDuDieuKien, hoLechSauPheDuyet, huyBan, kiemTraToanVen, LoiPhuongAn, pheDuyet, soSanh, tinhLaiBan } from "../src/phuong-an";
+import { moTaBan, chotPhuongAn, chupHo, hoChuaDuDieuKien, hoLechSauPheDuyet, huyBan, kiemTraToanVen, LoiPhuongAn, pheDuyet, soSanh, tinhLaiBan } from "../src/phuong-an";
 import type { Ho } from "../src/mo-hinh";
 import { canhBaoDuAn } from "../src/trang-thai";
 
@@ -46,6 +46,8 @@ describe("Phiên bản phương án", () => {
     const p2 = await chotPhuongAn(cs, da2, [hs[0]!], { ...O, ten: "Điều chỉnh", lyDo: "Bổ sung cây trồng sót" });
     expect(p2.so).toBe(2);
     expect(huyBan(p2, "Nhập nhầm", "B").trangThai).toBe("DA_HUY");
+    expect(moTaBan(d)).toBe("Phương án bản 1 – ĐÃ PHÊ DUYỆT theo Quyết định số 123/QĐ-UBND ngày 01/10/2026 của UBND xã (chốt ngày 27/09/2026)");
+    expect(moTaBan(p2)).toContain("CHỜ PHÊ DUYỆT");
     expect(() => huyBan(p2, " ", "B")).toThrow(/lý do/);
   });
 

@@ -238,3 +238,12 @@ export function hoLechSauPheDuyet(dsPA: PhienBanPA[], hienTai: { h: Ho; k: KetQu
     return D(x.tong).eq(k.tong.tongLamTron) ? [] : [{ h, ban: p, daDuyet: x.tong, hienTai: s(k.tong.tongLamTron) }];
   });
 }
+
+/** Dòng trạng thái in trên bảng xuất của một bản phương án. */
+export function moTaBan(p: PhienBanPA): string {
+  const ngay = (iso: string) => iso.split("-").reverse().join("/");
+  const chot = `chốt ngày ${ngay(p.luc.slice(0, 10))}`;
+  if (p.trangThai === "DA_PHE_DUYET" && p.pheDuyet) return `Phương án bản ${p.so} – ĐÃ PHÊ DUYỆT theo Quyết định số ${p.pheDuyet.so} ngày ${ngay(p.pheDuyet.ngay)}${p.pheDuyet.coQuan ? ` của ${p.pheDuyet.coQuan}` : ""} (${chot})`;
+  if (p.trangThai === "DA_HUY") return `Phương án bản ${p.so} – ĐÃ HỦY (${chot}) – không dùng để chi trả`;
+  return `Phương án bản ${p.so} – ĐÃ CHỐT, CHỜ PHÊ DUYỆT (${chot})`;
+}

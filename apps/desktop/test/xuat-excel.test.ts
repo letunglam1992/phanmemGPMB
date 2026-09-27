@@ -11,6 +11,17 @@ import nq152 from "../../../policy/nguon/nq152-2025-bang-gia-dat.json";
 const cs = cs0 as unknown as BoChinhSach;
 
 describe("Xuất Excel theo cấu trúc biểu mẫu", () => {
+  it("bản phương án: in dòng trạng thái, số QĐ phê duyệt trên các trang", async () => {
+    const { duAn, ho } = taoDuAnMau();
+    const ds = [{ h: ho[0]!, k: tinhHo(cs, duAn, ho[0]!) }];
+    const ban = "Phương án bản 1 – ĐÃ PHÊ DUYỆT theo Quyết định số 12/QĐ-UBND ngày 01/10/2026";
+    const doc = new ExcelJS.Workbook();
+    await doc.xlsx.load((await (await taoWorkbook(duAn, ds, ban)).xlsx.writeBuffer()) as ArrayBuffer);
+    expect(doc.getWorksheet("TH ĐẤT")!.getCell(2, 1).value).toBe(ban);
+    expect(doc.getWorksheet("TH GIÁ TRỊ TRÌNH DUYỆT")!.getCell(2, 1).value).toBe(ban);
+    expect(doc.getWorksheet("1. Hộ mẫu 01")!.getCell("H1").value).toBe(ban);
+  });
+
   it("TH ĐẤT, TH GIÁ TRỊ và trang từng hộ; số liệu khớp kết quả tính", async () => {
     const { duAn, ho } = taoDuAnMau();
     const ds = ho.map((h) => ({ h, k: tinhHo(cs, duAn, h) }));

@@ -8,6 +8,7 @@ import { xuatExcelDuAn } from "../xuat-excel";
 import { ngayChu } from "../van-ban/du-lieu";
 import {
   TEN_TT_PA,
+  moTaBan,
   chotPhuongAn,
   chupHo,
   duAnTheoBan,
@@ -54,7 +55,7 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
       setLoi(`Không xuất bản ${p.so}: tính lại từ dữ liệu đã đóng băng khác số đã chốt (${r.lech.map((x) => `${x.ma}: ${dong(x.daChot)} → ${dong(x.tinhLai)}`).join("; ")}). Cách tính trong phần mềm hoặc bộ chính sách đã thay đổi sau khi chốt — cần kiểm tra trước khi dùng.`);
       return;
     }
-    await xuatExcelDuAn({ ...duAnTheoBan(duAn, p), ten: `${duAn.ten} - PA ${p.so}` }, r.ds);
+    await xuatExcelDuAn({ ...duAnTheoBan(duAn, p), ten: `${duAn.ten} - PA ${p.so}` }, r.ds, moTaBan(p));
   };
 
   return (

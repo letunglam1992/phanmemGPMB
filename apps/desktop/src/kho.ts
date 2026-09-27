@@ -28,10 +28,13 @@ export interface Kho {
   /** Ghi nối tiếp một dòng nhật ký hệ thống (chuỗi băm). */
   ghiNhatKy(e: { nguoi: string; hoTen: string; hanhDong: string; chiTiet?: string }): Promise<DongNhatKy>;
   dsNhatKy(): Promise<DongNhatKy[]>;
+  /** Cài đặt dùng chung (lịch ngày nghỉ, tự động sao lưu…). */
+  docCaiDat<T>(khoa: string): Promise<T | null>;
+  luuCaiDat(khoa: string, giaTri: unknown): Promise<void>;
 }
 
 const TEN_CSDL = "gpmb-sonla";
-const PHIEN_BAN = 3;
+const PHIEN_BAN = 4;
 
 function mo(): Promise<IDBDatabase> {
   return new Promise((ok, loi) => {
@@ -48,6 +51,7 @@ function mo(): Promise<IDBDatabase> {
         db.createObjectStore("nguoiDung", { keyPath: "ten" });
         db.createObjectStore("nhatKyHT", { keyPath: "stt" });
       }
+      if (e.oldVersion < 4) db.createObjectStore("caiDat");
     };
     r.onsuccess = () => ok(r.result);
     r.onerror = () => loi(r.error);
@@ -133,6 +137,12 @@ export function taoKhoIndexedDb(): Kho {
     async dsNhatKy() {
       return yc((await store("nhatKyHT")).getAll()) as Promise<DongNhatKy[]>;
     },
+    async docCaiDat<T>(khoa: string) {
+      return ((await yc((await store("caiDat")).get(khoa))) as T | undefined) ?? null;
+    },
+    async luuCaiDat(khoa, giaTri) {
+      await yc((await store("caiDat", "readwrite")).put(giaTri, khoa));
+    },
   };
 }
 
@@ -144,6 +154,7 @@ export function taoKhoBoNho(): Kho {
   const mau = new Map<string, { bytes: Uint8Array; tenTep: string; luc: string }>();
   const nguoi = new Map<string, NguoiDung>();
   const nk: DongNhatKy[] = [];
+  const caiDat = new Map<string, unknown>();
   return {
     async dsDuAn() {
       return [...duAn.values()];
@@ -205,6 +216,12 @@ export function taoKhoBoNho(): Kho {
     },
     async dsNhatKy() {
       return nk.map((d) => ({ ...d }));
+    },
+    async docCaiDat<T>(khoa: string) {
+      return caiDat.has(khoa) ? (structuredClone(caiDat.get(khoa)) as T) : null;
+    },
+    async luuCaiDat(khoa, giaTri) {
+      caiDat.set(khoa, structuredClone(giaTri));
     },
   };
 }

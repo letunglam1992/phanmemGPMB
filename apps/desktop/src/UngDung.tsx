@@ -9,9 +9,10 @@ import { HopSaoLuu } from "./thanh-phan/HopSaoLuu";
 import { useState } from "react";
 import { HopDoiMatKhau, HopNhatKy, HopQuanLyTaiKhoan, ManDangNhap, ThongBaoNhanh } from "./thanh-phan/TaiKhoan";
 import { TEN_VAI_TRO } from "./tai-khoan";
+import { HopCaiDat } from "./thanh-phan/HopCaiDat";
 
 export function UngDung() {
-  const { man, di, dsDuAn, hopSaoLuu, moSaoLuu, taiKhoan, quyen, dangXuat } = useUngDung();
+  const { man, di, dsDuAn, hopSaoLuu, moSaoLuu, taiKhoan, quyen, dangXuat, hopCaiDat, moCaiDat } = useUngDung();
   const [menu, setMenu] = useState(false);
   const [hop, setHop] = useState<null | "mat-khau" | "tai-khoan" | "nhat-ky">(null);
   if (!taiKhoan) return (<><ManDangNhap /><ThongBaoNhanh /></>);
@@ -51,6 +52,7 @@ export function UngDung() {
               <div className="menu-tha" role="menu" onMouseLeave={() => setMenu(false)}>
                 <div className="mo chu-nho" style={{ padding: "6px 12px" }}>Đăng nhập: {taiKhoan.ten}</div>
                 <button role="menuitem" onClick={() => { setHop("mat-khau"); setMenu(false); }}>Đổi mật khẩu</button>
+                <button role="menuitem" onClick={() => { moCaiDat(true); setMenu(false); }}>Cài đặt chung</button>
                 {quyen("TAI_KHOAN") && <button role="menuitem" onClick={() => { setHop("tai-khoan"); setMenu(false); }}>Quản lý tài khoản</button>}
                 {quyen("XEM_NHAT_KY") && <button role="menuitem" onClick={() => { setHop("nhat-ky"); setMenu(false); }}>Nhật ký hệ thống</button>}
                 <button role="menuitem" onClick={() => { setMenu(false); void dangXuat(); }}>Đăng xuất</button>
@@ -77,6 +79,7 @@ export function UngDung() {
       {(hop === "mat-khau" || taiKhoan.phaiDoiMatKhau) && <HopDoiMatKhau batBuoc={taiKhoan.phaiDoiMatKhau} dong={() => setHop(null)} />}
       {hop === "tai-khoan" && <HopQuanLyTaiKhoan dong={() => setHop(null)} />}
       {hop === "nhat-ky" && <HopNhatKy dong={() => setHop(null)} />}
+      {hopCaiDat && <HopCaiDat />}
       <ThongBaoNhanh />
     </div>
   );

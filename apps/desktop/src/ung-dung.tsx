@@ -1,9 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { KHOA_TU_DONG, MAC_DINH_TU_DONG, coVoWindows, denHan, saoLuuTuDong, type CaiDatTuDong } from "./tu-dong-sao-luu";
 import type { BoChinhSach } from "@gpmb/core";
 import { BO_CHINH_SACH } from "./du-lieu";
 import { taoKhoIndexedDb, type Kho } from "./kho";
 import type { DuAn, Ho } from "./mo-hinh";
 import { docLanSaoLuu, ghiLanSaoLuu } from "./sao-luu";
+import { LICH_TRONG, type LichLamViec } from "./lich-lam-viec";
+import { KHOA_LICH } from "./sao-luu";
 import { coQuyen, dungMatKhau, taoTaiKhoan, tenHienThi, type NguoiDung, type Quyen, type VaiTro } from "./tai-khoan";
 
 export type Man =
@@ -46,6 +49,15 @@ interface NguCanh {
   /** Thông báo ngắn góc màn hình. */
   bao: (noiDung: string, loai?: "ok" | "loi") => void;
   thongBao: { noiDung: string; loai: "ok" | "loi"; id: number } | null;
+  /** Lịch ngày nghỉ, làm bù (VM-25). */
+  lich: LichLamViec;
+  luuLich: (l: LichLamViec) => Promise<void>;
+  hopCaiDat: boolean;
+  moCaiDat: (mo: boolean) => void;
+  tuDong: CaiDatTuDong;
+  luuTuDong: (c: CaiDatTuDong) => Promise<void>;
+  /** Sao lưu tự động ngay (bỏ qua chu kỳ). */
+  saoLuuTuDongNgay: () => Promise<CaiDatTuDong>;
 }
 
 const Ctx = createContext<NguCanh | null>(null);
@@ -65,6 +77,10 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
   const [taiKhoan, setTaiKhoan] = useState<NguoiDung | null>(null);
   const [coTaiKhoan, setCoTaiKhoan] = useState<boolean | null>(null);
   const [thongBao, setThongBao] = useState<NguCanh["thongBao"]>(null);
+  const [lich, setLich] = useState<LichLamViec>(LICH_TRONG);
+  const [hopCaiDat, moCaiDat] = useState(false);
+  const [tuDong, setTuDong] = useState<CaiDatTuDong>(MAC_DINH_TU_DONG);
+  const dangTuDong = useRef(false);
   const [sai, setSai] = useState<{ lan: number; den: number }>({ lan: 0, den: 0 });
   const nguoiDung = tenHienThi(taiKhoan);
   const quyen = (q: Quyen) => coQuyen(taiKhoan?.vaiTro, q);
@@ -86,6 +102,8 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
   const [lanSaoLuu, setLanSaoLuu] = useState<string | null>(() => docLanSaoLuu());
 
   const taiLai = useCallback(async () => {
+    const l = await kho.docCaiDat<LichLamViec>(KHOA_LICH);
+    if (l) setLich(l);
     const da = await kho.dsDuAn();
     const hos = (await Promise.all(da.map((d) => kho.dsHo(d.id)))).flat();
     setDsDuAn(da.sort((a, b) => b.taoLuc.localeCompare(a.taoLuc)));
@@ -96,7 +114,37 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
   useEffect(() => {
     void taiLai();
     void kho.dsNguoiDung().then((ds) => setCoTaiKhoan(ds.length > 0));
+    void kho.docCaiDat<LichLamViec>(KHOA_LICH).then((l) => l && setLich(l));
+    void kho.docCaiDat<CaiDatTuDong>(KHOA_TU_DONG).then((c) => c && setTuDong({ ...MAC_DINH_TU_DONG, ...c }));
   }, [taiLai, kho]);
+
+  const chayTuDong = useCallback(
+    async (epBuoc: boolean): Promise<CaiDatTuDong> => {
+      const c = { ...MAC_DINH_TU_DONG, ...((await kho.docCaiDat<CaiDatTuDong>(KHOA_TU_DONG)) ?? {}) };
+      if (dangTuDong.current || !coVoWindows()) return c;
+      if (!epBuoc && (!denHan(c) || (await kho.dsDuAn()).length === 0)) return c;
+      dangTuDong.current = true;
+      try {
+        const moi = await saoLuuTuDong(kho, c);
+        await kho.luuCaiDat(KHOA_TU_DONG, moi);
+        setTuDong(moi);
+        await kho.ghiNhatKy({ nguoi: "he-thong", hoTen: "Tự động", hanhDong: moi.lanCuoi !== c.lanCuoi ? "Tự động sao lưu" : "Tự động sao lưu không thành công", chiTiet: moi.lanCuoi !== c.lanCuoi ? moi.tepCuoi : moi.loiCuoi });
+        return moi;
+      } finally {
+        dangTuDong.current = false;
+      }
+    },
+    [kho],
+  );
+  useEffect(() => {
+    if (!taiKhoan || !coVoWindows()) return;
+    const t0 = setTimeout(() => void chayTuDong(false), 15_000);
+    const t = setInterval(() => void chayTuDong(false), 30 * 60_000);
+    return () => {
+      clearTimeout(t0);
+      clearInterval(t);
+    };
+  }, [taiKhoan?.ten, chayTuDong]);
 
   const giaTri: NguCanh = {
     kho,
@@ -176,6 +224,23 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
     ghiNhatKy,
     bao,
     thongBao,
+    lich,
+    luuLich: async (l) => {
+      if (chan("CAI_DAT")) return;
+      await kho.luuCaiDat(KHOA_LICH, l);
+      setLich(l);
+      await ghiNhatKy("Cập nhật lịch ngày nghỉ", `${l.nghi.length} ngày nghỉ, ${l.lamBu.length} ngày làm bù; năm đã xác nhận: ${l.namDaDu.join(", ") || "—"}`);
+    },
+    hopCaiDat,
+    moCaiDat,
+    tuDong,
+    luuTuDong: async (c) => {
+      if (chan("CAI_DAT")) return;
+      await kho.luuCaiDat(KHOA_TU_DONG, c);
+      setTuDong(c);
+      await ghiNhatKy("Cập nhật tự động sao lưu", `${c.bat ? "bật" : "tắt"}; ${c.soNgay} ngày/lần; giữ ${c.giuLai} bản; thư mục: ${c.thuMuc || "mặc định"}`);
+    },
+    saoLuuTuDongNgay: () => chayTuDong(true),
   };
   return <Ctx.Provider value={giaTri}>{children}</Ctx.Provider>;
 }

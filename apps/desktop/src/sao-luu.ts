@@ -11,6 +11,7 @@ import type { Kho } from "./kho";
 import type { DuAn, Ho } from "./mo-hinh";
 
 export const DINH_DANG = "gpmb-sonla-sao-luu";
+export const KHOA_LICH = "lichLamViec";
 export const PHIEN_BAN_SAO_LUU = 1;
 
 export interface ThongTinSaoLuu {
@@ -31,6 +32,8 @@ export interface BanSaoLuu {
   ho: Ho[];
   banDo: Map<string, Uint8Array>;
   mau: { ma: string; tenTep: string; luc: string; bytes: Uint8Array }[];
+  /** Cài đặt dùng chung (có từ bản ghi lịch làm việc; tệp cũ không có). */
+  caiDat?: { lichLamViec?: unknown };
 }
 
 export class LoiSaoLuu extends Error {}
@@ -44,7 +47,8 @@ export async function taoBanSaoLuu(kho: Kho, ungDung = "0.1"): Promise<{ bytes: 
   const duAn = await kho.dsDuAn();
   const ho = (await Promise.all(duAn.map((d) => kho.dsHo(d.id)))).flat();
   const zip = new PizZip();
-  const duLieu = JSON.stringify({ duAn, ho });
+  const caiDat = { lichLamViec: await kho.docCaiDat(KHOA_LICH) };
+  const duLieu = JSON.stringify({ duAn, ho, caiDat });
   zip.file("du-lieu.json", duLieu);
   let soBanDo = 0;
   for (const id of await kho.dsBanDo()) {
@@ -94,14 +98,14 @@ export async function docBanSaoLuu(bytes: Uint8Array | ArrayBuffer): Promise<Ban
   if (thongTin.phienBan > PHIEN_BAN_SAO_LUU) throw new LoiSaoLuu(`Bản sao lưu phiên bản ${thongTin.phienBan} mới hơn phần mềm — cần cập nhật phần mềm.`);
   const duLieu = dl.asText();
   if ((await sha256(duLieu)) !== thongTin.bamDuLieu) throw new LoiSaoLuu("Dữ liệu trong tệp sao lưu không khớp mã kiểm tra — tệp có thể bị hỏng hoặc bị sửa. Không khôi phục.");
-  const { duAn, ho } = JSON.parse(duLieu) as { duAn: DuAn[]; ho: Ho[] };
+  const { duAn, ho, caiDat } = JSON.parse(duLieu) as { duAn: DuAn[]; ho: Ho[]; caiDat?: BanSaoLuu["caiDat"] };
   if (duAn.length !== thongTin.soDuAn || ho.length !== thongTin.soHo) throw new LoiSaoLuu("Số lượng dự án/hồ sơ không khớp thông tin sao lưu.");
   const banDo = new Map<string, Uint8Array>();
   for (const f of zip.file(/^ban-do\/.+\.dgn$/)) banDo.set(f.name.slice(7, -4), f.asUint8Array());
   const dsMau = JSON.parse(zip.file("mau/danh-sach.json")?.asText() ?? "[]") as { ma: string; tenTep: string; luc: string }[];
   const mau = dsMau.map((m) => ({ ...m, bytes: zip.file(`mau/${m.ma}.docx`)!.asUint8Array() }));
   if (banDo.size !== thongTin.soBanDo || mau.length !== thongTin.soMau) throw new LoiSaoLuu("Số bản đồ/mẫu văn bản không khớp thông tin sao lưu.");
-  return { thongTin, duAn, ho, banDo, mau };
+  return { thongTin, duAn, ho, banDo, mau, caiDat };
 }
 
 /** Khôi phục: THAY_THE xóa dữ liệu hiện có rồi nạp; GOP ghi đè bản ghi cùng mã, giữ bản ghi khác. */
@@ -111,6 +115,7 @@ export async function khoiPhuc(kho: Kho, ban: BanSaoLuu, cheDo: "THAY_THE" | "GO
   for (const h of ban.ho) await kho.luuHo(h);
   for (const [id, b] of ban.banDo) await kho.luuBanDo(id, b);
   for (const m of ban.mau) await kho.luuMau(m.ma, m.bytes, m.tenTep);
+  if (ban.caiDat?.lichLamViec) await kho.luuCaiDat(KHOA_LICH, ban.caiDat.lichLamViec);
 }
 
 const KHOA_LAN_CUOI = "gpmb-sao-luu-lan-cuoi";

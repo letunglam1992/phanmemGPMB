@@ -29,7 +29,7 @@ function dongKe(r: ExcelJS.Row, tu: number, den: number) {
   for (let c = tu; c <= den; c++) r.getCell(c).border = VIEN;
 }
 
-function trangHo(wb: ExcelJS.Workbook, duAn: DuAn, h: Ho, kq: KetQuaHo, ten: string) {
+function trangHo(wb: ExcelJS.Workbook, duAn: DuAn, h: Ho, kq: KetQuaHo, ten: string, ban?: string) {
   const ws = wb.addWorksheet(ten, { pageSetup: { paperSize: 9, orientation: "portrait", fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
   ws.properties.defaultRowHeight = 16;
   ws.columns = [{ width: 6 }, { width: 44 }, { width: 8 }, { width: 12 }, { width: 10 }, { width: 13 }, { width: 16 }, { width: 30 }, { width: 13 }, { width: 44 }];
@@ -43,7 +43,7 @@ function trangHo(wb: ExcelJS.Workbook, duAn: DuAn, h: Ho, kq: KetQuaHo, ten: str
   };
   ws.getCell("A1").value = `UBND ${duAn.xa.toUpperCase()}`;
   ws.getCell("A1").font = { name: FONT, bold: true };
-  ws.getCell("H1").value = kq.tong.duocChot ? "" : "DỰ THẢO – CHƯA CHỐT";
+  ws.getCell("H1").value = ban ?? (kq.tong.duocChot ? "" : "DỰ THẢO – CHƯA CHỐT");
   ws.getCell("H1").font = { name: FONT, bold: true, color: { argb: "FFC00000" } };
   tieuDe("PHƯƠNG ÁN CHI TIẾT BỒI THƯỜNG, HỖ TRỢ, TÁI ĐỊNH CƯ", 3, true, 13);
   tieuDe(`Dự án: ${duAn.ten}`, 4, false);
@@ -154,7 +154,8 @@ function trangHo(wb: ExcelJS.Workbook, duAn: DuAn, h: Ho, kq: KetQuaHo, ten: str
   ws.getRow(r).font = { name: FONT, bold: true };
 }
 
-export async function taoWorkbook(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[]): Promise<ExcelJS.Workbook> {
+/** ban: dòng ghi trạng thái phiên bản phương án (vd. "Bản 2 – đã phê duyệt theo QĐ số … ngày …"), in dưới tiêu đề. */
+export async function taoWorkbook(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], ban?: string): Promise<ExcelJS.Workbook> {
   const { default: Excel } = await import("exceljs");
   const wb = new Excel.Workbook();
   wb.creator = "GPMB Sơn La";
@@ -168,6 +169,7 @@ export async function taoWorkbook(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[]): Pro
   wd.getCell(1, 1).value = `BẢNG TỔNG HỢP DIỆN TÍCH ĐẤT THU HỒI – ${duAn.ten}`;
   wd.getCell(1, 1).font = { name: FONT, bold: true, size: 13 };
   wd.getCell(1, 1).alignment = { horizontal: "center" };
+  if (ban) dongBan(wd, 6 + loaiDat.length, ban);
   const hd = wd.getRow(3);
   hd.values = ["STT", "Chủ sử dụng", "Địa chỉ", "Tờ", "Thửa", "DT thu hồi (m²)", ...loaiDat];
   hd.font = { name: FONT, bold: true };
@@ -199,6 +201,7 @@ export async function taoWorkbook(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[]): Pro
   wg.getCell(1, 1).value = `BẢNG TỔNG HỢP GIÁ TRỊ BỒI THƯỜNG, HỖ TRỢ TRÌNH DUYỆT – ${duAn.ten}`;
   wg.getCell(1, 1).font = { name: FONT, bold: true, size: 13 };
   wg.getCell(1, 1).alignment = { horizontal: "center" };
+  if (ban) dongBan(wg, tieuDeCot.length, ban);
   const hg = wg.getRow(3);
   hg.values = tieuDeCot;
   hg.font = { name: FONT, bold: true };
@@ -232,8 +235,16 @@ export async function taoWorkbook(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[]): Pro
   dongKe(tg, 1, tieuDeCot.length);
 
   const daDung = new Set(["TH ĐẤT", "TH GIÁ TRỊ TRÌNH DUYỆT"]);
-  ds.forEach(({ h, k }, i) => trangHo(wb, duAn, h, k, tenTrang(`${i + 1}. ${h.ten}`, daDung)));
+  ds.forEach(({ h, k }, i) => trangHo(wb, duAn, h, k, tenTrang(`${i + 1}. ${h.ten}`, daDung), ban));
   return wb;
+}
+
+function dongBan(ws: ExcelJS.Worksheet, soCot: number, ban: string) {
+  ws.mergeCells(2, 1, 2, soCot);
+  const c = ws.getCell(2, 1);
+  c.value = ban;
+  c.font = { name: FONT, italic: true, bold: true, color: { argb: "FF1F4E3D" } };
+  c.alignment = { horizontal: "center" };
 }
 
 function colName(n: number): string {
@@ -261,8 +272,8 @@ async function taiVe(wb: ExcelJS.Workbook, tenTep: string) {
 
 const tenAnToan = (s: string) => tenTep(s, 80);
 
-export async function xuatExcelDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[]) {
-  await taiVe(await taoWorkbook(duAn, ds), `Phuong-an_${tenAnToan(duAn.ten)}.xlsx`);
+export async function xuatExcelDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], ban?: string) {
+  await taiVe(await taoWorkbook(duAn, ds, ban), `Phuong-an_${tenAnToan(duAn.ten)}.xlsx`);
 }
 
 export async function xuatExcelHo(duAn: DuAn, h: Ho, k: KetQuaHo) {

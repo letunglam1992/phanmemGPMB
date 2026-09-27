@@ -11,16 +11,16 @@ import { DANH_MUC_XA } from "../du-lieu";
 import { HopThoai, O, ngayVN, tien } from "../thanh-phan/chung";
 
 export function TongQuan() {
-  const { dsDuAn, hoCua, di, chinhSach, luuDuAn, kho, dangTai, lanSaoLuu, moSaoLuu, quyen } = useUngDung();
+  const { dsDuAn, hoCua, di, chinhSach, luuDuAn, kho, dangTai, lanSaoLuu, moSaoLuu, quyen, lich, moCaiDat } = useUngDung();
   const [taoMoi, setTaoMoi] = useState(false);
   const homNay = homNayIso();
 
   const duLieu = useMemo(() => {
     return dsDuAn.map((d) => {
       const ds = hoCua(d.id).map((h) => ({ h, k: tinhHo(chinhSach(d), d, h) }));
-      return { d, ds, tk: thongKe(d, ds, homNay), cb: canhBaoDuAn(d, ds, homNay), tong: ds.reduce((s, x) => s.plus(x.k.tong.tongLamTron), D(0)) };
+      return { d, ds, tk: thongKe(d, ds, homNay), cb: canhBaoDuAn(d, ds, homNay, lich), tong: ds.reduce((s, x) => s.plus(x.k.tong.tongLamTron), D(0)) };
     });
-  }, [dsDuAn, hoCua, chinhSach, homNay]);
+  }, [dsDuAn, hoCua, chinhSach, homNay, lich]);
 
   const napMau = async () => {
     if (!quyen("SUA_HO_SO")) return;
@@ -37,7 +37,7 @@ export function TongQuan() {
   const chang = CAC_CHANG.map((c, i) => ({ ten: c.ten, soHo: cong((x) => x.tk.chang[i]!.soHo) }));
   const nhacSaoLuu = quyen("SAO_LUU") ? canhBaoSaoLuu(lanSaoLuu, homNay, dsDuAn.length > 0) : null;
   const canhBao = [
-    ...canhBaoChung(homNay).map((c) => ({ ...c, muc: "CAO" as const, duAnId: "", hoId: undefined, saoLuu: false })),
+    ...canhBaoChung(homNay, lich).map((c) => ({ ...c, muc: c.muc ?? ("CAO" as const), duAnId: "", hoId: undefined, saoLuu: false })),
     ...(nhacSaoLuu ? [{ noiDung: nhacSaoLuu, canCu: "Bấm để mở Sao lưu, khôi phục", muc: "TRUNG_BINH" as const, duAnId: "", hoId: undefined, saoLuu: true }] : []),
     ...duLieu.flatMap((x) => x.cb),
   ];
@@ -104,7 +104,7 @@ export function TongQuan() {
           <div className="the-dau"><h3>Cảnh báo tự động</h3><div className="phai"><span className="nhan nhan-do">{canhBao.filter((c) => c.muc === "CAO").length}</span><span className="nhan nhan-vang">{canhBao.filter((c) => c.muc !== "CAO").length}</span></div></div>
           <div className="bang-cuon" style={{ maxHeight: 520 }}>
             {canhBao.map((c, i) => (
-              <div key={i} className="canh-bao-dong" onClick={() => ("saoLuu" in c && c.saoLuu ? moSaoLuu(true) : c.duAnId && (c.hoId ? di({ ten: "ho", duAnId: c.duAnId, hoId: c.hoId, tab: "tien-do" }) : di({ ten: "du-an", duAnId: c.duAnId })))}>
+              <div key={i} className="canh-bao-dong" onClick={() => ("caiDat" in c && c.caiDat ? moCaiDat(true) : "saoLuu" in c && c.saoLuu ? moSaoLuu(true) : c.duAnId && (c.hoId ? di({ ten: "ho", duAnId: c.duAnId, hoId: c.hoId, tab: "tien-do" }) : di({ ten: "du-an", duAnId: c.duAnId })))}>
                 <span className={`cb-bt cb-${c.muc}`}>{c.muc === "THONG_TIN" ? "i" : "!"}</span>
                 <div>{c.noiDung}{c.canCu && <div className="can-cu">{c.canCu}</div>}</div>
               </div>

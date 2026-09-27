@@ -16,7 +16,7 @@ export const TEN_VAI_TRO: Record<VaiTro, string> = {
 
 export const MO_TA_VAI_TRO: Record<VaiTro, string> = {
   QUAN_TRI: "Toàn quyền; quản lý tài khoản; khôi phục dữ liệu",
-  LANH_DAO: "Như cán bộ + duyệt bước, chốt/ghi nhận phê duyệt/hủy phương án, thay mẫu văn bản, xóa dự án",
+  LANH_DAO: "Như cán bộ + duyệt bước, chốt/ghi nhận phê duyệt/hủy phương án, thay mẫu văn bản, xóa dự án, cài đặt chung",
   CAN_BO: "Nhập, sửa hồ sơ, kiểm đếm, bản đồ, nhập Excel, soạn văn bản, gửi duyệt, sao lưu",
   XEM: "Chỉ xem, tra cứu, xuất Excel/văn bản; không sửa dữ liệu",
 };
@@ -34,7 +34,8 @@ export type Quyen =
   | "SAO_LUU"
   | "KHOI_PHUC"
   | "TAI_KHOAN"
-  | "XEM_NHAT_KY";
+  | "XEM_NHAT_KY"
+  | "CAI_DAT";
 
 export const TEN_QUYEN: Record<Quyen, string> = {
   SUA_HO_SO: "Nhập, sửa dự án, hồ sơ, kiểm đếm, bản đồ; nhập Excel",
@@ -50,10 +51,11 @@ export const TEN_QUYEN: Record<Quyen, string> = {
   KHOI_PHUC: "Khôi phục dữ liệu",
   TAI_KHOAN: "Quản lý tài khoản",
   XEM_NHAT_KY: "Xem nhật ký hệ thống",
+  CAI_DAT: "Cài đặt chung (lịch ngày nghỉ, tự động sao lưu)",
 };
 
 const CAN_BO: Quyen[] = ["SUA_HO_SO", "SOAN_VAN_BAN", "GUI_DUYET", "SAO_LUU"];
-const LANH_DAO: Quyen[] = [...CAN_BO, "XOA_DU_AN", "THAY_MAU", "DUYET_BUOC", "CHOT_PA", "PHE_DUYET_PA", "HUY_PA", "XEM_NHAT_KY"];
+const LANH_DAO: Quyen[] = [...CAN_BO, "XOA_DU_AN", "THAY_MAU", "DUYET_BUOC", "CHOT_PA", "PHE_DUYET_PA", "HUY_PA", "XEM_NHAT_KY", "CAI_DAT"];
 export const QUYEN_THEO_VAI_TRO: Record<VaiTro, Quyen[]> = {
   QUAN_TRI: Object.keys(TEN_QUYEN) as Quyen[],
   LANH_DAO,

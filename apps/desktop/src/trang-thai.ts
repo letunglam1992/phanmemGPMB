@@ -12,6 +12,8 @@ import { CAC_BUOC, type DuAn, type Ho } from "./mo-hinh";
 import type { KetQuaHo } from "./tinh-ho";
 
 import { hoLechSauPheDuyet } from "./phuong-an";
+import { HAN_BUOC, tinhHanBuoc } from "./han-buoc";
+import { LICH_TRONG, type LichLamViec } from "./lich-lam-viec";
 export type TrangThaiGpmb = "HOAN_THANH" | "DANG_XU_LY" | "DA_KIEM_DEM" | "VUONG_MAC" | "CHUA_KIEM_DEM";
 
 export const THU_TU_TRANG_THAI: TrangThaiGpmb[] = ["HOAN_THANH", "DANG_XU_LY", "DA_KIEM_DEM", "VUONG_MAC", "CHUA_KIEM_DEM"];
@@ -136,7 +138,7 @@ export interface CanhBao {
 const soNgay = (tu: string, den: string) => Math.round((Date.parse(den) - Date.parse(tu)) / 86400000);
 
 /** Cảnh báo tự động — chỉ dùng các thời hạn có căn cứ (docs/05) hoặc kế hoạch do cán bộ nhập. */
-export function canhBaoDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: string): CanhBao[] {
+export function canhBaoDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: string, lich: LichLamViec = LICH_TRONG): CanhBao[] {
   const out: CanhBao[] = [];
   for (const m of mocTienDo(duAn, ds.map((x) => x.h), homNay))
     if (m.trangThai === "QUA_HAN")
@@ -153,6 +155,14 @@ export function canhBaoDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: st
       if (kc < toiThieu)
         out.push({ muc: "CAO", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: QĐ thu hồi cách thông báo ${kc} ngày (< ${toiThieu} ngày)`, canCu: "khoản 2 Điều 85 Luật Đất đai 2024" });
     }
+    for (const han of HAN_BUOC) {
+      const t = tinhHanBuoc(h, han, homNay, lich);
+      const ten = CAC_BUOC.find((b) => b.ma === han.buoc)?.ten ?? "";
+      const dv = han.loai === "NLV" ? "ngày làm việc" : "ngày";
+      const hc = t.hanChot?.split("-").reverse().join("/");
+      if (t.trangThai === "QUA_HAN") out.push({ muc: "CAO", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: bước ${han.buoc}. ${ten} quá hạn (hạn ${hc}, ${han.soNgay} ${dv})`, canCu: han.canCu });
+      else if (t.trangThai === "SAP_HET") out.push({ muc: "TRUNG_BINH", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: bước ${han.buoc}. ${ten} sắp hết hạn (${hc}, còn ${t.conLai} ${dv})`, canCu: han.canCu });
+    }
     if (h.vuongMac?.noiDung) out.push({ muc: "TRUNG_BINH", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: ${h.vuongMac.noiDung}` });
     if (k.tong.soDongThieuCanCu && dangLapPhuongAn(h))
       out.push({ muc: daNiemYet(h) ? "CAO" : "TRUNG_BINH", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: ${k.tong.soDongThieuCanCu} khoản thiếu căn cứ${daNiemYet(h) ? " (phương án đã niêm yết)" : ""}` });
@@ -166,11 +176,15 @@ export function canhBaoDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: st
 }
 
 /** Cảnh báo chung: văn bản phân cấp, ủy quyền QĐ 27/2026 hết hiệu lực 01/3/2027 (VM-18) — báo trước 60 ngày. */
-export function canhBaoChung(homNay: string): { noiDung: string; canCu: string }[] {
+export function canhBaoChung(homNay: string, lich?: LichLamViec): { noiDung: string; canCu: string; muc?: "TRUNG_BINH"; caiDat?: boolean }[] {
   const het = "2027-03-01";
   const con = soNgay(homNay, het);
-  if (con <= 60) return [{ noiDung: con > 0 ? `QĐ 27/2026/QĐ-UBND (phân cấp, ủy quyền) hết hiệu lực sau ${con} ngày` : "QĐ 27/2026/QĐ-UBND đã hết hiệu lực — kiểm tra thẩm quyền", canCu: "Điều 6 QĐ 27/2026/QĐ-UBND (VM-18)" }];
-  return [];
+  const out: ReturnType<typeof canhBaoChung> = [];
+  const nam = Number(homNay.slice(0, 4));
+  if (lich && !lich.namDaDu.includes(nam))
+    out.push({ noiDung: `Chưa xác nhận danh mục ngày nghỉ lễ, Tết năm ${nam} — hạn tính theo ngày làm việc hiện chỉ trừ thứ Bảy, Chủ nhật`, canCu: "VM-25 · bấm để mở Cài đặt → Lịch ngày nghỉ", muc: "TRUNG_BINH", caiDat: true });
+  if (con <= 60) return [...out, { noiDung: con > 0 ? `QĐ 27/2026/QĐ-UBND (phân cấp, ủy quyền) hết hiệu lực sau ${con} ngày` : "QĐ 27/2026/QĐ-UBND đã hết hiệu lực — kiểm tra thẩm quyền", canCu: "Điều 6 QĐ 27/2026/QĐ-UBND (VM-18)" }];
+  return out;
 }
 
 export const homNayIso = () => new Date().toISOString().slice(0, 10);

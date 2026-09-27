@@ -128,6 +128,8 @@ export interface BuocHo {
   /** Tài khoản gửi duyệt / xác nhận hoàn thành (tách người lập – người duyệt). */
   guiBoi?: string;
   duyetBoi?: string;
+  /** Ngày bắt đầu tính thời hạn của bước do cán bộ nhập (src/han-buoc.ts), vd. ngày nhận đủ hồ sơ. */
+  mocHan?: string;
 }
 
 export interface NhatKy {
