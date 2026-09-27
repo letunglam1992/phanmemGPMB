@@ -7,6 +7,7 @@ import { tinhHo } from "../tinh-ho";
 import { CAC_BUOC, TEN_DOI_TUONG, TEN_TRANG_THAI_BUOC, taoId, type Ho, type LoaiDoiTuong, type TrangThaiBuoc } from "../mo-hinh";
 import { NhanDong, O, ThanhBuoc, ngayVN, tien } from "../thanh-phan/chung";
 import { TabThua } from "./ho/Thua";
+import { TabChiTra } from "./ho/ChiTra";
 import { TabKiemDem } from "./ho/KiemDem";
 import { TabTinhToan } from "./ho/TinhToan";
 import { DANH_MUC_MAU } from "../van-ban/danh-muc";
@@ -20,6 +21,7 @@ const CAC_TAB = [
   ["ho-tro", "Hỗ trợ"],
   ["tinh", "Tính toán, giải trình"],
   ["tien-do", "Tiến độ"],
+  ["chi-tra", "Chi trả"],
   ["nhat-ky", "Nhật ký"],
 ] as const;
 
@@ -91,6 +93,7 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
       {tab === "ho-tro" && <TabHoTro h={h} doi={doi} />}
       </fieldset>
       {tab === "tinh" && <TabTinhToan h={h} duAn={duAn} kq={kq} />}
+      {tab === "chi-tra" && <fieldset className="khung-quyen" disabled={!choSua}><TabChiTra h={h} duAn={duAn} doi={doi} /></fieldset>}
       {tab === "tien-do" && <TabTienDo h={h} doi={doi} soanMau={(ma) => di({ ten: "van-ban", duAnId, ma, hoId: h.id })} luuNgay={async (moi, nk) => { setH(moi); await luuHo(moi, nk); setDaSua(false); }} />}
       {tab === "nhat-ky" && (
         <div className="the">

@@ -11,16 +11,16 @@ import { DANH_MUC_XA } from "../du-lieu";
 import { HopThoai, O, ngayVN, tien } from "../thanh-phan/chung";
 
 export function TongQuan() {
-  const { dsDuAn, hoCua, di, chinhSach, luuDuAn, kho, dangTai, lanSaoLuu, moSaoLuu, quyen, lich, moCaiDat } = useUngDung();
+  const { dsDuAn, hoCua, di, chinhSach, luuDuAn, kho, dangTai, lanSaoLuu, moSaoLuu, quyen, lich, moCaiDat, tyLeCham } = useUngDung();
   const [taoMoi, setTaoMoi] = useState(false);
   const homNay = homNayIso();
 
   const duLieu = useMemo(() => {
     return dsDuAn.map((d) => {
       const ds = hoCua(d.id).map((h) => ({ h, k: tinhHo(chinhSach(d), d, h) }));
-      return { d, ds, tk: thongKe(d, ds, homNay), cb: canhBaoDuAn(d, ds, homNay, lich), tong: ds.reduce((s, x) => s.plus(x.k.tong.tongLamTron), D(0)) };
+      return { d, ds, tk: thongKe(d, ds, homNay), cb: canhBaoDuAn(d, ds, homNay, lich, tyLeCham), tong: ds.reduce((s, x) => s.plus(x.k.tong.tongLamTron), D(0)) };
     });
-  }, [dsDuAn, hoCua, chinhSach, homNay, lich]);
+  }, [dsDuAn, hoCua, chinhSach, homNay, lich, tyLeCham]);
 
   const napMau = async () => {
     if (!quyen("SUA_HO_SO")) return;

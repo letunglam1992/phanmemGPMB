@@ -3,6 +3,7 @@ import { TheMangNoiBo } from "./KetNoi";
 import { coVoWindows, moThuMucSaoLuu, thuMucSaoLuu, type CaiDatTuDong } from "../tu-dong-sao-luu";
 import { useUngDung } from "../ung-dung";
 import { HopThoai } from "./chung";
+import type { GiaiDoanTyLe } from "../chi-tra";
 import { LE_DUONG_LICH_CO_DINH, type LichLamViec, type NgayDacBiet } from "../lich-lam-viec";
 
 const THU = ["Chủ nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
@@ -13,7 +14,7 @@ const vn = (iso: string) => iso.split("-").reverse().join("/");
 /** Cài đặt chung: lịch ngày nghỉ (VM-25); các thẻ khác truyền qua `them`. */
 export function HopCaiDat({ them }: { them?: { ma: string; ten: string; noiDung: ReactNode }[] }) {
   const { moCaiDat } = useUngDung();
-  const cacThe = [{ ma: "lich", ten: "Lịch ngày nghỉ", noiDung: <TheLich /> }, { ma: "tu-dong", ten: "Tự động sao lưu", noiDung: <TheTuDong /> }, { ma: "mang", ten: "Mạng nội bộ", noiDung: <TheMangNoiBo /> }, ...(them ?? [])];
+  const cacThe = [{ ma: "lich", ten: "Lịch ngày nghỉ", noiDung: <TheLich /> }, { ma: "tu-dong", ten: "Tự động sao lưu", noiDung: <TheTuDong /> }, { ma: "cham-tra", ten: "Tiền chậm trả", noiDung: <TheTyLeCham /> }, { ma: "mang", ten: "Mạng nội bộ", noiDung: <TheMangNoiBo /> }, ...(them ?? [])];
   const [the, setThe] = useState(cacThe[0]!.ma);
   return (
     <HopThoai tieuDe="Cài đặt chung" dong={() => moCaiDat(false)} rong={920}>
@@ -166,6 +167,57 @@ function TheTuDong() {
         {choSua && <button className="nut nut-chinh" disabled={!daSua} onClick={() => void luuTuDong(ban)}>Lưu cài đặt</button>}
       </div>
       {!choSua && <p className="mo chu-nho">Chỉ tài khoản Lãnh đạo hoặc Quản trị sửa được cài đặt.</p>}
+    </div>
+  );
+}
+
+function TheTyLeCham() {
+  const { tyLeCham, luuTyLeCham, quyen } = useUngDung();
+  const [ds, setDs] = useState<GiaiDoanTyLe[]>(tyLeCham);
+  const [moi, setMoi] = useState<GiaiDoanTyLe>({ tuNgay: "", tyLe: "", canCu: "" });
+  const [loi, setLoi] = useState("");
+  const choSua = quyen("CAI_DAT");
+  const daSua = JSON.stringify(ds) !== JSON.stringify(tyLeCham);
+  const them = () => {
+    setLoi("");
+    const tl = moi.tyLe.replace(",", ".").trim();
+    if (!moi.tuNgay || !/^\d+(\.\d+)?$/.test(tl) || Number(tl) <= 0 || Number(tl) >= 1) return setLoi("Nhập ngày áp dụng và tỷ lệ %/ngày (lớn hơn 0, nhỏ hơn 1), vd. 0,03");
+    if (!moi.canCu.trim()) return setLoi("Phải ghi căn cứ (điều, khoản, văn bản)");
+    if (ds.some((g) => g.tuNgay === moi.tuNgay)) return setLoi("Đã có giai đoạn bắt đầu cùng ngày");
+    setDs([...ds, { tuNgay: moi.tuNgay, tyLe: tl, canCu: moi.canCu.trim() }].sort((a, b) => a.tuNgay.localeCompare(b.tuNgay)));
+    setMoi({ tuNgay: "", tyLe: "", canCu: "" });
+  };
+  return (
+    <div>
+      <p className="mo" style={{ marginTop: 0 }}>
+        Điểm b khoản 3 Điều 94 Luật Đất đai 2024: chậm chi trả thì người có đất thu hồi "được thanh toán thêm một khoản tiền bằng <b>mức tiền chậm nộp theo quy định của Luật Quản lý thuế</b> tính trên số tiền chậm trả và thời gian chậm trả". Phần mềm không tự đặt mức: nhập tỷ lệ %/ngày theo văn bản hiện hành, mỗi lần thay đổi thêm một giai đoạn mới. Thiếu tỷ lệ cho ngày nào thì tiền chậm trả của khoản đó ở trạng thái thiếu căn cứ.
+      </p>
+      <table className="bang">
+        <thead><tr><th>Áp dụng từ ngày</th><th className="so">Tỷ lệ (%/ngày)</th><th>Căn cứ</th><th /></tr></thead>
+        <tbody>
+          {ds.map((g) => (
+            <tr key={g.tuNgay}><td>{vn(g.tuNgay)}</td><td className="so">{g.tyLe.replace(".", ",")}</td><td>{g.canCu}</td><td>{choSua && <button className="nut nut-nho nut-nguy" onClick={() => setDs(ds.filter((x) => x !== g))}>Xóa</button>}</td></tr>
+          ))}
+          {ds.length === 0 && <tr><td colSpan={4} className="trong">Chưa nhập — tiền chậm trả chưa tính được.</td></tr>}
+        </tbody>
+      </table>
+      {choSua ? (
+        <>
+          <div style={{ display: "flex", gap: 8, alignItems: "end", marginTop: 12, flexWrap: "wrap" }}>
+            <input type="date" aria-label="Áp dụng từ ngày" value={moi.tuNgay} onChange={(e) => setMoi({ ...moi, tuNgay: e.target.value })} />
+            <input aria-label="Tỷ lệ %/ngày" placeholder="%/ngày" value={moi.tyLe} style={{ width: 100 }} onChange={(e) => setMoi({ ...moi, tyLe: e.target.value })} />
+            <input aria-label="Căn cứ" placeholder="Căn cứ: điểm …, khoản …, Điều … Luật Quản lý thuế số …" value={moi.canCu} style={{ flex: 1, minWidth: 280 }} onChange={(e) => setMoi({ ...moi, canCu: e.target.value })} />
+            <button className="nut" onClick={them}>Thêm</button>
+          </div>
+          {loi && <div className="thong-bao thong-bao-do" style={{ marginTop: 8 }}>{loi}</div>}
+          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
+            <button className="nut" disabled={!daSua} onClick={() => setDs(tyLeCham)}>Hoàn tác</button>
+            <button className="nut nut-chinh" disabled={!daSua} onClick={() => void luuTyLeCham(ds)}>Lưu</button>
+          </div>
+        </>
+      ) : (
+        <p className="mo chu-nho">Chỉ tài khoản Lãnh đạo hoặc Quản trị sửa được.</p>
+      )}
     </div>
   );
 }

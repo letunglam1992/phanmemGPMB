@@ -4,7 +4,8 @@ import { useUngDung } from "../ung-dung";
 import type { KetQuaHo } from "../tinh-ho";
 import type { DuAn, Ho } from "../mo-hinh";
 import { HopThoai, O, ngayVN } from "./chung";
-import { xuatExcelDuAn } from "../xuat-excel";
+import { xuatExcelChiTra, xuatExcelDuAn } from "../xuat-excel";
+import { homNayIso } from "../trang-thai";
 import { ngayChu } from "../van-ban/du-lieu";
 import {
   TEN_TT_PA,
@@ -31,7 +32,7 @@ const TEN_LOAI: Record<LoaiThayDoi, [string, string]> = { THEM: ["Thêm", "nhan-
 
 /** Thẻ "Phương án – phiên bản" trên màn Dự án. */
 export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo }[] }) {
-  const { chinhSach, luuDuAn, luuHo, nguoiDung, quyen, ghiNhatKy } = useUngDung();
+  const { chinhSach, luuDuAn, luuHo, nguoiDung, quyen, ghiNhatKy, tyLeCham } = useUngDung();
   const ds = useMemo(() => [...(duAn.phuongAn ?? [])].sort((a, b) => b.so - a.so), [duAn.phuongAn]);
   const [hop, setHop] = useState<null | { loai: "chot" } | { loai: "duyet" | "huy" | "xem"; p: PhienBanPA } | { loai: "so-sanh"; a?: string; b?: string }>(null);
   const [toanVen, setToanVen] = useState<Record<string, boolean>>({});
@@ -64,6 +65,7 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
         <h2>Phương án – phiên bản</h2>
         <span className="mo chu-nho">Chốt để đóng băng số liệu; phê duyệt ghi theo quyết định; mọi thay đổi sau đó lập bản điều chỉnh</span>
         <div className="phai">
+          <button className="nut" disabled={!ds.some((p) => p.trangThai === "DA_PHE_DUYET")} title="Phải trả, đã chi, còn lại, tiền chậm trả tạm tính theo bản đã phê duyệt" onClick={() => void xuatExcelChiTra(duAn, kq.map((x) => x.h), tyLeCham, homNayIso())}>Theo dõi chi trả (Excel)</button>
           <button className="nut" disabled={ds.length === 0} onClick={() => setHop({ loai: "so-sanh" })}>So sánh</button>
           {quyen("CHOT_PA") && <button className="nut nut-chinh" disabled={kq.length === 0} onClick={() => setHop({ loai: "chot" })}>Chốt phương án…</button>}
         </div>

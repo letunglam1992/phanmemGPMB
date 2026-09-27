@@ -14,6 +14,8 @@ import type { KetQuaHo } from "./tinh-ho";
 import { hoLechSauPheDuyet } from "./phuong-an";
 import { HAN_BUOC, tinhHanBuoc } from "./han-buoc";
 import { LICH_TRONG, type LichLamViec } from "./lich-lam-viec";
+import { tinhChiTra, type GiaiDoanTyLe } from "./chi-tra";
+import { dinhDang } from "@gpmb/core";
 export type TrangThaiGpmb = "HOAN_THANH" | "DANG_XU_LY" | "DA_KIEM_DEM" | "VUONG_MAC" | "CHUA_KIEM_DEM";
 
 export const THU_TU_TRANG_THAI: TrangThaiGpmb[] = ["HOAN_THANH", "DANG_XU_LY", "DA_KIEM_DEM", "VUONG_MAC", "CHUA_KIEM_DEM"];
@@ -138,14 +140,22 @@ export interface CanhBao {
 const soNgay = (tu: string, den: string) => Math.round((Date.parse(den) - Date.parse(tu)) / 86400000);
 
 /** Cảnh báo tự động — chỉ dùng các thời hạn có căn cứ (docs/05) hoặc kế hoạch do cán bộ nhập. */
-export function canhBaoDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: string, lich: LichLamViec = LICH_TRONG): CanhBao[] {
+export function canhBaoDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: string, lich: LichLamViec = LICH_TRONG, tyLeCham: GiaiDoanTyLe[] = []): CanhBao[] {
   const out: CanhBao[] = [];
   for (const m of mocTienDo(duAn, ds.map((x) => x.h), homNay))
     if (m.trangThai === "QUA_HAN")
       out.push({ muc: "CAO", duAnId: duAn.id, noiDung: `Bước ${m.ma}. ${m.ten}: quá hạn kế hoạch ${m.ngayKeHoach} (${m.soXong}/${m.soHo} hộ hoàn thành)` });
   for (const { h, k } of ds) {
+    const ct = tinhChiTra(h, duAn.phuongAn ?? [], tyLeCham, homNay);
+    if (ct.trangThai !== "CHUA_DUYET") {
+      if (ct.conLai!.gt(0) && ct.hanChi! < homNay)
+        out.push({ muc: "CAO", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: quá hạn chi trả (hạn ${ct.hanChi!.split("-").reverse().join("/")}), còn ${dinhDang(ct.conLai!, 0)} đ; tiền chậm trả tạm tính ${ct.tienChamTra ? `${dinhDang(ct.tienChamTra, 0)} đ` : "chưa tính được (thiếu tỷ lệ)"}`, canCu: "điểm a, b khoản 3 Điều 94 Luật Đất đai 2024" });
+      else if (ct.chamTra.length && !(h.chiTra?.nguyenNhanCham))
+        out.push({ muc: "TRUNG_BINH", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: có khoản chi sau hạn — cần xác nhận nguyên nhân chậm để lập phương án chi trả bồi thường chậm`, canCu: "điểm b khoản 3 Điều 94 Luật Đất đai 2024" });
+      if (ct.trangThai === "CHI_VUOT") out.push({ muc: "CAO", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: đã chi vượt số được duyệt` });
+    }
     const b9 = h.tienDo["9"];
-    if (b9?.trangThai === "XONG" && b9.ngay && !xong(h, "12") && soNgay(b9.ngay, homNay) > 30)
+    if (ct.trangThai === "CHUA_DUYET" && b9?.trangThai === "XONG" && b9.ngay && !xong(h, "12") && soNgay(b9.ngay, homNay) > 30)
       out.push({ muc: "CAO", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: quá 30 ngày kể từ phê duyệt phương án chưa chi trả (${soNgay(b9.ngay, homNay)} ngày)`, canCu: "khoản 3 Điều 94 Luật Đất đai 2024" });
     const b13 = h.tienDo["13"];
     if (b13?.ngay && duAn.ngayThongBao) {

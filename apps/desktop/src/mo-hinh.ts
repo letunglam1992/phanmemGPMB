@@ -158,6 +158,8 @@ export interface Ho {
   vanBan?: Record<string, string>;
   /** Vướng mắc cần ưu tiên xử lý (khiếu nại, chưa nhận tiền, tranh chấp…), do cán bộ ghi. */
   vuongMac?: { noiDung: string; ngay: string } | null;
+  /** Chi trả theo phương án đã phê duyệt (src/chi-tra.ts). */
+  chiTra?: import("./chi-tra").ChiTraHo;
 }
 
 export interface BanDoDuAn {

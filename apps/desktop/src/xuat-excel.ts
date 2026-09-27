@@ -10,6 +10,7 @@ import { D } from "@gpmb/core";
 import type Decimal from "decimal.js";
 import type { DuAn, Ho } from "./mo-hinh";
 import { tenTep } from "./ten-tep";
+import { tinhChiTra, type GiaiDoanTyLe } from "./chi-tra";
 import { TEN_COT, type CotTongHop, type KetQuaHo } from "./tinh-ho";
 
 const FONT = "Times New Roman";
@@ -245,6 +246,69 @@ function dongBan(ws: ExcelJS.Worksheet, soCot: number, ban: string) {
   c.value = ban;
   c.font = { name: FONT, italic: true, bold: true, color: { argb: "FF1F4E3D" } };
   c.alignment = { horizontal: "center" };
+}
+
+/** Bảng theo dõi chi trả, tiền chậm trả (tạm tính) — căn cứ lập phương án chi trả bồi thường chậm (điểm b k3 Đ94 LĐĐ). */
+export async function taoWorkbookChiTra(duAn: DuAn, hos: Ho[], tyLe: GiaiDoanTyLe[], homNay: string): Promise<ExcelJS.Workbook> {
+  const { default: Excel } = await import("exceljs");
+  const wb = new Excel.Workbook();
+  wb.creator = "GPMB Sơn La";
+  const ws = wb.addWorksheet("THEO DÕI CHI TRẢ");
+  const cot = ["STT", "Mã", "Họ tên", "Bản PA / QĐ phê duyệt", "Ngày hiệu lực", "Hạn chi trả", "Phải trả (đ)", "Đã chi (đ)", "Còn phải chi (đ)", "Ngày chi gần nhất", "Số ngày chậm (lớn nhất)", "Tiền chậm trả tạm tính (đ)", "Nguyên nhân chậm", "Diễn giải"];
+  ws.columns = cot.map((_, i) => ({ width: [6, 8, 26, 26, 12, 12, 16, 16, 16, 13, 12, 18, 22, 60][i] }));
+  ws.mergeCells(1, 1, 1, cot.length);
+  ws.getCell(1, 1).value = `BẢNG THEO DÕI CHI TRẢ TIỀN BỒI THƯỜNG, HỖ TRỢ VÀ TIỀN CHẬM TRẢ – ${duAn.ten}`;
+  ws.getCell(1, 1).font = { name: FONT, bold: true, size: 13 };
+  ws.getCell(1, 1).alignment = { horizontal: "center" };
+  ws.mergeCells(2, 1, 2, cot.length);
+  ws.getCell(2, 1).value = `Số liệu đến ngày ${homNay.split("-").reverse().join("/")}. Tiền chậm trả là TẠM TÍNH theo điểm b khoản 3 Điều 94 Luật Đất đai 2024 với tỷ lệ do cán bộ nhập; phải được cấp có thẩm quyền phê duyệt phương án chi trả bồi thường chậm.`;
+  ws.getCell(2, 1).font = { name: FONT, italic: true };
+  ws.getCell(2, 1).alignment = { horizontal: "center", wrapText: true };
+  ws.getRow(2).height = 32;
+  const hd = ws.getRow(4);
+  hd.values = cot;
+  hd.font = { name: FONT, bold: true };
+  hd.alignment = { wrapText: true, vertical: "middle", horizontal: "center" };
+  hd.height = 44;
+  dongKe(hd, 1, cot.length);
+  let r = 5;
+  const tenNN = { DO_CO_QUAN: "Do cơ quan thực hiện BT", DO_NGUOI_DAN: "Do người có đất", "": "Chưa xác nhận" } as const;
+  hos.forEach((h, i) => {
+    const c = tinhChiTra(h, duAn.phuongAn ?? [], tyLe, homNay);
+    if (c.trangThai === "CHUA_DUYET") return;
+    const row = ws.getRow(r++);
+    const dots = [...(h.chiTra?.dot ?? [])].sort((a, b) => a.ngay.localeCompare(b.ngay));
+    row.values = [
+      i + 1,
+      h.ma,
+      h.ten,
+      `Bản ${c.ban!.so} – ${c.ban!.pheDuyet!.so} ngày ${c.ban!.pheDuyet!.ngay.split("-").reverse().join("/")}`,
+      c.ngayHieuLuc!.split("-").reverse().join("/"),
+      c.hanChi!.split("-").reverse().join("/"),
+      so(c.phaiTra!),
+      so(c.daChi),
+      so(c.conLai!),
+      dots.at(-1)?.ngay.split("-").reverse().join("/") ?? "",
+      c.chamTra.reduce((m, x) => Math.max(m, x.soNgay), 0) || "",
+      c.chamTra.length ? (c.tienChamTra ? so(c.tienChamTra) : "Thiếu căn cứ") : 0,
+      c.chamTra.length ? tenNN[h.chiTra?.nguyenNhanCham ?? ""] : "",
+      c.chamTra.map((x) => `${x.dotId ? `Chi ${x.ngay.split("-").reverse().join("/")}` : "Chưa chi"}: ${x.soTien.toFixed(0)} đ × ${x.dienGiai}`).join("\n"),
+    ];
+    row.font = { name: FONT };
+    row.alignment = { vertical: "top", wrapText: true };
+    for (const k of [7, 8, 9, 12]) row.getCell(k).numFmt = DINH_DANG_TIEN;
+    dongKe(row, 1, cot.length);
+  });
+  const tg = ws.getRow(r);
+  tg.values = ["", "", "Tổng cộng", "", "", "", ...[7, 8, 9].map((k) => ({ formula: `SUM(${colName(k)}5:${colName(k)}${r - 1})` })), "", "", { formula: `SUM(L5:L${r - 1})` }];
+  tg.font = { name: FONT, bold: true };
+  for (const k of [7, 8, 9, 12]) tg.getCell(k).numFmt = DINH_DANG_TIEN;
+  dongKe(tg, 1, cot.length);
+  return wb;
+}
+
+export async function xuatExcelChiTra(duAn: DuAn, hos: Ho[], tyLe: GiaiDoanTyLe[], homNay: string) {
+  await taiVe(await taoWorkbookChiTra(duAn, hos, tyLe, homNay), `Theo-doi-chi-tra_${tenAnToan(duAn.ten)}.xlsx`);
 }
 
 function colName(n: number): string {

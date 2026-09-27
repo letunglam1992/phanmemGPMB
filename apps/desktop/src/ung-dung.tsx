@@ -7,6 +7,7 @@ import { LoiMayChu, docCheDo, laKhoMang } from "./kho-mang";
 import type { DuAn, Ho } from "./mo-hinh";
 import { docLanSaoLuu, ghiLanSaoLuu } from "./sao-luu";
 import { LICH_TRONG, type LichLamViec } from "./lich-lam-viec";
+import { KHOA_TY_LE_CHAM, type GiaiDoanTyLe } from "./chi-tra";
 import { KHOA_LICH } from "./sao-luu";
 import { coQuyen, dungMatKhau, taoTaiKhoan, tenHienThi, type NguoiDung, type Quyen, type VaiTro } from "./tai-khoan";
 
@@ -55,6 +56,9 @@ interface NguCanh {
   luuLich: (l: LichLamViec) => Promise<void>;
   hopCaiDat: boolean;
   moCaiDat: (mo: boolean) => void;
+  /** Tỷ lệ tiền chậm nộp theo giai đoạn (điểm b k3 Đ94 LĐĐ) do cán bộ nhập kèm căn cứ. */
+  tyLeCham: GiaiDoanTyLe[];
+  luuTyLeCham: (ds: GiaiDoanTyLe[]) => Promise<void>;
   tuDong: CaiDatTuDong;
   luuTuDong: (c: CaiDatTuDong) => Promise<void>;
   /** Sao lưu tự động ngay (bỏ qua chu kỳ). */
@@ -87,6 +91,7 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
   const [thongBao, setThongBao] = useState<NguCanh["thongBao"]>(null);
   const [lich, setLich] = useState<LichLamViec>(LICH_TRONG);
   const [hopCaiDat, moCaiDat] = useState(false);
+  const [tyLeCham, setTyLeCham] = useState<GiaiDoanTyLe[]>([]);
   const [tuDong, setTuDong] = useState<CaiDatTuDong>(MAC_DINH_TU_DONG);
   const dangTuDong = useRef(false);
   const [sai, setSai] = useState<{ lan: number; den: number }>({ lan: 0, den: 0 });
@@ -113,6 +118,7 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
     if (laKhoMang(kho) && !kho.coPhien()) return; // máy chủ: chỉ tải sau khi đăng nhập
     const l = await kho.docCaiDat<LichLamViec>(KHOA_LICH);
     if (l) setLich(l);
+    setTyLeCham((await kho.docCaiDat<GiaiDoanTyLe[]>(KHOA_TY_LE_CHAM)) ?? []);
     const td = await kho.docCaiDat<CaiDatTuDong>(KHOA_TU_DONG);
     if (td) setTuDong({ ...MAC_DINH_TU_DONG, ...td });
     const da = await kho.dsDuAn();
@@ -306,6 +312,13 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
     },
     hopCaiDat,
     moCaiDat,
+    tyLeCham,
+    luuTyLeCham: async (ds) => {
+      if (chan("CAI_DAT")) return;
+      await ghi(() => kho.luuCaiDat(KHOA_TY_LE_CHAM, ds));
+      setTyLeCham(ds);
+      await ghiNhatKy("Cập nhật tỷ lệ tiền chậm trả", ds.map((g) => `từ ${g.tuNgay}: ${g.tyLe}%/ngày (${g.canCu})`).join("; ") || "xóa hết");
+    },
     tuDong,
     luuTuDong: async (c) => {
       if (chan("CAI_DAT")) return;

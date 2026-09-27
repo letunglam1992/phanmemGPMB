@@ -33,7 +33,7 @@ export interface BanSaoLuu {
   banDo: Map<string, Uint8Array>;
   mau: { ma: string; tenTep: string; luc: string; bytes: Uint8Array }[];
   /** Cài đặt dùng chung (có từ bản ghi lịch làm việc; tệp cũ không có). */
-  caiDat?: { lichLamViec?: unknown };
+  caiDat?: { lichLamViec?: unknown; tyLeChamTra?: unknown };
 }
 
 export class LoiSaoLuu extends Error {}
@@ -47,7 +47,7 @@ export async function taoBanSaoLuu(kho: Kho, ungDung = "0.1"): Promise<{ bytes: 
   const duAn = await kho.dsDuAn();
   const ho = (await Promise.all(duAn.map((d) => kho.dsHo(d.id)))).flat();
   const zip = new PizZip();
-  const caiDat = { lichLamViec: await kho.docCaiDat(KHOA_LICH) };
+  const caiDat = { lichLamViec: await kho.docCaiDat(KHOA_LICH), tyLeChamTra: await kho.docCaiDat("tyLeChamTra") };
   const duLieu = JSON.stringify({ duAn, ho, caiDat });
   zip.file("du-lieu.json", duLieu);
   let soBanDo = 0;
@@ -116,6 +116,7 @@ export async function khoiPhuc(kho: Kho, ban: BanSaoLuu, cheDo: "THAY_THE" | "GO
   for (const [id, b] of ban.banDo) await kho.luuBanDo(id, b);
   for (const m of ban.mau) await kho.luuMau(m.ma, m.bytes, m.tenTep);
   if (ban.caiDat?.lichLamViec) await kho.luuCaiDat(KHOA_LICH, ban.caiDat.lichLamViec);
+  if (ban.caiDat?.tyLeChamTra) await kho.luuCaiDat("tyLeChamTra", ban.caiDat.tyLeChamTra);
 }
 
 const KHOA_LAN_CUOI = "gpmb-sao-luu-lan-cuoi";
