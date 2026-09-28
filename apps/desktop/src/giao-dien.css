@@ -379,9 +379,41 @@ table.bang { width: 100%; border-collapse: collapse; font-size: 13px; }
 /* ---------- Đăng nhập, tài khoản ---------- */
 .man-dang-nhap { min-height: 100vh; display: grid; place-items: center; padding: 16px;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='200' viewBox='0 0 1200 200' fill='none' stroke='%23ffffff' stroke-opacity='.07' stroke-width='1.2'%3E%3Cpath d='M0 160C150 110 262 178 402 138S642 48 782 98S1042 178 1200 118'/%3E%3Cpath d='M0 188C170 140 300 196 450 160S700 80 860 126S1080 190 1200 150'/%3E%3C/svg%3E") right bottom / 1600px 260px no-repeat, linear-gradient(120deg, var(--dau-1) 0%, var(--dau-2) 100%); }
-.o-dang-nhap { width: min(440px, 94vw); padding: 28px 30px; box-shadow: var(--bong-3); border-radius: 18px; }
-.o-dang-nhap .logo { display: flex; align-items: center; gap: 12px; font-weight: 800; margin-bottom: 18px; color: var(--chu); }
-.o-dang-nhap .logo small { display: block; font-weight: 500; font-size: 12px; color: var(--chu-phu); }
+.o-dang-nhap { width: min(440px, 94vw); background: var(--be-mat); color: var(--chu); border-radius: 20px; box-shadow: var(--bong-3); overflow: hidden; animation: hien 220ms var(--ease-out); }
+.dn-thuong-hieu { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 30px 32px 22px; border-bottom: 1px solid var(--vien); }
+.dn-logo { width: 64px; height: 64px; border-radius: 18px; display: grid; place-items: center; font-size: 24px; font-weight: 800; letter-spacing: .02em; color: #fff;
+  background: linear-gradient(145deg, var(--dau-2), var(--dau-1)); box-shadow: 0 8px 20px rgba(13, 51, 39, .28), inset 0 1px 0 rgba(255, 255, 255, .14); margin-bottom: 14px; }
+.dn-ten { font-size: 21px; font-weight: 800; letter-spacing: .04em; color: var(--chinh-dam); }
+:root[data-theme="dark"] .dn-ten { color: var(--tieu-diem); }
+.dn-mo-ta { font-size: 13px; color: var(--chu-phu); margin-top: 4px; max-width: 340px; line-height: 1.45; text-wrap: balance; }
+:root[data-theme="dark"] .dn-logo { background: linear-gradient(145deg, var(--chinh-dam), var(--dau-2)); box-shadow: 0 8px 20px rgba(0, 0, 0, .45), inset 0 1px 0 rgba(255, 255, 255, .16); }
+:root[data-theme="dark"] .dn-nut { background: linear-gradient(120deg, var(--dau-2) 0%, var(--chinh) 60%, var(--chinh-dam) 100%); box-shadow: 0 6px 16px rgba(0, 0, 0, .4); }
+.dn-than { padding: 24px 32px 22px; }
+.dn-than h2 { margin: 0; font-size: 20px; font-weight: 700; }
+.dn-phu { margin: 4px 0 18px; font-size: 13px; color: var(--chu-phu); line-height: 1.5; }
+.dn-truong { display: grid; gap: 14px; }
+.o-bieu-tuong { position: relative; display: flex; align-items: center; }
+.o-bieu-tuong > svg { position: absolute; left: 12px; color: var(--chu-mo); pointer-events: none; }
+.o-bieu-tuong > input { width: 100%; height: 44px; padding-left: 40px !important; border-radius: 10px; }
+.o-bieu-tuong > input:focus + .o-mat, .o-bieu-tuong:focus-within > svg { color: var(--chinh); }
+.o-bieu-tuong .o-mat { position: absolute; right: 6px; width: 34px; height: 34px; display: grid; place-items: center; border: 0; background: none; border-radius: 8px; color: var(--chu-mo); cursor: pointer; }
+.o-bieu-tuong .o-mat:hover { background: var(--be-mat-hover); color: var(--chu); }
+.o-bieu-tuong:has(.o-mat) > input { padding-right: 44px !important; }
+.dn-nut { margin-top: 20px; width: 100%; height: 46px; border: 0; border-radius: 11px; display: flex; align-items: center; justify-content: center; gap: 9px;
+  font: inherit; font-size: 15px; font-weight: 700; color: #fff; cursor: pointer;
+  background: linear-gradient(120deg, var(--dau-2) 0%, var(--chinh) 55%, var(--tieu-diem) 100%); box-shadow: 0 6px 16px rgba(29, 107, 80, .3);
+  transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out), filter var(--dur-fast); }
+.dn-nut:hover:not(:disabled) { filter: brightness(1.06); box-shadow: 0 8px 20px rgba(29, 107, 80, .36); }
+.dn-nut:active:not(:disabled) { transform: translateY(1px); }
+.dn-nut:disabled { opacity: .55; cursor: not-allowed; box-shadow: none; }
+.dn-nut:focus-visible { outline: 3px solid color-mix(in srgb, var(--tieu-diem) 45%, transparent); outline-offset: 2px; }
+.dn-che-do { margin-top: 16px; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; font-size: 12.5px; line-height: 1.45;
+  background: var(--chinh-nhat); color: var(--chinh-dam); border: 1px solid color-mix(in srgb, var(--chinh) 18%, transparent); }
+:root[data-theme="dark"] .dn-che-do { color: var(--tieu-diem); }
+.dn-che-do-bt { flex: none; width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; background: color-mix(in srgb, var(--chinh) 14%, transparent); }
+.dn-chan { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px 12px 32px; border-top: 1px solid var(--vien); background: var(--be-mat-2); font-size: 12px; color: var(--chu-mo); }
+.dn-chan button { display: inline-flex; align-items: center; gap: 6px; border: 0; background: none; font: inherit; font-size: 12.5px; color: var(--chu-phu); padding: 6px 10px; border-radius: 8px; cursor: pointer; }
+.dn-chan button:hover { background: var(--be-mat-hover); color: var(--chu); }
 .logo-dau { width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; background: var(--dau-1); color: #fff; font-weight: 800; }
 .menu-nguoi { position: relative; }
 .menu-tha { position: absolute; right: 0; top: calc(100% + 6px); background: var(--be-mat); color: var(--chu); border: 1px solid var(--vien); border-radius: 12px; box-shadow: var(--bong-3); min-width: 260px; z-index: 80; padding: 6px; animation: hien 140ms var(--ease-out); }

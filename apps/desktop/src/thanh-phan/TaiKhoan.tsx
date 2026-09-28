@@ -16,7 +16,8 @@ import {
   type VaiTro,
 } from "../tai-khoan";
 import { kiemTraChuoi, type DongNhatKy } from "../nhat-ky";
-import { HopKetNoi, moTaCheDo } from "./KetNoi";
+import { HopKetNoi } from "./KetNoi";
+import { BieuTuong } from "./BieuDo";
 import { docCheDo, laKhoMang } from "../kho-mang";
 
 const ngayGio = (iso?: string) => (iso ? new Date(iso).toLocaleString("vi-VN", { hour12: false }) : "—");
@@ -32,6 +33,7 @@ export function ManDangNhap() {
   const [loi, setLoi] = useState("");
   const [dang, setDang] = useState(false);
   const [ketNoi, setKetNoi] = useState(false);
+  const [hienMk, setHienMk] = useState(false);
   const khoiTao = coTaiKhoan === false;
 
   const gui = async (e: React.FormEvent) => {
@@ -53,38 +55,78 @@ export function ManDangNhap() {
     }
   };
 
+  const cheDo = docCheDo();
+  const hopCheDo =
+    cheDo.cheDo === "MAY_DON"
+      ? { ten: "Chế độ cục bộ", mo: "Dữ liệu được lưu an toàn trên thiết bị này" }
+      : cheDo.cheDo === "MAY_CHU"
+        ? { ten: "Máy chủ mạng nội bộ", mo: `Dữ liệu lưu trên máy này, chia sẻ cho máy trạm (cổng ${cheDo.cong})` }
+        : { ten: "Máy trạm", mo: `Dữ liệu trên máy chủ nội bộ ${cheDo.ketNoi.diaChi}` };
+
   if (coTaiKhoan === null) return <div className="man-dang-nhap"><div className="trong">Đang mở dữ liệu…</div></div>;
   return (
     <div className="man-dang-nhap">
-      <form className="the o-dang-nhap" onSubmit={gui}>
-        <div className="logo" style={{ color: "var(--chinh-dam)", marginBottom: 14 }}>
-          <div className="logo-dau">GP</div>
-          <div>GPMB Sơn La<small style={{ color: "var(--chu-phu)" }}>Bồi thường, hỗ trợ, tái định cư</small></div>
+      <form className="o-dang-nhap" onSubmit={gui}>
+        <div className="dn-thuong-hieu">
+          <div className="dn-logo" aria-hidden>GP</div>
+          <div className="dn-ten">GPMB SƠN LA</div>
+          <div className="dn-mo-ta">Hệ thống quản lý bồi thường, hỗ trợ và tái định cư</div>
         </div>
-        <h2 style={{ margin: "0 0 4px" }}>{khoiTao ? "Tạo tài khoản quản trị đầu tiên" : "Đăng nhập"}</h2>
-        <p className="mo chu-nho" style={{ marginTop: 0 }}>
-          {khoiTao
-            ? "Máy này chưa có tài khoản. Tài khoản quản trị tạo các tài khoản cán bộ, lãnh đạo. Nên tạo thêm ít nhất một tài khoản quản trị dự phòng: nếu quên mật khẩu quản trị duy nhất sẽ không vào được phần mềm."
-            : docCheDo().cheDo === "MAY_TRAM"
-              ? "Đăng nhập bằng tài khoản trên máy chủ mạng nội bộ."
-              : "Tài khoản lưu trên máy này; phần mềm không kết nối máy chủ ngoài."}
-        </p>
-        <div className="luoi">
-          <O nhan="Tên đăng nhập"><input autoFocus value={ten} autoComplete="username" onChange={(e) => setTen(e.target.value)} placeholder={khoiTao ? "vd. quantri" : ""} /></O>
-          {khoiTao && (
-            <>
-              <O nhan="Họ tên"><input value={hoTen} onChange={(e) => setHoTen(e.target.value)} /></O>
-              <O nhan="Chức vụ (không bắt buộc)"><input value={chucVu} onChange={(e) => setChucVu(e.target.value)} /></O>
-            </>
-          )}
-          <O nhan="Mật khẩu" goiY={khoiTao ? "Tối thiểu 8 ký tự, có chữ và số" : undefined}><input type="password" value={mk} autoComplete={khoiTao ? "new-password" : "current-password"} onChange={(e) => setMk(e.target.value)} /></O>
-          {khoiTao && <O nhan="Nhập lại mật khẩu"><input type="password" value={mk2} autoComplete="new-password" onChange={(e) => setMk2(e.target.value)} /></O>}
+        <div className="dn-than">
+          <h2>{khoiTao ? "Tạo tài khoản quản trị đầu tiên" : "Đăng nhập"}</h2>
+          <p className="dn-phu">
+            {khoiTao
+              ? "Máy này chưa có tài khoản. Tài khoản quản trị tạo các tài khoản cán bộ, lãnh đạo. Nên tạo thêm ít nhất một tài khoản quản trị dự phòng: quên mật khẩu quản trị duy nhất sẽ không vào được phần mềm."
+              : cheDo.cheDo === "MAY_TRAM"
+                ? "Đăng nhập bằng tài khoản trên máy chủ mạng nội bộ."
+                : "Truy cập hệ thống quản lý GPMB"}
+          </p>
+          <div className="dn-truong">
+            <O nhan="Tên đăng nhập">
+              <span className="o-bieu-tuong">
+                <BieuTuong ten="taiKhoan" co={18} />
+                <input autoFocus value={ten} autoComplete="username" onChange={(e) => setTen(e.target.value)} placeholder="Nhập tên đăng nhập" />
+              </span>
+            </O>
+            {khoiTao && (
+              <>
+                <O nhan="Họ tên"><input value={hoTen} onChange={(e) => setHoTen(e.target.value)} /></O>
+                <O nhan="Chức vụ (không bắt buộc)"><input value={chucVu} onChange={(e) => setChucVu(e.target.value)} /></O>
+              </>
+            )}
+            <O nhan="Mật khẩu" goiY={khoiTao ? "Tối thiểu 8 ký tự, có chữ và số" : undefined}>
+              <span className="o-bieu-tuong">
+                <BieuTuong ten="khoa" co={18} />
+                <input type={hienMk ? "text" : "password"} value={mk} autoComplete={khoiTao ? "new-password" : "current-password"} onChange={(e) => setMk(e.target.value)} placeholder="Nhập mật khẩu" />
+                <button type="button" className="o-mat" onClick={() => setHienMk(!hienMk)} aria-label={hienMk ? "Ẩn mật khẩu" : "Hiện mật khẩu"} title={hienMk ? "Ẩn mật khẩu" : "Hiện mật khẩu"}>
+                  <BieuTuong ten={hienMk ? "matTat" : "mat"} co={18} />
+                </button>
+              </span>
+            </O>
+            {khoiTao && (
+              <O nhan="Nhập lại mật khẩu">
+                <span className="o-bieu-tuong">
+                  <BieuTuong ten="khoa" co={18} />
+                  <input type={hienMk ? "text" : "password"} value={mk2} autoComplete="new-password" onChange={(e) => setMk2(e.target.value)} />
+                </span>
+              </O>
+            )}
+          </div>
+          {loi && <div className="thong-bao thong-bao-do" role="alert" style={{ marginTop: 14, marginBottom: 0 }}>{loi}</div>}
+          <button className="dn-nut" type="submit" disabled={dang || !ten || !mk}>
+            <BieuTuong ten="vao" co={19} />
+            {dang ? "Đang xử lý…" : khoiTao ? "Tạo tài khoản và vào phần mềm" : "Đăng nhập"}
+          </button>
+          <div className="dn-che-do">
+            <span className="dn-che-do-bt"><BieuTuong ten="saoLuu" co={18} /></span>
+            <span><b>{hopCheDo.ten}</b> – {hopCheDo.mo}</span>
+          </div>
         </div>
-        {loi && <div className="thong-bao thong-bao-do" role="alert" style={{ marginTop: 12, marginBottom: 0 }}>{loi}</div>}
-        <button className="nut nut-chinh" type="submit" style={{ marginTop: 14, width: "100%" }} disabled={dang || !ten || !mk}>{khoiTao ? "Tạo tài khoản và vào phần mềm" : "Đăng nhập"}</button>
-        <div className="mo chu-nho" style={{ marginTop: 12, display: "flex", justifyContent: "space-between", gap: 8 }}>
-          <span>{moTaCheDo(docCheDo())}</span>
-          <button type="button" className="nut nut-chu nut-nho" onClick={() => setKetNoi(true)}>Kết nối…</button>
+        <div className="dn-chan">
+          <span>Phiên bản thử nghiệm 0.1</span>
+          <button type="button" onClick={() => setKetNoi(true)} title="Chế độ kết nối: máy đơn, máy chủ, máy trạm">
+            <BieuTuong ten="caiDat" co={15} /> Cài đặt
+          </button>
         </div>
       </form>
       {ketNoi && <HopKetNoi dong={() => setKetNoi(false)} />}
