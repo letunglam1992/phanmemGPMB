@@ -197,6 +197,8 @@ Mô hình dữ liệu là **tài liệu (document)**: mỗi `DuAn` và mỗi `Ho
 
 ### P0 – Bắt buộc sửa
 
+> **Cập nhật 28/9/2026 (phiên bản 0.4.0):** P0-1 … P0-6 và P1-9 đã triển khai theo docs/18 và quyết định QD-25 (docs/06) — trạng thái, kiểm thử, hạn chế từng mục ở docs/09.
+
 | Mã | Vấn đề → Nguyên nhân | Giải pháp | Lợi ích | Độ khó | Rủi ro |
 |---|---|---|---|---|---|
 | P0-1 | Trắng màn hình khi nhập "9222,1" → `D()` trên chuỗi thô, không ErrorBoundary | (a) ErrorBoundary theo màn, giữ bản nháp, báo ô lỗi; (b) `tinhHo` bọc từng dòng: giá trị không phải số → dòng "Thiếu căn cứ: DT không hợp lệ" thay vì ném lỗi | Không bao giờ mất dữ liệu đang nhập | Thấp (1–2 ngày) | Thấp |

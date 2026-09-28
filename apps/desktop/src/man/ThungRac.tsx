@@ -3,7 +3,7 @@ import { THOI_HAN_THUNG_RAC, duocXoaHan, soNgayTrongThungRac, type DauXoa } from
 
 /**
  * Thùng rác (P0-4): dự án, hồ sơ đã xóa mềm. Khôi phục: người có quyền sửa (hồ sơ) / xóa dự án (dự án).
- * Xóa hẳn: chỉ Quản trị, sau THOI_HAN_THUNG_RAC ngày; không tự xóa (QD-24).
+ * Xóa hẳn: chỉ Quản trị, sau THOI_HAN_THUNG_RAC ngày; không tự xóa (QD-25).
  */
 export function ThungRac() {
   const { thungRac, dsDuAn, quyen, khoiPhucHo, khoiPhucDuAn, xoaHanHo, xoaHanDuAn } = useUngDung();

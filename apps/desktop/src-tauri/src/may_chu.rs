@@ -260,7 +260,7 @@ fn kiem_tra_buoc(st: &MayChu, buoc_cu: &Value, moi: Option<&mut Value>, u: &Nguo
 
 // ---------------- Xóa mềm, thùng rác (P0-4) ----------------
 
-/// Số ngày tối thiểu trong thùng rác trước khi được xóa hẳn (QD-24).
+/// Số ngày tối thiểu trong thùng rác trước khi được xóa hẳn (QD-25).
 pub const THOI_HAN_THUNG_RAC: i64 = 30;
 
 fn co_chi_tra(h: &Value) -> bool {

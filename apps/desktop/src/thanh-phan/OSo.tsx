@@ -2,7 +2,7 @@ import { useEffect, useState, type InputHTMLAttributes } from "react";
 import { docSoNhap, hienSo, laSoMay } from "../so";
 
 /**
- * Ô nhập số dùng chung (P0-2, QD-24 quy ước Việt Nam): gõ và hiển thị "1.234,5" (dấu chấm phân cách nghìn, dấu phẩy
+ * Ô nhập số dùng chung (P0-2, QD-25 quy ước Việt Nam): gõ và hiển thị "1.234,5" (dấu chấm phân cách nghìn, dấu phẩy
  * thập phân; "20.000" = hai mươi nghìn); `value` / `onChange` là chuỗi chuẩn máy ("1234.5"). Gõ sai định dạng → viền đỏ,
  * không đổi giá trị đã có (không bao giờ hiểu sai im lặng). `canhBao` (tùy chọn): ngưỡng hợp lý — chỉ nhắc, không chặn.
  */

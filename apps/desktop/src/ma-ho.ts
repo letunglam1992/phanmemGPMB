@@ -1,5 +1,5 @@
 /**
- * Mã hồ sơ (P0-3). Mẫu mã do người dùng đặt theo dự án (QD-24, người dùng chốt 28/9/2026): chuỗi bất kỳ, dãy dấu "#"
+ * Mã hồ sơ (P0-3). Mẫu mã do người dùng đặt theo dự án (QD-25, người dùng chốt 28/9/2026): chuỗi bất kỳ, dãy dấu "#"
  * cuối cùng là chỗ đánh số (số dấu # = số chữ số tối thiểu). Ví dụ "H###" → H001; "CM-2026-####" → CM-2026-0001;
  * "TH/##/CB" → TH/01/CB. Không có "#" thì số nối vào cuối.
  * Mã không phân biệt hoa thường, bỏ khoảng trắng hai đầu khi so trùng. Hồ sơ trong thùng rác vẫn giữ mã (không dùng lại).

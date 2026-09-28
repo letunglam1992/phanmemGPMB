@@ -163,7 +163,6 @@ export function BanDo({ duAnId }: { duAnId: string }) {
   // Phạm vi thu hồi = hợp các vùng ranh / vùng thửa thu hồi đã chọn ∪ các thửa chọn trực tiếp
   const maVungChon = duAn?.banDo?.vungChonDs ?? (duAn?.banDo?.vungChon ? [duAn.banDo.vungChon] : []);
   const vungDs = dl ? dl.kq.vungGpmb.filter((v) => maVungChon.includes(v.ma)) : [];
-  const vung = vungDs[0] ?? null;
   const thuaChon = useMemo(() => new Set(duAn?.banDo?.thuaChon ?? []), [duAn?.banDo?.thuaChon]);
   const thuHoi = useMemo(() => {
     if (!dl || (!vungDs.length && !thuaChon.size)) return new Map<string, DienTichThuHoi>();

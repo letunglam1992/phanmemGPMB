@@ -4,7 +4,7 @@
  * - Hộ có trong bản phương án đã chốt / đã phê duyệt (chưa hủy) → không xóa; hủy bản phương án (có lý do) hoặc lập bản điều chỉnh.
  * - Hộ đã có đợt chi trả (chưa hủy) → không xóa.
  * - Dự án có bản phương án đã phê duyệt hoặc có hộ đã chi trả → không xóa.
- * Xóa là xóa mềm (vào thùng rác, khôi phục được); xóa hẳn chỉ Quản trị, sau THOI_HAN_THUNG_RAC ngày (QD-24).
+ * Xóa là xóa mềm (vào thùng rác, khôi phục được); xóa hẳn chỉ Quản trị, sau THOI_HAN_THUNG_RAC ngày (QD-25).
  */
 import { dotHieuLuc } from "./chi-tra";
 import type { DuAn, Ho } from "./mo-hinh";

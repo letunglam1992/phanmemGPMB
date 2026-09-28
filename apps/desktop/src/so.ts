@@ -1,5 +1,5 @@
 /**
- * Quy ước số của phần mềm (QD-24, người dùng chốt 28/9/2026 — theo quy ước Việt Nam):
+ * Quy ước số của phần mềm (QD-25, người dùng chốt 28/9/2026 — theo quy ước Việt Nam):
  * - NHẬP / HIỂN THỊ: dấu chấm phân cách nghìn, dấu phẩy thập phân ("1.234,5"; "20.000" = hai mươi nghìn);
  * - LƯU: chuỗi chuẩn máy ("1234.5") — lõi tính (Decimal) chỉ nhận dạng này.
  * Danh mục trường số của hồ sơ, dự án dùng chung cho: kiểm tra trước khi tính (P0-1), ô nhập số (P0-2),

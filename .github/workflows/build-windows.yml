@@ -17,10 +17,33 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run typecheck
+      - name: ESLint (hook React, catch rỗng, biến không dùng)
+        run: npm -w @gpmb/desktop run lint
       - run: npm test
 
+  giao-dien:
+    # Kiểm thử giao diện Playwright (P1-9): kịch bản Giai đoạn 1 trên bản build, Chromium
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+        working-directory: apps/desktop
+      - run: npm -w @gpmb/desktop run e2e
+        env:
+          CI: "1"
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-ket-qua
+          path: apps/desktop/test-results
+
   dong-goi-windows:
-    needs: kiem-thu
+    needs: [kiem-thu, giao-dien]
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4

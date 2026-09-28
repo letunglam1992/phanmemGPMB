@@ -1,5 +1,4 @@
 import { Fragment, useState } from "react";
-import { D } from "@gpmb/core";
 import { taoId, type DuAn, type Ho, type Thua } from "../../mo-hinh";
 import { ChonGiaDat } from "../../thanh-phan/ChonGiaDat";
 import { tien } from "../../thanh-phan/chung";

@@ -1,15 +1,17 @@
 {
   "name": "@gpmb/desktop",
-  "version": "0.3.5",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "vitest run",
+    "test": "vitest run --dir test",
     "typecheck": "tsc --noEmit",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "lint": "eslint --max-warnings=3 src test e2e",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@gpmb/core": "*",
@@ -25,13 +27,17 @@
     "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
+    "@playwright/test": "1.55",
     "@tauri-apps/cli": "^2.12.0",
     "@types/node": "^20.19.43",
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^4.7.0",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
     "fake-indexeddb": "^6.2.5",
     "typescript": "^5.9.3",
+    "typescript-eslint": "^8.70.1",
     "vite": "^5.4.21",
     "vitest": "^2.1.9"
   }
