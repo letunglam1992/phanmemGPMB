@@ -14,6 +14,7 @@ import { tinhChiTra, type GiaiDoanTyLe } from "./chi-tra";
 import { TEN_COT, type CotTongHop, type KetQuaHo } from "./tinh-ho";
 import { TEN_TINH_TRANG, type BaoCao, type SoLieu } from "./bao-cao";
 import { sapXepKy, tongKy, type KyBaoCao } from "./ky-bao-cao";
+import { taiXuong } from "./tai-xuong";
 
 const FONT = "Times New Roman";
 const so = (d: Decimal | null | undefined) => (d ? d.toDecimalPlaces(0).toNumber() : null);
@@ -378,15 +379,7 @@ function colName(n: number): string {
 
 async function taiVe(wb: ExcelJS.Workbook, tenTep: string) {
   const buf = await wb.xlsx.writeBuffer();
-  const blob = new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = tenTep;
-  a.style.display = "none";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  await taiXuong(new Uint8Array(buf as ArrayBuffer), tenTep, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 }
 
 const tenAnToan = (s: string) => tenTep(s, 80);

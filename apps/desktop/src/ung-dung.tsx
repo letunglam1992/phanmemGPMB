@@ -151,6 +151,16 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
     setThongBao({ noiDung, loai, id });
     setTimeout(() => setThongBao((t) => (t?.id === id ? null : t)), loai === "loi" ? 6000 : 3500);
   }, []);
+  // Lỗi không được bắt ở nút bấm (xuất tệp, lưu…) → luôn báo cho người dùng, không im lặng
+  useEffect(() => {
+    const f = (e: PromiseRejectionEvent) => {
+      if (e.reason instanceof DaBaoLoi) return;
+      console.error(e.reason);
+      bao(`Không thực hiện được: ${String((e.reason as Error)?.message ?? e.reason)}`, "loi");
+    };
+    window.addEventListener("unhandledrejection", f);
+    return () => window.removeEventListener("unhandledrejection", f);
+  }, [bao]);
   // Vỏ desktop: báo nơi đã lưu tệp tải về (tai-xuong.ts)
   useEffect(() => {
     const f = (e: Event) => bao(`Đã lưu tệp: ${(e as CustomEvent<string>).detail}`);

@@ -129,3 +129,17 @@ describe("22 mẫu văn bản QĐ 1966/QĐ-UBND", () => {
     expect(vanBan(dienMau(docMau("02"), du))).toContain("Thời gian tiến hành kiểm kê hiện trạng: từ ………… đến …………");
   });
 });
+
+describe("Tự điền từ hồ sơ", () => {
+  it("phương án: TĐC, chuyển đổi nghề, mồ mả lấy từ hồ sơ; giá trị đã lưu khác mặc định được giữ", async () => {
+    const { macDinhTuHoSo, giaTriNhapThem } = await import("../src/van-ban/tao-nhanh");
+    const h0 = { ...ho[0]!, hoTro: { ...ho[0]!.hoTro, taiDinhCu: { hinhThuc: "TU_LO" as const, khoanKhac: [] }, moMa: { xay: 2, khongXay: 1 } } };
+    const ds2 = [h0, ...ho.slice(1)].map((h) => ({ h, k: tinhHo(cs, duAn, h) }));
+    const md = macDinhTuHoSo(ds2);
+    expect(md.pa_tai_dinh_cu).toMatch(/1 hộ tự lo chỗ ở, hỗ trợ 60\.000\.000 đồng/);
+    expect(md.pa_chuyen_doi_nghe).toMatch(/cho 1 hộ/);
+    expect(md.pa_mo_ma).toBe("Di dời 3 mộ (2 mộ xây, 1 mộ đất).");
+    const m14 = DANH_MUC_MAU.find((m) => m.ma === "14")!;
+    expect(giaTriNhapThem(m14, { ...duAn, vanBan: { pa_tai_dinh_cu: "Không", pa_mo_ma: "Tự ghi" } }, ds2)).toMatchObject({ pa_tai_dinh_cu: md.pa_tai_dinh_cu, pa_mo_ma: "Tự ghi" });
+  });
+});

@@ -9,6 +9,7 @@ import { dienMau, dongGoiZip, truongTrongMau } from "../van-ban/dien-mau";
 import { HopThoai, O } from "../thanh-phan/chung";
 import { taiXuong } from "../tai-xuong";
 import { tenTep } from "../ten-tep";
+import { giaTriNhapThem } from "../van-ban/tao-nhanh";
 import { Chon } from "../thanh-phan/Chon";
 
 /** Thông tin chung của dự án dùng khi soạn văn bản (lưu vào DuAn.vanBan). */
@@ -48,7 +49,7 @@ const URL_MAU = (ma: string) => `${import.meta.env.BASE_URL}mau-van-ban/${tepMau
 
 async function napMauGoc(ma: string): Promise<Uint8Array> {
   const r = await fetch(URL_MAU(ma));
-  if (!r.ok) throw new Error(`Không nạp được mẫu gốc ${ma}`);
+  if (!r.ok) throw new Error(`Không nạp được mẫu gốc ${ma} (${r.status})`);
   return new Uint8Array(await r.arrayBuffer());
 }
 
@@ -85,7 +86,7 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
     if (duAn) setChung({ ...thongTinChungMacDinh(duAn), ...truongVanBanTuDonVi(dsDonVi), ...(duAn.vanBan ?? {}) });
   }, [duAn?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
-    setRieng(Object.fromEntries(mau.nhapThem.map((t) => [t.truong, (t.truong !== "noi_nhan" && duAn?.vanBan?.[t.truong]) || t.macDinh || ""])));
+    if (duAn) setRieng(giaTriNhapThem(mau, duAn, ds));
     if (mau.phamVi === "DOT" && chonHo.size === 0) setChonHo(new Set(hoCua(duAnId).map((h) => h.id)));
     setSo("");
     setThongBao(null);
@@ -119,7 +120,7 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
       if (mau.phamVi === "DOT") {
         if (!dsHoChon.length) throw new Error("Chọn các hộ, tổ chức trong đợt.");
         const out = dienMau(mauBytes, ghepDuLieu({ mau, duAn, ds: dsHoChon, chung, rieng, so, ngayKy }));
-        taiXuong(out, `Mau-${ma}_${tenAnToan(mau.ten)}_${dsHoChon.length}-ho.docx`, DOCX);
+        await taiXuong(out, `Mau-${ma}_${tenAnToan(mau.ten)}_${dsHoChon.length}-ho.docx`, DOCX);
         const vbMoi: Record<string, string> = { ...(duAn.vanBan ?? {}), ...chung, ...luuRieng };
         if (mau.ghiLai?.capDo === "DU_AN" && so.trim()) Object.assign(vbMoi, { [`${mau.ghiLai.khoa}_so`]: `${so.trim()}/${kyHieu}`, [`${mau.ghiLai.khoa}_ngay`]: ngayChu(ngayKy) });
         await luuDuAn({ ...duAn, vanBan: vbMoi });
@@ -131,7 +132,7 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
         setThongBao({ loai: "xanh", noiDung: `Đã tạo ${mau.ten} cho ${dsHoChon.length} hộ, tổ chức.` });
       } else if (mau.phamVi === "DU_AN") {
         const out = dienMau(mauBytes, ghepDuLieu({ mau, duAn, ds, chung, rieng, so, ngayKy }));
-        taiXuong(out, `Mau-${ma}_${tenAnToan(mau.ten)}_${tenAnToan(duAn.ten)}.docx`, DOCX);
+        await taiXuong(out, `Mau-${ma}_${tenAnToan(mau.ten)}_${tenAnToan(duAn.ten)}.docx`, DOCX);
         if (mau.ghiLai && so.trim()) await luuDuAn({ ...duAn, vanBan: { ...(duAn.vanBan ?? {}), ...chung, [`${mau.ghiLai.khoa}_so`]: `${so.trim()}/${kyHieu}`, [`${mau.ghiLai.khoa}_ngay`]: ngayChu(ngayKy) } });
         setThongBao({ loai: "xanh", noiDung: `Đã tạo Mẫu ${ma} cho dự án.` });
       } else {
@@ -145,8 +146,8 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
           if (mau.ghiLai && soHo.trim()) ghi.vanBan = { ...(x.h.vanBan ?? {}), [`${mau.ghiLai.khoa}_so`]: `${soHo.trim()}/${kyHieu}`, [`${mau.ghiLai.khoa}_ngay`]: ngayChu(ngayKy) };
           await luuHo({ ...x.h, ...ghi });
         }
-        if (tep.length === 1) taiXuong(tep[0]!.noiDung, tep[0]!.ten, DOCX);
-        else taiXuong(dongGoiZip(tep), `Mau-${ma}_${tep.length}-ho_${tenAnToan(duAn.ten)}.zip`, "application/zip");
+        if (tep.length === 1) await taiXuong(tep[0]!.noiDung, tep[0]!.ten, DOCX);
+        else await taiXuong(dongGoiZip(tep), `Mau-${ma}_${tep.length}-ho_${tenAnToan(duAn.ten)}.zip`, "application/zip");
         setThongBao({ loai: "xanh", noiDung: `Đã tạo ${tep.length} văn bản Mẫu ${ma}${tep.length > 1 ? " (tệp .zip)" : ""}${coGhi ? "; đã ghi nhật ký hồ sơ." : "."}` });
       }
       if (!coGhi) setThongBao({ loai: "xanh", noiDung: "Đã tạo bản dự thảo. Tài khoản chỉ xem: không ghi số, ngày văn bản và nhật ký vào hồ sơ." });

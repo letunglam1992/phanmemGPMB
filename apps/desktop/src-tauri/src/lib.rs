@@ -114,6 +114,28 @@ fn mo_thu_muc_sao_luu(app: tauri::AppHandle, rieng: String) -> Result<(), String
     Ok(())
 }
 
+/// Mở Explorer, chọn sẵn tệp vừa lưu. Dùng raw_arg: Explorer không hiểu tham số "/select,…" bị Rust bọc ngoặc kép.
+fn mo_explorer_chon(tep: &std::path::Path) {
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        let _ = std::process::Command::new("explorer").raw_arg(format!("/select,\"{}\"", tep.display())).spawn();
+    }
+    #[cfg(not(target_os = "windows"))]
+    let _ = tep;
+}
+
+/// Thư mục lưu tệp tải về: Downloads, không có thì Documents.
+fn thu_muc_tai_ve(app: &tauri::AppHandle) -> Result<PathBuf, String> {
+    let dir = app
+        .path()
+        .download_dir()
+        .or_else(|_| app.path().document_dir())
+        .map_err(|e| format!("Không xác định được thư mục Downloads: {e}"))?;
+    fs::create_dir_all(&dir).map_err(|e| format!("Không tạo được thư mục {}: {e}", dir.display()))?;
+    Ok(dir)
+}
+
 /// Làm sạch tên tệp tải về: bỏ ký tự Windows cấm và phần đường dẫn, giữ chữ có dấu.
 fn ten_tep_an_toan(ten: &str) -> String {
     let goc = ten.rsplit(['/', '\\']).next().unwrap_or("");
@@ -149,16 +171,10 @@ fn luu_tai_xuong(app: tauri::AppHandle, request: Request<'_>) -> Result<String, 
         return Err("Dữ liệu tệp không đúng dạng".into());
     };
     let ten = ten_tep_an_toan(&tieu_de(&request, "ten-tep")?);
-    let dir = app
-        .path()
-        .download_dir()
-        .or_else(|_| app.path().document_dir())
-        .map_err(|e| format!("Không xác định được thư mục Downloads: {e}"))?;
-    fs::create_dir_all(&dir).map_err(|e| format!("Không tạo được thư mục {}: {e}", dir.display()))?;
+    let dir = thu_muc_tai_ve(&app)?;
     let dich = ten_chua_co(&dir, &ten);
     fs::write(&dich, du_lieu).map_err(|e| format!("Không ghi được {}: {e}", dich.display()))?;
-    #[cfg(target_os = "windows")]
-    let _ = std::process::Command::new("explorer").arg(format!("/select,{}", dich.display())).spawn();
+    mo_explorer_chon(&dich);
     Ok(dich.display().to_string())
 }
 
@@ -245,6 +261,34 @@ pub fn run() {
             doc_van_tay_may_chu,
             goi_may_chu
         ])
+        // Cửa sổ chính tạo trong mã để gắn trình xử lý tải xuống của WebView2: mọi lượt tải (kể cả liên kết
+        // blob của giao diện) lưu thẳng vào Downloads, không phụ thuộc giao diện tải mặc định của WebView2.
+        .setup(|app| {
+            let cau_hinh = app.config().app.windows.iter().find(|w| w.label == "main").cloned().ok_or("Thiếu cấu hình cửa sổ main")?;
+            let h = app.handle().clone();
+            tauri::WebviewWindowBuilder::from_config(app.handle(), &cau_hinh)?
+                .on_download(move |_, su_kien| match su_kien {
+                    tauri::webview::DownloadEvent::Requested { destination, .. } => {
+                        let ten = destination.file_name().map(|t| ten_tep_an_toan(&t.to_string_lossy())).unwrap_or_else(|| "tep-tai-ve".into());
+                        match thu_muc_tai_ve(&h) {
+                            Ok(dir) => {
+                                *destination = ten_chua_co(&dir, &ten);
+                                true
+                            }
+                            Err(_) => true, // giữ đường dẫn mặc định của WebView2
+                        }
+                    }
+                    tauri::webview::DownloadEvent::Finished { path, success, .. } => {
+                        if let (true, Some(p)) = (success, path) {
+                            mo_explorer_chon(&p);
+                        }
+                        true
+                    }
+                    _ => true,
+                })
+                .build()?;
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("không khởi động được ứng dụng");
 }

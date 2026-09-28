@@ -20,7 +20,7 @@ export function HopSaoLuu() {
 
   const saoLuu = async (tienTo?: string) => {
     const { bytes, thongTin } = await taoBanSaoLuu(kho);
-    taiXuong(bytes, tenTepSaoLuu(thongTin.luc, tienTo), ZIP);
+    await taiXuong(bytes, tenTepSaoLuu(thongTin.luc, tienTo), ZIP);
     return thongTin;
   };
 

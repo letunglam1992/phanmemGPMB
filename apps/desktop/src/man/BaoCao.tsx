@@ -66,7 +66,7 @@ export function BaoCao() {
 
   async function xuatExcel() {
     const wb = await taoWorkbookBaoCao(bc, docTt(donViSuDung(dsDonVi)).coQuan, kyBaoCao);
-    taiXuong(new Uint8Array(await wb.xlsx.writeBuffer()), `${tenTep}.xlsx`, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    await taiXuong(new Uint8Array(await wb.xlsx.writeBuffer()), `${tenTep}.xlsx`, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     bao("Đã xuất Excel báo cáo tổng hợp");
   }
 
@@ -197,7 +197,7 @@ export function BaoCao() {
           localStorage.setItem(KHOA_TT, JSON.stringify({ ...tt, so: "", ngayKy: "" }));
         } catch { /* lưu tạm không được thì bỏ qua */ }
         const mau = await (await fetch("/mau-van-ban/bao-cao-tong-hop.docx")).arrayBuffer();
-        taiXuong(dienMau(mau, duLieuBaoCaoWord(bc, tt, ss)), `${tenTep}.docx`, "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+        await taiXuong(dienMau(mau, duLieuBaoCaoWord(bc, tt, ss)), `${tenTep}.docx`, "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
         bao("Đã tạo báo cáo Word (dự thảo) — kiểm tra trước khi trình ký");
         setHop(false);
       }} />}
