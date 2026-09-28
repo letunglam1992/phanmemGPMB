@@ -11,6 +11,7 @@
 import type ExcelJS from "exceljs";
 import { D } from "@gpmb/core";
 import { DON_GIA } from "./du-lieu";
+import { maHoTiepTheo, mauMaCua } from "./ma-ho";
 import { thuTinh } from "./bieu-thuc";
 import { TEN_LOAI_DAT } from "./van-ban/loai-dat";
 import { hoMoi, taoId, type DuAn, type Ho, type LoaiDoiTuong, type TaiSan, type Thua } from "./mo-hinh";
@@ -425,10 +426,10 @@ export function kiemTraNhap(tep: TepExcel, ax: AnhXa, duAn: DuAn, hienCo: Ho[], 
   const dem = { ho: 0, nhanKhau: 0, thua: 0, kiemDem: 0 };
   const soLoi = () => loi.filter((l) => l.muc === "LOI").length;
   const maDaDung = new Set([...hienCo.map((h) => h.ma.toLowerCase())]);
-  let soMa = 0;
+  // Mã tự đánh theo mẫu mã của dự án, tiếp số lớn nhất đang dùng (P0-3)
   const maTuDong = () => {
-    let m: string;
-    do m = `H${String(++soMa).padStart(3, "0")}`; while (maDaDung.has(m.toLowerCase()));
+    const m = maHoTiepTheo(maDaDung, mauMaCua(duAn));
+    maDaDung.add(m.toLowerCase());
     return m;
   };
   const loaiTheoTen = (ten: string): LoaiDoiTuong => (LA_TO_CHUC.test(chuanTen(ten)) ? "TO_CHUC" : "HO_GIA_DINH");

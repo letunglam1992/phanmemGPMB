@@ -20,6 +20,7 @@ import { thongTinChungMacDinh } from "../van-ban/du-lieu";
 import { truongVanBanTuDonVi } from "../don-vi";
 import { Chon } from "../thanh-phan/Chon";
 import { RaoLoi } from "../thanh-phan/RaoLoi";
+import { MAU_MA_MAC_DINH, loiMauMa, maHoTiepTheo, mauMaCua, nhomMaTrung, taoMa } from "../ma-ho";
 
 /**
  * Không gian "Hồ sơ" của một dự án: mọi việc chi tiết của dự án ở một chỗ — tổng quan, thông tin dự án
@@ -116,7 +117,7 @@ export function KhongGianDuAn({ duAnId, tab = "tong-quan", ma, hoId }: { duAnId:
 
       {keHoach && <HopKeHoach duAn={duAn} dong={() => setKeHoach(false)} />}
       {capNhatTd && <HopTienDoDuAn duAn={duAn} hos={hos} tabDau={capNhatTd} dong={() => setCapNhatTd(null)} />}
-      {them && <HopThemHo duAnId={duAnId} soHo={hos.length} dong={() => setThem(false)} />}
+      {them && <HopThemHo duAnId={duAnId} dong={() => setThem(false)} />}
       {nhapExcel && <HopNhapExcel duAn={duAn} dong={() => setNhapExcel(false)} />}
     </div>
   );
@@ -162,15 +163,17 @@ function TheTongQuan({ duAn, kq, moHo, capNhatTd, keHoach }: { duAn: DuAn; kq: K
 
 /** Thông tin dự án + thông tin dùng chung cho mọi văn bản của dự án (lưu một lần vào DuAn.vanBan). */
 function TheThongTin({ duAn, tiep }: { duAn: DuAn; tiep: () => void }) {
-  const { luuDuAn, quyen, bao, dsDonVi } = useUngDung();
+  const { luuDuAn, quyen, bao, dsDonVi, hoCua } = useUngDung();
   const [d, setD] = useState<DuAn>(duAn);
   const [chung, setChung] = useState<Record<string, string>>(() => ({ ...thongTinChungMacDinh(duAn), ...truongVanBanTuDonVi(dsDonVi), ...(duAn.vanBan ?? {}) }));
   const [dang, setDang] = useState(false);
   useEffect(() => { setD(duAn); }, [duAn]);
   const goc = { ...thongTinChungMacDinh(duAn), ...truongVanBanTuDonVi(dsDonVi), ...(duAn.vanBan ?? {}) };
   const daDoi = JSON.stringify(d) !== JSON.stringify(duAn) || JSON.stringify(chung) !== JSON.stringify(goc);
-  const { luuDuoc } = kiemTraDuAn(d);
+  const { luuDuoc: luuDuocDa } = kiemTraDuAn(d);
+  const luuDuoc = luuDuocDa && !loiMauMa(d.mauMaHo ?? "");
   const choSua = quyen("SUA_HO_SO");
+  const maTiep = maHoTiepTheo(hoCua(duAn.id).map((h) => h.ma), mauMaCua(d));
   const nhom = [...new Set(TRUONG_CHUNG.map((t) => t.nhom))];
   const luu = async (sangBuocSau = false) => {
     setDang(true);
@@ -195,6 +198,15 @@ function TheThongTin({ duAn, tiep }: { duAn: DuAn; tiep: () => void }) {
         <div className="the">
           <div className="the-dau"><h3>Thông tin dự án</h3><span className="mo chu-nho">dùng cho tính toán</span></div>
           <div className="the-than"><FormDuAn d={d} setD={setD} /></div>
+        </div>
+        <div className="the" style={{ gridColumn: "1" }}>
+          <div className="the-dau"><h3>Mẫu mã hồ sơ</h3><span className="mo chu-nho">do đơn vị đặt</span></div>
+          <div className="the-than">
+            <O nhan="Mẫu mã" goiY={loiMauMa(d.mauMaHo ?? "") ?? <>Dãy <b>#</b> là chỗ đánh số (số dấu # = số chữ số). Ví dụ: <code>H###</code> → {taoMa("H###", 1)}; <code>CM-2026-####</code> → {taoMa("CM-2026-####", 1)}. Mã kế tiếp: <b>{maTiep}</b></>}>
+              <input className={loiMauMa(d.mauMaHo ?? "") ? "loi-nhap" : ""} value={d.mauMaHo ?? ""} placeholder={MAU_MA_MAC_DINH} onChange={(e) => setD({ ...d, mauMaHo: e.target.value })} />
+            </O>
+            <p className="mo chu-nho" style={{ marginBottom: 0 }}>Áp dụng cho hồ sơ tạo mới (thêm tay, nhập Excel không có cột mã, tạo từ bản đồ). Hồ sơ đã có giữ nguyên mã; mã luôn duy nhất trong dự án.</p>
+          </div>
         </div>
         <div className="the">
           <div className="the-dau">
@@ -223,6 +235,7 @@ function TheThongTin({ duAn, tiep }: { duAn: DuAn; tiep: () => void }) {
 
 function TheHo({ duAn, kq }: { duAn: DuAn; kq: Kq }) {
   const { di } = useUngDung();
+  const maTrung = nhomMaTrung(kq.map((x) => x.h));
   const homNay = homNayIso();
   const [loc, setLoc] = useState("");
   const [locTt, setLocTt] = useState<TrangThaiGpmb | "">("");
@@ -237,6 +250,11 @@ function TheHo({ duAn, kq }: { duAn: DuAn; kq: Kq }) {
     .filter((x) => khopTuKhoa({ h: x.h, duAnTen: "" }, loc));
   return (
     <div className="the">
+      {maTrung.length > 0 && (
+        <div className="thong-bao thong-bao-vang" style={{ margin: "0 16px 10px" }}>
+          <b>Có {maTrung.length} mã hồ sơ bị trùng</b> (dữ liệu tạo trước phiên bản 0.4): {maTrung.map((g) => `${g.ma} (${g.ho.map((h) => h.ten).join(", ")})`).join("; ")}. Mở từng hồ sơ, đổi mã ở thẻ Thông tin rồi lưu — phần mềm không tự đổi vì mã có thể đã ghi trong văn bản, biên bản.
+        </div>
+      )}
       <div className="the-dau" style={{ flexWrap: "wrap" }}>
         <h2>Danh sách hộ gia đình, cá nhân, tổ chức</h2>
         <span className="mo">{ds.length}/{kq.length}</span>

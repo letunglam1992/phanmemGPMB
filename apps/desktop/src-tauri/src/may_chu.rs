@@ -539,6 +539,21 @@ fn ghi_ban_ghi(c: &Connection, st: &MayChu, u: &NguoiGoi, loai: &str, id: &str, 
     }
     let pb = cu.as_ref().map(|x| x.1 + 1).unwrap_or(1);
     let du_an_id = if loai == "ho" { moi["duAnId"].as_str().unwrap_or("").to_string() } else { id.to_string() };
+    // P0-3: mã hồ sơ duy nhất trong dự án — chặn khi tạo mới hoặc đổi sang mã đã dùng (mã trùng có sẵn từ dữ liệu cũ
+    // không chặn các sửa đổi khác; khôi phục dữ liệu giữ nguyên như bản sao lưu)
+    if loai == "ho" && !ghi_de {
+        let chuan = |v: &Value| v["ma"].as_str().unwrap_or("").trim().to_uppercase();
+        let ma = chuan(&moi);
+        if !ma.is_empty() && cu_v.as_ref().map(chuan).as_deref() != Some(ma.as_str()) {
+            let mut q = c.prepare("SELECT noi_dung FROM ban_ghi WHERE loai = 'ho' AND du_an_id = ?1 AND id <> ?2").map_err(loi_db)?;
+            let ds = q.query_map(params![du_an_id, id], |r| r.get::<_, String>(0)).map_err(loi_db)?;
+            for x in ds.filter_map(|x| x.ok()).filter_map(|x| serde_json::from_str::<Value>(&x).ok()) {
+                if chuan(&x) == ma {
+                    return Err(loi(StatusCode::CONFLICT, format!("Mã hồ sơ {ma} đã dùng cho \"{}\" trong dự án", x["ten"].as_str().unwrap_or(""))));
+                }
+            }
+        }
+    }
     c.execute(
         "INSERT OR REPLACE INTO ban_ghi(loai, id, du_an_id, phien_ban, noi_dung, sua_luc, sua_boi) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
         params![loai, id, du_an_id, pb, moi.to_string(), bay_gio(), u.ten],

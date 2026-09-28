@@ -19,6 +19,7 @@ import { tenTep } from "../ten-tep";
 import type { DiChuyen } from "@gpmb/core";
 import { Chon } from "../thanh-phan/Chon";
 import { RaoLoi } from "../thanh-phan/RaoLoi";
+import { chuanMa, hoTrungMa } from "../ma-ho";
 import { ghiBanNhap, layBanNhap, xoaBanNhap } from "../ban-nhap";
 
 const CAC_TAB = [
@@ -37,7 +38,7 @@ const CAC_TAB = [
 const CO_COT_BEN: string[] = ["thong-tin", "nhan-khau", "ho-tro", "nhat-ky"];
 
 export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; tabDau?: string }) {
-  const { dsDuAn, hoCua, di, luuHo, chinhSach, xoaHo, quyen } = useUngDung();
+  const { dsDuAn, hoCua, di, luuHo, chinhSach, xoaHo, quyen, bao } = useUngDung();
   const choSua = quyen("SUA_HO_SO");
   const duAn = dsDuAn.find((d) => d.id === duAnId);
   const goc = hoCua(duAnId).find((h) => h.id === hoId);
@@ -67,7 +68,10 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
     ghiBanNhap(moi);
   };
   const luu = async (ghiChu = "Cập nhật hồ sơ") => {
-    await luuHo(h, ghiChu);
+    // Chặn khi đổi sang mã đã dùng; mã trùng có sẵn từ dữ liệu cũ chỉ cảnh báo ở thẻ Thông tin
+    const trung = chuanMa(h.ma) !== chuanMa(goc?.ma ?? "") ? hoTrungMa(hoCua(duAnId), h.ma, h.id) : null;
+    if (trung || !h.ma.trim()) return bao(trung ? `Mã hồ sơ ${h.ma} đã dùng cho “${trung.ten}” — đổi mã ở thẻ Thông tin` : "Chưa có mã hồ sơ", "loi");
+    await luuHo({ ...h, ma: h.ma.trim() }, ghiChu);
     xoaBanNhap(h.id);
     setDaSua(false);
     setDaKhoiPhuc(false);
@@ -299,13 +303,17 @@ const VB_DA_BAN_HANH = [
 ] as const;
 
 function TabThongTin({ h, doi }: Tab) {
+  const { hoCua } = useUngDung();
+  const trung = hoTrungMa(hoCua(h.duAnId), h.ma, h.id);
   const s = (k: keyof Ho) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => doi({ ...h, [k]: e.target.value });
   const vb = h.vanBan ?? {};
   return (
     <div className="luoi">
     <div className="the the-than">
       <div className="luoi luoi-3">
-        <O nhan="Mã hồ sơ"><input value={h.ma} onChange={s("ma")} /></O>
+        <O nhan="Mã hồ sơ" goiY={trung ? <span className="chu-do">Trùng mã với hồ sơ “{trung.ten}” — đổi mã khác</span> : !h.ma.trim() ? <span className="chu-do">Chưa có mã</span> : undefined}>
+          <input className={trung || !h.ma.trim() ? "loi-nhap" : ""} value={h.ma} onChange={s("ma")} />
+        </O>
         <O nhan="Đối tượng">
           <Chon value={h.loai} onChange={(e) => doi({ ...h, loai: e.target.value as LoaiDoiTuong })}>
             {Object.entries(TEN_DOI_TUONG).map(([k, v]) => <option key={k} value={k}>{v}</option>)}

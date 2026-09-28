@@ -254,6 +254,18 @@ async fn may_chu_ghi_lo_nguyen_tu() {
     assert_eq!(ma, 200, "{v}");
     assert_eq!(so_ho().await, 1);
 
+    // P0-3: mã hồ sơ trùng trong dự án bị chặn (tạo mới, đổi mã); dự án khác dùng lại được
+    let (ma, v) = m.goi("PUT", "/api/ho/h10", Some(&cb), json!({ "duLieu": ho("h10", " h009 ") })).await;
+    assert_eq!(ma, 409, "{v}");
+    assert!(v["loi"].as_str().unwrap().contains("H009"), "{v}");
+    assert_eq!(m.goi("PUT", "/api/ho/h10", Some(&cb), json!({ "duLieu": ho("h10", "H010") })).await.0, 200);
+    let (ma, _) = m.goi("PUT", "/api/ho/h10", Some(&cb), json!({ "duLieu": ho("h10", "H009"), "phienBanTruoc": 1 })).await;
+    assert_eq!(ma, 409);
+    let mut o = ho("h11", "H009");
+    o["duAnId"] = json!("da2");
+    assert_eq!(m.goi("PUT", "/api/ho/h11", Some(&cb), json!({ "duLieu": o })).await.0, 200);
+    assert_eq!(m.goi("POST", "/api/lo", Some(&cb), json!({ "xoaHo": ["h10"] })).await.0, 200);
+
     // xóa hồ sơ trong lô
     assert_eq!(m.goi("POST", "/api/lo", Some(&cb), json!({ "xoaHo": ["h9"] })).await.0, 200);
     assert_eq!(so_ho().await, 0);

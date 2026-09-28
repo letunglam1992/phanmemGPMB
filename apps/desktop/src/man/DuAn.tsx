@@ -17,6 +17,7 @@ import { ThePhuongAn } from "../thanh-phan/PhuongAn";
 import { HopNhapExcel } from "../thanh-phan/HopNhapExcel";
 import { HopTienDoDuAn } from "../thanh-phan/TienDoDuAn";
 import { Chon } from "../thanh-phan/Chon";
+import { hoTrungMa, maHoTiepTheo, mauMaCua } from "../ma-ho";
 export { hoMoi };
 
 export const BT_LOAI_DU_AN: Record<LoaiDuAn, string> = { GIAO_THONG: "duong", CONG_NGHIEP: "nhaMay", TAI_DINH_CU: "nha", DO_THI: "toaNha", THUY_LOI: "nuoc", KHAC: "thua" };
@@ -177,9 +178,12 @@ function ChiSoNho({ bt, nhan, gt, phu, bam }: { bt: string; nhan: string; gt: st
   );
 }
 
-export function HopThemHo({ duAnId, soHo, dong }: { duAnId: string; soHo: number; dong: () => void }) {
-  const { luuHo, di } = useUngDung();
-  const [ma, setMa] = useState(`H${String(soHo + 1).padStart(2, "0")}`);
+export function HopThemHo({ duAnId, dong }: { duAnId: string; dong: () => void }) {
+  const { luuHo, di, hoCua, dsDuAn } = useUngDung();
+  const dsHo = hoCua(duAnId);
+  const mau = mauMaCua(dsDuAn.find((d) => d.id === duAnId));
+  const [ma, setMa] = useState(() => maHoTiepTheo(dsHo.map((h) => h.ma), mau));
+  const trung = hoTrungMa(dsHo, ma);
   const [ten, setTen] = useState("");
   const [loai, setLoai] = useState<LoaiDoiTuong>("HO_GIA_DINH");
   return (
@@ -190,12 +194,14 @@ export function HopThemHo({ duAnId, soHo, dong }: { duAnId: string; soHo: number
       chan={
         <>
           <button className="nut" onClick={dong}>Hủy</button>
-          <button className="nut nut-chinh" disabled={!ten.trim() || !ma.trim()} onClick={async () => { const h = hoMoi(duAnId, ma, ten, loai); await luuHo(h, "Tạo hồ sơ"); dong(); di({ ten: "ho", duAnId, hoId: h.id }); }}>Tạo hồ sơ</button>
+          <button className="nut nut-chinh" disabled={!ten.trim() || !ma.trim() || !!trung} onClick={async () => { const h = hoMoi(duAnId, ma.trim(), ten, loai); await luuHo(h, "Tạo hồ sơ"); dong(); di({ ten: "ho", duAnId, hoId: h.id }); }}>Tạo hồ sơ</button>
         </>
       }
     >
       <div className="luoi luoi-2">
-        <O nhan="Mã hồ sơ"><input value={ma} onChange={(e) => setMa(e.target.value)} /></O>
+        <O nhan="Mã hồ sơ" goiY={trung ? <span className="chu-do">Mã đã dùng cho hồ sơ “{trung.ten}”</span> : `Theo mẫu ${mau} (đổi ở Thông tin dự án)`}>
+          <input className={trung ? "loi-nhap" : ""} value={ma} onChange={(e) => setMa(e.target.value)} />
+        </O>
         <O nhan="Đối tượng">
           <Chon value={loai} onChange={(e) => setLoai(e.target.value as LoaiDoiTuong)}>
             {Object.entries(TEN_DOI_TUONG).map(([k, v]) => <option key={k} value={k}>{v}</option>)}

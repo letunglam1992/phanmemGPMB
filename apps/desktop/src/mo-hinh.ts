@@ -263,6 +263,8 @@ export interface DuAn {
    */
   lamTron?: { cach: "LEN" | "NUA_LEN" | "XUONG" | "KHONG"; lyDo: string };
   banDo: BanDoDuAn | null;
+  /** Mẫu mã hồ sơ do người dùng đặt (ma-ho.ts), vd. "H###", "CM-2026-####". Trống = "H###". */
+  mauMaHo?: string;
   /** Thông tin dùng chung khi soạn văn bản (cơ quan, người ký, căn cứ, thành phần…) và số, ngày văn bản cấp dự án. */
   vanBan?: Record<string, string>;
   /** Kế hoạch hoàn thành từng bước (ngày ISO) do cán bộ nhập để theo dõi, cảnh báo chậm tiến độ. */

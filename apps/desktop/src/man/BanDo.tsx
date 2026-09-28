@@ -26,6 +26,7 @@ import { hoMoi } from "./DuAn";
 import { tinhHo } from "../tinh-ho";
 import { THU_TU_TRANG_THAI, TT_GPMB, homNayIso, trangThaiHo, type TrangThaiGpmb } from "../trang-thai";
 import { PhanBoTrangThai } from "../thanh-phan/BieuDo";
+import { boSinhMa, mauMaCua } from "../ma-ho";
 import { Chon } from "../thanh-phan/Chon";
 
 interface DuLieuBanDo {
@@ -418,7 +419,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
         </HopThoai>
       )}
       {taoHo && dl && coPhamVi && (
-        <HopTaoHo duAn={duAn} dl={dl} thuHoi={thuHoi} khoaThua={khoaThua} daLienKet={daLienKet} soHo={hos.length} dong={() => setTaoHo(false)} />
+        <HopTaoHo duAn={duAn} dl={dl} thuHoi={thuHoi} khoaThua={khoaThua} daLienKet={daLienKet} dong={() => setTaoHo(false)} />
       )}
     </div>
   );
@@ -914,10 +915,9 @@ function HopTaoHo(p: {
   thuHoi: Map<string, DienTichThuHoi>;
   khoaThua: (t: ThuaBanDo) => string;
   daLienKet: Map<string, Ho>;
-  soHo: number;
   dong: () => void;
 }) {
-  const { kho, taiLai, di, quyen, bao, nguoiDung } = useUngDung();
+  const { kho, taiLai, di, quyen, bao, nguoiDung, hoCua } = useUngDung();
   const nhom = useMemo(() => {
     const m = new Map<string, { ten: string; thua: { t: ThuaBanDo; th: DienTichThuHoi }[] }>();
     for (const t of p.dl.kq.thua) {
@@ -946,11 +946,11 @@ function HopTaoHo(p: {
     if (!quyen("SUA_HO_SO")) return bao("Tài khoản không có quyền tạo hồ sơ", "loi");
     if (soNghiVan > 0 && !daXacNhan) return bao("Cần xác nhận đã kiểm tra các thửa có nghi vấn", "loi");
     setDangTao(true);
-    let i = p.soHo;
+    // Mã theo mẫu của dự án, tiếp số lớn nhất đang dùng — không trùng hồ sơ đã có (P0-3)
+    const maMoi = boSinhMa(hoCua(p.duAn.id).map((h) => h.ma), mauMaCua(p.duAn));
     const dsMoi: Ho[] = [];
     for (const g of nhom) {
-      i++;
-      const h = hoMoi(p.duAn.id, `H${String(i).padStart(3, "0")}`, g.ten, /ubnd|cộng đồng|tập thể|công ty|hợp tác/i.test(g.ten) ? "TO_CHUC" : "HO_GIA_DINH");
+      const h = hoMoi(p.duAn.id, maMoi(), g.ten, /ubnd|cộng đồng|tập thể|công ty|hợp tác/i.test(g.ten) ? "TO_CHUC" : "HO_GIA_DINH");
       h.thua = g.thua.map(({ t, th }) => ({
         id: taoId(),
         soTo: t.soTo ?? "",
