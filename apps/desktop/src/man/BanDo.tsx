@@ -26,6 +26,7 @@ import { hoMoi } from "./DuAn";
 import { tinhHo } from "../tinh-ho";
 import { THU_TU_TRANG_THAI, TT_GPMB, homNayIso, trangThaiHo, type TrangThaiGpmb } from "../trang-thai";
 import { PhanBoTrangThai } from "../thanh-phan/BieuDo";
+import { Chon } from "../thanh-phan/Chon";
 
 interface DuLieuBanDo {
   ban: KetQuaDocDgn;
@@ -293,11 +294,11 @@ export function BanDo({ duAnId }: { duAnId: string }) {
                 <h3>Thửa</h3>
                 <span className="mo chu-nho">{dsThua.length}/{dl.kq.thua.length}</span>
                 <div className="phai">
-                  <select value={loc} onChange={(e) => setLoc(e.target.value as typeof loc)}>
+                  <Chon value={loc} onChange={(e) => setLoc(e.target.value as typeof loc)}>
                     <option value="TRONG_RANH">Trong ranh</option>
                     <option value="TAT_CA">Tất cả</option>
                     <option value="CO_CO">Có nghi vấn</option>
-                  </select>
+                  </Chon>
                 </div>
               </div>
               <div className="bang-cuon">
@@ -795,10 +796,10 @@ function KhungVe(p: {
           <label key={k}><input type="checkbox" checked={lop[k]} onChange={(e) => setLop({ ...lop, [k]: e.target.checked })} /> {ten}</label>
         ))}
         <label className="mo" title="Cần kết nối Internet tới máy chủ bản đồ ngoài — tắt theo yêu cầu không gửi dữ liệu ra ngoài"><input type="checkbox" disabled /> Ảnh vệ tinh (trực tuyến – tắt)</label>
-        <select value={cheDo} onChange={(e) => setCheDo(e.target.value as typeof cheDo)} style={{ marginTop: 4 }}>
+        <Chon value={cheDo} onChange={(e) => setCheDo(e.target.value as typeof cheDo)} style={{ marginTop: 4 }}>
           <option value="HIEN_TRANG">Tô theo hiện trạng GPMB</option>
           <option value="PHAM_VI">Tô theo phạm vi thu hồi</option>
-        </select>
+        </Chon>
       </div>
       <svg className="mui-ten-bac" width={40} height={52} viewBox="0 0 40 52" aria-label="Hướng Bắc">
         <circle cx={20} cy={30} r={17} fill="rgba(255,255,255,0.92)" stroke="#c4ccc8" />

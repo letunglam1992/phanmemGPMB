@@ -4,6 +4,7 @@ import { BUOC_CHUNG, CAC_BUOC, TEN_TRANG_THAI_BUOC, laBuocChung, tienDoHieuLuc, 
 import { kiemTraDuyetBuoc } from "../tai-khoan";
 import { homNayIso } from "../trang-thai";
 import { HopThoai, O, ngayVN } from "./chung";
+import { Chon } from "./Chon";
 
 export const LOP_TRANG_THAI_BUOC: Record<TrangThaiBuoc, string> = { XONG: "nhan-xanh", DANG: "nhan-duong", CHO_DUYET: "nhan-tim", CHUA: "nhan-xam" };
 const BUOC_RIENG = CAC_BUOC.filter((b) => !laBuocChung(b.ma));
@@ -26,7 +27,8 @@ export function HopTienDoDuAn({ duAn, hos, dong, tabDau = "chung" }: { duAn: DuA
   );
 }
 
-function BuocChung({ duAn, hos }: { duAn: DuAn; hos: Ho[] }) {
+/** Bước chung 1–4 của dự án; `tiep` (không gian dự án) = nút "Lưu và tiếp" sang nhập hộ. */
+export function BuocChung({ duAn, hos, tiep }: { duAn: DuAn; hos: Ho[]; tiep?: { nhan: string; di: () => void } }) {
   const { luuDuAn, ghiNhatKy, taiKhoan, quyen, bao } = useUngDung();
   const goc = duAn.tienDoChung ?? {};
   const [nhap, setNhap] = useState<Record<string, BuocHo>>(() => Object.fromEntries(BUOC_CHUNG.map((ma) => [ma, goc[ma] ?? { trangThai: "CHUA" }])));
@@ -67,10 +69,10 @@ function BuocChung({ duAn, hos }: { duAn: DuAn; hos: Ho[] }) {
     <div className="luoi" style={{ gap: 12 }}>
       <div className="thong-bao thong-bao-xanh" style={{ marginBottom: 0 }}>
         Bước 1–4 (kế hoạch, họp dân, thông báo thu hồi, điều tra – kiểm đếm) thực hiện chung cho cả dự án: cập nhật ở đây một lần là áp dụng cho <b>{hos.length}</b> hộ, cá nhân, tổ chức — không phải tích từng hộ.
-        Hộ cần theo dõi riêng (vd. không hợp tác, phải kiểm đếm bắt buộc) đánh dấu ở tab Tiến độ của hồ sơ hộ.
+        Sau bước chung, nhập hộ, cá nhân, tổ chức (nhập tay, Excel hoặc từ bản đồ); từ bước 5 mỗi hộ có tiến độ riêng và ghi khó khăn, vướng mắc theo từng bước ở hồ sơ hộ.
       </div>
       <table className="bang">
-        <thead><tr><th style={{ width: 36 }}>Bước</th><th>Nội dung</th><th style={{ width: 150 }}>Trạng thái</th><th style={{ width: 150 }}>Ngày</th><th>Nội dung thực hiện, số văn bản</th><th style={{ width: 210 }} /></tr></thead>
+        <thead><tr><th style={{ width: 36 }}>Bước</th><th>Nội dung</th><th style={{ width: 180 }}>Trạng thái</th><th style={{ width: 160 }}>Ngày</th><th>Nội dung thực hiện, số văn bản</th><th style={{ width: 210 }} /></tr></thead>
         <tbody>
           {BUOC_CHUNG.map((ma) => {
             const x = CAC_BUOC.find((b) => b.ma === ma)!;
@@ -92,10 +94,10 @@ function BuocChung({ duAn, hos }: { duAn: DuAn; hos: Ho[] }) {
                   {b.trangThai === "CHO_DUYET" || b.trangThai === "XONG" ? (
                     <span className={`nhan ${LOP_TRANG_THAI_BUOC[b.trangThai]}`}>{TEN_TRANG_THAI_BUOC[b.trangThai]}</span>
                   ) : (
-                    <select value={b.trangThai} onChange={(e) => dat(ma, { trangThai: e.target.value as TrangThaiBuoc })}>
+                    <Chon value={b.trangThai} onChange={(e) => dat(ma, { trangThai: e.target.value as TrangThaiBuoc })}>
                       <option value="CHUA">{TEN_TRANG_THAI_BUOC.CHUA}</option>
                       <option value="DANG">{TEN_TRANG_THAI_BUOC.DANG}</option>
-                    </select>
+                    </Chon>
                   )}
                 </td>
                 <td><input type="date" value={b.ngay ?? ""} onChange={(e) => dat(ma, { ngay: e.target.value || undefined })} /></td>
@@ -114,7 +116,12 @@ function BuocChung({ duAn, hos }: { duAn: DuAn; hos: Ho[] }) {
       </table>
       <div className="nhom-nut" style={{ justifyContent: "flex-end" }}>
         {daDoi && <span className="nhan nhan-vang">Chưa lưu</span>}
-        <button className="nut nut-chinh" disabled={!daDoi || dang || !quyen("SUA_HO_SO")} onClick={() => luu(nhap, "Cập nhật bước chung của dự án")}>Lưu ngày, ghi chú, trạng thái</button>
+        <button className={`nut ${tiep ? "" : "nut-chinh"}`} disabled={!daDoi || dang || !quyen("SUA_HO_SO")} onClick={() => luu(nhap, "Cập nhật bước chung của dự án")}>Lưu ngày, ghi chú, trạng thái</button>
+        {tiep && (
+          <button className="nut nut-chinh" disabled={dang || (daDoi && !quyen("SUA_HO_SO"))} title="Lưu (nếu có thay đổi) rồi chuyển sang nhập hộ, cá nhân, tổ chức" onClick={async () => { if (daDoi) await luu(nhap, "Cập nhật bước chung của dự án"); tiep.di(); }}>
+            {daDoi ? "Lưu và tiếp" : "Tiếp"}: {tiep.nhan} →
+          </button>
+        )}
       </div>
     </div>
   );
@@ -182,19 +189,19 @@ function HangLoat({ duAn, hos }: { duAn: DuAn; hos: Ho[] }) {
     <div className="luoi" style={{ gap: 12 }}>
       <div className="luoi" style={{ gridTemplateColumns: "minmax(0,2fr) minmax(0,1.2fr) minmax(0,1fr)", gap: 10 }}>
         <O nhan="Bước">
-          <select value={buoc} onChange={(e) => { setBuoc(e.target.value); setChon(new Set()); setKetQua(null); }}>
+          <Chon value={buoc} onChange={(e) => { setBuoc(e.target.value); setChon(new Set()); setKetQua(null); }}>
             {BUOC_RIENG.map((x) => {
               const xong = hos.filter((h) => td.get(h.id)?.[x.ma]?.trangThai === "XONG").length;
               return <option key={x.ma} value={x.ma}>{x.ma}. {x.ten} — {xong}/{hos.length} hộ xong</option>;
             })}
-          </select>
+          </Chon>
         </O>
         <O nhan="Chuyển sang">
-          <select value={hanhDong} onChange={(e) => { setHanhDong(e.target.value as typeof hanhDong); setKetQua(null); }}>
+          <Chon value={hanhDong} onChange={(e) => { setHanhDong(e.target.value as typeof hanhDong); setKetQua(null); }}>
             <option value="DANG">Đang thực hiện</option>
             <option value="CHO_DUYET">Gửi duyệt (chờ xác nhận)</option>
             <option value="XONG">Xác nhận hoàn thành</option>
-          </select>
+          </Chon>
         </O>
         <O nhan="Ngày thực hiện / hoàn thành"><input type="date" value={ngay} onChange={(e) => setNgay(e.target.value)} /></O>
         <O nhan="Nội dung thực hiện, số văn bản (ghi cho mọi hộ được chọn; để trống = giữ ghi chú cũ)" style={{ gridColumn: "1 / -1" }}>

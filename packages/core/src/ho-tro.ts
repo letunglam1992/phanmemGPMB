@@ -129,3 +129,78 @@ export function tamCu(
     luaChon,
   });
 }
+
+/* ---------------- Hỗ trợ tái định cư ---------------- */
+
+function tdc(cs: BoChinhSach) {
+  if (!cs.taiDinhCu) throw new Error(`Bộ chính sách ${cs.ma} không có quy định hỗ trợ tái định cư`);
+  return cs.taiDinhCu;
+}
+
+/** C08 – hỗ trợ để tự lo chỗ ở (k8 Đ111 LĐĐ 2024; k1, k2 Đ23 NĐ 88/2024; Đ10 PL II QĐ 106/2025). */
+export function hoTroTuLoChoO(cs: BoChinhSach, p: { xa: string }): DongTinh {
+  const k = tdc(cs).tuLoChoO;
+  const nhom = nhomDiaBan(k.phanNhom, p.xa, "XA_CON_LAI");
+  const muc = D(k.mucTheoNhom[nhom]!);
+  return dong({
+    ma: "C08",
+    noiDung: "Hỗ trợ tái định cư – tự lo chỗ ở",
+    thamSo: { "Địa bàn": `${p.xa} → nhóm ${nhom}`, "Mức hỗ trợ": `${dinhDang(muc)} đ/hộ` },
+    congThuc: "Mức hỗ trợ theo địa bàn (đ/hộ)",
+    thanhTien: muc,
+    canCu: k.canCu,
+    canhBao: ["Điều kiện: hộ đủ điều kiện được hỗ trợ tái định cư theo khoản 8 Điều 111 Luật Đất đai và có nhu cầu tự lo chỗ ở — cán bộ xác nhận"],
+  });
+}
+
+/** Diện tích một suất tái định cư tối thiểu (Đ16 PL II QĐ 106): đất ở 40 m² (phường) / 60 m² (xã); nhà ở 40 m². */
+export function dienTichSuatToiThieu(cs: BoChinhSach, p: { xa: string; hinhThuc: "DAT_O" | "NHA_O" }): string {
+  const k = tdc(cs).suatToiThieu;
+  if (p.hinhThuc === "NHA_O") return k.nhaOM2;
+  return p.xa.startsWith("Phường") ? k.datOPhuongM2 : k.datOXaM2;
+}
+
+/**
+ * C10 – hỗ trợ đủ một suất tái định cư tối thiểu (k8 Đ111 LĐĐ 2024): người có đất ở thu hồi phải di chuyển chỗ ở,
+ * được bồi thường bằng giao đất ở / nhà ở TĐC mà tiền bồi thường về đất ở không đủ một suất tối thiểu.
+ * Giá trị suất = đơn giá (giá đất ở tại khu TĐC hoặc giá bán nhà TĐC) × diện tích suất tối thiểu (Đ16 PL II QĐ 106).
+ */
+export function hoTroSuatToiThieu(
+  cs: BoChinhSach,
+  p: { xa: string; hinhThuc: "DAT_O" | "NHA_O"; donGiaDongM2: SoVao; nguonGia: string; tienBoiThuongDatO: SoVao },
+): DongTinh {
+  const k = tdc(cs).suatToiThieu;
+  const dt = D(dienTichSuatToiThieu(cs, p));
+  const giaTri = D(p.donGiaDongM2).mul(dt);
+  const bt = D(p.tienBoiThuongDatO);
+  const chenh = giaTri.minus(bt);
+  return dong({
+    ma: "C10",
+    noiDung: `Hỗ trợ đủ suất tái định cư tối thiểu (${p.hinhThuc === "NHA_O" ? "nhà ở" : "đất ở"})`,
+    thamSo: {
+      "Suất tối thiểu": `${dinhDang(dt)} m² ${p.hinhThuc === "NHA_O" ? "nhà ở" : `đất ở (${p.xa.startsWith("Phường") ? "phường" : "xã"})`}`,
+      [p.hinhThuc === "NHA_O" ? "Giá bán nhà TĐC" : "Giá đất ở khu TĐC"]: `${dinhDang(p.donGiaDongM2)} đ/m² (${p.nguonGia || "chưa ghi văn bản"})`,
+      "Giá trị suất": `${dinhDang(giaTri)} đ`,
+      "Tiền bồi thường về đất ở": `${dinhDang(bt)} đ`,
+    },
+    congThuc: "max(0; Đơn giá × DT suất tối thiểu − Tiền bồi thường về đất ở)",
+    thanhTien: chenh.gt(0) ? chenh : D(0),
+    canCu: k.canCu,
+    canhBao: chenh.gt(0) ? [] : ["Tiền bồi thường về đất ở đã đủ một suất tái định cư tối thiểu — không phát sinh hỗ trợ"],
+  });
+}
+
+/** C11 – hỗ trợ 20% tiền sử dụng đất phải nộp của thửa đất được giao tái định cư (k11 Đ6 QĐ 14/2026; VM-28). */
+export function hoTroTienSddTdc(cs: BoChinhSach, p: { tienSddPhaiNop: SoVao; moTa: string }): DongTinh {
+  const k = tdc(cs).hoTroTienSdd;
+  const tien = D(p.tienSddPhaiNop);
+  return dong({
+    ma: "C11",
+    noiDung: "Hỗ trợ tiền sử dụng đất thửa đất được giao tái định cư",
+    thamSo: { "Tiền SDĐ phải nộp": `${dinhDang(tien)} đ (${p.moTa})`, "Tỷ lệ": `${dinhDang(D(k.tyLe).mul(100))}%` },
+    congThuc: "Tỷ lệ × Tiền sử dụng đất phải nộp",
+    thanhTien: tien.mul(k.tyLe),
+    canCu: k.canCu,
+    canhBao: [k.ghiChu],
+  });
+}

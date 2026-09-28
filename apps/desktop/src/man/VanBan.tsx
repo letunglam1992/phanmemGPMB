@@ -9,6 +9,7 @@ import { dienMau, dongGoiZip, truongTrongMau } from "../van-ban/dien-mau";
 import { HopThoai, O } from "../thanh-phan/chung";
 import { taiXuong } from "../tai-xuong";
 import { tenTep } from "../ten-tep";
+import { Chon } from "../thanh-phan/Chon";
 
 /** Thông tin chung của dự án dùng khi soạn văn bản (lưu vào DuAn.vanBan). */
 export const TRUONG_CHUNG: (TruongNhap & { nhom: string })[] = [
@@ -196,9 +197,9 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
           <div className="mo-ta">22 mẫu của Sổ tay ban hành kèm Quyết định số 1966/QĐ-UBND ngày 05/8/2025 · tự điền từ hồ sơ · xuất .docx để chỉnh tiếp trong Word</div>
         </div>
         <div className="phai">
-          <select value={duAnId} onChange={(e) => di({ ten: "van-ban", duAnId: e.target.value })}>
+          <Chon value={duAnId} onChange={(e) => di({ ten: "van-ban", duAnId: e.target.value })}>
             {dsDuAn.map((d) => <option key={d.id} value={d.id}>{d.ten}</option>)}
-          </select>
+          </Chon>
         </div>
       </div>
 
@@ -263,9 +264,9 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
                   {mau.nhapThem.map((t) => (
                     <O key={t.truong} nhan={t.nhan} goiY={t.goiY} style={t.nhieuDong ? { gridColumn: "1/-1" } : undefined}>
                       {t.luaChon ? (
-                        <select value={rieng[t.truong] ?? ""} onChange={(e) => setRieng({ ...rieng, [t.truong]: e.target.value })}>
+                        <Chon value={rieng[t.truong] ?? ""} onChange={(e) => setRieng({ ...rieng, [t.truong]: e.target.value })}>
                           {t.luaChon.map((l) => <option key={l.giaTri} value={l.giaTri}>{l.nhan}</option>)}
-                        </select>
+                        </Chon>
                       ) : t.nhieuDong ? (
                         <textarea rows={3} value={rieng[t.truong] ?? ""} onChange={(e) => setRieng({ ...rieng, [t.truong]: e.target.value })} placeholder="Để trống = in dấu chấm để viết tay" />
                       ) : (

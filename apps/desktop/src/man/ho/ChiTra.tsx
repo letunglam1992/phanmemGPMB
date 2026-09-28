@@ -6,6 +6,7 @@ import { O, ngayVN } from "../../thanh-phan/chung";
 import { TEN_HINH_THUC, tinhChiTra, type DotChi, type HinhThucChi } from "../../chi-tra";
 import { taoId, type DuAn, type Ho } from "../../mo-hinh";
 import { homNayIso } from "../../trang-thai";
+import { Chon } from "../../thanh-phan/Chon";
 
 const tien = (d: Decimal | null | undefined) => (d ? dinhDang(d, 0) : "—");
 
@@ -75,9 +76,9 @@ export function TabChiTra({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) =>
           <O nhan="Ngày chi"><input type="date" value={moi.ngay} onChange={(e) => setMoi({ ...moi, ngay: e.target.value })} /></O>
           <O nhan="Số tiền (đ)"><input className="o-so" value={moi.soTien} placeholder={r.conLai?.gt(0) ? r.conLai.toFixed(0) : ""} onChange={(e) => setMoi({ ...moi, soTien: e.target.value })} /></O>
           <O nhan="Hình thức">
-            <select value={moi.hinhThuc} onChange={(e) => setMoi({ ...moi, hinhThuc: e.target.value as HinhThucChi })}>
+            <Chon value={moi.hinhThuc} onChange={(e) => setMoi({ ...moi, hinhThuc: e.target.value as HinhThucChi })}>
               {(Object.keys(TEN_HINH_THUC) as HinhThucChi[]).map((k) => <option key={k} value={k}>{TEN_HINH_THUC[k]}</option>)}
-            </select>
+            </Chon>
           </O>
           <O nhan="Chứng từ"><input value={moi.chungTu} placeholder="Số phiếu chi / UNC / biên bản" onChange={(e) => setMoi({ ...moi, chungTu: e.target.value })} /></O>
           <O nhan="Ghi chú" style={{ flex: 1, minWidth: 180 }}><input value={moi.ghiChu} onChange={(e) => setMoi({ ...moi, ghiChu: e.target.value })} /></O>
@@ -99,11 +100,11 @@ export function TabChiTra({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) =>
           </table>
           <div className="the-than luoi luoi-2">
             <O nhan="Nguyên nhân chậm (cán bộ xác nhận)">
-              <select value={ct.nguyenNhanCham ?? ""} onChange={(e) => datCt({ nguyenNhanCham: e.target.value as "" | "DO_CO_QUAN" | "DO_NGUOI_DAN" })}>
+              <Chon value={ct.nguyenNhanCham ?? ""} onChange={(e) => datCt({ nguyenNhanCham: e.target.value as "" | "DO_CO_QUAN" | "DO_NGUOI_DAN" })}>
                 <option value="">— Chưa xác nhận —</option>
                 <option value="DO_CO_QUAN">Do cơ quan, đơn vị thực hiện bồi thường chậm chi trả</option>
                 <option value="DO_NGUOI_DAN">Do người có đất không nhận / chưa đến nhận</option>
-              </select>
+              </Chon>
             </O>
             <O nhan="Ghi chú, căn cứ xác định"><input value={ct.ghiChuCham ?? ""} onChange={(e) => datCt({ ghiChuCham: e.target.value })} /></O>
           </div>

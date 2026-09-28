@@ -20,6 +20,7 @@ import {
   type TepExcel,
 } from "../nhap-excel";
 import type { DuAn } from "../mo-hinh";
+import { Chon } from "./Chon";
 
 const XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
@@ -186,10 +187,10 @@ function AnhXaCot(p: { tep: TepExcel; ax: AnhXa; setAx: (a: AnhXa) => void; the:
       <div className="luoi" style={{ gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1fr)", gap: 10, alignItems: "end" }}>
         <label className="o-nhap">
           <span className="chu-nho mo">Trang trong tệp</span>
-          <select value={a.trang ?? ""} onChange={(e) => doiTrang(e.target.value)}>
+          <Chon value={a.trang ?? ""} onChange={(e) => doiTrang(e.target.value)}>
             <option value="">— Không nhập {TEN_LOAI_TRANG[p.the].toLowerCase()} —</option>
             {p.tep.trang.map((t) => <option key={t.ten} value={t.ten}>{t.ten} ({t.soDong} dòng)</option>)}
-          </select>
+          </Chon>
         </label>
         <label className="o-nhap">
           <span className="chu-nho mo">Dòng tiêu đề</span>
@@ -212,12 +213,12 @@ function AnhXaCot(p: { tep: TepExcel; ax: AnhXa; setAx: (a: AnhXa) => void; the:
                         {t.ghiChu && <div className="mo chu-nho">{t.ghiChu}</div>}
                       </td>
                       <td>
-                        <select className={thieu ? "o-loi" : ""} value={c ?? ""} onChange={(e) => dat({ cot: { ...a.cot, [t.khoa]: e.target.value ? Number(e.target.value) : null } })}>
+                        <Chon className={thieu ? "o-loi" : ""} value={c ?? ""} onChange={(e) => dat({ cot: { ...a.cot, [t.khoa]: e.target.value ? Number(e.target.value) : null } })}>
                           <option value="">— Không có —</option>
                           {Array.from({ length: soCot }, (_, i) => i + 1).map((i) => (
                             <option key={i} value={i}>Cột {chuCot(i)}: {nhan[i - 1] || "(trống)"}</option>
                           ))}
-                        </select>
+                        </Chon>
                       </td>
                     </tr>
                   );

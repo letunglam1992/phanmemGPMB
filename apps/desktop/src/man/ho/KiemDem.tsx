@@ -3,6 +3,7 @@ import type { LoaiDuong, LoaiVatNuoi } from "@gpmb/core";
 import { thuTinh } from "../../bieu-thuc";
 import { taoId, type Ho, type TaiSan, type Thua } from "../../mo-hinh";
 import { ChonDonGia } from "../../thanh-phan/ChonDonGia";
+import { Chon } from "../../thanh-phan/Chon";
 
 const TEN_LOAI: Record<TaiSan["loai"], [string, string]> = {
   NHA_CT: ["Nhà, CT", "nhan-duong"],
@@ -115,9 +116,9 @@ function TheThua(p: {
                   <td><span className={`nhan ${TEN_LOAI[x.loai][1]}`}>{TEN_LOAI[x.loai][0]}</span></td>
                   <td>
                     {x.loai === "VAT_NUOI" ? (
-                      <select value={x.loaiVatNuoi} onChange={(e) => sua(x.id, { loaiVatNuoi: e.target.value as LoaiVatNuoi })}>
+                      <Chon value={x.loaiVatNuoi} onChange={(e) => sua(x.id, { loaiVatNuoi: e.target.value as LoaiVatNuoi })}>
                         {Object.entries(VAT_NUOI).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                      </select>
+                      </Chon>
                     ) : (
                       <input value={x.ten} onChange={(e) => sua(x.id, { ten: e.target.value })} />
                     )}
@@ -155,14 +156,14 @@ function ThamSo({ x, sua }: { x: TaiSan; sua: (id: string, p: Partial<TaiSan>) =
   if (x.loai === "NHA_CT")
     return (
       <div style={st}>
-        <select value={x.cachTinh} onChange={(e) => sua(x.id, { cachTinh: e.target.value as "THIET_HAI_THUC_TE" | "HE_SO" })} style={{ gridColumn: "1/3" }}>
+        <Chon value={x.cachTinh} onChange={(e) => sua(x.id, { cachTinh: e.target.value as "THIET_HAI_THUC_TE" | "HE_SO" })} style={{ gridColumn: "1/3" }}>
           <option value="THIET_HAI_THUC_TE">Thiệt hại thực tế (T, T1)</option>
           <option value="HE_SO">KL × hệ số × đơn giá</option>
-        </select>
-        <select value={x.phan} onChange={(e) => sua(x.id, { phan: e.target.value as "BOI_THUONG" | "HO_TRO" })}>
+        </Chon>
+        <Chon value={x.phan} onChange={(e) => sua(x.id, { phan: e.target.value as "BOI_THUONG" | "HO_TRO" })}>
           <option value="BOI_THUONG">Bồi thường</option>
           <option value="HO_TRO">Hỗ trợ</option>
-        </select>
+        </Chon>
         {x.cachTinh === "THIET_HAI_THUC_TE" ? (
           <>
             <input placeholder="T (năm)" title="Thời gian khấu hao" className={x.T ? "" : "loi-nhap"} value={x.T ?? ""} onChange={(e) => sua(x.id, { T: e.target.value })} />
@@ -184,20 +185,20 @@ function ThamSo({ x, sua }: { x: TaiSan; sua: (id: string, p: Partial<TaiSan>) =
   if (x.loai === "VAT_NUOI")
     return (
       <div style={st}>
-        <select value={x.loaiDuong} onChange={(e) => sua(x.id, { loaiDuong: e.target.value as LoaiDuong })}>
+        <Chon value={x.loaiDuong} onChange={(e) => sua(x.id, { loaiDuong: e.target.value as LoaiDuong })}>
           <option value="CUNG_HOA">Đường cứng hóa</option>
           <option value="DUONG_DAT">Đường đất</option>
-        </select>
+        </Chon>
         <input placeholder="Quãng đường (km)" value={x.quangDuongKm} onChange={(e) => sua(x.id, { quangDuongKm: e.target.value })} />
       </div>
     );
   return (
     <div style={st}>
       <input placeholder="Hệ số" value={x.heSo} onChange={(e) => sua(x.id, { heSo: e.target.value })} />
-      <select value={x.phan} onChange={(e) => sua(x.id, { phan: e.target.value as "BOI_THUONG" | "HO_TRO" })}>
+      <Chon value={x.phan} onChange={(e) => sua(x.id, { phan: e.target.value as "BOI_THUONG" | "HO_TRO" })}>
         <option value="BOI_THUONG">Bồi thường</option>
         <option value="HO_TRO">Hỗ trợ</option>
-      </select>
+      </Chon>
       <input placeholder="Căn cứ đơn giá *" className={x.canCu ? "" : "loi-nhap"} value={x.canCu} onChange={(e) => sua(x.id, { canCu: e.target.value })} />
     </div>
   );

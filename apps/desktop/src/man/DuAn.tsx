@@ -16,6 +16,7 @@ import { BanDoNho } from "../thanh-phan/BanDoNho";
 import { ThePhuongAn } from "../thanh-phan/PhuongAn";
 import { HopNhapExcel } from "../thanh-phan/HopNhapExcel";
 import { HopTienDoDuAn } from "../thanh-phan/TienDoDuAn";
+import { Chon } from "../thanh-phan/Chon";
 export { hoMoi };
 
 export const BT_LOAI_DU_AN: Record<LoaiDuAn, string> = { GIAO_THONG: "duong", CONG_NGHIEP: "nhaMay", TAI_DINH_CU: "nha", DO_THI: "toaNha", THUY_LOI: "nuoc", KHAC: "thua" };
@@ -92,13 +93,13 @@ export function ManDuAn({ duAnId: idVao }: { duAnId?: string }) {
           <h2>Dự án đang theo dõi</h2><span className="mo">({hienThiDa.length} dự án)</span>
           <div className="phai">
             <label className="o-tim" style={{ minWidth: 260 }}><BieuTuong ten="traCuu" co={16} /><input value={timDa} onChange={(e) => setTimDa(e.target.value)} placeholder="Tìm dự án theo tên, địa điểm…" aria-label="Tìm dự án" /></label>
-            <select value={locDa} onChange={(e) => setLocDa(e.target.value as TrangThaiDuAn | "")} aria-label="Lọc trạng thái dự án">
+            <Chon value={locDa} onChange={(e) => setLocDa(e.target.value as TrangThaiDuAn | "")} aria-label="Lọc trạng thái dự án">
               <option value="">Tất cả trạng thái</option>
               {(Object.keys(TEN_TRANG_THAI_DU_AN) as TrangThaiDuAn[]).map((t) => <option key={t} value={t}>{TEN_TRANG_THAI_DU_AN[t]}</option>)}
-            </select>
-            <select value={sapXep} onChange={(e) => setSapXep(e.target.value as SapXep)} aria-label="Sắp xếp">
+            </Chon>
+            <Chon value={sapXep} onChange={(e) => setSapXep(e.target.value as SapXep)} aria-label="Sắp xếp">
               <option value="MOI">Mới nhất</option><option value="TEN">Tên A → Z</option><option value="TIEN_DO">Tiến độ cao nhất</option><option value="TIEN">Tạm tính lớn nhất</option>
-            </select>
+            </Chon>
             <div className="nhom-chuyen" role="group" aria-label="Kiểu hiển thị">
               <button className={dangLuoi ? "chon" : ""} onClick={() => setDangLuoi(true)} aria-label="Dạng thẻ" title="Dạng thẻ"><BieuTuong ten="luoi" co={16} /></button>
               <button className={!dangLuoi ? "chon" : ""} onClick={() => setDangLuoi(false)} aria-label="Dạng bảng" title="Dạng bảng"><BieuTuong ten="danhSach" co={16} /></button>
@@ -196,9 +197,9 @@ export function HopThemHo({ duAnId, soHo, dong }: { duAnId: string; soHo: number
       <div className="luoi luoi-2">
         <O nhan="Mã hồ sơ"><input value={ma} onChange={(e) => setMa(e.target.value)} /></O>
         <O nhan="Đối tượng">
-          <select value={loai} onChange={(e) => setLoai(e.target.value as LoaiDoiTuong)}>
+          <Chon value={loai} onChange={(e) => setLoai(e.target.value as LoaiDoiTuong)}>
             {Object.entries(TEN_DOI_TUONG).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-          </select>
+          </Chon>
         </O>
         <O nhan="Họ tên chủ hộ / tên tổ chức" style={{ gridColumn: "1/-1" }}><input value={ten} onChange={(e) => setTen(e.target.value)} autoFocus /></O>
       </div>

@@ -6,6 +6,7 @@ import { CAC_BUOC } from "../mo-hinh";
 import { BangHo, type DongHo } from "../thanh-phan/BangHo";
 import { BieuTuong } from "../thanh-phan/BieuDo";
 import { khopTuKhoa } from "../tim-kiem";
+import { Chon } from "../thanh-phan/Chon";
 export { khongDau, khopTuKhoa } from "../tim-kiem";
 
 export function DanhSachHo(p: { duAnId?: string; trangThai?: string; chang?: string; tim?: string }) {
@@ -41,18 +42,18 @@ export function DanhSachHo(p: { duAnId?: string; trangThai?: string; chang?: str
             <BieuTuong ten="traCuu" co={17} />
             <input value={tim} onChange={(e) => setTim(e.target.value)} placeholder="Tìm theo tên, mã hồ sơ, địa chỉ, tờ/thửa (vd. 5/85)…" aria-label="Tìm hồ sơ" />
           </label>
-          <select value={duAnId} onChange={(e) => setDuAnId(e.target.value)} aria-label="Dự án">
+          <Chon value={duAnId} onChange={(e) => setDuAnId(e.target.value)} aria-label="Dự án">
             <option value="">Tất cả dự án</option>
             {dsDuAn.map((d) => <option key={d.id} value={d.id}>{d.ten}</option>)}
-          </select>
-          <select value={trangThai} onChange={(e) => setTrangThai(e.target.value as TrangThaiGpmb | "")} aria-label="Hiện trạng">
+          </Chon>
+          <Chon value={trangThai} onChange={(e) => setTrangThai(e.target.value as TrangThaiGpmb | "")} aria-label="Hiện trạng">
             <option value="">Mọi hiện trạng</option>
             {THU_TU_TRANG_THAI.map((t) => <option key={t} value={t}>{TT_GPMB[t].ten}</option>)}
-          </select>
-          <select value={chang} onChange={(e) => setChang(e.target.value)} aria-label="Chặng quy trình">
+          </Chon>
+          <Chon value={chang} onChange={(e) => setChang(e.target.value)} aria-label="Chặng quy trình">
             <option value="">Mọi chặng</option>
             {CAC_CHANG.map((c) => <option key={c.buoc} value={c.buoc}>Đã qua: {c.ten} (bước {c.buoc}. {CAC_BUOC.find((b) => b.ma === c.buoc)?.ten})</option>)}
-          </select>
+          </Chon>
           {(duAnId || trangThai || chang || tim) && <button className="nut" onClick={() => { setDuAnId(""); setTrangThai(""); setChang(""); setTim(""); }}>Bỏ lọc</button>}
         </div>
       </div>

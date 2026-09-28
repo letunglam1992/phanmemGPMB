@@ -2,6 +2,7 @@ import { D, dinhDang, tyLeLop, type BoChinhSach } from "@gpmb/core";
 import { taoId, type Thua } from "../../mo-hinh";
 import { nhomPhanLop } from "../../tinh-ho";
 import { tien } from "../../thanh-phan/chung";
+import { Chon } from "../../thanh-phan/Chon";
 
 /**
  * Nhập lớp đất (QD-21): cán bộ thêm lớp, chọn vị trí trong bảng giá, nhập diện tích.
@@ -52,9 +53,9 @@ export function PhanLop({ t, cs, sua, moChonTuyen }: { t: Thua; cs: BoChinhSach;
               <tr key={l.id}>
                 <td><input type="number" min={1} value={l.lop} onChange={(e) => doiLop(l.id, { lop: Math.max(1, Number(e.target.value)), giaTuyChinh: undefined })} /></td>
                 <td>
-                  <select value={l.viTri} onChange={(e) => doiLop(l.id, { viTri: Number(e.target.value), giaTuyChinh: undefined })}>
+                  <Chon value={l.viTri} onChange={(e) => doiLop(l.id, { viTri: Number(e.target.value), giaTuyChinh: undefined })}>
                     {viTriCo.map((x) => <option key={x.vt} value={x.vt}>VT{x.vt} – {x.g} nghìn</option>)}
-                  </select>
+                  </Chon>
                 </td>
                 <td><input className={`o-so ${l.dienTich && dt === null ? "loi-nhap" : ""}`} value={l.dienTich} onChange={(e) => doiLop(l.id, { dienTich: e.target.value })} /></td>
                 <td className="so">{gVt != null ? tien(D(gVt).mul(1000)) : "—"}</td>

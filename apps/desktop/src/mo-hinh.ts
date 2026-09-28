@@ -133,6 +133,37 @@ export interface HoTroHo {
   chuyenDoiNghe: boolean;
   tamCu?: { soThang: number; tdcBangDat: boolean };
   moMa?: { xay: number; khongXay: number };
+  taiDinhCu?: TaiDinhCuHo;
+}
+
+/** Hình thức bố trí tái định cư (Điều 111 LĐĐ 2024; Điều 23, 24 NĐ 88/2024). */
+export type HinhThucTdc = "DAT_O" | "NHA_O" | "TU_LO" | "TAI_CHO";
+export const TEN_HINH_THUC_TDC: Record<HinhThucTdc, string> = {
+  DAT_O: "Giao đất ở tại khu, điểm tái định cư",
+  NHA_O: "Giao nhà ở tái định cư",
+  TU_LO: "Tự lo chỗ ở (nhận tiền hỗ trợ)",
+  TAI_CHO: "Tái định cư tại chỗ (chuyển mục đích phần đất NN còn lại — k3 Đ24 NĐ 88)",
+};
+
+export interface TaiDinhCuHo {
+  hinhThuc: HinhThucTdc;
+  /** Khu, điểm tái định cư; số lô / căn hộ. */
+  khuTdc?: string;
+  viTriLo?: string;
+  /** DT lô đất ở / căn hộ được giao (m²). */
+  dienTichGiao?: string;
+  /** Giá đất ở tại khu TĐC theo bảng giá tại thời điểm phê duyệt phương án (k3 Đ111 LĐĐ), hoặc giá bán nhà TĐC (đ/m²). */
+  donGia?: string;
+  nguonGia?: string;
+  /** Đề nghị hỗ trợ đủ một suất TĐC tối thiểu (k8 Đ111 LĐĐ). */
+  suatToiThieu?: boolean;
+  /** Hỗ trợ 20% tiền SDĐ phải nộp của thửa TĐC (k11 Đ6 QĐ 14/2026). */
+  hoTroTienSdd?: boolean;
+  /** Tiền SDĐ phải nộp theo thông báo (nếu có); trống = đơn giá × DT lô giao. */
+  tienSddPhaiNop?: string;
+  /** Khoản hỗ trợ khác do UBND xã quyết định cho dự án (k13 Đ6 QĐ 14/2026) hoặc chính sách chưa có sẵn — cán bộ nhập, bắt buộc căn cứ. */
+  khoanKhac: { id: string; noiDung: string; soTien: string; canCu: string }[];
+  ghiChu?: string;
 }
 
 export type TrangThaiBuoc = "CHUA" | "DANG" | "XONG" | "CHO_DUYET";
@@ -146,6 +177,12 @@ export interface BuocHo {
   duyetBoi?: string;
   /** Ngày bắt đầu tính thời hạn của bước do cán bộ nhập (src/han-buoc.ts), vd. ngày nhận đủ hồ sơ. */
   mocHan?: string;
+  /**
+   * Khó khăn, vướng mắc của hộ tại bước này (bước 5–16), vd. không nhất trí phương án, chưa nhận tiền, tranh chấp.
+   * Có nội dung → hộ ở trạng thái "Vướng mắc", đưa vào cảnh báo và báo cáo lãnh đạo; giải quyết xong thì xóa (ghi nhật ký).
+   */
+  vuongMac?: string;
+  vuongMacNgay?: string;
   /**
    * Chỉ dùng cho bước chung (1–4) lưu trong hồ sơ hộ: true = hộ này theo dõi riêng, không theo bước chung
    * của dự án (vd. hộ không hợp tác phải kiểm đếm bắt buộc).

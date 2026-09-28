@@ -4,6 +4,7 @@ import { dongOcr, nhanDang, type TienDo, type TrangOcr } from "../ocr/ocr";
 import { trichThongTin, type ThongTinVanBan } from "../ocr/nhan-dien";
 import { thongTinChungMacDinh } from "../van-ban/du-lieu";
 import { taiXuong } from "../tai-xuong";
+import { Chon } from "../thanh-phan/Chon";
 
 /** Độ tin cậy dưới ngưỡng này: cảnh báo đọc kỹ (ảnh mờ, nghiêng, chữ viết tay). */
 const NGUONG_TIN_CAY = 75;
@@ -106,7 +107,7 @@ export function DocScan() {
                 </div>
                 <div className="luoi" style={{ gridTemplateColumns: "1fr auto auto", alignItems: "end", marginTop: 8 }}>
                   <div className="o-nhap"><label>Dự án</label>
-                    <select value={duAnId} onChange={(e) => setDuAnId(e.target.value)}>{dsDuAn.map((d) => <option key={d.id} value={d.id}>{d.ten}</option>)}</select>
+                    <Chon value={duAnId} onChange={(e) => setDuAnId(e.target.value)}>{dsDuAn.map((d) => <option key={d.id} value={d.id}>{d.ten}</option>)}</Chon>
                   </div>
                   <button className="nut" onClick={() => void navigator.clipboard.writeText(canCu).then(() => bao("Đã sao chép"))}>Sao chép</button>
                   <button className="nut nut-chinh" disabled={!duAn || !canCu.trim() || !quyen("SUA_HO_SO")} onClick={() => void themCanCu()}>Thêm vào căn cứ riêng của dự án</button>

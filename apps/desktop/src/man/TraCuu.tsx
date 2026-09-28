@@ -4,6 +4,7 @@ import { khongDau } from "../tim-kiem";
 import { tenLoaiDat } from "../van-ban/loai-dat";
 import { useUngDung } from "../ung-dung";
 import { BieuTuong } from "../thanh-phan/BieuDo";
+import { Chon } from "../thanh-phan/Chon";
 
 /**
  * Tra cứu đơn giá, giá đất, chính sách (bố cục theo mẫu người dùng gửi 28/9/2026):
@@ -270,9 +271,9 @@ export function TraCuu() {
               <h3>Kết quả tra cứu</h3><span className="mo">({ketQua.length.toLocaleString("vi-VN")} dòng)</span>
               <div className="phai">
                 {chonDs.length > 0 && <button className="nut nut-nho" onClick={() => saoChep(["Mã nguồn\tHạng mục\tĐVT\tĐơn giá\tTrang", ...chonDs.map((m) => `${m.ma}\t${m.ten}\t${m.dvt}\t${m.gia ?? ""}\t${m.trang ?? ""}`)].join("\n"), `${chonDs.length} dòng (dán vào Excel)`)}>Sao chép {chonDs.length} dòng</button>}
-                <select value={sapXep} onChange={(e) => setSapXep(e.target.value as SapXep)} aria-label="Sắp xếp">
+                <Chon value={sapXep} onChange={(e) => setSapXep(e.target.value as SapXep)} aria-label="Sắp xếp">
                   <option value="MAC_DINH">Sắp xếp: Mặc định</option><option value="GIA_TANG">Đơn giá tăng dần</option><option value="GIA_GIAM">Đơn giá giảm dần</option><option value="TEN">Tên A → Z</option>
-                </select>
+                </Chon>
                 <div className="nhom-chuyen" role="group" aria-label="Kiểu hiển thị">
                   <button className={!dangLuoi ? "chon" : ""} onClick={() => setDangLuoi(false)} aria-label="Dạng bảng"><BieuTuong ten="danhSach" co={16} /></button>
                   <button className={dangLuoi ? "chon" : ""} onClick={() => setDangLuoi(true)} aria-label="Dạng thẻ"><BieuTuong ten="luoi" co={16} /></button>

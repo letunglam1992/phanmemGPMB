@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { napBangGiaDat, type BangGiaDat, type DongGiaTuyen } from "../du-lieu";
 import type { GiaThua } from "../mo-hinh";
 import { HopThoai, O } from "./chung";
+import { Chon } from "./Chon";
 
 type Bang = "NN" | "DAT_O" | "TMDV" | "SKC" | "KCN";
 const TEN_BANG: Record<Bang, string> = {
@@ -49,14 +50,14 @@ export function ChonGiaDat(p: { xa: string; loaiDat: string; dong: () => void; c
         <>
           <div className="luoi luoi-3" style={{ marginBottom: 12 }}>
             <O nhan="Bảng giá">
-              <select value={bang} onChange={(e) => setBang(e.target.value as Bang)}>
+              <Chon value={bang} onChange={(e) => setBang(e.target.value as Bang)}>
                 {Object.entries(TEN_BANG).filter(([k]) => !p.chonTuyen || ["DAT_O", "TMDV", "SKC"].includes(k)).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-              </select>
+              </Chon>
             </O>
             <O nhan="Xã, phường">
-              <select value={xa} onChange={(e) => setXa(e.target.value)}>
+              <Chon value={xa} onChange={(e) => setXa(e.target.value)}>
                 {bg.danh_muc_xa.map((x) => <option key={x}>{x}</option>)}
-              </select>
+              </Chon>
             </O>
             {bang !== "NN" && bang !== "KCN" && <O nhan="Tìm tuyến đường"><input value={loc} onChange={(e) => setLoc(e.target.value)} placeholder="Tên đường, đoạn…" /></O>}
           </div>

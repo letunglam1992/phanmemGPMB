@@ -14,6 +14,7 @@ import { HopThoai, O, ngayVN, tien } from "../thanh-phan/chung";
 import { PhanBoTrangThaiGon } from "./TongQuan";
 import { BieuDoKy } from "../thanh-phan/BieuDoKy";
 import { chotKy, kiemTraKy, kyTruoc, sapXepKy, soSanhKyTruoc, tongKy, type KyBaoCao } from "../ky-bao-cao";
+import { Chon } from "../thanh-phan/Chon";
 
 const KHOA_TT = "gpmb-bao-cao-thong-tin";
 const TT_MAC_DINH: ThongTinBaoCao = {
@@ -97,16 +98,16 @@ export function BaoCao() {
       <div className="the" style={{ marginBottom: 16 }}>
         <div className="the-than luoi" style={{ gridTemplateColumns: "repeat(3, minmax(0, 260px))", alignItems: "end" }}>
           <O nhan="Xã, phường">
-            <select value={xa} onChange={(e) => setXa(e.target.value)}>
+            <Chon value={xa} onChange={(e) => setXa(e.target.value)}>
               <option value="">Tất cả ({dsXa.length} xã, phường)</option>
               {dsXa.map((x) => <option key={x}>{x}</option>)}
-            </select>
+            </Chon>
           </O>
           <O nhan="Tình trạng dự án">
-            <select value={tinhTrang} onChange={(e) => setTinhTrang(e.target.value as TinhTrangDuAn | "")}>
+            <Chon value={tinhTrang} onChange={(e) => setTinhTrang(e.target.value as TinhTrangDuAn | "")}>
               <option value="">Tất cả</option>
               {(Object.keys(TEN_TINH_TRANG) as TinhTrangDuAn[]).map((k) => <option key={k} value={k}>{TEN_TINH_TRANG[k]}</option>)}
-            </select>
+            </Chon>
           </O>
           <O nhan="Tính đến ngày" goiY="Chi trả ghi sau ngày này không tính"><input type="date" value={denNgay} onChange={(e) => e.target.value && setDenNgay(e.target.value)} /></O>
         </div>

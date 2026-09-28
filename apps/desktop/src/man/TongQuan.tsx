@@ -9,6 +9,7 @@ import { BieuTuong, PhanBoTrangThai, VongTienDo } from "../thanh-phan/BieuDo";
 import { taoDuAnMau } from "../du-lieu-mau";
 import { DANH_MUC_XA } from "../du-lieu";
 import { HopThoai, O, ngayVN, tien } from "../thanh-phan/chung";
+import { Chon } from "../thanh-phan/Chon";
 
 type TongKpi = "xanh" | "vang" | "do" | "duong";
 
@@ -241,21 +242,21 @@ export function FormDuAn({ d, setD }: { d: DuAn; setD: (d: DuAn) => void }) {
       <div className="luoi luoi-2">
         <O nhan="Tên dự án *" style={{ gridColumn: "1/-1" }}><input value={d.ten} onChange={(e) => setD({ ...d, ten: e.target.value })} /></O>
         <O nhan="Loại dự án" goiY="Dùng cho biểu tượng, lọc danh sách">
-          <select value={d.loaiDuAn ?? ""} onChange={(e) => setD({ ...d, loaiDuAn: (e.target.value || undefined) as DuAn["loaiDuAn"] })}>
+          <Chon value={d.loaiDuAn ?? ""} onChange={(e) => setD({ ...d, loaiDuAn: (e.target.value || undefined) as DuAn["loaiDuAn"] })}>
             <option value="">— Chọn —</option>
             {(Object.keys(TEN_LOAI_DU_AN) as (keyof typeof TEN_LOAI_DU_AN)[]).map((k) => <option key={k} value={k}>{TEN_LOAI_DU_AN[k]}</option>)}
-          </select>
+          </Chon>
         </O>
         <O nhan="Trạng thái dự án">
-          <select value={d.trangThaiDuAn ?? "DANG_TRIEN_KHAI"} onChange={(e) => setD({ ...d, trangThaiDuAn: e.target.value as NonNullable<DuAn["trangThaiDuAn"]> })}>
+          <Chon value={d.trangThaiDuAn ?? "DANG_TRIEN_KHAI"} onChange={(e) => setD({ ...d, trangThaiDuAn: e.target.value as NonNullable<DuAn["trangThaiDuAn"]> })}>
             {(Object.keys(TEN_TRANG_THAI_DU_AN) as (keyof typeof TEN_TRANG_THAI_DU_AN)[]).map((k) => <option key={k} value={k}>{TEN_TRANG_THAI_DU_AN[k]}</option>)}
-          </select>
+          </Chon>
         </O>
         <O nhan="Xã, phường *" goiY="Danh mục 75 xã, phường theo NQ 152/2025">
-          <select value={d.xa} onChange={(e) => setD({ ...d, xa: e.target.value })}>
+          <Chon value={d.xa} onChange={(e) => setD({ ...d, xa: e.target.value })}>
             <option value="">— Chọn —</option>
             {DANH_MUC_XA.map((x) => <option key={x}>{x}</option>)}
-          </select>
+          </Chon>
         </O>
         <O nhan="Chủ đầu tư"><input value={d.chuDauTu} onChange={(e) => setD({ ...d, chuDauTu: e.target.value })} /></O>
         <O nhan="Căn cứ thu hồi (thông báo, kế hoạch)"><input value={d.canCuThuHoi} onChange={(e) => setD({ ...d, canCuThuHoi: e.target.value })} /></O>
@@ -272,10 +273,10 @@ export function FormDuAn({ d, setD }: { d: DuAn; setD: (d: DuAn) => void }) {
           <input className="o-so" value={d.heSoGiaDat?.heSo ?? "1"} onChange={(e) => setD({ ...d, heSoGiaDat: { heSo: e.target.value, vanBan: d.heSoGiaDat?.vanBan ?? "" } })} />
         </O>
         <O nhan="Làm tròn tổng tiền từng hộ" goiY="Mặc định QD-03: làm tròn lên đến 1.000 đ (VM-36)">
-          <select value={d.lamTron?.cach ?? ""} onChange={(e) => setD({ ...d, lamTron: e.target.value ? { cach: e.target.value as NonNullable<DuAn["lamTron"]>["cach"], lyDo: d.lamTron?.lyDo ?? "" } : undefined })}>
+          <Chon value={d.lamTron?.cach ?? ""} onChange={(e) => setD({ ...d, lamTron: e.target.value ? { cach: e.target.value as NonNullable<DuAn["lamTron"]>["cach"], lyDo: d.lamTron?.lyDo ?? "" } : undefined })}>
             <option value="">Theo bộ chính sách (làm tròn lên đến 1.000 đ)</option>
             {(Object.keys(TEN_CACH_LAM_TRON) as (keyof typeof TEN_CACH_LAM_TRON)[]).map((k) => <option key={k} value={k}>{TEN_CACH_LAM_TRON[k]}{k === "KHONG" ? "" : " đến 1.000 đ"}</option>)}
-          </select>
+          </Chon>
         </O>
         <O nhan="Lý do, căn cứ cách làm tròn"><input className={thieuLyDoLamTron ? "loi-nhap" : ""} value={d.lamTron?.lyDo ?? ""} disabled={!d.lamTron} onChange={(e) => setD({ ...d, lamTron: { cach: d.lamTron!.cach, lyDo: e.target.value } })} /></O>
         <O nhan="Văn bản quyết định hệ số"><input className={heSoKhac1 && !d.heSoGiaDat?.vanBan ? "loi-nhap" : ""} value={d.heSoGiaDat?.vanBan ?? ""} onChange={(e) => setD({ ...d, heSoGiaDat: { heSo: d.heSoGiaDat?.heSo ?? "1", vanBan: e.target.value } })} /></O>

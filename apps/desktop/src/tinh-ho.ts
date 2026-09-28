@@ -19,6 +19,9 @@ import {
   nhaCongTrinhThietHaiThucTe,
   onDinhDoiSong,
   tamCu,
+  hoTroTuLoChoO,
+  hoTroSuatToiThieu,
+  hoTroTienSddTdc,
   tongHo,
   type BoChinhSach,
   type DongCayXen,
@@ -27,7 +30,7 @@ import {
 } from "@gpmb/core";
 import type Decimal from "decimal.js";
 import { thuTinh } from "./bieu-thuc";
-import type { DuAn, Ho, TaiSan, Thua } from "./mo-hinh";
+import type { DuAn, Ho, TaiDinhCuHo, TaiSan, Thua } from "./mo-hinh";
 
 export const LOAI_DAT_NN = ["LUC", "LUK", "LUN", "BHK", "NHK", "HNK", "CLN", "RSX", "RPH", "RDD", "NTS", "NKH", "LNP"];
 export const laDatNN = (ma: string) => LOAI_DAT_NN.includes(ma.toUpperCase());
@@ -43,7 +46,7 @@ export const TEN_COT: Record<CotTongHop, string> = {
   HT_TAI_SAN: "Hỗ trợ tài sản, vật kiến trúc",
   HT_CAY: "Hỗ trợ cây cối, hoa màu",
   HT_CDN: "Hỗ trợ chuyển đổi nghề",
-  HT_KHAC: "Hỗ trợ khác (ổn định đời sống, tạm cư, di dời)",
+  HT_KHAC: "Hỗ trợ khác (ổn định đời sống, tạm cư, di dời, tái định cư)",
 };
 
 /** Dòng hiển thị theo cột biểu mẫu: ĐVT | Khối lượng | Hệ số/mức | Đơn giá (thành tiền = tích). */
@@ -281,6 +284,7 @@ export function tinhHo(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
     { ma: "B.III", ten: "Hỗ trợ cây trồng", dong: [] },
     { ma: "B.IV", ten: "Hỗ trợ đào tạo, chuyển đổi nghề và tìm kiếm việc làm", dong: [] },
     { ma: "B.V", ten: "Hỗ trợ ổn định đời sống, tạm cư, di dời", dong: [] },
+    { ma: "B.VI", ten: "Hỗ trợ tái định cư", dong: [] },
   ];
   const n = (ma: string) => nhom.find((x) => x.ma === ma)!;
 
@@ -442,6 +446,9 @@ export function tinhHo(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
       cot: "HT_KHAC",
     });
 
+  const tdc = ho.hoTro.taiDinhCu;
+  if (tdc) for (const d of dongTaiDinhCu(cs, duAn, ho, tdc, tienBoiThuongDatO(ho, n("A.I").dong))) n("B.VI").dong.push({ dong: d, cot: "HT_KHAC" });
+
   const tatCa = nhom.flatMap((x) => x.dong);
   const lt = duAn.lamTron?.lyDo?.trim() ? duAn.lamTron : null;
   const csTong: BoChinhSach = lt ? { ...cs, lamTron: { ...cs.lamTron, cach: lt.cach } } : cs;
@@ -462,6 +469,58 @@ export function tinhHo(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
     khauTru,
     conLai: tong.tongLamTron.minus(khauTru),
   };
+}
+
+/** Loại đất ở (bồi thường về đất ở — dùng cho suất tái định cư tối thiểu, ghi nợ tiền SDĐ). */
+export const laDatO = (loaiDat: string) => ["ONT", "ODT"].includes(loaiDat.trim().toUpperCase());
+
+/** Tổng tiền bồi thường về đất ở của hộ (các dòng A.I đã tính của thửa ONT/ODT). */
+export function tienBoiThuongDatO(ho: Ho, dongDat: DongKetQua[]): Decimal {
+  const datO = new Set(ho.thua.filter((t) => laDatO(t.loaiDat)).map((t) => t.id));
+  return dongDat.filter((x) => x.thuaId && datO.has(x.thuaId) && x.dong.trangThai === "TAM_TINH" && x.dong.thanhTien).reduce((s, x) => s.plus(x.dong.thanhTien!), D(0));
+}
+
+/** Tiền SDĐ phải nộp của thửa TĐC: theo thông báo nếu có, không thì đơn giá × DT lô giao. */
+export function tienSddTdc(t: TaiDinhCuHo): { tien: Decimal | null; moTa: string } {
+  if (t.tienSddPhaiNop?.trim()) return { tien: D(t.tienSddPhaiNop), moTa: "theo thông báo, cán bộ nhập" };
+  if (t.donGia?.trim() && t.dienTichGiao?.trim()) return { tien: D(t.donGia).mul(t.dienTichGiao), moTa: `${dinhDang(D(t.donGia))} đ/m² × ${t.dienTichGiao} m²` };
+  return { tien: null, moTa: "" };
+}
+
+/** Các dòng hỗ trợ tái định cư (B.VI): C08 tự lo chỗ ở, C10 suất tối thiểu, C11 20% tiền SDĐ, khoản khác cán bộ nhập. */
+function dongTaiDinhCu(cs: BoChinhSach, duAn: DuAn, ho: Ho, t: TaiDinhCuHo, btDatO: Decimal): DongTinh[] {
+  const out: DongTinh[] = [];
+  const coCs = !!cs.taiDinhCu;
+  const khongCs = (ma: string, nd: string) => thieu(ma, nd, `Bộ chính sách ${cs.ma} không có quy định hỗ trợ tái định cư`, "Bộ chính sách");
+  if (t.hinhThuc === "TU_LO") out.push(coCs ? hoTroTuLoChoO(cs, { xa: duAn.xa }) : khongCs("C08", "Hỗ trợ tái định cư – tự lo chỗ ở"));
+  if ((t.hinhThuc === "DAT_O" || t.hinhThuc === "NHA_O") && t.suatToiThieu) {
+    const nd = "Hỗ trợ đủ suất tái định cư tối thiểu";
+    if (!coCs) out.push(khongCs("C10", nd));
+    else if (!t.donGia?.trim()) out.push(thieu("C10", nd, t.hinhThuc === "NHA_O" ? "Chưa nhập giá bán nhà ở tái định cư (k3 Đ111 LĐĐ)" : "Chưa nhập giá đất ở tại khu tái định cư theo bảng giá (k3 Đ111 LĐĐ)"));
+    else {
+      const d = hoTroSuatToiThieu(cs, { xa: duAn.xa, hinhThuc: t.hinhThuc, donGiaDongM2: t.donGia, nguonGia: t.nguonGia ?? "", tienBoiThuongDatO: btDatO });
+      if (!ho.thua.some((x) => laDatO(x.loaiDat))) d.canhBao.push("Hộ không có thửa đất ở (ONT/ODT) bị thu hồi — kiểm tra điều kiện khoản 8 Điều 111 Luật Đất đai");
+      out.push(d);
+    }
+  }
+  if (t.hinhThuc === "DAT_O" && t.hoTroTienSdd) {
+    const nd = "Hỗ trợ tiền sử dụng đất thửa đất được giao tái định cư";
+    const sdd = tienSddTdc(t);
+    if (!coCs) out.push(khongCs("C11", nd));
+    else if (!sdd.tien) out.push(thieu("C11", nd, "Chưa có tiền SDĐ phải nộp (nhập đơn giá và DT lô giao, hoặc số tiền theo thông báo)"));
+    else {
+      const d = hoTroTienSddTdc(cs, { tienSddPhaiNop: sdd.tien, moTa: sdd.moTa });
+      if (!ho.thua.some((x) => laDatO(x.loaiDat))) d.canhBao.push("Khoản 11 Điều 6 QĐ 14/2026 áp dụng cho hộ bị thu hồi đất ở — hộ không có thửa ONT/ODT bị thu hồi, kiểm tra");
+      out.push(d);
+    }
+  }
+  for (const k of t.khoanKhac) {
+    const nd = k.noiDung.trim() || "Khoản hỗ trợ tái định cư khác";
+    if (!k.canCu.trim()) out.push(thieu("C.TĐC", nd, "Chưa ghi căn cứ (số, ngày văn bản của UBND xã hoặc văn bản quy định)"));
+    else if (!k.soTien.trim() || !D(k.soTien).gt(0)) out.push(thieu("C.TĐC", nd, "Chưa nhập số tiền", k.canCu));
+    else out.push(dong({ ma: "C.TĐC", noiDung: nd, thamSo: { "Số tiền": `${dinhDang(D(k.soTien))} đ` }, congThuc: "Theo văn bản (cán bộ nhập)", thanhTien: D(k.soTien), canCu: [{ vanBan: k.canCu, viTri: "" }] }));
+  }
+  return out;
 }
 
 export const SO_NGUYEN = (d: Decimal | null | undefined, le = 0) => (d ? dinhDang(d, le) : "—");

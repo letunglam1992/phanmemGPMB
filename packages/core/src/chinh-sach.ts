@@ -63,6 +63,13 @@ export interface BoChinhSach {
     duongDat: { heSo: string; apDungViTri: number[]; canCu: string };
     datNNXenKep: { heSo: string; canCu: string };
   };
+  /** Hỗ trợ tái định cư (Đ111 LĐĐ 2024; Đ23, Đ24 NĐ 88/2024; Đ10, Đ16 PL II QĐ 106; k11 Đ6 QĐ 14/2026). */
+  taiDinhCu?: {
+    ghiChu: string;
+    tuLoChoO: { canCu: CanCu[]; mucTheoNhom: Record<string, string>; phanNhom: Record<string, string[]>; ghiChuPhanNhom: string };
+    suatToiThieu: { canCu: CanCu[]; datOPhuongM2: string; datOXaM2: string; nhaOM2: string };
+    hoTroTienSdd: { canCu: CanCu[]; tyLe: string; ghiChu: string };
+  };
   chuyenDoiNghe: {
     canCu: CanCu[];
     heSoMacDinh: string;

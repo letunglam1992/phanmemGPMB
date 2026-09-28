@@ -24,6 +24,7 @@ import {
   type LoaiThayDoi,
   type PhienBanPA,
 } from "../phuong-an";
+import { Chon } from "./Chon";
 
 const dong = (x: string | null | undefined) => (x == null ? "—" : dinhDang(D(x), 0));
 const dau = (x: string) => (D(x).gt(0) ? "+" : "") + dinhDang(D(x), 0);
@@ -324,10 +325,10 @@ function HopSoSanh({ ds, kq, dong: dongHop }: { ds: PhienBanPA[]; kq: { h: Ho; k
   const sau = b === HIEN_TAI ? hienTai.filter((h) => truoc.some((x) => x.hoId === h.hoId)) : lay(b);
   const kqSs = soSanh(truoc, sau);
   const chon = (v: string, set: (x: string) => void, coHienTai: boolean) => (
-    <select value={v} onChange={(e) => set(e.target.value)}>
+    <Chon value={v} onChange={(e) => set(e.target.value)}>
       {coHienTai && <option value={HIEN_TAI}>Tạm tính hiện tại</option>}
       {ds.map((p) => <option key={p.id} value={p.id}>Bản {p.so} – {TEN_TT_PA[p.trangThai]}</option>)}
-    </select>
+    </Chon>
   );
   return (
     <HopThoai tieuDe="So sánh phương án" dong={dongHop} rong={1000}>

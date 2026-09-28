@@ -6,6 +6,7 @@ import { tien } from "../../thanh-phan/chung";
 import { PhanLop } from "./PhanLop";
 import { laDatNN } from "../../tinh-ho";
 import { useUngDung } from "../../ung-dung";
+import { Chon } from "../../thanh-phan/Chon";
 
 export const LOAI_DAT = ["LUC", "LUK", "LUN", "HNK", "BHK", "NHK", "CLN", "RSX", "RPH", "NTS", "ONT", "ODT", "TMD", "SKC", "SKK", "SKN", "DGT", "NTD", "CSD", "KHAC"];
 
@@ -45,10 +46,10 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
                     <td><input value={t.soTo} onChange={(e) => sua(t.id, { soTo: e.target.value })} /></td>
                     <td><input value={t.soThua} onChange={(e) => sua(t.id, { soThua: e.target.value })} /></td>
                     <td>
-                      <select value={t.loaiDat} onChange={(e) => sua(t.id, { loaiDat: e.target.value, gia: null })}>
+                      <Chon value={t.loaiDat} onChange={(e) => sua(t.id, { loaiDat: e.target.value, gia: null })}>
                         {!LOAI_DAT.includes(t.loaiDat) && <option>{t.loaiDat}</option>}
                         {LOAI_DAT.map((l) => <option key={l}>{l}</option>)}
-                      </select>
+                      </Chon>
                     </td>
                     <td><input className="o-so" value={t.dienTich} onChange={(e) => sua(t.id, { dienTich: e.target.value })} /></td>
                     <td>
@@ -95,10 +96,10 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
                           <div style={{ marginBottom: 12, paddingBottom: 12, borderBottom: "1px solid var(--vien)" }}>
                             <div className="luoi" style={{ gridTemplateColumns: "minmax(260px, 1.2fr) 1fr", alignItems: "end" }}>
                               <div className="o-nhap"><label>Đất nguồn gốc nông, lâm trường (B13 — k9 Đ6 QĐ 14/2026)</label>
-                                <select value={t.nongLamTruong?.truongHop ?? ""} onChange={(e) => sua(t.id, { nongLamTruong: e.target.value ? { truongHop: e.target.value as NonNullable<typeof t.nongLamTruong>["truongHop"], hoSo: t.nongLamTruong?.hoSo ?? "" } : undefined })}>
+                                <Chon value={t.nongLamTruong?.truongHop ?? ""} onChange={(e) => sua(t.id, { nongLamTruong: e.target.value ? { truongHop: e.target.value as NonNullable<typeof t.nongLamTruong>["truongHop"], hoSo: t.nongLamTruong?.hoSo ?? "" } : undefined })}>
                                   <option value="">Không (tính bồi thường như thường)</option>
                                   {Object.entries(cs.nongLamTruong.truongHop).map(([ma, th]) => <option key={ma} value={ma}>{ma} — {th.ten}</option>)}
-                                </select>
+                                </Chon>
                               </div>
                               <div className="o-nhap"><label>Hồ sơ xác nhận nguồn gốc (bắt buộc)</label>
                                 <input disabled={!t.nongLamTruong} placeholder="Hợp đồng giao khoán, xác nhận của công ty, QĐ thu hồi của UBND tỉnh…" value={t.nongLamTruong?.hoSo ?? ""} onChange={(e) => sua(t.id, { nongLamTruong: { truongHop: t.nongLamTruong!.truongHop, hoSo: e.target.value } })} />
@@ -116,20 +117,20 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
                           <div className="o-nhap"><label>DT công trình trừ khỏi quỹ mật độ (m²)</label><input className="o-so" value={t.cayXen?.dienTichTru ?? ""} onChange={(e) => sua(t.id, { cayXen: { dienTichTru: e.target.value, lyDoTru: t.cayXen?.lyDoTru ?? "", cachXep: t.cayXen?.cachXep ?? "DUNG_KHI_VUOT" } })} /></div>
                           <div className="o-nhap"><label>Lý do trừ (bắt buộc khi &gt; 0 — VM-34)</label><input value={t.cayXen?.lyDoTru ?? ""} onChange={(e) => sua(t.id, { cayXen: { dienTichTru: t.cayXen?.dienTichTru ?? "", lyDoTru: e.target.value, cachXep: t.cayXen?.cachXep ?? "DUNG_KHI_VUOT" } })} /></div>
                           <div className="o-nhap"><label>Cách xếp khi vượt quỹ</label>
-                            <select value={t.cayXen?.cachXep ?? "DUNG_KHI_VUOT"} onChange={(e) => sua(t.id, { cayXen: { dienTichTru: t.cayXen?.dienTichTru ?? "", lyDoTru: t.cayXen?.lyDoTru ?? "", cachXep: e.target.value as "DUNG_KHI_VUOT" | "LAP_DAY" } })}>
+                            <Chon value={t.cayXen?.cachXep ?? "DUNG_KHI_VUOT"} onChange={(e) => sua(t.id, { cayXen: { dienTichTru: t.cayXen?.dienTichTru ?? "", lyDoTru: t.cayXen?.lyDoTru ?? "", cachXep: e.target.value as "DUNG_KHI_VUOT" | "LAP_DAY" } })}>
                               <option value="DUNG_KHI_VUOT">Dừng khi vượt (theo biểu mẫu)</option>
                               <option value="LAP_DAY">Lấp đầy phần quỹ còn dư</option>
-                            </select>
+                            </Chon>
                           </div>
                         </div>
                         <div className="mo chu-nho" style={{ marginTop: 6 }}>Thứ tự tính cây = thứ tự dòng ở thẻ Kiểm đếm (chủ sở hữu lựa chọn, k4 Đ5 PL VIII QĐ 106/2025).</div>
                         <div className="luoi" style={{ gridTemplateColumns: "260px 1fr", alignItems: "end", marginTop: 10 }}>
                           <div className="o-nhap"><label>Cây không có mật độ trên thửa trồng xen (VM-35)</label>
-                            <select value={t.cayXen?.khongMatDo ?? ""} onChange={(e) => sua(t.id, { cayXen: { dienTichTru: t.cayXen?.dienTichTru ?? "", lyDoTru: t.cayXen?.lyDoTru ?? "", cachXep: t.cayXen?.cachXep ?? "DUNG_KHI_VUOT", lyDoKhongMatDo: t.cayXen?.lyDoKhongMatDo ?? "", khongMatDo: (e.target.value || undefined) as "TINH_100" | "TINH_30" | undefined } })}>
+                            <Chon value={t.cayXen?.khongMatDo ?? ""} onChange={(e) => sua(t.id, { cayXen: { dienTichTru: t.cayXen?.dienTichTru ?? "", lyDoTru: t.cayXen?.lyDoTru ?? "", cachXep: t.cayXen?.cachXep ?? "DUNG_KHI_VUOT", lyDoKhongMatDo: t.cayXen?.lyDoKhongMatDo ?? "", khongMatDo: (e.target.value || undefined) as "TINH_100" | "TINH_30" | undefined } })}>
                               <option value="">Chưa chọn (cần xác nhận)</option>
                               <option value="TINH_100">Tính 100% đơn giá</option>
                               <option value="TINH_30">Tính 30% như số cây còn lại</option>
-                            </select>
+                            </Chon>
                           </div>
                           <div className="o-nhap"><label>Lý do, căn cứ lựa chọn (bắt buộc)</label><input value={t.cayXen?.lyDoKhongMatDo ?? ""} onChange={(e) => sua(t.id, { cayXen: { dienTichTru: t.cayXen?.dienTichTru ?? "", lyDoTru: t.cayXen?.lyDoTru ?? "", cachXep: t.cayXen?.cachXep ?? "DUNG_KHI_VUOT", khongMatDo: t.cayXen?.khongMatDo, lyDoKhongMatDo: e.target.value } })} /></div>
                         </div>

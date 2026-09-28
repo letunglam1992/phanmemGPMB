@@ -3,6 +3,7 @@ import { useUngDung } from "../ung-dung";
 import { TEN_LOAI_DON_VI, donViMoi, kiemTraDonVi, type DonVi, type LoaiDonVi } from "../don-vi";
 import { O } from "../thanh-phan/chung";
 import { BieuTuong } from "../thanh-phan/BieuDo";
+import { Chon } from "../thanh-phan/Chon";
 
 const BT_LOAI: Record<LoaiDonVi, string> = { UBND: "toaNha", DON_VI_BT: "hoSo", PHONG: "vanBan", CHU_DAU_TU: "thua", KHAC: "thongTin" };
 
@@ -78,9 +79,9 @@ export function ThietLapDonVi() {
             <fieldset className="khung-quyen" disabled={!choSua}>
               <div className="the-than luoi luoi-2">
                 <O nhan="Loại đơn vị">
-                  <select value={dv.loai} onChange={(e) => sua({ loai: e.target.value as LoaiDonVi })}>
+                  <Chon value={dv.loai} onChange={(e) => sua({ loai: e.target.value as LoaiDonVi })}>
                     {(Object.keys(TEN_LOAI_DON_VI) as LoaiDonVi[]).map((l) => <option key={l} value={l}>{TEN_LOAI_DON_VI[l]}</option>)}
-                  </select>
+                  </Chon>
                 </O>
                 <O nhan="Đơn vị sử dụng phần mềm" goiY="Hiện tên trên thanh tiêu đề, điền sẵn báo cáo tổng hợp">
                   <label style={{ display: "flex", gap: 8, alignItems: "center", height: 38 }}><input type="checkbox" checked={!!dv.suDung} onChange={(e) => sua({ suDung: e.target.checked })} /> Đây là đơn vị đang sử dụng phần mềm</label>

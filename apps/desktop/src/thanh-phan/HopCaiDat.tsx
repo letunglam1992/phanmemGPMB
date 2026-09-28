@@ -5,6 +5,7 @@ import { useUngDung } from "../ung-dung";
 import { HopThoai } from "./chung";
 import type { GiaiDoanTyLe } from "../chi-tra";
 import { LE_DUONG_LICH_CO_DINH, type LichLamViec, type NgayDacBiet } from "../lich-lam-viec";
+import { Chon } from "./Chon";
 
 const THU = ["Chủ nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
 const thu = (iso: string) => THU[new Date(`${iso}T00:00:00Z`).getUTCDay()]!;
@@ -89,10 +90,10 @@ function TheLich() {
       {choSua ? (
         <>
           <div style={{ display: "flex", gap: 8, alignItems: "end", marginTop: 12, flexWrap: "wrap" }}>
-            <select value={moi.loai} aria-label="Loại ngày" onChange={(e) => setMoi({ ...moi, loai: e.target.value as "nghi" | "lamBu" })}>
+            <Chon value={moi.loai} aria-label="Loại ngày" onChange={(e) => setMoi({ ...moi, loai: e.target.value as "nghi" | "lamBu" })}>
               <option value="nghi">Ngày nghỉ</option>
               <option value="lamBu">Ngày làm bù</option>
-            </select>
+            </Chon>
             <input type="date" aria-label="Ngày" value={moi.ngay} onChange={(e) => setMoi({ ...moi, ngay: e.target.value })} />
             <input placeholder="Nội dung, vd. Tết Nguyên đán (theo thông báo số …)" aria-label="Nội dung" value={moi.ten} style={{ flex: 1, minWidth: 260 }} onChange={(e) => setMoi({ ...moi, ten: e.target.value })} />
             <button className="nut" onClick={them}>Thêm</button>

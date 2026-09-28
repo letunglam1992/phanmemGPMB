@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useUngDung } from "../ung-dung";
 import { tinhHo } from "../tinh-ho";
-import { TEN_TRANG_THAI_DU_AN, type DuAn } from "../mo-hinh";
+import { BUOC_CHUNG, TEN_TRANG_THAI_DU_AN, type DuAn } from "../mo-hinh";
 import { O, ngayVN } from "../thanh-phan/chung";
 import { BieuTuong, DaiChang, DongMoc, PhanBoTrangThai, VongTienDo } from "../thanh-phan/BieuDo";
 import { BangHo } from "../thanh-phan/BangHo";
@@ -11,13 +11,14 @@ import { xuatExcelDuAn } from "../xuat-excel";
 import { BanDoNho } from "../thanh-phan/BanDoNho";
 import { ThePhuongAn } from "../thanh-phan/PhuongAn";
 import { HopNhapExcel } from "../thanh-phan/HopNhapExcel";
-import { HopTienDoDuAn } from "../thanh-phan/TienDoDuAn";
+import { BuocChung, HopTienDoDuAn } from "../thanh-phan/TienDoDuAn";
 import { BT_LOAI_DU_AN, HopKeHoach, HopThemHo, LOP_TT_DU_AN, thieuDuLieu } from "./DuAn";
 import { FormDuAn, kiemTraDuAn } from "./TongQuan";
 import { BanDo } from "./BanDo";
 import { TRUONG_CHUNG, VanBan } from "./VanBan";
 import { thongTinChungMacDinh } from "../van-ban/du-lieu";
 import { truongVanBanTuDonVi } from "../don-vi";
+import { Chon } from "../thanh-phan/Chon";
 
 /**
  * Không gian "Hồ sơ" của một dự án: mọi việc chi tiết của dự án ở một chỗ — tổng quan, thông tin dự án
@@ -27,6 +28,7 @@ import { truongVanBanTuDonVi } from "../don-vi";
 const THE = [
   { ma: "tong-quan", ten: "Tổng quan dự án", bt: "tongQuan" },
   { ma: "thong-tin", ten: "Thông tin dự án", bt: "thongTin" },
+  { ma: "buoc-chung", ten: "Bước chung (1–4)", bt: "dongHo" },
   { ma: "ho", ten: "Hộ, cá nhân, tổ chức", bt: "nguoi" },
   { ma: "ban-do", ten: "Bản đồ", bt: "thua" },
   { ma: "van-ban", ten: "Văn bản", bt: "vanBan" },
@@ -55,9 +57,9 @@ export function KhongGianDuAn({ duAnId, tab = "tong-quan", ma, hoId }: { duAnId:
         <span className="da-bt lon"><BieuTuong ten={BT_LOAI_DU_AN[duAn.loaiDuAn ?? "KHAC"]} co={26} /></span>
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-            <select className="kg-chon" value={duAnId} onChange={(e) => di({ ten: "du-an", duAnId: e.target.value, tab })} aria-label="Chọn dự án" title="Chuyển sang dự án khác">
+            <Chon className="kg-chon" value={duAnId} onChange={(e) => di({ ten: "du-an", duAnId: e.target.value, tab })} aria-label="Chọn dự án" title="Chuyển sang dự án khác">
               {dsDuAn.map((d) => <option key={d.id} value={d.id}>{d.ten}</option>)}
-            </select>
+            </Chon>
             <span className={`nhan ${LOP_TT_DU_AN[tt]}`}>{TEN_TRANG_THAI_DU_AN[tt]}</span>
           </div>
           <div className="mo chu-nho">{duAn.xa || "Chưa chọn xã"} · Chủ đầu tư: {duAn.chuDauTu || "—"} · {duAn.canCuThuHoi || "Chưa ghi căn cứ thu hồi"} · TB: {ngayVN(duAn.ngayThongBao) || "—"} · {hos.length} hồ sơ</div>
@@ -85,6 +87,7 @@ export function KhongGianDuAn({ duAnId, tab = "tong-quan", ma, hoId }: { duAnId:
             <button key={t.ma} role="tab" aria-selected={tab === t.ma} className={tab === t.ma ? "chon" : ""} onClick={() => moThe(t.ma)}>
               <BieuTuong ten={t.bt} co={18} />{t.ten}
               {t.ma === "ho" && <span className="dem">{hos.length}</span>}
+              {t.ma === "buoc-chung" && <span className="dem">{BUOC_CHUNG.filter((m) => duAn.tienDoChung?.[m]?.trangThai === "XONG").length}/4</span>}
               {t.ma === "thong-tin" && thieu.length > 0 && <span className="dem" style={{ background: "var(--vang-nen)", color: "var(--vang)" }}>!</span>}
             </button>
           ))}
@@ -98,7 +101,12 @@ export function KhongGianDuAn({ duAnId, tab = "tong-quan", ma, hoId }: { duAnId:
       )}
 
       {tab === "tong-quan" && <TheTongQuan duAn={duAn} kq={kq} moHo={(t) => { moThe("ho"); setTimeout(() => window.dispatchEvent(new CustomEvent("gpmb-loc-ho", { detail: t })), 0); }} capNhatTd={setCapNhatTd} keHoach={() => setKeHoach(true)} />}
-      {tab === "thong-tin" && <TheThongTin key={duAn.id} duAn={duAn} />}
+      {tab === "thong-tin" && <TheThongTin key={duAn.id} duAn={duAn} tiep={() => moThe("buoc-chung")} />}
+      {tab === "buoc-chung" && (
+        <div className="the the-than">
+          <BuocChung duAn={duAn} hos={hos} tiep={{ nhan: "Hộ, cá nhân, tổ chức", di: () => moThe("ho") }} />
+        </div>
+      )}
       {tab === "ho" && <TheHo duAn={duAn} kq={kq} />}
       {tab === "ban-do" && <div className="kg-nhung"><BanDo duAnId={duAnId} /></div>}
       {tab === "van-ban" && <div className="kg-nhung"><VanBan key={`${duAnId}-${ma}-${hoId}`} duAnId={duAnId} maDau={ma} hoIdDau={hoId} /></div>}
@@ -150,7 +158,7 @@ function TheTongQuan({ duAn, kq, moHo, capNhatTd, keHoach }: { duAn: DuAn; kq: K
 }
 
 /** Thông tin dự án + thông tin dùng chung cho mọi văn bản của dự án (lưu một lần vào DuAn.vanBan). */
-function TheThongTin({ duAn }: { duAn: DuAn }) {
+function TheThongTin({ duAn, tiep }: { duAn: DuAn; tiep: () => void }) {
   const { luuDuAn, quyen, bao, dsDonVi } = useUngDung();
   const [d, setD] = useState<DuAn>(duAn);
   const [chung, setChung] = useState<Record<string, string>>(() => ({ ...thongTinChungMacDinh(duAn), ...truongVanBanTuDonVi(dsDonVi), ...(duAn.vanBan ?? {}) }));
@@ -161,14 +169,15 @@ function TheThongTin({ duAn }: { duAn: DuAn }) {
   const { luuDuoc } = kiemTraDuAn(d);
   const choSua = quyen("SUA_HO_SO");
   const nhom = [...new Set(TRUONG_CHUNG.map((t) => t.nhom))];
-  const luu = async () => {
+  const luu = async (sangBuocSau = false) => {
     setDang(true);
     try {
       await luuDuAn({ ...d, vanBan: { ...(duAn.vanBan ?? {}), ...chung } });
-      bao("Đã lưu thông tin dự án");
+      bao(sangBuocSau ? "Đã lưu thông tin dự án — tiếp: cập nhật bước chung 1–4" : "Đã lưu thông tin dự án");
     } finally {
       setDang(false);
     }
+    if (sangBuocSau) tiep();
   };
   return (
     <fieldset className="khung-quyen" disabled={!choSua}>
@@ -176,7 +185,8 @@ function TheThongTin({ duAn }: { duAn: DuAn }) {
         <span className="mo chu-nho">Thông tin nhập ở đây được dùng chung cho tính toán và <b>mọi mẫu văn bản của dự án</b> — không phải nhập lại ở từng văn bản.</span>
         {daDoi && <span className="nhan nhan-vang">Chưa lưu</span>}
         <button className="nut" disabled={!daDoi} onClick={() => { setD(duAn); setChung(goc); }}><BieuTuong ten="hoanTac" co={16} /> Hoàn tác</button>
-        <button className="nut nut-chinh" disabled={!daDoi || !luuDuoc || dang} onClick={() => void luu()}><BieuTuong ten="luu" co={16} /> Lưu thông tin dự án</button>
+        <button className="nut" disabled={!daDoi || !luuDuoc || dang} onClick={() => void luu()}><BieuTuong ten="luu" co={16} /> Lưu</button>
+        <button className="nut nut-chinh" disabled={(daDoi && !luuDuoc) || dang} title="Lưu (nếu có thay đổi) rồi chuyển sang cập nhật bước chung 1–4 của dự án" onClick={() => (daDoi ? void luu(true) : tiep())}>{daDoi ? "Lưu và tiếp" : "Tiếp"}: Bước chung (1–4) →</button>
       </div>
       <div className="luoi" style={{ gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", alignItems: "start" }}>
         <div className="the">
@@ -229,10 +239,10 @@ function TheHo({ duAn, kq }: { duAn: DuAn; kq: Kq }) {
         <span className="mo">{ds.length}/{kq.length}</span>
         <div className="phai">
           <label className="o-tim" style={{ minWidth: 300 }}><BieuTuong ten="traCuu" co={16} /><input placeholder="Tìm theo tên, mã, địa chỉ, tờ/thửa (vd. 5/85)…" value={loc} onChange={(e) => setLoc(e.target.value)} aria-label="Tìm hộ trong dự án" /></label>
-          <select value={locTt} onChange={(e) => setLocTt(e.target.value as TrangThaiGpmb | "")} aria-label="Lọc hiện trạng" style={{ height: 38, borderRadius: 10 }}>
+          <Chon value={locTt} onChange={(e) => setLocTt(e.target.value as TrangThaiGpmb | "")} aria-label="Lọc hiện trạng" style={{ height: 38, borderRadius: 10 }}>
             <option value="">Mọi hiện trạng</option>
             {THU_TU_TRANG_THAI.map((t) => <option key={t} value={t}>{TT_GPMB[t].ten}</option>)}
-          </select>
+          </Chon>
         </div>
       </div>
       <BangHo ds={ds} homNay={homNay} mo={(x) => di({ ten: "ho", duAnId: duAn.id, hoId: x.h.id })} trong={kq.length ? "Không có hồ sơ khớp điều kiện lọc." : "Chưa có hồ sơ. Bấm “Thêm hộ, tổ chức”, nhập Excel (menu Thêm) hoặc tạo từ bản đồ."} />

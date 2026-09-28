@@ -3,8 +3,9 @@ import { kiemTraDuyetBuoc } from "../tai-khoan";
 import { hanCuaBuoc, tinhHanBuoc } from "../han-buoc";
 import { TT_GPMB, homNayIso, trangThaiHo, type TrangThaiGpmb } from "../trang-thai";
 import { useUngDung } from "../ung-dung";
-import { tinhHo } from "../tinh-ho";
-import { CAC_BUOC, TEN_DOI_TUONG, TEN_TRANG_THAI_BUOC, hoHieuLuc, laBuocChung, taoId, tienDoHieuLuc, type DuAn, type Ho, type LoaiDoiTuong, type TrangThaiBuoc } from "../mo-hinh";
+import { tienBoiThuongDatO, tienSddTdc, tinhHo, type KetQuaHo } from "../tinh-ho";
+import { dienTichSuatToiThieu } from "@gpmb/core";
+import { BUOC_CHUNG, CAC_BUOC, TEN_DOI_TUONG, TEN_HINH_THUC_TDC, type HinhThucTdc, type TaiDinhCuHo, TEN_TRANG_THAI_BUOC, hoHieuLuc, laBuocChung, taoId, tienDoHieuLuc, type DuAn, type Ho, type LoaiDoiTuong, type TrangThaiBuoc } from "../mo-hinh";
 import { NhanDong, O, ngayVN, tien } from "../thanh-phan/chung";
 import { BieuTuong } from "../thanh-phan/BieuDo";
 import { TabThua } from "./ho/Thua";
@@ -13,6 +14,7 @@ import { TabKiemDem } from "./ho/KiemDem";
 import { TabTinhToan } from "./ho/TinhToan";
 import { DANH_MUC_MAU } from "../van-ban/danh-muc";
 import type { DiChuyen } from "@gpmb/core";
+import { Chon } from "../thanh-phan/Chon";
 
 const CAC_TAB = [
   ["thong-tin", "Thông tin", "thongTin"],
@@ -51,6 +53,16 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
     await luuHo(h, ghiChu);
     setDaSua(false);
   };
+  /** Thẻ kế tiếp theo trình tự nhập liệu (bỏ Nhật ký) — "Lưu và tiếp" lưu rồi chuyển sang. */
+  const THU_TU = CAC_TAB.map(([ma]) => ma).filter((ma) => ma !== "nhat-ky");
+  const ke = CAC_TAB.find(([ma]) => ma === THU_TU[THU_TU.indexOf(tab as (typeof THU_TU)[number]) + 1]);
+  const luuTiep = async () => {
+    if (daSua) await luu();
+    if (ke) {
+      setTab(ke[0]);
+      document.querySelector(".the-tab")?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  };
   const hieuLuc = hoHieuLuc(duAn, h);
   const tt = trangThaiHo(duAn, h, kq, homNayIso());
   const dem: Record<string, number> = { "nhan-khau": h.nhanKhau.length, thua: h.thua.length, "kiem-dem": h.taiSan.length, tinh: kq.tong.soDongCanXacNhan + kq.tong.soDongThieuCanCu };
@@ -86,7 +98,8 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
           </div>
           {daSua && <span className="nhan nhan-vang">Chưa lưu</span>}
           {choSua && <button className="nut nut-lon" disabled={!daSua} onClick={() => { setH(goc); setDaSua(false); }}><BieuTuong ten="hoanTac" co={17} /> Hoàn tác</button>}
-          {choSua && <button className="nut nut-chinh nut-lon" disabled={!daSua} onClick={() => luu()}><BieuTuong ten="luu" co={17} /> Lưu hồ sơ</button>}
+          {choSua && <button className={`nut nut-lon ${ke ? "" : "nut-chinh"}`} disabled={!daSua} onClick={() => luu()}><BieuTuong ten="luu" co={17} /> Lưu hồ sơ</button>}
+          {choSua && ke && <button className="nut nut-chinh nut-lon" title="Lưu (nếu có thay đổi) rồi chuyển sang thẻ tiếp theo" onClick={() => void luuTiep()}>{daSua ? "Lưu và tiếp" : "Tiếp"}: {ke[1]} →</button>}
         </div>
       </div>
 
@@ -121,11 +134,11 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
           {tab === "nhan-khau" && <TabNhanKhau h={h} doi={doi} />}
           {tab === "thua" && <TabThua h={h} duAn={duAn} doi={doi} />}
           {tab === "kiem-dem" && <TabKiemDem h={h} doi={doi} />}
-          {tab === "ho-tro" && <TabHoTro h={h} doi={doi} />}
+          {tab === "ho-tro" && <TabHoTro h={h} doi={doi} duAn={duAn} kq={kq} />}
           </fieldset>
           {tab === "tinh" && <TabTinhToan h={h} duAn={duAn} kq={kq} />}
           {tab === "chi-tra" && <fieldset className="khung-quyen" disabled={!choSua}><TabChiTra h={h} duAn={duAn} doi={doi} /></fieldset>}
-          {tab === "tien-do" && <TabTienDo h={h} duAn={duAn} doi={doi} moDuAn={() => di({ ten: "du-an", duAnId })} soanMau={(ma) => di({ ten: "van-ban", duAnId, ma, hoId: h.id })} luuNgay={async (moi, nk) => { setH(moi); await luuHo(moi, nk); setDaSua(false); }} />}
+          {tab === "tien-do" && <TabTienDo h={h} duAn={duAn} doi={doi} moDuAn={() => di({ ten: "du-an", duAnId, tab: "buoc-chung" })} soanMau={(ma) => di({ ten: "van-ban", duAnId, ma, hoId: h.id })} luuNgay={async (moi, nk) => { setH(moi); await luuHo(moi, nk); setDaSua(false); }} />}
           {tab === "nhat-ky" && (
             <div className="the">
               <div className="the-dau"><h2>Nhật ký hồ sơ</h2><span className="mo chu-nho">Mọi thay đổi đã lưu, kèm người thực hiện</span></div>
@@ -267,9 +280,9 @@ function TabThongTin({ h, doi }: Tab) {
       <div className="luoi luoi-3">
         <O nhan="Mã hồ sơ"><input value={h.ma} onChange={s("ma")} /></O>
         <O nhan="Đối tượng">
-          <select value={h.loai} onChange={(e) => doi({ ...h, loai: e.target.value as LoaiDoiTuong })}>
+          <Chon value={h.loai} onChange={(e) => doi({ ...h, loai: e.target.value as LoaiDoiTuong })}>
             {Object.entries(TEN_DOI_TUONG).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-          </select>
+          </Chon>
         </O>
         <O nhan={h.loai === "TO_CHUC" ? "Tên tổ chức" : "Họ tên chủ hộ / cá nhân"}><input value={h.ten} onChange={s("ten")} /></O>
         <O nhan={h.loai === "TO_CHUC" ? "Mã số thuế / QĐ thành lập" : "Số định danh cá nhân"} goiY="Thông tin cá nhân chỉ lưu trên máy này"><input value={h.soDinhDanh} onChange={s("soDinhDanh")} /></O>
@@ -345,10 +358,10 @@ function TabNhanKhau({ h, doi }: Tab) {
         </label>
         <label className="o-loc">
           <BieuTuong ten="loc" co={16} />
-          <select value={loc} onChange={(e) => setLoc(e.target.value)} aria-label="Lọc theo quan hệ với chủ hộ">
+          <Chon value={loc} onChange={(e) => setLoc(e.target.value)} aria-label="Lọc theo quan hệ với chủ hộ">
             <option value="">Tất cả</option>
             {dsQuanHe.map((q) => <option key={q} value={q}>{q}</option>)}
-          </select>
+          </Chon>
         </label>
       </div>
       <div className="nk-bang">
@@ -394,7 +407,7 @@ function TabNhanKhau({ h, doi }: Tab) {
   );
 }
 
-function TabHoTro({ h, doi }: Tab) {
+function TabHoTro({ h, doi, duAn, kq }: Tab & { duAn: DuAn; kq: KetQuaHo }) {
   const ht = h.hoTro;
   const dat = (p: Partial<Ho["hoTro"]>) => doi({ ...h, hoTro: { ...ht, ...p } });
   return (
@@ -405,18 +418,18 @@ function TabHoTro({ h, doi }: Tab) {
           <div className="the-than luoi luoi-2">
             <O nhan="DT đất NN đang sử dụng (m²)" goiY="Tỷ lệ thu hồi = DT đất NN thu hồi / DT đang sử dụng"><input className="o-so" value={ht.onDinh.dienTichNNDangSuDung} onChange={(e) => dat({ onDinh: { ...ht.onDinh!, dienTichNNDangSuDung: e.target.value } })} /></O>
             <O nhan="Di chuyển chỗ ở">
-              <select value={ht.onDinh.diChuyen} onChange={(e) => dat({ onDinh: { ...ht.onDinh!, diChuyen: e.target.value as DiChuyen } })}>
+              <Chon value={ht.onDinh.diChuyen} onChange={(e) => dat({ onDinh: { ...ht.onDinh!, diChuyen: e.target.value as DiChuyen } })}>
                 <option value="KHONG_DI_CHUYEN">Không phải di chuyển</option>
                 <option value="DI_CHUYEN">Phải di chuyển chỗ ở</option>
                 <option value="DEN_VUNG_KHO_KHAN">Di chuyển đến vùng KT-XH khó khăn, ĐBKK</option>
-              </select>
+              </Chon>
             </O>
             <O nhan="Chọn nhóm khi tỷ lệ đúng ngưỡng 30% (QD-16)" goiY="Để trống = mặc định theo NĐ 88">
-              <select value={ht.onDinh.chonNhom?.ma ?? ""} onChange={(e) => dat({ onDinh: { ...ht.onDinh!, chonNhom: e.target.value ? { ma: e.target.value, lyDo: ht.onDinh!.chonNhom?.lyDo ?? "" } : undefined } })}>
+              <Chon value={ht.onDinh.chonNhom?.ma ?? ""} onChange={(e) => dat({ onDinh: { ...ht.onDinh!, chonNhom: e.target.value ? { ma: e.target.value, lyDo: ht.onDinh!.chonNhom?.lyDo ?? "" } : undefined } })}>
                 <option value="">Mặc định</option>
                 <option value="20_30">Từ 20% đến 30% (Đ6 k9 QĐ 14/2026)</option>
                 <option value="30_70">Từ 30% đến 70% (NĐ 88)</option>
-              </select>
+              </Chon>
             </O>
             {ht.onDinh.chonNhom && <O nhan="Lý do lựa chọn *"><input className={ht.onDinh.chonNhom.lyDo ? "" : "loi-nhap"} value={ht.onDinh.chonNhom.lyDo} onChange={(e) => dat({ onDinh: { ...ht.onDinh!, chonNhom: { ...ht.onDinh!.chonNhom!, lyDo: e.target.value } } })} /></O>}
           </div>
@@ -435,6 +448,7 @@ function TabHoTro({ h, doi }: Tab) {
           </div>
         )}
       </div>
+      <TheTaiDinhCu h={h} doi={doi} duAn={duAn} kq={kq} />
       <div className="the">
         <div className="the-dau"><h3>Mồ mả, khấu trừ</h3></div>
         <div className="the-than luoi luoi-3">
@@ -447,16 +461,22 @@ function TabHoTro({ h, doi }: Tab) {
   );
 }
 
+/**
+ * Tiến độ của hộ: bước 1–4 là bước chung của dự án (chỉ xem, cập nhật một lần ở dự án); bước 5–16 theo từng hộ —
+ * mỗi hộ một tiến độ riêng, mỗi bước ghi được khó khăn, vướng mắc để lãnh đạo nắm và đưa vào báo cáo.
+ */
 function TabTienDo({ h, duAn, doi, luuNgay, soanMau, moDuAn }: Tab & { duAn: DuAn; luuNgay: (h: Ho, nk: string) => Promise<void>; soanMau: (ma: string) => void; moDuAn: () => void }) {
   const td = tienDoHieuLuc(duAn, h);
-  const [chon, setChon] = useState(CAC_BUOC[Math.max(0, CAC_BUOC.findIndex((b) => td[b.ma]?.trangThai !== "XONG"))]!.ma);
+  const BUOC_HO = CAC_BUOC.filter((x) => !laBuocChung(x.ma));
+  const [chon, setChon] = useState((BUOC_HO.find((x) => td[x.ma]?.trangThai !== "XONG") ?? BUOC_HO[BUOC_HO.length - 1]!).ma);
   const b = CAC_BUOC.find((x) => x.ma === chon)!;
-  const tuDuAn = !!td[chon]?.tuDuAn;
-  const bh = tuDuAn ? td[chon]! : h.tienDo[chon] ?? { trangThai: "CHUA" as TrangThaiBuoc };
+  const bh = h.tienDo[chon] ?? { trangThai: "CHUA" as TrangThaiBuoc };
   const { taiKhoan, quyen, bao, lich } = useUngDung();
   const han = hanCuaBuoc(chon);
   const th = han ? tinhHanBuoc(hoHieuLuc(duAn, h), han, homNayIso(), lich) : null;
   const loiDuyet = taiKhoan ? kiemTraDuyetBuoc(taiKhoan.vaiTro, taiKhoan.ten, bh) : "Chưa đăng nhập";
+  const chungXong = BUOC_CHUNG.every((ma) => td[ma]?.trangThai === "XONG");
+  const chungCu = BUOC_CHUNG.filter((ma) => h.tienDo[ma]);
   const datBuoc = (p: Partial<typeof bh>) => {
     if (p.trangThai === "XONG" && bh.trangThai !== "XONG") return void doiTrangThai("XONG", `Xác nhận hoàn thành bước ${b.ma}. ${b.ten}`);
     if (p.trangThai === "CHO_DUYET" && bh.trangThai !== "CHO_DUYET") return void doiTrangThai("CHO_DUYET", `Gửi duyệt bước ${b.ma}. ${b.ten}`);
@@ -468,120 +488,234 @@ function TabTienDo({ h, duAn, doi, luuNgay, soanMau, moDuAn }: Tab & { duAn: DuA
     const ghi = tt === "XONG" ? { duyetBoi: taiKhoan!.ten } : tt === "CHO_DUYET" ? { guiBoi: taiKhoan!.ten, duyetBoi: undefined } : {};
     return luuNgay({ ...h, tienDo: { ...h.tienDo, [chon]: { ...bh, ...ghi, trangThai: tt, ngay: bh.ngay || new Date().toISOString().slice(0, 10) } } }, nk);
   };
-  const theoDoiRieng = (rieng: boolean) => {
-    const cu = h.tienDo[chon] ?? { trangThai: "CHUA" as TrangThaiBuoc };
-    const { rieng: _bo, tuDuAn: _b2, ...khac } = cu;
-    void luuNgay(
-      { ...h, tienDo: { ...h.tienDo, [chon]: rieng ? { ...khac, rieng: true } : khac } },
-      rieng ? `Theo dõi riêng bước chung ${b.ma}. ${b.ten} cho hộ này` : `Bỏ theo dõi riêng bước ${b.ma} — theo bước chung của dự án`,
-    );
+  const giaiQuyet = () => {
+    const { vuongMac, vuongMacNgay: _n, ...con } = bh;
+    void luuNgay({ ...h, tienDo: { ...h.tienDo, [chon]: con } }, `Đã giải quyết vướng mắc bước ${b.ma}. ${b.ten}: ${vuongMac ?? ""}`);
   };
+  /** Bỏ tiến độ bước chung nhập riêng ở hộ (phiên bản trước) — theo bước chung của dự án. */
+  const boTienDoChungCu = () => {
+    const moi = { ...h.tienDo };
+    for (const ma of BUOC_CHUNG) delete moi[ma];
+    void luuNgay({ ...h, tienDo: moi }, "Bỏ tiến độ bước 1–4 nhập riêng ở hộ — theo bước chung của dự án");
+  };
+  const lopTt = (t: TrangThaiBuoc) => (t === "XONG" ? "nhan-xanh" : t === "DANG" ? "nhan-duong" : t === "CHO_DUYET" ? "nhan-tim" : "nhan-xam");
   return (
-    <div className="luoi luoi-chinh">
-      <div className="the">
-        <div className="the-dau"><h2>Tiến độ 16 bước</h2><span className="mo chu-nho">Bước 1–4 là bước chung của dự án (cập nhật một lần ở màn Dự án)</span></div>
-        <table className="bang">
-          <thead><tr><th>Bước</th><th>Nội dung</th><th>Thời hạn</th><th>Mẫu</th><th>Trạng thái</th><th>Ngày</th></tr></thead>
-          <tbody>
-            {CAC_BUOC.map((x) => {
-              const t = td[x.ma]?.trangThai ?? "CHUA";
-              return (
-                <tr key={x.ma} className={`co-the-chon ${chon === x.ma ? "dang-chon" : ""}`} onClick={() => setChon(x.ma)}>
-                  <td>{x.ma}</td>
-                  <td>
-                    {x.ten}
-                    {laBuocChung(x.ma) && <span className={`nhan ${h.tienDo[x.ma]?.rieng ? "nhan-vang" : "nhan-xam"}`} style={{ marginLeft: 6, fontSize: 10.5 }}>{h.tienDo[x.ma]?.rieng ? "riêng hộ này" : "chung"}</span>}
-                    <div className="can-cu">{x.canCu}</div>
-                  </td>
-                  <td className="chu-nho">{x.thoiHan ?? "—"}</td>
-                  <td className="chu-nho">{x.mau ?? "—"}</td>
-                  <td><span className={`nhan ${t === "XONG" ? "nhan-xanh" : t === "DANG" ? "nhan-duong" : t === "CHO_DUYET" ? "nhan-tim" : "nhan-xam"}`}>{TEN_TRANG_THAI_BUOC[t]}</span></td>
-                  <td className="chu-nho">{ngayVN(td[x.ma]?.ngay)}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+    <div className="luoi" style={{ gap: 14 }}>
+      <div className="the td-chung">
+        <div className="the-dau">
+          <h3>Bước chung của dự án (1–4)</h3>
+          <span className="mo chu-nho">Thực hiện chung cho cả dự án — chỉ xem ở đây</span>
+          <div className="phai"><button className="nut nut-nho" onClick={moDuAn}>Cập nhật ở dự án →</button></div>
+        </div>
+        <div className="td-chung-ds">
+          {BUOC_CHUNG.map((ma) => {
+            const x = CAC_BUOC.find((y) => y.ma === ma)!;
+            const t = td[ma]?.trangThai ?? "CHUA";
+            return (
+              <div key={ma} className={`td-chung-o ${t}`}>
+                <span className="so">{t === "XONG" ? "✓" : ma}</span>
+                <div>
+                  <b>{x.ten}</b>
+                  <div className="chu-nho"><span className={`nhan ${lopTt(t)}`}>{TEN_TRANG_THAI_BUOC[t]}</span>{td[ma]?.ngay ? ` · ${ngayVN(td[ma]!.ngay)}` : ""}</div>
+                  {td[ma]?.ghiChu && <div className="chu-nho mo">{td[ma]!.ghiChu}</div>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        {!chungXong && <div className="thong-bao thong-bao-vang" style={{ margin: "10px 16px 14px" }}>Dự án chưa hoàn thành đủ bước chung 1–4. Theo trình tự, các bước riêng của từng hộ (từ bước 5 — lập phương án) thực hiện sau khi đã thông báo thu hồi và điều tra, đo đạc, kiểm đếm (trình tự khoản 2, khoản 3 Điều 87 Luật Đất đai 2024).</div>}
+        {chungCu.length > 0 && (
+          <div className="thong-bao thong-bao-xanh chu-nho" style={{ margin: "10px 16px 14px" }}>
+            Hộ còn tiến độ bước {chungCu.join(", ")} nhập riêng ở phiên bản trước — đang dùng khi dự án chưa cập nhật bước đó.{" "}
+            {quyen("SUA_HO_SO") && <button className="nut nut-chu nut-nho" onClick={boTienDoChungCu}>Bỏ, theo bước chung của dự án</button>}
+          </div>
+        )}
       </div>
-      <div className="the">
-        <div className="the-dau"><h3>Bước {b.ma}. {b.ten}</h3></div>
-        <div className="the-than luoi">
-          <div className="chu-nho"><b>Căn cứ:</b> {b.canCu}<br /><b>Thời hạn:</b> {b.thoiHan ?? "—"}<br /><b>Mẫu biểu (Sổ tay QĐ 1966):</b> {b.mau ?? "—"}</div>
-          {laBuocChung(chon) && tuDuAn ? (
-            <>
-              <div className="thong-bao thong-bao-xanh" style={{ marginBottom: 0 }}>
-                <b>Bước chung của dự án</b> — áp dụng cho mọi hộ, cập nhật ở màn Dự án (Mốc tiến độ → Cập nhật tiến độ).
-                <div style={{ marginTop: 6 }}>
-                  Trạng thái: <span className={`nhan ${bh.trangThai === "XONG" ? "nhan-xanh" : bh.trangThai === "CHO_DUYET" ? "nhan-tim" : bh.trangThai === "DANG" ? "nhan-duong" : "nhan-xam"}`}>{TEN_TRANG_THAI_BUOC[bh.trangThai]}</span>
-                  {bh.ngay && <> · {ngayVN(bh.ngay)}</>}
-                  {bh.ghiChu && <div className="chu-nho">{bh.ghiChu}</div>}
-                  {(bh.guiBoi || bh.duyetBoi) && <div className="chu-nho mo">{bh.guiBoi && <>Gửi: {bh.guiBoi}. </>}{bh.duyetBoi && <>Xác nhận: {bh.duyetBoi}.</>}</div>}
-                </div>
-              </div>
-              <div className="nhom-nut">
-                <button className="nut" onClick={moDuAn}>Mở màn Dự án</button>
-                {quyen("SUA_HO_SO") && <button className="nut" title="Dùng khi hộ này khác các hộ còn lại, vd. không hợp tác, phải kiểm đếm bắt buộc" onClick={() => theoDoiRieng(true)}>Theo dõi riêng cho hộ này</button>}
-              </div>
-            </>
-          ) : (
-            <>
-              {laBuocChung(chon) && (
-                <div className={`thong-bao ${h.tienDo[chon]?.rieng ? "thong-bao-vang" : "thong-bao-xanh"}`} style={{ marginBottom: 0 }}>
-                  {h.tienDo[chon]?.rieng
-                    ? <>Hộ này <b>theo dõi riêng</b> bước chung {b.ma} (không theo trạng thái chung của dự án). <button className="nut nut-chu nut-nho" disabled={!quyen("SUA_HO_SO")} onClick={() => theoDoiRieng(false)}>Bỏ theo dõi riêng</button></>
-                    : <>Dự án chưa cập nhật bước chung {b.ma} — đang dùng tiến độ nhập riêng ở hộ. Nên cập nhật một lần cho cả dự án ở màn Dự án. <button className="nut nut-chu nut-nho" onClick={moDuAn}>Mở màn Dự án</button></>}
-                </div>
-              )}
-              {han && th && (
-                <div className={`thong-bao ${th.trangThai === "QUA_HAN" || th.trangThai === "XONG_QUA_HAN" ? "thong-bao-do" : th.trangThai === "SAP_HET" ? "thong-bao-vang" : "thong-bao-xanh"}`} style={{ marginBottom: 0 }}>
-                  <b>Thời hạn:</b> {han.soNgay} {han.loai === "NLV" ? "ngày làm việc" : "ngày"} kể từ {han.moc.nhan.charAt(0).toLowerCase() + han.moc.nhan.slice(1)} ({han.canCu}).
-                  {han.moc.loai === "NHAP" && (
-                    <div style={{ marginTop: 6 }}>
-                      <label className="chu-nho">Ngày mốc: <input type="date" value={bh.mocHan ?? ""} onChange={(e) => datBuoc({ mocHan: e.target.value || undefined })} /></label>
-                    </div>
-                  )}
-                  <div style={{ marginTop: 4 }}>
-                    {th.trangThai === "CHUA_CO_MOC" && (han.moc.loai === "NHAP" ? "Chưa nhập ngày mốc — chưa tính hạn." : `Chưa có ${han.moc.nhan} — chưa tính hạn.`)}
-                    {th.hanChot && <>Hạn chót: <b>{ngayVN(th.hanChot)}</b>. </>}
-                    {th.trangThai === "CON_HAN" && `Còn ${th.conLai} ${han.loai === "NLV" ? "ngày làm việc" : "ngày"}.`}
-                    {th.trangThai === "SAP_HET" && `Sắp hết hạn: còn ${th.conLai} ${han.loai === "NLV" ? "ngày làm việc" : "ngày"}.`}
-                    {th.trangThai === "QUA_HAN" && "Đã quá hạn."}
-                    {th.trangThai === "XONG_DUNG_HAN" && "Hoàn thành trong hạn."}
-                    {th.trangThai === "XONG_QUA_HAN" && "Hoàn thành sau hạn."}
-                    {th.thieuLich.length > 0 && <div className="chu-nho">Chưa xác nhận lịch ngày nghỉ năm {th.thieuLich.join(", ")} — hạn chỉ trừ thứ Bảy, Chủ nhật (Cài đặt chung → Lịch ngày nghỉ).</div>}
+      <div className="luoi luoi-chinh">
+        <div className="the">
+          <div className="the-dau"><h2>Tiến độ của hộ (bước 5–16)</h2><span className="mo chu-nho">Mỗi hộ một tiến độ; bấm một bước để cập nhật, ghi khó khăn, vướng mắc</span></div>
+          <div className="bang-cuon">
+            <table className="bang">
+              <thead><tr><th>Bước</th><th>Nội dung</th><th>Thời hạn</th><th>Trạng thái</th><th>Ngày</th><th>Khó khăn, vướng mắc</th></tr></thead>
+              <tbody>
+                {BUOC_HO.map((x) => {
+                  const t = td[x.ma]?.trangThai ?? "CHUA";
+                  const vm = h.tienDo[x.ma]?.vuongMac;
+                  return (
+                    <tr key={x.ma} className={`co-the-chon ${chon === x.ma ? "dang-chon" : ""}`} onClick={() => setChon(x.ma)}>
+                      <td>{x.ma}</td>
+                      <td>{x.ten}<div className="can-cu">{x.canCu}{x.mau ? ` · Mẫu ${x.mau}` : ""}</div></td>
+                      <td className="chu-nho">{x.thoiHan ?? "—"}</td>
+                      <td><span className={`nhan ${lopTt(t)}`}>{TEN_TRANG_THAI_BUOC[t]}</span></td>
+                      <td className="chu-nho">{ngayVN(td[x.ma]?.ngay)}</td>
+                      <td className="chu-nho">{vm ? <span className="chu-do">! {vm}</span> : <span className="mo">—</span>}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div className="the">
+          <div className="the-dau"><h3>Bước {b.ma}. {b.ten}</h3></div>
+          <div className="the-than luoi">
+            <div className="chu-nho"><b>Căn cứ:</b> {b.canCu}<br /><b>Thời hạn:</b> {b.thoiHan ?? "—"}<br /><b>Mẫu biểu (Sổ tay QĐ 1966):</b> {b.mau ?? "—"}</div>
+            {han && th && (
+              <div className={`thong-bao ${th.trangThai === "QUA_HAN" || th.trangThai === "XONG_QUA_HAN" ? "thong-bao-do" : th.trangThai === "SAP_HET" ? "thong-bao-vang" : "thong-bao-xanh"}`} style={{ marginBottom: 0 }}>
+                <b>Thời hạn:</b> {han.soNgay} {han.loai === "NLV" ? "ngày làm việc" : "ngày"} kể từ {han.moc.nhan.charAt(0).toLowerCase() + han.moc.nhan.slice(1)} ({han.canCu}).
+                {han.moc.loai === "NHAP" && (
+                  <div style={{ marginTop: 6 }}>
+                    <label className="chu-nho">Ngày mốc: <input type="date" value={bh.mocHan ?? ""} onChange={(e) => datBuoc({ mocHan: e.target.value || undefined })} /></label>
                   </div>
+                )}
+                <div style={{ marginTop: 4 }}>
+                  {th.trangThai === "CHUA_CO_MOC" && (han.moc.loai === "NHAP" ? "Chưa nhập ngày mốc — chưa tính hạn." : `Chưa có ${han.moc.nhan} — chưa tính hạn.`)}
+                  {th.hanChot && <>Hạn chót: <b>{ngayVN(th.hanChot)}</b>. </>}
+                  {th.trangThai === "CON_HAN" && `Còn ${th.conLai} ${han.loai === "NLV" ? "ngày làm việc" : "ngày"}.`}
+                  {th.trangThai === "SAP_HET" && `Sắp hết hạn: còn ${th.conLai} ${han.loai === "NLV" ? "ngày làm việc" : "ngày"}.`}
+                  {th.trangThai === "QUA_HAN" && "Đã quá hạn."}
+                  {th.trangThai === "XONG_DUNG_HAN" && "Hoàn thành trong hạn."}
+                  {th.trangThai === "XONG_QUA_HAN" && "Hoàn thành sau hạn."}
+                  {th.thieuLich.length > 0 && <div className="chu-nho">Chưa xác nhận lịch ngày nghỉ năm {th.thieuLich.join(", ")} — hạn chỉ trừ thứ Bảy, Chủ nhật (Cài đặt chung → Lịch ngày nghỉ).</div>}
                 </div>
-              )}
-              <O nhan="Trạng thái">
-                <select value={bh.trangThai} onChange={(e) => datBuoc({ trangThai: e.target.value as TrangThaiBuoc })}>
-                  {Object.entries(TEN_TRANG_THAI_BUOC).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                </select>
-              </O>
-              <O nhan="Ngày thực hiện / hoàn thành"><input type="date" value={bh.ngay ?? ""} onChange={(e) => datBuoc({ ngay: e.target.value })} /></O>
-              <O nhan="Nội dung thực hiện, ghi chú, số văn bản"><textarea rows={4} value={bh.ghiChu ?? ""} onChange={(e) => datBuoc({ ghiChu: e.target.value })} /></O>
+              </div>
+            )}
+            <O nhan="Trạng thái">
+              <Chon value={bh.trangThai} onChange={(e) => datBuoc({ trangThai: e.target.value as TrangThaiBuoc })}>
+                {Object.entries(TEN_TRANG_THAI_BUOC).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </Chon>
+            </O>
+            <O nhan="Ngày thực hiện / hoàn thành"><input type="date" value={bh.ngay ?? ""} onChange={(e) => datBuoc({ ngay: e.target.value })} /></O>
+            <O nhan="Nội dung thực hiện, ghi chú, số văn bản"><textarea rows={3} value={bh.ghiChu ?? ""} onChange={(e) => datBuoc({ ghiChu: e.target.value })} /></O>
+            <O nhan="Khó khăn, vướng mắc ở bước này" goiY="vd. Không nhất trí đơn giá, đề nghị xem xét lại; chưa nhận tiền; tranh chấp ranh giới… Có nội dung → hộ ở trạng thái Vướng mắc, hiện trong cảnh báo và báo cáo.">
+              <textarea rows={3} className={bh.vuongMac ? "o-vuong-mac" : ""} value={bh.vuongMac ?? ""} placeholder="Để trống nếu không có" onChange={(e) => datBuoc({ vuongMac: e.target.value || undefined, vuongMacNgay: e.target.value ? bh.vuongMacNgay ?? homNayIso() : undefined })} />
+            </O>
+            {bh.vuongMac && (
               <div className="nhom-nut">
-                <button className="nut" disabled={bh.trangThai === "CHO_DUYET" || bh.trangThai === "XONG" || !quyen("GUI_DUYET")} onClick={() => doiTrangThai("CHO_DUYET", `Gửi duyệt bước ${b.ma}. ${b.ten}`)}>Gửi duyệt</button>
-                <button className="nut nut-chinh" disabled={bh.trangThai === "XONG" || !!loiDuyet} title={loiDuyet ?? undefined} onClick={() => doiTrangThai("XONG", `Xác nhận hoàn thành bước ${b.ma}. ${b.ten}`)}>Xác nhận hoàn thành</button>
+                <span className="chu-nho mo">Ghi từ {ngayVN(bh.vuongMacNgay)}</span>
+                <button className="nut nut-nho" disabled={!quyen("SUA_HO_SO")} onClick={giaiQuyet}>Đã giải quyết (ghi nhật ký)</button>
               </div>
-              <div className="mo chu-nho">
-                {bh.guiBoi && <>Gửi duyệt: <b>{bh.guiBoi}</b>. </>}
-                {bh.duyetBoi && <>Xác nhận: <b>{bh.duyetBoi}</b>. </>}
-                {bh.trangThai !== "XONG" && loiDuyet && <>{loiDuyet}.</>}
-              </div>
-            </>
-          )}
-          {DANH_MUC_MAU.some((m) => m.buoc === b.ma) && (
-            <div>
-              <div className="chu-nho" style={{ fontWeight: 600, marginBottom: 4 }}>Soạn mẫu biểu của bước</div>
-              <div className="nhom-nut">
-                {DANH_MUC_MAU.filter((m) => m.buoc === b.ma).map((m) => (
-                  <button key={m.ma} className="nut nut-nho" title={m.ten} onClick={() => soanMau(m.ma)}>Mẫu {m.ma}</button>
-                ))}
-              </div>
+            )}
+            <div className="nhom-nut">
+              <button className="nut" disabled={bh.trangThai === "CHO_DUYET" || bh.trangThai === "XONG" || !quyen("GUI_DUYET")} onClick={() => doiTrangThai("CHO_DUYET", `Gửi duyệt bước ${b.ma}. ${b.ten}`)}>Gửi duyệt</button>
+              <button className="nut nut-chinh" disabled={bh.trangThai === "XONG" || !!loiDuyet} title={loiDuyet ?? undefined} onClick={() => doiTrangThai("XONG", `Xác nhận hoàn thành bước ${b.ma}. ${b.ten}`)}>Xác nhận hoàn thành</button>
             </div>
-          )}
+            <div className="mo chu-nho">
+              {bh.guiBoi && <>Gửi duyệt: <b>{bh.guiBoi}</b>. </>}
+              {bh.duyetBoi && <>Xác nhận: <b>{bh.duyetBoi}</b>. </>}
+              {bh.trangThai !== "XONG" && loiDuyet && <>{loiDuyet}.</>}
+            </div>
+            {DANH_MUC_MAU.some((m) => m.buoc === b.ma) && (
+              <div>
+                <div className="chu-nho" style={{ fontWeight: 600, marginBottom: 4 }}>Soạn mẫu biểu của bước</div>
+                <div className="nhom-nut">
+                  {DANH_MUC_MAU.filter((m) => m.buoc === b.ma).map((m) => (
+                    <button key={m.ma} className="nut nut-nho" title={m.ten} onClick={() => soanMau(m.ma)}>Mẫu {m.ma}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Hỗ trợ tái định cư: hình thức bố trí (Đ111 LĐĐ 2024; Đ23, Đ24 NĐ 88/2024), các khoản có sẵn trong bộ chính sách
+ * (C08 tự lo chỗ ở – Đ10 PL II QĐ 106; C10 suất tối thiểu – Đ16 PL II; C11 20% tiền SDĐ – k11 Đ6 QĐ 14/2026) và khoản
+ * khác cán bộ nhập kèm căn cứ (k13 Đ6 QĐ 14/2026: UBND xã quyết định cho từng dự án).
+ */
+function TheTaiDinhCu({ h, doi, duAn, kq }: Tab & { duAn: DuAn; kq: KetQuaHo }) {
+  const { chinhSach } = useUngDung();
+  const cs = chinhSach(duAn);
+  const t = h.hoTro.taiDinhCu;
+  const dat = (p: Partial<TaiDinhCuHo> | undefined) => doi({ ...h, hoTro: { ...h.hoTro, taiDinhCu: p === undefined ? undefined : { ...(t ?? { hinhThuc: "DAT_O", khoanKhac: [] }), ...p } } });
+  const btDatO = tienBoiThuongDatO(h, kq.nhom.find((x) => x.ma === "A.I")?.dong ?? []);
+  const sdd = t ? tienSddTdc(t) : null;
+  const giaoDat = t?.hinhThuc === "DAT_O" || t?.hinhThuc === "NHA_O";
+  const dtSuat = cs.taiDinhCu && giaoDat ? dienTichSuatToiThieu(cs, { xa: duAn.xa, hinhThuc: t!.hinhThuc as "DAT_O" | "NHA_O" }) : null;
+  const dongTdc = kq.nhom.find((x) => x.ma === "B.VI")?.dong ?? [];
+  const tongTdc = dongTdc.reduce((s, x) => (x.dong.thanhTien && x.dong.trangThai === "TAM_TINH" ? s + x.dong.thanhTien.toNumber() : s), 0);
+  const suaKhoan = (id: string, p: Partial<TaiDinhCuHo["khoanKhac"][number]>) => dat({ khoanKhac: t!.khoanKhac.map((k) => (k.id === id ? { ...k, ...p } : k)) });
+  return (
+    <div className="the" style={{ gridColumn: "1 / -1" }}>
+      <div className="the-dau">
+        <h3>Hỗ trợ tái định cư</h3>
+        <span className="mo chu-nho">Điều 111 Luật Đất đai 2024; Điều 23, 24 NĐ 88/2024; Điều 10, 16 PL II QĐ 106/2025; Điều 6 QĐ 14/2026</span>
+        <div className="phai"><label><input type="checkbox" checked={!!t} onChange={(e) => dat(e.target.checked ? {} : undefined)} /> Áp dụng</label></div>
+      </div>
+      {t && (
+        <div className="the-than luoi" style={{ gap: 12 }}>
+          {!cs.taiDinhCu && <div className="thong-bao thong-bao-vang" style={{ marginBottom: 0 }}>Bộ chính sách {cs.ma} chưa có quy định hỗ trợ tái định cư — chỉ nhập được khoản khác kèm căn cứ.</div>}
+          <div className="luoi luoi-3">
+            <O nhan="Hình thức bố trí tái định cư" style={{ gridColumn: "span 2" }}>
+              <Chon value={t.hinhThuc} onChange={(e) => dat({ hinhThuc: e.target.value as HinhThucTdc })}>
+                {Object.entries(TEN_HINH_THUC_TDC).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </Chon>
+            </O>
+            <O nhan="Khu, điểm tái định cư"><input value={t.khuTdc ?? ""} placeholder="vd. Khu TĐC bản Mé" onChange={(e) => dat({ khuTdc: e.target.value || undefined })} /></O>
+            {giaoDat && (
+              <>
+                <O nhan={t.hinhThuc === "NHA_O" ? "Căn hộ / vị trí" : "Lô số / vị trí"}><input value={t.viTriLo ?? ""} onChange={(e) => dat({ viTriLo: e.target.value || undefined })} /></O>
+                <O nhan={t.hinhThuc === "NHA_O" ? "DT căn hộ được giao (m²)" : "DT lô đất ở được giao (m²)"}><input className="o-so" value={t.dienTichGiao ?? ""} onChange={(e) => dat({ dienTichGiao: e.target.value || undefined })} /></O>
+                <O nhan={t.hinhThuc === "NHA_O" ? "Giá bán nhà ở TĐC (đ/m²)" : "Giá đất ở tại khu TĐC (đ/m²)"} goiY={t.hinhThuc === "NHA_O" ? "Do UBND có thẩm quyền quyết định (k3 Đ111 LĐĐ)" : "Theo bảng giá đất tại thời điểm phê duyệt phương án (k3 Đ111 LĐĐ)"}>
+                  <input className="o-so" value={t.donGia ?? ""} onChange={(e) => dat({ donGia: e.target.value || undefined })} />
+                </O>
+                <O nhan="Văn bản giá" style={{ gridColumn: "1 / -1" }}><input value={t.nguonGia ?? ""} placeholder="vd. NQ 152/2025/NQ-HĐND, Bảng 05, xã …, vị trí …" onChange={(e) => dat({ nguonGia: e.target.value || undefined })} /></O>
+              </>
+            )}
+          </div>
+          {t.hinhThuc === "TU_LO" && <div className="thong-bao thong-bao-xanh chu-nho" style={{ marginBottom: 0 }}>Hộ đủ điều kiện được hỗ trợ tái định cư (k8 Đ111 LĐĐ) mà tự lo chỗ ở: ngoài bồi thường về đất bằng tiền được hỗ trợ theo địa bàn — phường 100 triệu, 10 xã (Quỳnh Nhai, Thuận Châu, Mường La, Bắc Yên, Phù Yên, Yên Châu, Mai Sơn, Sông Mã, Sốp Cộp, Vân Hồ) 80 triệu, xã còn lại 60 triệu đồng/hộ (Đ10 PL II QĐ 106).</div>}
+          {t.hinhThuc === "TAI_CHO" && <div className="thong-bao thong-bao-xanh chu-nho" style={{ marginBottom: 0 }}>Tái định cư tại chỗ bằng chuyển mục đích phần đất nông nghiệp còn lại sang đất ở trong hạn mức, miễn tiền SDĐ bằng diện tích đất ở thu hồi khi người có đất đồng ý phương án bồi thường đất nông nghiệp (k3 Đ24 NĐ 88/2024) — không phát sinh khoản tiền hỗ trợ; hỗ trợ tạm cư nhập ở thẻ Tạm cư.</div>}
+          {giaoDat && (
+            <div className="luoi luoi-2">
+              <label className="o-chon-kem">
+                <input type="checkbox" checked={!!t.suatToiThieu} onChange={(e) => dat({ suatToiThieu: e.target.checked || undefined })} />
+                <span><b>Hỗ trợ đủ một suất tái định cư tối thiểu</b> (k8 Đ111 LĐĐ): hộ phải di chuyển chỗ ở, tiền bồi thường về đất ở không đủ một suất. Suất tối thiểu {dtSuat ? <b>{dtSuat} m²</b> : "—"} (Đ16 PL II QĐ 106).</span>
+              </label>
+              {t.hinhThuc === "DAT_O" && (
+                <label className="o-chon-kem">
+                  <input type="checkbox" checked={!!t.hoTroTienSdd} onChange={(e) => dat({ hoTroTienSdd: e.target.checked || undefined })} />
+                  <span><b>Hỗ trợ 20% tiền sử dụng đất phải nộp</b> của thửa đất được giao TĐC (k11 Đ6 QĐ 14/2026; VM-28).</span>
+                </label>
+              )}
+            </div>
+          )}
+          {t.hinhThuc === "DAT_O" && t.hoTroTienSdd && (
+            <O nhan="Tiền SDĐ phải nộp theo thông báo (đ)" goiY="Để trống: phần mềm tính = giá đất khu TĐC × DT lô giao"><input className="o-so" value={t.tienSddPhaiNop ?? ""} onChange={(e) => dat({ tienSddPhaiNop: e.target.value || undefined })} style={{ maxWidth: 280 }} /></O>
+          )}
+          {giaoDat && (
+            <div className="tdc-so">
+              <div><span>Tiền bồi thường về đất ở</span><b>{tien(btDatO)} đ</b></div>
+              {t.hinhThuc === "DAT_O" && <div><span>Tiền SDĐ phải nộp thửa TĐC</span><b>{sdd?.tien ? `${tien(sdd.tien)} đ` : "—"}</b></div>}
+              {t.hinhThuc === "DAT_O" && sdd?.tien && sdd.tien.gt(btDatO) && <div title="Điều 26 NĐ 88/2024 — thông tin, không cộng vào hỗ trợ"><span>Được ghi nợ (nếu có nhu cầu)</span><b>{tien(sdd.tien.minus(btDatO))} đ</b></div>}
+              <div><span>Tổng hỗ trợ tái định cư (tạm tính)</span><b>{tongTdc.toLocaleString("vi-VN")} đ</b></div>
+            </div>
+          )}
+          <div>
+            <div className="chu-nho" style={{ fontWeight: 600, marginBottom: 6 }}>Khoản hỗ trợ tái định cư khác <span className="mo" style={{ fontWeight: 400 }}>— UBND xã quyết định cho dự án (k13 Đ6 QĐ 14/2026) hoặc chính sách chưa có sẵn; bắt buộc ghi căn cứ</span></div>
+            {t.khoanKhac.length > 0 && (
+              <table className="bang">
+                <thead><tr><th>Nội dung</th><th style={{ width: 170 }}>Số tiền (đ)</th><th style={{ width: 300 }}>Căn cứ (số, ngày văn bản)</th><th style={{ width: 44 }} /></tr></thead>
+                <tbody>
+                  {t.khoanKhac.map((k) => (
+                    <tr key={k.id}>
+                      <td><input value={k.noiDung} placeholder="vd. Hỗ trợ san lấp mặt bằng lô TĐC" onChange={(e) => suaKhoan(k.id, { noiDung: e.target.value })} /></td>
+                      <td><input className="o-so" value={k.soTien} onChange={(e) => suaKhoan(k.id, { soTien: e.target.value })} /></td>
+                      <td><input className={k.canCu.trim() ? "" : "loi-nhap"} value={k.canCu} placeholder="vd. QĐ 45/QĐ-UBND ngày 10/9/2026 của UBND xã" onChange={(e) => suaKhoan(k.id, { canCu: e.target.value })} /></td>
+                      <td><button className="nut nut-chu nut-nguy nut-nho" aria-label="Xóa khoản" onClick={() => dat({ khoanKhac: t.khoanKhac.filter((x) => x.id !== k.id) })}><BieuTuong ten="thungRac" co={15} /></button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+            <button className="nut nut-nho" style={{ marginTop: 6 }} onClick={() => dat({ khoanKhac: [...t.khoanKhac, { id: taoId(), noiDung: "", soTien: "", canCu: "" }] })}><BieuTuong ten="cong" co={14} /> Thêm khoản</button>
+          </div>
+          <O nhan="Ghi chú"><textarea rows={2} value={t.ghiChu ?? ""} onChange={(e) => dat({ ghiChu: e.target.value || undefined })} /></O>
+        </div>
+      )}
     </div>
   );
 }

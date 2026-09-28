@@ -19,6 +19,7 @@ import { kiemTraChuoi, type DongNhatKy } from "../nhat-ky";
 import { HopKetNoi } from "./KetNoi";
 import { BieuTuong } from "./BieuDo";
 import { docCheDo, laKhoMang } from "../kho-mang";
+import { Chon } from "./Chon";
 
 const ngayGio = (iso?: string) => (iso ? new Date(iso).toLocaleString("vi-VN", { hour12: false }) : "—");
 
@@ -226,9 +227,9 @@ export function HopQuanLyTaiKhoan({ dong }: { dong: () => void }) {
               <td>{u.hoTen}</td>
               <td>{u.chucVu || "—"}</td>
               <td>
-                <select value={u.vaiTro} aria-label={`Vai trò ${u.ten}`} onChange={(e) => void luu({ ...u, vaiTro: e.target.value as VaiTro }, `Đổi vai trò → ${TEN_VAI_TRO[e.target.value as VaiTro]}`)}>
+                <Chon value={u.vaiTro} aria-label={`Vai trò ${u.ten}`} onChange={(e) => void luu({ ...u, vaiTro: e.target.value as VaiTro }, `Đổi vai trò → ${TEN_VAI_TRO[e.target.value as VaiTro]}`)}>
                   {(Object.keys(TEN_VAI_TRO) as VaiTro[]).map((k) => <option key={k} value={k}>{TEN_VAI_TRO[k]}</option>)}
-                </select>
+                </Chon>
               </td>
               <td>{u.hoatDong ? <span className="nhan nhan-xanh">Hoạt động</span> : <span className="nhan nhan-xam">Đã khóa</span>}{u.phaiDoiMatKhau && <span className="nhan nhan-vang" style={{ marginLeft: 4 }}>Chờ đổi mật khẩu</span>}</td>
               <td className="chu-nho">{ngayGio(u.dangNhapCuoi)}</td>
@@ -259,9 +260,9 @@ export function HopQuanLyTaiKhoan({ dong }: { dong: () => void }) {
             <O nhan="Họ tên"><input value={v.hoTen} onChange={(e) => setV({ ...v, hoTen: e.target.value })} /></O>
             <O nhan="Chức vụ"><input value={v.chucVu} onChange={(e) => setV({ ...v, chucVu: e.target.value })} /></O>
             <O nhan="Vai trò" goiY={MO_TA_VAI_TRO[v.vaiTro]}>
-              <select value={v.vaiTro} onChange={(e) => setV({ ...v, vaiTro: e.target.value as VaiTro })}>
+              <Chon value={v.vaiTro} onChange={(e) => setV({ ...v, vaiTro: e.target.value as VaiTro })}>
                 {(Object.keys(TEN_VAI_TRO) as VaiTro[]).map((k) => <option key={k} value={k}>{TEN_VAI_TRO[k]}</option>)}
-              </select>
+              </Chon>
             </O>
             <O nhan="Mật khẩu ban đầu" goiY={kiemTraMatKhau(v.matKhau, v.ten) ?? "Người dùng nên đổi sau lần đăng nhập đầu"}><input type="password" value={v.matKhau} onChange={(e) => setV({ ...v, matKhau: e.target.value })} /></O>
           </div>

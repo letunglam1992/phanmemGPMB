@@ -535,5 +535,83 @@
         ]
       }
     }
+  },
+  "taiDinhCu": {
+    "ghiChu": "Hỗ trợ tái định cư: tự lo chỗ ở (C08), suất tái định cư tối thiểu (C10), 20% tiền sử dụng đất thửa TĐC (C11). Ghi nợ tiền SDĐ (C12, Điều 26 NĐ 88/2024) chỉ để thông tin, không cộng vào tiền hỗ trợ.",
+    "tuLoChoO": {
+      "canCu": [
+        {
+          "vanBan": "Luật Đất đai 2024",
+          "viTri": "khoản 8 Điều 111"
+        },
+        {
+          "vanBan": "NĐ 88/2024/NĐ-CP",
+          "viTri": "khoản 1, khoản 2 Điều 23"
+        },
+        {
+          "vanBan": "QĐ 106/2025/QĐ-UBND",
+          "viTri": "Điều 10 Phụ lục II"
+        }
+      ],
+      "mucTheoNhom": {
+        "PHUONG": "100000000",
+        "XA_NHOM_1": "80000000",
+        "XA_CON_LAI": "60000000"
+      },
+      "phanNhom": {
+        "PHUONG": [
+          "Phường Tô Hiệu",
+          "Phường Chiềng An",
+          "Phường Chiềng Cơi",
+          "Phường Chiềng Sinh",
+          "Phường Mộc Châu",
+          "Phường Mộc Sơn",
+          "Phường Vân Sơn",
+          "Phường Thảo Nguyên"
+        ],
+        "XA_NHOM_1": [
+          "Xã Quỳnh Nhai",
+          "Xã Thuận Châu",
+          "Xã Mường La",
+          "Xã Bắc Yên",
+          "Xã Phù Yên",
+          "Xã Yên Châu",
+          "Xã Mai Sơn",
+          "Xã Sông Mã",
+          "Xã Sốp Cộp",
+          "Xã Vân Hồ"
+        ]
+      },
+      "ghiChuPhanNhom": "Danh sách theo khoản 1, 2 Điều 10 PL II QĐ 106; \"Quyết Tâm\" không có trong danh mục 75 xã, phường (NQ 152) → không gán (VM-04, QD-14)"
+    },
+    "suatToiThieu": {
+      "canCu": [
+        {
+          "vanBan": "Luật Đất đai 2024",
+          "viTri": "khoản 8, khoản 10 Điều 111"
+        },
+        {
+          "vanBan": "NĐ 88/2024/NĐ-CP",
+          "viTri": "điểm c khoản 1 Điều 24"
+        },
+        {
+          "vanBan": "QĐ 106/2025/QĐ-UBND",
+          "viTri": "Điều 16 Phụ lục II"
+        }
+      ],
+      "datOPhuongM2": "40",
+      "datOXaM2": "60",
+      "nhaOM2": "40"
+    },
+    "hoTroTienSdd": {
+      "canCu": [
+        {
+          "vanBan": "QĐ 14/2026/QĐ-UBND",
+          "viTri": "khoản 11 Điều 6"
+        }
+      ],
+      "tyLe": "0.2",
+      "ghiChu": "VM-28: chưa rõ tính trên tiền SDĐ trước hay sau khi trừ ghi nợ, miễn giảm — mặc định trên tiền SDĐ phải nộp do cán bộ nhập (QD-19)"
+    }
   }
 }
