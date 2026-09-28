@@ -3,7 +3,7 @@
  * Gợi ý chỉ dựa trên cấu trúc dữ liệu thấy được trong tệp; cán bộ xem lại trước khi dùng.
  */
 import type { KetQuaDocDgn, PhanTuChu } from "./dgn.js";
-import { CAU_HINH_MAC_DINH, giaiMaNhan, type CauHinhLop, type CauHinhNut, type TruongNut } from "./thua.js";
+import { CAU_HINH_MAC_DINH, diemTrongThua, dungThua, giaiMaNhan, loaiHienTrangBanDo, type CauHinhLop, type CauHinhNut, type TruongNut } from "./thua.js";
 
 export interface ThongKeLop {
   lop: number;
@@ -123,9 +123,61 @@ export function goiYCauHinh(ban: KetQuaDocDgn, goc: CauHinhLop = CAU_HINH_MAC_DI
       }
     }
   }
+  if (!goc.nhanHienTrang?.length) {
+    const ht = lopNhanHienTrang(ban);
+    if (ht) {
+      cauHinh.nhanHienTrang = [ht.lop];
+      ghiChu.push(`Lớp ${ht.lop} ghi hiện trạng GPMB trong thửa (${ht.mau}) — dùng để đối chiếu với tiến độ trong phần mềm, không ghi đè.`);
+    }
+  }
   if (!co(cauHinh.ranhThua, (x) => x.soDuong + x.soVung)) ghiChu.push(`Lớp ranh thửa (${cauHinh.ranhThua.join(", ")}) không có đường nào.`);
-  if (!co(cauHinh.ranhGpmb, (x) => x.soDuong + x.soVung)) ghiChu.push(`Lớp ranh GPMB (${cauHinh.ranhGpmb.join(", ")}) không có đường nào — chọn lớp ranh GPMB trong cấu hình lớp.`);
+  if (!co(cauHinh.ranhGpmb, (x) => x.soDuong + x.soVung)) {
+    const vt = lopVungThuaThuHoi(ban, cauHinh);
+    if (vt) {
+      cauHinh.ranhGpmb = [vt.lop];
+      ghiChu.push(`Lớp ranh GPMB mặc định (${goc.ranhGpmb.join(", ")}) trống; lớp ${vt.lop} có ${vt.soVung} vùng khép kín trùng thửa đất (${vt.soTrung}/${vt.soVung}) — dùng làm phạm vi thu hồi (chọn các vùng cần tính ở mục Phạm vi thu hồi). Cán bộ xác nhận lớp này đúng là thửa thu hồi.`);
+    } else ghiChu.push(`Lớp ranh GPMB (${cauHinh.ranhGpmb.join(", ")}) không có đường nào — chọn lớp ranh GPMB trong cấu hình lớp, hoặc chọn thửa thu hồi trực tiếp trên bản đồ.`);
+  }
   return { cauHinh, ghiChu };
+}
+
+/** Lớp chữ ghi hiện trạng GPMB: ≥ 5 dòng chữ, ≥ 60% dạng "Đã GPMB", "Chưa GPMB", "NQH". */
+function lopNhanHienTrang(ban: KetQuaDocDgn): { lop: number; mau: string } | null {
+  const theoLop = new Map<number, string[]>();
+  for (const pt of ban.phanTu) if (pt.loai === "CHU") theoLop.set(pt.lop, [...(theoLop.get(pt.lop) ?? []), giaiMaNhan(pt)]);
+  let tot: { lop: number; mau: string; n: number } | null = null;
+  for (const [lop, ds] of theoLop) {
+    const khop = ds.filter((x) => loaiHienTrangBanDo(x));
+    if (khop.length >= 5 && khop.length / ds.length >= 0.6 && (!tot || khop.length > tot.n)) {
+      const dem = new Map<string, number>();
+      for (const x of khop) dem.set(x, (dem.get(x) ?? 0) + 1);
+      tot = { lop, n: khop.length, mau: [...dem].map(([k, v]) => `"${k}" ${v}`).join(", ") };
+    }
+  }
+  return tot;
+}
+
+/**
+ * Lớp có vùng khép kín trùng thửa đất (vd. DC5 lớp 40: các thửa thu hồi tô gạch): ≥ 3 vùng, ≥ 60% vùng có
+ * điểm trong nằm trong một thửa và diện tích không vượt thửa đó quá 2%.
+ */
+function lopVungThuaThuHoi(ban: KetQuaDocDgn, ch: CauHinhLop): { lop: number; soVung: number; soTrung: number } | null {
+  const kq = dungThua(ban, { ...ch, ranhGpmb: [] });
+  if (!kq.thua.length) return null;
+  const tk = thongKeLop(ban).filter((x) => x.soVung >= 3 && !ch.ranhThua.includes(x.lop));
+  let tot: { lop: number; soVung: number; soTrung: number } | null = null;
+  for (const x of tk) {
+    const v = dungThua(ban, { ...ch, ranhGpmb: [x.lop] }).vungGpmb.filter((g) => g.nguon === "VUNG_KHEP_KIN");
+    if (v.length < 3) continue;
+    const trung = v.filter((g) => {
+      const d = g.vong[0]!;
+      const tam = { x: d.reduce((s, p) => s + p.x, 0) / d.length, y: d.reduce((s, p) => s + p.y, 0) / d.length };
+      const t = kq.thua.find((t) => diemTrongThua(tam, t.vong));
+      return !!t && g.dienTich <= t.dienTichHinhHoc * 1.02;
+    }).length;
+    if (trung / v.length >= 0.6 && (!tot || trung > tot.soTrung)) tot = { lop: x.lop, soVung: v.length, soTrung: trung };
+  }
+  return tot;
 }
 
 const chuanTen = (x: string) => x.toLocaleLowerCase("vi").replace(/\s+/g, " ").trim();

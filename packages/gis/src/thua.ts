@@ -35,6 +35,11 @@ export interface CauHinhLop {
    * tờ / thửa / địa chỉ / loại đất / chủ). `dong` = chỉ số dòng (từ 0) của từng trường trong nút.
    */
   nutThuocTinh?: CauHinhNut | null;
+  /**
+   * Lớp chữ ghi hiện trạng GPMB đặt trong thửa (vd. DC5: lớp 62 "Đã GPMB", "Chưa GPMB", "NQH").
+   * Chỉ dùng để đối chiếu với tiến độ trong phần mềm — không ghi đè. Nhiều bản đồ không có lớp này.
+   */
+  nhanHienTrang?: number[];
 }
 
 export type TruongNut = "soTo" | "soThua" | "loaiDat" | "chuSuDung";
@@ -93,6 +98,17 @@ export interface ThuaBanDo {
   tamNhan: Diem;
   nhan: NhanDoc[];
   co: CoThua[];
+  /** Chữ hiện trạng GPMB ghi trên bản đồ trong thửa (lớp nhanHienTrang), nếu có. */
+  hienTrangBanDo?: string | null;
+}
+
+/** Phân loại chữ hiện trạng trên bản đồ: "Đã GPMB" → DA; "Chưa GPMB", "NQH" (ghi chú thửa chưa GPMB) → CHUA. */
+export function loaiHienTrangBanDo(chu: string | null | undefined): "DA" | "CHUA" | null {
+  if (!chu) return null;
+  const c = chu.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/gi, "d").toUpperCase();
+  if (/CHUA\s*GPMB|^NQH$/.test(c)) return "CHUA";
+  if (/DA\s*GPMB/.test(c)) return "DA";
+  return null;
 }
 
 export interface VungUngVien {
@@ -197,6 +213,7 @@ export function dungThua(ban: KetQuaDocDgn, ch: CauHinhLop = CAU_HINH_MAC_DINH):
   if (nutCh) for (const [k, v] of Object.entries(nutCh.dong)) if (v !== undefined) truongTheoDong.set(v, k as TruongNut);
   const dongTrongNut = new Map<number, number>(); // stt nút -> số dòng đã gặp
   const neo = new Map<number, Diem>(); // stt nút -> vị trí dòng đầu
+  const nhanHt: NhanDoc[] = []; // chữ hiện trạng GPMB trên bản đồ
   for (const pt of ban.phanTu) {
     if (thuoc(ch.ranhThua, pt.lop) && laHinhTuyen(pt)) {
       const g = thanhDuong(pt.diem);
@@ -209,6 +226,10 @@ export function dungThua(ban: KetQuaDocDgn, ch: CauHinhLop = CAU_HINH_MAC_DINH):
         if (i === 0) neo.set(pt.nut, pt.goc);
         const truong = truongTheoDong.get(i);
         if (truong) nhan.push({ lop: pt.lop, chu: giaiMaNhan(pt), diem: pt.goc, stt: pt.stt, truongNut: truong, neoNut: neo.get(pt.nut) ?? pt.goc });
+        continue;
+      }
+      if (ch.nhanHienTrang?.length && thuoc(ch.nhanHienTrang, pt.lop)) {
+        nhanHt.push({ lop: pt.lop, chu: giaiMaNhan(pt), diem: pt.goc, stt: pt.stt });
         continue;
       }
       const laNhan = [ch.nhanThua, ch.soThua, ch.soTo, ch.chuSuDung].some((ds) => thuoc(ds, pt.lop));
@@ -305,6 +326,7 @@ export function dungThua(ban: KetQuaDocDgn, ch: CauHinhLop = CAU_HINH_MAC_DINH):
       tamNhan: { x: tam.x, y: tam.y },
       nhan: nhanTrong,
       co: [...new Set(co)],
+      hienTrangBanDo: nhanHt.length ? ([...new Set(nhanHt.filter((n) => diemTrongThua(n.diem, vong)).map((n) => n.chu))].join("; ") || null) : undefined,
     };
   });
 

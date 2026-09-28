@@ -150,4 +150,14 @@ describe.skipIf(!tep || !existsSync(tep))("Tệp DGN V8i thật (GPMB_DGN_V8)", 
     expect(coDt.length / kq.thua.length).toBeGreaterThan(0.8);
     expect(coDt.filter((t) => Math.abs(t.dienTichGhi! - t.dienTichHinhHoc) / t.dienTichHinhHoc > 0.001)).toHaveLength(0);
   });
+
+  test("không có ranh GPMB: gợi ý lớp 40 (thửa đã thu hồi) và lớp 62 (nhãn hiện trạng)", () => {
+    const ban = docDgn(readFileSync(tep!));
+    const g = goiYCauHinh(ban);
+    expect(g.cauHinh.ranhGpmb).toEqual([40]);
+    expect(g.cauHinh.nhanHienTrang).toEqual([62]);
+    const kq = dungThua(ban, g.cauHinh);
+    expect(kq.vungGpmb.length).toBeGreaterThanOrEqual(10);
+    expect(kq.thua.filter((t) => t.hienTrangBanDo).length).toBeGreaterThan(40);
+  });
 });

@@ -188,8 +188,12 @@ export interface Ho {
 export interface BanDoDuAn {
   tenTep: string;
   ngayNhap: string;
-  /** Vùng ranh GPMB cán bộ đã chọn (mã vùng ứng viên). */
+  /** Vùng ranh GPMB cán bộ đã chọn (mã vùng ứng viên) — dữ liệu cũ, một vùng. */
   vungChon: string | null;
+  /** Các vùng ranh / vùng thửa thu hồi đã chọn (hợp các vùng). Có giá trị thì dùng thay vungChon. */
+  vungChonDs?: string[];
+  /** Thửa cán bộ chọn trực tiếp là thửa thu hồi (mã thửa bản đồ) — dùng khi bản đồ không có ranh GPMB. */
+  thuaChon?: string[];
   /** Cấu hình lớp cán bộ đã chốt cho tệp này; chưa có thì dùng gợi ý tự động (goiYCauHinh). */
   cauHinh?: CauHinhLop;
 }

@@ -80,11 +80,36 @@ Không gửi thửa, tên chủ, hồ sơ. Mặc định **tắt**.
 | 19 | 73 nút thuộc tính gCadas: dòng 1 số tờ, 2 số thửa, 3 địa chỉ, 4 loại đất, 5 chủ sử dụng |
 | 54 | Nhãn chủ sử dụng đứng riêng (88% trùng tên trong nút) |
 | 53, 56 | Loại đất, địa chỉ đứng riêng (không dùng) |
-| 62, 63, 65 | Hiện trạng ("Đã/Chưa GPMB", "NQH"), lưới tọa độ, sơ đồ tờ |
-| — | **Không có lớp ranh GPMB riêng**; cán bộ chọn lớp phù hợp trong "Cấu hình lớp" |
+| 40 | **12 vùng khép kín = các thửa đã được thu hồi** (người dùng xác nhận 28/9/2026); trùng thửa 12/12 |
+| 62 | Chữ hiện trạng trong thửa: "Đã GPMB" 21, "Chưa GPMB" 23, "NQH" 9 (NQH = ghi chú thửa chưa GPMB) |
+| 63, 65 | Lưới tọa độ, sơ đồ tờ |
+| — | **Không có lớp ranh GPMB riêng** → phần mềm gợi ý lớp 40 làm phạm vi thu hồi (mục 8) |
 
 Với cấu hình gợi ý (nút lớp 19 + lớp chủ 54 để đối chiếu): 73/74 thửa đủ số tờ, số thửa; **13 thửa bị cờ "Nhiều chủ"** vì tên trong nút gCadas khác tên nhãn đứng riêng (ví dụ nút ghi một người, nhãn ghi người khác; một thửa lớn chứa nhãn chủ của các thửa nhỏ lân cận) — đây là mâu thuẫn trong dữ liệu gốc, cán bộ đối chiếu hồ sơ địa chính. Một số nhãn có lỗi gõ trong dữ liệu gốc (vd. "Xó" thay "Xã": mã byte TCVN3 là của chữ "ó") — phần mềm giữ nguyên, không tự sửa.
 
 **Gợi ý cấu hình** (`goiYCauHinh`): chỉ dựa trên cấu trúc thấy trong tệp — nút chữ ≥ 5 nút trên cùng lớp, các dòng cùng vị trí có kiểu giá trị ổn định (số lặp lại ít = số tờ; số khác nhau nhiều = số thửa; mã chữ in hoa 2–4 ký tự = loại đất; họ tên nhiều từ, khác nhau nhiều nhất = chủ); lớp chủ đứng riêng chỉ được thêm khi ≥ 50% tên trùng tên trong nút. Cấu hình đang là gợi ý thì màn Bản đồ hiện dải cảnh báo "chưa được chốt"; cán bộ chốt → lưu theo dự án.
 
 **Hạn chế (chưa đọc, có cảnh báo khi gặp):** cung tròn (kiểu 16) và phần tử 3D ở V8; ô dùng chung (shared cell) và tham chiếu ngoài (reference); các mô hình khác ngoài mô hình mặc định; bảng tên lớp (tên lớp trong MicroStation) chưa giải mã — phần mềm hiển thị mã số lớp. Mới kiểm với **một** tệp V8i thật (gCadas); tệp V8 từ phần mềm khác (Famis, VietMap XM…) cần thử thêm.
+
+## 8. Yêu cầu bản đồ, phạm vi thu hồi và nhãn hiện trạng (28/9/2026)
+
+**Căn cứ phân lớp:** mục I Phụ lục số 21 Thông tư số 26/2024/TT-BTNMT (điểm d khoản 1 Điều 16), đã được sửa đổi bởi điểm b khoản 8 Điều 8 Thông tư số 23/2025/TT-BNNMT (bãi bỏ đối tượng địa giới huyện — lớp 44, 45). Bảng lớp đưa vào `packages/gis/src/phan-lop.ts` (`LOP_PL21`), hiện ở cột "Theo PL 21" trong hộp Cấu hình lớp. Một số lớp PL 21 dùng tới: 10 ranh giới thửa hiện trạng, 61 ranh giới thửa theo giấy tờ, 11 điểm nhãn thửa, 13 số thứ tự thửa, 2 loại đất hiện trạng, 4 diện tích, 29 loại đất pháp lý; **30 là đường mép nước, 40 là biên giới quốc gia**. Điểm d khoản 1 Điều 16 cho phép "tận dụng các lớp bản đồ số còn bỏ trống để thể hiện yếu tố thuộc tính khác của thửa đất" — lớp 62 (không có trong PL 21) dùng ghi chú GPMB là phù hợp; lớp 40 dùng cho thửa đã thu hồi là **quy ước địa phương** trùng lớp biên giới quốc gia → phần mềm nhắc cán bộ xác nhận (Sơn La có xã biên giới).
+
+Điểm k khoản 1 Điều 16 TT 26/2024: khi đo đạc xác định ranh giới khu đất bị thu hồi tại nơi đã có bản đồ địa chính thì tách khu vực thu hồi thành mảnh bản đồ đo đạc bổ sung — nên ranh thu hồi thường nằm ở **tệp riêng**; nạp ranh từ tệp DGN/DXF riêng (PA5) để giai đoạn sau.
+
+**Kiểm tra bản đồ** (thẻ bên phải màn Bản đồ): khép thửa; tọa độ VN-2000 trong khoảng của Sơn La; tỷ lệ thửa có số tờ/số thửa (≥ 90%), loại đất (≥ 90%), diện tích ghi (≥ 80%), chủ sử dụng (≥ 80%); phạm vi thu hồi đã chọn chưa; phân lớp theo PL 21; nhãn hiện trạng và số thửa lệch tiến độ. Mỗi mục thiếu có nút mở việc cần làm. Các ngưỡng % là ngưỡng cảnh báo của phần mềm, **không phải quy định pháp luật**.
+
+**Ba cách xác định thửa thu hồi** (cán bộ chọn theo hồ sơ được duyệt, phần mềm không tự chọn):
+1. Chọn **nhiều vùng** trên lớp ranh GPMB / lớp vùng thửa thu hồi (tích từng vùng hoặc "Chọn tất cả"); diện tích thu hồi = phần giao giữa thửa và **hợp** các vùng đã chọn (toàn bộ / một phần).
+2. **Chọn thửa trực tiếp**: bấm thửa trên bản đồ (chế độ chọn thửa) hoặc tích cột "TH" ở bảng thửa; thửa chọn tay ngoài vùng được tính thu hồi toàn bộ (thu hồi một phần: sửa diện tích trong hồ sơ).
+3. Theo **nhãn hiện trạng**: thêm các thửa ghi "Chưa GPMB/NQH", hoặc mọi thửa có nhãn.
+
+Lưu theo dự án: `banDo.vungChonDs`, `banDo.thuaChon`.
+
+**Gợi ý tự động** (`goiYCauHinh`): lớp chữ có ≥ 5 chữ, ≥ 60% dạng "Đã/Chưa GPMB", "NQH" → `nhanHienTrang`; nếu lớp ranh GPMB trống: lớp có ≥ 3 vùng khép kín, ≥ 60% vùng có tâm nằm trong một thửa và diện tích ≤ 102% thửa → `ranhGpmb`, kèm ghi chú yêu cầu cán bộ xác nhận. DC5: gợi ý lớp 40 (12 vùng → 12 thửa thu hồi toàn bộ) và lớp 62 (53 thửa có nhãn).
+
+**Nhãn hiện trạng chỉ để đối chiếu:** không ghi đè tiến độ 16 bước; thửa đã gắn hồ sơ mà nhãn khác tiến độ ("Đã GPMB" nhưng hồ sơ chưa hoàn thành, hoặc ngược lại) được đánh dấu để kiểm tra.
+
+**Tạo hồ sơ:** nút luôn bấm được; chưa có phạm vi → hộp thoại giải thích 2 cách. Nhóm thửa theo chủ sử dụng; thửa nghi vấn (cờ đọc bản đồ, chưa rõ chủ, thiếu số tờ/thửa) đánh dấu ⚠ — phải tích xác nhận đã kiểm tra mới tạo được; lý do ghi vào ghi chú thửa. DC5 (Playwright): 12 vùng + 32 thửa "Chưa GPMB/NQH" → 14 hồ sơ / 44 thửa.
+
+**Kiểm thử:** `packages/gis/test/thu-hoi.test.ts` (tệp tổng hợp: phân loại nhãn, gợi ý lớp 62 và lớp 40, bản đồ không có lớp hiện trạng, hợp nhiều vùng 300 m², bảng PL 21); `dgn-v8.test.ts` với `GPMB_DGN_V8` kiểm DC5 gợi ý lớp 40 và 62.

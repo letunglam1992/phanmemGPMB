@@ -1,12 +1,15 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   CAU_HINH_MAC_DINH,
   diemTrongThua,
+  loaiHienTrangBanDo,
   docDgn,
   giaiMaNhan,
   dungThua,
   goiYCauHinh,
   thongKeLop,
+  tenLopPl21,
+  LOP_RANH_THUA_PL21,
   tinhDienTichThuHoi,
   type CauHinhLop,
   type TruongNut,
@@ -114,13 +117,30 @@ export function BanDo({ duAnId }: { duAnId: string }) {
     });
   }, [duAnId, duAn?.banDo, dl, kho]);
 
-  const vung = dl?.kq.vungGpmb.find((v) => v.ma === duAn?.banDo?.vungChon) ?? null;
+  // Phạm vi thu hồi = hợp các vùng ranh / vùng thửa thu hồi đã chọn ∪ các thửa chọn trực tiếp
+  const maVungChon = duAn?.banDo?.vungChonDs ?? (duAn?.banDo?.vungChon ? [duAn.banDo.vungChon] : []);
+  const vungDs = dl ? dl.kq.vungGpmb.filter((v) => maVungChon.includes(v.ma)) : [];
+  const vung = vungDs[0] ?? null;
+  const thuaChon = useMemo(() => new Set(duAn?.banDo?.thuaChon ?? []), [duAn?.banDo?.thuaChon]);
   const thuHoi = useMemo(() => {
-    if (!dl || !vung) return new Map<string, DienTichThuHoi>();
-    const r = tinhDienTichThuHoi(dl.kq.thua, [vung.vong]);
-    return new Map(dl.kq.thua.map((t, i) => [t.ma + "#" + i, r[i]!]));
-  }, [dl, vung]);
+    if (!dl || (!vungDs.length && !thuaChon.size)) return new Map<string, DienTichThuHoi>();
+    const r = vungDs.length ? tinhDienTichThuHoi(dl.kq.thua, vungDs.map((v) => v.vong)) : null;
+    return new Map(
+      dl.kq.thua.map((t, i) => {
+        const g = r?.[i];
+        const toanBo: DienTichThuHoi = { ma: t.ma, dienTichHinhHoc: t.dienTichHinhHoc, dienTichThuHoi: t.dienTichHinhHoc, phamVi: "TOAN_BO", vongThuHoi: [t.vong] };
+        const kq: DienTichThuHoi = thuaChon.has(t.ma) && (!g || g.phamVi === "NGOAI") ? toanBo : g ?? { ...toanBo, dienTichThuHoi: 0, phamVi: "NGOAI", vongThuHoi: [] };
+        return [t.ma + "#" + i, kq];
+      }),
+    );
+  }, [dl, maVungChon.join("|"), thuaChon]); // eslint-disable-line react-hooks/exhaustive-deps
+  const coPhamVi = vungDs.length > 0 || thuaChon.size > 0;
   const khoaThua = (t: ThuaBanDo) => t.ma + "#" + dl!.kq.thua.indexOf(t);
+  const [cheDoChonThua, setCheDoChonThua] = useState(false);
+  const [thieuPhamVi, setThieuPhamVi] = useState(false);
+  const luuBanDoDa = (p: Partial<NonNullable<DuAn["banDo"]>>) => duAn?.banDo && luuDuAn({ ...duAn, banDo: { ...duAn.banDo, ...p } });
+  const doiThuaChon = (ds: string[]) => void luuBanDoDa({ thuaChon: ds });
+  const batTatThua = (t: ThuaBanDo) => { const s = new Set(thuaChon); if (s.has(t.ma)) s.delete(t.ma); else s.add(t.ma); doiThuaChon([...s]); };
 
   const hos = hoCua(duAnId);
   const ttThua = useMemo(() => {
@@ -151,7 +171,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
       await kho.luuBanDo(duAnId, bytes);
       boNho.set(duAnId, d);
       setDl(d);
-      await luuDuAn({ ...duAn, banDo: { tenTep: f.name, ngayNhap: new Date().toISOString(), vungChon: null } });
+      await luuDuAn({ ...duAn, banDo: { tenTep: f.name, ngayNhap: new Date().toISOString(), vungChon: null, vungChonDs: [], thuaChon: [] } });
     } catch (e) {
       setLoi((e as Error).message);
     } finally {
@@ -168,7 +188,8 @@ export function BanDo({ duAnId }: { duAnId: string }) {
     setChon(null);
     const { cauHinh: _bo, ...banDo } = duAn.banDo;
     const vungChon = d.kq.vungGpmb.some((v) => v.ma === banDo.vungChon) ? banDo.vungChon : null;
-    await luuDuAn({ ...duAn, banDo: ch ? { ...banDo, vungChon, cauHinh: ch } : { ...banDo, vungChon } });
+    const vungChonDs = (banDo.vungChonDs ?? []).filter((m) => d.kq.vungGpmb.some((v) => v.ma === m));
+    await luuDuAn({ ...duAn, banDo: ch ? { ...banDo, vungChon, vungChonDs, cauHinh: ch } : { ...banDo, vungChon, vungChonDs } });
     setMoCauHinh(false);
     bao(ch ? "Đã chốt cấu hình lớp và dựng lại thửa" : "Đã quay về cấu hình gợi ý");
   };
@@ -176,7 +197,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
   const dsThua = dl
     ? dl.kq.thua.filter((t) => {
         if (loc === "CO_CO") return t.co.length > 0;
-        if (loc === "TRONG_RANH") return !vung || (thuHoi.get(khoaThua(t))?.phamVi ?? "NGOAI") !== "NGOAI";
+        if (loc === "TRONG_RANH") return !coPhamVi || (thuHoi.get(khoaThua(t))?.phamVi ?? "NGOAI") !== "NGOAI";
         return true;
       })
     : [];
@@ -200,7 +221,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
             {dangDoc ? "Đang đọc…" : duAn.banDo ? "Nạp tệp khác" : "Nạp tệp DGN"}
             <input type="file" accept=".dgn,.DGN" style={{ display: "none" }} onChange={(e) => e.target.files?.[0] && napTep(e.target.files[0])} />
           </label>
-          <button className="nut nut-chinh" disabled={!vung} onClick={() => setTaoHo(true)} title={vung ? "" : "Chọn ranh GPMB trước"}>Tạo hồ sơ từ thửa trong ranh</button>
+          {dl && <button className="nut nut-chinh" onClick={() => (coPhamVi ? setTaoHo(true) : setThieuPhamVi(true))}>Tạo hồ sơ từ thửa thu hồi</button>}
         </div>
       </div>
       {loi && <div className="thong-bao thong-bao-do">{loi}</div>}
@@ -219,24 +240,41 @@ export function BanDo({ duAnId }: { duAnId: string }) {
       )}
       {dl && (
         <div className="ban-do-khung">
-          <KhungVe dl={dl} vungChon={vung?.ma ?? null} thuHoi={thuHoi} khoaThua={khoaThua} chon={chon} setChon={setChon} daLienKet={daLienKet} ttThua={ttThua} />
+          <KhungVe dl={dl} vungChon={maVungChon} thuHoi={thuHoi} khoaThua={khoaThua} chon={chon} setChon={setChon} daLienKet={daLienKet} ttThua={ttThua} bamThua={cheDoChonThua && quyen("SUA_HO_SO") ? batTatThua : undefined} thuaChon={thuaChon} />
           <div className="ben-phai">
-            <div className="the">
-              <div className="the-dau"><h3>Ranh giải phóng mặt bằng</h3></div>
+            <KiemTraBanDo dl={dl} coPhamVi={coPhamVi} soVung={dl.kq.vungGpmb.length} moCauHinh={() => setMoCauHinh(true)} ttThua={ttThua} />
+            <div className="the co-dinh">
+              <div className="the-dau"><h3>Phạm vi thu hồi</h3><span className="mo chu-nho">{vungDs.length} vùng · {thuaChon.size} thửa chọn tay</span></div>
               <div className="the-than" style={{ display: "grid", gap: 6 }}>
-                <div className="mo chu-nho">Các vùng khép kín tìm thấy trên lớp ranh GPMB. Phần mềm không tự chọn — cán bộ chọn vùng đúng theo hồ sơ được duyệt.</div>
-                {dl.kq.vungGpmb.map((v) => (
-                  <label key={v.ma} className="nhom-nut" style={{ alignItems: "center" }}>
-                    <input type="radio" name="vung" checked={vung?.ma === v.ma} onChange={() => luuDuAn({ ...duAn, banDo: { ...duAn.banDo!, vungChon: v.ma } })} />
-                    <span>
-                      <b>{v.dienTich.toLocaleString("vi-VN", { maximumFractionDigits: 1 })} m²</b>{" "}
-                      <span className="mo chu-nho">· chu vi {v.chuVi.toLocaleString("vi-VN", { maximumFractionDigits: 1 })} m · {v.nguon === "VUNG_KHEP_KIN" ? "vùng khép kín" : "khép từ đường"}</span>
-                    </span>
-                  </label>
-                ))}
-                {dl.kq.vungGpmb.length === 0 && <div className="thong-bao thong-bao-vang">Không có vùng khép kín trên lớp ranh GPMB.</div>}
-                {vung && <TomTatThuHoi thuHoi={thuHoi} />}
-                {vung && (() => {
+                <div className="mo chu-nho">Cách 1 — chọn các vùng ranh GPMB / vùng thửa thu hồi (lớp {dl.cauHinh.ranhGpmb.join(", ")}): phần mềm tính phần giao, phân biệt thu hồi toàn bộ / một phần. Phần mềm không tự chọn — cán bộ chọn theo hồ sơ được duyệt.</div>
+                {dl.kq.vungGpmb.length > 0 && (
+                  <div className="nhom-nut">
+                    <button className="nut nut-nho" disabled={!quyen("SUA_HO_SO")} onClick={() => void luuBanDoDa({ vungChonDs: dl.kq.vungGpmb.map((v) => v.ma), vungChon: null })}>Chọn tất cả {dl.kq.vungGpmb.length} vùng</button>
+                    <button className="nut nut-nho" disabled={!maVungChon.length || !quyen("SUA_HO_SO")} onClick={() => void luuBanDoDa({ vungChonDs: [], vungChon: null })}>Bỏ chọn</button>
+                  </div>
+                )}
+                <div className="ds-vung">
+                  {dl.kq.vungGpmb.map((v) => (
+                    <label key={v.ma} className="nhom-nut" style={{ alignItems: "center" }}>
+                      <input type="checkbox" disabled={!quyen("SUA_HO_SO")} checked={maVungChon.includes(v.ma)} onChange={(e) => void luuBanDoDa({ vungChonDs: e.target.checked ? [...maVungChon, v.ma] : maVungChon.filter((m) => m !== v.ma), vungChon: null })} />
+                      <span>
+                        <b>{v.dienTich.toLocaleString("vi-VN", { maximumFractionDigits: 1 })} m²</b>{" "}
+                        <span className="mo chu-nho">· chu vi {v.chuVi.toLocaleString("vi-VN", { maximumFractionDigits: 1 })} m · {v.nguon === "VUNG_KHEP_KIN" ? "vùng khép kín" : "khép từ đường"}</span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                {dl.kq.vungGpmb.length === 0 && <div className="thong-bao thong-bao-vang" style={{ marginBottom: 0 }}>Không có vùng khép kín trên lớp {dl.cauHinh.ranhGpmb.join(", ")}. Chọn lớp khác ở <button className="nut nut-chu nut-nho" onClick={() => setMoCauHinh(true)}>Cấu hình lớp</button> hoặc dùng cách 2.</div>}
+                <div className="mo chu-nho" style={{ marginTop: 4 }}>Cách 2 — chọn thửa trực tiếp (thu hồi toàn bộ thửa; thửa thu hồi một phần sửa diện tích trong hồ sơ):</div>
+                <div className="nhom-nut">
+                  <button className={`nut nut-nho ${cheDoChonThua ? "nut-chinh" : ""}`} disabled={!quyen("SUA_HO_SO")} onClick={() => setCheDoChonThua(!cheDoChonThua)}>{cheDoChonThua ? "Đang chọn thửa — bấm để xong" : "Chọn thửa trên bản đồ"}</button>
+                  {dl.kq.thua.some((t) => loaiHienTrangBanDo(t.hienTrangBanDo) === "CHUA") && <button className="nut nut-nho" disabled={!quyen("SUA_HO_SO")} onClick={() => doiThuaChon([...new Set([...thuaChon, ...dl.kq.thua.filter((t) => loaiHienTrangBanDo(t.hienTrangBanDo) === "CHUA").map((t) => t.ma)])])}>+ Thửa ghi "Chưa GPMB/NQH"</button>}
+                  {dl.kq.thua.some((t) => loaiHienTrangBanDo(t.hienTrangBanDo)) && <button className="nut nut-nho" disabled={!quyen("SUA_HO_SO")} onClick={() => doiThuaChon([...new Set([...thuaChon, ...dl.kq.thua.filter((t) => loaiHienTrangBanDo(t.hienTrangBanDo)).map((t) => t.ma)])])}>+ Mọi thửa có nhãn hiện trạng</button>}
+                  {thuaChon.size > 0 && <button className="nut nut-nho" disabled={!quyen("SUA_HO_SO")} onClick={() => doiThuaChon([])}>Bỏ {thuaChon.size} thửa chọn tay</button>}
+                </div>
+                {cheDoChonThua && <div className="thong-bao thong-bao-xanh chu-nho" style={{ marginBottom: 0 }}>Bấm vào thửa trên bản đồ (hoặc ô ở bảng thửa) để thêm / bỏ khỏi phạm vi thu hồi.</div>}
+                {coPhamVi && <TomTatThuHoi thuHoi={thuHoi} />}
+                {coPhamVi && (() => {
                   const trong = dl.kq.thua.filter((t) => (thuHoi.get(khoaThua(t))?.phamVi ?? "NGOAI") !== "NGOAI");
                   const dem = Object.fromEntries(THU_TU_TRANG_THAI.map((t) => [t, 0])) as Record<TrangThaiGpmb, number>;
                   let chuaHoSo = 0;
@@ -264,12 +302,13 @@ export function BanDo({ duAnId }: { duAnId: string }) {
               </div>
               <div className="bang-cuon">
                 <table className="bang">
-                  <thead><tr><th>Tờ-thửa</th><th>Loại</th><th className="so">DT ghi</th><th className="so">Thu hồi</th><th>Chủ SD</th></tr></thead>
+                  <thead><tr><th title="Chọn tay là thửa thu hồi">TH</th><th>Tờ-thửa</th><th>Loại</th><th className="so">DT ghi</th><th className="so">Thu hồi</th><th>Chủ SD</th></tr></thead>
                   <tbody>
                     {dsThua.slice(0, 800).map((t) => {
                       const th = thuHoi.get(khoaThua(t));
                       return (
                         <tr key={khoaThua(t)} className={`co-the-chon ${chon === t ? "dang-chon" : ""}`} onClick={() => setChon(t)}>
+                          <td onClick={(e) => e.stopPropagation()}><input type="checkbox" disabled={!quyen("SUA_HO_SO")} checked={thuaChon.has(t.ma)} onChange={() => batTatThua(t)} aria-label={`Chọn thửa ${t.soTo ?? "?"}-${t.soThua ?? "?"} là thửa thu hồi`} title="Chọn tay là thửa thu hồi" /></td>
                           <td style={{ whiteSpace: "nowrap" }}>{t.soTo ?? "?"}-{t.soThua ?? "?"}{t.co.length > 0 && <span className="nhan nhan-vang" style={{ marginLeft: 4 }} title={t.co.map((c) => TEN_CO[c]).join(", ")}>!</span>}</td>
                           <td>{t.loaiDatBanDo ?? "—"}</td>
                           <td className="so">{t.dienTichGhi ?? "—"}</td>
@@ -282,13 +321,23 @@ export function BanDo({ duAnId }: { duAnId: string }) {
                 </table>
               </div>
             </div>
-            {chon && <ChiTietThua t={chon} th={thuHoi.get(khoaThua(chon))} ho={daLienKet.get(chon.ma)} moHo={(h) => di({ ten: "ho", duAnId, hoId: h.id, tab: "thua" })} />}
+            {chon && <ChiTietThua t={chon} th={thuHoi.get(khoaThua(chon))} ho={daLienKet.get(chon.ma)} tt={ttThua.get(chon.ma)} moHo={(h) => di({ ten: "ho", duAnId, hoId: h.id, tab: "thua" })} />}
           </div>
         </div>
       )}
       {dl && dl.ban.canhBao.length > 0 && <div className="mo chu-nho" style={{ marginTop: 8 }}>Ghi chú đọc tệp: {dl.ban.canhBao.join(" ")}</div>}
       {moCauHinh && dl && <HopCauHinhLop dl={dl} sua={quyen("SUA_HO_SO")} apDung={apDungCauHinh} dong={() => setMoCauHinh(false)} />}
-      {taoHo && dl && vung && (
+      {thieuPhamVi && dl && (
+        <HopThoai tieuDe="Chưa xác định thửa thu hồi" dong={() => setThieuPhamVi(false)} rong={640} chan={<button className="nut nut-chinh" onClick={() => setThieuPhamVi(false)}>Đã hiểu</button>}>
+          <p style={{ marginTop: 0 }}>Để tạo hồ sơ, phần mềm cần biết thửa nào thuộc diện thu hồi. Chọn một trong hai cách ở mục <b>Phạm vi thu hồi</b> (cột bên phải):</p>
+          <ol style={{ lineHeight: 1.7 }}>
+            <li><b>Chọn vùng ranh GPMB / vùng thửa thu hồi</b> — {dl.kq.vungGpmb.length ? <>lớp {dl.cauHinh.ranhGpmb.join(", ")} đang có {dl.kq.vungGpmb.length} vùng; tích các vùng cần tính (hoặc "Chọn tất cả").</> : <>lớp {dl.cauHinh.ranhGpmb.join(", ")} chưa có vùng khép kín; mở <b>Cấu hình lớp</b> để chọn lớp chứa ranh GPMB hoặc thửa thu hồi (xem bảng thống kê lớp).</>}</li>
+            <li><b>Chọn thửa trực tiếp</b> — bấm "Chọn thửa trên bản đồ" rồi bấm từng thửa, hoặc tích ô ở bảng thửa{dl.kq.thua.some((t) => loaiHienTrangBanDo(t.hienTrangBanDo)) ? ', hoặc thêm các thửa có nhãn "Chưa GPMB/NQH"' : ""}.</li>
+          </ol>
+          <p className="mo chu-nho">Diện tích thu hồi của thửa chọn trực tiếp mặc định bằng cả thửa; thửa thu hồi một phần sửa trong hồ sơ theo trích đo được duyệt.</p>
+        </HopThoai>
+      )}
+      {taoHo && dl && coPhamVi && (
         <HopTaoHo duAn={duAn} dl={dl} thuHoi={thuHoi} khoaThua={khoaThua} daLienKet={daLienKet} soHo={hos.length} dong={() => setTaoHo(false)} />
       )}
     </div>
@@ -309,6 +358,7 @@ function HopCauHinhLop(p: { dl: DuLieuBanDo; sua: boolean; apDung: (ch: CauHinhL
     soTo: c0.soTo.join(", "),
     chuSuDung: c0.chuSuDung.join(", "),
     ranhGpmb: c0.ranhGpmb.join(", "),
+    nhanHienTrang: (c0.nhanHienTrang ?? []).join(", "),
     dienTichToiThieu: String(c0.dienTichToiThieu),
     lechPhanTram: String(Math.round(c0.lechDienTichChoPhep * 1000) / 10),
     lopNut: c0.nutThuocTinh?.lop.join(", ") ?? "",
@@ -338,11 +388,12 @@ function HopCauHinhLop(p: { dl: DuLieuBanDo; sua: boolean; apDung: (ch: CauHinhL
     soTo: dsLop(f.soTo),
     chuSuDung: dsLop(f.chuSuDung),
     ranhGpmb: dsLop(f.ranhGpmb),
+    nhanHienTrang: dsLop(f.nhanHienTrang),
     dienTichToiThieu: dtMin,
     lechDienTichChoPhep: lech / 100,
     nutThuocTinh: lopNut.length ? { lop: lopNut, dong: dongNut } : null,
   });
-  const truong = (k: "ranhThua" | "nhanThua" | "soThua" | "soTo" | "chuSuDung" | "ranhGpmb", nhan: string, goiY: string) => (
+  const truong = (k: "ranhThua" | "nhanThua" | "soThua" | "soTo" | "chuSuDung" | "ranhGpmb" | "nhanHienTrang", nhan: string, goiY: string) => (
     <O nhan={nhan} goiY={goiY}><input value={f[k]} onChange={(e) => dat(k, e.target.value)} disabled={!p.sua} /></O>
   );
   return (
@@ -364,10 +415,11 @@ function HopCauHinhLop(p: { dl: DuLieuBanDo; sua: boolean; apDung: (ch: CauHinhL
           <div className="luoi" style={{ gap: 8, gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}>
             {truong("ranhThua", "Ranh thửa", "đường khép thửa")}
             {truong("nhanThua", "Nhãn thửa", "loại đất, số thửa, DT")}
-            {truong("ranhGpmb", "Ranh GPMB", "đường/vùng ranh thu hồi")}
+            {truong("ranhGpmb", "Ranh GPMB / thửa thu hồi", "vùng khép kín")}
             {truong("soThua", "Số thửa (riêng)", "")}
             {truong("soTo", "Số tờ (riêng)", "")}
             {truong("chuSuDung", "Chủ sử dụng (riêng)", "")}
+            {truong("nhanHienTrang", "Nhãn hiện trạng GPMB", "chỉ đối chiếu")}
           </div>
           <div className="the" style={{ padding: 10 }}>
             <b className="chu-nho">Nút chữ thuộc tính thửa (gCadas)</b>
@@ -390,11 +442,12 @@ function HopCauHinhLop(p: { dl: DuLieuBanDo; sua: boolean; apDung: (ch: CauHinhL
         </div>
         <div className="bang-cuon" style={{ maxHeight: 440 }}>
           <table className="bang">
-            <thead><tr><th className="so">Lớp</th><th className="so">Đường</th><th className="so">Vùng</th><th className="so">Chữ</th><th className="so">Nút</th><th>Chữ mẫu</th></tr></thead>
+            <thead><tr><th className="so">Lớp</th><th>Theo PL 21 TT 26/2024</th><th className="so">Đường</th><th className="so">Vùng</th><th className="so">Chữ</th><th className="so">Nút</th><th>Chữ mẫu</th></tr></thead>
             <tbody>
               {tk.map((x) => (
                 <tr key={x.lop}>
                   <td className="so"><b>{x.lop}</b></td>
+                  <td className="chu-nho mo">{tenLopPl21(x.lop) ?? "(lớp trống — địa phương dùng)"}</td>
                   <td className="so">{x.soDuong || ""}</td>
                   <td className="so">{x.soVung || ""}</td>
                   <td className="so">{x.soChu || ""}</td>
@@ -423,7 +476,77 @@ function TomTatThuHoi({ thuHoi }: { thuHoi: Map<string, DienTichThuHoi> }) {
   );
 }
 
-function ChiTietThua({ t, th, ho, moHo }: { t: ThuaBanDo; th?: DienTichThuHoi; ho?: Ho; moHo: (h: Ho) => void }) {
+/**
+ * Kiểm tra bản đồ: các điều kiện cần và đủ để dùng bản đồ theo dõi GPMB đến từng thửa và nhập nhanh thông tin
+ * (khép thửa, nhãn thửa, tọa độ, phạm vi thu hồi, nhãn hiện trạng) — nêu việc cần làm khi thiếu.
+ */
+/**
+ * Đối chiếu lớp đang dùng với Phụ lục 21 TT 26/2024/TT-BTNMT (điểm d khoản 1 Điều 16): ranh thửa phải là lớp 10/61;
+ * lớp ranh thu hồi trùng lớp đã có nghĩa khác (vd. 30 đường mép nước, 40 biên giới quốc gia) → cán bộ xác nhận
+ * đây là lớp địa phương tận dụng, không phải đối tượng theo PL 21.
+ */
+function phanLopPl21(dl: DuLieuBanDo): { ok: boolean | "canh"; ten: string; chiTiet: string } {
+  const ch = dl.cauHinh;
+  const ghi: string[] = [];
+  const ranhLa = ch.ranhThua.filter((l) => !(LOP_RANH_THUA_PL21 as readonly number[]).includes(l));
+  if (ranhLa.length) ghi.push(`ranh thửa đang lấy lớp ${ranhLa.join(", ")} (PL 21 quy định lớp 10 hiện trạng, 61 theo giấy tờ)`);
+  const trung = ch.ranhGpmb.filter((l) => dl.kq.vungGpmb.length && tenLopPl21(l));
+  if (trung.length) ghi.push(`lớp thu hồi ${trung.map((l) => `${l} (PL 21: ${tenLopPl21(l)})`).join(", ")} — xác nhận đây là lớp địa phương tận dụng`);
+  return {
+    ok: ghi.length ? "canh" : true,
+    ten: "Phân lớp theo PL 21 TT 26/2024",
+    chiTiet: ghi.length ? `Cần xem: ${ghi.join("; ")}.` : "Lớp ranh thửa và lớp thu hồi phù hợp bảng phân lớp.",
+  };
+}
+
+function KiemTraBanDo({ dl, coPhamVi, soVung, moCauHinh, ttThua }: { dl: DuLieuBanDo; coPhamVi: boolean; soVung: number; moCauHinh: () => void; ttThua: Map<string, TrangThaiGpmb> }) {
+  const [mo, setMo] = useState(true);
+  const ds = dl.kq.thua;
+  const n = ds.length;
+  const pt = (k: number) => (n ? Math.round((k / n) * 100) : 0);
+  const du = (f: (t: ThuaBanDo) => unknown) => ds.filter(f).length;
+  const { pham } = dl;
+  // VN-2000 múi 3°: hoành độ (Y, đông) ~ 500 km ± 200 km; tung độ (X, bắc) Sơn La ~ 2.300–2.450 km
+  const toaDoHopLy = pham.minX > 200000 && pham.maxX < 800000 && pham.minY > 2200000 && pham.maxY < 2500000;
+  const coHt = ds.filter((t) => loaiHienTrangBanDo(t.hienTrangBanDo));
+  const lech = coHt.filter((t) => { const tt = ttThua.get(t.ma); return tt && (loaiHienTrangBanDo(t.hienTrangBanDo) === "DA") !== (tt === "HOAN_THANH"); });
+  const muc: { ok: boolean | "canh"; ten: string; chiTiet: string; lam?: ReactNode }[] = [
+    { ok: n > 0, ten: "Khép thửa", chiTiet: n ? `${n} thửa từ lớp ranh thửa ${dl.cauHinh.ranhThua.join(", ")}` : `Không khép được thửa nào từ lớp ${dl.cauHinh.ranhThua.join(", ")}`, lam: n ? undefined : <button className="nut nut-chu nut-nho" onClick={moCauHinh}>Chọn lớp ranh thửa</button> },
+    { ok: toaDoHopLy ? true : "canh", ten: "Tọa độ VN-2000", chiTiet: toaDoHopLy ? "Tọa độ nằm trong vùng tỉnh Sơn La" : "Tọa độ ngoài khoảng thường gặp của Sơn La — kiểm tra hệ tọa độ, đơn vị (m)" },
+    { ok: pt(du((t) => t.soThua && t.soTo)) >= 90 ? true : "canh", ten: "Số tờ, số thửa", chiTiet: `${du((t) => t.soThua && t.soTo)}/${n} thửa (${pt(du((t) => t.soThua && t.soTo))}%)`, lam: pt(du((t) => t.soThua && t.soTo)) < 90 ? <button className="nut nut-chu nut-nho" onClick={moCauHinh}>Cấu hình lớp nhãn</button> : undefined },
+    { ok: pt(du((t) => t.loaiDatBanDo)) >= 90 ? true : "canh", ten: "Loại đất", chiTiet: `${du((t) => t.loaiDatBanDo)}/${n} thửa` },
+    { ok: pt(du((t) => t.dienTichGhi !== null)) >= 80 ? true : "canh", ten: "Diện tích ghi", chiTiet: `${du((t) => t.dienTichGhi !== null)}/${n} thửa; ${du((t) => t.co.includes("LECH_DIEN_TICH"))} thửa lệch > ${Math.round(dl.cauHinh.lechDienTichChoPhep * 100)}%` },
+    { ok: pt(du((t) => t.chuSuDung)) >= 80 ? true : "canh", ten: "Chủ sử dụng", chiTiet: `${du((t) => t.chuSuDung)}/${n} thửa; ${du((t) => t.co.includes("NHIEU_CHU"))} thửa tên khác nhau giữa hai nguồn` },
+    { ok: coPhamVi ? true : soVung ? "canh" : false, ten: "Phạm vi thu hồi", chiTiet: coPhamVi ? "Đã chọn vùng / thửa thu hồi" : soVung ? `Có ${soVung} vùng trên lớp ${dl.cauHinh.ranhGpmb.join(", ")} — chưa chọn` : `Lớp ${dl.cauHinh.ranhGpmb.join(", ")} không có vùng khép kín — chọn lớp khác hoặc chọn thửa trực tiếp`, lam: !soVung ? <button className="nut nut-chu nut-nho" onClick={moCauHinh}>Chọn lớp ranh</button> : undefined },
+    phanLopPl21(dl),
+    ...(dl.cauHinh.nhanHienTrang?.length ? [{ ok: (lech.length ? "canh" : true) as boolean | "canh", ten: "Nhãn hiện trạng trên bản đồ", chiTiet: `${coHt.length} thửa (lớp ${dl.cauHinh.nhanHienTrang.join(", ")}); ${lech.length} thửa khác tiến độ trong phần mềm — chỉ đối chiếu, không ghi đè` }] : []),
+  ];
+  const soLoi = muc.filter((m) => m.ok === false).length;
+  const soCanh = muc.filter((m) => m.ok === "canh").length;
+  return (
+    <div className="the co-dinh">
+      <div className="the-dau">
+        <h3>Kiểm tra bản đồ</h3>
+        <span className={`nhan ${soLoi ? "nhan-do" : soCanh ? "nhan-vang" : "nhan-xanh"}`}>{soLoi ? `${soLoi} việc cần làm` : soCanh ? `${soCanh} điểm cần xem` : "Đủ điều kiện"}</span>
+        <div className="phai"><button className="nut nut-chu nut-nho" onClick={() => setMo(!mo)}>{mo ? "Thu gọn" : "Xem"}</button></div>
+      </div>
+      {mo && (
+        <div className="the-than">
+          <ul className="kt-bd">
+            {muc.map((m) => (
+              <li key={m.ten} className={m.ok === true ? "ok" : m.ok === "canh" ? "canh" : "loi"}>
+                <span className="dau">{m.ok === true ? "✓" : "!"}</span>
+                <div><b>{m.ten}</b><small>{m.chiTiet}</small>{m.lam && <div>{m.lam}</div>}</div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ChiTietThua({ t, th, ho, tt, moHo }: { t: ThuaBanDo; th?: DienTichThuHoi; ho?: Ho; tt?: TrangThaiGpmb; moHo: (h: Ho) => void }) {
   return (
     <div className="the">
       <div className="the-dau"><h3>Tờ {t.soTo ?? "?"}, thửa {t.soThua ?? "?"}</h3></div>
@@ -431,6 +554,12 @@ function ChiTietThua({ t, th, ho, moHo }: { t: ThuaBanDo; th?: DienTichThuHoi; h
         <div>Chủ sử dụng: <b>{t.chuSuDung ?? "—"}</b> · Loại (bản đồ): <b>{t.loaiDatBanDo ?? "—"}</b></div>
         <div>DT ghi: <b>{t.dienTichGhi ?? "—"}</b> m² · DT hình học: <b>{t.dienTichHinhHoc.toFixed(2)}</b> m²{th && th.phamVi !== "NGOAI" ? <> · Thu hồi: <b>{th.dienTichThuHoi.toFixed(2)}</b> m² ({th.phamVi === "TOAN_BO" ? "toàn bộ" : "một phần"})</> : null}</div>
         {t.co.length > 0 && <div className="nhom-nut">{t.co.map((c) => <span key={c} className="nhan nhan-vang">{TEN_CO[c]}</span>)}</div>}
+        {t.hienTrangBanDo && (
+          <div>
+            Bản đồ ghi: <b>{t.hienTrangBanDo}</b>
+            {tt && ((loaiHienTrangBanDo(t.hienTrangBanDo) === "DA") !== (tt === "HOAN_THANH")) && <span className="nhan nhan-vang" style={{ marginLeft: 6 }}>Khác tiến độ trong phần mềm ({TT_GPMB[tt].ten}) — kiểm tra</span>}
+          </div>
+        )}
         <div className="mo">Nhãn trong thửa: {t.nhan.map((n) => `[${n.lop}] ${n.chu}`).join(" · ")}</div>
         {ho && <div>Đã gắn hồ sơ: <button className="nut nut-chu nut-nho" onClick={() => moHo(ho)}>{ho.ma} · {ho.ten}</button></div>}
       </div>
@@ -442,7 +571,10 @@ function ChiTietThua({ t, th, ho, moHo }: { t: ThuaBanDo; th?: DienTichThuHoi; h
 
 function KhungVe(p: {
   dl: DuLieuBanDo;
-  vungChon: string | null;
+  vungChon: string[];
+  /** Chế độ chọn thửa: bấm thửa để thêm / bỏ khỏi phạm vi thu hồi */
+  bamThua?: (t: ThuaBanDo) => void;
+  thuaChon: Set<string>;
   thuHoi: Map<string, DienTichThuHoi>;
   khoaThua: (t: ThuaBanDo) => string;
   chon: ThuaBanDo | null;
@@ -535,7 +667,7 @@ function KhungVe(p: {
       }
       // ranh GPMB
       for (const vg of lop.ranh ? p.dl.kq.vungGpmb : []) {
-        const laChon = vg.ma === p.vungChon;
+        const laChon = p.vungChon.includes(vg.ma);
         ctx.beginPath();
         duong(vg.vong[0]!);
         ctx.closePath();
@@ -543,6 +675,19 @@ function KhungVe(p: {
         ctx.lineWidth = laChon ? 2.4 : 1.2;
         ctx.strokeStyle = laChon ? "#c0392b" : "#6a3fb5";
         ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      // thửa chọn tay là thửa thu hồi: viền đỏ đứt
+      if (p.thuaChon.size) {
+        ctx.setLineDash([5, 3]);
+        ctx.lineWidth = 1.8;
+        ctx.strokeStyle = "#c0392b";
+        for (const t of p.dl.kq.thua) {
+          if (!p.thuaChon.has(t.ma)) continue;
+          ctx.beginPath();
+          for (const vg of t.vong) { duong(vg); ctx.closePath(); }
+          ctx.stroke();
+        }
         ctx.setLineDash([]);
       }
       // thửa chọn
@@ -589,7 +734,7 @@ function KhungVe(p: {
     const ro = new ResizeObserver(ve);
     ro.observe(cv);
     return () => ro.disconnect();
-  }, [nhin, nen, diaDanh, p.dl, p.thuHoi, p.vungChon, p.chon, p.ttThua, p.khoaThua, pham, lop, cheDo]);
+  }, [nhin, nen, diaDanh, p.dl, p.thuHoi, p.vungChon.join("|"), p.thuaChon, p.chon, p.ttThua, p.khoaThua, pham, lop, cheDo]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const doiToaDo = (e: React.MouseEvent) => {
     const cv = ref.current!;
@@ -627,6 +772,7 @@ function KhungVe(p: {
           if (k?.di || !nhin) return;
           const d = doiToaDo(e);
           const t = p.dl.kq.thua.find((t) => diemTrongThua(d, t.vong));
+          if (t && p.bamThua) p.bamThua(t);
           p.setChon(t ?? null);
         }}
         onMouseLeave={() => (keo.current = null)}
@@ -672,6 +818,7 @@ function KhungVe(p: {
           </>
         )}
         <span><i style={{ background: "#fff", borderColor: "#c0392b", borderWidth: 2 }} />Ranh GPMB đã chọn</span>
+        {p.thuaChon.size > 0 && <span><i style={{ background: "#fff", borderColor: "#c0392b", borderStyle: "dashed" }} />Thửa chọn tay</span>}
         <span><i style={{ background: "#fff", borderColor: "#6a3fb5", borderStyle: "dashed" }} />Ranh ứng viên</span>
       </div>
       <div className="toa-do">{toaDo || "VN-2000"}</div>
@@ -705,9 +852,19 @@ function HopTaoHo(p: {
     return [...m.values()].sort((a, b) => a.ten.localeCompare(b.ten, "vi"));
   }, [p]);
   const [dangTao, setDangTao] = useState(false);
+  const [daXacNhan, setDaXacNhan] = useState(false);
+  // Thửa có nghi vấn: cán bộ phải xác nhận đã kiểm tra trước khi tạo hồ sơ
+  const nghiVan = (t: ThuaBanDo): string[] => {
+    const ds: string[] = t.co.map((c) => TEN_CO[c] ?? c);
+    if (!t.chuSuDung) ds.push("chưa rõ chủ sử dụng");
+    if (!t.soTo || !t.soThua) ds.push("thiếu số tờ/số thửa");
+    return ds;
+  };
+  const soNghiVan = nhom.reduce((s, g) => s + g.thua.filter(({ t }) => nghiVan(t).length > 0).length, 0);
 
   const tao = async () => {
     if (!quyen("SUA_HO_SO")) return bao("Tài khoản không có quyền tạo hồ sơ", "loi");
+    if (soNghiVan > 0 && !daXacNhan) return bao("Cần xác nhận đã kiểm tra các thửa có nghi vấn", "loi");
     setDangTao(true);
     let i = p.soHo;
     for (const g of nhom) {
@@ -724,7 +881,7 @@ function HopTaoHo(p: {
         gia: null,
         maBanDo: t.ma,
         dienTichBanDo: th.dienTichThuHoi,
-        ghiChu: t.co.length ? `Nghi vấn khi đọc bản đồ: ${t.co.map((c) => TEN_CO[c]).join(", ")}` : undefined,
+        ghiChu: nghiVan(t).length ? `Nghi vấn khi đọc bản đồ (đã được cán bộ xác nhận kiểm tra): ${nghiVan(t).join(", ")}` : undefined,
       }));
       h.nhatKy = [{ luc: new Date().toISOString(), nguoi: nguoiDung, noiDung: `Tạo từ bản đồ ${p.duAn.banDo?.tenTep ?? ""}: ${h.thua.length} thửa` }];
       await kho.luuHo(h);
@@ -738,12 +895,12 @@ function HopTaoHo(p: {
   const soThua = nhom.reduce((s, g) => s + g.thua.length, 0);
   return (
     <HopThoai
-      tieuDe="Tạo hồ sơ từ các thửa trong ranh GPMB"
+      tieuDe="Tạo hồ sơ từ các thửa thu hồi"
       dong={p.dong}
       chan={
         <>
           <button className="nut" onClick={p.dong}>Hủy</button>
-          <button className="nut nut-chinh" disabled={dangTao || nhom.length === 0} onClick={tao}>{dangTao ? "Đang tạo…" : `Tạo ${nhom.length} hồ sơ (${soThua} thửa)`}</button>
+          <button className="nut nut-chinh" disabled={dangTao || nhom.length === 0 || (soNghiVan > 0 && !daXacNhan)} onClick={tao}>{dangTao ? "Đang tạo…" : `Tạo ${nhom.length} hồ sơ (${soThua} thửa)`}</button>
         </>
       }
     >
@@ -758,13 +915,32 @@ function HopTaoHo(p: {
             <tr key={g.ten}>
               <td>{g.ten}</td>
               <td className="so">{g.thua.length}</td>
-              <td className="chu-nho">{g.thua.map(({ t }) => `${t.soTo ?? "?"}-${t.soThua ?? "?"}`).join(", ")}</td>
+              <td className="chu-nho">
+                {g.thua.map(({ t }, i) => {
+                  const nv = nghiVan(t);
+                  const nhan = `${t.soTo ?? "?"}-${t.soThua ?? "?"}`;
+                  return (
+                    <span key={t.ma}>
+                      {i > 0 && ", "}
+                      {nv.length ? <b className="chu-do" title={nv.join("; ")}>⚠ {nhan}</b> : nhan}
+                    </span>
+                  );
+                })}
+              </td>
               <td className="so">{g.thua.reduce((s, x) => s + x.th.dienTichThuHoi, 0).toLocaleString("vi-VN", { maximumFractionDigits: 2 })}</td>
             </tr>
           ))}
-          {nhom.length === 0 && <tr><td colSpan={4} className="trong">Mọi thửa trong ranh đã có hồ sơ.</td></tr>}
+          {nhom.length === 0 && <tr><td colSpan={4} className="trong">Mọi thửa thu hồi đã có hồ sơ.</td></tr>}
         </tbody>
       </table>
+      {soNghiVan > 0 && (
+        <label className="thong-bao thong-bao-vang" style={{ display: "flex", gap: 8, alignItems: "flex-start", marginTop: 10 }}>
+          <input type="checkbox" checked={daXacNhan} onChange={(e) => setDaXacNhan(e.target.checked)} />
+          <span>
+            Có <b>{soNghiVan}</b> thửa nghi vấn (đánh dấu ⚠, rê chuột để xem lý do). Tôi đã kiểm tra các thửa này với hồ sơ địa chính/trích đo và đồng ý tạo hồ sơ; nội dung nghi vấn được ghi vào ghi chú của thửa.
+          </span>
+        </label>
+      )}
     </HopThoai>
   );
 }

@@ -300,9 +300,24 @@ table.bang { width: 100%; border-collapse: collapse; font-size: 13px; }
 .cong-cu-ban-do { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; gap: 4px; }
 .cong-cu-ban-do .nut { padding: 5px 10px; box-shadow: var(--bong-1); }
 .toa-do { position: absolute; right: 10px; bottom: 10px; font-size: 11px; background: color-mix(in srgb, var(--be-mat) 90%, transparent); padding: 2px 6px; border-radius: 4px; color: var(--chu-phu); }
-.ben-phai { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+.ben-phai { display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow-y: auto; padding-right: 2px; }
 .ben-phai .the { min-height: 0; display: flex; flex-direction: column; }
 .ben-phai .the .bang-cuon { flex: 1; }
+.ben-phai .the.co-dinh { flex: none; }
+.ben-phai .the:last-child { min-height: 260px; }
+/* Kiểm tra bản đồ: danh sách điều kiện */
+.kt-bd { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 12.5px; }
+.kt-bd li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; align-items: start; line-height: 1.4; }
+.kt-bd .dau { width: 18px; height: 18px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 11px; font-weight: 700; color: #fff; }
+.kt-bd li.ok .dau { background: var(--xanh-to, #2e7d32); }
+.kt-bd li.canh .dau { background: var(--vang-to); }
+.kt-bd li.loi .dau { background: var(--do-to); }
+.kt-bd li.loi { color: var(--do); }
+.kt-bd small { display: block; color: var(--chu-phu); }
+.kt-bd li.loi small { color: inherit; }
+.ds-vung { max-height: 180px; overflow: auto; border: 1px solid var(--vien); border-radius: 8px; padding: 4px 8px; display: grid; gap: 2px; font-size: 12.5px; }
+.ds-vung label { display: flex; gap: 6px; align-items: center; padding: 2px 0; cursor: pointer; }
+.chu-do { color: var(--do); }
 
 .thong-bao { padding: 10px 14px; border-radius: var(--r-md); font-size: 13px; margin-bottom: 12px; border: 1px solid var(--vien); border-left-width: 4px; background: var(--be-mat); }
 .thong-bao-vang { background: var(--vang-nen); border-color: color-mix(in srgb, var(--vang-to) 35%, transparent); border-left-color: var(--vang-to); color: var(--vang); }

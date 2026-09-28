@@ -4,3 +4,4 @@ export * from "./thua.js";
 export * from "./cfb.js";
 export * from "./dgn-v8.js";
 export * from "./goi-y-cau-hinh.js";
+export * from "./phan-lop.js";
