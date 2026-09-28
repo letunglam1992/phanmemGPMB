@@ -61,3 +61,26 @@ describe("Tính hộ mẫu (từ biểu áp giá thửa 85, ẩn danh)", () => {
     expect(canhBao).toContain("giá gạo");
   });
 });
+
+describe("P0-1: số không hợp lệ không làm dừng tính toán", () => {
+  it('DT thu hồi "9222,1", đơn giá "abc", giá gạo "x" → không ném lỗi; dòng Thiếu căn cứ nêu đúng trường; không được chốt', () => {
+    const { duAn, ho } = taoDuAnMau();
+    const h = structuredClone(ho[0]!);
+    h.thua[0]!.dienTichThuHoi = "9222,1";
+    const ts = h.taiSan.find((x) => x.loai === "CAY")!;
+    (ts as { donGia: string }).donGia = "abc";
+    const kq = tinhHo(cs, { ...duAn, giaGao: { dongKg: "x", nguon: "" } }, h);
+    const dl = kq.nhom.find((n) => n.ma === "DL")!;
+    expect(dl.dong.map((x) => x.dong.canhBao[0])).toEqual(
+      expect.arrayContaining([expect.stringContaining('"9222,1"'), expect.stringContaining('"abc"'), expect.stringContaining('"x"')]),
+    );
+    expect(dl.dong.some((x) => x.dong.noiDung.includes("DT thu hồi"))).toBe(true);
+    expect(kq.tong.duocChot).toBe(false);
+    // hồ sơ gốc không bị sửa
+    expect(h.thua[0]!.dienTichThuHoi).toBe("9222,1");
+  });
+  it("dữ liệu hợp lệ: không có nhóm DL", () => {
+    const { duAn, ho } = taoDuAnMau();
+    expect(tinhHo(cs, duAn, ho[0]!).nhom.some((n) => n.ma === "DL")).toBe(false);
+  });
+});

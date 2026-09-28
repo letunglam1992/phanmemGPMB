@@ -7,6 +7,7 @@ import { PhanLop } from "./PhanLop";
 import { laDatNN } from "../../tinh-ho";
 import { useUngDung } from "../../ung-dung";
 import { Chon } from "../../thanh-phan/Chon";
+import { soD } from "../../so";
 
 export const LOAI_DAT = ["LUC", "LUK", "LUN", "HNK", "BHK", "NHK", "CLN", "RSX", "RPH", "NTS", "ONT", "ODT", "TMD", "SKC", "SKK", "SKN", "DGT", "NTD", "CSD", "KHAC"];
 
@@ -38,7 +39,7 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
           </thead>
           <tbody>
             {h.thua.map((t) => {
-              const loiDt = t.dienTich && t.dienTichThuHoi && !isNaN(Number(t.dienTich)) && D(t.dienTichThuHoi || 0).gt(t.dienTich);
+              const loiDt = t.dienTich && t.dienTichThuHoi && !isNaN(Number(t.dienTich)) && soD(t.dienTichThuHoi).gt(soD(t.dienTich));
               const lechBanDo = t.dienTichBanDo !== undefined && t.dienTichThuHoi && Math.abs(Number(t.dienTichThuHoi) - t.dienTichBanDo) > 0.05;
               return (
                 <Fragment key={t.id}>
@@ -61,7 +62,7 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
                       {t.phanLop?.lop.length ? (
                         <div><b>Phân lớp · {t.phanLop.lop.length} lớp</b> <button className="nut nut-chu nut-nho" onClick={() => setMoRong(t.id)}>Sửa</button><div className="can-cu">Bảng {t.phanLop.tuyen.bang}, STT {t.phanLop.tuyen.stt}: {t.phanLop.tuyen.tuyen}</div></div>
                       ) : t.gia ? (
-                        <div><b>{tien(D(t.gia.giaNghinDong).mul(1000))} đ/m²</b> <button className="nut nut-chu nut-nho" onClick={() => setChonGia(t.id)}>Đổi</button><div className="can-cu">{t.gia.nguon}</div></div>
+                        <div><b>{tien(soD(t.gia.giaNghinDong).mul(1000))} đ/m²</b> <button className="nut nut-chu nut-nho" onClick={() => setChonGia(t.id)}>Đổi</button><div className="can-cu">{t.gia.nguon}</div></div>
                       ) : (
                         <button className="nut nut-nho" style={{ borderColor: "var(--do)", color: "var(--do)" }} onClick={() => setChonGia(t.id)}>Chọn giá đất…</button>
                       )}

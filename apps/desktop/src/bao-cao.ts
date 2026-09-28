@@ -10,6 +10,7 @@ import type { KetQuaHo } from "./tinh-ho";
 import { canhBaoDuAn, thongKe, THU_TU_TRANG_THAI, type CanhBao, type TrangThaiGpmb } from "./trang-thai";
 import { tinhChiTra, type GiaiDoanTyLe } from "./chi-tra";
 import type { LichLamViec } from "./lich-lam-viec";
+import { soD } from "./so";
 
 export type TinhTrangDuAn = "HOAN_THANH" | "CO_VUONG_MAC" | "DANG_THUC_HIEN" | "CHUA_CO_HO_SO";
 export const TEN_TINH_TRANG: Record<TinhTrangDuAn, string> = {
@@ -93,7 +94,7 @@ export function dongDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], denNgay: stri
   s.soHo = ds.length;
   s.theoTrangThai = tk.theoTrangThai;
   for (const { h, k } of ds) {
-    s.dtThuHoi = s.dtThuHoi.plus(h.thua.reduce((x, t) => x.plus(t.dienTichThuHoi || 0), D(0)));
+    s.dtThuHoi = s.dtThuHoi.plus(h.thua.reduce((x, t) => x.plus(soD(t.dienTichThuHoi)), D(0)));
     s.tamTinh = s.tamTinh.plus(k.tong.tongLamTron);
     const ct = tinhChiTra(hoDenNgay(h, denNgay), duAn.phuongAn ?? [], tyLeCham, denNgay);
     s.daChi = s.daChi.plus(ct.daChi);

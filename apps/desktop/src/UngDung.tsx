@@ -24,6 +24,7 @@ import { KhongGianDuAn } from "./man/KhongGianDuAn";
 import { TimKiemChung } from "./thanh-phan/TimKiem";
 import { MenuChuotPhai } from "./thanh-phan/MenuChuotPhai";
 import { BanPhim, type MucPhim } from "./thanh-phan/BanPhim";
+import { RaoLoi } from "./thanh-phan/RaoLoi";
 import { useTongHop } from "./thanh-phan/dung-canh-bao";
 import { donViSuDung } from "./don-vi";
 import { HopGioiThieu } from "./thanh-phan/GioiThieu";
@@ -32,7 +33,7 @@ import { BAN_QUYEN, MA_BUILD, moTaPhienBan } from "./phien-ban";
 type MucBen = { ten: string; bt: string; chon?: boolean; bam: () => void; tat?: boolean; an?: boolean };
 
 export function UngDung() {
-  const { man, di, dsDuAn, hopSaoLuu, moSaoLuu, taiKhoan, quyen, dangXuat, hopCaiDat, moCaiDat, quayLai, coTheQuayLai, dsDonVi, anhNen, taiLai, bao } = useUngDung();
+  const { man, di, dsDuAn, hopSaoLuu, moSaoLuu, taiKhoan, quyen, dangXuat, hopCaiDat, moCaiDat, quayLai, coTheQuayLai, dsDonVi, anhNen, taiLai, bao, ghiNhatKy } = useUngDung();
   const [menu, setMenu] = useState(false);
   const [chuong, setChuong] = useState(false);
   // Dự án làm việc gần nhất — mục "Hồ sơ" mở lại dự án này
@@ -200,6 +201,7 @@ export function UngDung() {
       </header>
 
       <main className="noi-dung">
+        <RaoLoi ten="màn hình này" khoa={JSON.stringify(man)} khiLoi={(m) => void ghiNhatKy("Lỗi giao diện", m).catch(() => undefined)}>
         {man.ten === "tong-quan" && <TongQuan />}
         {man.ten === "du-an" && !man.duAnId && <ManDuAn />}
         {man.ten === "du-an" && man.duAnId && <KhongGianDuAn duAnId={man.duAnId} tab={man.tab} ma={man.ma} hoId={man.hoId} />}
@@ -213,6 +215,7 @@ export function UngDung() {
         {man.ten === "kiem-tra-pa" && <KiemTraPhuongAn />}
         {man.ten === "bao-cao" && <BaoCao />}
         {man.ten === "van-ban" && <KhongGianDuAn duAnId={man.duAnId} tab="van-ban" ma={man.ma} hoId={man.hoId} />}
+        </RaoLoi>
       </main>
       <footer className="chan">
         <span>Bộ chính sách: Sơn La, hiệu lực 31/3/2026 (QĐ 106/2025, QĐ 14/2026, QĐ 32/2025, NQ 152/2025)</span>

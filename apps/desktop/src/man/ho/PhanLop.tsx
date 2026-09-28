@@ -3,6 +3,7 @@ import { taoId, type Thua } from "../../mo-hinh";
 import { nhomPhanLop } from "../../tinh-ho";
 import { tien } from "../../thanh-phan/chung";
 import { Chon } from "../../thanh-phan/Chon";
+import { soD } from "../../so";
 
 /**
  * Nhập lớp đất (QD-21): cán bộ thêm lớp, chọn vị trí trong bảng giá, nhập diện tích.
@@ -23,7 +24,7 @@ export function PhanLop({ t, cs, sua, moChonTuyen }: { t: Thua; cs: BoChinhSach;
   const doiLop = (id: string, p: Partial<(typeof pl.lop)[number]>) => sua({ phanLop: { ...pl, lop: pl.lop.map((l) => (l.id === id ? { ...l, ...p } : l)) } });
   const viTriCo = pl.tuyen.vt.map((g, i) => ({ vt: i + 1, g })).filter((x) => x.g !== null);
   const tongDt = pl.lop.reduce((s, l) => s.plus(isNaN(Number(l.dienTich)) || !l.dienTich ? 0 : D(l.dienTich)), D(0));
-  const khopDt = t.dienTichThuHoi && !isNaN(Number(t.dienTichThuHoi)) && tongDt.toDecimalPlaces(2).eq(D(t.dienTichThuHoi).toDecimalPlaces(2));
+  const khopDt = t.dienTichThuHoi && !isNaN(Number(t.dienTichThuHoi)) && tongDt.toDecimalPlaces(2).eq(soD(t.dienTichThuHoi).toDecimalPlaces(2));
   return (
     <div>
       <div className="nhom-nut" style={{ alignItems: "center", marginBottom: 6 }}>

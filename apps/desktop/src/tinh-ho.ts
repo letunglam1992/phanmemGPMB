@@ -31,6 +31,7 @@ import {
 import type Decimal from "decimal.js";
 import { thuTinh } from "./bieu-thuc";
 import type { DuAn, Ho, TaiDinhCuHo, TaiSan, Thua } from "./mo-hinh";
+import { truongLoi, truongSoDuAn, truongSoHo } from "./so";
 
 export const LOAI_DAT_NN = ["LUC", "LUK", "LUN", "BHK", "NHK", "HNK", "CLN", "RSX", "RPH", "RDD", "NTS", "NKH", "LNP"];
 export const laDatNN = (ma: string) => LOAI_DAT_NN.includes(ma.toUpperCase());
@@ -274,7 +275,43 @@ function dongCayThua(cs: BoChinhSach, t: Thua, cay: Extract<TaiSan, { loai: "CAY
   return out;
 }
 
+/**
+ * Tính một hộ. Không bao giờ ném lỗi (P0-1): giá trị số không đọc được (vd. "9222,1" từ dữ liệu cũ) → dòng
+ * "Thiếu căn cứ" nêu đúng trường, giá trị; phần còn lại tính trên bản sao đã bỏ giá trị lỗi. Tổng không được chốt
+ * khi còn dòng này (tongHo: duocChot = false). Lỗi bất ngờ trong khi tính cũng trả về dòng "Thiếu căn cứ".
+ */
 export function tinhHo(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
+  const loiHo = truongLoi(truongSoHo(ho));
+  const loiDa = truongLoi(truongSoDuAn(duAn));
+  let hoTinh = ho, daTinh = duAn;
+  if (loiHo.length) {
+    hoTinh = structuredClone(ho);
+    for (const x of truongLoi(truongSoHo(hoTinh))) x.dat("");
+  }
+  if (loiDa.length) {
+    daTinh = structuredClone(duAn);
+    for (const x of truongLoi(truongSoDuAn(daTinh))) x.dat("");
+  }
+  const dongLoi: DongKetQua[] = [...loiDa, ...loiHo].map((x) => ({
+    dong: thieu("DL", x.nhan, `Giá trị không hợp lệ: "${x.gt}" — nhập lại số (dấu chấm phân cách nghìn, dấu phẩy thập phân)`),
+    cot: "HT_KHAC",
+  }));
+  let kq: KetQuaHo;
+  try {
+    kq = tinhHoGoc(cs, daTinh, hoTinh);
+  } catch (e) {
+    kq = tinhHoGoc(cs, daTinh, { ...hoTinh, thua: [], taiSan: [], hoTro: { chuyenDoiNghe: false }, khauTru: "" });
+    dongLoi.push({ dong: thieu("DL", "Lỗi khi tính hồ sơ", `Không tính được: ${(e as Error).message} — kiểm tra số liệu vừa nhập`), cot: "HT_KHAC" });
+  }
+  if (!dongLoi.length) return kq;
+  const tatCa = [...dongLoi, ...kq.tatCa];
+  const lt = duAn.lamTron?.lyDo?.trim() ? duAn.lamTron : null;
+  const csTong: BoChinhSach = lt ? { ...cs, lamTron: { ...cs.lamTron, cach: lt.cach } } : cs;
+  const tong = tongHo(csTong, tatCa.map((x) => x.dong));
+  return { ...kq, nhom: [{ ma: "DL", ten: "Dữ liệu nhập chưa hợp lệ", dong: dongLoi }, ...kq.nhom], tatCa, tong, conLai: tong.tongLamTron.minus(kq.khauTru) };
+}
+
+function tinhHoGoc(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
   const nhom: NhomKetQua[] = [
     { ma: "A.I", ten: "Bồi thường về đất", dong: [] },
     { ma: "A.II", ten: "Bồi thường nhà, công trình, vật kiến trúc", dong: [] },

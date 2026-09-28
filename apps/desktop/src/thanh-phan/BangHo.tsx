@@ -4,6 +4,7 @@ import { CAC_BUOC, hoHieuLuc, type DuAn, type Ho } from "../mo-hinh";
 import type { KetQuaHo } from "../tinh-ho";
 import { TT_GPMB, vuongMacHo, type TrangThaiGpmb } from "../trang-thai";
 import { tien } from "./chung";
+import { soD } from "../so";
 
 export interface DongHo {
   h: Ho;
@@ -12,7 +13,7 @@ export interface DongHo {
   tt: TrangThaiGpmb;
 }
 
-const dtThuHoi = (h: Ho) => h.thua.reduce((s, t) => s.plus(t.dienTichThuHoi || "0"), D(0));
+const dtThuHoi = (h: Ho) => h.thua.reduce((s, t) => s.plus(soD(t.dienTichThuHoi)), D(0));
 
 /**
  * Bảng hộ, cá nhân, tổ chức: STT, họ tên, địa chỉ, tờ, thửa, diện tích thu hồi, loại đất (mỗi thửa một dòng),
@@ -58,7 +59,7 @@ export function BangHo({ ds, homNay, coDuAn, mo, trong }: { ds: DongHo[]; homNay
                 <td className="chu-nho c-dc">{h.diaChi || "—"}</td>
                 <td className="so">{thua.map((t, j) => <div key={j}>{t?.soTo || "—"}</div>)}</td>
                 <td className="so">{thua.map((t, j) => <div key={j}>{t?.soThua || "—"}</div>)}</td>
-                <td className="so">{thua.map((t, j) => <div key={j}>{t ? tien(D(t.dienTichThuHoi || "0").toDecimalPlaces(2)) : "—"}</div>)}</td>
+                <td className="so">{thua.map((t, j) => <div key={j}>{t ? tien(soD(t.dienTichThuHoi).toDecimalPlaces(2)) : "—"}</div>)}</td>
                 <td>{thua.map((t, j) => <div key={j}>{t?.loaiDat || "—"}</div>)}</td>
                 <td className="so">{tien(k.tongBoiThuong)}</td>
                 <td className="so">{tien(k.tongHoTro)}</td>

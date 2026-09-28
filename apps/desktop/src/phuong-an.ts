@@ -13,6 +13,7 @@ import type Decimal from "decimal.js";
 import type { BoChinhSach } from "@gpmb/core";
 import { tinhHo, TEN_COT, type CotTongHop, type KetQuaHo } from "./tinh-ho";
 import { taoId, type DuAn, type Ho } from "./mo-hinh";
+import { soD } from "./so";
 
 export type TrangThaiPA = "DA_CHOT" | "DA_PHE_DUYET" | "DA_HUY";
 export const TEN_TT_PA: Record<TrangThaiPA, string> = { DA_CHOT: "Đã chốt, chờ phê duyệt", DA_PHE_DUYET: "Đã phê duyệt", DA_HUY: "Đã hủy" };
@@ -78,7 +79,7 @@ export function chupHo(h: Ho, k: KetQuaHo): HoChot {
     hoId: h.id,
     ma: h.ma,
     ten: h.ten,
-    dtThuHoi: s(h.thua.reduce((a, t) => a.plus(t.dienTichThuHoi || "0"), D(0))),
+    dtThuHoi: s(h.thua.reduce((a, t) => a.plus(soD(t.dienTichThuHoi)), D(0))),
     theoCot: Object.fromEntries(Object.entries(k.theoCot).map(([c, v]) => [c, s(v)])) as Record<CotTongHop, string>,
     tongBoiThuong: s(k.tongBoiThuong),
     tongHoTro: s(k.tongHoTro),

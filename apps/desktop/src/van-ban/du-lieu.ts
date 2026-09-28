@@ -9,6 +9,7 @@ import type { KetQuaHo } from "../tinh-ho";
 import { docSoTien } from "./doc-so";
 import type { MauVanBan } from "./danh-muc";
 import { tenLoaiDat } from "./loai-dat";
+import { soD } from "../so";
 
 export const CHAM = "…………";
 
@@ -73,12 +74,12 @@ const soM2 = (v: string | number | Decimal) => dinhDang(D(v || 0), 2);
 function moTaThua(h: Ho): string {
   return h.thua
     .filter((t) => Number(t.dienTichThuHoi) > 0)
-    .map((t) => `thửa đất số ${t.soThua} (${D(t.dienTichThuHoi).gte(D(t.dienTich || 0)) ? "toàn bộ" : "một phần"} thửa đất), tờ bản đồ số ${t.soTo}`)
+    .map((t) => `thửa đất số ${t.soThua} (${soD(t.dienTichThuHoi).gte(soD(t.dienTich)) ? "toàn bộ" : "một phần"} thửa đất), tờ bản đồ số ${t.soTo}`)
     .join("; ");
 }
 
 export function duLieuHo(h: Ho, k: KetQuaHo): Record<string, unknown> {
-  const dt = h.thua.reduce((s, t) => s.plus(t.dienTichThuHoi || 0), D(0));
+  const dt = h.thua.reduce((s, t) => s.plus(soD(t.dienTichThuHoi)), D(0));
   const thuaTheoId = new Map(h.thua.map((t) => [t.id, t]));
   return {
     ho_ten: h.ten,
@@ -98,7 +99,7 @@ export function duLieuHo(h: Ho, k: KetQuaHo): Record<string, unknown> {
       loai_dat: t.loaiDat,
       dien_tich: soM2(t.dienTich),
       dt_thu_hoi: soM2(t.dienTichThuHoi),
-      pham_vi: D(t.dienTichThuHoi || 0).gte(D(t.dienTich || 0)) ? "Thu hồi toàn bộ" : "Thu hồi một phần",
+      pham_vi: soD(t.dienTichThuHoi).gte(soD(t.dienTich)) ? "Thu hồi toàn bộ" : "Thu hồi một phần",
     })),
     tai_san: h.taiSan.map((x, i) => {
       const t = thuaTheoId.get(x.thuaId);
@@ -125,7 +126,7 @@ export function duLieuDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[]): Record<str
   let tongDt = D(0);
   for (const { h } of ds)
     for (const t of h.thua) {
-      const v = D(t.dienTichThuHoi || 0);
+      const v = soD(t.dienTichThuHoi);
       if (v.lte(0)) continue;
       theoLoai.set(t.loaiDat, (theoLoai.get(t.loaiDat) ?? D(0)).plus(v));
       tongDt = tongDt.plus(v);
@@ -137,7 +138,7 @@ export function duLieuDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[]): Record<str
     let tong = D(0);
     for (const { h } of ds)
       for (const t of h.thua) {
-        const v = D(t.dienTichThuHoi || 0);
+        const v = soD(t.dienTichThuHoi);
         if (v.lte(0) || !loc(h, t)) continue;
         const ten = tenLoaiDat(t.loaiDat);
         m.set(ten, (m.get(ten) ?? D(0)).plus(v));
@@ -155,10 +156,10 @@ export function duLieuDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[]): Record<str
   const dsThua: Record<string, unknown>[] = [];
   ds.forEach(({ h }, i) =>
     h.thua
-      .filter((t) => D(t.dienTichThuHoi || 0).gt(0))
+      .filter((t) => soD(t.dienTichThuHoi).gt(0))
       .forEach((t) => {
-        const tong = D(t.dienTichThuHoi || 0);
-        const coGcn = t.gcn?.dtThuHoiCoGcn ? D(t.gcn.dtThuHoiCoGcn) : D(0);
+        const tong = soD(t.dienTichThuHoi);
+        const coGcn = t.gcn?.dtThuHoiCoGcn ? soD(t.gcn.dtThuHoiCoGcn) : D(0);
         const khongGcn = tong.minus(coGcn);
         dtCoGcn = dtCoGcn.plus(coGcn);
         dtKhongGcn = dtKhongGcn.plus(khongGcn);
@@ -229,7 +230,7 @@ export function duLieuDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[]): Record<str
       dia_chi: h.diaChi,
       to_thua: h.thua.map((t) => `${t.soTo}/${t.soThua}`).join(", "),
       loai_dat: [...new Set(h.thua.map((t) => t.loaiDat))].join(", "),
-      dt_thu_hoi: soM2(h.thua.reduce((s, t) => s.plus(t.dienTichThuHoi || 0), D(0))),
+      dt_thu_hoi: soM2(h.thua.reduce((s, t) => s.plus(soD(t.dienTichThuHoi)), D(0))),
     })),
     ds_thuong: [],
     khoan_pa: khoan.map((x, i) => ({ chu: CHU[i] ?? String(i + 1), ten: x.ten, tien: dinhDang(x.tien, 2).replace(/,00$/, "") })),
@@ -329,7 +330,7 @@ export function ghepDuLieu(p: {
   const tenTo = (p.rieng.ten_to_ban_do || "tờ bản đồ số").trim();
   kq.ds_thua_pa = p.ds.flatMap(({ h }) =>
     h.thua
-      .filter((t) => D(t.dienTichThuHoi || 0).gt(0))
+      .filter((t) => soD(t.dienTichThuHoi).gt(0))
       .map((t) => ({ mo_ta: `Thửa số ${t.soThua}; ${tenTo} ${t.soTo}, Diện tích ${soM2(t.dienTichThuHoi)} m², loại đất: ${t.loaiDat}.` })),
   );
   if (!kq.ky_hieu) kq.ky_hieu = "";

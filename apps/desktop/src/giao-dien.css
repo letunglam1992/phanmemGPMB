@@ -924,3 +924,7 @@ textarea.o-vuong-mac { border-color: var(--do-to); background: var(--do-nen); }
 tr.co-the-chon:focus-visible { outline: 2px solid var(--chinh); outline-offset: -2px; background: var(--be-mat-hover); }
 .tab > button:focus-visible, .tc-tab > button:focus-visible { outline: 2px solid var(--chinh); outline-offset: 2px; }
 kbd.phim { display: inline-block; min-width: 20px; padding: 1px 6px; border: 1px solid var(--vien); border-bottom-width: 2px; border-radius: 5px; background: var(--be-mat-2); font: 600 11.5px/1.5 inherit; text-align: center; }
+
+/* Rào lỗi giao diện (thanh-phan/RaoLoi.tsx) */
+.rao-loi { border-left: 4px solid var(--do-to); }
+.rao-loi code { font-size: 12px; background: var(--be-mat-2); padding: 1px 5px; border-radius: 4px; }

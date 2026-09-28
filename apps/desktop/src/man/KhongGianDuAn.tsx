@@ -19,6 +19,7 @@ import { TRUONG_CHUNG, VanBan } from "./VanBan";
 import { thongTinChungMacDinh } from "../van-ban/du-lieu";
 import { truongVanBanTuDonVi } from "../don-vi";
 import { Chon } from "../thanh-phan/Chon";
+import { RaoLoi } from "../thanh-phan/RaoLoi";
 
 /**
  * Không gian "Hồ sơ" của một dự án: mọi việc chi tiết của dự án ở một chỗ — tổng quan, thông tin dự án
@@ -100,6 +101,7 @@ export function KhongGianDuAn({ duAnId, tab = "tong-quan", ma, hoId }: { duAnId:
         </div>
       )}
 
+      <RaoLoi ten={`thẻ ${THE.find((t) => t.ma === tab)?.ten ?? tab}`} khoa={`${duAnId}|${tab}`}>
       {tab === "tong-quan" && <TheTongQuan duAn={duAn} kq={kq} moHo={(t) => { moThe("ho"); setTimeout(() => window.dispatchEvent(new CustomEvent("gpmb-loc-ho", { detail: t })), 0); }} capNhatTd={setCapNhatTd} keHoach={() => setKeHoach(true)} />}
       {tab === "thong-tin" && <TheThongTin key={duAn.id} duAn={duAn} tiep={() => moThe("buoc-chung")} />}
       {tab === "buoc-chung" && (
@@ -110,6 +112,7 @@ export function KhongGianDuAn({ duAnId, tab = "tong-quan", ma, hoId }: { duAnId:
       {tab === "ho" && <TheHo duAn={duAn} kq={kq} />}
       {tab === "ban-do" && <div className="kg-nhung"><BanDo duAnId={duAnId} /></div>}
       {tab === "van-ban" && <div className="kg-nhung"><VanBan key={`${duAnId}-${ma}-${hoId}`} duAnId={duAnId} maDau={ma} hoIdDau={hoId} /></div>}
+      </RaoLoi>
 
       {keHoach && <HopKeHoach duAn={duAn} dong={() => setKeHoach(false)} />}
       {capNhatTd && <HopTienDoDuAn duAn={duAn} hos={hos} tabDau={capNhatTd} dong={() => setCapNhatTd(null)} />}

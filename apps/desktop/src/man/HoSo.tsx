@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { useRef, Fragment, useEffect, useMemo, useState } from "react";
 import { kiemTraDuyetBuoc } from "../tai-khoan";
 import { hanCuaBuoc, tinhHanBuoc } from "../han-buoc";
 import { TT_GPMB, homNayIso, trangThaiHo, type TrangThaiGpmb } from "../trang-thai";
@@ -18,6 +18,8 @@ import { taiXuong } from "../tai-xuong";
 import { tenTep } from "../ten-tep";
 import type { DiChuyen } from "@gpmb/core";
 import { Chon } from "../thanh-phan/Chon";
+import { RaoLoi } from "../thanh-phan/RaoLoi";
+import { ghiBanNhap, layBanNhap, xoaBanNhap } from "../ban-nhap";
 
 const CAC_TAB = [
   ["thong-tin", "Thông tin", "thongTin"],
@@ -39,23 +41,36 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
   const choSua = quyen("SUA_HO_SO");
   const duAn = dsDuAn.find((d) => d.id === duAnId);
   const goc = hoCua(duAnId).find((h) => h.id === hoId);
-  const [h, setH] = useState<Ho | undefined>(goc);
+  // Bản nháp chưa lưu (P0-1): mở lại hồ sơ → khôi phục thay đổi chưa lưu của lần trước trong phiên
+  const nhap = layBanNhap(hoId);
+  const [h, setH] = useState<Ho | undefined>(nhap?.h ?? goc);
   const [tab, setTab] = useState<string>(tabDau ?? "thong-tin");
-  const [daSua, setDaSua] = useState(false);
+  const [daSua, setDaSua] = useState(!!nhap);
+  const [daKhoiPhuc, setDaKhoiPhuc] = useState(!!nhap);
+  const boQuaLanDau = useRef(!!nhap);
   useEffect(() => {
+    if (boQuaLanDau.current) {
+      boQuaLanDau.current = false;
+      return;
+    }
     setH(goc);
     setDaSua(false);
-  }, [goc]);
+    setDaKhoiPhuc(false);
+    xoaBanNhap(hoId);
+  }, [goc]); // eslint-disable-line react-hooks/exhaustive-deps
   const kq = useMemo(() => (duAn && h ? tinhHo(chinhSach(duAn), duAn, h) : null), [duAn, h, chinhSach]);
   if (!duAn || !h || !kq) return <div className="trang trong">Không tìm thấy hồ sơ.</div>;
 
   const doi = (moi: Ho) => {
     setH(moi);
     setDaSua(true);
+    ghiBanNhap(moi);
   };
   const luu = async (ghiChu = "Cập nhật hồ sơ") => {
     await luuHo(h, ghiChu);
+    xoaBanNhap(h.id);
     setDaSua(false);
+    setDaKhoiPhuc(false);
   };
   /** Thẻ kế tiếp theo trình tự nhập liệu (bỏ Nhật ký) — "Lưu và tiếp" lưu rồi chuyển sang. */
   const THU_TU = CAC_TAB.map(([ma]) => ma).filter((ma) => ma !== "nhat-ky");
@@ -101,7 +116,7 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
             </div>
           </div>
           {daSua && <span className="nhan nhan-vang">Chưa lưu</span>}
-          {choSua && <button className="nut nut-lon" disabled={!daSua} onClick={() => { setH(goc); setDaSua(false); }}><BieuTuong ten="hoanTac" co={17} /> Hoàn tác</button>}
+          {choSua && <button className="nut nut-lon" disabled={!daSua} onClick={() => { setH(goc); setDaSua(false); setDaKhoiPhuc(false); xoaBanNhap(hoId); }}><BieuTuong ten="hoanTac" co={17} /> Hoàn tác</button>}
           {choSua && <button className={`nut nut-lon ${ke ? "" : "nut-chinh"}`} disabled={!daSua} data-phim="luu" title="Lưu hồ sơ (Ctrl + S)" onClick={() => luu()}><BieuTuong ten="luu" co={17} /> Lưu hồ sơ</button>}
           {choSua && ke && <button className="nut nut-chinh nut-lon" data-phim="luu-tiep" title="Lưu (nếu có thay đổi) rồi chuyển sang thẻ tiếp theo (Ctrl + Enter)" onClick={() => void luuTiep()}>{daSua ? "Lưu và tiếp" : "Tiếp"}: {ke[1]} →</button>}
         </div>
@@ -132,6 +147,12 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
           </aside>
         )}
         <div className="ho-noi-dung">
+          {daKhoiPhuc && (
+            <div className="thong-bao thong-bao-vang" style={{ marginBottom: 10 }}>
+              Đã khôi phục các thay đổi <b>chưa lưu</b> của hồ sơ này từ lần mở trước (lúc {new Date(nhap?.luc ?? Date.now()).toLocaleTimeString("vi-VN")}). Bấm “Lưu hồ sơ” để lưu, hoặc “Hoàn tác” để bỏ.
+            </div>
+          )}
+          <RaoLoi ten={`thẻ ${CAC_TAB.find(([m]) => m === tab)?.[1] ?? tab}`} khoa={tab}>
           {/* tài khoản không có quyền sửa: khóa các ô nhập của các thẻ nhập liệu */}
           <fieldset className="khung-quyen" disabled={!choSua}>
           {tab === "thong-tin" && <TabThongTin h={h} doi={doi} />}
@@ -142,7 +163,7 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
           </fieldset>
           {tab === "tinh" && <TabTinhToan h={h} duAn={duAn} kq={kq} />}
           {tab === "chi-tra" && <fieldset className="khung-quyen" disabled={!choSua}><TabChiTra h={h} duAn={duAn} doi={doi} /></fieldset>}
-          {tab === "tien-do" && <TabTienDo h={h} duAn={duAn} doi={doi} moDuAn={() => di({ ten: "du-an", duAnId, tab: "buoc-chung" })} soanMau={(ma) => di({ ten: "van-ban", duAnId, ma, hoId: h.id })} luuNgay={async (moi, nk) => { setH(moi); await luuHo(moi, nk); setDaSua(false); }} />}
+          {tab === "tien-do" && <TabTienDo h={h} duAn={duAn} doi={doi} moDuAn={() => di({ ten: "du-an", duAnId, tab: "buoc-chung" })} soanMau={(ma) => di({ ten: "van-ban", duAnId, ma, hoId: h.id })} luuNgay={async (moi, nk) => { setH(moi); await luuHo(moi, nk); xoaBanNhap(hoId); setDaSua(false); }} />}
           {tab === "van-ban" && <TabVanBanHo h={h} duAn={duAn} kq={kq} hieuLuc={hieuLuc} soan={(ma) => di({ ten: "van-ban", duAnId, ma, hoId: h.id })} />}
           {tab === "nhat-ky" && (
             <div className="the">
@@ -158,6 +179,7 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
               </table>
             </div>
           )}
+          </RaoLoi>
           {kq.tong.soDongThieuCanCu + kq.tong.soDongCanXacNhan > 0 && tab !== "tinh" && (
             <div className="thong-bao thong-bao-vang" style={{ marginTop: 14 }}>
               Còn {kq.tong.soDongThieuCanCu + kq.tong.soDongCanXacNhan} khoản chưa đủ căn cứ hoặc cần xác nhận — hồ sơ chưa thể chốt.{" "}
