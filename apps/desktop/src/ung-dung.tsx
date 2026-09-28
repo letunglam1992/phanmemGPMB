@@ -107,6 +107,11 @@ interface NguCanh {
   xoaKyBaoCao: (id: string, lyDo: string) => Promise<void>;
   /** Sao lưu tự động ngay (bỏ qua chu kỳ). */
   saoLuuTuDongNgay: () => Promise<CaiDatTuDong>;
+  /** P1-5: khôi phục hồ sơ về bản trong lịch sử (quyền KHOI_PHUC_BAN_GHI — quản trị); trả false nếu bị chặn/lỗi. */
+  khoiPhucLichSu: (stt: number, lyDo: string) => Promise<boolean>;
+  /** Số năm giữ lịch sử bản ghi (0 = không thời hạn) — quản trị đặt. */
+  giuLichSu: number;
+  luuGiuLichSu: (soNam: number) => Promise<void>;
 }
 
 const Ctx = createContext<NguCanh | null>(null);
@@ -165,6 +170,7 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
   const [tyLeCham, setTyLeCham] = useState<GiaiDoanTyLe[]>([]);
   const [tuDong, setTuDong] = useState<CaiDatTuDong>(MAC_DINH_TU_DONG);
   const [kyBaoCao, setKyBaoCao] = useState<KyBaoCao[]>([]);
+  const [giuLichSu, setGiuLichSu] = useState(0);
   const dangTuDong = useRef(false);
   const [sai, setSai] = useState<{ lan: number; den: number }>({ lan: 0, den: 0 });
   const nguoiDung = tenHienThi(taiKhoan);
@@ -213,6 +219,7 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
     setDsDonVi((await kho.docCaiDat<DonVi[]>(KHOA_DON_VI)) ?? []);
     setAnhNen((await kho.docCaiDat<string>("anhNen")) ?? null);
     setKhoaKhoiPhuc((await kho.docCaiDat<KhoaKhoiPhuc>(KHOA_KHOI_PHUC)) ?? null);
+    setGiuLichSu((await kho.docCaiDat<{ soNam: number }>("giuLichSu"))?.soNam ?? 0);
     const da = await kho.dsDuAn();
     const hos = (await Promise.all(da.map((d) => kho.dsHo(d.id)))).flat();
     setDsDuAn(da.sort((a, b) => b.taoLuc.localeCompare(a.taoLuc)));
@@ -220,10 +227,37 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
     setDangTai(false);
   }, [kho]);
 
+  /**
+   * P1-2: cập nhật trạng thái bằng các bản ghi vừa lưu / vừa đổi, không tải lại toàn bộ. Bản ghi không đổi giữ nguyên
+   * tham chiếu → kết quả tính, thống kê đã ghi nhớ (P1-1) được dùng lại.
+   */
+  const capNhat = useCallback((x: { duAn?: DuAn[]; ho?: Ho[]; xoaDuAn?: string[]; xoaHo?: string[] }) => {
+    if (x.duAn?.length || x.xoaDuAn?.length) {
+      const bo = new Set(x.xoaDuAn ?? []);
+      setDsDuAn((ds) => {
+        const moi = new Map((x.duAn ?? []).map((d) => [d.id, d]));
+        const out = ds.filter((d) => !bo.has(d.id)).map((d) => moi.get(d.id) ?? d);
+        for (const d of moi.values()) if (!ds.some((y) => y.id === d.id)) out.push(d);
+        return out.sort((a, b) => b.taoLuc.localeCompare(a.taoLuc));
+      });
+    }
+    if (x.ho?.length || x.xoaHo?.length || x.xoaDuAn?.length) {
+      const bo = new Set(x.xoaHo ?? []);
+      const boDa = new Set(x.xoaDuAn ?? []);
+      setDsHo((ds) => {
+        const moi = new Map((x.ho ?? []).map((h) => [h.id, h]));
+        const out = ds.filter((h) => !bo.has(h.id) && !boDa.has(h.duAnId)).map((h) => moi.get(h.id) ?? h);
+        let them = false;
+        for (const h of moi.values()) if (!ds.some((y) => y.id === h.id)) (out.push(h), (them = true));
+        return them ? out.sort((a, b) => a.ma.localeCompare(b.ma, "vi", { numeric: true })) : out;
+      });
+    }
+  }, []);
+
   /** Ghi qua máy chủ: báo lỗi (xung đột, quyền, quy tắc) và tải lại bản mới nhất; ném DaBaoLoi để màn hình giữ bản nháp. */
-  const ghi = async (f: () => Promise<void>) => {
+  const ghi = async <T,>(f: () => Promise<T>): Promise<T> => {
     try {
-      await f();
+      return await f();
     } catch (e) {
       if (!(e instanceof LoiMayChu)) throw e;
       bao(e.message, "loi");
@@ -255,7 +289,7 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
   // Máy chủ: hỏi thay đổi định kỳ, tải lại khi người khác vừa cập nhật
   const seq = useRef<number | null>(null);
   useEffect(() => {
-    if (!laKhoMang(kho) || !taiKhoan) return;
+    if (!laKhoMang(kho) || kho.noiBo || !taiKhoan) return;
     let dung = false;
     const hoi = async () => {
       try {
@@ -264,7 +298,28 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
         const lanDau = seq.current === null;
         seq.current = r.seq;
         if (!lanDau && cuaNguoiKhac.length && !dung) {
-          await taiLai();
+          // P1-2: chỉ tải các bản ghi vừa đổi; thay đổi khác (cài đặt, khôi phục toàn bộ) → tải lại hết
+          if (cuaNguoiKhac.every((x) => x.loai === "ho" || x.loai === "duAn" || x.loai === "pa")) {
+            const khoa = [...new Map(cuaNguoiKhac.map((x) => [`${x.loai}:${x.id}`, { loai: x.loai, id: x.id }])).values()];
+            const r = await kho.docNhieu(khoa);
+            const ho = r.flatMap((x) => (x.loai === "ho" && x.duLieu ? [x.duLieu] : []));
+            const xoaHo = r.flatMap((x) => (x.loai === "ho" && !x.duLieu ? [x.id] : []));
+            const xoaDuAn = r.flatMap((x) => (x.loai === "duAn" && !x.duLieu ? [x.id] : []));
+            const pa = r.flatMap((x) => (x.loai === "pa" && x.duLieu ? [x.duLieu] : []));
+            const loiDa = r.flatMap((x) => (x.loai === "duAn" && x.duLieu ? [x.duLieu] : []));
+            setDsDuAn((ds) => {
+              const out = ds.filter((d) => !xoaDuAn.includes(d.id)).map((d) => {
+                const loi = loiDa.find((y) => y.id === d.id);
+                const cuaDa = pa.filter((p) => p.duAnId === d.id);
+                if (!loi && !cuaDa.length) return d;
+                const dsPa = [...(d.phuongAn ?? []).map((p) => cuaDa.find((q) => q.id === p.id)?.pa ?? p), ...cuaDa.filter((q) => !(d.phuongAn ?? []).some((p) => p.id === q.id)).map((q) => q.pa)];
+                return { ...(loi ?? d), ...(dsPa.length ? { phuongAn: dsPa } : {}) };
+              });
+              for (const d of loiDa) if (!ds.some((y) => y.id === d.id)) out.push({ ...d, ...(pa.some((p) => p.duAnId === d.id) ? { phuongAn: pa.filter((p) => p.duAnId === d.id).map((p) => p.pa) } : {}) });
+              return out.sort((a, b) => b.taoLuc.localeCompare(a.taoLuc));
+            });
+            capNhat({ ho, xoaHo, xoaDuAn });
+          } else await taiLai();
           const ai = [...new Set(cuaNguoiKhac.map((x) => x.boi))].join(", ");
           bao(`Dữ liệu vừa được cập nhật bởi ${ai}`);
         }
@@ -281,8 +336,22 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
       dung = true;
       clearInterval(t);
     };
-  }, [kho, taiKhoan, taiLai, bao]);
+  }, [kho, taiKhoan, taiLai, bao, capNhat]);
 
+  // Máy đơn: báo một lần sau khi dữ liệu IndexedDB cũ được chuyển sang SQLite (may-don.ts)
+  useEffect(() => {
+    if (!taiKhoan) return;
+    try {
+      const x = sessionStorage.getItem("gpmb-da-chuyen-sqlite");
+      if (x !== null) {
+        sessionStorage.removeItem("gpmb-da-chuyen-sqlite");
+        bao(`Đã chuyển dữ liệu máy đơn sang cơ sở dữ liệu SQLite: ${x}. Dữ liệu cũ vẫn giữ nguyên trên máy.`);
+      }
+    } catch {
+      /* không có sessionStorage */
+    }
+  }, [taiKhoan, bao]);
+  useEffect(() => kho.datNguoi(taiKhoan ? `${taiKhoan.hoTen} (${taiKhoan.ten})` : ""), [kho, taiKhoan]);
   useEffect(() => {
     void taiLai();
     if (laKhoMang(kho)) void kho.trangThai().then((t) => setCoTaiKhoan(t.coTaiKhoan), (e) => bao(String((e as Error).message ?? e), "loi"));
@@ -366,22 +435,20 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
     },
     luuDuAn: async (d, q = "SUA_HO_SO") => {
       if (chan(q)) return;
-      await ghi(() => kho.luuDuAn(d));
-      await taiLai();
+      capNhat({ duAn: [await ghi(() => kho.luuDuAn(d))] });
     },
     luuHo: async (h, nk) => {
       if (chan("SUA_HO_SO")) return;
       const ban = nk ? { ...h, nhatKy: [...h.nhatKy, { luc: new Date().toISOString(), nguoi: nguoiDung, noiDung: nk }] } : h;
-      await ghi(() => kho.luuHo(ban));
-      await taiLai();
+      capNhat({ ho: [await ghi(() => kho.luuHo(ban))] });
     },
     luuNhieuHo: async (ds) => {
       if (chan("SUA_HO_SO")) return { daLuu: 0, loi: ["Tài khoản không có quyền sửa hồ sơ"] };
       // Nguyên tử (P0-6, QD: cập nhật hàng loạt hủy cả lô khi có hộ bị người khác sửa cùng lúc)
       const luc = new Date().toISOString();
       try {
-        await kho.ghiLo({ ho: ds.map(({ h, nhatKy }) => ({ ...h, nhatKy: [...h.nhatKy, { luc, nguoi: nguoiDung, noiDung: nhatKy }] })) });
-        await taiLai();
+        const r = await kho.ghiLo({ ho: ds.map(({ h, nhatKy }) => ({ ...h, nhatKy: [...h.nhatKy, { luc, nguoi: nguoiDung, noiDung: nhatKy }] })) });
+        capNhat({ ho: r.ho });
         return { daLuu: ds.length, loi: [] };
       } catch (e) {
         if (e instanceof LoiMayChu && e.ma === 401) setTaiKhoan(null);
@@ -397,12 +464,11 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
       if (ly.length) return bao(`Không xóa được hồ sơ ${h.ma}: ${ly.join("; ")}. Hủy bản phương án (có lý do) hoặc hủy đợt chi trước.`, "loi"), false;
       if (!lyDo.trim()) return bao("Xóa hồ sơ cần ghi lý do", "loi"), false;
       try {
-        await ghi(() => kho.luuHo({ ...h, daXoa: dauXoa(lyDo), nhatKy: [...h.nhatKy, { luc: new Date().toISOString(), nguoi: nguoiDung, noiDung: `Đưa vào thùng rác: ${lyDo.trim()}` }] }));
+        capNhat({ ho: [await ghi(() => kho.luuHo({ ...h, daXoa: dauXoa(lyDo), nhatKy: [...h.nhatKy, { luc: new Date().toISOString(), nguoi: nguoiDung, noiDung: `Đưa vào thùng rác: ${lyDo.trim()}` }] }))] });
       } catch {
         return false;
       }
       await ghiNhatKy("Xóa hồ sơ (vào thùng rác)", `${h.ma} · ${h.ten} — ${lyDo.trim()}`);
-      await taiLai();
       return true;
     },
     khoiPhucHo: async (id) => {
@@ -410,17 +476,16 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
       const h = dsHo.find((x) => x.id === id);
       if (!h?.daXoa) return;
       const { daXoa: _bo, ...con } = h;
-      await ghi(() => kho.luuHo({ ...con, nhatKy: [...h.nhatKy, { luc: new Date().toISOString(), nguoi: nguoiDung, noiDung: "Khôi phục từ thùng rác" }] }));
+      capNhat({ ho: [await ghi(() => kho.luuHo({ ...con, nhatKy: [...h.nhatKy, { luc: new Date().toISOString(), nguoi: nguoiDung, noiDung: "Khôi phục từ thùng rác" }] }))] });
       await ghiNhatKy("Khôi phục hồ sơ từ thùng rác", `${h.ma} · ${h.ten}`);
-      await taiLai();
     },
     xoaHanHo: async (id) => {
       if (chan("XOA_HAN")) return;
       const h = dsHo.find((x) => x.id === id);
       if (!h?.daXoa || !duocXoaHan(h.daXoa)) return bao(`Chỉ xóa hẳn hồ sơ đã nằm trong thùng rác đủ ${THOI_HAN_THUNG_RAC} ngày`, "loi");
       await ghi(() => kho.ghiLo({ xoaHo: [id] }));
+      capNhat({ xoaHo: [id] });
       await ghiNhatKy("Xóa hẳn hồ sơ", `${h.ma} · ${h.ten} (vào thùng rác ${h.daXoa.luc.slice(0, 10)} bởi ${h.daXoa.nguoi}: ${h.daXoa.lyDo})`);
-      await taiLai();
     },
     xoaDuAn: async (id, lyDo) => {
       if (chan("XOA_DU_AN")) return false;
@@ -430,12 +495,11 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
       if (ly.length) return bao(`Không xóa được dự án: ${ly.join("; ")}`, "loi"), false;
       if (!lyDo.trim()) return bao("Xóa dự án cần ghi lý do", "loi"), false;
       try {
-        await ghi(() => kho.luuDuAn({ ...d, daXoa: dauXoa(lyDo) }));
+        capNhat({ duAn: [await ghi(() => kho.luuDuAn({ ...d, daXoa: dauXoa(lyDo) }))] });
       } catch {
         return false;
       }
       await ghiNhatKy("Xóa dự án (vào thùng rác)", `${d.ten} — ${lyDo.trim()}`);
-      await taiLai();
       return true;
     },
     khoiPhucDuAn: async (id) => {
@@ -443,9 +507,8 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
       const d = dsDuAn.find((x) => x.id === id);
       if (!d?.daXoa) return;
       const { daXoa: _bo, ...con } = d;
-      await ghi(() => kho.luuDuAn(con));
+      capNhat({ duAn: [await ghi(() => kho.luuDuAn(con))] });
       await ghiNhatKy("Khôi phục dự án từ thùng rác", d.ten);
-      await taiLai();
     },
     xoaHanDuAn: async (id) => {
       if (chan("XOA_HAN")) return;
@@ -456,8 +519,8 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
       const bytes = await maHoaBanSaoLuu(ban, await cachTuDong(kho)); // mã hóa bằng khóa khôi phục / DPAPI (P0-5)
       if (!(await taiXuong(bytes, tenTepSaoLuu(ban.thongTin.luc, "GPMB-truoc-xoa-du-an"), "application/zip"))) return bao("Chưa lưu bản sao lưu trước khi xóa — không xóa dự án", "loi");
       await ghi(() => kho.ghiLo({ xoaDuAn: [id] }));
+      capNhat({ xoaDuAn: [id] });
       await ghiNhatKy("Xóa hẳn dự án", `${d.ten} (vào thùng rác ${d.daXoa.luc.slice(0, 10)} bởi ${d.daXoa.nguoi}: ${d.daXoa.lyDo})`);
-      await taiLai();
     },
     chinhSach,
     dangTai,
@@ -561,6 +624,28 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
       await ghi(() => kho.luuCaiDat(KHOA_KY_BAO_CAO, ds));
       setKyBaoCao(ds);
       await ghiNhatKy("Chốt số liệu kỳ báo cáo", `${k.ten} — số liệu đến ${k.denNgay}; ${k.dong.length} dự án; SHA-256 ${k.bam.slice(0, 16)}…`);
+    },
+    khoiPhucLichSu: async (stt, lyDo) => {
+      if (chan("KHOI_PHUC_BAN_GHI")) return false;
+      if (!lyDo.trim()) return bao("Khôi phục cần ghi lý do", "loi"), false;
+      try {
+        const h = await ghi(() => kho.khoiPhucBanLichSu(stt, lyDo.trim(), nguoiDung));
+        capNhat({ ho: [h] });
+        if (!laKhoMang(kho)) await ghiNhatKy("Khôi phục hồ sơ về phiên bản cũ", `${h.ma} · ${h.ten} — ${lyDo.trim()}`); // máy chủ tự ghi
+        bao(`Đã khôi phục hồ sơ ${h.ma}`);
+        return true;
+      } catch (e) {
+        if (!(e instanceof DaBaoLoi)) bao(`Không khôi phục được: ${(e as Error).message}`, "loi");
+        return false;
+      }
+    },
+    giuLichSu,
+    luuGiuLichSu: async (soNam) => {
+      if (chan("KHOI_PHUC_BAN_GHI")) return;
+      if (!Number.isInteger(soNam) || soNam < 0 || soNam > 100) return bao("Số năm giữ lịch sử từ 0 (không thời hạn) đến 100", "loi");
+      await ghi(() => kho.luuCaiDat("giuLichSu", { soNam }));
+      setGiuLichSu(soNam);
+      if (!laKhoMang(kho)) await ghiNhatKy("Đặt thời hạn giữ lịch sử bản ghi", `${soNam} năm`);
     },
     xoaKyBaoCao: async (id, lyDo) => {
       if (chan("CAI_DAT")) return;

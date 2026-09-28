@@ -17,7 +17,7 @@ const vn = (iso: string) => iso.split("-").reverse().join("/");
 /** Cài đặt chung: lịch ngày nghỉ (VM-25); các thẻ khác truyền qua `them`. */
 export function HopCaiDat({ them }: { them?: { ma: string; ten: string; noiDung: ReactNode }[] }) {
   const { moCaiDat } = useUngDung();
-  const cacThe = [{ ma: "lich", ten: "Lịch ngày nghỉ", noiDung: <TheLich /> }, { ma: "tu-dong", ten: "Tự động sao lưu", noiDung: <TheTuDong /> }, { ma: "cham-tra", ten: "Tiền chậm trả", noiDung: <TheTyLeCham /> }, { ma: "mang", ten: "Mạng nội bộ", noiDung: <TheMangNoiBo /> }, { ma: "luu-tep", ten: "Lưu tệp xuất", noiDung: <TheLuuTep /> }, { ma: "giao-dien", ten: "Giao diện", noiDung: <TheGiaoDien /> }, ...(them ?? [])];
+  const cacThe = [{ ma: "lich", ten: "Lịch ngày nghỉ", noiDung: <TheLich /> }, { ma: "tu-dong", ten: "Tự động sao lưu", noiDung: <TheTuDong /> }, { ma: "cham-tra", ten: "Tiền chậm trả", noiDung: <TheTyLeCham /> }, { ma: "mang", ten: "Mạng nội bộ", noiDung: <TheMangNoiBo /> }, { ma: "luu-tep", ten: "Lưu tệp xuất", noiDung: <TheLuuTep /> }, { ma: "lich-su", ten: "Lịch sử bản ghi", noiDung: <TheLichSu /> }, { ma: "giao-dien", ten: "Giao diện", noiDung: <TheGiaoDien /> }, ...(them ?? [])];
   const [the, setThe] = useState(cacThe[0]!.ma);
   return (
     <HopThoai tieuDe="Cài đặt chung" dong={() => moCaiDat(false)} rong={920}>
@@ -26,6 +26,37 @@ export function HopCaiDat({ them }: { them?: { ma: string; ten: string; noiDung:
       </div>
       {cacThe.find((t) => t.ma === the)?.noiDung}
     </HopThoai>
+  );
+}
+
+/** P1-5: thời hạn giữ lịch sử bản ghi — quản trị đặt; phần mềm không đặt sẵn thời hạn. */
+function TheLichSu() {
+  const { giuLichSu, luuGiuLichSu, quyen } = useUngDung();
+  const [n, setN] = useState(String(giuLichSu));
+  const choSua = quyen("KHOI_PHUC_BAN_GHI");
+  const so = Number(n);
+  const hopLe = /^\d{1,3}$/.test(n.trim()) && so <= 100;
+  return (
+    <div>
+      <p className="mo" style={{ marginTop: 0 }}>
+        Mỗi lần sửa, xóa hẳn hoặc khôi phục, phần mềm giữ lại bản cũ của hồ sơ, dự án, phương án (xem ở thẻ Nhật ký của hồ sơ; hồ sơ đã xóa hẳn ở Thùng rác).
+        Quản trị khôi phục được hồ sơ về bản cũ. Thời hạn giữ do đơn vị quyết định theo quy định về lưu trữ hồ sơ của đơn vị — phần mềm không đặt sẵn;
+        <b> 0 = giữ không thời hạn</b>. Bản cũ hơn thời hạn bị xóa vĩnh viễn khi lưu thiết lập và mỗi lần mở dữ liệu.
+      </p>
+      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <label htmlFor="giu-ls">Giữ lịch sử (năm)</label>
+        <input id="giu-ls" style={{ width: 90 }} value={n} disabled={!choSua} inputMode="numeric" onChange={(e) => setN(e.target.value)} />
+        {choSua && (
+          <button className="nut nut-chinh" disabled={!hopLe || so === giuLichSu} onClick={() => {
+            if (so > 0 && so < giuLichSu && !confirm(`Rút thời hạn còn ${so} năm: bản lịch sử cũ hơn ${so} năm sẽ bị xóa vĩnh viễn. Tiếp tục?`)) return;
+            if (giuLichSu === 0 && so > 0 && !confirm(`Đặt thời hạn ${so} năm: bản lịch sử cũ hơn ${so} năm sẽ bị xóa vĩnh viễn. Tiếp tục?`)) return;
+            void luuGiuLichSu(so);
+          }}>Lưu</button>
+        )}
+        <span className="mo chu-nho">Hiện tại: {giuLichSu ? `${giuLichSu} năm` : "không thời hạn"}{!choSua && " · chỉ Quản trị thay đổi"}</span>
+      </div>
+      {!hopLe && <div className="thong-bao thong-bao-vang" style={{ marginTop: 8 }}>Nhập số nguyên từ 0 đến 100</div>}
+    </div>
   );
 }
 

@@ -11,7 +11,7 @@ import { D } from "@gpmb/core";
 import type { DuAn, Ho } from "./mo-hinh";
 import { docSoNhap, hienSo, laSoMay, soD, truongSoDuAn, truongSoHo, type TruongSo } from "./so";
 
-export const PHIEN_BAN_CAU_TRUC = 2;
+export { PHIEN_BAN_CAU_TRUC, chuyenDoiDuAn, chuyenDoiHo, type DoiTuDong } from "./chuyen-doi";
 
 /** "20.000", "1.500.000": đúng dạng nhóm nghìn — trước đây Decimal đọc là số thập phân (20; 1.5). */
 export const laMoHo = (v: string) => /^-?\d{1,3}(\.\d{3})+$/.test(v.trim());
@@ -25,47 +25,6 @@ function truongBieuThucHo(h: Ho): TruongSo[] {
       if (typeof o[k] === "string") ds.push({ nhan: `Tài sản "${ts.ten || "?"}" — ${k === "soLuong" ? "số lượng" : "khối lượng"}`, gt: o[k] as string, dat: (x) => (o[k] = x) });
   }
   return ds;
-}
-
-export interface DoiTuDong {
-  nhan: string;
-  tu: string;
-  thanh: string;
-}
-
-/** Tự đổi giá trị một nghĩa sang chuẩn máy trên bản sao. Trả null nếu không có gì đổi. */
-export function chuyenDoiHo(h: Ho): { h: Ho; doi: DoiTuDong[] } | null {
-  const ban = structuredClone(h);
-  const doi: DoiTuDong[] = [];
-  for (const x of truongSoHo(ban)) {
-    const v = x.gt.trim();
-    if (!v || laSoMay(v)) continue;
-    const r = docSoNhap(v);
-    if (r.so === null) continue; // không đọc được: để cán bộ sửa (tinhHo báo "Thiếu căn cứ")
-    x.dat(r.so);
-    doi.push({ nhan: x.nhan, tu: x.gt, thanh: r.so });
-  }
-  if (!doi.length) return null;
-  ban.phienBanCauTruc = PHIEN_BAN_CAU_TRUC;
-  if (doi.length)
-    ban.nhatKy = [...ban.nhatKy, { luc: new Date().toISOString(), nguoi: "Phần mềm (chuyển đổi định dạng số, P0-2)", noiDung: `Đổi định dạng số: ${doi.map((d) => `${d.nhan}: "${d.tu}" → ${d.thanh}`).join("; ")}` }];
-  return { h: ban, doi };
-}
-
-export function chuyenDoiDuAn(d: DuAn): { d: DuAn; doi: DoiTuDong[] } | null {
-  const ban = structuredClone(d);
-  const doi: DoiTuDong[] = [];
-  for (const x of truongSoDuAn(ban)) {
-    const v = x.gt.trim();
-    if (!v || laSoMay(v)) continue;
-    const r = docSoNhap(v);
-    if (r.so === null) continue;
-    x.dat(r.so);
-    doi.push({ nhan: x.nhan, tu: x.gt, thanh: r.so });
-  }
-  if (!doi.length) return null;
-  ban.phienBanCauTruc = PHIEN_BAN_CAU_TRUC;
-  return { d: ban, doi };
 }
 
 export interface MucRaSoat {

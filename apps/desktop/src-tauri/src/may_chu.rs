@@ -130,6 +130,8 @@ impl MayChu {
              CREATE TABLE IF NOT EXISTS cai_dat(khoa TEXT PRIMARY KEY, noi_dung TEXT NOT NULL);
              CREATE TABLE IF NOT EXISTS thay_doi(seq INTEGER PRIMARY KEY AUTOINCREMENT, loai TEXT, id TEXT, du_an_id TEXT, boi TEXT, luc TEXT);",
         )?;
+        chuyen_doi_csdl(&c)?;
+        don_lich_su(&c)?;
         let quyen: HashMap<String, Vec<String>> = serde_json::from_str(MA_TRAN_QUYEN).expect("quyen.json hỏng");
         Ok(MayChu { db: Mutex::new(c), phien: Mutex::new(HashMap::new()), sai: Mutex::new(HashMap::new()), quyen })
     }
@@ -157,6 +159,229 @@ impl MayChu {
     fn co_quyen(&self, vai_tro: &str, q: &str) -> bool {
         self.quyen.get(vai_tro).is_some_and(|ds| ds.iter().any(|x| x == q))
     }
+}
+
+// ---------------- Chuyển đổi cấu trúc CSDL (P2-6), lịch sử bản ghi (P1-5) ----------------
+
+/// Phiên bản cấu trúc CSDL hiện tại (PRAGMA user_version). Mỗi bước chuyển đổi chạy một lần, trong một giao dịch.
+pub const PHIEN_BAN_CSDL: i64 = 2;
+
+pub fn chuyen_doi_csdl(c: &Connection) -> rusqlite::Result<()> {
+    let v: i64 = c.query_row("PRAGMA user_version", [], |r| r.get(0))?;
+    if v < 1 {
+        // P1-5: bản cũ của bản ghi mỗi lần sửa / xóa hẳn / ghi đè khi khôi phục
+        c.execute_batch(
+            "BEGIN;
+             CREATE TABLE IF NOT EXISTS lich_su(stt INTEGER PRIMARY KEY AUTOINCREMENT, loai TEXT NOT NULL, id TEXT NOT NULL, du_an_id TEXT,
+               phien_ban INTEGER, noi_dung TEXT NOT NULL, sua_luc TEXT, sua_boi TEXT, luu_luc TEXT NOT NULL, luu_boi TEXT, ly_do TEXT);
+             CREATE INDEX IF NOT EXISTS ix_lich_su_ban_ghi ON lich_su(loai, id);
+             CREATE INDEX IF NOT EXISTS ix_lich_su_luc ON lich_su(luu_luc);
+             PRAGMA user_version = 1;
+             COMMIT;",
+        )?;
+    }
+    if v < 2 {
+        // P1-6: tách các bản phương án khỏi bản ghi dự án — mỗi bản một bản ghi loại "pa" { id, duAnId, pa }
+        c.execute_batch("BEGIN")?;
+        let r = (|| -> rusqlite::Result<()> {
+            let ds: Vec<(String, String, i64)> = {
+                let mut q = c.prepare("SELECT id, noi_dung, phien_ban FROM ban_ghi WHERE loai = 'duAn'")?;
+                let x = q.query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))?.filter_map(|x| x.ok()).collect();
+                x
+            };
+            for (id, nd, pb) in ds {
+                let Ok(mut v) = serde_json::from_str::<Value>(&nd) else { continue };
+                let Some(pas) = v.as_object_mut().and_then(|o| o.remove("phuongAn")) else { continue };
+                for p in pas.as_array().cloned().unwrap_or_default() {
+                    let Some(pid) = p["id"].as_str() else { continue };
+                    let ban = json!({ "id": pid, "duAnId": id, "pa": p });
+                    c.execute(
+                        "INSERT OR REPLACE INTO ban_ghi(loai, id, du_an_id, phien_ban, noi_dung, sua_luc, sua_boi) VALUES ('pa', ?1, ?2, 1, ?3, ?4, 'chuyen-doi')",
+                        params![pid, id, ban.to_string(), bay_gio()],
+                    )?;
+                }
+                c.execute("UPDATE ban_ghi SET noi_dung = ?1, phien_ban = ?2 WHERE loai = 'duAn' AND id = ?3", params![v.to_string(), pb + 1, id])?;
+            }
+            c.execute_batch("PRAGMA user_version = 2;")
+        })();
+        match r {
+            Ok(()) => c.execute_batch("COMMIT")?,
+            Err(e) => {
+                let _ = c.execute_batch("ROLLBACK");
+                return Err(e);
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Số năm giữ lịch sử bản ghi (cài đặt "giuLichSu": { soNam }); 0 hoặc chưa đặt = giữ không thời hạn.
+pub fn so_nam_giu(c: &Connection) -> i64 {
+    c.query_row("SELECT noi_dung FROM cai_dat WHERE khoa = 'giuLichSu'", [], |r| r.get::<_, String>(0))
+        .ok()
+        .and_then(|s| serde_json::from_str::<Value>(&s).ok())
+        .and_then(|v| v["soNam"].as_i64())
+        .unwrap_or(0)
+        .max(0)
+}
+
+/// Xóa lịch sử cũ hơn thời hạn giữ. Trả về số dòng đã xóa.
+pub fn don_lich_su(c: &Connection) -> rusqlite::Result<usize> {
+    let n = so_nam_giu(c);
+    if n == 0 {
+        return Ok(0);
+    }
+    c.execute("DELETE FROM lich_su WHERE luu_luc < ?1", [iso_truoc(n * 365 + n / 4)])
+}
+
+/// Lưu bản hiện có của bản ghi vào lịch sử trước khi bị thay / xóa.
+fn luu_lich_su(c: &Connection, loai: &str, id: &str, ly_do: &str, boi: &str) -> Kq<()> {
+    c.execute(
+        "INSERT INTO lich_su(loai, id, du_an_id, phien_ban, noi_dung, sua_luc, sua_boi, luu_luc, luu_boi, ly_do)
+         SELECT loai, id, du_an_id, phien_ban, noi_dung, sua_luc, sua_boi, ?3, ?4, ?5 FROM ban_ghi WHERE loai = ?1 AND id = ?2",
+        params![loai, id, bay_gio(), boi, ly_do],
+    )
+    .map_err(loi_db)?;
+    Ok(())
+}
+fn luu_lich_su_du_an(c: &Connection, du_an_id: &str, ly_do: &str, boi: &str) -> Kq<()> {
+    c.execute(
+        "INSERT INTO lich_su(loai, id, du_an_id, phien_ban, noi_dung, sua_luc, sua_boi, luu_luc, luu_boi, ly_do)
+         SELECT loai, id, du_an_id, phien_ban, noi_dung, sua_luc, sua_boi, ?2, ?3, ?4 FROM ban_ghi
+         WHERE (loai = 'duAn' AND id = ?1) OR (loai IN ('ho', 'pa') AND du_an_id = ?1)",
+        params![du_an_id, bay_gio(), boi, ly_do],
+    )
+    .map_err(loi_db)?;
+    Ok(())
+}
+
+// ---------------- Kiểm tra cấu trúc bản ghi (P1-8) ----------------
+
+fn la_so_may(s: &str) -> bool {
+    let s = s.strip_prefix('-').unwrap_or(s);
+    let (a, b) = s.split_once('.').unwrap_or((s, "0"));
+    !a.is_empty() && !b.is_empty() && a.bytes().all(|x| x.is_ascii_digit()) && b.bytes().all(|x| x.is_ascii_digit())
+}
+
+/// Các ô số của bản ghi (đường dẫn, giá trị) — đồng bộ với truongSoHo / truongSoDuAn (src/so.ts).
+fn o_so(loai: &str, v: &Value) -> Vec<(String, Value)> {
+    let mut out = vec![];
+    let mut them = |duong: String, x: &Value| {
+        if !x.is_null() {
+            out.push((duong, x.clone()));
+        }
+    };
+    if loai == "duAn" {
+        them("giaGao.dongKg".into(), &v["giaGao"]["dongKg"]);
+        them("hanMucNN.m2".into(), &v["hanMucNN"]["m2"]);
+        them("heSoGiaDat.heSo".into(), &v["heSoGiaDat"]["heSo"]);
+        return out;
+    }
+    for (i, t) in v["thua"].as_array().into_iter().flatten().enumerate() {
+        for k in ["dienTich", "dienTichThuHoi"] {
+            them(format!("thua[{i}].{k}"), &t[k]);
+        }
+        them(format!("thua[{i}].gia.giaNghinDong"), &t["gia"]["giaNghinDong"]);
+        for (j, l) in t["phanLop"]["lop"].as_array().into_iter().flatten().enumerate() {
+            them(format!("thua[{i}].phanLop.lop[{j}].dienTich"), &l["dienTich"]);
+            them(format!("thua[{i}].phanLop.lop[{j}].giaTuyChinh"), &l["giaTuyChinh"]);
+        }
+        them(format!("thua[{i}].gcn.dienTich"), &t["gcn"]["dienTich"]);
+        them(format!("thua[{i}].gcn.dtThuHoiCoGcn"), &t["gcn"]["dtThuHoiCoGcn"]);
+        them(format!("thua[{i}].cayXen.dienTichTru"), &t["cayXen"]["dienTichTru"]);
+    }
+    for (i, ts) in v["taiSan"].as_array().into_iter().flatten().enumerate() {
+        for k in ["donGia", "heSo", "T", "T1", "matDoHa", "quangDuongKm"] {
+            them(format!("taiSan[{i}].{k}"), &ts[k]);
+        }
+    }
+    them("hoTro.onDinh.dienTichNNDangSuDung".into(), &v["hoTro"]["onDinh"]["dienTichNNDangSuDung"]);
+    let tdc = &v["hoTro"]["taiDinhCu"];
+    for k in ["dienTichGiao", "donGia", "tienSddPhaiNop"] {
+        them(format!("hoTro.taiDinhCu.{k}"), &tdc[k]);
+    }
+    for (i, k) in tdc["khoanKhac"].as_array().into_iter().flatten().enumerate() {
+        them(format!("hoTro.taiDinhCu.khoanKhac[{i}].soTien"), &k["soTien"]);
+    }
+    them("khauTru".into(), &v["khauTru"]);
+    out
+}
+
+/// Kiểm tra cấu trúc trước khi ghi: kiểu dữ liệu, trường bắt buộc, ô số đúng chuẩn máy ("1234.5").
+/// Giá trị số sai đã có sẵn trong bản cũ (dữ liệu trước P0-2) không chặn việc lưu thay đổi khác — chỉ chặn giá trị sai mới.
+/// `kiem_so` = false (khôi phục từ tệp sao lưu): chỉ kiểm cấu trúc, giữ nguyên giá trị như bản sao lưu.
+pub fn kiem_luoc_do(loai: &str, cu: Option<&Value>, v: &Value, kiem_so: bool) -> Result<(), String> {
+    let o = v.as_object().ok_or("Bản ghi phải là đối tượng")?;
+    let chuoi = |k: &str, bat_buoc: bool| -> Result<(), String> {
+        match o.get(k) {
+            Some(Value::String(s)) if bat_buoc && s.trim().is_empty() => Err(format!("Trường \"{k}\" không được để trống")),
+            Some(Value::String(_)) => Ok(()),
+            None | Some(Value::Null) if !bat_buoc => Ok(()),
+            _ => Err(format!("Trường \"{k}\" phải là chuỗi")),
+        }
+    };
+    let mang = |k: &str| -> Result<(), String> { if o.get(k).is_some_and(|x| x.is_array()) { Ok(()) } else { Err(format!("Trường \"{k}\" phải là danh sách")) } };
+    let doi_tuong = |k: &str| -> Result<(), String> { if o.get(k).is_some_and(|x| x.is_object()) { Ok(()) } else { Err(format!("Trường \"{k}\" phải là đối tượng")) } };
+    chuoi("id", true)?;
+    match loai {
+        "ho" => {
+            chuoi("duAnId", true)?;
+            chuoi("ma", false)?;
+            chuoi("ten", false)?;
+            if !matches!(o.get("loai").and_then(|x| x.as_str()), Some("HO_GIA_DINH" | "CA_NHAN" | "TO_CHUC")) {
+                return Err("Loại đối tượng không hợp lệ".into());
+            }
+            for k in ["nhanKhau", "thua", "taiSan", "nhatKy"] {
+                mang(k)?;
+            }
+            for k in ["hoTro", "tienDo"] {
+                doi_tuong(k)?;
+            }
+            for (i, t) in v["thua"].as_array().into_iter().flatten().enumerate() {
+                if !t.is_object() || !t["id"].is_string() {
+                    return Err(format!("Thửa thứ {} không đúng cấu trúc", i + 1));
+                }
+            }
+            for (i, t) in v["taiSan"].as_array().into_iter().flatten().enumerate() {
+                if !t.is_object() || !t["id"].is_string() || !matches!(t["loai"].as_str(), Some("NHA_CT" | "CAY" | "VAT_NUOI" | "KHAC")) {
+                    return Err(format!("Tài sản thứ {} không đúng cấu trúc", i + 1));
+                }
+            }
+        }
+        "duAn" => {
+            chuoi("ten", false)?;
+            if o.get("phuongAn").is_some_and(|x| !x.is_null()) {
+                return Err("Bản ghi dự án không chứa phương án (từ phiên bản 0.6.0 mỗi bản phương án là một bản ghi riêng) — cập nhật phần mềm trên máy này".into());
+            }
+        }
+        "pa" => {
+            chuoi("duAnId", true)?;
+            let p = o.get("pa").and_then(|x| x.as_object()).ok_or("Bản phương án thiếu nội dung")?;
+            if p.get("id").and_then(|x| x.as_str()) != o.get("id").and_then(|x| x.as_str()) {
+                return Err("Mã bản phương án không khớp".into());
+            }
+            if !matches!(p.get("trangThai").and_then(|x| x.as_str()), Some("DA_CHOT" | "DA_PHE_DUYET" | "DA_HUY")) {
+                return Err("Trạng thái bản phương án không hợp lệ".into());
+            }
+            return Ok(());
+        }
+        _ => return Err("Loại bản ghi không hợp lệ".into()),
+    }
+    if !kiem_so {
+        return Ok(());
+    }
+    let cu_so: Vec<(String, Value)> = cu.map(|c| o_so(loai, c)).unwrap_or_default();
+    for (duong, x) in o_so(loai, v) {
+        let dung = match &x {
+            Value::String(s) => s.trim().is_empty() || la_so_may(s.trim()),
+            Value::Number(_) => true,
+            _ => false,
+        };
+        if !dung && !cu_so.iter().any(|(d, y)| d == &duong && y == &x) {
+            return Err(format!("Ô số \"{duong}\" = {x} không đúng định dạng số (chuẩn máy: 1234.5)"));
+        }
+    }
+    Ok(())
 }
 
 /// Người dùng của phiên (đọc lại từ CSDL mỗi yêu cầu: tài khoản bị khóa / đổi vai trò có hiệu lực ngay).
@@ -279,8 +504,13 @@ pub const THOI_HAN_THUNG_RAC: i64 = 30;
 fn co_chi_tra(h: &Value) -> bool {
     h["chiTra"]["dot"].as_array().is_some_and(|ds| ds.iter().any(|d| d.get("huy").is_none_or(|x| x.is_null())))
 }
-fn co_trong_pa(du_an: &Value, ho_id: &str) -> Option<String> {
-    du_an["phuongAn"].as_array()?.iter().find_map(|p| {
+fn ds_pa(c: &Connection, du_an_id: &str) -> Kq<Vec<Value>> {
+    let mut q = c.prepare("SELECT noi_dung FROM ban_ghi WHERE loai = 'pa' AND du_an_id = ?1").map_err(loi_db)?;
+    let ds = q.query_map([du_an_id], |r| r.get::<_, String>(0)).map_err(loi_db)?.filter_map(|x| x.ok().and_then(|s| serde_json::from_str::<Value>(&s).ok())).map(|v| v["pa"].clone()).collect();
+    Ok(ds)
+}
+fn co_trong_pa(ds: &[Value], ho_id: &str) -> Option<String> {
+    ds.iter().find_map(|p| {
         let tt = p["trangThai"].as_str().unwrap_or("");
         let co = p["ho"].as_array().is_some_and(|ds| ds.iter().any(|x| x["hoId"].as_str() == Some(ho_id)));
         (tt != "DA_HUY" && co).then(|| format!("có trong bản phương án số {} {}", p["so"], if tt == "DA_PHE_DUYET" { "đã phê duyệt" } else { "đã chốt" }))
@@ -312,12 +542,10 @@ fn kiem_tra_xoa_mem(c: &Connection, st: &MayChu, u: &NguoiGoi, loai: &str, id: &
         if co_chi_tra(moi) {
             chan.push("đã ghi chi trả".into());
         }
-        if let Some(da) = doc_json(c, "duAn", moi["duAnId"].as_str().unwrap_or(""))? {
-            chan.extend(co_trong_pa(&da, id));
-        }
+        chan.extend(co_trong_pa(&ds_pa(c, moi["duAnId"].as_str().unwrap_or(""))?, id));
     } else {
         can(st, u, "XOA_DU_AN")?;
-        if moi["phuongAn"].as_array().is_some_and(|ds| ds.iter().any(|p| p["trangThai"] == "DA_PHE_DUYET")) {
+        if ds_pa(c, id)?.iter().any(|p| p["trangThai"] == "DA_PHE_DUYET") {
             chan.push("có bản phương án đã phê duyệt".into());
         }
         let mut q = c.prepare("SELECT noi_dung FROM ban_ghi WHERE loai = 'ho' AND du_an_id = ?1").map_err(loi_db)?;
@@ -366,45 +594,47 @@ pub fn kiem_tra_du_an(st: &MayChu, cu: Option<&Value>, moi: &mut Value, u: &Nguo
         let chung_cu = cu.map(|c| c["tienDoChung"].clone()).unwrap_or(json!({}));
         kiem_tra_buoc(st, &chung_cu, moi.get_mut("tienDoChung"), u)?;
     }
-    let ds_cu = cu.and_then(|c| c["phuongAn"].as_array().cloned()).unwrap_or_default();
-    let ds_moi = moi["phuongAn"].as_array().cloned().unwrap_or_default();
-    let tim = |id: &Value| ds_moi.iter().find(|p| &p["id"] == id);
-    for p in &ds_cu {
-        let so = p["so"].clone();
-        let Some(q) = tim(&p["id"]) else {
-            return Err(loi(StatusCode::FORBIDDEN, format!("Không được xóa bản phương án {so}")));
-        };
-        if q == p {
-            continue;
-        }
-        let tt = p["trangThai"].as_str().unwrap_or("");
-        let tt_moi = q["trangThai"].as_str().unwrap_or("");
-        if tt != "DA_CHOT" {
-            return Err(loi(StatusCode::FORBIDDEN, format!("Bản phương án {so} đã {} — không sửa được", if tt == "DA_HUY" { "hủy" } else { "phê duyệt" })));
-        }
-        let (quyen, thay) = match tt_moi {
-            "DA_PHE_DUYET" => ("PHE_DUYET_PA", ["trangThai", "pheDuyet"]),
-            "DA_HUY" => ("HUY_PA", ["trangThai", "huy"]),
-            _ => return Err(loi(StatusCode::FORBIDDEN, format!("Bản phương án {so}: chỉ được ghi nhận phê duyệt hoặc hủy"))),
-        };
-        can(st, u, quyen)?;
-        if bo_truong(p, &thay) != bo_truong(q, &thay) {
-            return Err(loi(StatusCode::FORBIDDEN, format!("Bản phương án {so}: số liệu đã chốt không được sửa")));
-        }
-    }
-    for q in &ds_moi {
-        if ds_cu.iter().any(|p| p["id"] == q["id"]) {
-            continue;
-        }
-        if u.vai_tro == "QUAN_TRI" {
-            continue; // khôi phục dữ liệu
-        }
-        can(st, u, "CHOT_PA")?;
-        if q["trangThai"].as_str() != Some("DA_CHOT") {
-            return Err(loi(StatusCode::FORBIDDEN, "Bản phương án mới phải ở trạng thái Đã chốt"));
-        }
-    }
     Ok(())
+}
+
+/// Bản phương án (P1-6, bản ghi riêng): bản đã phê duyệt/hủy không sửa; bản đã chốt chỉ được ghi nhận phê duyệt hoặc
+/// hủy (đúng quyền), số liệu đã chốt không đổi; bản mới phải ở trạng thái Đã chốt, quyền CHOT_PA.
+pub fn kiem_tra_pa(st: &MayChu, cu: Option<&Value>, moi: &Value, u: &NguoiGoi) -> Kq<()> {
+    let q = &moi["pa"];
+    let so = q["so"].clone();
+    match cu {
+        Some(c) => {
+            let p = &c["pa"];
+            if c["duAnId"] != moi["duAnId"] {
+                return Err(loi(StatusCode::FORBIDDEN, format!("Bản phương án {so}: không được chuyển sang dự án khác")));
+            }
+            if p == q {
+                return Ok(());
+            }
+            let tt = p["trangThai"].as_str().unwrap_or("");
+            if tt != "DA_CHOT" {
+                return Err(loi(StatusCode::FORBIDDEN, format!("Bản phương án {so} đã {} — không sửa được", if tt == "DA_HUY" { "hủy" } else { "phê duyệt" })));
+            }
+            let (quyen, thay) = match q["trangThai"].as_str().unwrap_or("") {
+                "DA_PHE_DUYET" => ("PHE_DUYET_PA", ["trangThai", "pheDuyet"]),
+                "DA_HUY" => ("HUY_PA", ["trangThai", "huy"]),
+                _ => return Err(loi(StatusCode::FORBIDDEN, format!("Bản phương án {so}: chỉ được ghi nhận phê duyệt hoặc hủy"))),
+            };
+            can(st, u, quyen)?;
+            if bo_truong(p, &thay) != bo_truong(q, &thay) {
+                return Err(loi(StatusCode::FORBIDDEN, format!("Bản phương án {so}: số liệu đã chốt không được sửa")));
+            }
+            Ok(())
+        }
+        None if u.vai_tro == "QUAN_TRI" => Ok(()), // khôi phục dữ liệu
+        None => {
+            can(st, u, "CHOT_PA")?;
+            if q["trangThai"].as_str() != Some("DA_CHOT") {
+                return Err(loi(StatusCode::FORBIDDEN, "Bản phương án mới phải ở trạng thái Đã chốt"));
+            }
+            Ok(())
+        }
+    }
 }
 
 // ---------------- Xử lý yêu cầu ----------------
@@ -628,16 +858,21 @@ fn ghi_ban_ghi(c: &Connection, st: &MayChu, u: &NguoiGoi, loai: &str, id: &str, 
         }
         _ => {}
     }
-    if loai == "ho" {
-        kiem_tra_ho(st, cu_v.as_ref(), &mut moi, u)?;
-    } else {
-        kiem_tra_du_an(st, cu_v.as_ref(), &mut moi, u)?;
+    kiem_luoc_do(loai, cu_v.as_ref(), &moi, !ghi_de).map_err(|e| loi(StatusCode::BAD_REQUEST, e))?;
+    match loai {
+        "ho" => kiem_tra_ho(st, cu_v.as_ref(), &mut moi, u)?,
+        "pa" => kiem_tra_pa(st, cu_v.as_ref(), &moi, u)?,
+        _ => kiem_tra_du_an(st, cu_v.as_ref(), &mut moi, u)?,
     }
-    if !ghi_de {
+    if !ghi_de && loai != "pa" {
         kiem_tra_xoa_mem(c, st, u, loai, id, cu_v.as_ref(), &mut moi)?;
     }
+    if cu_v.as_ref() == Some(&moi) {
+        // không có gì thay đổi: không tăng phiên bản, không ghi lịch sử
+        return Ok((moi, cu.as_ref().map(|x| x.1).unwrap_or(1)));
+    }
     let pb = cu.as_ref().map(|x| x.1 + 1).unwrap_or(1);
-    let du_an_id = if loai == "ho" { moi["duAnId"].as_str().unwrap_or("").to_string() } else { id.to_string() };
+    let du_an_id = if loai == "duAn" { id.to_string() } else { moi["duAnId"].as_str().unwrap_or("").to_string() };
     // P0-3: mã hồ sơ duy nhất trong dự án — chặn khi tạo mới hoặc đổi sang mã đã dùng (mã trùng có sẵn từ dữ liệu cũ
     // không chặn các sửa đổi khác; khôi phục dữ liệu giữ nguyên như bản sao lưu)
     if loai == "ho" && !ghi_de {
@@ -652,6 +887,9 @@ fn ghi_ban_ghi(c: &Connection, st: &MayChu, u: &NguoiGoi, loai: &str, id: &str, 
                 }
             }
         }
+    }
+    if cu.is_some() {
+        luu_lich_su(c, loai, id, if ghi_de { "Ghi đè khi khôi phục dữ liệu" } else { "Sửa" }, &u.ten)?;
     }
     c.execute(
         "INSERT OR REPLACE INTO ban_ghi(loai, id, du_an_id, phien_ban, noi_dung, sua_luc, sua_boi) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
@@ -686,32 +924,40 @@ async fn ghi_lo(State(st): State<St>, h: HeaderMap, b: Bytes) -> Kq<Json<Value>>
     let mut c = st.db.lock().unwrap();
     let tx = c.transaction().map_err(loi_db)?;
     if xoa_tat_ca {
+        tx.execute(
+            "INSERT INTO lich_su(loai, id, du_an_id, phien_ban, noi_dung, sua_luc, sua_boi, luu_luc, luu_boi, ly_do)
+             SELECT loai, id, du_an_id, phien_ban, noi_dung, sua_luc, sua_boi, ?1, ?2, 'Khôi phục kiểu thay thế toàn bộ' FROM ban_ghi",
+            params![bay_gio(), u.ten],
+        )
+        .map_err(loi_db)?;
         tx.execute_batch("DELETE FROM ban_ghi; DELETE FROM tep;").map_err(loi_db)?;
         MayChu::ghi_thay_doi(&tx, "tatCa", "", "", &u.ten).map_err(loi_db)?;
     }
     for id in xoa_du_an.iter().filter_map(|x| x.as_str()) {
         kiem_tra_xoa_han(&tx, &st, &u, "duAn", id)?;
-        tx.execute("DELETE FROM ban_ghi WHERE (loai = 'duAn' AND id = ?1) OR (loai = 'ho' AND du_an_id = ?1)", [id]).map_err(loi_db)?;
+        luu_lich_su_du_an(&tx, id, "Xóa hẳn", &u.ten)?;
+        tx.execute("DELETE FROM ban_ghi WHERE (loai = 'duAn' AND id = ?1) OR (loai IN ('ho', 'pa') AND du_an_id = ?1)", [id]).map_err(loi_db)?;
         tx.execute("DELETE FROM tep WHERE loai = 'banDo' AND id = ?1", [id]).map_err(loi_db)?;
         MayChu::ghi_thay_doi(&tx, "duAn", id, id, &u.ten).map_err(loi_db)?;
     }
     for id in xoa_ho.iter().filter_map(|x| x.as_str()) {
         kiem_tra_xoa_han(&tx, &st, &u, "ho", id)?;
         let du_an: Option<String> = tx.query_row("SELECT du_an_id FROM ban_ghi WHERE loai = 'ho' AND id = ?1", [id], |r| r.get(0)).optional().map_err(loi_db)?;
+        luu_lich_su(&tx, "ho", id, "Xóa hẳn", &u.ten)?;
         tx.execute("DELETE FROM ban_ghi WHERE loai = 'ho' AND id = ?1", [id]).map_err(loi_db)?;
         MayChu::ghi_thay_doi(&tx, "ho", id, &du_an.unwrap_or_default(), &u.ten).map_err(loi_db)?;
     }
     let mut phien_ban = Vec::with_capacity(ghi.len());
     for g in &ghi {
         let loai = match g["loai"].as_str() {
-            Some(l @ ("duAn" | "ho")) => l,
+            Some(l @ ("duAn" | "ho" | "pa")) => l,
             _ => return Err(loi(StatusCode::BAD_REQUEST, "Loại bản ghi không hợp lệ")),
         };
         let moi = g["duLieu"].clone();
         let id = moi["id"].as_str().ok_or_else(|| loi(StatusCode::BAD_REQUEST, "Bản ghi thiếu mã"))?.to_string();
         let nhan = moi["ma"].as_str().map(|m| format!("Hồ sơ {m}")).or_else(|| moi["ten"].as_str().map(|t| format!("\"{t}\""))).unwrap_or_else(|| id.clone());
-        let (_, pb) = ghi_ban_ghi(&tx, &st, &u, loai, &id, moi, g["phienBanTruoc"].as_i64(), ghi_de).map_err(|Loi(ma, s)| Loi(ma, format!("{nhan}: {s}")))?;
-        phien_ban.push(json!({ "loai": loai, "id": id, "phienBan": pb }));
+        let (du_lieu, pb) = ghi_ban_ghi(&tx, &st, &u, loai, &id, moi, g["phienBanTruoc"].as_i64(), ghi_de).map_err(|Loi(ma, s)| Loi(ma, format!("{nhan}: {s}")))?;
+        phien_ban.push(json!({ "loai": loai, "id": id, "phienBan": pb, "duLieu": du_lieu }));
     }
     for t in &tep {
         let (loai, id) = (t["loai"].as_str().unwrap_or(""), t["id"].as_str().unwrap_or(""));
@@ -744,7 +990,8 @@ async fn xoa_du_an(State(st): State<St>, h: HeaderMap, Path(id): Path<String>) -
     let mut c = st.db.lock().unwrap();
     kiem_tra_xoa_han(&c, &st, &u, "duAn", &id)?;
     let tx = c.transaction().map_err(loi_db)?;
-    tx.execute("DELETE FROM ban_ghi WHERE (loai = 'duAn' AND id = ?1) OR (loai = 'ho' AND du_an_id = ?1)", [&id]).map_err(loi_db)?;
+    luu_lich_su_du_an(&tx, &id, "Xóa hẳn", &u.ten)?;
+    tx.execute("DELETE FROM ban_ghi WHERE (loai = 'duAn' AND id = ?1) OR (loai IN ('ho', 'pa') AND du_an_id = ?1)", [&id]).map_err(loi_db)?;
     tx.execute("DELETE FROM tep WHERE loai = 'banDo' AND id = ?1", [&id]).map_err(loi_db)?;
     MayChu::ghi_thay_doi(&tx, "duAn", &id, &id, &u.ten).map_err(loi_db)?;
     tx.commit().map_err(loi_db)?;
@@ -756,6 +1003,7 @@ async fn xoa_ho(State(st): State<St>, h: HeaderMap, Path(id): Path<String>) -> K
     let c = st.db.lock().unwrap();
     kiem_tra_xoa_han(&c, &st, &u, "ho", &id)?;
     let du_an: Option<String> = c.query_row("SELECT du_an_id FROM ban_ghi WHERE loai = 'ho' AND id = ?1", [&id], |r| r.get(0)).optional().map_err(loi_db)?;
+    luu_lich_su(&c, "ho", &id, "Xóa hẳn", &u.ten)?;
     c.execute("DELETE FROM ban_ghi WHERE loai = 'ho' AND id = ?1", [&id]).map_err(loi_db)?;
     MayChu::ghi_thay_doi(&c, "ho", &id, &du_an.unwrap_or_default(), &u.ten).map_err(loi_db)?;
     Ok(Json(json!({})))
@@ -839,8 +1087,20 @@ async fn luu_cai_dat(State(st): State<St>, h: HeaderMap, Path(khoa): Path<String
     can(&st, &u, "CAI_DAT")?;
     let v = tach(&b)?;
     let c = st.db.lock().unwrap();
+    if khoa == "giuLichSu" {
+        // thời hạn giữ lịch sử quyết định dữ liệu bị xóa vĩnh viễn: chỉ quản trị
+        can(&st, &u, "KHOI_PHUC_BAN_GHI")?;
+        if !v["soNam"].as_i64().is_some_and(|n| (0..=100).contains(&n)) {
+            return Err(loi(StatusCode::BAD_REQUEST, "Số năm giữ lịch sử phải từ 0 (không thời hạn) đến 100"));
+        }
+    }
     c.execute("INSERT OR REPLACE INTO cai_dat(khoa, noi_dung) VALUES (?1, ?2)", params![khoa, v.to_string()]).map_err(loi_db)?;
     MayChu::ghi_thay_doi(&c, "caiDat", &khoa, "", &u.ten).map_err(loi_db)?;
+    if khoa == "giuLichSu" {
+        let n = don_lich_su(&c).map_err(loi_db)?;
+        st.ghi_nhat_ky(&c, &u.ten, &u.ho_ten, "Đặt thời hạn giữ lịch sử bản ghi", &format!("{} năm; đã xóa {n} bản cũ hơn thời hạn", v["soNam"])).map_err(loi_db)?;
+        return Ok(Json(json!({ "daXoa": n })));
+    }
     Ok(Json(json!({})))
 }
 
@@ -848,6 +1108,12 @@ async fn xoa_tat_ca(State(st): State<St>, h: HeaderMap) -> Kq<Json<Value>> {
     let u = xac_thuc(&st, &h)?;
     can(&st, &u, "KHOI_PHUC")?;
     let c = st.db.lock().unwrap();
+    c.execute(
+        "INSERT INTO lich_su(loai, id, du_an_id, phien_ban, noi_dung, sua_luc, sua_boi, luu_luc, luu_boi, ly_do)
+         SELECT loai, id, du_an_id, phien_ban, noi_dung, sua_luc, sua_boi, ?1, ?2, 'Khôi phục kiểu thay thế toàn bộ' FROM ban_ghi",
+        params![bay_gio(), u.ten],
+    )
+    .map_err(loi_db)?;
     c.execute_batch("DELETE FROM ban_ghi; DELETE FROM tep;").map_err(loi_db)?;
     MayChu::ghi_thay_doi(&c, "tatCa", "", "", &u.ten).map_err(loi_db)?;
     Ok(Json(json!({})))
@@ -873,6 +1139,134 @@ async fn thay_doi(State(st): State<St>, h: HeaderMap, Query(s): Query<Sau>) -> K
         .filter_map(|x| x.ok())
         .collect();
     Ok(Json(json!({ "seq": cuoi, "ds": ds })))
+}
+
+/// Đọc lại một số bản ghi theo danh sách (P1-2: máy trạm chỉ tải bản ghi vừa đổi). Bản ghi không còn → duLieu null.
+async fn doc_nhieu(State(st): State<St>, h: HeaderMap, b: Bytes) -> Kq<Json<Value>> {
+    xac_thuc(&st, &h)?;
+    let v = tach(&b)?;
+    let c = st.db.lock().unwrap();
+    let mut out = vec![];
+    for x in v["ds"].as_array().into_iter().flatten().take(5000) {
+        let (loai, id) = (x["loai"].as_str().unwrap_or(""), x["id"].as_str().unwrap_or(""));
+        let r: Option<(String, i64)> = c
+            .query_row("SELECT noi_dung, phien_ban FROM ban_ghi WHERE loai = ?1 AND id = ?2", params![loai, id], |r| Ok((r.get(0)?, r.get(1)?)))
+            .optional()
+            .map_err(loi_db)?;
+        out.push(match r {
+            Some((nd, pb)) => json!({ "loai": loai, "id": id, "duLieu": serde_json::from_str::<Value>(&nd).unwrap_or(Value::Null), "phienBan": pb }),
+            None => json!({ "loai": loai, "id": id, "duLieu": null, "phienBan": null }),
+        });
+    }
+    Ok(Json(Value::Array(out)))
+}
+
+async fn api_ds_pa(State(st): State<St>, h: HeaderMap, Query(l): Query<LocDuAn>) -> Kq<Json<Value>> {
+    xac_thuc(&st, &h)?;
+    Ok(Json(doc_ban_ghi(&st.db.lock().unwrap(), "pa", l.du_an.as_deref())?))
+}
+
+#[derive(serde::Deserialize)]
+struct LocLichSu {
+    loai: Option<String>,
+    id: Option<String>,
+    #[serde(rename = "duAn")]
+    du_an: Option<String>,
+}
+
+fn dong_lich_su(r: &rusqlite::Row) -> rusqlite::Result<Value> {
+    Ok(json!({
+        "stt": r.get::<_, i64>(0)?, "loai": r.get::<_, String>(1)?, "id": r.get::<_, String>(2)?, "duAnId": r.get::<_, Option<String>>(3)?,
+        "phienBan": r.get::<_, Option<i64>>(4)?, "duLieu": serde_json::from_str::<Value>(&r.get::<_, String>(5)?).unwrap_or(Value::Null),
+        "suaLuc": r.get::<_, Option<String>>(6)?, "suaBoi": r.get::<_, Option<String>>(7)?, "luuLuc": r.get::<_, String>(8)?,
+        "luuBoi": r.get::<_, Option<String>>(9)?, "lyDo": r.get::<_, Option<String>>(10)?
+    }))
+}
+const COT_LICH_SU: &str = "stt, loai, id, du_an_id, phien_ban, noi_dung, sua_luc, sua_boi, luu_luc, luu_boi, ly_do";
+
+/// Các bản cũ của một bản ghi, mới nhất trước (P1-5).
+async fn lich_su(State(st): State<St>, h: HeaderMap, Query(l): Query<LocLichSu>) -> Kq<Json<Value>> {
+    xac_thuc(&st, &h)?;
+    let c = st.db.lock().unwrap();
+    let mut q = c.prepare(&format!("SELECT {COT_LICH_SU} FROM lich_su WHERE loai = ?1 AND id = ?2 ORDER BY stt DESC LIMIT 500")).map_err(loi_db)?;
+    let ds: Vec<Value> = q.query_map(params![l.loai.unwrap_or_default(), l.id.unwrap_or_default()], dong_lich_su).map_err(loi_db)?.filter_map(|x| x.ok()).collect();
+    Ok(Json(json!({ "ds": ds, "soNamGiu": so_nam_giu(&c) })))
+}
+
+/// Hồ sơ đã xóa hẳn (còn trong lịch sử) của một dự án — bản cuối trước khi xóa.
+async fn lich_su_da_xoa(State(st): State<St>, h: HeaderMap, Query(l): Query<LocLichSu>) -> Kq<Json<Value>> {
+    xac_thuc(&st, &h)?;
+    let c = st.db.lock().unwrap();
+    let mut q = c
+        .prepare(&format!(
+            "SELECT {COT_LICH_SU} FROM lich_su ls WHERE loai = 'ho' AND du_an_id = ?1 AND ly_do = 'Xóa hẳn'
+             AND stt = (SELECT MAX(stt) FROM lich_su x WHERE x.loai = 'ho' AND x.id = ls.id)
+             AND NOT EXISTS (SELECT 1 FROM ban_ghi b WHERE b.loai = 'ho' AND b.id = ls.id) ORDER BY stt DESC LIMIT 500"
+        ))
+        .map_err(loi_db)?;
+    let ds: Vec<Value> = q.query_map([l.du_an.unwrap_or_default()], dong_lich_su).map_err(loi_db)?.filter_map(|x| x.ok()).collect();
+    Ok(Json(Value::Array(ds)))
+}
+
+/// Khôi phục một hồ sơ về bản trong lịch sử (P1-5) — chỉ Quản trị (KHOI_PHUC_BAN_GHI), bắt buộc lý do. Bản hiện có
+/// được lưu vào lịch sử trước; ghi nhật ký hồ sơ và nhật ký hệ thống.
+async fn khoi_phuc_ban_ghi(State(st): State<St>, h: HeaderMap, b: Bytes) -> Kq<Json<Value>> {
+    let u = xac_thuc(&st, &h)?;
+    can(&st, &u, "KHOI_PHUC_BAN_GHI")?;
+    let v = tach(&b)?;
+    let ly_do = v["lyDo"].as_str().unwrap_or("").trim().to_string();
+    if ly_do.is_empty() {
+        return Err(loi(StatusCode::BAD_REQUEST, "Khôi phục cần ghi lý do"));
+    }
+    let stt = v["stt"].as_i64().ok_or_else(|| loi(StatusCode::BAD_REQUEST, "Thiếu số thứ tự bản lịch sử"))?;
+    let mut c = st.db.lock().unwrap();
+    let ls = c
+        .query_row(&format!("SELECT {COT_LICH_SU} FROM lich_su WHERE stt = ?1"), [stt], dong_lich_su)
+        .optional()
+        .map_err(loi_db)?
+        .ok_or_else(|| loi(StatusCode::NOT_FOUND, "Không còn bản lịch sử này"))?;
+    if ls["loai"] != "ho" {
+        return Err(loi(StatusCode::BAD_REQUEST, "Chỉ khôi phục được hồ sơ hộ, cá nhân, tổ chức"));
+    }
+    let id = ls["id"].as_str().unwrap_or("").to_string();
+    let mut moi = ls["duLieu"].clone();
+    let du_an_id = moi["duAnId"].as_str().unwrap_or("").to_string();
+    if doc_json(&c, "duAn", &du_an_id)?.is_none() {
+        return Err(loi(StatusCode::CONFLICT, "Dự án của hồ sơ không còn — không khôi phục được"));
+    }
+    kiem_luoc_do("ho", None, &moi, false).map_err(|e| loi(StatusCode::BAD_REQUEST, e))?;
+    let ma = moi["ma"].as_str().unwrap_or("").trim().to_uppercase();
+    {
+        let mut q = c.prepare("SELECT noi_dung FROM ban_ghi WHERE loai = 'ho' AND du_an_id = ?1 AND id <> ?2").map_err(loi_db)?;
+        let trung = q
+            .query_map(params![du_an_id, id], |r| r.get::<_, String>(0))
+            .map_err(loi_db)?
+            .filter_map(|x| x.ok().and_then(|s| serde_json::from_str::<Value>(&s).ok()))
+            .find(|x| !ma.is_empty() && x["ma"].as_str().unwrap_or("").trim().to_uppercase() == ma);
+        if let Some(x) = trung {
+            return Err(loi(StatusCode::CONFLICT, format!("Mã hồ sơ {ma} đang dùng cho \"{}\" — đổi mã hồ sơ đó trước khi khôi phục", x["ten"].as_str().unwrap_or(""))));
+        }
+    }
+    let luc = bay_gio();
+    let mo_ta = format!("Quản trị khôi phục về phiên bản {} (lưu lúc {}): {ly_do}", ls["phienBan"], ls["suaLuc"].as_str().unwrap_or(""));
+    if let Some(nk) = moi["nhatKy"].as_array_mut() {
+        nk.push(json!({ "luc": luc, "nguoi": format!("{} ({})", u.ho_ten, u.ten), "noiDung": mo_ta }));
+    }
+    let tx = c.transaction().map_err(loi_db)?;
+    let pb_cu: Option<i64> = tx.query_row("SELECT phien_ban FROM ban_ghi WHERE loai = 'ho' AND id = ?1", [&id], |r| r.get(0)).optional().map_err(loi_db)?;
+    if pb_cu.is_some() {
+        luu_lich_su(&tx, "ho", &id, &format!("Trước khi khôi phục về phiên bản {}", ls["phienBan"]), &u.ten)?;
+    }
+    let pb = pb_cu.unwrap_or(0) + 1;
+    tx.execute(
+        "INSERT OR REPLACE INTO ban_ghi(loai, id, du_an_id, phien_ban, noi_dung, sua_luc, sua_boi) VALUES ('ho', ?1, ?2, ?3, ?4, ?5, ?6)",
+        params![id, du_an_id, pb, moi.to_string(), luc, u.ten],
+    )
+    .map_err(loi_db)?;
+    MayChu::ghi_thay_doi(&tx, "ho", &id, &du_an_id, &u.ten).map_err(loi_db)?;
+    st.ghi_nhat_ky(&tx, &u.ten, &u.ho_ten, "Khôi phục hồ sơ về phiên bản cũ", &format!("{} · {} — {mo_ta}", moi["ma"].as_str().unwrap_or(""), moi["ten"].as_str().unwrap_or(""))).map_err(loi_db)?;
+    tx.commit().map_err(loi_db)?;
+    Ok(Json(json!({ "duLieu": moi, "phienBan": pb })))
 }
 
 pub fn ma_hoa_url(s: &str) -> String {
@@ -918,8 +1312,139 @@ pub fn dinh_tuyen(st: St) -> Router {
         .route("/api/xoa-tat-ca", post(xoa_tat_ca))
         .route("/api/lo", post(ghi_lo))
         .route("/api/thay-doi", get(thay_doi))
+        .route("/api/doc", post(doc_nhieu))
+        .route("/api/pa", get(api_ds_pa))
+        .route("/api/lich-su", get(lich_su))
+        .route("/api/lich-su/da-xoa", get(lich_su_da_xoa))
+        .route("/api/lich-su/khoi-phuc", post(khoi_phuc_ban_ghi))
         .layer(DefaultBodyLimit::max(300 * 1024 * 1024))
         .with_state(st)
+}
+
+// ---------------- Máy đơn: cùng lõi SQLite, gọi trong tiến trình (không mở cổng mạng) ----------------
+
+/// Mở CSDL máy đơn (thư mục dữ liệu ứng dụng\may-don) và trả bộ định tuyến để vỏ gọi trực tiếp (lệnh goi_noi_bo).
+/// Ngoài các đường dẫn như máy chủ, có hai đường dẫn chỉ gọi được trong tiến trình (máy chủ mạng không có):
+/// chuyển dữ liệu IndexedDB cũ vào CSDL trống, và xuất toàn bộ dữ liệu máy đơn để đưa lên máy chủ.
+pub fn mo_may_don(thu_muc: PathBuf) -> Result<Router, String> {
+    std::fs::create_dir_all(&thu_muc).map_err(|e| format!("Không tạo được thư mục dữ liệu: {e}"))?;
+    let st = Arc::new(MayChu::mo(&thu_muc.join("gpmb-may-don.sqlite")).map_err(|e| format!("Không mở được CSDL máy đơn: {e}"))?);
+    let noi_bo = Router::new()
+        .route("/api/noi-bo/chuyen-du-lieu", post(chuyen_du_lieu))
+        .route("/api/noi-bo/xuat", get(xuat_noi_bo))
+        .layer(DefaultBodyLimit::max(1024 * 1024 * 1024))
+        .with_state(st.clone());
+    Ok(dinh_tuyen(st).merge(noi_bo))
+}
+
+/// Chuyển dữ liệu máy đơn cũ (IndexedDB) vào CSDL SQLite TRỐNG — một giao dịch; giữ nguyên tài khoản (băm mật khẩu),
+/// nhật ký hệ thống (chuỗi băm), cài đặt, bản đồ, mẫu; phương án tách thành bản ghi riêng.
+async fn chuyen_du_lieu(State(st): State<St>, b: Bytes) -> Kq<Json<Value>> {
+    use base64::Engine;
+    let v = tach(&b)?;
+    let ds = |k: &str| v[k].as_array().cloned().unwrap_or_default();
+    let mut c = st.db.lock().unwrap();
+    let (n_nd, n_bg): (i64, i64) = c
+        .query_row("SELECT (SELECT COUNT(*) FROM nguoi_dung), (SELECT COUNT(*) FROM ban_ghi)", [], |r| Ok((r.get(0)?, r.get(1)?)))
+        .map_err(loi_db)?;
+    if n_nd + n_bg > 0 {
+        return Err(loi(StatusCode::CONFLICT, "CSDL máy đơn đã có dữ liệu — không chuyển đổi lại"));
+    }
+    let tx = c.transaction().map_err(loi_db)?;
+    let luc = bay_gio();
+    for u in ds("nguoiDung") {
+        let ten = u["ten"].as_str().unwrap_or("").to_string();
+        if !ten.is_empty() {
+            tx.execute("INSERT OR REPLACE INTO nguoi_dung(ten, noi_dung) VALUES (?1, ?2)", params![ten, u.to_string()]).map_err(loi_db)?;
+        }
+    }
+    let mut nk = ds("nhatKy");
+    nk.sort_by_key(|x| x["stt"].as_i64().unwrap_or(0));
+    for d in &nk {
+        tx.execute("INSERT OR REPLACE INTO nhat_ky(stt, noi_dung) VALUES (?1, ?2)", params![d["stt"].as_i64().unwrap_or(0), d.to_string()]).map_err(loi_db)?;
+    }
+    for x in ds("caiDat") {
+        if let Some(k) = x["khoa"].as_str() {
+            tx.execute("INSERT OR REPLACE INTO cai_dat(khoa, noi_dung) VALUES (?1, ?2)", params![k, x["giaTri"].to_string()]).map_err(loi_db)?;
+        }
+    }
+    let ghi = |loai: &str, id: &str, du_an: &str, v: &Value| -> Kq<()> {
+        tx.execute(
+            "INSERT OR REPLACE INTO ban_ghi(loai, id, du_an_id, phien_ban, noi_dung, sua_luc, sua_boi) VALUES (?1, ?2, ?3, 1, ?4, ?5, 'chuyen-doi-may-don')",
+            params![loai, id, du_an, v.to_string(), luc],
+        )
+        .map_err(loi_db)?;
+        Ok(())
+    };
+    let (mut so_da, mut so_ho, mut so_pa) = (0, 0, 0);
+    for mut d in ds("duAn") {
+        let id = d["id"].as_str().unwrap_or("").to_string();
+        if id.is_empty() {
+            continue;
+        }
+        let pas = d.as_object_mut().and_then(|o| o.remove("phuongAn")).and_then(|x| x.as_array().cloned()).unwrap_or_default();
+        for p in pas {
+            if let Some(pid) = p["id"].as_str() {
+                ghi("pa", pid, &id, &json!({ "id": pid, "duAnId": id, "pa": p }))?;
+                so_pa += 1;
+            }
+        }
+        ghi("duAn", &id, &id, &d)?;
+        so_da += 1;
+    }
+    for h in ds("ho") {
+        let (id, da) = (h["id"].as_str().unwrap_or(""), h["duAnId"].as_str().unwrap_or(""));
+        if !id.is_empty() {
+            ghi("ho", id, da, &h)?;
+            so_ho += 1;
+        }
+    }
+    let mut so_tep = 0;
+    for t in ds("tep") {
+        let (loai, id) = (t["loai"].as_str().unwrap_or(""), t["id"].as_str().unwrap_or(""));
+        let noi_dung = base64::engine::general_purpose::STANDARD.decode(t["noiDung"].as_str().unwrap_or("")).map_err(|e| loi(StatusCode::BAD_REQUEST, format!("Tệp {loai}/{id}: {e}")))?;
+        tx.execute("INSERT OR REPLACE INTO tep(loai, id, meta, noi_dung) VALUES (?1, ?2, ?3, ?4)", params![loai, id, t["meta"].as_str().unwrap_or("{}"), noi_dung]).map_err(loi_db)?;
+        so_tep += 1;
+    }
+    let tom_tat = format!("{so_da} dự án, {so_ho} hồ sơ, {so_pa} bản phương án, {so_tep} tệp, {} tài khoản, {} dòng nhật ký", ds("nguoiDung").len(), nk.len());
+    st.ghi_nhat_ky(&tx, "he-thong", "Phần mềm", "Chuyển dữ liệu máy đơn từ IndexedDB sang SQLite", &tom_tat).map_err(loi_db)?;
+    tx.commit().map_err(loi_db)?;
+    Ok(Json(json!({ "tomTat": tom_tat })))
+}
+
+/// Xuất toàn bộ dữ liệu máy đơn (để đưa lên máy chủ khi chuyển sang chế độ mạng nội bộ) — phương án ghép lại vào dự án.
+async fn xuat_noi_bo(State(st): State<St>) -> Kq<Json<Value>> {
+    use base64::Engine;
+    let c = st.db.lock().unwrap();
+    let doc = |sql: &str| -> Kq<Vec<Value>> {
+        let mut q = c.prepare(sql).map_err(loi_db)?;
+        let ds = q.query_map([], |r| r.get::<_, String>(0)).map_err(loi_db)?.filter_map(|x| x.ok().and_then(|s| serde_json::from_str(&s).ok())).collect();
+        Ok(ds)
+    };
+    let pa = doc("SELECT noi_dung FROM ban_ghi WHERE loai = 'pa'")?;
+    let mut du_an = doc("SELECT noi_dung FROM ban_ghi WHERE loai = 'duAn'")?;
+    for d in du_an.iter_mut() {
+        let ds: Vec<Value> = pa.iter().filter(|p| p["duAnId"] == d["id"]).map(|p| p["pa"].clone()).collect();
+        d["phuongAn"] = Value::Array(ds);
+    }
+    let mut q = c.prepare("SELECT loai, id, meta, noi_dung FROM tep").map_err(loi_db)?;
+    let tep: Vec<Value> = q
+        .query_map([], |r| Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?, r.get::<_, String>(2)?, r.get::<_, Vec<u8>>(3)?)))
+        .map_err(loi_db)?
+        .filter_map(|x| x.ok())
+        .map(|(l, i, m, b)| json!({ "loai": l, "id": i, "meta": m, "noiDung": base64::engine::general_purpose::STANDARD.encode(b) }))
+        .collect();
+    let mut q = c.prepare("SELECT khoa, noi_dung FROM cai_dat").map_err(loi_db)?;
+    let cai_dat: Vec<Value> = q
+        .query_map([], |r| Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?)))
+        .map_err(loi_db)?
+        .filter_map(|x| x.ok())
+        .map(|(k, v)| json!({ "khoa": k, "giaTri": serde_json::from_str::<Value>(&v).unwrap_or(Value::Null) }))
+        .collect();
+    Ok(Json(json!({
+        "duAn": du_an, "ho": doc("SELECT noi_dung FROM ban_ghi WHERE loai = 'ho'")?, "tep": tep, "caiDat": cai_dat,
+        "nguoiDung": doc("SELECT noi_dung FROM nguoi_dung")?, "nhatKy": doc("SELECT noi_dung FROM nhat_ky ORDER BY stt")?
+    })))
 }
 
 // ---------------- Chứng chỉ, khởi chạy ----------------
@@ -985,12 +1510,13 @@ pub async fn khoi_dong(thu_muc: PathBuf, cong: u16) -> Result<DangChay, String> 
     let cfg = axum_server::tls_rustls::RustlsConfig::from_pem(cc.cert_pem.into_bytes(), cc.key_pem.into_bytes()).await.map_err(|e| e.to_string())?;
     let handle = axum_server::Handle::new();
     let dia_chi = SocketAddr::from(([0, 0, 0, 0], cong));
-    // thử mở cổng trước để báo lỗi ngay (cổng bận)
-    std::net::TcpListener::bind(dia_chi).map_err(|e| format!("Không mở được cổng {cong}: {e}"))?;
+    // mở cổng ngay tại đây (báo lỗi cổng bận; máy trạm gọi được ngay khi hàm trả về)
+    let nghe = std::net::TcpListener::bind(dia_chi).map_err(|e| format!("Không mở được cổng {cong}: {e}"))?;
+    nghe.set_nonblocking(true).map_err(|e| e.to_string())?;
     let app = dinh_tuyen(st);
     let h2 = handle.clone();
     tokio::spawn(async move {
-        let _ = axum_server::bind_rustls(dia_chi, cfg).handle(h2).serve(app.into_make_service_with_connect_info::<SocketAddr>()).await;
+        let _ = axum_server::from_tcp_rustls(nghe, cfg).handle(h2).serve(app.into_make_service_with_connect_info::<SocketAddr>()).await;
     });
     Ok(DangChay { handle, cong, van_tay: cc.van_tay })
 }

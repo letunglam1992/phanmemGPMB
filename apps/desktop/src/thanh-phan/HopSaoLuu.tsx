@@ -151,7 +151,7 @@ export function HopSaoLuu() {
       {!quyen("KHOI_PHUC") && <p className="mo chu-nho">Khôi phục dữ liệu chỉ dành cho tài khoản Quản trị.</p>}
       {quyen("KHOI_PHUC") && <div className="the" style={{ padding: 14 }}>
         <h3 style={{ marginTop: 0 }}>Khôi phục từ tệp sao lưu</h3>
-        {laKhoMang(kho) && <div className="thong-bao thong-bao-vang">Đang làm việc trên <b>máy chủ mạng nội bộ</b>: khôi phục thay đổi dữ liệu chung của mọi người dùng.</div>}
+        {laKhoMang(kho) && !kho.noiBo && <div className="thong-bao thong-bao-vang">Đang làm việc trên <b>máy chủ mạng nội bộ</b>: khôi phục thay đổi dữ liệu chung của mọi người dùng.</div>}
         <input type="file" accept=".gpmb,application/zip" aria-label="Chọn tệp sao lưu" disabled={dangLam} onChange={(e) => void chonTep(e.target.files?.[0])} />
         {cho && (
           <div style={{ marginTop: 10 }}>

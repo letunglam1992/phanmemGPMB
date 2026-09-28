@@ -28,7 +28,7 @@ function TheKpi(p: { bt: string; nhan: string; gt: number; ms: number; tong: Ton
 }
 
 export function TongQuan() {
-  const { dsDuAn, di, luuDuAn, kho, dangTai, quyen } = useUngDung();
+  const { dsDuAn, di, taiLai, kho, dangTai, quyen } = useUngDung();
   const [taoMoi, setTaoMoi] = useState(false);
   const { duLieu, canhBao, mo } = useTongHop();
   const dsRef = useRef<HTMLDivElement>(null);
@@ -36,9 +36,8 @@ export function TongQuan() {
   const napMau = async () => {
     if (!quyen("SUA_HO_SO")) return;
     const { duAn, ho } = taoDuAnMau();
-    await kho.luuDuAn(duAn);
-    for (const h of ho) await kho.luuHo(h);
-    await luuDuAn(duAn);
+    await kho.ghiLo({ duAn: [duAn], ho }); // một lô (P0-6); tải lại để có cả hồ sơ (P1-2: lưu dự án không tải lại)
+    await taiLai();
   };
 
   const cong = (f: (x: (typeof duLieu)[number]) => number) => duLieu.reduce((s, x) => s + f(x), 0);

@@ -5,6 +5,7 @@ import { taoKhoIndexedDb, type Kho } from "../kho";
 import { coVoWindows } from "../tu-dong-sao-luu";
 import { useUngDung } from "../ung-dung";
 import { docBanSaoLuu, khoiPhuc, taoBanSaoLuu } from "../sao-luu";
+import { docDuLieuMayDon, khoTuDuLieu, moMayDon } from "../may-don";
 
 async function goiVo<T>(lenh: string, thamSo?: Record<string, unknown>): Promise<T> {
   const { invoke } = await import("@tauri-apps/api/core");
@@ -19,7 +20,12 @@ export interface ThongTinMayChu {
 
 /** Mở kho theo chế độ của máy này; máy chủ thì khởi động dịch vụ trước. */
 export async function moKho(c: CheDoMang = docCheDo()): Promise<Kho> {
-  if (c.cheDo === "MAY_DON") return taoKhoIndexedDb();
+  if (c.cheDo === "MAY_DON") {
+    if (!coVoWindows()) return taoKhoIndexedDb(); // chạy trên trình duyệt (dùng thử, kiểm thử giao diện)
+    const { kho, daChuyen } = await moMayDon();
+    if (daChuyen !== null) sessionStorage.setItem("gpmb-da-chuyen-sqlite", daChuyen);
+    return kho;
+  }
   if (!coVoWindows()) throw new Error("Chế độ mạng nội bộ chỉ có trong bản cài Windows.");
   let k;
   if (c.cheDo === "MAY_CHU") {
@@ -149,7 +155,7 @@ export function TheMangNoiBo() {
     if (!confirm("Đưa toàn bộ dữ liệu máy đơn (dự án, hồ sơ, bản đồ, mẫu, lịch, tài khoản) lên máy chủ? Bản ghi trùng mã trên máy chủ sẽ bị ghi đè.")) return;
     setDang(true);
     try {
-      const dia = taoKhoIndexedDb();
+      const dia = coVoWindows() ? await khoTuDuLieu(await docDuLieuMayDon()) : taoKhoIndexedDb();
       const ban = await docBanSaoLuu((await taoBanSaoLuu(dia)).bytes);
       await khoiPhuc(kho, ban, "GOP");
       const tk = await dia.dsNguoiDung();

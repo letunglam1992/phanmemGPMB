@@ -16,6 +16,12 @@ fn tai_khoan(ten: &str, vai_tro: &str, mk: &str) -> Value {
             "muoi": hex(&muoi), "vongLap": VONG, "bam": hex(&out), "taoLuc": "2026-09-27T00:00:00.000Z" })
 }
 
+/// Hồ sơ tối thiểu đúng cấu trúc (P1-8).
+fn ho_mau(id: &str, ma: &str) -> Value {
+    json!({ "id": id, "duAnId": "da1", "ma": ma, "ten": format!("Hộ {ma}"), "loai": "HO_GIA_DINH", "nhanKhau": [], "thua": [], "taiSan": [],
+            "nhatKy": [], "hoTro": { "chuyenDoiNghe": false }, "tienDo": {}, "khauTru": "" })
+}
+
 struct May {
     dia_chi: String,
     van_tay: String,
@@ -85,11 +91,11 @@ async fn may_chu_dau_cuoi() {
     assert_eq!(m.goi("GET", "/api/nguoi-dung", Some(&cb), Value::Null).await.1.as_array().unwrap().len(), 1);
 
     // dự án, hồ sơ; chỉ xem không ghi được
-    let du_an = json!({ "id": "da1", "ten": "Dự án thử", "phuongAn": [] });
+    let du_an = json!({ "id": "da1", "ten": "Dự án thử" });
     assert_eq!(m.goi("PUT", "/api/du-an/da1", Some(&xem), json!({ "duLieu": du_an })).await.0, 403);
     let (ma, v) = m.goi("PUT", "/api/du-an/da1", Some(&cb), json!({ "duLieu": du_an })).await;
     assert_eq!((ma, v["phienBan"].as_i64()), (200, Some(1)));
-    let ho = json!({ "id": "h1", "duAnId": "da1", "ma": "H01", "ten": "Hộ thử", "tienDo": {} });
+    let ho = ho_mau("h1", "H01");
     assert_eq!(m.goi("PUT", "/api/ho/h1", Some(&cb), json!({ "duLieu": ho })).await.0, 200);
 
     // xung đột: hai người cùng sửa từ phiên bản 1
@@ -123,37 +129,31 @@ async fn may_chu_dau_cuoi() {
     assert_eq!(m.goi("PUT", "/api/ho/h1", Some(&ld), json!({ "duLieu": h5, "phienBanTruoc": 5 })).await.0, 403);
     assert_eq!(m.goi("PUT", "/api/ho/h1", Some(&ld2), json!({ "duLieu": h5, "phienBanTruoc": 5 })).await.0, 200);
 
-    // phương án: cán bộ không chốt; lãnh đạo chốt, phê duyệt; bản đã duyệt không sửa, không xóa
+    // phương án (P1-6: mỗi bản một bản ghi "pa"): cán bộ không chốt; lãnh đạo chốt, phê duyệt; bản đã duyệt không sửa
     let pa = json!({ "id": "p1", "so": 1, "trangThai": "DA_CHOT", "tong": "1000", "ho": [] });
-    let mut da = du_an.clone();
-    da["phuongAn"] = json!([pa]);
-    assert_eq!(m.goi("PUT", "/api/du-an/da1", Some(&cb), json!({ "duLieu": da, "phienBanTruoc": 1 })).await.0, 403);
-    assert_eq!(m.goi("PUT", "/api/du-an/da1", Some(&ld), json!({ "duLieu": da, "phienBanTruoc": 1 })).await.0, 200);
-    let mut sua_so = da.clone();
-    sua_so["phuongAn"][0]["tong"] = json!("999");
-    sua_so["phuongAn"][0]["trangThai"] = json!("DA_PHE_DUYET");
-    assert_eq!(m.goi("PUT", "/api/du-an/da1", Some(&ld), json!({ "duLieu": sua_so, "phienBanTruoc": 2 })).await.0, 403);
-    let mut duyet = da.clone();
-    duyet["phuongAn"][0]["trangThai"] = json!("DA_PHE_DUYET");
-    duyet["phuongAn"][0]["pheDuyet"] = json!({ "so": "12/QĐ-UBND", "ngay": "2026-10-01" });
-    assert_eq!(m.goi("PUT", "/api/du-an/da1", Some(&ld), json!({ "duLieu": duyet, "phienBanTruoc": 2 })).await.0, 200);
-    let mut xoa_pa = du_an.clone();
-    xoa_pa["phuongAn"] = json!([]);
-    assert_eq!(m.goi("PUT", "/api/du-an/da1", Some(&qt), json!({ "duLieu": xoa_pa, "phienBanTruoc": 3 })).await.0, 403);
-
-    // bước chung cấp dự án (1–4): cùng quy tắc gửi – duyệt như bước của hộ
-    let mut chung = duyet.clone();
-    chung["tienDoChung"] = json!({ "3": { "trangThai": "XONG" } });
-    assert_eq!(m.goi("PUT", "/api/du-an/da1", Some(&cb), json!({ "duLieu": chung, "phienBanTruoc": 3 })).await.0, 403);
-    chung["tienDoChung"] = json!({ "3": { "trangThai": "CHO_DUYET", "guiBoi": "gia-mao" } });
-    let (ma, v) = m.goi("PUT", "/api/du-an/da1", Some(&cb), json!({ "duLieu": chung, "phienBanTruoc": 3 })).await;
+    let lo_pa = |p: &Value, pb: Option<i64>| json!({ "ghi": [{ "loai": "pa", "duLieu": { "id": "p1", "duAnId": "da1", "pa": p }, "phienBanTruoc": pb }] });
+    assert_eq!(m.goi("POST", "/api/lo", Some(&cb), lo_pa(&pa, None)).await.0, 403);
+    let (ma, v) = m.goi("POST", "/api/lo", Some(&ld), lo_pa(&pa, None)).await;
     assert_eq!(ma, 200, "{v}");
-    assert_eq!(v["duLieu"]["tienDoChung"]["3"]["guiBoi"], "canbo1");
-    let mut chung2 = v["duLieu"].clone();
-    chung2["tienDoChung"]["3"]["trangThai"] = json!("XONG");
-    let (ma, v) = m.goi("PUT", "/api/du-an/da1", Some(&ld), json!({ "duLieu": chung2, "phienBanTruoc": 4 })).await;
-    assert_eq!(ma, 200, "{v}");
-    assert_eq!(v["duLieu"]["tienDoChung"]["3"]["duyetBoi"], "lanhdao");
+    let mut sua_so = pa.clone();
+    sua_so["tong"] = json!("999");
+    sua_so["trangThai"] = json!("DA_PHE_DUYET");
+    assert_eq!(m.goi("POST", "/api/lo", Some(&ld), lo_pa(&sua_so, Some(1))).await.0, 403);
+    let mut duyet = pa.clone();
+    duyet["trangThai"] = json!("DA_PHE_DUYET");
+    duyet["pheDuyet"] = json!({ "so": "12/QĐ-UBND", "ngay": "2026-10-01" });
+    assert_eq!(m.goi("POST", "/api/lo", Some(&ld), lo_pa(&duyet, Some(1))).await.0, 200);
+    let mut sua_duyet = duyet.clone();
+    sua_duyet["tong"] = json!("1");
+    assert_eq!(m.goi("POST", "/api/lo", Some(&qt), lo_pa(&sua_duyet, Some(2))).await.0, 403);
+    let (_, v) = m.goi("GET", "/api/pa?duAn=da1", Some(&xem), Value::Null).await;
+    assert_eq!(v[0]["duLieu"]["pa"]["trangThai"], "DA_PHE_DUYET");
+    // máy trạm cũ gửi dự án kèm phương án nhúng → từ chối, nêu cần cập nhật phần mềm
+    let mut nhung = du_an.clone();
+    nhung["phuongAn"] = json!([duyet]);
+    let (ma, v) = m.goi("PUT", "/api/du-an/da1", Some(&qt), json!({ "duLieu": nhung, "phienBanTruoc": 1 })).await;
+    assert_eq!(ma, 400, "{v}");
+    assert!(v["loi"].as_str().unwrap().contains("cập nhật phần mềm"));
 
     // thay đổi: máy trạm thấy các lần ghi, kèm người ghi
     let (_, td) = m.goi("GET", "/api/thay-doi?sau=0", Some(&xem), Value::Null).await;
@@ -223,8 +223,8 @@ async fn may_chu_ghi_lo_nguyen_tu() {
     let so_ho = || async { m.goi("GET", "/api/ho?duAn=da1", Some(&cb), Value::Null).await.1.as_array().map(|a| a.len()).unwrap_or(0) };
 
     // lô hợp lệ: dự án + 3 hồ sơ + bản đồ
-    let da = json!({ "id": "da1", "ten": "Dự án lô", "phuongAn": [] });
-    let ho = |id: &str, ma: &str| json!({ "id": id, "duAnId": "da1", "ma": ma, "ten": format!("Hộ {ma}"), "tienDo": {} });
+    let da = json!({ "id": "da1", "ten": "Dự án lô" });
+    let ho = ho_mau;
     let (ma, v) = m
         .goi("POST", "/api/lo", Some(&cb), json!({
             "ghi": [{ "loai": "duAn", "duLieu": da }, { "loai": "ho", "duLieu": ho("h1", "H001") }, { "loai": "ho", "duLieu": ho("h2", "H002") }, { "loai": "ho", "duLieu": ho("h3", "H003") }],
@@ -292,9 +292,8 @@ async fn may_chu_ghi_lo_nguyen_tu() {
     assert!(v["loi"].as_str().unwrap().contains("chi trả"));
     c["chiTra"]["dot"][0]["huy"] = json!({ "lyDo": "ghi nhầm" });
     assert_eq!(m.goi("PUT", "/api/ho/h12", Some(&cb), json!({ "duLieu": c, "phienBanTruoc": 1 })).await.0, 200);
-    let mut da_pa = da.clone();
-    da_pa["phuongAn"] = json!([{ "id": "p1", "so": 1, "trangThai": "DA_CHOT", "ho": [{ "hoId": "h9" }] }]);
-    assert_eq!(m.goi("POST", "/api/lo", Some(&qt), json!({ "ghiDe": true, "ghi": [{ "loai": "duAn", "duLieu": da_pa }] })).await.0, 200);
+    let ban_pa = json!({ "id": "p1", "duAnId": "da1", "pa": { "id": "p1", "so": 1, "trangThai": "DA_CHOT", "ho": [{ "hoId": "h9" }] } });
+    assert_eq!(m.goi("POST", "/api/lo", Some(&qt), json!({ "ghiDe": true, "ghi": [{ "loai": "pa", "duLieu": ban_pa }] })).await.0, 200);
     let mut h9 = ho("h9", "H009");
     h9["daXoa"] = json!({ "lyDo": "thử" });
     let (ma, v) = m.goi("POST", "/api/lo", Some(&qt), json!({ "ghi": [{ "loai": "ho", "duLieu": h9 }] })).await;
@@ -319,4 +318,213 @@ async fn may_chu_ghi_lo_nguyen_tu() {
 
     d.handle.shutdown();
     let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// Giai đoạn 3: kiểm lược đồ (P1-8), đọc theo danh sách (P1-2), lịch sử và khôi phục hồ sơ (P1-5).
+#[tokio::test(flavor = "multi_thread")]
+async fn may_chu_lich_su_luoc_do() {
+    let dir = std::env::temp_dir().join(format!("gpmb-may-chu-ls-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let cong = cong_trong();
+    let d = may_chu::khoi_dong(dir.clone(), cong).await.unwrap();
+    let m = May { dia_chi: format!("127.0.0.1:{cong}"), van_tay: d.van_tay.clone() };
+    let qt = m.goi("POST", "/api/khoi-tao", None, tai_khoan("quantri", "QUAN_TRI", "Gpmb2026qt")).await.1["token"].as_str().unwrap().to_string();
+    for (t, vt) in [("lanhdao", "LANH_DAO"), ("canbo1", "CAN_BO")] {
+        assert_eq!(m.goi("PUT", &format!("/api/nguoi-dung/{t}"), Some(&qt), tai_khoan(t, vt, "Matkhau2026")).await.0, 200);
+    }
+    let (ld, cb) = (m.dang_nhap("lanhdao", "Matkhau2026").await, m.dang_nhap("canbo1", "Matkhau2026").await);
+    assert_eq!(m.goi("PUT", "/api/du-an/da1", Some(&cb), json!({ "duLieu": { "id": "da1", "ten": "Dự án", "giaGao": { "dongKg": "15000" } } })).await.0, 200);
+
+    // P1-8: sai cấu trúc, ô số sai định dạng → 400; dự án giá gạo "15.000,5" → 400
+    let mut h = ho_mau("h1", "H001");
+    h["thua"] = json!([{ "id": "t1", "soTo": "5", "soThua": "1", "loaiDat": "LUC", "dienTich": "1.000,5", "dienTichThuHoi": "100", "nguonGoc": "" }]);
+    let (ma, v) = m.goi("PUT", "/api/ho/h1", Some(&cb), json!({ "duLieu": h })).await;
+    assert_eq!(ma, 400, "{v}");
+    assert!(v["loi"].as_str().unwrap().contains("thua[0].dienTich"), "{v}");
+    let mut sai_kieu = ho_mau("h1", "H001");
+    sai_kieu["thua"] = json!({});
+    assert_eq!(m.goi("PUT", "/api/ho/h1", Some(&cb), json!({ "duLieu": sai_kieu })).await.0, 400);
+    let mut sai_loai = ho_mau("h1", "H001");
+    sai_loai["loai"] = json!("KHAC");
+    assert_eq!(m.goi("PUT", "/api/ho/h1", Some(&cb), json!({ "duLieu": sai_loai })).await.0, 400);
+    assert_eq!(m.goi("PUT", "/api/du-an/da1", Some(&cb), json!({ "duLieu": { "id": "da1", "ten": "Dự án", "giaGao": { "dongKg": "15.000,5" } }, "phienBanTruoc": 1 })).await.0, 400);
+    // giá trị sai có sẵn (dữ liệu cũ, quản trị đưa lên) không chặn việc sửa trường khác; giá trị sai MỚI thì chặn
+    assert_eq!(m.goi("POST", "/api/lo", Some(&qt), json!({ "ghiDe": true, "ghi": [{ "loai": "ho", "duLieu": h }] })).await.0, 200);
+    let mut h2 = h.clone();
+    h2["ten"] = json!("Đổi tên");
+    let (ma, v) = m.goi("PUT", "/api/ho/h1", Some(&cb), json!({ "duLieu": h2, "phienBanTruoc": 1 })).await;
+    assert_eq!(ma, 200, "{v}");
+    let mut h3 = h2.clone();
+    h3["thua"][0]["dienTichThuHoi"] = json!("abc");
+    assert_eq!(m.goi("PUT", "/api/ho/h1", Some(&cb), json!({ "duLieu": h3, "phienBanTruoc": 2 })).await.0, 400);
+    let mut h4 = h2.clone();
+    h4["thua"][0]["dienTich"] = json!("1000.5");
+    assert_eq!(m.goi("PUT", "/api/ho/h1", Some(&cb), json!({ "duLieu": h4, "phienBanTruoc": 2 })).await.0, 200);
+    // lưu lại đúng nội dung cũ: không tăng phiên bản, không thêm lịch sử
+    let (ma, v) = m.goi("PUT", "/api/ho/h1", Some(&cb), json!({ "duLieu": h4, "phienBanTruoc": 3 })).await;
+    assert_eq!((ma, v["phienBan"].as_i64()), (200, Some(3)));
+
+    // P1-2: đọc lại theo danh sách
+    let (_, v) = m.goi("POST", "/api/doc", Some(&cb), json!({ "ds": [{ "loai": "ho", "id": "h1" }, { "loai": "ho", "id": "khong-co" }] })).await;
+    assert_eq!(v[0]["phienBan"], 3);
+    assert_eq!(v[0]["duLieu"]["ten"], "Đổi tên");
+    assert!(v[1]["duLieu"].is_null());
+
+    // P1-5: lịch sử — các bản cũ, mới nhất trước (bản 1: tên gốc, bản 2: "Đổi tên", số sai)
+    let (_, ls) = m.goi("GET", "/api/lich-su?loai=ho&id=h1", Some(&cb), Value::Null).await;
+    let ds = ls["ds"].as_array().unwrap();
+    assert_eq!(ds.len(), 2, "{ls}");
+    assert_eq!((ds[0]["phienBan"].as_i64(), ds[1]["phienBan"].as_i64()), (Some(2), Some(1)));
+    assert_eq!(ds[1]["duLieu"]["ten"], "Hộ H001");
+    assert_eq!(ds[0]["luuBoi"], "canbo1");
+    assert_eq!(ls["soNamGiu"], 0);
+    let stt1 = ds[1]["stt"].as_i64().unwrap();
+    // khôi phục: chỉ quản trị (lãnh đạo, cán bộ bị chặn), bắt buộc lý do
+    assert_eq!(m.goi("POST", "/api/lich-su/khoi-phuc", Some(&ld), json!({ "stt": stt1, "lyDo": "nhập nhầm" })).await.0, 403);
+    assert_eq!(m.goi("POST", "/api/lich-su/khoi-phuc", Some(&qt), json!({ "stt": stt1, "lyDo": " " })).await.0, 400);
+    let (ma, v) = m.goi("POST", "/api/lich-su/khoi-phuc", Some(&qt), json!({ "stt": stt1, "lyDo": "nhập nhầm tên" })).await;
+    assert_eq!(ma, 200, "{v}");
+    assert_eq!((v["duLieu"]["ten"].as_str(), v["phienBan"].as_i64()), (Some("Hộ H001"), Some(4)));
+    assert!(v["duLieu"]["nhatKy"].as_array().unwrap().last().unwrap()["noiDung"].as_str().unwrap().contains("nhập nhầm tên"));
+    let (_, ls) = m.goi("GET", "/api/lich-su?loai=ho&id=h1", Some(&cb), Value::Null).await;
+    assert!(ls["ds"][0]["lyDo"].as_str().unwrap().starts_with("Trước khi khôi phục"));
+    let (_, nk) = m.goi("GET", "/api/nhat-ky", Some(&qt), Value::Null).await;
+    assert!(nk.as_array().unwrap().iter().any(|x| x["hanhDong"] == "Khôi phục hồ sơ về phiên bản cũ"));
+
+    // hồ sơ xóa hẳn → còn trong lịch sử, quản trị khôi phục được
+    let mut x = ho_mau("h2", "H002");
+    x["daXoa"] = json!({ "luc": "2000-01-01T00:00:00.000Z", "nguoi": "canbo1", "lyDo": "nhập trùng" });
+    assert_eq!(m.goi("POST", "/api/lo", Some(&qt), json!({ "ghiDe": true, "ghi": [{ "loai": "ho", "duLieu": x }] })).await.0, 200);
+    assert_eq!(m.goi("POST", "/api/lo", Some(&qt), json!({ "xoaHo": ["h2"] })).await.0, 200);
+    let (_, dx) = m.goi("GET", "/api/lich-su/da-xoa?duAn=da1", Some(&cb), Value::Null).await;
+    assert_eq!(dx.as_array().unwrap().len(), 1, "{dx}");
+    let (ma, v) = m.goi("POST", "/api/lich-su/khoi-phuc", Some(&qt), json!({ "stt": dx[0]["stt"], "lyDo": "xóa nhầm" })).await;
+    assert_eq!(ma, 200, "{v}");
+    assert_eq!(m.goi("GET", "/api/ho?duAn=da1", Some(&cb), Value::Null).await.1.as_array().unwrap().len(), 2);
+    assert_eq!(m.goi("GET", "/api/lich-su/da-xoa?duAn=da1", Some(&cb), Value::Null).await.1.as_array().unwrap().len(), 0);
+    // khôi phục bản trùng mã với hồ sơ khác → 409
+    let mut y = ho_mau("h3", "H003");
+    assert_eq!(m.goi("PUT", "/api/ho/h3", Some(&cb), json!({ "duLieu": y })).await.0, 200);
+    y["ma"] = json!("H009");
+    assert_eq!(m.goi("PUT", "/api/ho/h3", Some(&cb), json!({ "duLieu": y, "phienBanTruoc": 1 })).await.0, 200);
+    let mut z = ho_mau("h4", "H003");
+    assert_eq!(m.goi("PUT", "/api/ho/h4", Some(&cb), json!({ "duLieu": z })).await.0, 200);
+    z["ten"] = json!("x");
+    let (_, ls3) = m.goi("GET", "/api/lich-su?loai=ho&id=h3", Some(&cb), Value::Null).await;
+    let (ma, v) = m.goi("POST", "/api/lich-su/khoi-phuc", Some(&qt), json!({ "stt": ls3["ds"][0]["stt"], "lyDo": "thử" })).await;
+    assert_eq!(ma, 409, "{v}");
+
+    // thời hạn giữ lịch sử: chỉ quản trị đặt; ngoài khoảng 0–100 → 400
+    assert_eq!(m.goi("PUT", "/api/cai-dat/giuLichSu", Some(&ld), json!({ "soNam": 5 })).await.0, 403);
+    assert_eq!(m.goi("PUT", "/api/cai-dat/giuLichSu", Some(&qt), json!({ "soNam": -1 })).await.0, 400);
+    let (ma, v) = m.goi("PUT", "/api/cai-dat/giuLichSu", Some(&qt), json!({ "soNam": 5 })).await;
+    assert_eq!((ma, v["daXoa"].as_i64()), (200, Some(0)));
+    d.handle.shutdown();
+}
+
+/// P2-6, P1-6: CSDL phiên bản cũ (phương án nhúng trong dự án, chưa có lịch sử) được chuyển đổi khi mở;
+/// dọn lịch sử quá thời hạn giữ.
+#[test]
+fn chuyen_doi_csdl_cu_va_don_lich_su() {
+    let dir = std::env::temp_dir().join(format!("gpmb-cd-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    let f = dir.join("cu.sqlite");
+    {
+        let c = rusqlite::Connection::open(&f).unwrap();
+        c.execute_batch(
+            "CREATE TABLE ban_ghi(loai TEXT NOT NULL, id TEXT NOT NULL, du_an_id TEXT, phien_ban INTEGER NOT NULL, noi_dung TEXT NOT NULL, sua_luc TEXT, sua_boi TEXT, PRIMARY KEY(loai, id));",
+        )
+        .unwrap();
+        let da = json!({ "id": "da1", "ten": "Cũ", "phuongAn": [{ "id": "p1", "so": 1, "trangThai": "DA_PHE_DUYET", "ho": [] }, { "id": "p2", "so": 2, "trangThai": "DA_CHOT", "ho": [] }] });
+        c.execute("INSERT INTO ban_ghi VALUES ('duAn', 'da1', 'da1', 3, ?1, '', 'a')", [da.to_string()]).unwrap();
+    }
+    drop(may_chu::MayChu::mo(&f).unwrap());
+    let c = rusqlite::Connection::open(&f).unwrap();
+    let v: i64 = c.query_row("PRAGMA user_version", [], |r| r.get(0)).unwrap();
+    assert_eq!(v, may_chu::PHIEN_BAN_CSDL);
+    let da: String = c.query_row("SELECT noi_dung FROM ban_ghi WHERE loai = 'duAn'", [], |r| r.get(0)).unwrap();
+    assert!(serde_json::from_str::<Value>(&da).unwrap().get("phuongAn").is_none());
+    let n: i64 = c.query_row("SELECT COUNT(*) FROM ban_ghi WHERE loai = 'pa' AND du_an_id = 'da1'", [], |r| r.get(0)).unwrap();
+    assert_eq!(n, 2);
+    let p1: String = c.query_row("SELECT noi_dung FROM ban_ghi WHERE loai = 'pa' AND id = 'p1'", [], |r| r.get(0)).unwrap();
+    assert_eq!(serde_json::from_str::<Value>(&p1).unwrap()["pa"]["trangThai"], "DA_PHE_DUYET");
+    // mở lại: không chuyển đổi lần hai
+    drop(may_chu::MayChu::mo(&f).unwrap());
+    // dọn lịch sử: giữ 2 năm → bản 3 năm trước bị xóa, bản mới giữ lại
+    c.execute("INSERT INTO lich_su(loai, id, noi_dung, luu_luc) VALUES ('ho', 'x', '{}', ?1)", [may_chu::iso_truoc(3 * 365)]).unwrap();
+    c.execute("INSERT INTO lich_su(loai, id, noi_dung, luu_luc) VALUES ('ho', 'x', '{}', ?1)", [may_chu::iso_truoc(30)]).unwrap();
+    assert_eq!(may_chu::don_lich_su(&c).unwrap(), 0); // chưa đặt = không thời hạn
+    c.execute("CREATE TABLE IF NOT EXISTS cai_dat(khoa TEXT PRIMARY KEY, noi_dung TEXT NOT NULL)", []).unwrap();
+    c.execute("INSERT OR REPLACE INTO cai_dat VALUES ('giuLichSu', '{\"soNam\":2}')", []).unwrap();
+    assert_eq!(may_chu::don_lich_su(&c).unwrap(), 1);
+    let con: i64 = c.query_row("SELECT COUNT(*) FROM lich_su", [], |r| r.get(0)).unwrap();
+    assert_eq!(con, 1);
+    std::fs::remove_dir_all(&dir).ok();
+}
+
+async fn goi_router(r: &axum::Router, pt: &str, dd: &str, token: Option<&str>, than: Value) -> (u16, Value) {
+    use tower::ServiceExt;
+    let mut rq = axum::http::Request::builder().method(pt).uri(dd);
+    if let Some(t) = token {
+        rq = rq.header("authorization", format!("Bearer {t}"));
+    }
+    let b = if than.is_null() { vec![] } else { than.to_string().into_bytes() };
+    let mut rq = rq.body(axum::body::Body::from(b)).unwrap();
+    rq.extensions_mut().insert(axum::extract::ConnectInfo(std::net::SocketAddr::from(([127, 0, 0, 1], 0))));
+    let r = r.clone().oneshot(rq).await.unwrap();
+    let ma = r.status().as_u16();
+    let b = axum::body::to_bytes(r.into_body(), usize::MAX).await.unwrap();
+    (ma, serde_json::from_slice(&b).unwrap_or(Value::Null))
+}
+
+/// Máy đơn SQLite (Giai đoạn 3): chuyển dữ liệu IndexedDB cũ vào CSDL trống, đăng nhập bằng tài khoản cũ,
+/// chuỗi nhật ký cũ giữ nguyên, phương án tách bản ghi; chuyển lần hai bị từ chối; xuất để đưa lên máy chủ.
+#[tokio::test(flavor = "multi_thread")]
+async fn may_don_trong_tien_trinh() {
+    let dir = std::env::temp_dir().join(format!("gpmb-may-don-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let r = may_chu::mo_may_don(dir.clone()).unwrap();
+    let (_, tt) = goi_router(&r, "GET", "/api/trang-thai", None, Value::Null).await;
+    assert_eq!(tt["coTaiKhoan"], false);
+    let bam1 = may_chu::tinh_bam_nhat_ky(1, "2026-09-01T00:00:00.000Z", "quantri", "Q", "Đăng nhập", "", &"0".repeat(64));
+    let nk1 = json!({ "stt": 1, "luc": "2026-09-01T00:00:00.000Z", "nguoi": "quantri", "hoTen": "Q", "hanhDong": "Đăng nhập", "chiTiet": "", "bamTruoc": "0".repeat(64), "bam": bam1 });
+    let du_lieu = json!({
+        "nguoiDung": [tai_khoan("quantri", "QUAN_TRI", "Gpmb2026qt")],
+        "nhatKy": [nk1],
+        "caiDat": [{ "khoa": "lich", "giaTri": { "nghi": [] } }],
+        "duAn": [{ "id": "da1", "ten": "Dự án cũ", "phuongAn": [{ "id": "p1", "so": 1, "trangThai": "DA_PHE_DUYET", "ho": [{ "hoId": "h1" }] }] }],
+        "ho": [ho_mau("h1", "H001")],
+        "tep": [{ "loai": "banDo", "id": "da1", "meta": "{}", "noiDung": "AQID" }]
+    });
+    let (ma, v) = goi_router(&r, "POST", "/api/noi-bo/chuyen-du-lieu", None, du_lieu.clone()).await;
+    assert_eq!(ma, 200, "{v}");
+    assert!(v["tomTat"].as_str().unwrap().contains("1 dự án, 1 hồ sơ, 1 bản phương án, 1 tệp"));
+    assert_eq!(goi_router(&r, "POST", "/api/noi-bo/chuyen-du-lieu", None, du_lieu).await.0, 409);
+    // đăng nhập bằng tài khoản cũ; dữ liệu, phương án, nhật ký nối tiếp chuỗi cũ
+    let (ma, v) = goi_router(&r, "POST", "/api/dang-nhap", None, json!({ "ten": "quantri", "matKhau": "Gpmb2026qt" })).await;
+    assert_eq!(ma, 200, "{v}");
+    let t = v["token"].as_str().unwrap().to_string();
+    assert_eq!(goi_router(&r, "GET", "/api/ho?duAn=da1", Some(&t), Value::Null).await.1.as_array().unwrap().len(), 1);
+    assert_eq!(goi_router(&r, "GET", "/api/pa?duAn=da1", Some(&t), Value::Null).await.1[0]["duLieu"]["pa"]["trangThai"], "DA_PHE_DUYET");
+    let (_, nk) = goi_router(&r, "GET", "/api/nhat-ky", Some(&t), Value::Null).await;
+    let nk = nk.as_array().unwrap();
+    assert_eq!(nk[0]["bam"], bam1);
+    assert!(nk.iter().any(|x| x["hanhDong"] == "Chuyển dữ liệu máy đơn từ IndexedDB sang SQLite" && x["bamTruoc"] == bam1));
+    // hộ có trong phương án đã duyệt: không xóa được (quy tắc máy chủ áp dụng cho máy đơn)
+    let mut h = ho_mau("h1", "H001");
+    h["daXoa"] = json!({ "lyDo": "thử" });
+    assert_eq!(goi_router(&r, "PUT", "/api/ho/h1", Some(&t), json!({ "duLieu": h, "phienBanTruoc": 1 })).await.0, 409);
+    // xuất: phương án ghép lại vào dự án, tệp base64
+    let (_, x) = goi_router(&r, "GET", "/api/noi-bo/xuat", None, Value::Null).await;
+    assert_eq!(x["duAn"][0]["phuongAn"][0]["id"], "p1");
+    assert_eq!(x["tep"][0]["noiDung"], "AQID");
+    assert_eq!(x["nguoiDung"][0]["ten"], "quantri");
+    // máy chủ mạng không có các đường dẫn nội bộ
+    let cong = cong_trong();
+    let d = may_chu::khoi_dong(dir.join("mang"), cong).await.unwrap();
+    let m = May { dia_chi: format!("127.0.0.1:{cong}"), van_tay: d.van_tay.clone() };
+    assert_eq!(m.goi("GET", "/api/noi-bo/xuat", None, Value::Null).await.0, 404);
+    d.handle.shutdown();
+    std::fs::remove_dir_all(&dir).ok();
 }

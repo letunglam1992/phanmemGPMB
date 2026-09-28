@@ -312,6 +312,50 @@ async fn doc_van_tay_may_chu(dia_chi: String) -> Result<String, String> {
     tauri::async_runtime::spawn_blocking(move || ket_noi::doc_van_tay(&dia_chi)).await.map_err(|e| e.to_string())?
 }
 
+/// Máy đơn (Giai đoạn 3): CSDL SQLite của máy này, mở khi gọi lần đầu.
+#[derive(Default)]
+struct MayDon(tokio::sync::Mutex<Option<axum::Router>>);
+
+/// Gọi lõi dữ liệu máy đơn trong tiến trình — cùng giao thức với goi_may_chu nhưng không qua mạng, không mở cổng.
+#[tauri::command]
+async fn goi_noi_bo(app: tauri::AppHandle, md: tauri::State<'_, MayDon>, request: Request<'_>) -> Result<tauri::ipc::Response, String> {
+    use tower::ServiceExt;
+    let router = {
+        let mut g = md.0.lock().await;
+        if g.is_none() {
+            let dir = app.path().app_local_data_dir().map_err(|e| e.to_string())?.join("may-don");
+            *g = Some(may_chu::mo_may_don(dir)?);
+        }
+        g.as_ref().unwrap().clone()
+    };
+    let h = |k: &str| request.headers().get(k).and_then(|v| v.to_str().ok()).map(|s| s.to_string());
+    let phuong_thuc = h("x-phuong-thuc").unwrap_or_else(|| "GET".into());
+    let duong_dan = h("x-duong-dan").ok_or("Thiếu đường dẫn")?;
+    let than = match request.body() {
+        InvokeBody::Raw(b) => b.clone(),
+        InvokeBody::Json(_) => Vec::new(),
+    };
+    let mut rq = axum::http::Request::builder().method(phuong_thuc.as_str()).uri(duong_dan.as_str());
+    if let Some(t) = h("x-token") {
+        rq = rq.header("authorization", format!("Bearer {t}"));
+    }
+    if let Some(m) = h("x-meta") {
+        rq = rq.header("x-meta", m);
+    }
+    let mut rq = rq.body(axum::body::Body::from(than)).map_err(|e| e.to_string())?;
+    rq.extensions_mut().insert(axum::extract::ConnectInfo(std::net::SocketAddr::from(([127, 0, 0, 1], 0))));
+    let r = router.oneshot(rq).await.map_err(|e| e.to_string())?;
+    let ma = r.status().as_u16();
+    let meta = r.headers().get("x-meta").and_then(|v| v.to_str().ok()).unwrap_or("").to_string();
+    let than = axum::body::to_bytes(r.into_body(), usize::MAX).await.map_err(|e| e.to_string())?;
+    let mut out = Vec::with_capacity(6 + meta.len() + than.len());
+    out.extend_from_slice(&ma.to_be_bytes());
+    out.extend_from_slice(&(meta.len() as u32).to_be_bytes());
+    out.extend_from_slice(meta.as_bytes());
+    out.extend_from_slice(&than);
+    Ok(tauri::ipc::Response::new(out))
+}
+
 /// Chuyển tiếp yêu cầu của giao diện tới máy chủ (HTTPS ghim vân tay).
 /// Trả về: 2 byte mã trạng thái, 4 byte độ dài meta, meta, thân.
 #[tauri::command]
@@ -344,6 +388,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .manage(TrangThaiMayChu::default())
+        .manage(MayDon::default())
         .invoke_handler(tauri::generate_handler![
             ghi_sao_luu,
             thu_muc_sao_luu,
@@ -356,7 +401,8 @@ pub fn run() {
             tat_may_chu,
             trang_thai_may_chu,
             doc_van_tay_may_chu,
-            goi_may_chu
+            goi_may_chu,
+            goi_noi_bo
         ])
         // Cửa sổ chính tạo trong mã để gắn trình xử lý tải xuống của WebView2: mọi lượt tải (kể cả liên kết
         // blob của giao diện) lưu thẳng vào Downloads, không phụ thuộc giao diện tải mặc định của WebView2.

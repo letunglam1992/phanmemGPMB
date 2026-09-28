@@ -23,7 +23,7 @@ type SapXep = "MOI" | "TEN" | "TIEN_DO" | "TIEN";
 
 /** Dự án & hồ sơ: danh sách dự án (thẻ hoặc bảng) + chi tiết dự án đang chọn và bảng hộ, cá nhân, tổ chức. */
 export function ManDuAn({ duAnId: idVao }: { duAnId?: string }) {
-  const { dsDuAn, hoCua, di, chinhSach, quyen, dangTai, kho, luuDuAn } = useUngDung();
+  const { dsDuAn, hoCua, di, chinhSach, quyen, dangTai, kho, taiLai } = useUngDung();
   const homNay = homNayIso();
   const [timDa, setTimDa] = useState("");
   const [locDa, setLocDa] = useState<TrangThaiDuAn | "">("");
@@ -55,9 +55,8 @@ export function ManDuAn({ duAnId: idVao }: { duAnId?: string }) {
   const thieu = dsDuAn.filter((d) => thieuDuLieu(d).length);
   const napMau = async () => {
     const { duAn, ho } = taoDuAnMau();
-    await kho.luuDuAn(duAn);
-    for (const h of ho) await kho.luuHo(h);
-    await luuDuAn(duAn);
+    await kho.ghiLo({ duAn: [duAn], ho }); // một lô (P0-6); tải lại để có cả hồ sơ (P1-2: lưu dự án không tải lại)
+    await taiLai();
   };
 
   return (

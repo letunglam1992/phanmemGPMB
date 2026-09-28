@@ -1,4 +1,7 @@
+import { useEffect, useState } from "react";
 import { useUngDung } from "../ung-dung";
+import type { BanLichSu } from "../kho";
+import type { Ho } from "../mo-hinh";
 import { THOI_HAN_THUNG_RAC, duocXoaHan, soNgayTrongThungRac, type DauXoa } from "../rang-buoc";
 
 /**
@@ -79,6 +82,56 @@ export function ThungRac() {
           </tbody>
         </table>
       </div>
+      <TheDaXoaHan />
+    </div>
+  );
+}
+
+/** P1-5: hồ sơ đã xóa hẳn nhưng còn trong lịch sử (trong thời hạn giữ) — quản trị khôi phục được. */
+function TheDaXoaHan() {
+  const { kho, dsDuAn, quyen, khoiPhucLichSu, giuLichSu, thungRac } = useUngDung();
+  const [ds, setDs] = useState<(BanLichSu & { tenDuAn: string })[] | null>(null);
+  const [lan, setLan] = useState(0);
+  useEffect(() => {
+    let huy = false;
+    void Promise.all(dsDuAn.map(async (d) => (await kho.hoDaXoaHan(d.id)).map((x) => ({ ...x, tenDuAn: d.ten })))).then(
+      (r) => !huy && setDs(r.flat()),
+      () => !huy && setDs([]),
+    );
+    return () => {
+      huy = true;
+    };
+  }, [kho, dsDuAn, thungRac, lan]);
+  return (
+    <div className="the" style={{ marginTop: 14 }}>
+      <div className="the-dau">
+        <h3>Hồ sơ đã xóa hẳn (còn trong lịch sử)</h3>
+        <span className="mo chu-nho">Giữ {giuLichSu ? `${giuLichSu} năm` : "không thời hạn"}; chỉ Quản trị khôi phục, bắt buộc lý do</span>
+      </div>
+      <table className="bang">
+        <thead><tr><th>Mã</th><th>Họ tên</th><th>Dự án</th><th>Xóa hẳn lúc</th><th>Người xóa</th><th /></tr></thead>
+        <tbody>
+          {(ds ?? []).map((x) => {
+            const h = x.duLieu as Ho;
+            return (
+              <tr key={x.stt}>
+                <td>{h.ma}</td>
+                <td><b>{h.ten}</b></td>
+                <td className="chu-nho">{x.tenDuAn}</td>
+                <td className="chu-nho">{new Date(x.luuLuc).toLocaleString("vi-VN")}</td>
+                <td className="chu-nho">{x.luuBoi || "—"}</td>
+                <td>
+                  {quyen("KHOI_PHUC_BAN_GHI") && (
+                    <button className="nut nut-nho" onClick={async () => { const lyDo = prompt(`Khôi phục hồ sơ ${h.ma} – ${h.ten} đã xóa hẳn?\n\nLý do (bắt buộc):`)?.trim(); if (lyDo && (await khoiPhucLichSu(x.stt, lyDo))) setLan((n) => n + 1); }}>Khôi phục</button>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+          {ds !== null && !ds.length && <tr><td colSpan={6} className="trong">Không có.</td></tr>}
+          {ds === null && <tr><td colSpan={6} className="trong">Đang tải…</td></tr>}
+        </tbody>
+      </table>
     </div>
   );
 }

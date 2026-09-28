@@ -1,5 +1,6 @@
 import { useRef, Fragment, useEffect, useMemo, useState } from "react";
 import { TabCuon } from "../thanh-phan/TabCuon";
+import { LichSuHo } from "../thanh-phan/LichSuHo";
 import { kiemTraDuyetBuoc } from "../tai-khoan";
 import { hanCuaBuoc, tinhHanBuoc } from "../han-buoc";
 import { TT_GPMB, homNayIso, trangThaiHo, type TrangThaiGpmb } from "../trang-thai";
@@ -191,6 +192,7 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
               </table>
             </div>
           )}
+          {tab === "nhat-ky" && !daSua && goc && <LichSuHo h={goc} />}
           </RaoLoi>
           {kq.tong.soDongThieuCanCu + kq.tong.soDongCanXacNhan > 0 && tab !== "tinh" && (
             <div className="thong-bao thong-bao-vang" style={{ marginTop: 14 }}>

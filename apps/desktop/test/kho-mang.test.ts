@@ -23,10 +23,11 @@ describe("Kho qua máy chủ mạng nội bộ (phía máy trạm)", () => {
     const { gui, nhat } = giaLap((pt, dd, than) => {
       if (dd === "/api/dang-nhap") return { ma: 200, v: { token: "T1", nguoiDung: { ten: "canbo1" } } };
       if (pt === "GET" && dd === "/api/du-an") return { ma: 200, v: [{ duLieu: { id: "da1", ten: "A" }, phienBan: pb }] };
+      if (pt === "GET" && dd === "/api/pa") return { ma: 200, v: [] };
       if (pt === "PUT" && dd === "/api/du-an/da1") {
-        const t = than as { phienBanTruoc: number | null };
+        const t = than as { phienBanTruoc: number | null; duLieu: object };
         if (t.phienBanTruoc !== pb) return { ma: 409, v: { loi: 'Dữ liệu đã được "lanhdao" sửa' } };
-        return { ma: 200, v: { duLieu: {}, phienBan: ++pb } };
+        return { ma: 200, v: { duLieu: t.duLieu, phienBan: ++pb } };
       }
       return { ma: 404, v: { loi: "không có" } };
     });
@@ -43,6 +44,40 @@ describe("Kho qua máy chủ mạng nội bộ (phía máy trạm)", () => {
     expect((nhat.at(-1)!.than as { phienBanTruoc: number }).phienBanTruoc).toBe(2);
     pb = 9; // người khác vừa lưu
     await expect(k.luuDuAn({ ...d!, ten: "D" })).rejects.toMatchObject({ ma: 409, message: 'Dữ liệu đã được "lanhdao" sửa' });
+  });
+
+  it("P1-6: phương án là bản ghi riêng — chốt bản mới chỉ gửi bản đó; sửa dự án chỉ gửi lõi dự án; P1-2 trả bản ghi đã lưu", async () => {
+    const pa1 = { id: "p1", so: 1, trangThai: "DA_CHOT", ho: [] };
+    const { gui, nhat } = giaLap((pt, dd, than) => {
+      if (dd === "/api/dang-nhap") return { ma: 200, v: { token: "T", nguoiDung: {} } };
+      if (pt === "GET" && dd === "/api/du-an") return { ma: 200, v: [{ duLieu: { id: "da1", ten: "A" }, phienBan: 3 }] };
+      if (pt === "GET" && dd === "/api/pa") return { ma: 200, v: [{ duLieu: { id: "p1", duAnId: "da1", pa: pa1 }, phienBan: 1 }] };
+      if (pt === "POST" && dd === "/api/lo") {
+        const g = (than as { ghi: { loai: string; duLieu: { id: string } }[] }).ghi;
+        return { ma: 200, v: { phienBan: g.map((x) => ({ loai: x.loai, id: x.duLieu.id, phienBan: 2, duLieu: x.loai === "pa" ? { ...x.duLieu, pa: { ...(x.duLieu as unknown as { pa: object }).pa, daKy: true } } : x.duLieu })) } };
+      }
+      if (pt === "PUT" && dd === "/api/du-an/da1") return { ma: 200, v: { duLieu: { ...(than as { duLieu: object }).duLieu, guiBoi: "may-chu" }, phienBan: 4 } };
+      return { ma: 404, v: { loi: "không có" } };
+    });
+    const k = taoKhoMang({ diaChi: "a:1", vanTay: "v" }, gui);
+    await k.dangNhap("a", "b");
+    const [d] = await k.dsDuAn();
+    expect(d!.phuongAn).toEqual([pa1]);
+    const pa2 = { ...pa1, id: "p2", so: 2 } as unknown as NonNullable<typeof d>["phuongAn"] extends (infer T)[] | undefined ? T : never;
+    const moi = await k.luuDuAn({ ...d!, phuongAn: [...d!.phuongAn!, pa2] });
+    const lo = nhat.at(-1)!;
+    expect(lo.dd).toBe("/api/lo");
+    expect((lo.than as { ghi: { loai: string; duLieu: { id: string }; phienBanTruoc: number | null }[] }).ghi).toEqual([{ loai: "pa", duLieu: { id: "p2", duAnId: "da1", pa: pa2 }, phienBanTruoc: null }]);
+    expect(moi.phuongAn!.map((p) => p.id)).toEqual(["p1", "p2"]);
+    expect((moi.phuongAn![1] as unknown as { daKy: boolean }).daKy).toBe(true); // bản máy chủ trả về
+    const sua = await k.luuDuAn({ ...moi, ten: "Tên mới" });
+    expect(nhat.at(-1)).toMatchObject({ pt: "PUT", dd: "/api/du-an/da1", than: { phienBanTruoc: 3 } });
+    expect((nhat.at(-1)!.than as { duLieu: object }).duLieu).not.toHaveProperty("phuongAn");
+    expect(sua).toMatchObject({ ten: "Tên mới", guiBoi: "may-chu" });
+    expect(sua.phuongAn).toHaveLength(2);
+    const n = nhat.length;
+    expect(await k.luuDuAn(sua)).toBe(sua); // không đổi gì: không gửi
+    expect(nhat.length).toBe(n);
   });
 
   it("401 xóa phiên; 404 tệp trả null; mẫu văn bản đọc tên tệp từ meta; ghi nhật ký không gửi tên người", async () => {

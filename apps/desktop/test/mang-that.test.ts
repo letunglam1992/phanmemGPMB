@@ -79,7 +79,13 @@ describe.skipIf(!bien)("Nối thật máy trạm ↔ máy chủ Rust", () => {
     await k.luuHo({ ...hoLo[0]!, ten: "Sửa bởi k" }); // k2 giữ phiên bản cũ của lo-0
     await expect(k2.ghiLo({ ho: [{ ...hoLo[1]!, ten: "k2 sửa" }, { ...hoLo[0]!, ten: "k2 sửa" }] })).rejects.toThrow(/Hồ sơ L00/);
     expect((await k.dsHo(duAn.id)).find((h) => h.id === "lo-1")!.ten).toBe(hoLo[1]!.ten);
-    await k.ghiLo({ xoaHo: ["lo-0", "lo-1"] });
+    await expect(k.ghiLo({ xoaHo: ["lo-0", "lo-1"] })).rejects.toThrow(/XOA_HAN/); // P0-4: xóa hẳn chỉ quản trị, qua thùng rác
+    const trongThung = (await qt.dsHo(duAn.id)).filter((h) => h.id.startsWith("lo-")).map((h) => ({ ...h, daXoa: { luc: "2000-01-01T00:00:00.000Z", nguoi: "canbo1", lyDo: "thử" } }));
+    await qt.ghiLo({ ghiDe: true, ho: trongThung });
+    await qt.ghiLo({ xoaHo: ["lo-0", "lo-1"] });
+    // P1-5: hồ sơ xóa hẳn còn trong lịch sử; bản sửa trước đó cũng còn
+    expect((await k.hoDaXoaHan(duAn.id)).map((x) => x.id).sort()).toEqual(["lo-0", "lo-1"]);
+    expect((await k.lichSu("ho", "lo-0")).ds.some((x) => (x.duLieu as { ten: string }).ten === hoLo[0]!.ten)).toBe(true);
     await k.luuBanDo(duAn.id, new Uint8Array([8, 9, 10]));
     await expect(k.luuMau("05", new Uint8Array([1]), "mẫu.docx")).rejects.toThrow(/THAY_MAU/);
 
