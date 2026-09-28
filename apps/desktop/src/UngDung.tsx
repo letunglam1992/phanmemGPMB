@@ -7,6 +7,7 @@ import { HoSo } from "./man/HoSo";
 import { BanDo } from "./man/BanDo";
 import { TraCuu } from "./man/TraCuu";
 import { DocScan } from "./man/DocScan";
+import { BaoCao } from "./man/BaoCao";
 import { VanBan } from "./man/VanBan";
 import { HopSaoLuu } from "./thanh-phan/HopSaoLuu";
 import { HopDoiMatKhau, HopNhatKy, HopQuanLyTaiKhoan, ManDangNhap, ThongBaoNhanh } from "./thanh-phan/TaiKhoan";
@@ -44,6 +45,7 @@ export function UngDung() {
       muc: [
         { ten: "Tổng quan", bt: "tongQuan", chon: man.ten === "tong-quan", bam: () => di({ ten: "tong-quan" }) },
         { ten: "Dự án & hồ sơ", bt: "danhSach", chon: man.ten === "du-an" || man.ten === "ho", bam: () => duAnId && di({ ten: "du-an", duAnId }), tat: !duAnId },
+        { ten: "Báo cáo tổng hợp", bt: "baoCao", chon: man.ten === "bao-cao", bam: () => di({ ten: "bao-cao" }) },
         { ten: "Bản đồ", bt: "thua", chon: man.ten === "ban-do", bam: () => duAnId && di({ ten: "ban-do", duAnId }), tat: !duAnId },
       ],
     },
@@ -142,6 +144,7 @@ export function UngDung() {
         {man.ten === "ban-do" && <BanDo duAnId={man.duAnId} />}
         {man.ten === "tra-cuu" && <TraCuu />}
         {man.ten === "doc-scan" && <DocScan />}
+        {man.ten === "bao-cao" && <BaoCao />}
         {man.ten === "van-ban" && <VanBan key={`${man.duAnId}-${man.ma}-${man.hoId}`} duAnId={man.duAnId} maDau={man.ma} hoIdDau={man.hoId} />}
       </main>
       <footer className="chan">

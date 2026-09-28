@@ -12,6 +12,7 @@ import type { DuAn, Ho } from "./mo-hinh";
 import { tenTep } from "./ten-tep";
 import { tinhChiTra, type GiaiDoanTyLe } from "./chi-tra";
 import { TEN_COT, type CotTongHop, type KetQuaHo } from "./tinh-ho";
+import { TEN_TINH_TRANG, type BaoCao, type SoLieu } from "./bao-cao";
 
 const FONT = "Times New Roman";
 const so = (d: Decimal | null | undefined) => (d ? d.toDecimalPlaces(0).toNumber() : null);
@@ -395,4 +396,93 @@ export async function xuatExcelDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], ba
 
 export async function xuatExcelHo(duAn: DuAn, h: Ho, k: KetQuaHo) {
   await taiVe(await taoWorkbook(duAn, [{ h, k }]), `Phuong-an-chi-tiet_${tenAnToan(h.ma + " " + h.ten)}.xlsx`);
+}
+
+/** Báo cáo tổng hợp nhiều dự án: trang "Tổng hợp" (nhóm theo xã, cộng xã, tổng cộng) và "Vướng mắc". */
+export async function taoWorkbookBaoCao(bc: BaoCao, coQuan: string): Promise<ExcelJS.Workbook> {
+  const { default: Excel } = await import("exceljs");
+  const wb = new Excel.Workbook();
+  wb.creator = "GPMB Sơn La";
+  const ws = wb.addWorksheet("Tổng hợp", { pageSetup: { orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
+  const cot = ["TT", "Dự án / Xã", "Tình trạng", "Số hộ", "DT thu hồi (m²)", "Kinh phí tạm tính (đ)", "Số hộ đã duyệt PA", "Kinh phí đã duyệt (đ)", "Đã chi trả (đ)", "Còn phải chi (đ)", "Hộ hoàn thành GPMB", "Tỷ lệ hoàn thành", "Hộ vướng mắc", "Chặng hiện tại", "Cảnh báo cần xử lý"];
+  ws.columns = cot.map((_, i) => ({ width: [5, 42, 16, 8, 14, 18, 10, 18, 18, 18, 11, 10, 10, 26, 10][i] }));
+  const ngay = bc.loc.denNgay.split("-").reverse().join("/");
+  const tieuDe = (r: number, v: string, f: Partial<ExcelJS.Font>) => {
+    ws.mergeCells(r, 1, r, cot.length);
+    ws.getCell(r, 1).value = v;
+    ws.getCell(r, 1).font = { name: FONT, ...f };
+    ws.getCell(r, 1).alignment = { horizontal: "center", wrapText: true };
+  };
+  tieuDe(1, coQuan.toUpperCase(), { bold: true, size: 12 });
+  tieuDe(2, "BÁO CÁO TỔNG HỢP TÌNH HÌNH BỒI THƯỜNG, HỖ TRỢ, TÁI ĐỊNH CƯ CÁC DỰ ÁN", { bold: true, size: 13 });
+  tieuDe(3, `Số liệu tính đến ngày ${ngay}${bc.loc.xa ? ` — ${bc.loc.xa}` : ""}${bc.loc.tinhTrang ? ` — ${TEN_TINH_TRANG[bc.loc.tinhTrang]}` : ""}. Kinh phí tạm tính theo bảng tính hiện tại; kinh phí đã duyệt theo các bản phương án đã phê duyệt.`, { italic: true });
+  ws.getRow(3).height = 30;
+  const hd = ws.getRow(5);
+  hd.values = cot;
+  hd.font = { name: FONT, bold: true };
+  hd.alignment = { wrapText: true, vertical: "middle", horizontal: "center" };
+  hd.height = 48;
+  dongKe(hd, 1, cot.length);
+  const TIEN = [6, 8, 9, 10];
+  const soLieu = (x: SoLieu) => [x.soHo, x.dtThuHoi.toDecimalPlaces(2).toNumber(), so(x.tamTinh), x.soHoDaDuyet, so(x.daDuyet), so(x.daChi), so(x.conPhaiChi), x.theoTrangThai.HOAN_THANH, x.soHo ? x.theoTrangThai.HOAN_THANH / x.soHo : 0, x.theoTrangThai.VUONG_MAC];
+  const dinhDang = (row: ExcelJS.Row, dam = false) => {
+    row.font = { name: FONT, bold: dam };
+    row.alignment = { vertical: "top", wrapText: true };
+    for (const k of TIEN) row.getCell(k).numFmt = DINH_DANG_TIEN;
+    row.getCell(5).numFmt = "#,##0.00";
+    row.getCell(12).numFmt = "0%";
+    dongKe(row, 1, cot.length);
+  };
+  let r = 6;
+  let tt = 0;
+  for (const nhom of bc.theoXa) {
+    const rx = ws.getRow(r++);
+    rx.values = ["", nhom.xa];
+    rx.font = { name: FONT, bold: true, italic: true };
+    dongKe(rx, 1, cot.length);
+    for (const d of nhom.dong) {
+      const row = ws.getRow(r++);
+      const [soHo, dt, tamTinh, soHoDuyet, daDuyet, daChi, conPhaiChi, hoanThanh, tyLe, vuongMac] = soLieu(d);
+      row.values = [++tt, d.duAn.ten, TEN_TINH_TRANG[d.tinhTrang], soHo, dt, tamTinh, soHoDuyet, daDuyet, daChi, conPhaiChi, hoanThanh, tyLe, vuongMac, d.changHienTai, d.canhBaoCao];
+      dinhDang(row);
+    }
+    if (bc.theoXa.length > 1) {
+      const rc = ws.getRow(r++);
+      rc.values = ["", `Cộng ${nhom.xa.replace(/^Xã |^Phường /, (m) => m.toLowerCase())}`, "", ...soLieu(nhom.tong), "", nhom.tong.canhBaoCao];
+      dinhDang(rc, true);
+    }
+  }
+  const tg = ws.getRow(r++);
+  tg.values = ["", `TỔNG CỘNG (${bc.tong.soDuAn} dự án)`, "", ...soLieu(bc.tong), "", bc.tong.canhBaoCao];
+  dinhDang(tg, true);
+  r++;
+  const ghiChu = [
+    bc.tong.soHoChamTraThieuTyLe ? `Có ${bc.tong.soHoChamTraThieuTyLe} hộ chi trả quá hạn 30 ngày nhưng chưa nhập tỷ lệ tiền chậm nộp — chưa tính được tiền chậm trả (k3 Đ94 LĐĐ 2024).` : "",
+    bc.tong.chamTra.gt(0) ? `Tiền chậm trả tạm tính: ${bc.tong.chamTra.toDecimalPlaces(0).toNumber().toLocaleString("vi-VN")} đ (chưa phê duyệt).` : "",
+    "Tình trạng dự án: Hoàn thành GPMB = mọi hộ đã xác nhận chi trả (bước 12); Có vướng mắc = có hộ vướng mắc hoặc cảnh báo cần xử lý ngay.",
+  ].filter(Boolean);
+  for (const g of ghiChu) {
+    ws.mergeCells(r, 1, r, cot.length);
+    ws.getCell(r, 1).value = g;
+    ws.getCell(r++, 1).font = { name: FONT, italic: true, size: 10 };
+  }
+  ws.views = [{ state: "frozen", ySplit: 5, xSplit: 2 }];
+
+  const vm = wb.addWorksheet("Vướng mắc");
+  vm.columns = [{ width: 5 }, { width: 18 }, { width: 40 }, { width: 70 }, { width: 36 }];
+  const h2 = vm.getRow(1);
+  h2.values = ["TT", "Xã", "Dự án", "Nội dung cần xử lý ngay", "Căn cứ"];
+  h2.font = { name: FONT, bold: true };
+  dongKe(h2, 1, 5);
+  let i = 0;
+  for (const d of bc.dong)
+    for (const c of d.vuongMac) {
+      const row = vm.getRow(i + 2);
+      row.values = [++i, d.duAn.xa, d.duAn.ten, c.noiDung, c.canCu ?? ""];
+      row.font = { name: FONT };
+      row.alignment = { vertical: "top", wrapText: true };
+      dongKe(row, 1, 5);
+    }
+  if (!i) vm.getCell(2, 1).value = "Không có cảnh báo cần xử lý ngay.";
+  return wb;
 }

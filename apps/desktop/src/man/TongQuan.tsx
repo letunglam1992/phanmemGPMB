@@ -1,8 +1,7 @@
-import { TEN_CACH_LAM_TRON } from "../tinh-ho";
 import { useMemo, useState } from "react";
 import { D } from "@gpmb/core";
 import { useUngDung } from "../ung-dung";
-import { tinhHo } from "../tinh-ho";
+import { TEN_CACH_LAM_TRON, tinhHo } from "../tinh-ho";
 import { taoId, type DuAn } from "../mo-hinh";
 import { canhBaoSaoLuu } from "../sao-luu";
 import { CAC_CHANG, THU_TU_TRANG_THAI, TT_GPMB, canhBaoChung, canhBaoDuAn, homNayIso, thongKe, type TrangThaiGpmb } from "../trang-thai";
@@ -162,7 +161,7 @@ export function TongQuan() {
   );
 }
 
-function PhanBoTrangThaiGon({ dem, tong }: { dem: Record<TrangThaiGpmb, number>; tong: number }) {
+export function PhanBoTrangThaiGon({ dem, tong }: { dem: Record<TrangThaiGpmb, number>; tong: number }) {
   return (
     <div className="thanh-xep" style={{ height: 8, margin: "10px 0 6px" }} title={THU_TU_TRANG_THAI.map((t) => `${TT_GPMB[t].ten}: ${dem[t]}`).join(" · ")}>
       {tong === 0 && <span style={{ flex: 1, background: "var(--xam-nen)" }} />}

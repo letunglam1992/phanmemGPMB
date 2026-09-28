@@ -88,3 +88,8 @@ R4, R5 dựng từ 02 tệp người dùng gửi ngày 28/9/2026 bằng `tools/m
 - Văn bản xuất ra là **dự thảo**: cán bộ kiểm tra, chỉnh sửa trước khi trình ký.
 - Mẫu riêng R1–R3: kết luận thẩm định mặc định "Đủ điều kiện thu hồi đất…" chỉ là câu gợi ý — cán bộ thẩm định phải sửa theo kết quả thực tế. Tệp gốc chuyển từ .doc có một số lỗi cấu trúc (đánh số, kiểu đoạn) sẵn có; Word/LibreOffice mở bình thường.
 - Danh sách hỗ trợ bàn giao mặt bằng sớm (Mẫu 20, 21) chưa có dữ liệu tính trong phần mềm → bảng để trống điền tay.
+
+## Mẫu báo cáo tổng hợp các dự án
+
+`public/mau-van-ban/bao-cao-tong-hop.docx`, dựng bằng `tools/mau-van-ban/mau-bao-cao.cjs` (A4, lề trái 30 mm, Times New Roman 13 — NĐ 30/2020/NĐ-CP). Trường tự điền: cơ quan, số, ngày, phạm vi (xã), ngày tính số liệu, câu kết quả chung, bảng từng dự án (`{#du_an}`), tổng cộng, vướng mắc (`{#vuong_mac}`); trường cán bộ nhập: mở đầu, khó khăn khác, nhiệm vụ, kiến nghị, câu kết, nơi nhận, người ký.
+
