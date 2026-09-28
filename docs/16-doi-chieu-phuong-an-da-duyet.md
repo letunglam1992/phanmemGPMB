@@ -28,10 +28,12 @@ Hồ sơ do người dùng cung cấp ngày 28/9/2026: Tờ trình của Phòng 
 | Cây không có mật độ quy định trên thửa trồng xen (chuối, đu đủ, cỏ, dứa, rau ngót) | Phần mềm tự tính 100% (hồ sơ tính 30%) → chênh +24.791.200 đ | Dòng ở trạng thái **Cần xác nhận**, không cộng vào tổng; cán bộ chọn 100% hoặc 30% ở thẻ Thửa đất, **bắt buộc lý do** (VM-35) |
 | Cây đào: nhóm "Mơ, Đào, Mai anh đào (800 cây/ha), táo (625 cây/ha)" có hai mật độ nên danh mục để trống | Tính 100% (hồ sơ: 30%) → chênh +946.400 đ | Cùng xử lý VM-35; cán bộ nhập mật độ 800 ở thẻ Kiểm đếm thì dòng được xếp vào quỹ như hồ sơ |
 
-## 4. Điểm phần mềm chưa làm được
+## 4. Bổ sung sau quyết định QD-23
 
-- **B13 — đất nguồn gốc nông, lâm trường (k9 Đ6 QĐ 14/2026):** phần mềm đang ghi khoản đất là "Bồi thường về đất", cây là "Bồi thường cây trồng". Hồ sơ (PL II) xếp toàn bộ vào **hỗ trợ** theo điểm a mục 9.1. Số tiền trùng, nhưng tên khoản, căn cứ, trần hạn mức và điều kiện hỗ trợ ổn định đời sống khác (VM-37, VM-38). Đề xuất làm tiếp.
-- Mẫu Tờ trình và Quyết định phê duyệt phương án theo thể thức của xã: chưa đưa vào danh mục mẫu riêng.
+- **B13 — đất nguồn gốc nông, lâm trường (k9 Đ6 QĐ 14/2026):** đã làm. Cán bộ chọn trường hợp cho từng thửa (9.1.a/b/c, 9.2.a/b) và ghi hồ sơ xác nhận nguồn gốc. Chạy lại hồ sơ đối chiếu với trường hợp 9.1.a: khoản đất 641.628.000 đ chuyển sang **Hỗ trợ về đất**, cây trồng 1.413.166.700 đ sang **Hỗ trợ cây trồng**, kèm căn cứ điểm a mục 9.1; số tiền không đổi. Dòng "Hỗ trợ ổn định đời sống" ở trạng thái Cần xác nhận cho đến khi nhập DT đất NN đang sử dụng (VM-38).
+- 9.1.b, 9.1.c (có nhà ở, đất ở, khấu trừ nghĩa vụ tài chính): phần mềm **chưa tính tự động** — dòng Cần xác nhận, cán bộ tính và nhập kèm căn cứ.
+- Làm tròn: chọn "Không làm tròn" ở thông tin dự án thì tổng khớp hồ sơ (3.979.678.700 đ) — VM-36.
+- Mẫu Tờ trình, QĐ phê duyệt phương án của xã: đang làm.
 
 ## 5. Nội dung văn bản cần xem lại (để người dùng cân nhắc — phần mềm không sửa hồ sơ)
 

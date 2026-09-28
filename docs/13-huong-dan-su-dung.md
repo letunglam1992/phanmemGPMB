@@ -39,3 +39,5 @@ Quá hạn kế hoạch; bước quá hạn theo luật (thẩm định 30 ngày
 - Làm việc qua mạng nội bộ: nếu thấy thông báo "Dữ liệu đã được … sửa", phần mềm đã tải bản mới nhất; bản đang nhập của anh/chị vẫn còn trên màn hình để nhập lại rồi lưu.
 - Tra cứu đơn giá, giá đất: menu **Tra cứu đơn giá, giá đất**.
 - Thửa trồng xen có cây tính theo mật độ và cây không có mật độ quy định (chuối, đu đủ, hoa màu tính m², loài chưa có mật độ như đào, táo): các dòng đó ở trạng thái "Cần xác nhận" cho đến khi chọn tính 100% hay 30% ở thẻ **Thửa đất** kèm lý do (VM-35). Với loài có mật độ nhưng danh mục để trống, nhập mật độ ở thẻ **Kiểm đếm** để xếp vào quỹ mật độ.
+- **Đất nguồn gốc nông, lâm trường (B13):** Hồ sơ → Thửa đất → nút ⋯ của thửa → chọn trường hợp theo k9 Đ6 QĐ 14/2026 và ghi hồ sơ xác nhận nguồn gốc. Khoản đất, cây trồng chuyển sang phần Hỗ trợ; cần nhập DT đất NN đang sử dụng ở thẻ Hỗ trợ để xác định hỗ trợ ổn định đời sống. Trường hợp 9.1.b, 9.1.c chưa tính tự động.
+- **Làm tròn tổng tiền hộ:** mặc định làm tròn lên đến 1.000 đ (QD-03); đổi ở Thông tin dự án (nửa lên, xuống, không làm tròn) kèm lý do.

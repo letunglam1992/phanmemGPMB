@@ -34,10 +34,11 @@ const THUA_2: L[] = [
   ["Xoan 4 năm-khép tán", 8, 47000, 1600], ["Lát 4 năm-khép tán", 3, 76000, 1600],
 ];
 
-function dung(p: { chonKhongMatDo?: "TINH_100" | "TINH_30"; matDoDao?: number }) {
+function dung(p: { chonKhongMatDo?: "TINH_100" | "TINH_30"; matDoDao?: number; b13?: boolean; hoSo?: string; onDinh?: Ho["hoTro"]["onDinh"] }) {
   const { duAn } = taoDuAnMau();
   const a = taoId(), b = taoId();
   const gia = { giaNghinDong: "54", nguon: "NQ 152/2025 Bảng 02, STT 45, Xã Chiềng Mung, CLN" };
+  const nlt = p.b13 ? { truongHop: "9.1.a" as const, hoSo: p.hoSo ?? "Hợp đồng giao khoán; QĐ thu hồi đất của UBND tỉnh" } : undefined;
   const cayXen = { dienTichTru: "0", lyDoTru: "", cachXep: "DUNG_KHI_VUOT" as const, khongMatDo: p.chonKhongMatDo, lyDoKhongMatDo: p.chonKhongMatDo ? "Theo phương án đã duyệt" : "" };
   const mk = (thuaId: string, l: L[]): TaiSan[] =>
     l.map(([ten, sl, dg, md, dv]) => {
@@ -46,16 +47,16 @@ function dung(p: { chonKhongMatDo?: "TINH_100" | "TINH_30"; matDoDao?: number })
     });
   const ho: Ho = {
     id: taoId(), duAnId: duAn.id, ma: "DC1", loai: "CA_NHAN", ten: "Đối tượng đối chiếu", diaChi: "", soDinhDanh: "", dienThoai: "",
-    nhanKhau: [],
+    nhanKhau: [{ id: "nk1", hoTen: "Đối tượng đối chiếu", quanHe: "Chủ hộ" }],
     thua: [
-      { id: a, soTo: "", soThua: "1", loaiDat: "CLN", dienTich: "6358.8", dienTichThuHoi: "6358.8", nguonGoc: "Nông trường", gia, cayXen },
-      { id: b, soTo: "", soThua: "2", loaiDat: "CLN", dienTich: "5523.2", dienTichThuHoi: "5523.2", nguonGoc: "Nông trường", gia, cayXen },
+      { id: a, soTo: "", soThua: "1", loaiDat: "CLN", dienTich: "6358.8", dienTichThuHoi: "6358.8", nguonGoc: "Nông trường", gia, cayXen, nongLamTruong: nlt },
+      { id: b, soTo: "", soThua: "2", loaiDat: "CLN", dienTich: "5523.2", dienTichThuHoi: "5523.2", nguonGoc: "Nông trường", gia, cayXen, nongLamTruong: nlt },
     ] as Ho["thua"],
     taiSan: [...mk(a, THUA_1), ...mk(b, THUA_2)],
-    hoTro: { chuyenDoiNghe: true },
+    hoTro: { chuyenDoiNghe: true, ...(p.onDinh ? { onDinh: p.onDinh } : {}) },
     khauTru: "0", tienDo: {} as Ho["tienDo"], nhatKy: [],
   };
-  return tinhHo(cs, duAn, ho);
+  return tinhHo(cs, { ...duAn, giaGao: { dongKg: "15000", nguon: "Giá gạo mẫu" } }, ho);
 }
 
 describe("Đối chiếu phương án đã phê duyệt (ẩn danh)", () => {
@@ -93,5 +94,35 @@ describe("VM-36: cách làm tròn do dự án chọn", () => {
     expect(tinhHo(cs, { ...duAn, lamTron: { cach: "XUONG", lyDo: "x" } }, h).tong.tongLamTron.toString()).toBe(t.div(1000).floor().mul(1000).toString());
     expect(tinhHo(cs, { ...duAn, lamTron: { cach: "KHONG", lyDo: " " } }, h).tong.tongLamTron.eq(goc.tong.tongLamTron)).toBe(true);
     expect(tinhHo(cs, { ...duAn, lamTron: { cach: "KHONG", lyDo: "Theo PA" } }, h).moTaLamTron).toContain("VM-36");
+  });
+});
+
+describe("B13: đất nguồn gốc nông, lâm trường (điểm a mục 9.1 k9 Đ6 QĐ 14/2026)", () => {
+  it("khoản đất, cây trồng chuyển sang hỗ trợ; số tiền như phương án đã duyệt; ổn định đời sống phải xác định (VM-38)", () => {
+    const kq = dung({ chonKhongMatDo: "TINH_30", matDoDao: 800, b13: true });
+    expect(kq.theoCot.BT_DAT.toString()).toBe("0");
+    expect(kq.theoCot.BT_CAY.toString()).toBe("0");
+    expect(kq.theoCot.HT_DAT.toString()).toBe("641628000");
+    expect(kq.theoCot.HT_CAY.toString()).toBe("1413166700");
+    expect(kq.theoCot.HT_CDN.toString()).toBe("1924884000");
+    const dat = kq.nhom.find((n) => n.ma === "B.I")!.dong[0]!.dong;
+    expect(dat.noiDung).toContain("Hỗ trợ về đất");
+    expect(dat.canCu.map((c) => c.viTri)).toContain("điểm a mục 9.1 khoản 9 Điều 6");
+    const od = kq.nhom.find((n) => n.ma === "B.V")!.dong.map((x) => x.dong);
+    expect(od.some((d) => d.trangThai === "CAN_XAC_NHAN" && d.canhBao.join().includes("VM-38"))).toBe(true);
+    expect(kq.tong.duocChot).toBe(false);
+  });
+
+  it("thiếu hồ sơ nguồn gốc → khoản đất cần xác nhận (VM-37)", () => {
+    const kq = dung({ chonKhongMatDo: "TINH_30", matDoDao: 800, b13: true, hoSo: " " });
+    expect(kq.nhom.find((n) => n.ma === "B.I")!.dong.every((x) => x.dong.trangThai === "CAN_XAC_NHAN")).toBe(true);
+  });
+
+  it("đã nhập DT đất NN đang sử dụng → tính theo tỷ lệ, không còn dòng nhắc VM-38", () => {
+    const kq = dung({ chonKhongMatDo: "TINH_30", matDoDao: 800, b13: true, onDinh: { dienTichNNDangSuDung: "200000", diChuyen: "KHONG_DI_CHUYEN" } });
+    const od = kq.nhom.find((n) => n.ma === "B.V")!.dong.map((x) => x.dong);
+    expect(od.some((d) => d.canhBao.join().includes("VM-38"))).toBe(false);
+    // 11.882 / 200.000 = 5,94% < 10% → không hỗ trợ
+    expect(od.map((d) => [d.trangThai, String(d.thanhTien)])).toEqual([["TAM_TINH", "0"]]);
   });
 });

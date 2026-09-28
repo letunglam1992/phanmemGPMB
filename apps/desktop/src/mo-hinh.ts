@@ -63,6 +63,11 @@ export interface Thua {
     khongMatDo?: "TINH_100" | "TINH_30";
     lyDoKhongMatDo?: string;
   };
+  /**
+   * B13: thửa có nguồn gốc nông, lâm trường — cán bộ chọn trường hợp theo k9 Đ6 QĐ 14/2026 và ghi hồ sơ
+   * xác nhận nguồn gốc (VM-37). Phần mềm không tự suy ra trường hợp.
+   */
+  nongLamTruong?: { truongHop: import("@gpmb/core").MaNongLamTruong; hoSo: string };
   ghiChu?: string;
 }
 

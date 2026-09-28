@@ -2,6 +2,8 @@ import type { CanCu } from "./types";
 import type { KhoangThoiGian } from "./moc-thoi-gian";
 import type { CachLamTron } from "./so";
 
+export type MaNongLamTruong = "9.1.a" | "9.1.b" | "9.1.c" | "9.2.a" | "9.2.b";
+
 /** Bộ chính sách: toàn bộ tham số có căn cứ, tách khỏi mã nguồn (P1, P2 – docs/00). */
 export interface BoChinhSach {
   ma: string;
@@ -20,6 +22,22 @@ export interface BoChinhSach {
     donGia: Record<LoaiDuong, Record<LoaiVatNuoi, { donVi: "tấn" | "kg"; den5km: string; tren5km: string }>>;
   };
   cayTrong: { tyLeVuotMatDo: string; tyLePhanVuot: string; tyLeTreTrucBuiToiDa: string; canCu: CanCu[] };
+  /** B13 – đất nguồn gốc nông, lâm trường (k9 Đ6 QĐ 14/2026). Không có → bộ chính sách không hỗ trợ B13. */
+  nongLamTruong?: {
+    ghiChu: string;
+    truongHop: Record<
+      MaNongLamTruong,
+      {
+        ten: string;
+        /** Số lần giá đất NN theo bảng giá; null = chưa tính tự động (cán bộ nhập). */
+        datLan: string | null;
+        tenKhoanDat: string;
+        /** HO_TRO_100: cây trồng hỗ trợ 100% đơn giá bồi thường; THEO_BOI_THUONG: văn bản không quy định riêng. */
+        cayTrong: "HO_TRO_100" | "THEO_BOI_THUONG";
+        canCu: CanCu[];
+      }
+    >;
+  };
   moMa: { canCu: CanCu[]; mucXay: string; mucKhongXay: string };
   onDinhDoiSong: {
     kgGaoNhanKhauThang: string;

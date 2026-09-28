@@ -4,6 +4,7 @@
  * Không chứa quy tắc pháp lý riêng — mọi mức, hệ số lấy từ bộ chính sách.
  */
 import {
+  lamTronDienTich,
   boiThuongDat,
   cayTrong,
   cayTrongXenCanh,
@@ -117,6 +118,56 @@ function dongDat(duAn: DuAn, t: Thua): DongTinh {
   return d;
 }
 
+/**
+ * B13 – thửa nguồn gốc nông, lâm trường (k9 Đ6 QĐ 14/2026). Trả về khoản hỗ trợ về đất theo trường hợp cán bộ chọn;
+ * null khi thửa không thuộc B13 (tính như thường).
+ */
+function nongLamTruong(cs: BoChinhSach, duAn: DuAn, t: Thua): { ma: string; dat: DongTinh; bieu?: DongBieu[]; cayHoTro: boolean; canCu: DongTinh["canCu"] } | null {
+  if (!t.nongLamTruong) return null;
+  const ma = t.nongLamTruong.truongHop;
+  const nd = `${t.loaiDat} (${nhanThua(t)})`;
+  const th = cs.nongLamTruong?.truongHop[ma];
+  if (!th) {
+    return { ma, dat: thieu("B13", `Hỗ trợ về đất nguồn gốc nông, lâm trường – ${nd}`, `Bộ chính sách ${cs.ma} không có quy định trường hợp ${ma}`, "QĐ 14/2026/QĐ-UBND"), cayHoTro: false, canCu: [] };
+  }
+  const canCu = th.canCu;
+  const cayHoTro = th.cayTrong === "HO_TRO_100";
+  const canhBaoHoSo = t.nongLamTruong.hoSo.trim() ? [] : ["Chưa ghi hồ sơ xác nhận nguồn gốc đất (hợp đồng giao khoán, xác nhận của công ty, quyết định thu hồi…) — VM-37"];
+  const noiDung = `${th.tenKhoanDat} – ${nd}`;
+  if (!th.datLan) {
+    return {
+      ma, cayHoTro, canCu,
+      dat: dong({ ma: "B13", noiDung, congThuc: "Chưa tính tự động: đất ở trong hạn mức theo giá đất ở, phần còn lại theo giá đất NN, khấu trừ nghĩa vụ tài chính", thanhTien: null, canCu, trangThai: "CAN_XAC_NHAN", canhBao: ["Trường hợp " + ma + ": cán bộ tính và nhập khoản hỗ trợ ở thẻ Kiểm đếm (tài sản khác, phần Hỗ trợ) kèm căn cứ", ...canhBaoHoSo] }),
+    };
+  }
+  if (!t.gia) return { ma, cayHoTro, canCu, dat: thieu("B13", noiDung, "Chưa chọn giá đất nông nghiệp từ bảng giá", "NQ 152/2025/NQ-HĐND") };
+  if (!duAn.hanMucNN) return { ma, cayHoTro, canCu, dat: thieu("B13", noiDung, "Chưa nhập hạn mức đất nông nghiệp của dự án — diện tích tính hỗ trợ không vượt hạn mức công nhận cùng loại") };
+  const dt = lamTronDienTich(t.dienTichThuHoi || "0");
+  const han = D(duAn.hanMucNN.m2);
+  const dtTinh = dt.lt(han) ? dt : han;
+  const gia = D(t.gia.giaNghinDong).mul(1000);
+  const lan = D(th.datLan);
+  const dat = dong({
+    ma: "B13",
+    noiDung,
+    thamSo: {
+      "Trường hợp": `${ma} — ${th.ten}`,
+      "DT thu hồi": `${dinhDang(dt, 2)} m²`,
+      "Hạn mức công nhận đất NN cùng loại": `${dinhDang(han, 2)} m² (${duAn.hanMucNN.canCu || "chưa ghi căn cứ"})`,
+      "DT tính hỗ trợ": `${dinhDang(dtTinh, 2)} m²`,
+      "Giá đất NN theo bảng giá": `${dinhDang(gia)} đ/m² (${t.gia.nguon})`,
+      "Số lần giá đất": dinhDang(lan, 2),
+      "Hồ sơ nguồn gốc": t.nongLamTruong.hoSo || "chưa ghi",
+    },
+    congThuc: "DT tính hỗ trợ (≤ hạn mức) × Giá đất NN theo bảng giá × Số lần",
+    thanhTien: dtTinh.mul(gia).mul(lan),
+    canCu: [...canCu, { vanBan: "NQ 152/2025/NQ-HĐND", viTri: t.gia.nguon }],
+    trangThai: canhBaoHoSo.length ? "CAN_XAC_NHAN" : "TAM_TINH",
+    canhBao: [...canhBaoHoSo, ...(dt.gt(han) ? [`DT thu hồi vượt hạn mức: phần ${dinhDang(dt.minus(han), 2)} m² không tính hỗ trợ`] : []), ...(duAn.heSoGiaDat && !D(duAn.heSoGiaDat.heSo).eq(1) ? ["Văn bản quy định theo bảng giá đất: không nhân hệ số điều chỉnh giá đất của dự án"] : [])],
+  });
+  return { ma, cayHoTro, canCu, dat, bieu: [{ dvt: "m²", kl: dtTinh, heSo: lan, donGia: gia }] };
+}
+
 function dongNhaCongTrinh(cs: BoChinhSach, ts: Extract<TaiSan, { loai: "NHA_CT" }>): DongTinh {
   const kl = soLuong(ts, ts.khoiLuong, "A03");
   if (kl.loi) return kl.loi;
@@ -225,14 +276,19 @@ export function tinhHo(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
     { ma: "A.I", ten: "Bồi thường về đất", dong: [] },
     { ma: "A.II", ten: "Bồi thường nhà, công trình, vật kiến trúc", dong: [] },
     { ma: "A.III", ten: "Bồi thường cây trồng, vật nuôi", dong: [] },
+    { ma: "B.I", ten: "Hỗ trợ về đất", dong: [] },
     { ma: "B.II", ten: "Hỗ trợ tài sản, vật kiến trúc", dong: [] },
+    { ma: "B.III", ten: "Hỗ trợ cây trồng", dong: [] },
     { ma: "B.IV", ten: "Hỗ trợ đào tạo, chuyển đổi nghề và tìm kiếm việc làm", dong: [] },
     { ma: "B.V", ten: "Hỗ trợ ổn định đời sống, tạm cư, di dời", dong: [] },
   ];
   const n = (ma: string) => nhom.find((x) => x.ma === ma)!;
 
   for (const t of ho.thua) {
-    if (D(t.dienTichThuHoi || "0").gt(0)) {
+    const b13 = nongLamTruong(cs, duAn, t);
+    if (b13 && D(t.dienTichThuHoi || "0").gt(0)) {
+      n("B.I").dong.push({ dong: b13.dat, bieu: b13.bieu, cot: "HT_DAT", thuaId: t.id });
+    } else if (D(t.dienTichThuHoi || "0").gt(0)) {
       const hs = duAn.heSoGiaDat && !D(duAn.heSoGiaDat.heSo).eq(1) ? { heSo: duAn.heSoGiaDat.heSo, vanBan: duAn.heSoGiaDat.vanBan } : undefined;
       if (t.phanLop && t.phanLop.lop.length) {
         const pl = t.phanLop;
@@ -273,8 +329,9 @@ export function tinhHo(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
         const bieu = kl && d.thanhTien
           ? [{ dvt: ts.donVi, kl: kl.toDecimalPlaces(2), heSo: ts.cachTinh === "HE_SO" ? D(ts.heSo || "1") : null, donGia: D(ts.donGia || "0"), ghiChu: ts.cachTinh === "THIET_HAI_THUC_TE" ? "Thiệt hại thực tế (T, T1)" : undefined }]
           : undefined;
-        if (ts.phan === "BOI_THUONG") n("A.II").dong.push({ dong: d, bieu, cot: "BT_TAI_SAN", thuaId: t.id, taiSanId: ts.id });
-        else n("B.II").dong.push({ dong: d, bieu, cot: "HT_TAI_SAN", thuaId: t.id, taiSanId: ts.id });
+        const dNha = b13 && b13.ma.startsWith("9.1") ? { ...d, canhBao: [...d.canhBao, `Thửa nguồn gốc nông, lâm trường (${b13.ma}): nhà, công trình phục vụ sản xuất nông nghiệp hỗ trợ 100% mức bồi thường; không phục vụ sản xuất nông nghiệp hỗ trợ theo điểm 3.2 k3 Đ6 QĐ 14/2026 — kiểm tra lựa chọn "Bồi thường/Hỗ trợ"`] } : d;
+        if (ts.phan === "BOI_THUONG") n("A.II").dong.push({ dong: dNha, bieu, cot: "BT_TAI_SAN", thuaId: t.id, taiSanId: ts.id });
+        else n("B.II").dong.push({ dong: dNha, bieu, cot: "HT_TAI_SAN", thuaId: t.id, taiSanId: ts.id });
       } else if (ts.loai === "KHAC") {
         const kl = soLuong(ts, ts.khoiLuong, "A03");
         const d =
@@ -303,7 +360,18 @@ export function tinhHo(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
       }
     }
     const cay = tsThua.filter((x): x is Extract<TaiSan, { loai: "CAY" }> => x.loai === "CAY");
-    if (cay.length) n("A.III").dong.push(...dongCayThua(cs, t, cay));
+    if (cay.length) {
+      const ds = dongCayThua(cs, t, cay);
+      if (b13?.cayHoTro)
+        n("B.III").dong.push(
+          ...ds.map((x) => ({
+            ...x,
+            cot: "HT_CAY" as const,
+            dong: { ...x.dong, noiDung: x.dong.noiDung.replace(/^Cây trồng/, "Hỗ trợ cây trồng"), canCu: [...b13.canCu, ...x.dong.canCu] },
+          })),
+        );
+      else n("A.III").dong.push(...ds);
+    }
 
     if (ho.hoTro.chuyenDoiNghe && laDatNN(t.loaiDat) && D(t.dienTichThuHoi || "0").gt(0)) {
       let d: DongTinh;
@@ -325,6 +393,7 @@ export function tinhHo(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
         const gia = D(t.gia.giaNghinDong).mul(1000);
         bieu = [{ dvt: "m²", kl: dtTinh, heSo: d.thanhTien.div(dtTinh.mul(gia)), donGia: gia }];
       }
+      if (b13) d = { ...d, canCu: [...d.canCu, ...b13.canCu] };
       n("B.IV").dong.push({ dong: d, bieu, cot: "HT_CDN", thuaId: t.id });
     }
   }
@@ -333,6 +402,22 @@ export function tinhHo(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
     n("A.II").dong.push({ dong: moMa(cs, { soMoXay: ho.hoTro.moMa.xay, soMoKhongXay: ho.hoTro.moMa.khongXay }), cot: "BT_TAI_SAN" });
 
   const od = ho.hoTro.onDinh;
+  const thuaB13 = ho.thua.filter((t) => t.nongLamTruong && D(t.dienTichThuHoi || "0").gt(0));
+  if (!od && thuaB13.length && cs.nongLamTruong) {
+    // VM-38: k9 Đ6 QĐ 14/2026 có hỗ trợ ổn định đời sống theo tỷ lệ đất NN bị thu hồi — phải xác định, không bỏ qua im lặng.
+    n("B.V").dong.push({
+      dong: dong({
+        ma: "C01",
+        noiDung: "Hỗ trợ ổn định đời sống (đất nguồn gốc nông, lâm trường)",
+        congThuc: "Theo tỷ lệ DT đất NN thu hồi / DT đất NN đang sử dụng",
+        thanhTien: null,
+        canCu: [...new Map(thuaB13.flatMap((t) => cs.nongLamTruong!.truongHop[t.nongLamTruong!.truongHop].canCu).map((c) => [c.viTri, c])).values(), ...cs.onDinhDoiSong.canCu],
+        trangThai: "CAN_XAC_NHAN",
+        canhBao: ["Chưa nhập DT đất NN đang sử dụng ở thẻ Hỗ trợ để xác định tỷ lệ thu hồi (dưới 10% thì không hỗ trợ) — VM-38"],
+      }),
+      cot: "HT_KHAC",
+    });
+  }
   if (od) {
     const dtNN = ho.thua.filter((t) => laDatNN(t.loaiDat)).reduce((s, t) => s.plus(t.dienTichThuHoi || "0"), D(0));
     let d: DongTinh;

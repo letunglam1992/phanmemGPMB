@@ -91,6 +91,22 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
                           </div>
                           <div className="mo chu-nho" style={{ marginTop: 4 }}>DT không có trong GCN = DT thu hồi − DT thu hồi có GCN (tự tính).</div>
                         </div>
+                        {cs.nongLamTruong && (
+                          <div style={{ marginBottom: 12, paddingBottom: 12, borderBottom: "1px solid var(--vien)" }}>
+                            <div className="luoi" style={{ gridTemplateColumns: "minmax(260px, 1.2fr) 1fr", alignItems: "end" }}>
+                              <div className="o-nhap"><label>Đất nguồn gốc nông, lâm trường (B13 — k9 Đ6 QĐ 14/2026)</label>
+                                <select value={t.nongLamTruong?.truongHop ?? ""} onChange={(e) => sua(t.id, { nongLamTruong: e.target.value ? { truongHop: e.target.value as NonNullable<typeof t.nongLamTruong>["truongHop"], hoSo: t.nongLamTruong?.hoSo ?? "" } : undefined })}>
+                                  <option value="">Không (tính bồi thường như thường)</option>
+                                  {Object.entries(cs.nongLamTruong.truongHop).map(([ma, th]) => <option key={ma} value={ma}>{ma} — {th.ten}</option>)}
+                                </select>
+                              </div>
+                              <div className="o-nhap"><label>Hồ sơ xác nhận nguồn gốc (bắt buộc)</label>
+                                <input disabled={!t.nongLamTruong} placeholder="Hợp đồng giao khoán, xác nhận của công ty, QĐ thu hồi của UBND tỉnh…" value={t.nongLamTruong?.hoSo ?? ""} onChange={(e) => sua(t.id, { nongLamTruong: { truongHop: t.nongLamTruong!.truongHop, hoSo: e.target.value } })} />
+                              </div>
+                            </div>
+                            {t.nongLamTruong && <div className="mo chu-nho" style={{ marginTop: 4 }}>{cs.nongLamTruong.truongHop[t.nongLamTruong.truongHop].tenKhoanDat}; {cs.nongLamTruong.truongHop[t.nongLamTruong.truongHop].cayTrong === "HO_TRO_100" ? "cây trồng hỗ trợ 100% đơn giá bồi thường" : "cây trồng tính như bồi thường (văn bản không quy định riêng)"}; hỗ trợ ổn định đời sống, chuyển đổi nghề nhập ở thẻ Hỗ trợ. Phần mềm không tự xác định trường hợp.</div>}
+                          </div>
+                        )}
                         {(t.phanLop || !laDatNN(t.loaiDat)) && (
                           <div style={{ marginBottom: 12, paddingBottom: 12, borderBottom: "1px solid var(--vien)" }}>
                             <PhanLop t={t} cs={cs} sua={(p) => sua(t.id, p)} moChonTuyen={() => setChonTuyen(t.id)} />

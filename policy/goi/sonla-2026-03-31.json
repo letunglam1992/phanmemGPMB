@@ -470,5 +470,70 @@
       "heSo": "1.5",
       "canCu": "khoản 1 Điều 6"
     }
+  },
+  "nongLamTruong": {
+    "ghiChu": "Hỗ trợ đối với hộ gia đình, cá nhân đang sử dụng đất có nguồn gốc từ các nông, lâm trường quốc doanh (khoản 9 Điều 6 QĐ 14/2026, quy định tại khoản 12 Điều 3 NQ 254/2025/QH15)",
+    "truongHop": {
+      "9.1.a": {
+        "ten": "Đất NN giao, giao khoán, khoán trắng, thuê, mượn của nông, lâm trường trước 01/02/2015 (UBND tỉnh đã thu hồi, bàn giao cho cấp huyện/xã quản lý)",
+        "datLan": "1",
+        "tenKhoanDat": "Hỗ trợ về đất (01 lần giá đất nông nghiệp theo bảng giá)",
+        "cayTrong": "HO_TRO_100",
+        "canCu": [
+          {
+            "vanBan": "QĐ 14/2026/QĐ-UBND",
+            "viTri": "điểm a mục 9.1 khoản 9 Điều 6"
+          }
+        ]
+      },
+      "9.1.b": {
+        "ten": "Đất sử dụng trước 15/10/1993, tự ý làm nhà ở, tại thời điểm thu hồi có nhà ở",
+        "datLan": null,
+        "tenKhoanDat": "Hỗ trợ về đất (đất ở trong hạn mức, phần còn lại theo giá đất NN; khấu trừ nghĩa vụ tài chính)",
+        "cayTrong": "HO_TRO_100",
+        "canCu": [
+          {
+            "vanBan": "QĐ 14/2026/QĐ-UBND",
+            "viTri": "điểm b mục 9.1 khoản 9 Điều 6"
+          }
+        ]
+      },
+      "9.1.c": {
+        "ten": "Đất sử dụng từ 15/10/1993 đến trước 01/7/2014, tại thời điểm thu hồi có nhà ở",
+        "datLan": null,
+        "tenKhoanDat": "Hỗ trợ về đất (đất ở trong hạn mức giao đất ở, phần còn lại theo giá đất NN; khấu trừ nghĩa vụ tài chính)",
+        "cayTrong": "HO_TRO_100",
+        "canCu": [
+          {
+            "vanBan": "QĐ 14/2026/QĐ-UBND",
+            "viTri": "điểm c mục 9.1 khoản 9 Điều 6"
+          }
+        ]
+      },
+      "9.2.a": {
+        "ten": "Diện tích công ty nông, lâm nghiệp đang thuê; hộ có hợp đồng giao khoán trước đây, nay chuyển sang hợp đồng hợp tác",
+        "datLan": "1",
+        "tenKhoanDat": "Hỗ trợ chi phí đầu tư vào đất còn lại (01 lần giá đất nông nghiệp theo bảng giá)",
+        "cayTrong": "THEO_BOI_THUONG",
+        "canCu": [
+          {
+            "vanBan": "QĐ 14/2026/QĐ-UBND",
+            "viTri": "điểm a mục 9.2 khoản 9 Điều 6"
+          }
+        ]
+      },
+      "9.2.b": {
+        "ten": "Diện tích công ty nông, lâm nghiệp đang thuê; không có hợp đồng giao khoán nhưng trực tiếp sản xuất, công ty xác nhận không sử dụng → hỗ trợ theo mục 9.1",
+        "datLan": "1",
+        "tenKhoanDat": "Hỗ trợ về đất (01 lần giá đất nông nghiệp theo bảng giá — theo mục 9.1)",
+        "cayTrong": "HO_TRO_100",
+        "canCu": [
+          {
+            "vanBan": "QĐ 14/2026/QĐ-UBND",
+            "viTri": "điểm b mục 9.2 khoản 9 Điều 6 (dẫn chiếu mục 9.1)"
+          }
+        ]
+      }
+    }
   }
 }
