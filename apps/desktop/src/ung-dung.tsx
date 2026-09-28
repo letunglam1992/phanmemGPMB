@@ -310,20 +310,17 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
     },
     luuNhieuHo: async (ds) => {
       if (chan("SUA_HO_SO")) return { daLuu: 0, loi: ["Tài khoản không có quyền sửa hồ sơ"] };
+      // Nguyên tử (P0-6, QD: cập nhật hàng loạt hủy cả lô khi có hộ bị người khác sửa cùng lúc)
       const luc = new Date().toISOString();
-      let daLuu = 0;
-      const loi: string[] = [];
-      for (const { h, nhatKy } of ds) {
-        try {
-          await kho.luuHo({ ...h, nhatKy: [...h.nhatKy, { luc, nguoi: nguoiDung, noiDung: nhatKy }] });
-          daLuu++;
-        } catch (e) {
-          loi.push(`${h.ma}: ${(e as Error).message}`);
-          if (e instanceof LoiMayChu && e.ma === 401) { setTaiKhoan(null); break; }
-        }
+      try {
+        await kho.ghiLo({ ho: ds.map(({ h, nhatKy }) => ({ ...h, nhatKy: [...h.nhatKy, { luc, nguoi: nguoiDung, noiDung: nhatKy }] })) });
+        await taiLai();
+        return { daLuu: ds.length, loi: [] };
+      } catch (e) {
+        if (e instanceof LoiMayChu && e.ma === 401) setTaiKhoan(null);
+        await taiLai();
+        return { daLuu: 0, loi: [`Chưa cập nhật hộ nào (cả lô bị hủy): ${(e as Error).message}. Dữ liệu đã được tải lại — thực hiện lại thao tác.`] };
       }
-      await taiLai();
-      return { daLuu, loi };
     },
     xoaHo: async (id) => {
       if (chan("SUA_HO_SO")) return;

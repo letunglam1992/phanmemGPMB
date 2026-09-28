@@ -54,7 +54,7 @@ describe.skipIf(!bien)("Nối thật máy trạm ↔ máy chủ Rust", () => {
     await expect(k.dangNhap("canbo1", "sai")).rejects.toThrow(/Sai tên đăng nhập/);
     await k.dangNhap("canbo1", "Matkhau2026");
     const { duAn, ho } = taoDuAnMau();
-    await k.luuDuAn(duAn);
+    await qt.luuDuAn(duAn); // dự án mẫu có bước chung đã hoàn thành — cán bộ không tự tạo được
     // hồ sơ mẫu có bước đã "Hoàn thành": cán bộ không tự tạo được (không có quyền xác nhận bước)
     await expect(k.luuHo(ho[0]!)).rejects.toThrow(/không có quyền xác nhận/);
     const l = taoKhoMang({ diaChi, vanTay }, guiNode);
@@ -67,6 +67,19 @@ describe.skipIf(!bien)("Nối thật máy trạm ↔ máy chủ Rust", () => {
     expect([...(await k.docBanDo(duAn.id))!]).toEqual([8, 9, 10]);
     await k.xoaBanDo(duAn.id);
     expect(await k.docBanDo(duAn.id)).toBeNull();
+    await k.luuBanDo(duAn.id, new Uint8Array([8, 9, 10]));
+    // P0-6: ghi lô qua máy chủ — một hồ sơ sai phiên bản thì cả lô không ghi
+    const hoLo = [0, 1].map((i) => ({ ...ho[1]!, id: `lo-${i}`, ma: `L0${i}`, tienDo: {} }));
+    await k.ghiLo({ ho: hoLo, banDo: [{ duAnId: duAn.id, bytes: new Uint8Array([7, 7]) }] });
+    expect((await k.dsHo(duAn.id)).length).toBe(ho.length + 2);
+    expect([...(await k.docBanDo(duAn.id))!]).toEqual([7, 7]);
+    const k2 = taoKhoMang({ diaChi, vanTay }, guiNode);
+    await k2.dangNhap("canbo1", "Matkhau2026");
+    await k2.dsHo(duAn.id);
+    await k.luuHo({ ...hoLo[0]!, ten: "Sửa bởi k" }); // k2 giữ phiên bản cũ của lo-0
+    await expect(k2.ghiLo({ ho: [{ ...hoLo[1]!, ten: "k2 sửa" }, { ...hoLo[0]!, ten: "k2 sửa" }] })).rejects.toThrow(/Hồ sơ L00/);
+    expect((await k.dsHo(duAn.id)).find((h) => h.id === "lo-1")!.ten).toBe(hoLo[1]!.ten);
+    await k.ghiLo({ xoaHo: ["lo-0", "lo-1"] });
     await k.luuBanDo(duAn.id, new Uint8Array([8, 9, 10]));
     await expect(k.luuMau("05", new Uint8Array([1]), "mẫu.docx")).rejects.toThrow(/THAY_MAU/);
 

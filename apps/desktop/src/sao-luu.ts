@@ -110,11 +110,15 @@ export async function docBanSaoLuu(bytes: Uint8Array | ArrayBuffer): Promise<Ban
 
 /** Khôi phục: THAY_THE xóa dữ liệu hiện có rồi nạp; GOP ghi đè bản ghi cùng mã, giữ bản ghi khác. */
 export async function khoiPhuc(kho: Kho, ban: BanSaoLuu, cheDo: "THAY_THE" | "GOP"): Promise<void> {
-  if (cheDo === "THAY_THE") await kho.xoaTatCa();
-  for (const d of ban.duAn) await kho.luuDuAn(d);
-  for (const h of ban.ho) await kho.luuHo(h);
-  for (const [id, b] of ban.banDo) await kho.luuBanDo(id, b);
-  for (const m of ban.mau) await kho.luuMau(m.ma, m.bytes, m.tenTep);
+  // Một giao dịch (P0-6): kiểu thay thế không còn "xóa hết rồi ghi dở" — lỗi giữa chừng thì dữ liệu cũ còn nguyên
+  await kho.ghiLo({
+    xoaTatCa: cheDo === "THAY_THE",
+    ghiDe: true,
+    duAn: ban.duAn,
+    ho: ban.ho,
+    banDo: [...ban.banDo].map(([duAnId, bytes]) => ({ duAnId, bytes })),
+    mau: ban.mau.map((m) => ({ ma: m.ma, bytes: m.bytes, tenTep: m.tenTep, luc: m.luc })),
+  });
   if (ban.caiDat?.lichLamViec) await kho.luuCaiDat(KHOA_LICH, ban.caiDat.lichLamViec);
   if (ban.caiDat?.tyLeChamTra) await kho.luuCaiDat("tyLeChamTra", ban.caiDat.tyLeChamTra);
   if (ban.caiDat?.kyBaoCao) await kho.luuCaiDat("kyBaoCao", ban.caiDat.kyBaoCao);

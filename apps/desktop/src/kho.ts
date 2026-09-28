@@ -6,7 +6,26 @@ import type { DuAn, Ho } from "./mo-hinh";
 import type { NguoiDung } from "./tai-khoan";
 import { taoDong, type DongNhatKy } from "./nhat-ky";
 
+/**
+ * Một lô ghi nguyên tử (P0-6): tất cả hoặc không gì cả. Thứ tự áp dụng: xoaTatCa → xoaDuAn → xoaHo → ghi dự án,
+ * hồ sơ → bản đồ, mẫu.
+ */
+export interface LoGhi {
+  xoaTatCa?: boolean;
+  /** Khôi phục dữ liệu: ghi đè không kiểm phiên bản (mạng nội bộ — cần quyền KHOI_PHUC). */
+  ghiDe?: boolean;
+  xoaDuAn?: string[];
+  xoaHo?: string[];
+  duAn?: DuAn[];
+  ho?: Ho[];
+  /** bytes null = xóa */
+  banDo?: { duAnId: string; bytes: Uint8Array | null }[];
+  mau?: { ma: string; bytes: Uint8Array | null; tenTep?: string; luc?: string }[];
+}
+
 export interface Kho {
+  /** Ghi nhiều bản ghi trong một giao dịch (nhập Excel, tạo từ bản đồ, cập nhật hàng loạt, xóa dự án, khôi phục). */
+  ghiLo(lo: LoGhi): Promise<void>;
   dsDuAn(): Promise<DuAn[]>;
   luuDuAn(d: DuAn): Promise<void>;
   xoaDuAn(id: string): Promise<void>;
@@ -78,10 +97,39 @@ export function taoKhoIndexedDb(): Kho {
       await yc((await store("duAn", "readwrite")).put(d));
     },
     async xoaDuAn(id) {
-      await yc((await store("duAn", "readwrite")).delete(id));
-      const hos = await this.dsHo(id);
-      for (const h of hos) await this.xoaHo(h.id);
-      await yc((await store("banDo", "readwrite")).delete(id));
+      await this.ghiLo({ xoaDuAn: [id] });
+    },
+    async ghiLo(lo) {
+      // Một giao dịch IndexedDB trên mọi kho liên quan; lỗi bất kỳ → abort, không ghi gì
+      const t = (await db).transaction(["duAn", "ho", "banDo", "mauVanBan"], "readwrite");
+      const xong = new Promise<void>((ok, loi) => {
+        t.oncomplete = () => ok();
+        t.onerror = () => loi(t.error ?? new Error("Lỗi ghi dữ liệu"));
+        t.onabort = () => loi(t.error ?? new Error("Đã hủy ghi — dữ liệu không thay đổi"));
+      });
+      xong.catch(() => undefined); // tránh "unhandled" khi nhánh catch dưới đây ném lỗi trước
+      const s = (n: string) => t.objectStore(n);
+      try {
+        if (lo.xoaTatCa) for (const n of ["duAn", "ho", "banDo", "mauVanBan"]) s(n).clear();
+        for (const id of lo.xoaDuAn ?? []) {
+          s("duAn").delete(id);
+          for (const k of await yc(s("ho").index("duAnId").getAllKeys(id))) s("ho").delete(k);
+          s("banDo").delete(id);
+        }
+        for (const id of lo.xoaHo ?? []) s("ho").delete(id);
+        for (const d of lo.duAn ?? []) s("duAn").put(d);
+        for (const h of lo.ho ?? []) s("ho").put(h);
+        for (const b of lo.banDo ?? []) b.bytes ? s("banDo").put(b.bytes, b.duAnId) : s("banDo").delete(b.duAnId);
+        for (const m of lo.mau ?? []) m.bytes ? s("mauVanBan").put({ bytes: m.bytes, tenTep: m.tenTep ?? `${m.ma}.docx`, luc: m.luc ?? new Date().toISOString() }, m.ma) : s("mauVanBan").delete(m.ma);
+      } catch (e) {
+        try {
+          t.abort();
+        } catch {
+          /* giao dịch đã kết thúc */
+        }
+        throw e;
+      }
+      await xong;
     },
     async dsHo(duAnId) {
       return yc((await store("ho")).index("duAnId").getAll(duAnId)) as Promise<Ho[]>;
@@ -151,8 +199,11 @@ export function taoKhoIndexedDb(): Kho {
   };
 }
 
-/** Kho trong bộ nhớ – dùng cho kiểm thử. */
-export function taoKhoBoNho(): Kho {
+/**
+ * Kho trong bộ nhớ – dùng cho kiểm thử. `thuLoi(buoc)` (kiểm thử): gọi trước mỗi thao tác của ghiLo, ném lỗi để
+ * giả lập hỏng giữa chừng.
+ */
+export function taoKhoBoNho(tuyChon: { thuLoi?: (buoc: number) => void } = {}): Kho {
   const duAn = new Map<string, DuAn>();
   const ho = new Map<string, Ho>();
   const banDo = new Map<string, Uint8Array>();
@@ -168,9 +219,39 @@ export function taoKhoBoNho(): Kho {
       duAn.set(d.id, structuredClone(d));
     },
     async xoaDuAn(id) {
-      duAn.delete(id);
-      for (const h of [...ho.values()]) if (h.duAnId === id) ho.delete(h.id);
-      banDo.delete(id);
+      await this.ghiLo({ xoaDuAn: [id] });
+    },
+    async ghiLo(lo) {
+      // Sao lưu trạng thái, áp dụng; lỗi → trả lại nguyên trạng
+      const truoc = [new Map(duAn), new Map(ho), new Map(banDo), new Map(mau)] as const;
+      let buoc = 0;
+      const b = () => tuyChon.thuLoi?.(buoc++);
+      try {
+        if (lo.xoaTatCa) {
+          b();
+          duAn.clear();
+          ho.clear();
+          banDo.clear();
+          mau.clear();
+        }
+        for (const id of lo.xoaDuAn ?? []) {
+          b();
+          duAn.delete(id);
+          for (const h of [...ho.values()]) if (h.duAnId === id) ho.delete(h.id);
+          banDo.delete(id);
+        }
+        for (const id of lo.xoaHo ?? []) (b(), ho.delete(id));
+        for (const d of lo.duAn ?? []) (b(), duAn.set(d.id, structuredClone(d)));
+        for (const h of lo.ho ?? []) (b(), ho.set(h.id, structuredClone(h)));
+        for (const x of lo.banDo ?? []) (b(), x.bytes ? banDo.set(x.duAnId, x.bytes) : banDo.delete(x.duAnId));
+        for (const m of lo.mau ?? []) (b(), m.bytes ? mau.set(m.ma, { bytes: m.bytes, tenTep: m.tenTep ?? `${m.ma}.docx`, luc: m.luc ?? new Date().toISOString() }) : mau.delete(m.ma));
+      } catch (e) {
+        for (const [dich, goc] of [[duAn, truoc[0]], [ho, truoc[1]], [banDo, truoc[2]], [mau, truoc[3]]] as [Map<string, unknown>, Map<string, unknown>][]) {
+          dich.clear();
+          for (const [k, v] of goc) dich.set(k, v);
+        }
+        throw e;
+      }
     },
     async dsHo(duAnId) {
       return [...ho.values()].filter((h) => h.duAnId === duAnId);

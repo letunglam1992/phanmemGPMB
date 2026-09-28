@@ -917,7 +917,7 @@ function HopTaoHo(p: {
   soHo: number;
   dong: () => void;
 }) {
-  const { kho, luuDuAn, di, quyen, bao, nguoiDung } = useUngDung();
+  const { kho, taiLai, di, quyen, bao, nguoiDung } = useUngDung();
   const nhom = useMemo(() => {
     const m = new Map<string, { ten: string; thua: { t: ThuaBanDo; th: DienTichThuHoi }[] }>();
     for (const t of p.dl.kq.thua) {
@@ -947,6 +947,7 @@ function HopTaoHo(p: {
     if (soNghiVan > 0 && !daXacNhan) return bao("Cần xác nhận đã kiểm tra các thửa có nghi vấn", "loi");
     setDangTao(true);
     let i = p.soHo;
+    const dsMoi: Ho[] = [];
     for (const g of nhom) {
       i++;
       const h = hoMoi(p.duAn.id, `H${String(i).padStart(3, "0")}`, g.ten, /ubnd|cộng đồng|tập thể|công ty|hợp tác/i.test(g.ten) ? "TO_CHUC" : "HO_GIA_DINH");
@@ -964,9 +965,16 @@ function HopTaoHo(p: {
         ghiChu: nghiVan(t).length ? `Nghi vấn khi đọc bản đồ (đã được cán bộ xác nhận kiểm tra): ${nghiVan(t).join(", ")}` : undefined,
       }));
       h.nhatKy = [{ luc: new Date().toISOString(), nguoi: nguoiDung, noiDung: `Tạo từ bản đồ ${p.duAn.banDo?.tenTep ?? ""}: ${h.thua.length} thửa` }];
-      await kho.luuHo(h);
+      dsMoi.push(h);
     }
-    await luuDuAn(p.duAn);
+    // Một giao dịch: tạo đủ tất cả hồ sơ hoặc không tạo hồ sơ nào (P0-6)
+    try {
+      await kho.ghiLo({ ho: dsMoi });
+    } catch (e) {
+      setDangTao(false);
+      return bao(`Không tạo được hồ sơ (chưa hồ sơ nào được ghi): ${(e as Error).message}`, "loi");
+    }
+    await taiLai();
     setDangTao(false);
     p.dong();
     di({ ten: "du-an", duAnId: p.duAn.id, tab: "ho" });

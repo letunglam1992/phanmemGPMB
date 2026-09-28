@@ -1277,6 +1277,7 @@ version = "0.3.5"
 dependencies = [
  "axum",
  "axum-server",
+ "base64 0.22.1",
  "getrandom 0.2.17",
  "if-addrs",
  "pbkdf2",

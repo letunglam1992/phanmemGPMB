@@ -68,7 +68,14 @@ export function HopNhapExcel({ duAn, dong }: { duAn: DuAn; dong: () => void }) {
     if (!kq || chan || !quyen("SUA_HO_SO") || !tep) return;
     setDang(true);
     try {
-      for (const h of [...kq.hoMoi, ...kq.hoBoSung]) await kho.luuHo(h);
+      // Một giao dịch: nhập đủ hoặc không nhập gì (P0-6)
+      try {
+        await kho.ghiLo({ ho: [...kq.hoMoi, ...kq.hoBoSung] });
+      } catch (e) {
+        await taiLai();
+        setLoiDoc(`Không nhập được — chưa hồ sơ nào được ghi: ${(e as Error).message}`);
+        return;
+      }
       await taiLai();
       await ghiNhatKy("Nhập hồ sơ từ Excel", `${duAn.ten} – tệp ${tep.ten}: ${kq.hoMoi.length} hồ sơ mới, bổ sung ${kq.hoBoSung.length}; ${kq.dem.thua} thửa, ${kq.dem.kiemDem} dòng kiểm đếm`);
       const d = kq.dem;

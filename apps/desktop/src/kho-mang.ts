@@ -144,6 +144,27 @@ export function taoKhoMang(ketNoi: KetNoi, gui: GuiYeuCau = guiQuaVo(ketNoi)): K
     async xoaHo(id) {
       await goi("DELETE", `/api/ho/${ma(id)}`);
     },
+    async ghiLo(lo) {
+      const b64 = (b: Uint8Array) => {
+        let s = "";
+        for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode(...b.subarray(i, i + 0x8000));
+        return btoa(s);
+      };
+      if (lo.xoaTatCa) phienBan.clear();
+      const ghi = [...(lo.duAn ?? []).map((d) => ({ loai: "duAn", duLieu: d })), ...(lo.ho ?? []).map((h) => ({ loai: "ho", duLieu: h }))].map((x) => ({
+        ...x,
+        phienBanTruoc: lo.ghiDe ? null : phienBan.get(`${x.loai}:${x.duLieu.id}`) ?? null,
+      }));
+      const tep = [
+        ...(lo.banDo ?? []).map((x) => ({ loai: "banDo", id: x.duAnId, meta: "{}", noiDung: x.bytes ? b64(x.bytes) : null })),
+        ...(lo.mau ?? []).map((m) => ({ loai: "mau", id: m.ma, meta: JSON.stringify({ tenTep: m.tenTep ?? `${m.ma}.docx`, luc: m.luc ?? new Date().toISOString() }), noiDung: m.bytes ? b64(m.bytes) : null })),
+      ];
+      const r = await json<{ phienBan: { loai: string; id: string; phienBan: number }[] }>("POST", "/api/lo", {
+        json: { xoaTatCa: !!lo.xoaTatCa, ghiDe: !!lo.ghiDe, xoaDuAn: lo.xoaDuAn ?? [], xoaHo: lo.xoaHo ?? [], ghi, tep },
+      });
+      for (const id of lo.xoaHo ?? []) phienBan.delete(`ho:${id}`);
+      for (const x of r.phienBan) phienBan.set(`${x.loai}:${x.id}`, x.phienBan);
+    },
     async luuBanDo(duAnId, bytes) {
       await goi("PUT", `/api/tep/banDo/${ma(duAnId)}`, { than: bytes, meta: ma("{}") });
     },

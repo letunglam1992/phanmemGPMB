@@ -179,7 +179,8 @@ function HangLoat({ duAn, hos }: { duAn: DuAn; hos: Ho[] }) {
       const r = await luuNhieuHo(ghi);
       setKetQua({ daLuu: r.daLuu, boQua: [...boQua, ...r.loi] });
       setChon(new Set());
-      bao(`Đã cập nhật ${r.daLuu} hộ`);
+      if (r.loi.length) bao(r.loi[0]!, "loi");
+      else bao(`Đã cập nhật ${r.daLuu} hộ`);
     } finally {
       setDang(false);
     }

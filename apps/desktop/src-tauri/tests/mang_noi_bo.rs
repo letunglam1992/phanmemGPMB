@@ -208,3 +208,55 @@ fn thoi_diem_dang_iso() {
     assert_eq!(t.len(), 24);
     assert!(t.ends_with('Z') && t.as_bytes()[10] == b'T');
 }
+
+/// P0-6: ghi nhiều bản ghi trong một giao dịch — một bản ghi lỗi thì không bản ghi nào được ghi.
+#[tokio::test(flavor = "multi_thread")]
+async fn may_chu_ghi_lo_nguyen_tu() {
+    let dir = std::env::temp_dir().join(format!("gpmb-may-chu-lo-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let cong = cong_trong();
+    let d = may_chu::khoi_dong(dir.clone(), cong).await.unwrap();
+    let m = May { dia_chi: format!("127.0.0.1:{cong}"), van_tay: d.van_tay.clone() };
+    let qt = m.goi("POST", "/api/khoi-tao", None, tai_khoan("quantri", "QUAN_TRI", "Gpmb2026qt")).await.1["token"].as_str().unwrap().to_string();
+    assert_eq!(m.goi("PUT", "/api/nguoi-dung/canbo1", Some(&qt), tai_khoan("canbo1", "CAN_BO", "Matkhau2026")).await.0, 200);
+    let cb = m.dang_nhap("canbo1", "Matkhau2026").await;
+    let so_ho = || async { m.goi("GET", "/api/ho?duAn=da1", Some(&cb), Value::Null).await.1.as_array().map(|a| a.len()).unwrap_or(0) };
+
+    // lô hợp lệ: dự án + 3 hồ sơ + bản đồ
+    let da = json!({ "id": "da1", "ten": "Dự án lô", "phuongAn": [] });
+    let ho = |id: &str, ma: &str| json!({ "id": id, "duAnId": "da1", "ma": ma, "ten": format!("Hộ {ma}"), "tienDo": {} });
+    let (ma, v) = m
+        .goi("POST", "/api/lo", Some(&cb), json!({
+            "ghi": [{ "loai": "duAn", "duLieu": da }, { "loai": "ho", "duLieu": ho("h1", "H001") }, { "loai": "ho", "duLieu": ho("h2", "H002") }, { "loai": "ho", "duLieu": ho("h3", "H003") }],
+            "tep": [{ "loai": "banDo", "id": "da1", "meta": "{}", "noiDung": "AQID" }]
+        }))
+        .await;
+    assert_eq!(ma, 200, "{v}");
+    assert_eq!(v["phienBan"].as_array().unwrap().len(), 4);
+    assert_eq!(so_ho().await, 3);
+
+    // lô có một hồ sơ sai phiên bản → 409, nêu mã hồ sơ; hồ sơ mới trong lô KHÔNG được ghi
+    let (ma, v) = m
+        .goi("POST", "/api/lo", Some(&cb), json!({ "ghi": [{ "loai": "ho", "duLieu": ho("h4", "H004") }, { "loai": "ho", "duLieu": ho("h1", "H001"), "phienBanTruoc": 7 }] }))
+        .await;
+    assert_eq!(ma, 409, "{v}");
+    assert!(v["loi"].as_str().unwrap().starts_with("Hồ sơ H001"), "{v}");
+    assert_eq!(so_ho().await, 3);
+
+    // cán bộ không được xóa tất cả / ghi đè (cần KHOI_PHUC)
+    assert_eq!(m.goi("POST", "/api/lo", Some(&cb), json!({ "xoaTatCa": true })).await.0, 403);
+
+    // khôi phục kiểu thay thế trong một lô: xóa hết rồi ghi, lỗi giữa chừng → dữ liệu cũ còn nguyên
+    let (ma, _) = m.goi("POST", "/api/lo", Some(&qt), json!({ "xoaTatCa": true, "ghiDe": true, "ghi": [{ "loai": "ho", "duLieu": ho("h9", "H009") }, { "loai": "xyz", "duLieu": {} }] })).await;
+    assert_eq!(ma, 400);
+    assert_eq!(so_ho().await, 3);
+    let (ma, v) = m.goi("POST", "/api/lo", Some(&qt), json!({ "xoaTatCa": true, "ghiDe": true, "ghi": [{ "loai": "duAn", "duLieu": da }, { "loai": "ho", "duLieu": ho("h9", "H009") }] })).await;
+    assert_eq!(ma, 200, "{v}");
+    assert_eq!(so_ho().await, 1);
+
+    // xóa hồ sơ trong lô
+    assert_eq!(m.goi("POST", "/api/lo", Some(&cb), json!({ "xoaHo": ["h9"] })).await.0, 200);
+    assert_eq!(so_ho().await, 0);
+    d.handle.shutdown();
+    let _ = std::fs::remove_dir_all(&dir);
+}
