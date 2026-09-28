@@ -17,7 +17,9 @@ export type Man =
   | { ten: "ho"; duAnId: string; hoId: string; tab?: string }
   | { ten: "ban-do"; duAnId: string }
   | { ten: "van-ban"; duAnId: string; ma?: string; hoId?: string }
-  | { ten: "tra-cuu" };
+  | { ten: "tra-cuu" }
+  | { ten: "doc-scan" }
+  | { ten: "bao-cao" };
 
 interface NguCanh {
   kho: Kho;
