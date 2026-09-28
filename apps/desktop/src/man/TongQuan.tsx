@@ -10,6 +10,7 @@ import { taoDuAnMau } from "../du-lieu-mau";
 import { DANH_MUC_XA } from "../du-lieu";
 import { HopThoai, O, ngayVN, tien } from "../thanh-phan/chung";
 import { Chon } from "../thanh-phan/Chon";
+import { OSo } from "../thanh-phan/OSo";
 
 type TongKpi = "xanh" | "vang" | "do" | "duong";
 
@@ -262,15 +263,15 @@ export function FormDuAn({ d, setD }: { d: DuAn; setD: (d: DuAn) => void }) {
         <O nhan="Căn cứ thu hồi (thông báo, kế hoạch)"><input value={d.canCuThuHoi} onChange={(e) => setD({ ...d, canCuThuHoi: e.target.value })} /></O>
         <O nhan="Ngày thông báo thu hồi đất" goiY="Dùng xác định mốc hỗ trợ nhà, công trình (QĐ 14/2026)"><input type="date" value={d.ngayThongBao} onChange={(e) => setD({ ...d, ngayThongBao: e.target.value })} /></O>
         <O nhan="Giá gạo tẻ trung bình (đ/kg)" goiY="Theo văn bản của Sở Tài chính (TL-26)">
-          <input className="o-so" value={d.giaGao?.dongKg ?? ""} onChange={(e) => setD({ ...d, giaGao: e.target.value ? { dongKg: e.target.value, nguon: d.giaGao?.nguon ?? "" } : null })} />
+          <OSo canhBao={(v) => (Number(v) < 1000 ? "Nhỏ hơn 1.000 đ/kg — kiểm tra cách ghi số" : null)} value={d.giaGao?.dongKg ?? ""} onChange={(v) => setD({ ...d, giaGao: v ? { dongKg: v, nguon: d.giaGao?.nguon ?? "" } : null })} />
         </O>
         <O nhan="Văn bản giá gạo"><input value={d.giaGao?.nguon ?? ""} disabled={!d.giaGao} onChange={(e) => setD({ ...d, giaGao: { dongKg: d.giaGao!.dongKg, nguon: e.target.value } })} /></O>
         <O nhan="Hạn mức giao đất NN (m²)" goiY="Dùng giới hạn diện tích hỗ trợ chuyển đổi nghề">
-          <input className="o-so" value={d.hanMucNN?.m2 ?? ""} onChange={(e) => setD({ ...d, hanMucNN: e.target.value ? { m2: e.target.value, canCu: d.hanMucNN?.canCu ?? "" } : null })} />
+          <OSo canhBao={(v) => (Number(v) < 100 ? "Nhỏ hơn 100 m² — kiểm tra đơn vị (m²) và cách ghi số" : null)} value={d.hanMucNN?.m2 ?? ""} onChange={(v) => setD({ ...d, hanMucNN: v ? { m2: v, canCu: d.hanMucNN?.canCu ?? "" } : null })} />
         </O>
         <O nhan="Căn cứ hạn mức"><input value={d.hanMucNN?.canCu ?? ""} disabled={!d.hanMucNN} onChange={(e) => setD({ ...d, hanMucNN: { m2: d.hanMucNN!.m2, canCu: e.target.value } })} /></O>
         <O nhan="Hệ số điều chỉnh giá đất" goiY="Mặc định 1. Khác 1 phải ghi văn bản (QD-02)">
-          <input className="o-so" value={d.heSoGiaDat?.heSo ?? "1"} onChange={(e) => setD({ ...d, heSoGiaDat: { heSo: e.target.value, vanBan: d.heSoGiaDat?.vanBan ?? "" } })} />
+          <OSo className="o-so" value={d.heSoGiaDat?.heSo ?? "1"} onChange={(v) => setD({ ...d, heSoGiaDat: { heSo: v, vanBan: d.heSoGiaDat?.vanBan ?? "" } })} />
         </O>
         <O nhan="Làm tròn tổng tiền từng hộ" goiY="Mặc định QD-03: làm tròn lên đến 1.000 đ (VM-36)">
           <Chon value={d.lamTron?.cach ?? ""} onChange={(e) => setD({ ...d, lamTron: e.target.value ? { cach: e.target.value as NonNullable<DuAn["lamTron"]>["cach"], lyDo: d.lamTron?.lyDo ?? "" } : undefined })}>

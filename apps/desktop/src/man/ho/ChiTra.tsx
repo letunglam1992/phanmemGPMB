@@ -7,6 +7,7 @@ import { TEN_HINH_THUC, tinhChiTra, type DotChi, type HinhThucChi } from "../../
 import { taoId, type DuAn, type Ho } from "../../mo-hinh";
 import { homNayIso } from "../../trang-thai";
 import { Chon } from "../../thanh-phan/Chon";
+import { OSo } from "../../thanh-phan/OSo";
 
 const tien = (d: Decimal | null | undefined) => (d ? dinhDang(d, 0) : "—");
 
@@ -21,7 +22,7 @@ export function TabChiTra({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) =>
 
   const them = () => {
     setLoi("");
-    const so = moi.soTien.replace(/\./g, "").replace(",", ".").trim();
+    const so = moi.soTien.trim(); // ô số trả chuẩn máy (P0-2)
     if (!moi.ngay || !/^\d+(\.\d+)?$/.test(so) || Number(so) <= 0) return setLoi("Nhập ngày chi và số tiền (đồng)");
     if (!moi.chungTu.trim()) return setLoi("Ghi số chứng từ (phiếu chi, ủy nhiệm chi, biên bản…)");
     const d: DotChi = { id: taoId(), ngay: moi.ngay, soTien: so, hinhThuc: moi.hinhThuc, chungTu: moi.chungTu.trim(), ghiChu: moi.ghiChu.trim() || undefined, nguoiGhi: nguoiDung };
@@ -84,7 +85,7 @@ export function TabChiTra({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) =>
         </table>
         <div className="the-than" style={{ display: "flex", gap: 8, alignItems: "end", flexWrap: "wrap" }}>
           <O nhan="Ngày chi"><input type="date" value={moi.ngay} onChange={(e) => setMoi({ ...moi, ngay: e.target.value })} /></O>
-          <O nhan="Số tiền (đ)"><input className="o-so" value={moi.soTien} placeholder={r.conLai?.gt(0) ? r.conLai.toFixed(0) : ""} onChange={(e) => setMoi({ ...moi, soTien: e.target.value })} /></O>
+          <O nhan="Số tiền (đ)"><OSo className="o-so" value={moi.soTien} placeholder={r.conLai?.gt(0) ? r.conLai.toFixed(0) : ""} onChange={(v) => setMoi({ ...moi, soTien: v })} /></O>
           <O nhan="Hình thức">
             <Chon value={moi.hinhThuc} onChange={(e) => setMoi({ ...moi, hinhThuc: e.target.value as HinhThucChi })}>
               {(Object.keys(TEN_HINH_THUC) as HinhThucChi[]).map((k) => <option key={k} value={k}>{TEN_HINH_THUC[k]}</option>)}

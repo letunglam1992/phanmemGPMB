@@ -7,6 +7,8 @@ import { BanDo } from "./man/BanDo";
 import { TraCuu } from "./man/TraCuu";
 import { KiemTraPhuongAn } from "./man/KiemTraPhuongAn";
 import { ThungRac } from "./man/ThungRac";
+import { RaSoatSo } from "./man/RaSoatSo";
+import { raSoat } from "./ra-soat-so";
 import { DocScan } from "./man/DocScan";
 import { BaoCao } from "./man/BaoCao";
 import { VanBan } from "./man/VanBan";
@@ -34,7 +36,7 @@ import { BAN_QUYEN, MA_BUILD, moTaPhienBan } from "./phien-ban";
 type MucBen = { ten: string; bt: string; chon?: boolean; bam: () => void; tat?: boolean; an?: boolean };
 
 export function UngDung() {
-  const { man, di, dsDuAn, hopSaoLuu, moSaoLuu, taiKhoan, quyen, dangXuat, hopCaiDat, moCaiDat, quayLai, coTheQuayLai, dsDonVi, anhNen, taiLai, bao, ghiNhatKy, thungRac } = useUngDung();
+  const { man, di, dsDuAn, hopSaoLuu, moSaoLuu, taiKhoan, quyen, dangXuat, hopCaiDat, moCaiDat, quayLai, coTheQuayLai, dsDonVi, anhNen, taiLai, bao, ghiNhatKy, thungRac, hoCua } = useUngDung();
   const [menu, setMenu] = useState(false);
   const [chuong, setChuong] = useState(false);
   // Dự án làm việc gần nhất — mục "Hồ sơ" mở lại dự án này
@@ -59,6 +61,7 @@ export function UngDung() {
   const dvSuDung = donViSuDung(dsDonVi);
   const cao = canhBao.filter((c) => c.muc === "CAO");
   const vietTat = taiKhoan ? taiKhoan.hoTen.trim().split(/\s+/).slice(-2).map((x) => x[0]).join("").toUpperCase() : "";
+  const soRaSoat = raSoat(dsDuAn, (id) => hoCua(id)).filter((m) => m.loai !== "HOP_LY").length; // sau lệnh return sớm: không dùng hook
   // Alt + 1…6: chuyển màn bằng bàn phím
   const diMuc: MucPhim[] = [
     { phim: "1", ten: "Tổng quan", bam: () => di({ ten: "tong-quan" }) },
@@ -83,6 +86,7 @@ export function UngDung() {
       muc: [
         { ten: "Thiết lập đơn vị", bt: "toaNha", chon: man.ten === "don-vi", bam: () => di({ ten: "don-vi" }) },
         { ten: "Tra cứu đơn giá, giá đất", bt: "traCuu", chon: man.ten === "tra-cuu", bam: () => di({ ten: "tra-cuu" }) },
+        { ten: `Rà soát số liệu${soRaSoat ? ` (${soRaSoat})` : ""}`, bt: "canhBao", chon: man.ten === "ra-soat-so", bam: () => di({ ten: "ra-soat-so" }) },
         { ten: "Kiểm tra phương án", bt: "kiemTra", chon: man.ten === "kiem-tra-pa", bam: () => di({ ten: "kiem-tra-pa" }) },
         { ten: "Đọc văn bản scan (OCR)", bt: "ocr", chon: man.ten === "doc-scan", bam: () => di({ ten: "doc-scan" }) },
       ],
@@ -216,6 +220,7 @@ export function UngDung() {
         {man.ten === "doc-scan" && <DocScan />}
         {man.ten === "kiem-tra-pa" && <KiemTraPhuongAn />}
         {man.ten === "thung-rac" && <ThungRac />}
+        {man.ten === "ra-soat-so" && <RaSoatSo />}
         {man.ten === "bao-cao" && <BaoCao />}
         {man.ten === "van-ban" && <KhongGianDuAn duAnId={man.duAnId} tab="van-ban" ma={man.ma} hoId={man.hoId} />}
         </RaoLoi>

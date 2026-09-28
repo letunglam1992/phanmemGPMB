@@ -3,7 +3,8 @@ import { taoId, type Thua } from "../../mo-hinh";
 import { nhomPhanLop } from "../../tinh-ho";
 import { tien } from "../../thanh-phan/chung";
 import { Chon } from "../../thanh-phan/Chon";
-import { soD } from "../../so";
+import { OSo } from "../../thanh-phan/OSo";
+import { laSoMay, soD } from "../../so";
 
 /**
  * Nhập lớp đất (QD-21): cán bộ thêm lớp, chọn vị trí trong bảng giá, nhập diện tích.
@@ -47,8 +48,8 @@ export function PhanLop({ t, cs, sua, moChonTuyen }: { t: Thua; cs: BoChinhSach;
             const gVt = pl.tuyen.vt[l.viTri - 1];
             const tyLe = tyLeLop(cs, nhom, l.lop);
             const macDinh = gVt != null ? D(gVt).mul(1000).mul(tyLe) : null;
-            const sua1 = l.giaTuyChinh !== undefined && l.giaTuyChinh !== "" && macDinh !== null && !D(l.giaTuyChinh).mul(1000).eq(macDinh);
-            const gia = sua1 ? D(l.giaTuyChinh!).mul(1000) : macDinh;
+            const sua1 = l.giaTuyChinh !== undefined && l.giaTuyChinh !== "" && macDinh !== null && !soD(l.giaTuyChinh).mul(1000).eq(macDinh);
+            const gia = sua1 ? soD(l.giaTuyChinh!).mul(1000) : macDinh;
             const dt = l.dienTich && !isNaN(Number(l.dienTich)) ? D(l.dienTich).toDecimalPlaces(2) : null;
             return (
               <tr key={l.id}>
@@ -58,13 +59,13 @@ export function PhanLop({ t, cs, sua, moChonTuyen }: { t: Thua; cs: BoChinhSach;
                     {viTriCo.map((x) => <option key={x.vt} value={x.vt}>VT{x.vt} – {x.g} nghìn</option>)}
                   </Chon>
                 </td>
-                <td><input className={`o-so ${l.dienTich && dt === null ? "loi-nhap" : ""}`} value={l.dienTich} onChange={(e) => doiLop(l.id, { dienTich: e.target.value })} /></td>
+                <td><OSo value={l.dienTich} onChange={(v) => doiLop(l.id, { dienTich: v })} /></td>
                 <td className="so">{gVt != null ? tien(D(gVt).mul(1000)) : "—"}</td>
                 <td className="so">{dinhDang(tyLe.mul(100), 2)}%</td>
                 <td>
-                  <input className="o-so" placeholder={macDinh ? tien(macDinh) : ""} title="Đồng/m². Để trống = giá phần mềm điền"
-                    value={l.giaTuyChinh ? D(l.giaTuyChinh).mul(1000).toString() : ""}
-                    onChange={(e) => { const v = e.target.value.replace(/[.\s]/g, "").replace(",", "."); doiLop(l.id, { giaTuyChinh: v && !isNaN(Number(v)) ? D(v).div(1000).toString() : undefined }); }} />
+                  <OSo placeholder={macDinh ? tien(macDinh) : ""} title="Đồng/m². Để trống = giá phần mềm điền"
+                    value={l.giaTuyChinh && laSoMay(l.giaTuyChinh) ? D(l.giaTuyChinh).mul(1000).toString() : ""}
+                    onChange={(v) => doiLop(l.id, { giaTuyChinh: v ? D(v).div(1000).toString() : undefined })} />
                   <div className="chu-nho mo" style={{ textAlign: "right" }}>{gia ? `${tien(gia)} đ` : ""}</div>
                 </td>
                 <td>{sua1 && <input className={l.lyDo ? "" : "loi-nhap"} placeholder="Bắt buộc khi sửa giá" value={l.lyDo ?? ""} onChange={(e) => doiLop(l.id, { lyDo: e.target.value })} />}</td>

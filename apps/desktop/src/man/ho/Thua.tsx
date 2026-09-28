@@ -8,6 +8,7 @@ import { laDatNN } from "../../tinh-ho";
 import { useUngDung } from "../../ung-dung";
 import { Chon } from "../../thanh-phan/Chon";
 import { soD } from "../../so";
+import { OSo } from "../../thanh-phan/OSo";
 
 export const LOAI_DAT = ["LUC", "LUK", "LUN", "HNK", "BHK", "NHK", "CLN", "RSX", "RPH", "NTS", "ONT", "ODT", "TMD", "SKC", "SKK", "SKN", "DGT", "NTD", "CSD", "KHAC"];
 
@@ -52,9 +53,9 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
                         {LOAI_DAT.map((l) => <option key={l}>{l}</option>)}
                       </Chon>
                     </td>
-                    <td><input className="o-so" value={t.dienTich} onChange={(e) => sua(t.id, { dienTich: e.target.value })} /></td>
+                    <td><OSo className="o-so" value={t.dienTich} onChange={(v) => sua(t.id, { dienTich: v })} /></td>
                     <td>
-                      <input className={`o-so ${loiDt ? "loi-nhap" : ""}`} value={t.dienTichThuHoi} onChange={(e) => sua(t.id, { dienTichThuHoi: e.target.value })} />
+                      <OSo className={`o-so ${loiDt ? "loi-nhap" : ""}`} value={t.dienTichThuHoi} onChange={(v) => sua(t.id, { dienTichThuHoi: v })} />
                       {t.dienTichBanDo !== undefined && <div className={`chu-nho ${lechBanDo ? "" : "mo"}`} style={lechBanDo ? { color: "var(--vang)" } : undefined}>Bản đồ: {t.dienTichBanDo.toFixed(2)}</div>}
                     </td>
                     <td><input value={t.nguonGoc} onChange={(e) => sua(t.id, { nguonGoc: e.target.value })} /></td>
@@ -86,7 +87,11 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
                               ["seri", "Số sêri GCN"], ["soTo", "Tờ (GCN)"], ["soThua", "Thửa (GCN)"], ["dienTich", "DT thửa GCN (m²)"], ["loaiDat", "Loại đất GCN"], ["dtThuHoiCoGcn", "DT thu hồi có GCN"], ["loaiDatThuHoi", "Loại đất thu hồi"],
                             ] as const).map(([k, nhan]) => (
                               <div key={k} className="o-nhap"><label>{nhan}</label>
-                                <input className={k === "dienTich" || k === "dtThuHoiCoGcn" ? "o-so" : ""} value={t.gcn?.[k] ?? ""} onChange={(e) => sua(t.id, { gcn: { seri: "", soTo: "", soThua: "", dienTich: "", loaiDat: "", dtThuHoiCoGcn: "", loaiDatThuHoi: "", ...t.gcn, [k]: e.target.value } })} />
+                                {k === "dienTich" || k === "dtThuHoiCoGcn" ? (
+                                  <OSo value={t.gcn?.[k] ?? ""} onChange={(v) => sua(t.id, { gcn: { seri: "", soTo: "", soThua: "", dienTich: "", loaiDat: "", dtThuHoiCoGcn: "", loaiDatThuHoi: "", ...t.gcn, [k]: v } })} />
+                                ) : (
+                                  <input value={t.gcn?.[k] ?? ""} onChange={(e) => sua(t.id, { gcn: { seri: "", soTo: "", soThua: "", dienTich: "", loaiDat: "", dtThuHoiCoGcn: "", loaiDatThuHoi: "", ...t.gcn, [k]: e.target.value } })} />
+                                )}
                               </div>
                             ))}
                             <div className="o-nhap"><label>Ghi chú (danh sách)</label><input value={t.ghiChu ?? ""} onChange={(e) => sua(t.id, { ghiChu: e.target.value })} /></div>
@@ -115,7 +120,7 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
                           </div>
                         )}
                         <div className="luoi" style={{ gridTemplateColumns: "200px 1fr 260px", alignItems: "end" }}>
-                          <div className="o-nhap"><label>DT công trình trừ khỏi quỹ mật độ (m²)</label><input className="o-so" value={t.cayXen?.dienTichTru ?? ""} onChange={(e) => sua(t.id, { cayXen: { dienTichTru: e.target.value, lyDoTru: t.cayXen?.lyDoTru ?? "", cachXep: t.cayXen?.cachXep ?? "DUNG_KHI_VUOT" } })} /></div>
+                          <div className="o-nhap"><label>DT công trình trừ khỏi quỹ mật độ (m²)</label><OSo className="o-so" value={t.cayXen?.dienTichTru ?? ""} onChange={(v) => sua(t.id, { cayXen: { dienTichTru: v, lyDoTru: t.cayXen?.lyDoTru ?? "", cachXep: t.cayXen?.cachXep ?? "DUNG_KHI_VUOT" } })} /></div>
                           <div className="o-nhap"><label>Lý do trừ (bắt buộc khi &gt; 0 — VM-34)</label><input value={t.cayXen?.lyDoTru ?? ""} onChange={(e) => sua(t.id, { cayXen: { dienTichTru: t.cayXen?.dienTichTru ?? "", lyDoTru: e.target.value, cachXep: t.cayXen?.cachXep ?? "DUNG_KHI_VUOT" } })} /></div>
                           <div className="o-nhap"><label>Cách xếp khi vượt quỹ</label>
                             <Chon value={t.cayXen?.cachXep ?? "DUNG_KHI_VUOT"} onChange={(e) => sua(t.id, { cayXen: { dienTichTru: t.cayXen?.dienTichTru ?? "", lyDoTru: t.cayXen?.lyDoTru ?? "", cachXep: e.target.value as "DUNG_KHI_VUOT" | "LAP_DAY" } })}>

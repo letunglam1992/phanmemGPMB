@@ -928,3 +928,4 @@ kbd.phim { display: inline-block; min-width: 20px; padding: 1px 6px; border: 1px
 /* Rào lỗi giao diện (thanh-phan/RaoLoi.tsx) */
 .rao-loi { border-left: 4px solid var(--do-to); }
 .rao-loi code { font-size: 12px; background: var(--be-mat-2); padding: 1px 5px; border-radius: 4px; }
+.nhac-nhap { border-color: var(--vang, #c98a00) !important; }

@@ -8,6 +8,7 @@ import type { DuAn, Ho } from "./mo-hinh";
 import { docLanSaoLuu, ghiLanSaoLuu, taoBanSaoLuu, tenTepSaoLuu } from "./sao-luu";
 import { THOI_HAN_THUNG_RAC, duocXoaHan, lyDoKhongXoaDuAn, lyDoKhongXoaHo } from "./rang-buoc";
 import { taiXuong } from "./tai-xuong";
+import { chuyenDoiDuAn, chuyenDoiHo } from "./ra-soat-so";
 import { LICH_TRONG, type LichLamViec } from "./lich-lam-viec";
 import { KHOA_TY_LE_CHAM, type GiaiDoanTyLe } from "./chi-tra";
 import { KHOA_KY_BAO_CAO, type KyBaoCao } from "./ky-bao-cao";
@@ -25,6 +26,7 @@ export type Man =
   | { ten: "doc-scan" }
   | { ten: "kiem-tra-pa" }
   | { ten: "thung-rac" }
+  | { ten: "ra-soat-so" }
   | { ten: "bao-cao" }
   | { ten: "don-vi" }
   | { ten: "huong-dan" }
@@ -222,6 +224,26 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
       throw new DaBaoLoi(e.message);
     }
   };
+  // P0-2: chuyển giá trị số cũ một nghĩa ("9222,1") sang chuẩn máy — một lần mỗi phiên, một giao dịch, ghi nhật ký
+  const daChuyenDoi = useRef(false);
+  useEffect(() => {
+    if (daChuyenDoi.current || dangTai || !taiKhoan || !coQuyen(taiKhoan.vaiTro, "SUA_HO_SO")) return;
+    daChuyenDoi.current = true;
+    const hoDoi = dsHo.map(chuyenDoiHo).filter((x) => x !== null);
+    const daDoi = dsDuAn.map(chuyenDoiDuAn).filter((x) => x !== null);
+    if (!hoDoi.length && !daDoi.length) return;
+    const n = [...hoDoi, ...daDoi].reduce((s, x) => s + x.doi.length, 0);
+    void (async () => {
+      try {
+        await kho.ghiLo({ ho: hoDoi.map((x) => x.h), duAn: daDoi.map((x) => x.d) });
+        await ghiNhatKy("Chuyển đổi định dạng số (P0-2)", `${n} giá trị ở ${hoDoi.length} hồ sơ, ${daDoi.length} dự án: ${[...hoDoi.flatMap((x) => x.doi), ...daDoi.flatMap((x) => x.doi)].slice(0, 20).map((d) => `${d.nhan} "${d.tu}" → ${d.thanh}`).join("; ")}`);
+        bao(`Đã chuyển ${n} giá trị số sang định dạng chuẩn (chi tiết trong Nhật ký hồ sơ)`);
+        await taiLai();
+      } catch {
+        /* máy khác vừa chuyển đổi / xung đột: lần mở sau thử lại */
+      }
+    })();
+  }, [dangTai, taiKhoan, dsHo, dsDuAn]); // eslint-disable-line react-hooks/exhaustive-deps
   // Máy chủ: hỏi thay đổi định kỳ, tải lại khi người khác vừa cập nhật
   const seq = useRef<number | null>(null);
   useEffect(() => {

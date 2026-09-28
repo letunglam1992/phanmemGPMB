@@ -4,6 +4,7 @@ import { thuTinh } from "../../bieu-thuc";
 import { taoId, type Ho, type TaiSan, type Thua } from "../../mo-hinh";
 import { ChonDonGia } from "../../thanh-phan/ChonDonGia";
 import { Chon } from "../../thanh-phan/Chon";
+import { OSo } from "../../thanh-phan/OSo";
 
 const TEN_LOAI: Record<TaiSan["loai"], [string, string]> = {
   NHA_CT: ["Nhà, CT", "nhan-duong"],
@@ -133,7 +134,7 @@ function TheThua(p: {
                     {klVao && kl.loi && <div className="chu-nho" style={{ color: "var(--do)" }}>{kl.loi}</div>}
                   </td>
                   <td className="so">
-                    {x.loai === "KHAC" || x.loai === "NHA_CT" ? <input className="o-so" value={x.donGia} onChange={(e) => sua(x.id, { donGia: e.target.value })} /> : x.loai === "CAY" ? Number(x.donGia).toLocaleString("vi-VN") : <span className="mo">theo PL V</span>}
+                    {x.loai === "KHAC" || x.loai === "NHA_CT" ? <OSo className="o-so" value={x.donGia} onChange={(v) => sua(x.id, { donGia: v })} /> : x.loai === "CAY" ? Number(x.donGia).toLocaleString("vi-VN") : <span className="mo">theo PL V</span>}
                   </td>
                   <td><ThamSo x={x} sua={sua} /></td>
                   <td><input type="number" min={1} value={x.dot} onChange={(e) => sua(x.id, { dot: Math.max(1, Number(e.target.value)) })} /></td>
@@ -166,19 +167,19 @@ function ThamSo({ x, sua }: { x: TaiSan; sua: (id: string, p: Partial<TaiSan>) =
         </Chon>
         {x.cachTinh === "THIET_HAI_THUC_TE" ? (
           <>
-            <input placeholder="T (năm)" title="Thời gian khấu hao" className={x.T ? "" : "loi-nhap"} value={x.T ?? ""} onChange={(e) => sua(x.id, { T: e.target.value })} />
-            <input placeholder="T1 (năm)" title="Thời gian đã sử dụng" className={x.T1 ? "" : "loi-nhap"} value={x.T1 ?? ""} onChange={(e) => sua(x.id, { T1: e.target.value })} />
+            <OSo placeholder="T (năm)" title="Thời gian khấu hao" className={x.T ? "" : "loi-nhap"} value={x.T ?? ""} onChange={(v) => sua(x.id, { T: v })} />
+            <OSo placeholder="T1 (năm)" title="Thời gian đã sử dụng" className={x.T1 ? "" : "loi-nhap"} value={x.T1 ?? ""} onChange={(v) => sua(x.id, { T1: v })} />
             <input placeholder="Căn cứ khấu hao" value={x.canCuKhauHao ?? ""} onChange={(e) => sua(x.id, { canCuKhauHao: e.target.value })} />
           </>
         ) : (
-          <input placeholder="Hệ số" value={x.heSo ?? "1"} onChange={(e) => sua(x.id, { heSo: e.target.value })} />
+          <OSo placeholder="Hệ số" value={x.heSo ?? "1"} onChange={(v) => sua(x.id, { heSo: v })} />
         )}
       </div>
     );
   if (x.loai === "CAY")
     return (
       <div style={{ ...st, gridTemplateColumns: "140px 1fr" }}>
-        <input placeholder="Mật độ (cây/ha)" value={x.matDoHa ?? ""} onChange={(e) => sua(x.id, { matDoHa: e.target.value || null })} />
+        <OSo placeholder="Mật độ (cây/ha)" value={x.matDoHa ?? ""} onChange={(v) => sua(x.id, { matDoHa: v || null })} />
         <span className="chu-nho mo" style={{ alignSelf: "center" }}>{x.matDoHa ? "Tính theo quỹ mật độ của thửa" : x.donVi === "m²" ? "Tính theo diện tích" : "Không mật độ: cần xác nhận"}</span>
       </div>
     );
@@ -189,12 +190,12 @@ function ThamSo({ x, sua }: { x: TaiSan; sua: (id: string, p: Partial<TaiSan>) =
           <option value="CUNG_HOA">Đường cứng hóa</option>
           <option value="DUONG_DAT">Đường đất</option>
         </Chon>
-        <input placeholder="Quãng đường (km)" value={x.quangDuongKm} onChange={(e) => sua(x.id, { quangDuongKm: e.target.value })} />
+        <OSo placeholder="Quãng đường (km)" value={x.quangDuongKm} onChange={(v) => sua(x.id, { quangDuongKm: v })} />
       </div>
     );
   return (
     <div style={st}>
-      <input placeholder="Hệ số" value={x.heSo} onChange={(e) => sua(x.id, { heSo: e.target.value })} />
+      <OSo placeholder="Hệ số" value={x.heSo} onChange={(v) => sua(x.id, { heSo: v })} />
       <Chon value={x.phan} onChange={(e) => sua(x.id, { phan: e.target.value as "BOI_THUONG" | "HO_TRO" })}>
         <option value="BOI_THUONG">Bồi thường</option>
         <option value="HO_TRO">Hỗ trợ</option>

@@ -4,10 +4,17 @@
  */
 import { D } from "@gpmb/core";
 import type Decimal from "decimal.js";
+import { docSoNhap } from "./so";
 
 export class LoiBieuThuc extends Error {}
 
 export function tinhBieuThuc(vao: string): Decimal {
+  // Số thường (không bắt đầu bằng "="): quy ước Việt Nam — "1.500" = một nghìn năm trăm, "2,5" = hai phẩy năm (P0-2).
+  // Biểu thức bắt đầu bằng "=" giữ cách viết kiểu Excel: dấu chấm hoặc phẩy là phần thập phân ("=10*9.8").
+  if (!vao.trim().startsWith("=")) {
+    const r = docSoNhap(vao);
+    if (r.so !== null) return D(r.so);
+  }
   const s = vao.trim().replace(/^=/, "").replace(/,/g, ".").replace(/[×x]/g, "*").replace(/÷/g, "/").replace(/\s+/g, "");
   if (s === "") throw new LoiBieuThuc("Chưa nhập giá trị");
   let i = 0;

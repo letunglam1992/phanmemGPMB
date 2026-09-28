@@ -21,6 +21,7 @@ import { Chon } from "../thanh-phan/Chon";
 import { RaoLoi } from "../thanh-phan/RaoLoi";
 import { chuanMa, hoTrungMa } from "../ma-ho";
 import { ghiBanNhap, layBanNhap, xoaBanNhap } from "../ban-nhap";
+import { OSo } from "../thanh-phan/OSo";
 
 const CAC_TAB = [
   ["thong-tin", "Thông tin", "thongTin"],
@@ -454,7 +455,7 @@ function TabHoTro({ h, doi, duAn, kq }: Tab & { duAn: DuAn; kq: KetQuaHo }) {
         <div className="the-dau"><h3>Hỗ trợ ổn định đời sống</h3><div className="phai"><label><input type="checkbox" checked={!!ht.onDinh} onChange={(e) => dat({ onDinh: e.target.checked ? { dienTichNNDangSuDung: "", diChuyen: "KHONG_DI_CHUYEN" } : undefined })} /> Áp dụng</label></div></div>
         {ht.onDinh && (
           <div className="the-than luoi luoi-2">
-            <O nhan="DT đất NN đang sử dụng (m²)" goiY="Tỷ lệ thu hồi = DT đất NN thu hồi / DT đang sử dụng"><input className="o-so" value={ht.onDinh.dienTichNNDangSuDung} onChange={(e) => dat({ onDinh: { ...ht.onDinh!, dienTichNNDangSuDung: e.target.value } })} /></O>
+            <O nhan="DT đất NN đang sử dụng (m²)" goiY="Tỷ lệ thu hồi = DT đất NN thu hồi / DT đang sử dụng"><OSo className="o-so" value={ht.onDinh.dienTichNNDangSuDung} onChange={(v) => dat({ onDinh: { ...ht.onDinh!, dienTichNNDangSuDung: v } })} /></O>
             <O nhan="Di chuyển chỗ ở">
               <Chon value={ht.onDinh.diChuyen} onChange={(e) => dat({ onDinh: { ...ht.onDinh!, diChuyen: e.target.value as DiChuyen } })}>
                 <option value="KHONG_DI_CHUYEN">Không phải di chuyển</option>
@@ -492,7 +493,7 @@ function TabHoTro({ h, doi, duAn, kq }: Tab & { duAn: DuAn; kq: KetQuaHo }) {
         <div className="the-than luoi luoi-3">
           <O nhan="Số mộ xây"><input type="number" min={0} value={ht.moMa?.xay ?? 0} onChange={(e) => dat({ moMa: { xay: Number(e.target.value), khongXay: ht.moMa?.khongXay ?? 0 } })} /></O>
           <O nhan="Số mộ không xây"><input type="number" min={0} value={ht.moMa?.khongXay ?? 0} onChange={(e) => dat({ moMa: { xay: ht.moMa?.xay ?? 0, khongXay: Number(e.target.value) } })} /></O>
-          <O nhan="Khấu trừ nghĩa vụ tài chính (đ)"><input className="o-so" value={h.khauTru} onChange={(e) => doi({ ...h, khauTru: e.target.value })} /></O>
+          <O nhan="Khấu trừ nghĩa vụ tài chính (đ)"><OSo className="o-so" value={h.khauTru} onChange={(v) => doi({ ...h, khauTru: v })} /></O>
         </div>
       </div>
     </div>
@@ -697,9 +698,9 @@ function TheTaiDinhCu({ h, doi, duAn, kq }: Tab & { duAn: DuAn; kq: KetQuaHo }) 
             {giaoDat && (
               <>
                 <O nhan={t.hinhThuc === "NHA_O" ? "Căn hộ / vị trí" : "Lô số / vị trí"}><input value={t.viTriLo ?? ""} onChange={(e) => dat({ viTriLo: e.target.value || undefined })} /></O>
-                <O nhan={t.hinhThuc === "NHA_O" ? "DT căn hộ được giao (m²)" : "DT lô đất ở được giao (m²)"}><input className="o-so" value={t.dienTichGiao ?? ""} onChange={(e) => dat({ dienTichGiao: e.target.value || undefined })} /></O>
+                <O nhan={t.hinhThuc === "NHA_O" ? "DT căn hộ được giao (m²)" : "DT lô đất ở được giao (m²)"}><OSo className="o-so" value={t.dienTichGiao ?? ""} onChange={(v) => dat({ dienTichGiao: v || undefined })} /></O>
                 <O nhan={t.hinhThuc === "NHA_O" ? "Giá bán nhà ở TĐC (đ/m²)" : "Giá đất ở tại khu TĐC (đ/m²)"} goiY={t.hinhThuc === "NHA_O" ? "Do UBND có thẩm quyền quyết định (k3 Đ111 LĐĐ)" : "Theo bảng giá đất tại thời điểm phê duyệt phương án (k3 Đ111 LĐĐ)"}>
-                  <input className="o-so" value={t.donGia ?? ""} onChange={(e) => dat({ donGia: e.target.value || undefined })} />
+                  <OSo className="o-so" value={t.donGia ?? ""} onChange={(v) => dat({ donGia: v || undefined })} />
                 </O>
                 <O nhan="Văn bản giá" style={{ gridColumn: "1 / -1" }}><input value={t.nguonGia ?? ""} placeholder="vd. NQ 152/2025/NQ-HĐND, Bảng 05, xã …, vị trí …" onChange={(e) => dat({ nguonGia: e.target.value || undefined })} /></O>
               </>
@@ -722,7 +723,7 @@ function TheTaiDinhCu({ h, doi, duAn, kq }: Tab & { duAn: DuAn; kq: KetQuaHo }) 
             </div>
           )}
           {t.hinhThuc === "DAT_O" && t.hoTroTienSdd && (
-            <O nhan="Tiền SDĐ phải nộp theo thông báo (đ)" goiY="Để trống: phần mềm tính = giá đất khu TĐC × DT lô giao"><input className="o-so" value={t.tienSddPhaiNop ?? ""} onChange={(e) => dat({ tienSddPhaiNop: e.target.value || undefined })} style={{ maxWidth: 280 }} /></O>
+            <O nhan="Tiền SDĐ phải nộp theo thông báo (đ)" goiY="Để trống: phần mềm tính = giá đất khu TĐC × DT lô giao"><OSo className="o-so" value={t.tienSddPhaiNop ?? ""} onChange={(v) => dat({ tienSddPhaiNop: v || undefined })} style={{ maxWidth: 280 }} /></O>
           )}
           {giaoDat && (
             <div className="tdc-so">
@@ -741,7 +742,7 @@ function TheTaiDinhCu({ h, doi, duAn, kq }: Tab & { duAn: DuAn; kq: KetQuaHo }) 
                   {t.khoanKhac.map((k) => (
                     <tr key={k.id}>
                       <td><input value={k.noiDung} placeholder="vd. Hỗ trợ san lấp mặt bằng lô TĐC" onChange={(e) => suaKhoan(k.id, { noiDung: e.target.value })} /></td>
-                      <td><input className="o-so" value={k.soTien} onChange={(e) => suaKhoan(k.id, { soTien: e.target.value })} /></td>
+                      <td><OSo className="o-so" value={k.soTien} onChange={(v) => suaKhoan(k.id, { soTien: v })} /></td>
                       <td><input className={k.canCu.trim() ? "" : "loi-nhap"} value={k.canCu} placeholder="vd. QĐ 45/QĐ-UBND ngày 10/9/2026 của UBND xã" onChange={(e) => suaKhoan(k.id, { canCu: e.target.value })} /></td>
                       <td><button className="nut nut-chu nut-nguy nut-nho" aria-label="Xóa khoản" onClick={() => dat({ khoanKhac: t.khoanKhac.filter((x) => x.id !== k.id) })}><BieuTuong ten="thungRac" co={15} /></button></td>
                     </tr>

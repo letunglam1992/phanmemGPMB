@@ -222,6 +222,8 @@ export interface Ho {
   chiTra?: import("./chi-tra").ChiTraHo;
   /** Xóa mềm (P0-4): hồ sơ nằm trong thùng rác, không tính vào danh sách, tổng hợp, báo cáo. */
   daXoa?: import("./rang-buoc").DauXoa;
+  /** Phiên bản cấu trúc dữ liệu (P0-2: 2 = số đã chuẩn hóa). */
+  phienBanCauTruc?: number;
 }
 
 export interface BanDoDuAn {
@@ -267,6 +269,8 @@ export interface DuAn {
   banDo: BanDoDuAn | null;
   /** Mẫu mã hồ sơ do người dùng đặt (ma-ho.ts), vd. "H###", "CM-2026-####". Trống = "H###". */
   mauMaHo?: string;
+  /** Phiên bản cấu trúc dữ liệu (P0-2: 2 = số đã chuẩn hóa). */
+  phienBanCauTruc?: number;
   /** Xóa mềm (P0-4): dự án nằm trong thùng rác. */
   daXoa?: import("./rang-buoc").DauXoa;
   /** Thông tin dùng chung khi soạn văn bản (cơ quan, người ký, căn cứ, thành phần…) và số, ngày văn bản cấp dự án. */
