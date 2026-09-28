@@ -21,6 +21,7 @@ export function taoDuAnMau(): { duAn: DuAn; ho: Ho[] } {
     hanMucNN: { m2: "30000", canCu: "Hạn mức mẫu – cần nhập theo PL I QĐ 106/2025" },
     heSoGiaDat: null,
     banDo: null,
+    loaiDuAn: "CONG_NGHIEP",
     // Bước chung 1–3 đã xong cho cả dự án; bước 4 (kiểm đếm) chưa cập nhật chung → theo từng hộ
     tienDoChung: {
       "1": { trangThai: "XONG", ngay: "2026-03-20" },

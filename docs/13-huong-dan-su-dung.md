@@ -19,6 +19,7 @@ Phần mềm hỗ trợ tính toán, lập hồ sơ bồi thường, hỗ trợ,
 |---|---|---|
 | 1. Tạo dự án | Tổng quan → **+ Dự án mới** | Tên, xã, căn cứ thu hồi, ngày thông báo, giá gạo (kèm nguồn), hạn mức giao đất NN, hệ số giá đất (nếu ≠ 1 phải ghi văn bản) |
 | 2. Lập kế hoạch | Dự án → Mốc tiến độ → **Lập kế hoạch** | Ngày dự kiến xong từng bước (để cảnh báo chậm) |
+| 0. Thiết lập đơn vị (lần đầu) | **Công cụ → Thiết lập đơn vị**: thêm đơn vị sử dụng phần mềm, UBND xã, đơn vị bồi thường, phòng chuyên môn (tên, cấp trên, ký hiệu, người ký) | Dùng điền sẵn văn bản, báo cáo. Tìm nhanh mọi nơi: **Ctrl + K**; quay lại màn trước: nút **Quay lại** hoặc **Alt + ←** |
 | 3. Tạo hồ sơ | Dự án → **+ Thêm hộ, tổ chức**, hoặc **Nhập Excel…** (tải tệp mẫu trước), hoặc Bản đồ → nạp DGN (V7 hoặc V8/V8i) → **Cấu hình lớp** (xem gợi ý, chốt) → chọn ranh → tạo hồ sơ từ thửa | Mỗi hộ, cá nhân, tổ chức một hồ sơ |
 | 4. Nhập hồ sơ | Hồ sơ → Thông tin, Nhân khẩu, Thửa đất (chọn giá đất theo NQ 152; phân lớp nếu cần), Kiểm đếm tài sản (chọn đơn giá QĐ 32 / PL VIII), Hỗ trợ | Bấm **Lưu hồ sơ** sau khi sửa |
 | 5. Kiểm tra tính toán | Hồ sơ → **Tính toán, giải trình** | Xem từng khoản: khối lượng, đơn giá, hệ số, công thức, căn cứ; xử lý các khoản "Thiếu căn cứ", "Cần xác nhận" |

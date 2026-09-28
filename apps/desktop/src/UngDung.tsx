@@ -18,12 +18,27 @@ import { docCheDo } from "./kho-mang";
 import { moTaCheDo } from "./thanh-phan/KetNoi";
 import { tinhHo } from "./tinh-ho";
 import { docGiaoDien, ghiGiaoDien, type GiaoDien } from "./giao-dien-sang-toi";
+import { DanhSachHo } from "./man/DanhSachHo";
+import { ThietLapDonVi } from "./man/ThietLapDonVi";
+import { TimKiemChung } from "./thanh-phan/TimKiem";
+import { useTongHop } from "./thanh-phan/dung-canh-bao";
+import { donViSuDung } from "./don-vi";
 
 type MucBen = { ten: string; bt: string; chon?: boolean; bam: () => void; tat?: boolean; an?: boolean };
 
 export function UngDung() {
-  const { man, di, dsDuAn, hoCua, chinhSach, hopSaoLuu, moSaoLuu, taiKhoan, quyen, dangXuat, hopCaiDat, moCaiDat } = useUngDung();
+  const { man, di, dsDuAn, hoCua, chinhSach, hopSaoLuu, moSaoLuu, taiKhoan, quyen, dangXuat, hopCaiDat, moCaiDat, quayLai, coTheQuayLai, dsDonVi } = useUngDung();
   const [menu, setMenu] = useState(false);
+  const [chuong, setChuong] = useState(false);
+  const { canhBao, mo: moCanhBao } = useTongHop();
+  // Phím Quay lại: Alt + ←, nút lùi của chuột (không bắt Backspace để tránh mất thao tác khi đang nhập)
+  useEffect(() => {
+    const phim = (e: KeyboardEvent) => { if (e.altKey && e.key === "ArrowLeft") { e.preventDefault(); quayLai(); } };
+    const chuot = (e: MouseEvent) => { if (e.button === 3) { e.preventDefault(); quayLai(); } };
+    window.addEventListener("keydown", phim);
+    window.addEventListener("mouseup", chuot);
+    return () => { window.removeEventListener("keydown", phim); window.removeEventListener("mouseup", chuot); };
+  }, [quayLai]);
   const [hop, setHop] = useState<null | "mat-khau" | "tai-khoan" | "nhat-ky">(null);
   const [giaoDien, setGiaoDien] = useState<GiaoDien>(docGiaoDien);
   useEffect(() => ghiGiaoDien(giaoDien), [giaoDien]);
@@ -38,13 +53,16 @@ export function UngDung() {
   }, [dsDuAn, hoCua, chinhSach]);
   if (!taiKhoan) return (<><ManDangNhap /><ThongBaoNhanh /></>);
 
-  const duAnId = "duAnId" in man ? man.duAnId : dsDuAn[0]?.id;
+  const duAnId = ("duAnId" in man && man.duAnId) || dsDuAn[0]?.id;
+  const dvSuDung = donViSuDung(dsDonVi);
+  const cao = canhBao.filter((c) => c.muc === "CAO");
+  const vietTat = taiKhoan ? taiKhoan.hoTen.trim().split(/\s+/).slice(-2).map((x) => x[0]).join("").toUpperCase() : "";
   const nhom: { nhan: string; muc: MucBen[] }[] = [
     {
       nhan: "Theo dõi",
       muc: [
         { ten: "Tổng quan", bt: "tongQuan", chon: man.ten === "tong-quan", bam: () => di({ ten: "tong-quan" }) },
-        { ten: "Dự án & hồ sơ", bt: "danhSach", chon: man.ten === "du-an" || man.ten === "ho", bam: () => duAnId && di({ ten: "du-an", duAnId }), tat: !duAnId },
+        { ten: "Dự án & hồ sơ", bt: "danhSach", chon: man.ten === "du-an" || man.ten === "ho" || man.ten === "ds-ho", bam: () => di({ ten: "du-an", duAnId }) },
         { ten: "Báo cáo tổng hợp", bt: "baoCao", chon: man.ten === "bao-cao", bam: () => di({ ten: "bao-cao" }) },
         { ten: "Bản đồ", bt: "thua", chon: man.ten === "ban-do", bam: () => duAnId && di({ ten: "ban-do", duAnId }), tat: !duAnId },
       ],
@@ -53,6 +71,12 @@ export function UngDung() {
       nhan: "Nghiệp vụ",
       muc: [
         { ten: "Văn bản", bt: "vanBan", chon: man.ten === "van-ban", bam: () => duAnId && di({ ten: "van-ban", duAnId }), tat: !duAnId },
+      ],
+    },
+    {
+      nhan: "Công cụ",
+      muc: [
+        { ten: "Thiết lập đơn vị", bt: "toaNha", chon: man.ten === "don-vi", bam: () => di({ ten: "don-vi" }) },
         { ten: "Tra cứu đơn giá, giá đất", bt: "traCuu", chon: man.ten === "tra-cuu", bam: () => di({ ten: "tra-cuu" }) },
         { ten: "Đọc văn bản scan (OCR)", bt: "ocr", chon: man.ten === "doc-scan", bam: () => di({ ten: "doc-scan" }) },
       ],
@@ -74,7 +98,9 @@ export function UngDung() {
     <div className="khung">
       <aside className="thanh-ben" aria-label="Điều hướng">
         <div className="ben-logo">
-          <span className="ben-logo-dau"><BieuTuong ten="toaNha" co={21} /></span>
+          <span className="ben-logo-nui" aria-hidden>
+            <svg width="44" height="30" viewBox="0 0 44 30" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinejoin="round" strokeLinecap="round"><path d="M2 27L15 7l7 10 5-6 15 16z" /><path d="M11 27l7-9 5 6" /></svg>
+          </span>
           <span>GPMB<br />Tỉnh Sơn La</span>
         </div>
         {nhom.map((n) => (
@@ -96,15 +122,19 @@ export function UngDung() {
 
       <header className="thanh-tren">
         <div className="thuong-hieu">
-          <span className="thuong-hieu-dau"><BieuTuong ten="toaNha" co={24} /></span>
+          <button className="nut-quay-lai" onClick={quayLai} disabled={!coTheQuayLai} title="Quay lại màn trước (Alt + ←)" aria-label="Quay lại">
+            <BieuTuong ten="hoanTac" co={18} /><span>Quay lại</span>
+          </button>
+          <button className="thuong-hieu-dau" onClick={() => di({ ten: "tong-quan" })} title="Về Tổng quan" aria-label="Về Tổng quan"><BieuTuong ten="nha" co={24} /></button>
           <div>
-            <div className="to-chuc">Tỉnh Sơn La</div>
+            <div className="to-chuc" title={dvSuDung ? `Đơn vị sử dụng: ${dvSuDung.ten}` : "Chưa thiết lập đơn vị (Công cụ → Thiết lập đơn vị)"}>{dvSuDung ? dvSuDung.ten : "Tỉnh Sơn La"}</div>
             <div className="ten-ung-dung">Bồi thường, hỗ trợ, tái định cư</div>
             <div className="phu-de">
-              {dsDuAn.length} dự án · {tongQuat.soHo} hồ sơ · {dinhDang(tongQuat.tien, 0)} đ tạm tính
+              <button onClick={() => di({ ten: "du-an", duAnId })}>{dsDuAn.length} dự án</button> · <button onClick={() => di({ ten: "ds-ho" })}>{tongQuat.soHo} hồ sơ</button> · {dinhDang(tongQuat.tien, 0)} đ tạm tính
             </div>
           </div>
         </div>
+        <TimKiemChung />
         <div className="phai">
           <div className="meta-tren">
             <span><BieuTuong ten="lich" co={14} /> <b>{homNay}</b></span>
@@ -118,8 +148,28 @@ export function UngDung() {
               <BieuTuong ten={giaoDien === "toi" ? "sang" : "toi"} co={17} />
             </button>
             <div className="menu-nguoi">
-              <button className="nut-tren" aria-haspopup="menu" aria-expanded={menu} onClick={() => setMenu(!menu)}>
-                <BieuTuong ten="taiKhoan" co={16} /> {taiKhoan.hoTen} · {TEN_VAI_TRO[taiKhoan.vaiTro]} <BieuTuong ten="xuong" co={14} />
+              <button className="nut-tren nut-tren-bt nut-chuong" title={`${canhBao.length} cảnh báo, việc cần theo dõi`} aria-label="Thông báo" aria-expanded={chuong} onClick={() => setChuong(!chuong)}>
+                <BieuTuong ten="chuong" co={17} />
+                {canhBao.length > 0 && <span className={`cham-chuong ${cao.length ? "" : "vang"}`}>{canhBao.length > 99 ? "99+" : canhBao.length}</span>}
+              </button>
+              {chuong && (
+                <div className="menu-tha menu-chuong" role="menu" onMouseLeave={() => setChuong(false)}>
+                  <div className="menu-nhan">Thông báo · {cao.length} cần xử lý ngay · {canhBao.length - cao.length} cần theo dõi</div>
+                  {[...cao, ...canhBao.filter((c) => c.muc !== "CAO")].slice(0, 8).map((c, i) => (
+                    <button key={i} role="menuitem" onClick={() => { moCanhBao(c); setChuong(false); }}>
+                      <span className={`cb-bt cb-${c.muc}`}>{c.muc === "THONG_TIN" ? "i" : "!"}</span>
+                      <span className="chuong-nd">{c.noiDung}</span>
+                    </button>
+                  ))}
+                  {canhBao.length === 0 && <div className="trong" style={{ padding: 16 }}>Không có thông báo.</div>}
+                  <div className="menu-vach" />
+                  <button role="menuitem" onClick={() => { di({ ten: "tong-quan" }); setChuong(false); }}>Xem tất cả ở Tổng quan →</button>
+                </div>
+              )}
+            </div>
+            <div className="menu-nguoi">
+              <button className="nut-tren nut-nguoi" aria-haspopup="menu" aria-expanded={menu} onClick={() => setMenu(!menu)}>
+                <span className="anh-dai-dien" aria-hidden>{vietTat || <BieuTuong ten="taiKhoan" co={15} />}</span> {taiKhoan.hoTen} · {TEN_VAI_TRO[taiKhoan.vaiTro]} <BieuTuong ten="xuong" co={14} />
               </button>
               {menu && (
                 <div className="menu-tha" role="menu" onMouseLeave={() => setMenu(false)}>
@@ -139,7 +189,9 @@ export function UngDung() {
 
       <main className="noi-dung">
         {man.ten === "tong-quan" && <TongQuan />}
-        {man.ten === "du-an" && <ManDuAn duAnId={man.duAnId} />}
+        {man.ten === "du-an" && <ManDuAn duAnId={man.duAnId ?? duAnId} />}
+        {man.ten === "ds-ho" && <DanhSachHo key={JSON.stringify(man)} duAnId={man.duAnId} trangThai={man.trangThai} chang={man.chang} tim={man.tim} />}
+        {man.ten === "don-vi" && <ThietLapDonVi />}
         {man.ten === "ho" && <HoSo duAnId={man.duAnId} hoId={man.hoId} tabDau={man.tab} />}
         {man.ten === "ban-do" && <BanDo duAnId={man.duAnId} />}
         {man.ten === "tra-cuu" && <TraCuu />}

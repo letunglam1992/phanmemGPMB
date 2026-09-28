@@ -194,9 +194,20 @@ export interface BanDoDuAn {
   cauHinh?: CauHinhLop;
 }
 
+export type LoaiDuAn = "GIAO_THONG" | "CONG_NGHIEP" | "TAI_DINH_CU" | "DO_THI" | "THUY_LOI" | "KHAC";
+export const TEN_LOAI_DU_AN: Record<LoaiDuAn, string> = {
+  GIAO_THONG: "Giao thông", CONG_NGHIEP: "Khu, cụm công nghiệp", TAI_DINH_CU: "Khu tái định cư, dân cư", DO_THI: "Đô thị, hạ tầng", THUY_LOI: "Thủy lợi, thủy điện", KHAC: "Khác",
+};
+export type TrangThaiDuAn = "DANG_TRIEN_KHAI" | "TAM_DUNG" | "HOAN_THANH";
+export const TEN_TRANG_THAI_DU_AN: Record<TrangThaiDuAn, string> = { DANG_TRIEN_KHAI: "Đang triển khai", TAM_DUNG: "Tạm dừng", HOAN_THANH: "Hoàn thành" };
+
 export interface DuAn {
   id: string;
   ten: string;
+  /** Loại dự án (biểu tượng, lọc); không ảnh hưởng tính toán. */
+  loaiDuAn?: LoaiDuAn;
+  /** Trạng thái do cán bộ ghi; bỏ trống = Đang triển khai. */
+  trangThaiDuAn?: TrangThaiDuAn;
   xa: string;
   chuDauTu: string;
   canCuThuHoi: string;

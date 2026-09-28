@@ -5,6 +5,7 @@ import { tinhHo } from "../tinh-ho";
 import { homNayIso } from "../trang-thai";
 import { lapBaoCao, TEN_TINH_TRANG, type SoLieu, type TinhTrangDuAn } from "../bao-cao";
 import { duLieuBaoCaoWord, type ThongTinBaoCao } from "../bao-cao-van-ban";
+import { donViSuDung, type DonVi } from "../don-vi";
 import { taoWorkbookBaoCao } from "../xuat-excel";
 import { dienMau } from "../van-ban/dien-mau";
 import { taiXuong } from "../tai-xuong";
@@ -32,17 +33,21 @@ const TT_MAC_DINH: ThongTinBaoCao = {
   quyenHan: "Trưởng phòng",
   nguoiKy: "",
 };
-function docTt(): ThongTinBaoCao {
+/** Mặc định < đơn vị sử dụng phần mềm (Thiết lập đơn vị) < thông tin nhập lần trước trên máy này. */
+function docTt(dv: DonVi | null): ThongTinBaoCao {
+  const tuDonVi: Partial<ThongTinBaoCao> = dv
+    ? Object.fromEntries(Object.entries({ coQuanCapTren: dv.capTren, coQuan: dv.ten, kyHieu: dv.kyHieu, diaDanh: dv.diaDanh, quyenHan: dv.quyenHan, nguoiKy: dv.nguoiKy }).filter(([, v]) => v && v.trim()))
+    : {};
   try {
-    return { ...TT_MAC_DINH, ...JSON.parse(localStorage.getItem(KHOA_TT) ?? "{}"), ngayKy: homNayIso(), so: "" };
+    return { ...TT_MAC_DINH, ...tuDonVi, ...JSON.parse(localStorage.getItem(KHOA_TT) ?? "{}"), ngayKy: homNayIso(), so: "" };
   } catch {
-    return TT_MAC_DINH;
+    return { ...TT_MAC_DINH, ...tuDonVi };
   }
 }
 const LOP_TT: Record<TinhTrangDuAn, string> = { HOAN_THANH: "nhan nhan-xanh", CO_VUONG_MAC: "nhan nhan-do", DANG_THUC_HIEN: "nhan nhan-duong", CHUA_CO_HO_SO: "nhan nhan-xam" };
 
 export function BaoCao() {
-  const { dsDuAn, hoCua, chinhSach, lich, tyLeCham, di, bao, kyBaoCao, themKyBaoCao, xoaKyBaoCao, quyen, nguoiDung } = useUngDung();
+  const { dsDuAn, hoCua, chinhSach, lich, tyLeCham, di, bao, kyBaoCao, themKyBaoCao, xoaKyBaoCao, quyen, nguoiDung, dsDonVi } = useUngDung();
   const [xa, setXa] = useState("");
   const [tinhTrang, setTinhTrang] = useState<TinhTrangDuAn | "">("");
   const [denNgay, setDenNgay] = useState(homNayIso());
@@ -59,7 +64,7 @@ export function BaoCao() {
   const tenTep = `Bao-cao-tong-hop-GPMB-${denNgay}`;
 
   async function xuatExcel() {
-    const wb = await taoWorkbookBaoCao(bc, docTt().coQuan, kyBaoCao);
+    const wb = await taoWorkbookBaoCao(bc, docTt(donViSuDung(dsDonVi)).coQuan, kyBaoCao);
     taiXuong(new Uint8Array(await wb.xlsx.writeBuffer()), `${tenTep}.xlsx`, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     bao("Đã xuất Excel báo cáo tổng hợp");
   }
@@ -200,7 +205,8 @@ export function BaoCao() {
 }
 
 function HopWord({ dong, xuat }: { dong: () => void; xuat: (t: ThongTinBaoCao) => Promise<void> }) {
-  const [t, setT] = useState<ThongTinBaoCao>(docTt);
+  const { dsDonVi } = useUngDung();
+  const [t, setT] = useState<ThongTinBaoCao>(() => docTt(donViSuDung(dsDonVi)));
   const o = (k: keyof ThongTinBaoCao, nhan: string, dong = 1, goiY?: string) => (
     <O nhan={nhan} goiY={goiY} style={dong > 1 ? { gridColumn: "1/-1" } : undefined}>
       {dong > 1 ? <textarea rows={dong} value={t[k]} onChange={(e) => setT({ ...t, [k]: e.target.value })} /> : <input value={t[k]} onChange={(e) => setT({ ...t, [k]: e.target.value })} />}

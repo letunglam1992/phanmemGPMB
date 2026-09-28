@@ -4,6 +4,7 @@ import { tinhHo } from "../tinh-ho";
 import { CAC_BUOC, type Ho } from "../mo-hinh";
 import { DANH_MUC_MAU, mauTheoMa, tepMau, type MauVanBan, type TruongNhap } from "../van-ban/danh-muc";
 import { ghepDuLieu, ngayChu, thongTinChungMacDinh } from "../van-ban/du-lieu";
+import { truongVanBanTuDonVi } from "../don-vi";
 import { dienMau, dongGoiZip, truongTrongMau } from "../van-ban/dien-mau";
 import { HopThoai, O } from "../thanh-phan/chung";
 import { taiXuong } from "../tai-xuong";
@@ -54,7 +55,7 @@ const DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.doc
 const tenAnToan = (s: string) => tenTep(s, 70);
 
 export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: string; hoIdDau?: string }) {
-  const { dsDuAn, hoCua, chinhSach, luuDuAn: luuDuAnGoc, luuHo: luuHoGoc, kho, di, quyen, nguoiDung } = useUngDung();
+  const { dsDuAn, hoCua, chinhSach, luuDuAn: luuDuAnGoc, luuHo: luuHoGoc, kho, di, quyen, nguoiDung, dsDonVi } = useUngDung();
   // Tài khoản chỉ xem vẫn tạo được bản dự thảo nhưng không ghi số, ngày, nhật ký vào hồ sơ.
   const coGhi = quyen("SOAN_VAN_BAN");
   const luuDuAn: typeof luuDuAnGoc = coGhi ? luuDuAnGoc : async () => undefined;
@@ -79,7 +80,8 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
   const ds = useMemo(() => (duAn ? hos.map((h) => ({ h, k: tinhHo(chinhSach(duAn), duAn, h) })) : []), [hos, duAn, chinhSach]);
 
   useEffect(() => {
-    if (duAn) setChung({ ...thongTinChungMacDinh(duAn), ...(duAn.vanBan ?? {}) });
+    // Thứ tự ưu tiên: mặc định < Thiết lập đơn vị < thông tin đã lưu riêng cho dự án
+    if (duAn) setChung({ ...thongTinChungMacDinh(duAn), ...truongVanBanTuDonVi(dsDonVi), ...(duAn.vanBan ?? {}) });
   }, [duAn?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     setRieng(Object.fromEntries(mau.nhapThem.map((t) => [t.truong, (t.truong !== "noi_nhan" && duAn?.vanBan?.[t.truong]) || t.macDinh || ""])));
@@ -284,7 +286,7 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
 
           {moChung && (
             <div className="the">
-              <div className="the-dau"><h3>Thông tin chung dùng cho mọi văn bản của dự án</h3><div className="phai"><button className="nut nut-nho nut-chinh" onClick={() => luuDuAn({ ...duAn, vanBan: { ...(duAn.vanBan ?? {}), ...chung } })}>Lưu</button></div></div>
+              <div className="the-dau"><h3>Thông tin chung dùng cho mọi văn bản của dự án</h3><div className="phai"><button className="nut nut-nho" disabled={!dsDonVi.length} title={dsDonVi.length ? "Ghi đè tên cơ quan, ký hiệu, người ký bằng thông tin ở Công cụ → Thiết lập đơn vị" : "Chưa có đơn vị — vào Công cụ → Thiết lập đơn vị"} onClick={() => setChung({ ...chung, ...truongVanBanTuDonVi(dsDonVi) })}>Điền từ Thiết lập đơn vị</button><button className="nut nut-nho nut-chinh" onClick={() => luuDuAn({ ...duAn, vanBan: { ...(duAn.vanBan ?? {}), ...chung } })}>Lưu</button></div></div>
               <div className="the-than luoi">
                 {nhom.map((n) => (
                   <div key={n}>

@@ -9,18 +9,22 @@ import { docLanSaoLuu, ghiLanSaoLuu } from "./sao-luu";
 import { LICH_TRONG, type LichLamViec } from "./lich-lam-viec";
 import { KHOA_TY_LE_CHAM, type GiaiDoanTyLe } from "./chi-tra";
 import { KHOA_KY_BAO_CAO, type KyBaoCao } from "./ky-bao-cao";
+import { KHOA_DON_VI, type DonVi } from "./don-vi";
 import { KHOA_LICH } from "./sao-luu";
 import { coQuyen, dungMatKhau, taoTaiKhoan, tenHienThi, type NguoiDung, type Quyen, type VaiTro } from "./tai-khoan";
 
 export type Man =
   | { ten: "tong-quan" }
-  | { ten: "du-an"; duAnId: string }
+  | { ten: "du-an"; duAnId?: string }
   | { ten: "ho"; duAnId: string; hoId: string; tab?: string }
   | { ten: "ban-do"; duAnId: string }
   | { ten: "van-ban"; duAnId: string; ma?: string; hoId?: string }
   | { ten: "tra-cuu" }
   | { ten: "doc-scan" }
-  | { ten: "bao-cao" };
+  | { ten: "bao-cao" }
+  | { ten: "don-vi" }
+  /** Danh sách hồ sơ (mọi dự án hoặc một dự án) lọc theo hiện trạng, chặng quy trình, từ khóa — đích khi bấm vào các chỉ số. */
+  | { ten: "ds-ho"; duAnId?: string; trangThai?: string; chang?: string; tim?: string };
 
 interface NguCanh {
   kho: Kho;
@@ -28,6 +32,12 @@ interface NguCanh {
   hoCua: (duAnId: string) => Ho[];
   man: Man;
   di: (m: Man) => void;
+  /** Quay lại màn trước (nút Quay lại, Alt + ←, nút lùi của chuột). */
+  quayLai: () => void;
+  coTheQuayLai: boolean;
+  /** Thiết lập đơn vị (Công cụ). */
+  dsDonVi: DonVi[];
+  luuDonVi: (ds: DonVi[]) => Promise<void>;
   /** Lưu dự án; mặc định cần quyền SUA_HO_SO (chốt/duyệt phương án truyền quyền riêng). */
   luuDuAn: (d: DuAn, quyen?: Quyen) => Promise<void>;
   luuHo: (h: Ho, nhatKy?: string) => Promise<void>;
@@ -95,6 +105,29 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
   const [dsDuAn, setDsDuAn] = useState<DuAn[]>([]);
   const [dsHo, setDsHo] = useState<Ho[]>([]);
   const [man, setMan] = useState<Man>({ ten: "tong-quan" });
+  const [lichSu, setLichSu] = useState<Man[]>([]);
+  const [dsDonVi, setDsDonVi] = useState<DonVi[]>([]);
+  // Lịch sử điều hướng giữ trong ref để tránh tác dụng phụ trong hàm cập nhật state (StrictMode gọi 2 lần)
+  const manRef = useRef<Man>(man);
+  const lichSuRef = useRef<Man[]>([]);
+  const di = useCallback((m: Man) => {
+    const cu = manRef.current;
+    if (JSON.stringify(cu) !== JSON.stringify(m)) {
+      lichSuRef.current = [...lichSuRef.current.slice(-49), cu];
+      setLichSu(lichSuRef.current);
+    }
+    manRef.current = m;
+    setMan(m);
+  }, []);
+  const quayLai = useCallback(() => {
+    const ls = lichSuRef.current;
+    if (!ls.length) return;
+    const m = ls[ls.length - 1]!;
+    lichSuRef.current = ls.slice(0, -1);
+    setLichSu(lichSuRef.current);
+    manRef.current = m;
+    setMan(m);
+  }, []);
   const [dangTai, setDangTai] = useState(true);
   const [taiKhoan, setTaiKhoan] = useState<NguoiDung | null>(null);
   const [coTaiKhoan, setCoTaiKhoan] = useState<boolean | null>(null);
@@ -133,6 +166,7 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
     const td = await kho.docCaiDat<CaiDatTuDong>(KHOA_TU_DONG);
     if (td) setTuDong({ ...MAC_DINH_TU_DONG, ...td });
     setKyBaoCao((await kho.docCaiDat<KyBaoCao[]>(KHOA_KY_BAO_CAO)) ?? []);
+    setDsDonVi((await kho.docCaiDat<DonVi[]>(KHOA_DON_VI)) ?? []);
     const da = await kho.dsDuAn();
     const hos = (await Promise.all(da.map((d) => kho.dsHo(d.id)))).flat();
     setDsDuAn(da.sort((a, b) => b.taoLuc.localeCompare(a.taoLuc)));
@@ -223,7 +257,16 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
     dsDuAn,
     hoCua: (id) => dsHo.filter((h) => h.duAnId === id),
     man,
-    di: setMan,
+    di,
+    quayLai,
+    coTheQuayLai: lichSu.length > 0,
+    dsDonVi,
+    luuDonVi: async (ds) => {
+      if (chan("CAI_DAT")) return;
+      await ghi(() => kho.luuCaiDat(KHOA_DON_VI, ds));
+      setDsDonVi(ds);
+      await ghiNhatKy("Cập nhật thiết lập đơn vị", ds.map((d) => `${d.ten}${d.suDung ? " (đơn vị sử dụng)" : ""}`).join("; "));
+    },
     luuDuAn: async (d, q = "SUA_HO_SO") => {
       if (chan(q)) return;
       await ghi(() => kho.luuDuAn(d));
@@ -311,7 +354,10 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
       if (laKhoMang(kho)) await kho.dangXuat().catch(() => undefined);
       else if (taiKhoan) await ghiNhatKy("Đăng xuất");
       setTaiKhoan(null);
+      manRef.current = { ten: "tong-quan" };
+      lichSuRef.current = [];
       setMan({ ten: "tong-quan" });
+      setLichSu([]);
     },
     khoiTaoQuanTri: async (v) => {
       if (laKhoMang(kho)) {

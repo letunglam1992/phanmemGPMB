@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="220" viewBox="0 0 1600 220" preserveAspectRatio="xMaxYMax slice">
+  <!-- Nền núi đồi Tây Bắc (tự vẽ, không dùng ảnh bên ngoài) -->
+  <defs>
+    <linearGradient id="troi" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fc4b0"/><stop offset=".55" stop-color="#cfe0cf"/><stop offset="1" stop-color="#e8efe0"/></linearGradient>
+    <linearGradient id="nui1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7fa391"/><stop offset="1" stop-color="#9dbba5"/></linearGradient>
+    <linearGradient id="nui2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4f8062"/><stop offset="1" stop-color="#6b9a72"/></linearGradient>
+    <linearGradient id="nui3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f6a45"/><stop offset="1" stop-color="#3f7d4c"/></linearGradient>
+    <linearGradient id="nui4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1e5334"/><stop offset="1" stop-color="#174a2e"/></linearGradient>
+  </defs>
+  <rect width="1600" height="220" fill="url(#troi)"/>
+  <path d="M0 150 L120 96 L210 128 L330 60 L440 112 L560 70 L690 118 L800 52 L930 104 L1060 58 L1180 110 L1300 64 L1430 104 L1600 72 V220 H0Z" fill="url(#nui1)" opacity=".85"/>
+  <path d="M0 170 C90 140 150 120 250 132 S420 96 520 118 S700 84 820 116 S1010 90 1120 124 S1320 92 1440 120 S1560 110 1600 116 V220 H0Z" fill="url(#nui2)"/>
+  <path d="M0 196 C120 164 230 150 360 162 S560 136 700 158 S930 132 1060 156 S1300 128 1420 154 S1560 146 1600 150 V220 H0Z" fill="url(#nui3)"/>
+  <g fill="none" stroke="#86b36c" stroke-opacity=".55" stroke-width="2">
+    <path d="M760 176 C860 160 960 158 1060 170"/><path d="M780 186 C880 170 980 168 1080 180"/><path d="M800 196 C900 180 1000 178 1100 190"/>
+    <path d="M1180 170 C1260 156 1340 154 1420 164"/><path d="M1200 180 C1280 166 1360 164 1440 174"/><path d="M1220 190 C1300 176 1380 174 1460 184"/>
+  </g>
+  <path d="M0 212 C160 188 300 180 460 192 S760 170 920 188 S1220 168 1380 186 S1560 180 1600 182 V220 H0Z" fill="url(#nui4)"/>
+</svg>

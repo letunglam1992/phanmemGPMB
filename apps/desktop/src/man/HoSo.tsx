@@ -189,8 +189,10 @@ function TheThongTinHo({ h, hieuLuc, tt, moTab, soanVanBan }: { h: Ho; hieuLuc: 
   const phanTram = Math.round((soXong / CAC_BUOC.length) * 100);
   const dau = Math.max(0, Math.min(iHienTai < 0 ? CAC_BUOC.length - 5 : iHienTai - 1, CAC_BUOC.length - 5));
   const hienThi = tatCa ? CAC_BUOC : CAC_BUOC.slice(dau, dau + 5);
-  const dong = (bt: string, nhan: string, gt: React.ReactNode) => (
-    <div className="ttho-dong"><BieuTuong ten={bt} co={17} /><span>{nhan}</span><b>{gt}</b></div>
+  const dong = (bt: string, nhan: string, gt: React.ReactNode, tab?: string) => (
+    <div className={`ttho-dong ${tab ? "bam" : ""}`} onClick={tab ? () => moTab(tab) : undefined} role={tab ? "button" : undefined} tabIndex={tab ? 0 : undefined} title={tab ? "Bấm để xem chi tiết" : undefined}>
+      <BieuTuong ten={bt} co={17} /><span>{nhan}</span><b>{gt}</b>
+    </div>
   );
   return (
     <div className="the ttho">
@@ -215,10 +217,10 @@ function TheThongTinHo({ h, hieuLuc, tt, moTab, soanVanBan }: { h: Ho; hieuLuc: 
         </div>
       </div>
       <div className="ttho-bang">
-        {dong("viTri", "Địa chỉ", h.diaChi || "—")}
-        {dong("lop", "Số thửa đất", `${h.thua.length} thửa`)}
-        {dong("nguoi", "Số nhân khẩu", h.nhanKhau.length)}
-        {dong("thongTin", "Tình trạng", <span className="nhan" style={{ background: TT_GPMB[tt].nen, color: "var(--chu)" }}>{TT_GPMB[tt].ten}</span>)}
+        {dong("viTri", "Địa chỉ", h.diaChi || "—", "thong-tin")}
+        {dong("lop", "Số thửa đất", `${h.thua.length} thửa`, "thua")}
+        {dong("nguoi", "Số nhân khẩu", h.nhanKhau.length, "nhan-khau")}
+        {dong("thongTin", "Tình trạng", <span className="nhan" style={{ background: TT_GPMB[tt].nen, color: "var(--chu)" }}>{TT_GPMB[tt].ten}</span>, "tien-do")}
       </div>
       <div className="ttho-td">
         <div className="ttho-td-dau"><b>Tiến độ thực hiện</b><span className="mo">Bước {buocHt}/{CAC_BUOC.length}</span></div>

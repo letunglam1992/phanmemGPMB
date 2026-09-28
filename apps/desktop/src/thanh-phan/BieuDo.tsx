@@ -35,6 +35,13 @@ const P: Record<string, ReactNode> = {
   xuong: <path d="M6 9l6 6 6-6" />,
   mat: <><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" /><circle cx="12" cy="12" r="3" /></>,
   matTat: <><path d="M9.9 5.7A9.7 9.7 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-2.6 3.4M6.6 6.6C3.9 8.3 2.5 12 2.5 12S6 18.5 12 18.5a9.3 9.3 0 0 0 5.4-1.7" /><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2M3 3l18 18" /></>,
+  chuong: <><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z" /><path d="M10 21a2.2 2.2 0 0 0 4 0" /></>,
+  duong: <><path d="M9 3L5 21M15 3l4 18" /><path d="M12 4v3M12 10.5v3M12 17v3" /></>,
+  nhaMay: <><path d="M3 21V10l5 3V10l5 3V6h4v15z" /><path d="M17 21V3h3v18M3 21h18M7 17h2M11 17h2" /></>,
+  nuoc: <><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z" /><path d="M9 14.5a3 3 0 0 0 3 3" /></>,
+  luoi: <><rect x="4" y="4" width="7" height="7" rx="1.5" /><rect x="13" y="4" width="7" height="7" rx="1.5" /><rect x="4" y="13" width="7" height="7" rx="1.5" /><rect x="13" y="13" width="7" height="7" rx="1.5" /></>,
+  hopThu: <><path d="M3 13l3-8h12l3 8v5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18z" /><path d="M3 13h5l1.5 2.5h5L16 13h5" /></>,
+  bieuDo: <><rect x="3.5" y="3.5" width="17" height="17" rx="3" /><path d="M7.5 15.5l3-3.5 2.5 2 4-5" /><path d="M14.5 9h2.5v2.5" /></>,
   nha: <><path d="M3.5 11L12 4l8.5 7" /><path d="M5.5 9.5V20h13V9.5M10 20v-5.5h4V20" /></>,
   phai: <path d="M9 6l6 6-6 6" />,
   mayTinh: <><rect x="5" y="3" width="14" height="18" rx="2" /><path d="M8 7h8v3H8zM8.5 14h.01M12 14h.01M15.5 14h.01M8.5 17.5h.01M12 17.5h.01M15.5 17.5h.01" /></>,
@@ -89,7 +96,7 @@ export function TheChiSo(p: { bieuTuong: string; nhan: string; giaTri: number | 
 }
 
 /** Phân bố trạng thái: một thanh xếp chồng (khe 2px) + chú giải có biểu tượng, số lượng, tỷ lệ. */
-export function PhanBoTrangThai({ dem, tong, donVi = "hộ" }: { dem: Record<TrangThaiGpmb, number>; tong: number; donVi?: string }) {
+export function PhanBoTrangThai({ dem, tong, donVi = "hộ", chon }: { dem: Record<TrangThaiGpmb, number>; tong: number; donVi?: string; chon?: (t: TrangThaiGpmb) => void }) {
   return (
     <div>
       <div className="thanh-xep" role="img" aria-label={THU_TU_TRANG_THAI.map((t) => `${TT_GPMB[t].ten} ${dem[t]}`).join(", ")}>
@@ -100,7 +107,7 @@ export function PhanBoTrangThai({ dem, tong, donVi = "hộ" }: { dem: Record<Tra
       </div>
       <div className="chu-giai-tt">
         {THU_TU_TRANG_THAI.map((t) => (
-          <div key={t}>
+          <div key={t} className={chon ? "bam" : undefined} onClick={chon ? () => chon(t) : undefined} role={chon ? "button" : undefined} tabIndex={chon ? 0 : undefined} title={chon ? `Xem danh sách: ${TT_GPMB[t].ten}` : undefined}>
             <i style={{ background: TT_GPMB[t].mau }}>{TT_GPMB[t].bieuTuong}</i>
             <span>{TT_GPMB[t].ten}</span>
             <b>{dem[t]}</b>
@@ -133,11 +140,11 @@ export function VongTienDo({ tyLe, nhan }: { tyLe: number; nhan: string }) {
 }
 
 /** Dải chặng nghiệp vụ: số hộ đã qua từng chặng. */
-export function DaiChang({ chang, soHo, bieuTuong }: { chang: { ten: string; soHo: number }[]; soHo: number; bieuTuong: string[] }) {
+export function DaiChang({ chang, soHo, bieuTuong, bam }: { chang: { ten: string; soHo: number }[]; soHo: number; bieuTuong: string[]; bam?: (i: number) => void }) {
   return (
     <div className="dai-chang">
       {chang.map((c, i) => (
-        <div key={c.ten} className="chang">
+        <div key={c.ten} className={`chang ${bam ? "bam" : ""}`} onClick={bam ? () => bam(i) : undefined} role={bam ? "button" : undefined} tabIndex={bam ? 0 : undefined} title={bam ? `Xem danh sách hộ đã qua chặng ${c.ten}` : undefined}>
           <span className="chang-bt"><BieuTuong ten={bieuTuong[i] ?? "hoSo"} co={22} /></span>
           <div className="chang-ten">{c.ten}</div>
           <div className="chang-so"><b>{c.soHo}</b>/{soHo} hộ</div>

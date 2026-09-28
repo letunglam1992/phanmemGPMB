@@ -208,3 +208,23 @@ export function canhBaoChung(homNay: string, lich?: LichLamViec): { noiDung: str
 }
 
 export const homNayIso = () => new Date().toISOString().slice(0, 10);
+
+/**
+ * Khó khăn, vướng mắc của hộ để hiện trong danh sách: nội dung cán bộ ghi + các điểm phần mềm phát hiện
+ * (bước quá hạn kế hoạch, khoản thiếu căn cứ khi phương án đã niêm yết, bước chờ duyệt).
+ */
+export function vuongMacHo(duAn: DuAn, h0: Ho, kq: KetQuaHo, homNay: string): { noiDung: string; muc: "CAO" | "TRUNG_BINH" }[] {
+  const h = hoHieuLuc(duAn, h0);
+  const out: { noiDung: string; muc: "CAO" | "TRUNG_BINH" }[] = [];
+  if (h.vuongMac?.noiDung) out.push({ noiDung: h.vuongMac.noiDung, muc: "CAO" });
+  const qh = buocQuaHan(duAn, h, homNay);
+  if (qh.length) out.push({ noiDung: `Quá hạn kế hoạch bước ${qh.join(", ")}`, muc: "CAO" });
+  if (kq.tong.soDongThieuCanCu > 0 && daNiemYet(h)) out.push({ noiDung: `${kq.tong.soDongThieuCanCu} khoản thiếu căn cứ (đã niêm yết)`, muc: "CAO" });
+  else if (kq.tong.soDongThieuCanCu > 0) out.push({ noiDung: `${kq.tong.soDongThieuCanCu} khoản thiếu căn cứ`, muc: "TRUNG_BINH" });
+  const cho = CAC_BUOC.filter((b) => h.tienDo[b.ma]?.trangThai === "CHO_DUYET" && !h.tienDo[b.ma]?.tuDuAn).map((b) => b.ma);
+  if (cho.length) out.push({ noiDung: `Bước ${cho.join(", ")} chờ duyệt`, muc: "TRUNG_BINH" });
+  return out;
+}
+
+/** Hộ đã qua chặng (CAC_CHANG) — dùng lọc danh sách khi bấm vào dải quy trình. */
+export const daQuaChang = (duAn: DuAn, h: Ho, buoc: string) => xong(hoHieuLuc(duAn, h), buoc);
