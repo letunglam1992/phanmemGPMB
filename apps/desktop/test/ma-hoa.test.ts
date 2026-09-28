@@ -55,7 +55,7 @@ describe("Sao lưu mã hóa", { timeout: 60_000 }, () => {
     const tep = await maHoaBanSaoLuu(await banMau(), { matKhau: "Gpmb-sao-luu-2026" });
     const zip = new PizZip(tep);
     const du = zip.file("du-lieu.bin")!.asUint8Array().slice();
-    du[100] ^= 1;
+    du[100] = du[100]! ^ 1;
     zip.file("du-lieu.bin", du);
     const hong = zip.generate({ type: "uint8array" });
     const loi = await docBanSaoLuu(hong, { matKhau: "Gpmb-sao-luu-2026" }).catch((e) => e);
