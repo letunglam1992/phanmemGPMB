@@ -5,7 +5,7 @@ import type { BoChinhSach } from "@gpmb/core";
 import { taoDuAnMau } from "../src/du-lieu-mau";
 import { DON_GIA } from "../src/du-lieu";
 import { tinhHo } from "../src/tinh-ho";
-import { coLoiChan, docSo, docTepNhap, taoMauNhap } from "../src/nhap-excel";
+import { coLoiChan, docSo, docTepNhap, goiYAnhXa, kiemTraNhap, moTepExcel, nhanCot, taoMauNhap, xemTruoc } from "../src/nhap-excel";
 
 const cs = cs0 as unknown as BoChinhSach;
 const cay = DON_GIA.find((r) => r.nguon === "PL VIII")!;
@@ -94,10 +94,92 @@ describe("Nhập hồ sơ từ Excel", () => {
     expect(docSo("").so).toBeNull();
   });
 
-  it("tiêu đề cột sai thứ tự bị báo", async () => {
+  it("tệp mẫu đổi thứ tự cột: ánh xạ theo tên cột, đọc đúng dữ liệu", async () => {
     const { duAn } = taoDuAnMau();
-    const b = await tep((wb) => { wb.getWorksheet("Thua")!.getCell(1, 2).value = "Số thửa"; });
+    const b = await tep((wb) => {
+      const ws = wb.getWorksheet("Thua")!;
+      ws.getCell(1, 2).value = "Số thửa";
+      ws.getCell(1, 3).value = "Tờ bản đồ";
+      them(wb, "Ho", ["X1", "Hộ X"]);
+      them(wb, "Thua", ["X1", "85", "5", "CLN", 100, 40]);
+    });
     const k = await docTepNhap(b, duAn, []);
-    expect(k.loi.some((l) => l.trang === "Thua" && l.dong === 1 && l.noiDung.includes("khác mẫu"))).toBe(true);
+    expect(k.loi.filter((l) => l.muc === "LOI")).toEqual([]);
+    expect(k.hoMoi[0]!.thua[0]).toMatchObject({ soTo: "5", soThua: "85" });
+  });
+
+  it("thiếu cột bắt buộc → báo lỗi, không nhập", async () => {
+    const { duAn } = taoDuAnMau();
+    const t = await moTepExcel(await taoMauNhap());
+    const ax = goiYAnhXa(t);
+    ax.Thua.cot.dienTichThuHoi = null;
+    const k = kiemTraNhap(t, ax, duAn, []);
+    expect(coLoiChan(k)).toBe(true);
+    expect(k.loi[0]!.noiDung).toContain("DT thu hồi");
+  });
+});
+
+/** Tệp "danh sách hộ bị ảnh hưởng" kiểu địa phương: tiêu đề 2 dòng gộp ô, dòng đánh số cột, nhóm theo thôn, dòng tổng. */
+async function tepDiaPhuong(): Promise<Uint8Array> {
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet("DS anh huong");
+  ws.getCell("A1").value = "DANH SÁCH CÁC HỘ BỊ ẢNH HƯỞNG";
+  ws.mergeCells("A1:I1");
+  ws.addRow([]);
+  ws.addRow(["STT", "Họ và tên chủ sử dụng", "Địa chỉ", "Tờ bản đồ", "Thửa số", "Mục đích sử dụng", "Diện tích (m²)", "", "Ghi chú"]);
+  ws.addRow(["", "", "", "", "", "", "Diện tích thửa", "Diện tích thu hồi", ""]);
+  for (const c of ["A", "B", "C", "D", "E", "F", "I"]) ws.mergeCells(`${c}3:${c}4`);
+  ws.mergeCells("G3:H3");
+  ws.addRow(["(1)", "(2)", "(3)", "(4)", "(5)", "(6)", "(7)", "(8)", "(9)"]);
+  ws.addRow(["I", "Bản Mé"]);
+  ws.addRow([1, "Lò Văn An", "Bản Mé", 5, 85, "CLN", 1000, "250,5", ""]);
+  ws.addRow(["", "", "", 5, 86, "Đất trồng lúa nương", 500, 500, "cùng chủ"]);
+  ws.addRow([2, "UBND xã Chiềng Mung", "Bản Mé", 5, 90, "DGT", 300, 120, ""]);
+  ws.addRow([3, "Lò Văn An", "Bản Mé", 6, 10, "CLN", 200, 200, ""]);
+  ws.addRow(["", "Tổng cộng", "", "", "", "", 2000, "1070,5", ""]);
+  return new Uint8Array(await wb.xlsx.writeBuffer());
+}
+
+describe("Ánh xạ cột tệp Excel khác mẫu", () => {
+  it("nhận ra trang, dòng tiêu đề 2 tầng, các cột theo tên", async () => {
+    const t = await moTepExcel(await tepDiaPhuong());
+    const ax = goiYAnhXa(t);
+    expect(ax.Ho.trang).toBeNull();
+    expect(ax.Thua).toMatchObject({ trang: "DS anh huong", dongTieuDe: 4 });
+    expect(ax.Thua.cot).toMatchObject({ maHo: null, tenChu: 2, diaChiChu: 3, soTo: 4, soThua: 5, loaiDat: 6, dienTich: 7, dienTichThuHoi: 8, ghiChu: 9 });
+    expect(nhanCot(t, "DS anh huong", 4)[7]).toBe("Diện tích (m²) Diện tích thu hồi");
+    const xt = xemTruoc(t, ax.Thua);
+    expect(xt[0]!.dong).toBe(6); // bỏ dòng đánh số cột (5)
+  });
+
+  it("gộp thửa theo chủ sử dụng, tự đánh mã; bỏ dòng tổng, dòng nhóm; đổi tên loại đất sang mã; báo rõ", async () => {
+    const { duAn } = taoDuAnMau();
+    const k = await docTepNhap(await tepDiaPhuong(), duAn, []);
+    expect(k.loi.filter((l) => l.muc === "LOI")).toEqual([]);
+    expect(k.hoMoi.map((h) => [h.ma, h.ten, h.loai, h.thua.length])).toEqual([
+      ["H001", "Lò Văn An", "HO_GIA_DINH", 3],
+      ["H002", "UBND xã Chiềng Mung", "TO_CHUC", 1],
+    ]);
+    const an = k.hoMoi[0]!;
+    expect(an.thua.map((x) => `${x.soTo}/${x.soThua}:${x.loaiDat}:${x.dienTichThuHoi}`)).toEqual(["5/85:CLN:250.5", "5/86:LUN:500", "6/10:CLN:200"]);
+    const cb = k.loi.map((l) => l.noiDung).join(" | ");
+    expect(cb).toContain("lấy theo dòng 7");
+    expect(cb).toContain("tự đánh mã");
+    expect(cb).toContain("dòng tổng");
+    expect(cb).toContain("Bỏ qua dòng không có tờ");
+  });
+
+  it("thửa trùng tên chủ đã có trong dự án → gắn vào hồ sơ đó, có cảnh báo", async () => {
+    const { duAn, ho } = taoDuAnMau();
+    const b = await tep((wb) => {
+      const ws = wb.getWorksheet("Thua")!;
+      ws.getCell(1, 1).value = "Chủ sử dụng";
+      them(wb, "Thua", [ho[0]!.ten, "99", "1", "CLN", 100, 100]);
+    });
+    const k = await docTepNhap(b, duAn, ho);
+    expect(k.loi.filter((l) => l.muc === "LOI")).toEqual([]);
+    expect(k.hoBoSung).toHaveLength(1);
+    expect(k.hoBoSung[0]!.id).toBe(ho[0]!.id);
+    expect(k.loi.some((l) => l.noiDung.includes(`hồ sơ đã có ${ho[0]!.ma}`))).toBe(true);
   });
 });

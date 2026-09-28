@@ -1,5 +1,5 @@
 //! Vỏ ứng dụng desktop. Toàn bộ nghiệp vụ nằm ở giao diện (TypeScript) và các gói @gpmb/*;
-//! vỏ Rust chỉ mở cửa sổ WebView2 và ghi tệp sao lưu tự động vào thư mục trên máy.
+//! vỏ Rust chỉ mở cửa sổ WebView2, ghi tệp sao lưu tự động và tệp tải về (Downloads) trên máy.
 //! Không mở cổng mạng, không gửi dữ liệu ra ngoài.
 
 pub mod ket_noi;
@@ -114,6 +114,54 @@ fn mo_thu_muc_sao_luu(app: tauri::AppHandle, rieng: String) -> Result<(), String
     Ok(())
 }
 
+/// Làm sạch tên tệp tải về: bỏ ký tự Windows cấm và phần đường dẫn, giữ chữ có dấu.
+fn ten_tep_an_toan(ten: &str) -> String {
+    let goc = ten.rsplit(['/', '\\']).next().unwrap_or("");
+    let s: String = goc
+        .chars()
+        .map(|c| if c.is_control() || "<>:\"|?*".contains(c) { '_' } else { c })
+        .collect();
+    let s = s.trim().trim_matches('.').to_string();
+    if s.is_empty() { "tep-tai-ve".into() } else { s }
+}
+
+/// Tên chưa tồn tại trong thư mục: "a.xlsx" → "a (1).xlsx"…
+fn ten_chua_co(dir: &std::path::Path, ten: &str) -> PathBuf {
+    let p = dir.join(ten);
+    if !p.exists() {
+        return p;
+    }
+    let (goc, duoi) = match ten.rfind('.') {
+        Some(i) if i > 0 => (&ten[..i], &ten[i..]),
+        _ => (ten, ""),
+    };
+    (1..)
+        .map(|i| dir.join(format!("{goc} ({i}){duoi}")))
+        .find(|p| !p.exists())
+        .unwrap()
+}
+
+/// Tải tệp về máy trong vỏ desktop (WebView2 không tự lưu liên kết blob): ghi vào thư mục Downloads
+/// rồi mở trình quản lý tệp, chọn sẵn tệp vừa lưu. Thân yêu cầu = nội dung tệp; header `ten-tep` = tên.
+#[tauri::command]
+fn luu_tai_xuong(app: tauri::AppHandle, request: Request<'_>) -> Result<String, String> {
+    let InvokeBody::Raw(du_lieu) = request.body() else {
+        return Err("Dữ liệu tệp không đúng dạng".into());
+    };
+    let ten = ten_tep_an_toan(&tieu_de(&request, "ten-tep")?);
+    let dir = app
+        .path()
+        .download_dir()
+        .or_else(|_| app.path().document_dir())
+        .map_err(|e| format!("Không xác định được thư mục Downloads: {e}"))?;
+    fs::create_dir_all(&dir).map_err(|e| format!("Không tạo được thư mục {}: {e}", dir.display()))?;
+    let dich = ten_chua_co(&dir, &ten);
+    fs::write(&dich, du_lieu).map_err(|e| format!("Không ghi được {}: {e}", dich.display()))?;
+    #[cfg(target_os = "windows")]
+    let _ = std::process::Command::new("explorer").arg(format!("/select,{}", dich.display())).spawn();
+    Ok(dich.display().to_string())
+}
+
 // ---------------- Mạng nội bộ ----------------
 
 #[derive(Default)]
@@ -190,6 +238,7 @@ pub fn run() {
             ghi_sao_luu,
             thu_muc_sao_luu,
             mo_thu_muc_sao_luu,
+            luu_tai_xuong,
             bat_may_chu,
             tat_may_chu,
             trang_thai_may_chu,
@@ -202,7 +251,20 @@ pub fn run() {
 
 #[cfg(test)]
 mod kiem_thu {
-    use super::{ghi_va_don, giai_ma};
+    use super::{ghi_va_don, giai_ma, ten_chua_co, ten_tep_an_toan};
+
+    #[test]
+    fn ten_tep_tai_ve_an_toan_va_khong_ghi_de() {
+        assert_eq!(ten_tep_an_toan("Mẫu nhập hồ sơ.xlsx"), "Mẫu nhập hồ sơ.xlsx");
+        assert_eq!(ten_tep_an_toan("..\\a/b:c?.xlsx"), "b_c_.xlsx");
+        assert_eq!(ten_tep_an_toan("  "), "tep-tai-ve");
+        let dir = std::env::temp_dir().join(format!("gpmb-tx-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("a.xlsx"), b"1").unwrap();
+        assert_eq!(ten_chua_co(&dir, "a.xlsx"), dir.join("a (1).xlsx"));
+        assert_eq!(ten_chua_co(&dir, "b.xlsx"), dir.join("b.xlsx"));
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
 
     #[test]
     fn ghi_va_chi_giu_so_ban_moi_nhat() {

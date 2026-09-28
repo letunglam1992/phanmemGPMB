@@ -119,7 +119,7 @@ export function UngDung() {
         ))}
         <div className="ben-chan">
           <span className="chip" title={moTaCheDo(cheDo)}><span className="cham" style={cheDo.cheDo === "MAY_DON" ? undefined : { background: "var(--xanh-duong-to)" }} />{cheDo.cheDo === "MAY_DON" ? "Lưu trên máy này" : cheDo.cheDo === "MAY_CHU" ? "Máy chủ mạng nội bộ" : "Máy trạm"}</span>
-          <span className="mo chu-nho" style={{ padding: "0 6px" }}>Bản thử nghiệm 0.1</span>
+          <span className="mo chu-nho" style={{ padding: "0 6px" }}>Bản thử nghiệm 0.2</span>
         </div>
       </aside>
 

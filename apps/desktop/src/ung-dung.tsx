@@ -151,6 +151,12 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
     setThongBao({ noiDung, loai, id });
     setTimeout(() => setThongBao((t) => (t?.id === id ? null : t)), loai === "loi" ? 6000 : 3500);
   }, []);
+  // Vỏ desktop: báo nơi đã lưu tệp tải về (tai-xuong.ts)
+  useEffect(() => {
+    const f = (e: Event) => bao(`Đã lưu tệp: ${(e as CustomEvent<string>).detail}`);
+    window.addEventListener("gpmb-da-tai", f);
+    return () => window.removeEventListener("gpmb-da-tai", f);
+  }, [bao]);
   const ghiNhatKy = async (hanhDong: string, chiTiet?: string) => {
     await kho.ghiNhatKy({ nguoi: taiKhoan?.ten ?? "", hoTen: taiKhoan?.hoTen ?? "", hanhDong, chiTiet });
   };

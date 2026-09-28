@@ -123,7 +123,7 @@ export function ManDangNhap() {
           </div>
         </div>
         <div className="dn-chan">
-          <span>Phiên bản thử nghiệm 0.1</span>
+          <span>Phiên bản thử nghiệm 0.2</span>
           <button type="button" onClick={() => setKetNoi(true)} title="Chế độ kết nối: máy đơn, máy chủ, máy trạm">
             <BieuTuong ten="caiDat" co={15} /> Cài đặt
           </button>

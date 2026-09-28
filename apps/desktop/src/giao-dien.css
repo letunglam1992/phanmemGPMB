@@ -871,3 +871,7 @@ label.nut.tat { opacity: .55; pointer-events: none; }
 .kg-nhung > .trang > .duong-dan { display: none; }
 .kg-luu { display: flex; align-items: center; gap: 10px; justify-content: flex-end; margin-bottom: 12px; flex-wrap: wrap; }
 .kg-luu .mo { margin-right: auto; }
+/* Nhập Excel: ánh xạ cột */
+.nx-tieu-de { margin: 14px 0 6px; font-size: 13.5px; }
+.nx-anh-xa select { width: 100%; }
+select.o-loi { border-color: var(--do-to); background: var(--do-nen); }
