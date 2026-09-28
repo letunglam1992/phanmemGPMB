@@ -8,6 +8,7 @@ import { useUngDung } from "../../ung-dung";
 import { Chon } from "../../thanh-phan/Chon";
 import { soD } from "../../so";
 import { OSo } from "../../thanh-phan/OSo";
+import { NHOM_PHAP_LY, THU_TU_PHAP_LY, goiYPhapLy, type NhomPhapLy } from "../../nguon-goc";
 
 export const LOAI_DAT = ["LUC", "LUK", "LUN", "HNK", "BHK", "NHK", "CLN", "RSX", "RPH", "NTS", "ONT", "ODT", "TMD", "SKC", "SKK", "SKN", "DGT", "NTD", "CSD", "KHAC"];
 
@@ -57,7 +58,14 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
                       <OSo className={`o-so ${loiDt ? "loi-nhap" : ""}`} value={t.dienTichThuHoi} onChange={(v) => sua(t.id, { dienTichThuHoi: v })} />
                       {t.dienTichBanDo !== undefined && <div className={`chu-nho ${lechBanDo ? "" : "mo"}`} style={lechBanDo ? { color: "var(--vang)" } : undefined}>Bản đồ: {t.dienTichBanDo.toFixed(2)}</div>}
                     </td>
-                    <td><input value={t.nguonGoc} onChange={(e) => sua(t.id, { nguonGoc: e.target.value })} /></td>
+                    <td>
+                      {/* P2-5: tình trạng pháp lý (danh mục) + diễn giải nguồn gốc (chữ) */}
+                      <select value={t.phapLy ?? ""} title="Tình trạng pháp lý nguồn gốc đất — để lọc, thống kê; điều kiện bồi thường do cán bộ xác định (Điều 95 LĐĐ 2024)" className={t.phapLy ? "" : "nhac-nhap"} onChange={(e) => sua(t.id, { phapLy: (e.target.value || undefined) as NhomPhapLy | undefined })} style={{ marginBottom: 4 }}>
+                        <option value="">— Pháp lý{goiYPhapLy(t) ? ` (gợi ý: ${NHOM_PHAP_LY[goiYPhapLy(t)!].ngan})` : ""} —</option>
+                        {THU_TU_PHAP_LY.map((k) => <option key={k} value={k}>{NHOM_PHAP_LY[k].ngan}</option>)}
+                      </select>
+                      <input value={t.nguonGoc} placeholder="Diễn giải nguồn gốc" onChange={(e) => sua(t.id, { nguonGoc: e.target.value })} />
+                    </td>
                     <td>
                       {t.phanLop?.lop.length ? (
                         <div><b>Phân lớp · {t.phanLop.lop.length} lớp</b> <button className="nut nut-chu nut-nho" onClick={() => setMoRong(t.id)}>Sửa</button><div className="can-cu">Bảng {t.phanLop.tuyen.bang}, STT {t.phanLop.tuyen.stt}: {t.phanLop.tuyen.tuyen}</div></div>

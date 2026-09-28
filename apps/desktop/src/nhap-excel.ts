@@ -14,6 +14,8 @@ import { DON_GIA } from "./du-lieu";
 import { maHoTiepTheo, mauMaCua } from "./ma-ho";
 import { thuTinh } from "./bieu-thuc";
 import { TEN_LOAI_DAT } from "./van-ban/loai-dat";
+import { NHOM_PHAP_LY, THU_TU_PHAP_LY, nhomTuChu } from "./nguon-goc";
+import { khongDau } from "./tim-kiem";
 import { hoMoi, taoId, type DuAn, type Ho, type LoaiDoiTuong, type TaiSan, type Thua } from "./mo-hinh";
 
 export interface LoiNhap {
@@ -56,6 +58,7 @@ export const MAU: Record<string, CotMau[]> = {
     { khoa: "dienTich", tieuDe: "DT thửa (m²)", rong: 12 },
     { khoa: "dienTichThuHoi", tieuDe: "DT thu hồi (m²)", batBuoc: true, rong: 14 },
     { khoa: "nguonGoc", tieuDe: "Nguồn gốc sử dụng đất", rong: 30 },
+    { khoa: "phapLy", tieuDe: "Tình trạng pháp lý", rong: 20, ghiChu: "Có GCN / Có giấy tờ / Không giấy tờ / Thuê đất / Giao khoán / Công ích / Lấn chiếm, vi phạm / Khác" },
     { khoa: "ghiChu", tieuDe: "Ghi chú", rong: 24 },
   ],
   KiemDem: [
@@ -199,6 +202,7 @@ export const TRUONG: Record<LoaiTrang, TruongNhap[]> = {
     { khoa: "loaiDat", tieuDe: "Loại đất (mã)", batBuoc: true, ghiChu: "Mã (LUC, CLN, ONT…) hoặc đúng tên loại đất", dongNghia: ["loai dat", "ma loai dat", "muc dich su dung", "muc dich su dung dat", "mdsd", "ky hieu loai dat"] },
     { khoa: "dienTich", tieuDe: "DT thửa (m²)", dongNghia: ["dien tich thua", "dt thua", "dien tich thua dat", "tong dien tich", "dien tich", "dien tich m", "dien tich theo ban do"] },
     { khoa: "dienTichThuHoi", tieuDe: "DT thu hồi (m²)", batBuoc: true, dongNghia: ["dien tich thu hoi", "dt thu hoi", "thu hoi", "dien tich bi thu hoi", "dien tich anh huong", "dien tich thu hoi m", "dien tich thu hoi dat"] },
+    { khoa: "phapLy", tieuDe: "Tình trạng pháp lý", dongNghia: ["phap ly", "tinh trang phap ly", "tinh trang phap ly nguon goc", "phap ly nguon goc"] },
     { khoa: "nguonGoc", tieuDe: "Nguồn gốc sử dụng đất", dongNghia: ["nguon goc", "nguon goc su dung dat", "nguon goc dat"] },
     { khoa: "ghiChu", tieuDe: "Ghi chú", dongNghia: ["ghi chu"] },
   ],
@@ -574,7 +578,10 @@ export function kiemTraNhap(tep: TepExcel, ax: AnhXa, duAn: DuAn, hienCoTatCa: H
     const khac = toThua.get(`${soTo}/${soThua}`);
     if (khac && khac !== h.ma) bao("Thua", dong, "soThua", `Thửa ${soThua} tờ ${soTo} cũng có ở hộ ${khac} — kiểm tra (đồng sử dụng hay nhập nhầm)`, "CANH_BAO");
     toThua.set(`${soTo}/${soThua}`, h.ma);
-    const t: Thua = { id: taoId(), soTo, soThua, loaiDat, dienTich: dt.so ?? "", dienTichThuHoi: dtth.so ?? "", nguonGoc: chuO(o.nguonGoc), gia: null, ghiChu: chuO(o.ghiChu) || undefined };
+    const plChu = chuO(o.phapLy);
+    const phapLy = nhomTuChu(plChu) ?? THU_TU_PHAP_LY.find((k) => khongDau(NHOM_PHAP_LY[k].ngan) === khongDau(plChu).trim()) ?? undefined;
+    if (plChu && !phapLy) bao("Thua", dong, "phapLy", `Không nhận ra tình trạng pháp lý "${plChu}" — để trống, chọn lại trong hồ sơ`, "CANH_BAO");
+    const t: Thua = { id: taoId(), soTo, soThua, loaiDat, dienTich: dt.so ?? "", dienTichThuHoi: dtth.so ?? "", nguonGoc: chuO(o.nguonGoc), phapLy, gia: null, ghiChu: chuO(o.ghiChu) || undefined };
     h.thua.push(t);
     dem.thua++;
   }

@@ -20,6 +20,8 @@ import { thongTinChungMacDinh } from "../van-ban/du-lieu";
 import { truongVanBanTuDonVi } from "../don-vi";
 import { Chon } from "../thanh-phan/Chon";
 import { RaoLoi } from "../thanh-phan/RaoLoi";
+import { NHOM_PHAP_LY, THU_TU_PHAP_LY, thongKePhapLy, type NhomPhapLy } from "../nguon-goc";
+import { hienSo } from "../so";
 import { CauHinhThuongBanGiao } from "../thanh-phan/CauHinhThuong";
 import { MAU_MA_MAC_DINH, loiMauMa, maHoTiepTheo, mauMaCua, nhomMaTrung, taoMa } from "../ma-ho";
 
@@ -142,6 +144,17 @@ function TheTongQuan({ duAn, kq, moHo, capNhatTd, keHoach }: { duAn: DuAn; kq: K
             <div className="the-than"><PhanBoTrangThai dem={tk.theoTrangThai} tong={tk.soHo} chon={moHo} /></div>
           </div>
           <div className="the">
+            <div className="the-dau"><h3>DT thu hồi theo pháp lý nguồn gốc</h3><span className="mo chu-nho">dữ kiện, không phải kết luận bồi thường</span></div>
+            <table className="bang">
+              <thead><tr><th>Tình trạng pháp lý</th><th className="so">Số thửa</th><th className="so">DT thu hồi (m²)</th></tr></thead>
+              <tbody>
+                {thongKePhapLy(kq.map((x) => x.h)).map((x) => (
+                  <tr key={x.nhom}><td>{x.nhom === "CHUA" ? <span className="nhan nhan-vang">Chưa phân loại</span> : NHOM_PHAP_LY[x.nhom].ngan}</td><td className="so">{x.soThua}</td><td className="so">{hienSo(x.dt)}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="the">
             <div className="the-dau"><h3>Bản đồ dự án</h3><span className="mo chu-nho">bấm để mở</span></div>
             <div className="the-than" style={{ padding: 8 }}><BanDoNho duAn={duAn} ttThua={ttThua} /></div>
           </div>
@@ -244,6 +257,7 @@ function TheHo({ duAn, kq }: { duAn: DuAn; kq: Kq }) {
   const homNay = homNayIso();
   const [loc, setLoc] = useState("");
   const [locTt, setLocTt] = useState<TrangThaiGpmb | "">("");
+  const [locPl, setLocPl] = useState<NhomPhapLy | "CHUA" | "">("");
   useEffect(() => {
     const nghe = (e: Event) => setLocTt((e as CustomEvent<TrangThaiGpmb>).detail);
     window.addEventListener("gpmb-loc-ho", nghe);
@@ -252,6 +266,7 @@ function TheHo({ duAn, kq }: { duAn: DuAn; kq: Kq }) {
   const ds = kq
     .map(({ h, k }) => ({ h, k, duAn, tt: trangThaiHo(duAn, h, k, homNay) }))
     .filter((x) => !locTt || x.tt === locTt)
+    .filter((x) => !locPl || x.h.thua.some((t) => Number(t.dienTichThuHoi) > 0 && (t.phapLy ?? "CHUA") === locPl))
     .filter((x) => khopTuKhoa({ h: x.h, duAnTen: "" }, loc));
   return (
     <div className="the">
@@ -268,6 +283,11 @@ function TheHo({ duAn, kq }: { duAn: DuAn; kq: Kq }) {
           <Chon value={locTt} onChange={(e) => setLocTt(e.target.value as TrangThaiGpmb | "")} aria-label="Lọc hiện trạng" style={{ height: 38, borderRadius: 10 }}>
             <option value="">Mọi hiện trạng</option>
             {THU_TU_TRANG_THAI.map((t) => <option key={t} value={t}>{TT_GPMB[t].ten}</option>)}
+          </Chon>
+          <Chon value={locPl} onChange={(e) => setLocPl(e.target.value as NhomPhapLy | "CHUA" | "")} aria-label="Lọc pháp lý nguồn gốc" style={{ height: 38, borderRadius: 10 }}>
+            <option value="">Mọi pháp lý nguồn gốc</option>
+            {THU_TU_PHAP_LY.map((k) => <option key={k} value={k}>{NHOM_PHAP_LY[k].ngan}</option>)}
+            <option value="CHUA">Chưa phân loại</option>
           </Chon>
         </div>
       </div>

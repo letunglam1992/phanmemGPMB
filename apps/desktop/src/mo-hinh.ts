@@ -44,6 +44,8 @@ export interface Thua {
   dienTich: string;
   dienTichThuHoi: string;
   nguonGoc: string;
+  /** Tình trạng pháp lý nguồn gốc đất (P2-5, nguon-goc.ts) — dữ kiện để lọc, thống kê. */
+  phapLy?: import("./nguon-goc").NhomPhapLy;
   gia: GiaThua | null;
   phanLop?: PhanLopThua;
   /** Thông tin Giấy chứng nhận (dùng cho danh sách thu hồi đất theo mẫu của xã). */
