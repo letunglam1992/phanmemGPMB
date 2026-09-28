@@ -11,7 +11,7 @@ import { taiXuong } from "../tai-xuong";
 import { tenTep } from "../ten-tep";
 
 /** Thông tin chung của dự án dùng khi soạn văn bản (lưu vào DuAn.vanBan). */
-const TRUONG_CHUNG: (TruongNhap & { nhom: string })[] = [
+export const TRUONG_CHUNG: (TruongNhap & { nhom: string })[] = [
   { nhom: "Cơ quan", truong: "ten_don_vi_bt", nhan: "Đơn vị, tổ chức thực hiện nhiệm vụ bồi thường, GPMB", goiY: "Ghi tên Đơn vị/Tổ chức thực hiện nhiệm vụ bồi thường, giải phóng mặt bằng" },
   { nhom: "Cơ quan", truong: "co_quan_cap_tren_bt", nhan: "Cơ quan cấp trên của đơn vị bồi thường (dòng trên tiêu đề)" },
   { nhom: "Cơ quan", truong: "ky_hieu_don_vi", nhan: "Chữ viết tắt tên đơn vị bồi thường (ký hiệu văn bản)" },

@@ -63,7 +63,7 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
         <BieuTuong ten="phai" co={13} />
         <button onClick={() => di({ ten: "du-an", duAnId })}>{duAn.ten}</button>
         <BieuTuong ten="phai" co={13} />
-        <button onClick={() => di({ ten: "du-an", duAnId })}>Hồ sơ</button>
+        <button onClick={() => di({ ten: "du-an", duAnId, tab: "ho" })}>Hồ sơ</button>
         <BieuTuong ten="phai" co={13} />
         <b>Hồ sơ hộ, cá nhân, tổ chức</b>
       </nav>
@@ -148,7 +148,7 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
           )}
           {choSua && (
             <div className="vung-xoa">
-              <button className="nut-xoa" onClick={async () => { if (confirm(`Xóa hồ sơ ${h.ma} – ${h.ten}? Thao tác không hoàn tác được.`)) { await xoaHo(h.id); di({ ten: "du-an", duAnId }); } }}>
+              <button className="nut-xoa" onClick={async () => { if (confirm(`Xóa hồ sơ ${h.ma} – ${h.ten}? Thao tác không hoàn tác được.`)) { await xoaHo(h.id); di({ ten: "du-an", duAnId, tab: "ho" }); } }}>
                 <BieuTuong ten="thungRac" co={19} />
                 <span><b>Xóa hồ sơ</b><small>Xóa vĩnh viễn hồ sơ và toàn bộ dữ liệu liên quan.</small></span>
               </button>

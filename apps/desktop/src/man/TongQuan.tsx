@@ -170,7 +170,7 @@ export function TongQuan() {
         </div>
 
         <div className="the" style={{ alignSelf: "start" }}>
-          <div className="the-dau"><h2>Dự án</h2><span className="mo chu-nho">{dsDuAn.length}</span><div className="phai"><button className="nut nut-nho" onClick={() => di({ ten: "du-an" })}>Mở Dự án & hồ sơ</button></div></div>
+          <div className="the-dau"><h2>Dự án</h2><span className="mo chu-nho">{dsDuAn.length}</span><div className="phai"><button className="nut nut-nho" onClick={() => di({ ten: "du-an" })}>Mở danh sách dự án</button></div></div>
           <div className="the-than luoi" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))" }}>
             {duLieu.length === 0 && <div className="trong">{dangTai ? "Đang tải…" : "Chưa có dự án. Tạo dự án mới hoặc nạp dữ liệu mẫu để xem thử."}</div>}
             {duLieu.map(({ d, tk, tong, cb }) => (
@@ -209,9 +209,7 @@ export function HopTaoDuAn({ dong, duAn }: { dong: () => void; duAn?: DuAn }) {
       giaGao: null, hanMucNN: null, heSoGiaDat: null, banDo: null, taoLuc: new Date().toISOString(),
     },
   );
-  const hopLe = d.ten.trim() && d.xa;
-  const heSoKhac1 = d.heSoGiaDat && d.heSoGiaDat.heSo && d.heSoGiaDat.heSo !== "1";
-  const thieuLyDoLamTron = !!d.lamTron && !d.lamTron.lyDo.trim();
+  const { hopLe, heSoKhac1, thieuLyDoLamTron } = kiemTraDuAn(d);
   return (
     <HopThoai
       tieuDe={duAn ? "Thông tin dự án" : "Dự án mới"}
@@ -220,10 +218,26 @@ export function HopTaoDuAn({ dong, duAn }: { dong: () => void; duAn?: DuAn }) {
       chan={
         <>
           <button className="nut" onClick={dong}>Hủy</button>
-          <button className="nut nut-chinh" disabled={!hopLe || (!!heSoKhac1 && !d.heSoGiaDat?.vanBan) || thieuLyDoLamTron} onClick={async () => { await luuDuAn(d); dong(); if (!duAn) di({ ten: "du-an", duAnId: d.id }); }}>Lưu</button>
+          <button className="nut nut-chinh" disabled={!hopLe || (!!heSoKhac1 && !d.heSoGiaDat?.vanBan) || thieuLyDoLamTron} onClick={async () => { await luuDuAn(d); dong(); if (!duAn) di({ ten: "du-an", duAnId: d.id, tab: "thong-tin" }); }}>Lưu</button>
         </>
       }
     >
+      <FormDuAn d={d} setD={setD} />
+    </HopThoai>
+  );
+}
+
+export function kiemTraDuAn(d: DuAn) {
+  const hopLe = !!(d.ten.trim() && d.xa);
+  const heSoKhac1 = !!(d.heSoGiaDat && d.heSoGiaDat.heSo && d.heSoGiaDat.heSo !== "1");
+  const thieuLyDoLamTron = !!d.lamTron && !d.lamTron.lyDo.trim();
+  return { hopLe, heSoKhac1, thieuLyDoLamTron, luuDuoc: hopLe && (!heSoKhac1 || !!d.heSoGiaDat?.vanBan) && !thieuLyDoLamTron };
+}
+
+/** Các trường thông tin dự án (dùng trong hộp "Dự án mới" và thẻ Thông tin dự án ở không gian Hồ sơ). */
+export function FormDuAn({ d, setD }: { d: DuAn; setD: (d: DuAn) => void }) {
+  const { heSoKhac1, thieuLyDoLamTron } = kiemTraDuAn(d);
+  return (
       <div className="luoi luoi-2">
         <O nhan="Tên dự án *" style={{ gridColumn: "1/-1" }}><input value={d.ten} onChange={(e) => setD({ ...d, ten: e.target.value })} /></O>
         <O nhan="Loại dự án" goiY="Dùng cho biểu tượng, lọc danh sách">
@@ -266,6 +280,5 @@ export function HopTaoDuAn({ dong, duAn }: { dong: () => void; duAn?: DuAn }) {
         <O nhan="Lý do, căn cứ cách làm tròn"><input className={thieuLyDoLamTron ? "loi-nhap" : ""} value={d.lamTron?.lyDo ?? ""} disabled={!d.lamTron} onChange={(e) => setD({ ...d, lamTron: { cach: d.lamTron!.cach, lyDo: e.target.value } })} /></O>
         <O nhan="Văn bản quyết định hệ số"><input className={heSoKhac1 && !d.heSoGiaDat?.vanBan ? "loi-nhap" : ""} value={d.heSoGiaDat?.vanBan ?? ""} onChange={(e) => setD({ ...d, heSoGiaDat: { heSo: d.heSoGiaDat?.heSo ?? "1", vanBan: e.target.value } })} /></O>
       </div>
-    </HopThoai>
   );
 }

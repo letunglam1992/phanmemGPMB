@@ -21,6 +21,7 @@ import { docGiaoDien, ghiGiaoDien, type GiaoDien } from "./giao-dien-sang-toi";
 import { DanhSachHo } from "./man/DanhSachHo";
 import { ThietLapDonVi } from "./man/ThietLapDonVi";
 import { HuongDan } from "./man/HuongDan";
+import { KhongGianDuAn } from "./man/KhongGianDuAn";
 import { TimKiemChung } from "./thanh-phan/TimKiem";
 import { useTongHop } from "./thanh-phan/dung-canh-bao";
 import { donViSuDung } from "./don-vi";
@@ -28,9 +29,12 @@ import { donViSuDung } from "./don-vi";
 type MucBen = { ten: string; bt: string; chon?: boolean; bam: () => void; tat?: boolean; an?: boolean };
 
 export function UngDung() {
-  const { man, di, dsDuAn, hoCua, chinhSach, hopSaoLuu, moSaoLuu, taiKhoan, quyen, dangXuat, hopCaiDat, moCaiDat, quayLai, coTheQuayLai, dsDonVi } = useUngDung();
+  const { man, di, dsDuAn, hoCua, chinhSach, hopSaoLuu, moSaoLuu, taiKhoan, quyen, dangXuat, hopCaiDat, moCaiDat, quayLai, coTheQuayLai, dsDonVi, anhNen } = useUngDung();
   const [menu, setMenu] = useState(false);
   const [chuong, setChuong] = useState(false);
+  // Dự án làm việc gần nhất — mục "Hồ sơ" mở lại dự án này
+  const [duAnGanNhat, setDuAnGanNhat] = useState<string | null>(null);
+  useEffect(() => { if ("duAnId" in man && man.duAnId) setDuAnGanNhat(man.duAnId); }, [man]);
   const { canhBao, mo: moCanhBao } = useTongHop();
   // Phím Quay lại: Alt + ←, nút lùi của chuột (không bắt Backspace để tránh mất thao tác khi đang nhập)
   useEffect(() => {
@@ -54,7 +58,7 @@ export function UngDung() {
   }, [dsDuAn, hoCua, chinhSach]);
   if (!taiKhoan) return (<><ManDangNhap /><ThongBaoNhanh /></>);
 
-  const duAnId = ("duAnId" in man && man.duAnId) || dsDuAn[0]?.id;
+  const duAnId = ("duAnId" in man && man.duAnId) || (duAnGanNhat && dsDuAn.some((d) => d.id === duAnGanNhat) ? duAnGanNhat : dsDuAn[0]?.id);
   const dvSuDung = donViSuDung(dsDonVi);
   const cao = canhBao.filter((c) => c.muc === "CAO");
   const vietTat = taiKhoan ? taiKhoan.hoTen.trim().split(/\s+/).slice(-2).map((x) => x[0]).join("").toUpperCase() : "";
@@ -63,15 +67,9 @@ export function UngDung() {
       nhan: "Theo dõi",
       muc: [
         { ten: "Tổng quan", bt: "tongQuan", chon: man.ten === "tong-quan", bam: () => di({ ten: "tong-quan" }) },
-        { ten: "Dự án & hồ sơ", bt: "danhSach", chon: man.ten === "du-an" || man.ten === "ho" || man.ten === "ds-ho", bam: () => di({ ten: "du-an", duAnId }) },
+        { ten: "Dự án", bt: "danhSach", chon: man.ten === "du-an" && !man.duAnId, bam: () => di({ ten: "du-an" }) },
+        { ten: "Hồ sơ", bt: "hoSo", chon: (man.ten === "du-an" && !!man.duAnId) || man.ten === "ho" || man.ten === "ds-ho" || man.ten === "ban-do" || man.ten === "van-ban", bam: () => duAnId && di({ ten: "du-an", duAnId }), tat: !duAnId },
         { ten: "Báo cáo tổng hợp", bt: "baoCao", chon: man.ten === "bao-cao", bam: () => di({ ten: "bao-cao" }) },
-        { ten: "Bản đồ", bt: "thua", chon: man.ten === "ban-do", bam: () => duAnId && di({ ten: "ban-do", duAnId }), tat: !duAnId },
-      ],
-    },
-    {
-      nhan: "Nghiệp vụ",
-      muc: [
-        { ten: "Văn bản", bt: "vanBan", chon: man.ten === "van-ban", bam: () => duAnId && di({ ten: "van-ban", duAnId }), tat: !duAnId },
       ],
     },
     {
@@ -125,7 +123,7 @@ export function UngDung() {
         </div>
       </aside>
 
-      <header className="thanh-tren">
+      <header className="thanh-tren" style={anhNen ? ({ "--anh-nen": `url("${anhNen}")` } as React.CSSProperties) : undefined}>
         <div className="thuong-hieu">
           <button className="nut-quay-lai" onClick={quayLai} disabled={!coTheQuayLai} title="Quay lại màn trước (Alt + ←)" aria-label="Quay lại">
             <BieuTuong ten="hoanTac" co={18} /><span>Quay lại</span>
@@ -135,7 +133,7 @@ export function UngDung() {
             <div className="to-chuc" title={dvSuDung ? `Đơn vị sử dụng: ${dvSuDung.ten}` : "Chưa thiết lập đơn vị (Công cụ → Thiết lập đơn vị)"}>{dvSuDung ? dvSuDung.ten : "Tỉnh Sơn La"}</div>
             <div className="ten-ung-dung">Bồi thường, hỗ trợ, tái định cư</div>
             <div className="phu-de">
-              <button onClick={() => di({ ten: "du-an", duAnId })}>{dsDuAn.length} dự án</button> · <button onClick={() => di({ ten: "ds-ho" })}>{tongQuat.soHo} hồ sơ</button> · {dinhDang(tongQuat.tien, 0)} đ tạm tính
+              <button onClick={() => di({ ten: "du-an" })}>{dsDuAn.length} dự án</button> · <button onClick={() => di({ ten: "ds-ho" })}>{tongQuat.soHo} hồ sơ</button> · {dinhDang(tongQuat.tien, 0)} đ tạm tính
             </div>
           </div>
         </div>
@@ -195,16 +193,17 @@ export function UngDung() {
 
       <main className="noi-dung">
         {man.ten === "tong-quan" && <TongQuan />}
-        {man.ten === "du-an" && <ManDuAn duAnId={man.duAnId ?? duAnId} />}
+        {man.ten === "du-an" && !man.duAnId && <ManDuAn />}
+        {man.ten === "du-an" && man.duAnId && <KhongGianDuAn duAnId={man.duAnId} tab={man.tab} ma={man.ma} hoId={man.hoId} />}
         {man.ten === "ds-ho" && <DanhSachHo key={JSON.stringify(man)} duAnId={man.duAnId} trangThai={man.trangThai} chang={man.chang} tim={man.tim} />}
         {man.ten === "don-vi" && <ThietLapDonVi />}
         {man.ten === "huong-dan" && <HuongDan />}
         {man.ten === "ho" && <HoSo duAnId={man.duAnId} hoId={man.hoId} tabDau={man.tab} />}
-        {man.ten === "ban-do" && <BanDo duAnId={man.duAnId} />}
+        {man.ten === "ban-do" && <KhongGianDuAn duAnId={man.duAnId} tab="ban-do" />}
         {man.ten === "tra-cuu" && <TraCuu />}
         {man.ten === "doc-scan" && <DocScan />}
         {man.ten === "bao-cao" && <BaoCao />}
-        {man.ten === "van-ban" && <VanBan key={`${man.duAnId}-${man.ma}-${man.hoId}`} duAnId={man.duAnId} maDau={man.ma} hoIdDau={man.hoId} />}
+        {man.ten === "van-ban" && <KhongGianDuAn duAnId={man.duAnId} tab="van-ban" ma={man.ma} hoId={man.hoId} />}
       </main>
       <footer className="chan">
         <span>Bộ chính sách: Sơn La, hiệu lực 31/3/2026 (QĐ 106/2025, QĐ 14/2026, QĐ 32/2025, NQ 152/2025)</span>

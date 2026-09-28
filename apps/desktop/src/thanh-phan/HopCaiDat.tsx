@@ -14,7 +14,7 @@ const vn = (iso: string) => iso.split("-").reverse().join("/");
 /** Cài đặt chung: lịch ngày nghỉ (VM-25); các thẻ khác truyền qua `them`. */
 export function HopCaiDat({ them }: { them?: { ma: string; ten: string; noiDung: ReactNode }[] }) {
   const { moCaiDat } = useUngDung();
-  const cacThe = [{ ma: "lich", ten: "Lịch ngày nghỉ", noiDung: <TheLich /> }, { ma: "tu-dong", ten: "Tự động sao lưu", noiDung: <TheTuDong /> }, { ma: "cham-tra", ten: "Tiền chậm trả", noiDung: <TheTyLeCham /> }, { ma: "mang", ten: "Mạng nội bộ", noiDung: <TheMangNoiBo /> }, ...(them ?? [])];
+  const cacThe = [{ ma: "lich", ten: "Lịch ngày nghỉ", noiDung: <TheLich /> }, { ma: "tu-dong", ten: "Tự động sao lưu", noiDung: <TheTuDong /> }, { ma: "cham-tra", ten: "Tiền chậm trả", noiDung: <TheTyLeCham /> }, { ma: "mang", ten: "Mạng nội bộ", noiDung: <TheMangNoiBo /> }, { ma: "giao-dien", ten: "Giao diện", noiDung: <TheGiaoDien /> }, ...(them ?? [])];
   const [the, setThe] = useState(cacThe[0]!.ma);
   return (
     <HopThoai tieuDe="Cài đặt chung" dong={() => moCaiDat(false)} rong={920}>
@@ -218,6 +218,49 @@ function TheTyLeCham() {
       ) : (
         <p className="mo chu-nho">Chỉ tài khoản Lãnh đạo hoặc Quản trị sửa được.</p>
       )}
+    </div>
+  );
+}
+
+/** Ảnh nền thanh tiêu đề: mặc định là tranh núi đồi tự vẽ; đơn vị có thể chọn ảnh chụp riêng (lưu trong cài đặt, không gửi ra ngoài). */
+function TheGiaoDien() {
+  const { anhNen, luuAnhNen, quyen, bao } = useUngDung();
+  const [dang, setDang] = useState(false);
+  const chon = async (f: File) => {
+    if (!/^image\/(jpeg|png|webp)$/.test(f.type)) return bao("Chỉ nhận ảnh JPG, PNG, WEBP", "loi");
+    setDang(true);
+    try {
+      // Thu nhỏ về rộng 2000 px, JPEG 82% để nhẹ dữ liệu cài đặt (đồng bộ qua mạng nội bộ)
+      const url = URL.createObjectURL(f);
+      const img = await new Promise<HTMLImageElement>((ok, loi) => { const i = new Image(); i.onload = () => ok(i); i.onerror = loi; i.src = url; });
+      const tl = Math.min(1, 2000 / img.naturalWidth);
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.naturalWidth * tl);
+      c.height = Math.round(img.naturalHeight * tl);
+      c.getContext("2d")!.drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      await luuAnhNen(c.toDataURL("image/jpeg", 0.82));
+      bao("Đã đổi ảnh nền thanh tiêu đề");
+    } catch {
+      bao("Không đọc được ảnh", "loi");
+    } finally {
+      setDang(false);
+    }
+  };
+  return (
+    <div className="luoi" style={{ gap: 12 }}>
+      <p className="mo" style={{ margin: 0 }}>Ảnh nền thanh tiêu đề. Mặc định là tranh núi đồi, ruộng bậc thang do phần mềm tự vẽ. Có thể chọn ảnh chụp phong cảnh của địa phương (JPG, PNG, WEBP; nên ảnh ngang, rộng ≥ 1.600 px). Ảnh lưu trong cài đặt của phần mềm, không gửi ra ngoài.</p>
+      <div className="xem-nen" style={{ backgroundImage: `linear-gradient(90deg, rgba(10,44,32,.9), rgba(20,70,50,.1)), url("${anhNen ?? "/nen-nui.svg"}")` }}>
+        <b>Bồi thường, hỗ trợ, tái định cư</b><small>Xem trước</small>
+      </div>
+      <div className="nhom-nut">
+        <label className={`nut nut-chinh ${!quyen("CAI_DAT") || dang ? "tat" : ""}`}>
+          {dang ? "Đang xử lý…" : "Chọn ảnh…"}
+          <input type="file" accept="image/jpeg,image/png,image/webp" style={{ display: "none" }} disabled={!quyen("CAI_DAT") || dang} onChange={(e) => e.target.files?.[0] && void chon(e.target.files[0])} />
+        </label>
+        <button className="nut" disabled={!anhNen || !quyen("CAI_DAT")} onClick={() => void luuAnhNen(null)}>Dùng ảnh mặc định</button>
+      </div>
+      {!quyen("CAI_DAT") && <div className="chu-nho mo">Lãnh đạo hoặc quản trị được đổi ảnh nền.</div>}
     </div>
   );
 }

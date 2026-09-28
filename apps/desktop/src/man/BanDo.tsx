@@ -732,7 +732,7 @@ function HopTaoHo(p: {
     await luuDuAn(p.duAn);
     setDangTao(false);
     p.dong();
-    di({ ten: "du-an", duAnId: p.duAn.id });
+    di({ ten: "du-an", duAnId: p.duAn.id, tab: "ho" });
   };
 
   const soThua = nhom.reduce((s, g) => s + g.thua.length, 0);

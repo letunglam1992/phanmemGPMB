@@ -15,7 +15,7 @@ import { coQuyen, dungMatKhau, taoTaiKhoan, tenHienThi, type NguoiDung, type Quy
 
 export type Man =
   | { ten: "tong-quan" }
-  | { ten: "du-an"; duAnId?: string }
+  | { ten: "du-an"; duAnId?: string; tab?: string; ma?: string; hoId?: string }
   | { ten: "ho"; duAnId: string; hoId: string; tab?: string }
   | { ten: "ban-do"; duAnId: string }
   | { ten: "van-ban"; duAnId: string; ma?: string; hoId?: string }
@@ -38,6 +38,9 @@ interface NguCanh {
   coTheQuayLai: boolean;
   /** Thiết lập đơn vị (Công cụ). */
   dsDonVi: DonVi[];
+  /** Ảnh nền thanh tiêu đề do đơn vị chọn (data URL); null = ảnh núi đồi mặc định. */
+  anhNen: string | null;
+  luuAnhNen: (url: string | null) => Promise<void>;
   luuDonVi: (ds: DonVi[]) => Promise<void>;
   /** Lưu dự án; mặc định cần quyền SUA_HO_SO (chốt/duyệt phương án truyền quyền riêng). */
   luuDuAn: (d: DuAn, quyen?: Quyen) => Promise<void>;
@@ -108,6 +111,7 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
   const [man, setMan] = useState<Man>({ ten: "tong-quan" });
   const [lichSu, setLichSu] = useState<Man[]>([]);
   const [dsDonVi, setDsDonVi] = useState<DonVi[]>([]);
+  const [anhNen, setAnhNen] = useState<string | null>(null);
   // Lịch sử điều hướng giữ trong ref để tránh tác dụng phụ trong hàm cập nhật state (StrictMode gọi 2 lần)
   const manRef = useRef<Man>(man);
   const lichSuRef = useRef<Man[]>([]);
@@ -168,6 +172,7 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
     if (td) setTuDong({ ...MAC_DINH_TU_DONG, ...td });
     setKyBaoCao((await kho.docCaiDat<KyBaoCao[]>(KHOA_KY_BAO_CAO)) ?? []);
     setDsDonVi((await kho.docCaiDat<DonVi[]>(KHOA_DON_VI)) ?? []);
+    setAnhNen((await kho.docCaiDat<string>("anhNen")) ?? null);
     const da = await kho.dsDuAn();
     const hos = (await Promise.all(da.map((d) => kho.dsHo(d.id)))).flat();
     setDsDuAn(da.sort((a, b) => b.taoLuc.localeCompare(a.taoLuc)));
@@ -262,6 +267,13 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
     quayLai,
     coTheQuayLai: lichSu.length > 0,
     dsDonVi,
+    anhNen,
+    luuAnhNen: async (url) => {
+      if (chan("CAI_DAT")) return;
+      await ghi(() => kho.luuCaiDat("anhNen", url));
+      setAnhNen(url);
+      await ghiNhatKy(url ? "Đổi ảnh nền thanh tiêu đề" : "Dùng lại ảnh nền mặc định");
+    },
     luuDonVi: async (ds) => {
       if (chan("CAI_DAT")) return;
       await ghi(() => kho.luuCaiDat(KHOA_DON_VI, ds));

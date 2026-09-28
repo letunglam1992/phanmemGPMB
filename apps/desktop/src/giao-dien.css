@@ -113,8 +113,8 @@ button.chip:hover { border-color: var(--vien-dam); color: var(--chu); }
 .chip .cham { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--xanh-to); }
 
 .thanh-tren { grid-column: 2; position: relative; z-index: 60; color: #fff; padding: 16px 28px 18px; display: flex; justify-content: space-between; align-items: center; gap: 14px 20px; flex-wrap: wrap;
-  background: linear-gradient(90deg, var(--dau-1) 0%, var(--dau-2) 34%, rgba(27, 90, 68, .55) 58%, rgba(20, 70, 50, .12) 100%), url("/nen-nui.svg") right bottom / cover no-repeat, var(--dau-2); }
-:root[data-theme="dark"] .thanh-tren { background: linear-gradient(90deg, var(--dau-1) 0%, var(--dau-2) 45%, rgba(10, 30, 22, .78) 100%), url("/nen-nui.svg") right bottom / cover no-repeat, var(--dau-2); }
+  background: linear-gradient(90deg, rgba(10, 44, 32, .93) 0%, rgba(16, 62, 44, .78) 26%, rgba(20, 70, 50, .38) 50%, rgba(20, 70, 50, .08) 78%, rgba(20, 70, 50, 0) 100%), linear-gradient(0deg, rgba(8, 36, 26, .35), rgba(8, 36, 26, 0) 60%), var(--anh-nen, url("/nen-nui.svg")) center 62% / cover no-repeat, var(--dau-2); }
+:root[data-theme="dark"] .thanh-tren { background: linear-gradient(90deg, rgba(5, 18, 13, .95) 0%, rgba(8, 28, 20, .8) 35%, rgba(8, 28, 20, .45) 100%), var(--anh-nen, url("/nen-nui.svg")) center 62% / cover no-repeat, var(--dau-2); }
 .thuong-hieu { display: flex; gap: 14px; align-items: center; min-width: 0; }
 .thuong-hieu-dau { width: 46px; height: 46px; border-radius: var(--r-md); background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .18); display: grid; place-items: center; flex: none; color: #fff; cursor: pointer; }
 .thuong-hieu-dau:hover { background: rgba(255, 255, 255, .18); }
@@ -840,3 +840,19 @@ mark { background: #fde68a; color: inherit; border-radius: 3px; padding: 0 1px; 
 .hd-buoc .nd { font-size: 13.5px; color: var(--chu-phu); line-height: 1.6; margin-top: 3px; }
 .hd-buoc > .nut { flex: none; margin-top: 2px; }
 .hd-phim { display: inline-block; min-width: 22px; padding: 1px 6px; border: 1px solid var(--vien-dam); border-bottom-width: 2px; border-radius: 6px; background: var(--be-mat-2); font: 600 12px var(--font); text-align: center; color: var(--chu); }
+
+.thanh-tren .ten-ung-dung, .thanh-tren .to-chuc, .thanh-tren .phu-de, .thanh-tren .meta-tren { text-shadow: 0 1px 3px rgba(0, 0, 0, .35); }
+.xem-nen { height: 96px; border-radius: 12px; background-size: cover; background-position: center 62%; color: #fff; display: flex; flex-direction: column; justify-content: center; padding: 0 20px; text-shadow: 0 1px 3px rgba(0,0,0,.35); }
+.xem-nen b { font-size: 20px; }
+label.nut.tat { opacity: .55; pointer-events: none; }
+
+/* ---------- Không gian Hồ sơ của dự án ---------- */
+.kg-trang { max-width: none; }
+.kg-dau { display: flex; gap: 14px; align-items: center; padding: 14px 18px; margin-bottom: 14px; flex-wrap: wrap; }
+.kg-dau .phai { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.kg-chon { font-size: 19px; font-weight: 700; border: 1px solid transparent !important; background: transparent !important; padding: 2px 30px 2px 6px !important; margin-left: -6px; max-width: 720px; border-radius: 8px; cursor: pointer; color: var(--chu); }
+.kg-chon:hover { border-color: var(--vien) !important; background: var(--be-mat-2) !important; }
+.kg-nhung > .trang { padding: 0; max-width: none; }
+.kg-nhung > .trang > .duong-dan { display: none; }
+.kg-luu { display: flex; align-items: center; gap: 10px; justify-content: flex-end; margin-bottom: 12px; flex-wrap: wrap; }
+.kg-luu .mo { margin-right: auto; }
