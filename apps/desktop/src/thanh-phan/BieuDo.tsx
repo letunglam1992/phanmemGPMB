@@ -35,6 +35,21 @@ const P: Record<string, ReactNode> = {
   xuong: <path d="M6 9l6 6 6-6" />,
   mat: <><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" /><circle cx="12" cy="12" r="3" /></>,
   matTat: <><path d="M9.9 5.7A9.7 9.7 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-2.6 3.4M6.6 6.6C3.9 8.3 2.5 12 2.5 12S6 18.5 12 18.5a9.3 9.3 0 0 0 5.4-1.7" /><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2M3 3l18 18" /></>,
+  nha: <><path d="M3.5 11L12 4l8.5 7" /><path d="M5.5 9.5V20h13V9.5M10 20v-5.5h4V20" /></>,
+  phai: <path d="M9 6l6 6-6 6" />,
+  mayTinh: <><rect x="5" y="3" width="14" height="18" rx="2" /><path d="M8 7h8v3H8zM8.5 14h.01M12 14h.01M15.5 14h.01M8.5 17.5h.01M12 17.5h.01M15.5 17.5h.01" /></>,
+  hoanTac: <><path d="M9 14L4 9l5-5" /><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" /></>,
+  luu: <><path d="M5 3h11l3 3v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z" /><path d="M8 3v5h7V3M8 21v-6h8v6" /></>,
+  lop: <><path d="M12 3l9 5-9 5-9-5z" /><path d="M3 12.5l9 5 9-5M3 16.5l9 5 9-5" /></>,
+  hoTro: <><path d="M3 14.5h3.5l3.5 1.5h3a1.5 1.5 0 0 1 0 3H9.5" /><path d="M13.3 19h3.2l4-3.2a1.4 1.4 0 0 0-1.8-2.1L15.5 16" /><path d="M14.5 10.8S11 8.7 11 6.4A2 2 0 0 1 14.5 5a2 2 0 0 1 3.5 1.4c0 2.3-3.5 4.4-3.5 4.4z" /></>,
+  theNganHang: <><rect x="3" y="5.5" width="18" height="13" rx="2" /><path d="M3 10h18M7 15h3" /></>,
+  viTri: <><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z" /><circle cx="12" cy="10" r="2.4" /></>,
+  cong: <path d="M12 5v14M5 12h14" />,
+  loc: <path d="M4 5h16l-6.2 7.4V19l-3.6-1.8v-4.8z" />,
+  sapXep: <path d="M8 9.5l4-4 4 4M8 14.5l4 4 4-4" />,
+  thungRac: <><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12.5a1.5 1.5 0 0 0 1.5 1.5h7a1.5 1.5 0 0 0 1.5-1.5L18 7M9 7V4.5h6V7" /></>,
+  baCham: <><circle cx="5.5" cy="12" r="1" /><circle cx="12" cy="12" r="1" /><circle cx="18.5" cy="12" r="1" /></>,
+  thongTin: <><path d="M7 3h7l5 5v13H7z" /><path d="M14 3v5h5M10 12.5h6M10 16h6" /></>,
   vao: <><path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4M14 8l4 4-4 4M18 12H9" /></>,
 };
 export function BieuTuong({ ten, co = 20 }: { ten: keyof typeof P | string; co?: number }) {
@@ -138,11 +153,11 @@ export function DongMoc({ moc, chon }: { moc: MocTienDo[]; chon?: (ma: string) =
   return (
     <ol className="dong-moc">
       {moc.map((m) => (
-        <li key={m.ma} className={`moc-${m.trangThai}`} onClick={() => chon?.(m.ma)}>
+        <li key={m.ma} className={`moc-${m.trangThai}`} onClick={() => chon?.(m.ma)} style={chon ? { cursor: "pointer" } : undefined} title={chon ? "Bấm để cập nhật tiến độ" : undefined}>
           <span className="moc-cham">{m.trangThai === "HOAN_THANH" ? "✓" : m.trangThai === "QUA_HAN" ? "!" : m.ma}</span>
           <div>
             <div className="chu-nho mo">{m.ngayKeHoach ? `Kế hoạch ${ngayVN(m.ngayKeHoach)}` : "Chưa có kế hoạch"}</div>
-            <div className="moc-ten">{m.ma}. {m.ten}</div>
+            <div className="moc-ten">{m.ma}. {m.ten}{["1", "2", "3", "4"].includes(m.ma) && <span className="nhan nhan-xam" style={{ marginLeft: 6, fontSize: 10.5 }}>chung</span>}</div>
             <div className="chu-nho"><span className={`nhan ${TT_MOC[m.trangThai].lop}`}>{TT_MOC[m.trangThai].ten}</span> <span className="mo">{m.soXong}/{m.soHo} hộ</span></div>
           </div>
         </li>

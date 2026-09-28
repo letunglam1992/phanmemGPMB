@@ -31,6 +31,8 @@ interface NguCanh {
   /** Lưu dự án; mặc định cần quyền SUA_HO_SO (chốt/duyệt phương án truyền quyền riêng). */
   luuDuAn: (d: DuAn, quyen?: Quyen) => Promise<void>;
   luuHo: (h: Ho, nhatKy?: string) => Promise<void>;
+  /** Lưu nhiều hồ sơ (cập nhật hàng loạt), tải lại một lần; trả về số hồ sơ lưu được và lỗi từng hồ sơ. */
+  luuNhieuHo: (ds: { h: Ho; nhatKy: string }[]) => Promise<{ daLuu: number; loi: string[] }>;
   xoaHo: (id: string) => Promise<void>;
   xoaDuAn: (id: string) => Promise<void>;
   chinhSach: (d: DuAn) => BoChinhSach;
@@ -232,6 +234,23 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
       const ban = nk ? { ...h, nhatKy: [...h.nhatKy, { luc: new Date().toISOString(), nguoi: nguoiDung, noiDung: nk }] } : h;
       await ghi(() => kho.luuHo(ban));
       await taiLai();
+    },
+    luuNhieuHo: async (ds) => {
+      if (chan("SUA_HO_SO")) return { daLuu: 0, loi: ["Tài khoản không có quyền sửa hồ sơ"] };
+      const luc = new Date().toISOString();
+      let daLuu = 0;
+      const loi: string[] = [];
+      for (const { h, nhatKy } of ds) {
+        try {
+          await kho.luuHo({ ...h, nhatKy: [...h.nhatKy, { luc, nguoi: nguoiDung, noiDung: nhatKy }] });
+          daLuu++;
+        } catch (e) {
+          loi.push(`${h.ma}: ${(e as Error).message}`);
+          if (e instanceof LoiMayChu && e.ma === 401) { setTaiKhoan(null); break; }
+        }
+      }
+      await taiLai();
+      return { daLuu, loi };
     },
     xoaHo: async (id) => {
       if (chan("SUA_HO_SO")) return;

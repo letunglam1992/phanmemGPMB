@@ -4,7 +4,7 @@ import type { BoChinhSach } from "@gpmb/core";
 import { tinhHo } from "../src/tinh-ho";
 import { taoDuAnMau } from "../src/du-lieu-mau";
 import { canhBaoChung, canhBaoDuAn, mocTienDo, thongKe, trangThaiHo } from "../src/trang-thai";
-import type { Ho } from "../src/mo-hinh";
+import { laBuocChung, tienDoHieuLuc, type Ho } from "../src/mo-hinh";
 
 const cs = cs0 as unknown as BoChinhSach;
 const { duAn, ho } = taoDuAnMau();
@@ -62,5 +62,39 @@ describe("Thống kê, mốc tiến độ, cảnh báo", () => {
   it("QĐ 27/2026 hết hiệu lực: báo trước 60 ngày", () => {
     expect(canhBaoChung("2026-09-27")).toHaveLength(0);
     expect(canhBaoChung("2027-01-15")[0]!.noiDung).toContain("45 ngày");
+  });
+});
+
+describe("Bước chung 1–4 cấp dự án", () => {
+  const hoTrong = (ma: string): Ho => ({ ...ho[1]!, id: ma, ma, tienDo: {} });
+  it("cập nhật một lần ở dự án → áp dụng cho mọi hộ (kể cả hộ chưa có tiến độ)", () => {
+    const da = { ...duAn, tienDoChung: { "1": { trangThai: "XONG" as const }, "2": { trangThai: "XONG" as const }, "3": { trangThai: "XONG" as const }, "4": { trangThai: "XONG" as const } } };
+    const ds = [hoTrong("A"), hoTrong("B"), hoTrong("C")];
+    for (const h of ds) expect(tienDoHieuLuc(da, h)["4"]).toMatchObject({ trangThai: "XONG", tuDuAn: true });
+    expect(trangThaiHo(da, ds[0]!, k(ds[0]!), "2026-09-27")).toBe("DA_KIEM_DEM");
+    const m = mocTienDo(da, ds, "2026-09-27");
+    expect(m.find((x) => x.ma === "3")).toMatchObject({ soXong: 3, soHo: 3, trangThai: "HOAN_THANH" });
+    expect(thongKe(da, ds.map((h) => ({ h, k: k(h) })), "2026-09-27").chang.find((c) => c.buoc === "4")!.soHo).toBe(3);
+  });
+  it("hộ theo dõi riêng (vd. kiểm đếm bắt buộc) không bị bước chung ghi đè", () => {
+    const da = { ...duAn, tienDoChung: { "4": { trangThai: "XONG" as const } } };
+    const rieng: Ho = { ...hoTrong("R"), tienDo: { "4": { trangThai: "DANG", rieng: true } } };
+    expect(tienDoHieuLuc(da, rieng)["4"]!.trangThai).toBe("DANG");
+    expect(mocTienDo(da, [hoTrong("A"), rieng], "2026-09-27").find((x) => x.ma === "4")!.soXong).toBe(1);
+  });
+  it("dự án chưa cập nhật bước chung → giữ tiến độ đã nhập ở hộ (dữ liệu cũ); bước 5–16 luôn theo hộ", () => {
+    const da = { ...duAn, tienDoChung: { "1": { trangThai: "XONG" as const } } };
+    const h: Ho = { ...hoTrong("X"), tienDo: { "4": { trangThai: "XONG" }, "5": { trangThai: "DANG" } } };
+    const t = tienDoHieuLuc(da, h);
+    expect(t["4"]!.trangThai).toBe("XONG");
+    expect(t["5"]!.trangThai).toBe("DANG");
+    expect(t["1"]!.tuDuAn).toBe(true);
+    expect(laBuocChung("4") && !laBuocChung("5")).toBe(true);
+  });
+  it("bước chung chờ duyệt: một cảnh báo cấp dự án, không lặp theo từng hộ", () => {
+    const da = { ...duAn, tienDoChung: { "3": { trangThai: "CHO_DUYET" as const, guiBoi: "canbo" } } };
+    const ds = [hoTrong("A"), hoTrong("B")];
+    const cb = canhBaoDuAn(da, ds.map((h) => ({ h, k: k(h) })), "2026-09-27");
+    expect(cb.filter((c) => c.noiDung.includes("chờ duyệt"))).toHaveLength(1);
   });
 });

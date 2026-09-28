@@ -141,6 +141,20 @@ async fn may_chu_dau_cuoi() {
     xoa_pa["phuongAn"] = json!([]);
     assert_eq!(m.goi("PUT", "/api/du-an/da1", Some(&qt), json!({ "duLieu": xoa_pa, "phienBanTruoc": 3 })).await.0, 403);
 
+    // bước chung cấp dự án (1–4): cùng quy tắc gửi – duyệt như bước của hộ
+    let mut chung = duyet.clone();
+    chung["tienDoChung"] = json!({ "3": { "trangThai": "XONG" } });
+    assert_eq!(m.goi("PUT", "/api/du-an/da1", Some(&cb), json!({ "duLieu": chung, "phienBanTruoc": 3 })).await.0, 403);
+    chung["tienDoChung"] = json!({ "3": { "trangThai": "CHO_DUYET", "guiBoi": "gia-mao" } });
+    let (ma, v) = m.goi("PUT", "/api/du-an/da1", Some(&cb), json!({ "duLieu": chung, "phienBanTruoc": 3 })).await;
+    assert_eq!(ma, 200, "{v}");
+    assert_eq!(v["duLieu"]["tienDoChung"]["3"]["guiBoi"], "canbo1");
+    let mut chung2 = v["duLieu"].clone();
+    chung2["tienDoChung"]["3"]["trangThai"] = json!("XONG");
+    let (ma, v) = m.goi("PUT", "/api/du-an/da1", Some(&ld), json!({ "duLieu": chung2, "phienBanTruoc": 4 })).await;
+    assert_eq!(ma, 200, "{v}");
+    assert_eq!(v["duLieu"]["tienDoChung"]["3"]["duyetBoi"], "lanhdao");
+
     // thay đổi: máy trạm thấy các lần ghi, kèm người ghi
     let (_, td) = m.goi("GET", "/api/thay-doi?sau=0", Some(&xem), Value::Null).await;
     assert!(td["ds"].as_array().unwrap().iter().any(|x| x["boi"] == "lanhdao2"));

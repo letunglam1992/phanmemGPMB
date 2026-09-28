@@ -205,7 +205,13 @@ pub fn kiem_tra_ho(st: &MayChu, cu: Option<&Value>, moi: &mut Value, u: &NguoiGo
         return Ok(()); // quản trị khôi phục / đưa dữ liệu lên: giữ nguyên lịch sử người gửi, người duyệt
     }
     let buoc_cu = cu.map(|c| c["tienDo"].clone()).unwrap_or(json!({}));
-    let Some(td) = moi.get_mut("tienDo").and_then(|v| v.as_object_mut()) else {
+    kiem_tra_buoc(st, &buoc_cu, moi.get_mut("tienDo"), u)
+}
+
+/// Chuyển trạng thái bước (của hộ hoặc bước chung cấp dự án): gửi duyệt cần GUI_DUYET, xác nhận hoàn thành /
+/// mở lại bước đã xong cần DUYET_BUOC, người gửi không tự xác nhận; máy chủ tự ghi người gửi/duyệt.
+fn kiem_tra_buoc(st: &MayChu, buoc_cu: &Value, moi: Option<&mut Value>, u: &NguoiGoi) -> Kq<()> {
+    let Some(td) = moi.and_then(|v| v.as_object_mut()) else {
         return Ok(());
     };
     for (ma, b) in td.iter_mut() {
@@ -258,7 +264,12 @@ fn bo_truong(v: &Value, truong: &[&str]) -> Value {
 }
 
 /// Dự án: bản phương án đã phê duyệt/hủy không sửa, không xóa; chuyển trạng thái đúng quyền.
-pub fn kiem_tra_du_an(st: &MayChu, cu: Option<&Value>, moi: &Value, u: &NguoiGoi) -> Kq<()> {
+pub fn kiem_tra_du_an(st: &MayChu, cu: Option<&Value>, moi: &mut Value, u: &NguoiGoi) -> Kq<()> {
+    // Bước chung (1–4) của dự án: cùng quy tắc gửi – duyệt như bước của hộ
+    if !(cu.is_none() && u.vai_tro == "QUAN_TRI") {
+        let chung_cu = cu.map(|c| c["tienDoChung"].clone()).unwrap_or(json!({}));
+        kiem_tra_buoc(st, &chung_cu, moi.get_mut("tienDoChung"), u)?;
+    }
     let ds_cu = cu.and_then(|c| c["phuongAn"].as_array().cloned()).unwrap_or_default();
     let ds_moi = moi["phuongAn"].as_array().cloned().unwrap_or_default();
     let tim = |id: &Value| ds_moi.iter().find(|p| &p["id"] == id);
@@ -514,7 +525,7 @@ fn luu_ban_ghi(st: &MayChu, u: &NguoiGoi, loai: &str, id: &str, b: &Bytes) -> Kq
     if loai == "ho" {
         kiem_tra_ho(st, cu_v.as_ref(), &mut moi, u)?;
     } else {
-        kiem_tra_du_an(st, cu_v.as_ref(), &moi, u)?;
+        kiem_tra_du_an(st, cu_v.as_ref(), &mut moi, u)?;
     }
     let pb = cu.as_ref().map(|x| x.1 + 1).unwrap_or(1);
     let du_an_id = if loai == "ho" { moi["duAnId"].as_str().unwrap_or("").to_string() } else { id.to_string() };

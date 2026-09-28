@@ -146,6 +146,13 @@ export interface BuocHo {
   duyetBoi?: string;
   /** Ngày bắt đầu tính thời hạn của bước do cán bộ nhập (src/han-buoc.ts), vd. ngày nhận đủ hồ sơ. */
   mocHan?: string;
+  /**
+   * Chỉ dùng cho bước chung (1–4) lưu trong hồ sơ hộ: true = hộ này theo dõi riêng, không theo bước chung
+   * của dự án (vd. hộ không hợp tác phải kiểm đếm bắt buộc).
+   */
+  rieng?: boolean;
+  /** Chỉ có trong kết quả tienDoHieuLuc: giá trị lấy từ bước chung của dự án. */
+  tuDuAn?: boolean;
 }
 
 export interface NhatKy {
@@ -208,6 +215,8 @@ export interface DuAn {
   vanBan?: Record<string, string>;
   /** Kế hoạch hoàn thành từng bước (ngày ISO) do cán bộ nhập để theo dõi, cảnh báo chậm tiến độ. */
   keHoach?: Record<string, string>;
+  /** Trạng thái các bước chung (BUOC_CHUNG: 1–4) — cập nhật một lần, áp dụng cho mọi hộ của dự án. */
+  tienDoChung?: Record<string, BuocHo>;
   /** Các phiên bản phương án đã chốt/phê duyệt (src/phuong-an.ts). */
   phuongAn?: import("./phuong-an").PhienBanPA[];
   taoLuc: string;
@@ -232,6 +241,33 @@ export const CAC_BUOC: { ma: string; ten: string; thoiHan?: string; mau?: string
   { ma: "15", ten: "Chỉnh lý hồ sơ địa chính", thoiHan: "≤ 3 NLV sau chi trả", canCu: "Mục XVIII Sổ tay" },
   { ma: "16", ten: "Quản lý đất đã thu hồi", canCu: "k5 Đ86 LĐĐ" },
 ];
+
+/**
+ * Bước chung của cả dự án (kế hoạch, họp dân, thông báo thu hồi, điều tra – kiểm đếm): cán bộ cập nhật một lần
+ * ở màn Dự án. Bước 5–16 theo dõi riêng từng hộ, cá nhân, tổ chức (có cập nhật hàng loạt cho nhiều hộ).
+ */
+export const BUOC_CHUNG = ["1", "2", "3", "4"] as const;
+export const laBuocChung = (ma: string) => (BUOC_CHUNG as readonly string[]).includes(ma);
+
+/**
+ * Tiến độ có hiệu lực của hộ: bước chung lấy theo dự án, trừ khi hộ đánh dấu theo dõi riêng; dự án chưa
+ * cập nhật bước chung thì giữ giá trị cũ trong hồ sơ hộ (dữ liệu nhập trước khi có bước chung).
+ */
+export function tienDoHieuLuc(duAn: Pick<DuAn, "tienDoChung"> | undefined | null, h: Ho): Record<string, BuocHo> {
+  const chung = duAn?.tienDoChung;
+  if (!chung) return h.tienDo;
+  const out = { ...h.tienDo };
+  for (const ma of BUOC_CHUNG) {
+    if (h.tienDo[ma]?.rieng) continue;
+    const c = chung[ma];
+    if (c) out[ma] = { ...c, tuDuAn: true };
+  }
+  return out;
+}
+
+/** Hồ sơ với tiến độ có hiệu lực — dùng cho mọi chỗ ĐỌC tiến độ (thống kê, cảnh báo, thanh bước). */
+export const hoHieuLuc = (duAn: Pick<DuAn, "tienDoChung"> | undefined | null, h: Ho): Ho =>
+  duAn?.tienDoChung ? { ...h, tienDo: tienDoHieuLuc(duAn, h) } : h;
 
 export const TEN_TRANG_THAI_BUOC: Record<TrangThaiBuoc, string> = {
   CHUA: "Chưa thực hiện",

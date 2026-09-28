@@ -8,7 +8,7 @@
  *   4. DA_KIEM_DEM – bước 4 (điều tra, kiểm đếm) đã hoàn thành;
  *   5. CHUA_KIEM_DEM.
  */
-import { CAC_BUOC, type DuAn, type Ho } from "./mo-hinh";
+import { CAC_BUOC, hoHieuLuc, type DuAn, type Ho } from "./mo-hinh";
 import type { KetQuaHo } from "./tinh-ho";
 
 import { hoLechSauPheDuyet } from "./phuong-an";
@@ -38,12 +38,14 @@ const batDau = (h: Ho, ma: string) => {
 export const daNiemYet = (h: Ho) => CAC_BUOC.slice(5).some((b) => batDau(h, b.ma));
 const dangLapPhuongAn = (h: Ho) => CAC_BUOC.slice(4).some((b) => batDau(h, b.ma));
 
-export function buocQuaHan(duAn: DuAn, h: Ho, homNay: string): string[] {
+export function buocQuaHan(duAn: DuAn, h0: Ho, homNay: string): string[] {
+  const h = hoHieuLuc(duAn, h0);
   const kh = duAn.keHoach ?? {};
   return CAC_BUOC.filter((b) => kh[b.ma] && kh[b.ma]! < homNay && !xong(h, b.ma)).map((b) => b.ma);
 }
 
-export function trangThaiHo(duAn: DuAn, h: Ho, kq: KetQuaHo, homNay: string): TrangThaiGpmb {
+export function trangThaiHo(duAn: DuAn, h0: Ho, kq: KetQuaHo, homNay: string): TrangThaiGpmb {
+  const h = hoHieuLuc(duAn, h0);
   if (xong(h, "12")) return "HOAN_THANH";
   if (h.vuongMac?.noiDung || buocQuaHan(duAn, h, homNay).length || (kq.tong.soDongThieuCanCu > 0 && daNiemYet(h))) return "VUONG_MAC";
   if (CAC_BUOC.slice(4).some((b) => batDau(h, b.ma))) return "DANG_XU_LY";
@@ -76,7 +78,8 @@ export function thongKe(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: string
   const theoTrangThai = Object.fromEntries(THU_TU_TRANG_THAI.map((t) => [t, 0])) as Record<TrangThaiGpmb, number>;
   let soThua = 0, soThuaDaKiemDem = 0, soBuocXong = 0;
   let capNhatCuoi: string | null = null;
-  for (const { h, k } of ds) {
+  for (const { h: h0, k } of ds) {
+    const h = hoHieuLuc(duAn, h0);
     theoTrangThai[trangThaiHo(duAn, h, k, homNay)]++;
     soThua += h.thua.length;
     if (xong(h, "4")) soThuaDaKiemDem += h.thua.length;
@@ -90,7 +93,7 @@ export function thongKe(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: string
     soThua,
     soThuaDaKiemDem,
     tienDoChung: ds.length ? soBuocXong / (ds.length * CAC_BUOC.length) : 0,
-    chang: CAC_CHANG.map((c) => ({ ...c, soHo: ds.filter(({ h }) => xong(h, c.buoc)).length })),
+    chang: CAC_CHANG.map((c) => ({ ...c, soHo: ds.filter(({ h }) => xong(hoHieuLuc(duAn, h), c.buoc)).length })),
     capNhatCuoi,
   };
 }
@@ -115,7 +118,8 @@ export interface MocTienDo {
 }
 
 /** Mốc tiến độ cấp dự án: tổng hợp trạng thái bước của mọi hộ so với kế hoạch. */
-export function mocTienDo(duAn: DuAn, hos: Ho[], homNay: string): MocTienDo[] {
+export function mocTienDo(duAn: DuAn, hos0: Ho[], homNay: string): MocTienDo[] {
+  const hos = hos0.map((h) => hoHieuLuc(duAn, h));
   return CAC_BUOC.map((b) => {
     const soXong = hos.filter((h) => xong(h, b.ma)).length;
     const coBatDau = hos.some((h) => batDau(h, b.ma));
@@ -145,7 +149,13 @@ export function canhBaoDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: st
   for (const m of mocTienDo(duAn, ds.map((x) => x.h), homNay))
     if (m.trangThai === "QUA_HAN")
       out.push({ muc: "CAO", duAnId: duAn.id, noiDung: `Bước ${m.ma}. ${m.ten}: quá hạn kế hoạch ${m.ngayKeHoach} (${m.soXong}/${m.soHo} hộ hoàn thành)` });
-  for (const { h, k } of ds) {
+  for (const ma of ["1", "2", "3", "4"]) {
+    const c = duAn.tienDoChung?.[ma];
+    if (c?.trangThai === "CHO_DUYET")
+      out.push({ muc: "THONG_TIN", duAnId: duAn.id, noiDung: `Bước chung ${ma}. ${CAC_BUOC.find((b) => b.ma === ma)?.ten ?? ""}: chờ duyệt (áp dụng cho mọi hộ của dự án)` });
+  }
+  for (const { h: h0, k } of ds) {
+    const h = hoHieuLuc(duAn, h0);
     const ct = tinhChiTra(h, duAn.phuongAn ?? [], tyLeCham, homNay);
     if (ct.trangThai !== "CHUA_DUYET") {
       if (ct.conLai!.gt(0) && ct.hanChi! < homNay)
@@ -176,11 +186,11 @@ export function canhBaoDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: st
     if (h.vuongMac?.noiDung) out.push({ muc: "TRUNG_BINH", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: ${h.vuongMac.noiDung}` });
     if (k.tong.soDongThieuCanCu && dangLapPhuongAn(h))
       out.push({ muc: daNiemYet(h) ? "CAO" : "TRUNG_BINH", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: ${k.tong.soDongThieuCanCu} khoản thiếu căn cứ${daNiemYet(h) ? " (phương án đã niêm yết)" : ""}` });
-    if (Object.values(h.tienDo).some((b) => b.trangThai === "CHO_DUYET")) out.push({ muc: "THONG_TIN", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: có bước chờ duyệt` });
+    if (Object.values(h.tienDo).some((b) => b.trangThai === "CHO_DUYET" && !b.tuDuAn)) out.push({ muc: "THONG_TIN", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: có bước chờ duyệt` });
   }
   for (const l of hoLechSauPheDuyet(duAn.phuongAn ?? [], ds))
     out.push({ muc: "CAO", duAnId: duAn.id, hoId: l.h.id, noiDung: `${l.h.ma} · ${l.h.ten}: hồ sơ đã sửa sau khi phương án bản ${l.ban.so} được phê duyệt (${l.ban.pheDuyet?.so ?? ""}) — tạm tính khác số đã duyệt; nếu đúng cần lập phương án điều chỉnh` });
-  const chuaDu = ds.filter(({ h, k }) => k.tong.soDongThieuCanCu && !dangLapPhuongAn(h)).length;
+  const chuaDu = ds.filter(({ h, k }) => k.tong.soDongThieuCanCu && !dangLapPhuongAn(hoHieuLuc(duAn, h))).length;
   if (chuaDu) out.push({ muc: "THONG_TIN", duAnId: duAn.id, noiDung: `${chuaDu} hồ sơ đang điều tra, kiểm đếm chưa đủ số liệu tính (giá đất, khối lượng…)` });
   return out;
 }

@@ -3,7 +3,7 @@ import { D } from "@gpmb/core";
 import type Decimal from "decimal.js";
 import { useUngDung } from "../ung-dung";
 import { tinhHo } from "../tinh-ho";
-import { CAC_BUOC, TEN_DOI_TUONG, buocHienTai, hoMoi, taoId, type DuAn, type Ho, type LoaiDoiTuong } from "../mo-hinh";
+import { CAC_BUOC, TEN_DOI_TUONG, buocHienTai, hoHieuLuc, hoMoi, taoId, type DuAn, type Ho, type LoaiDoiTuong } from "../mo-hinh";
 import { HopThoai, O, ngayVN, tien } from "../thanh-phan/chung";
 import { BieuTuong, DaiChang, DongMoc, PhanBoTrangThai, TheChiSo, VongTienDo } from "../thanh-phan/BieuDo";
 import { THU_TU_TRANG_THAI, TT_GPMB, homNayIso, mocTienDo, thongKe, trangThaiHo, type TrangThaiGpmb } from "../trang-thai";
@@ -12,6 +12,7 @@ import { xuatExcelDuAn } from "../xuat-excel";
 import { BanDoNho } from "../thanh-phan/BanDoNho";
 import { ThePhuongAn } from "../thanh-phan/PhuongAn";
 import { HopNhapExcel } from "../thanh-phan/HopNhapExcel";
+import { HopTienDoDuAn } from "../thanh-phan/TienDoDuAn";
 export { hoMoi };
 
 export function ManDuAn({ duAnId }: { duAnId: string }) {
@@ -23,6 +24,7 @@ export function ManDuAn({ duAnId }: { duAnId: string }) {
   const [loc, setLoc] = useState("");
   const [dangXuat, setDangXuat] = useState(false);
   const [keHoach, setKeHoach] = useState(false);
+  const [capNhatTd, setCapNhatTd] = useState<null | "chung" | "hang-loat">(null);
   const [locTt, setLocTt] = useState<TrangThaiGpmb | null>(null);
   const homNay = homNayIso();
   const hos = hoCua(duAnId);
@@ -100,8 +102,8 @@ export function ManDuAn({ duAnId }: { duAnId: string }) {
           <div className="the-than" style={{ padding: 8 }}><BanDoNho duAn={duAn} ttThua={ttThua} /></div>
         </div>
         <div className="the">
-          <div className="the-dau"><h3>Mốc tiến độ dự án</h3><div className="phai"><button className="nut nut-nho" onClick={() => setKeHoach(true)}>Lập kế hoạch</button></div></div>
-          <div className="bang-cuon" style={{ maxHeight: 360, padding: "6px 10px" }}><DongMoc moc={moc} /></div>
+          <div className="the-dau"><h3>Mốc tiến độ dự án</h3><div className="phai"><button className="nut nut-nho" onClick={() => setKeHoach(true)}>Lập kế hoạch</button>{quyen("SUA_HO_SO") && <button className="nut nut-nho nut-chinh" onClick={() => setCapNhatTd("chung")}>Cập nhật tiến độ</button>}</div></div>
+          <div className="bang-cuon" style={{ maxHeight: 360, padding: "6px 10px" }}><DongMoc moc={moc} chon={quyen("SUA_HO_SO") ? (ma) => setCapNhatTd(["1", "2", "3", "4"].includes(ma) ? "chung" : "hang-loat") : undefined} /></div>
         </div>
         </div>
       </div>
@@ -126,7 +128,7 @@ export function ManDuAn({ duAnId }: { duAnId: string }) {
             </thead>
             <tbody>
               {hienThi.map(({ h, k }) => {
-                const b = CAC_BUOC[buocHienTai(h)];
+                const b = CAC_BUOC[buocHienTai(hoHieuLuc(duAn, h))];
                 return (
                   <tr key={h.id} className="co-the-chon" onClick={() => di({ ten: "ho", duAnId, hoId: h.id })}>
                     <td>{h.ma}</td>
@@ -171,6 +173,7 @@ export function ManDuAn({ duAnId }: { duAnId: string }) {
       </div>
       {sua && <HopTaoDuAn duAn={duAn} dong={() => setSua(false)} />}
       {keHoach && <HopKeHoach duAn={duAn} dong={() => setKeHoach(false)} />}
+      {capNhatTd && <HopTienDoDuAn duAn={duAn} hos={hos} tabDau={capNhatTd} dong={() => setCapNhatTd(null)} />}
       {them && <HopThemHo duAnId={duAnId} soHo={hos.length} dong={() => setThem(false)} />}
       {nhapExcel && <HopNhapExcel duAn={duAn} dong={() => setNhapExcel(false)} />}
     </div>
