@@ -37,7 +37,9 @@ export type Quyen =
   | "KHOI_PHUC"
   | "TAI_KHOAN"
   | "XEM_NHAT_KY"
-  | "CAI_DAT";
+  | "CAI_DAT"
+  | "XOA_HAN"
+  | "XUAT_KHONG_MA_HOA";
 
 export const TEN_QUYEN: Record<Quyen, string> = {
   SUA_HO_SO: "Nhập, sửa dự án, hồ sơ, kiểm đếm, bản đồ; nhập Excel",
@@ -54,6 +56,8 @@ export const TEN_QUYEN: Record<Quyen, string> = {
   TAI_KHOAN: "Quản lý tài khoản",
   XEM_NHAT_KY: "Xem nhật ký hệ thống",
   CAI_DAT: "Cài đặt chung (lịch ngày nghỉ, tự động sao lưu)",
+  XOA_HAN: "Xóa hẳn hồ sơ, dự án khỏi thùng rác (sau 30 ngày)",
+  XUAT_KHONG_MA_HOA: "Xuất bản sao lưu không mã hóa (kèm xác nhận, ghi nhật ký)",
 };
 
 /** Ma trận quyền dùng chung với máy chủ mạng nội bộ (src-tauri đọc cùng tệp). */

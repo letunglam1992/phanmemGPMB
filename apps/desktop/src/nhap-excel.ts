@@ -390,7 +390,9 @@ const LA_TO_CHUC = /ubnd|uy ban|cong ty|hop tac xa|to chuc|ban quan ly|truong|co
 const MA_LOAI_THEO_TEN = new Map(Object.entries(TEN_LOAI_DAT).map(([ma, ten]) => [chuanTen(ten), ma]));
 
 /** Kiểm tra (không ghi gì vào kho) theo ánh xạ đã chọn. */
-export function kiemTraNhap(tep: TepExcel, ax: AnhXa, duAn: DuAn, hienCo: Ho[], tenTep = "tệp Excel", nguoi = ""): KetQuaNhap {
+export function kiemTraNhap(tep: TepExcel, ax: AnhXa, duAn: DuAn, hienCoTatCa: Ho[], tenTep = "tệp Excel", nguoi = ""): KetQuaNhap {
+  // Hồ sơ trong thùng rác: chỉ giữ mã (không dùng lại), không bổ sung dữ liệu vào (P0-3, P0-4)
+  const hienCo = hienCoTatCa.filter((h) => !h.daXoa);
   const loi: LoiNhap[] = [];
   const tenTruong = (l: LoaiTrang, khoa: string) => {
     const t = TRUONG[l].find((x) => x.khoa === khoa);
@@ -419,13 +421,13 @@ export function kiemTraNhap(tep: TepExcel, ax: AnhXa, duAn: DuAn, hienCo: Ho[], 
   };
 
   const nhatKy = { luc: new Date().toISOString(), nguoi, noiDung: `Nhập từ Excel (${tenTep})` };
-  const theoMaCu = new Map(hienCo.map((h) => [h.ma.toLowerCase(), h]));
+  const theoMaCu = new Map(hienCoTatCa.map((h) => [h.ma.toLowerCase(), h]));
   const moi = new Map<string, Ho>();
   const boSung = new Map<string, Ho>();
   const dinhDanh = new Map(hienCo.filter((h) => h.soDinhDanh).map((h) => [h.soDinhDanh, h.ma]));
   const dem = { ho: 0, nhanKhau: 0, thua: 0, kiemDem: 0 };
   const soLoi = () => loi.filter((l) => l.muc === "LOI").length;
-  const maDaDung = new Set([...hienCo.map((h) => h.ma.toLowerCase())]);
+  const maDaDung = new Set([...hienCoTatCa.map((h) => h.ma.toLowerCase())]);
   // Mã tự đánh theo mẫu mã của dự án, tiếp số lớn nhất đang dùng (P0-3)
   const maTuDong = () => {
     const m = maHoTiepTheo(maDaDung, mauMaCua(duAn));

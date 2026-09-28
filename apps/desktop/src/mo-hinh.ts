@@ -220,6 +220,8 @@ export interface Ho {
   vuongMac?: { noiDung: string; ngay: string } | null;
   /** Chi trả theo phương án đã phê duyệt (src/chi-tra.ts). */
   chiTra?: import("./chi-tra").ChiTraHo;
+  /** Xóa mềm (P0-4): hồ sơ nằm trong thùng rác, không tính vào danh sách, tổng hợp, báo cáo. */
+  daXoa?: import("./rang-buoc").DauXoa;
 }
 
 export interface BanDoDuAn {
@@ -265,6 +267,8 @@ export interface DuAn {
   banDo: BanDoDuAn | null;
   /** Mẫu mã hồ sơ do người dùng đặt (ma-ho.ts), vd. "H###", "CM-2026-####". Trống = "H###". */
   mauMaHo?: string;
+  /** Xóa mềm (P0-4): dự án nằm trong thùng rác. */
+  daXoa?: import("./rang-buoc").DauXoa;
   /** Thông tin dùng chung khi soạn văn bản (cơ quan, người ký, căn cứ, thành phần…) và số, ngày văn bản cấp dự án. */
   vanBan?: Record<string, string>;
   /** Kế hoạch hoàn thành từng bước (ngày ISO) do cán bộ nhập để theo dõi, cảnh báo chậm tiến độ. */

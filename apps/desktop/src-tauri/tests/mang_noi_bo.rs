@@ -264,11 +264,43 @@ async fn may_chu_ghi_lo_nguyen_tu() {
     let mut o = ho("h11", "H009");
     o["duAnId"] = json!("da2");
     assert_eq!(m.goi("PUT", "/api/ho/h11", Some(&cb), json!({ "duLieu": o })).await.0, 200);
-    assert_eq!(m.goi("POST", "/api/lo", Some(&cb), json!({ "xoaHo": ["h10"] })).await.0, 200);
+    // P0-4: xóa mềm có lý do, máy chủ ghi người xóa; xóa hẳn cần XOA_HAN và đủ 30 ngày trong thùng rác
+    let mut x = ho("h10", "H010");
+    x["daXoa"] = json!({ "luc": "2000-01-01T00:00:00.000Z", "nguoi": "gia-mao", "lyDo": "" });
+    assert_eq!(m.goi("PUT", "/api/ho/h10", Some(&cb), json!({ "duLieu": x, "phienBanTruoc": 1 })).await.0, 400);
+    x["daXoa"]["lyDo"] = json!("nhập trùng");
+    let (ma, v) = m.goi("PUT", "/api/ho/h10", Some(&cb), json!({ "duLieu": x, "phienBanTruoc": 1 })).await;
+    assert_eq!(ma, 200, "{v}");
+    assert_eq!(v["duLieu"]["daXoa"]["nguoi"], "canbo1");
+    assert_ne!(v["duLieu"]["daXoa"]["luc"], "2000-01-01T00:00:00.000Z");
+    assert_eq!(m.goi("POST", "/api/lo", Some(&cb), json!({ "xoaHo": ["h10"] })).await.0, 403);
+    assert_eq!(m.goi("DELETE", "/api/ho/h10", Some(&cb), Value::Null).await.0, 403);
+    let (ma, v) = m.goi("POST", "/api/lo", Some(&qt), json!({ "xoaHo": ["h10"] })).await;
+    assert_eq!(ma, 409, "{v}");
+    assert!(v["loi"].as_str().unwrap().contains("30 ngày"));
+    // (khôi phục dữ liệu giữ nguyên dấu xóa cũ) → đủ hạn → xóa hẳn được
+    x["daXoa"] = json!({ "luc": "2000-01-01T00:00:00.000Z", "nguoi": "canbo1", "lyDo": "nhập trùng" });
+    assert_eq!(m.goi("POST", "/api/lo", Some(&qt), json!({ "ghiDe": true, "ghi": [{ "loai": "ho", "duLieu": x }] })).await.0, 200);
+    assert_eq!(m.goi("POST", "/api/lo", Some(&qt), json!({ "xoaHo": ["h10"] })).await.0, 200);
+    // hộ đã chi trả / có trong phương án đã chốt → không xóa được
+    let mut c = ho("h12", "H012");
+    c["chiTra"] = json!({ "dot": [{ "id": "d1", "ngay": "2026-10-01", "soTien": "100" }] });
+    assert_eq!(m.goi("PUT", "/api/ho/h12", Some(&cb), json!({ "duLieu": c })).await.0, 200);
+    c["daXoa"] = json!({ "lyDo": "thử" });
+    let (ma, v) = m.goi("PUT", "/api/ho/h12", Some(&cb), json!({ "duLieu": c, "phienBanTruoc": 1 })).await;
+    assert_eq!(ma, 409, "{v}");
+    assert!(v["loi"].as_str().unwrap().contains("chi trả"));
+    c["chiTra"]["dot"][0]["huy"] = json!({ "lyDo": "ghi nhầm" });
+    assert_eq!(m.goi("PUT", "/api/ho/h12", Some(&cb), json!({ "duLieu": c, "phienBanTruoc": 1 })).await.0, 200);
+    let mut da_pa = da.clone();
+    da_pa["phuongAn"] = json!([{ "id": "p1", "so": 1, "trangThai": "DA_CHOT", "ho": [{ "hoId": "h9" }] }]);
+    assert_eq!(m.goi("POST", "/api/lo", Some(&qt), json!({ "ghiDe": true, "ghi": [{ "loai": "duAn", "duLieu": da_pa }] })).await.0, 200);
+    let mut h9 = ho("h9", "H009");
+    h9["daXoa"] = json!({ "lyDo": "thử" });
+    let (ma, v) = m.goi("POST", "/api/lo", Some(&qt), json!({ "ghi": [{ "loai": "ho", "duLieu": h9 }] })).await;
+    assert_eq!(ma, 409, "{v}");
+    assert!(v["loi"].as_str().unwrap().contains("phương án số 1"), "{v}");
 
-    // xóa hồ sơ trong lô
-    assert_eq!(m.goi("POST", "/api/lo", Some(&cb), json!({ "xoaHo": ["h9"] })).await.0, 200);
-    assert_eq!(so_ho().await, 0);
     d.handle.shutdown();
     let _ = std::fs::remove_dir_all(&dir);
 }

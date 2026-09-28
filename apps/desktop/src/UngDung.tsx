@@ -6,6 +6,7 @@ import { HoSo } from "./man/HoSo";
 import { BanDo } from "./man/BanDo";
 import { TraCuu } from "./man/TraCuu";
 import { KiemTraPhuongAn } from "./man/KiemTraPhuongAn";
+import { ThungRac } from "./man/ThungRac";
 import { DocScan } from "./man/DocScan";
 import { BaoCao } from "./man/BaoCao";
 import { VanBan } from "./man/VanBan";
@@ -33,7 +34,7 @@ import { BAN_QUYEN, MA_BUILD, moTaPhienBan } from "./phien-ban";
 type MucBen = { ten: string; bt: string; chon?: boolean; bam: () => void; tat?: boolean; an?: boolean };
 
 export function UngDung() {
-  const { man, di, dsDuAn, hopSaoLuu, moSaoLuu, taiKhoan, quyen, dangXuat, hopCaiDat, moCaiDat, quayLai, coTheQuayLai, dsDonVi, anhNen, taiLai, bao, ghiNhatKy } = useUngDung();
+  const { man, di, dsDuAn, hopSaoLuu, moSaoLuu, taiKhoan, quyen, dangXuat, hopCaiDat, moCaiDat, quayLai, coTheQuayLai, dsDonVi, anhNen, taiLai, bao, ghiNhatKy, thungRac } = useUngDung();
   const [menu, setMenu] = useState(false);
   const [chuong, setChuong] = useState(false);
   // Dự án làm việc gần nhất — mục "Hồ sơ" mở lại dự án này
@@ -97,6 +98,7 @@ export function UngDung() {
       nhan: "Quản trị",
       muc: [
         { ten: "Sao lưu, khôi phục", bt: "saoLuu", bam: () => moSaoLuu(true), an: !(quyen("SAO_LUU") || quyen("KHOI_PHUC")) },
+        { ten: `Thùng rác${thungRac.duAn.length + thungRac.ho.length ? ` (${thungRac.duAn.length + thungRac.ho.length})` : ""}`, bt: "thungRac", chon: man.ten === "thung-rac", bam: () => di({ ten: "thung-rac" }) },
         { ten: "Cài đặt chung", bt: "caiDat", bam: () => moCaiDat(true) },
         { ten: "Tài khoản", bt: "taiKhoan", bam: () => setHop("tai-khoan"), an: !quyen("TAI_KHOAN") },
         { ten: "Nhật ký hệ thống", bt: "nhatKy", bam: () => setHop("nhat-ky"), an: !quyen("XEM_NHAT_KY") },
@@ -213,6 +215,7 @@ export function UngDung() {
         {man.ten === "tra-cuu" && <TraCuu key={man.tim ?? ""} timDau={man.tim} />}
         {man.ten === "doc-scan" && <DocScan />}
         {man.ten === "kiem-tra-pa" && <KiemTraPhuongAn />}
+        {man.ten === "thung-rac" && <ThungRac />}
         {man.ten === "bao-cao" && <BaoCao />}
         {man.ten === "van-ban" && <KhongGianDuAn duAnId={man.duAnId} tab="van-ban" ma={man.ma} hoId={man.hoId} />}
         </RaoLoi>

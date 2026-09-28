@@ -76,7 +76,7 @@ export function KhongGianDuAn({ duAnId, tab = "tong-quan", ma, hoId }: { duAnId:
                 {quyen("SUA_HO_SO") && <button role="menuitem" onClick={() => { setCapNhatTd("chung"); setMenuThem(false); }}>Cập nhật tiến độ</button>}
                 <button role="menuitem" onClick={() => { setKeHoach(true); setMenuThem(false); }}>Lập kế hoạch từng bước</button>
                 <button role="menuitem" onClick={() => { di({ ten: "ds-ho", duAnId }); setMenuThem(false); }}>Danh sách hồ sơ (lọc nâng cao)</button>
-                {quyen("XOA_DU_AN") && <><div className="menu-vach" /><button role="menuitem" style={{ color: "var(--do-to)" }} onClick={async () => { setMenuThem(false); if (confirm(`Xóa dự án "${duAn.ten}" và toàn bộ hồ sơ? Không thể hoàn tác.`)) { await xoaDuAn(duAn.id); di({ ten: "du-an" }); } }}>Xóa dự án</button></>}
+                {quyen("XOA_DU_AN") && <><div className="menu-vach" /><button role="menuitem" style={{ color: "var(--do-to)" }} onClick={async () => { setMenuThem(false); const lyDo = prompt(`Đưa dự án "${duAn.ten}" (kèm hồ sơ) vào thùng rác?\nKhôi phục được trong thùng rác; xóa hẳn chỉ Quản trị, sau 30 ngày.\n\nLý do xóa (bắt buộc):`)?.trim(); if (lyDo && (await xoaDuAn(duAn.id, lyDo))) di({ ten: "du-an" }); }}>Xóa dự án</button></>}
               </div>
             )}
           </div>
@@ -173,7 +173,7 @@ function TheThongTin({ duAn, tiep }: { duAn: DuAn; tiep: () => void }) {
   const { luuDuoc: luuDuocDa } = kiemTraDuAn(d);
   const luuDuoc = luuDuocDa && !loiMauMa(d.mauMaHo ?? "");
   const choSua = quyen("SUA_HO_SO");
-  const maTiep = maHoTiepTheo(hoCua(duAn.id).map((h) => h.ma), mauMaCua(d));
+  const maTiep = maHoTiepTheo(hoCua(duAn.id, true).map((h) => h.ma), mauMaCua(d));
   const nhom = [...new Set(TRUONG_CHUNG.map((t) => t.nhom))];
   const luu = async (sangBuocSau = false) => {
     setDang(true);

@@ -180,7 +180,7 @@ function ChiSoNho({ bt, nhan, gt, phu, bam }: { bt: string; nhan: string; gt: st
 
 export function HopThemHo({ duAnId, dong }: { duAnId: string; dong: () => void }) {
   const { luuHo, di, hoCua, dsDuAn } = useUngDung();
-  const dsHo = hoCua(duAnId);
+  const dsHo = hoCua(duAnId, true);
   const mau = mauMaCua(dsDuAn.find((d) => d.id === duAnId));
   const [ma, setMa] = useState(() => maHoTiepTheo(dsHo.map((h) => h.ma), mau));
   const trung = hoTrungMa(dsHo, ma);

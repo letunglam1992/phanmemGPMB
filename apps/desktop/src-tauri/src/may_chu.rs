@@ -49,8 +49,13 @@ type Kq<T> = Result<T, Loi>;
 
 /// Thời điểm dạng ISO như Date.toISOString() của giao diện.
 pub fn bay_gio() -> String {
+    iso_truoc(0)
+}
+
+/// Thời điểm ISO cách hiện tại `so_ngay` ngày về trước (so sánh chuỗi ISO được vì cùng định dạng).
+pub fn iso_truoc(so_ngay: i64) -> String {
     let d = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default();
-    let (s, ms) = (d.as_secs() as i64, d.subsec_millis());
+    let (s, ms) = (d.as_secs() as i64 - so_ngay * 86400, d.subsec_millis());
     let (ngay, giay) = (s.div_euclid(86400), s.rem_euclid(86400));
     // civil_from_days (Howard Hinnant)
     let z = ngay + 719468;
@@ -249,6 +254,84 @@ fn kiem_tra_buoc(st: &MayChu, buoc_cu: &Value, moi: Option<&mut Value>, u: &Nguo
         } else if tt_cu == "XONG" {
             can(st, u, "DUYET_BUOC").map_err(|_| loi(StatusCode::FORBIDDEN, format!("Bước {ma}: chỉ người có quyền duyệt mới mở lại bước đã hoàn thành")))?;
         }
+    }
+    Ok(())
+}
+
+// ---------------- Xóa mềm, thùng rác (P0-4) ----------------
+
+/// Số ngày tối thiểu trong thùng rác trước khi được xóa hẳn (QD-24).
+pub const THOI_HAN_THUNG_RAC: i64 = 30;
+
+fn co_chi_tra(h: &Value) -> bool {
+    h["chiTra"]["dot"].as_array().is_some_and(|ds| ds.iter().any(|d| d.get("huy").is_none_or(|x| x.is_null())))
+}
+fn co_trong_pa(du_an: &Value, ho_id: &str) -> Option<String> {
+    du_an["phuongAn"].as_array()?.iter().find_map(|p| {
+        let tt = p["trangThai"].as_str().unwrap_or("");
+        let co = p["ho"].as_array().is_some_and(|ds| ds.iter().any(|x| x["hoId"].as_str() == Some(ho_id)));
+        (tt != "DA_HUY" && co).then(|| format!("có trong bản phương án số {} {}", p["so"], if tt == "DA_PHE_DUYET" { "đã phê duyệt" } else { "đã chốt" }))
+    })
+}
+fn doc_json(c: &Connection, loai: &str, id: &str) -> Kq<Option<Value>> {
+    let s: Option<String> = c.query_row("SELECT noi_dung FROM ban_ghi WHERE loai = ?1 AND id = ?2", params![loai, id], |r| r.get(0)).optional().map_err(loi_db)?;
+    Ok(s.and_then(|x| serde_json::from_str(&x).ok()))
+}
+
+/// Đưa vào thùng rác (đặt `daXoa`): máy chủ ghi người, thời điểm; chặn khi hộ có trong phương án đã chốt/duyệt hoặc
+/// đã chi trả, dự án có phương án đã duyệt hoặc hộ đã chi trả. Dấu xóa đã có không sửa được.
+fn kiem_tra_xoa_mem(c: &Connection, st: &MayChu, u: &NguoiGoi, loai: &str, id: &str, cu: Option<&Value>, moi: &mut Value) -> Kq<()> {
+    let co = |v: &Value| v.get("daXoa").is_some_and(|x| !x.is_null());
+    let cu_xoa = cu.filter(|c| co(c)).map(|c| c["daXoa"].clone());
+    if !co(moi) {
+        return Ok(()); // chưa xóa hoặc khôi phục từ thùng rác
+    }
+    if let Some(d) = cu_xoa {
+        moi["daXoa"] = d;
+        return Ok(());
+    }
+    let ly_do = moi["daXoa"]["lyDo"].as_str().unwrap_or("").trim().to_string();
+    if ly_do.is_empty() {
+        return Err(loi(StatusCode::BAD_REQUEST, "Xóa cần ghi lý do"));
+    }
+    let mut chan: Vec<String> = vec![];
+    if loai == "ho" {
+        if co_chi_tra(moi) {
+            chan.push("đã ghi chi trả".into());
+        }
+        if let Some(da) = doc_json(c, "duAn", moi["duAnId"].as_str().unwrap_or(""))? {
+            chan.extend(co_trong_pa(&da, id));
+        }
+    } else {
+        can(st, u, "XOA_DU_AN")?;
+        if moi["phuongAn"].as_array().is_some_and(|ds| ds.iter().any(|p| p["trangThai"] == "DA_PHE_DUYET")) {
+            chan.push("có bản phương án đã phê duyệt".into());
+        }
+        let mut q = c.prepare("SELECT noi_dung FROM ban_ghi WHERE loai = 'ho' AND du_an_id = ?1").map_err(loi_db)?;
+        let n = q
+            .query_map([id], |r| r.get::<_, String>(0))
+            .map_err(loi_db)?
+            .filter_map(|x| x.ok().and_then(|s| serde_json::from_str::<Value>(&s).ok()))
+            .filter(|h| !co(h) && co_chi_tra(h))
+            .count();
+        if n > 0 {
+            chan.push(format!("{n} hộ đã ghi chi trả"));
+        }
+    }
+    if !chan.is_empty() {
+        return Err(loi(StatusCode::CONFLICT, format!("Không xóa được: {}", chan.join("; "))));
+    }
+    moi["daXoa"] = json!({ "luc": bay_gio(), "nguoi": u.ten, "lyDo": ly_do });
+    Ok(())
+}
+
+/// Xóa hẳn (khỏi thùng rác): quyền XOA_HAN, bản ghi đã trong thùng rác đủ THOI_HAN_THUNG_RAC ngày.
+fn kiem_tra_xoa_han(c: &Connection, st: &MayChu, u: &NguoiGoi, loai: &str, id: &str) -> Kq<()> {
+    can(st, u, "XOA_HAN")?;
+    let Some(v) = doc_json(c, loai, id)? else { return Ok(()) };
+    let luc = v["daXoa"]["luc"].as_str().ok_or_else(|| loi(StatusCode::CONFLICT, "Chỉ xóa hẳn được bản ghi đã nằm trong thùng rác"))?;
+    if luc > iso_truoc(THOI_HAN_THUNG_RAC).as_str() {
+        return Err(loi(StatusCode::CONFLICT, format!("Bản ghi mới vào thùng rác lúc {luc} — chỉ xóa hẳn sau {THOI_HAN_THUNG_RAC} ngày")));
     }
     Ok(())
 }
@@ -537,6 +620,9 @@ fn ghi_ban_ghi(c: &Connection, st: &MayChu, u: &NguoiGoi, loai: &str, id: &str, 
     } else {
         kiem_tra_du_an(st, cu_v.as_ref(), &mut moi, u)?;
     }
+    if !ghi_de {
+        kiem_tra_xoa_mem(c, st, u, loai, id, cu_v.as_ref(), &mut moi)?;
+    }
     let pb = cu.as_ref().map(|x| x.1 + 1).unwrap_or(1);
     let du_an_id = if loai == "ho" { moi["duAnId"].as_str().unwrap_or("").to_string() } else { id.to_string() };
     // P0-3: mã hồ sơ duy nhất trong dự án — chặn khi tạo mới hoặc đổi sang mã đã dùng (mã trùng có sẵn từ dữ liệu cũ
@@ -578,10 +664,7 @@ async fn ghi_lo(State(st): State<St>, h: HeaderMap, b: Bytes) -> Kq<Json<Value>>
     if xoa_tat_ca || ghi_de {
         can(&st, &u, "KHOI_PHUC")?;
     }
-    if !xoa_du_an.is_empty() {
-        can(&st, &u, "XOA_DU_AN")?;
-    }
-    if !xoa_ho.is_empty() || !ghi.is_empty() {
+    if !ghi.is_empty() {
         can(&st, &u, "SUA_HO_SO")?;
     }
     for t in &tep {
@@ -594,11 +677,13 @@ async fn ghi_lo(State(st): State<St>, h: HeaderMap, b: Bytes) -> Kq<Json<Value>>
         MayChu::ghi_thay_doi(&tx, "tatCa", "", "", &u.ten).map_err(loi_db)?;
     }
     for id in xoa_du_an.iter().filter_map(|x| x.as_str()) {
+        kiem_tra_xoa_han(&tx, &st, &u, "duAn", id)?;
         tx.execute("DELETE FROM ban_ghi WHERE (loai = 'duAn' AND id = ?1) OR (loai = 'ho' AND du_an_id = ?1)", [id]).map_err(loi_db)?;
         tx.execute("DELETE FROM tep WHERE loai = 'banDo' AND id = ?1", [id]).map_err(loi_db)?;
         MayChu::ghi_thay_doi(&tx, "duAn", id, id, &u.ten).map_err(loi_db)?;
     }
     for id in xoa_ho.iter().filter_map(|x| x.as_str()) {
+        kiem_tra_xoa_han(&tx, &st, &u, "ho", id)?;
         let du_an: Option<String> = tx.query_row("SELECT du_an_id FROM ban_ghi WHERE loai = 'ho' AND id = ?1", [id], |r| r.get(0)).optional().map_err(loi_db)?;
         tx.execute("DELETE FROM ban_ghi WHERE loai = 'ho' AND id = ?1", [id]).map_err(loi_db)?;
         MayChu::ghi_thay_doi(&tx, "ho", id, &du_an.unwrap_or_default(), &u.ten).map_err(loi_db)?;
@@ -643,8 +728,8 @@ async fn luu_ho(State(st): State<St>, h: HeaderMap, Path(id): Path<String>, b: B
 
 async fn xoa_du_an(State(st): State<St>, h: HeaderMap, Path(id): Path<String>) -> Kq<Json<Value>> {
     let u = xac_thuc(&st, &h)?;
-    can(&st, &u, "XOA_DU_AN")?;
     let mut c = st.db.lock().unwrap();
+    kiem_tra_xoa_han(&c, &st, &u, "duAn", &id)?;
     let tx = c.transaction().map_err(loi_db)?;
     tx.execute("DELETE FROM ban_ghi WHERE (loai = 'duAn' AND id = ?1) OR (loai = 'ho' AND du_an_id = ?1)", [&id]).map_err(loi_db)?;
     tx.execute("DELETE FROM tep WHERE loai = 'banDo' AND id = ?1", [&id]).map_err(loi_db)?;
@@ -655,8 +740,8 @@ async fn xoa_du_an(State(st): State<St>, h: HeaderMap, Path(id): Path<String>) -
 
 async fn xoa_ho(State(st): State<St>, h: HeaderMap, Path(id): Path<String>) -> Kq<Json<Value>> {
     let u = xac_thuc(&st, &h)?;
-    can(&st, &u, "SUA_HO_SO")?;
     let c = st.db.lock().unwrap();
+    kiem_tra_xoa_han(&c, &st, &u, "ho", &id)?;
     let du_an: Option<String> = c.query_row("SELECT du_an_id FROM ban_ghi WHERE loai = 'ho' AND id = ?1", [&id], |r| r.get(0)).optional().map_err(loi_db)?;
     c.execute("DELETE FROM ban_ghi WHERE loai = 'ho' AND id = ?1", [&id]).map_err(loi_db)?;
     MayChu::ghi_thay_doi(&c, "ho", &id, &du_an.unwrap_or_default(), &u.ten).map_err(loi_db)?;

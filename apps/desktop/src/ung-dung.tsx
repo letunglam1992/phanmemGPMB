@@ -5,7 +5,9 @@ import { BO_CHINH_SACH } from "./du-lieu";
 import { taoKhoIndexedDb, type Kho } from "./kho";
 import { LoiMayChu, docCheDo, laKhoMang } from "./kho-mang";
 import type { DuAn, Ho } from "./mo-hinh";
-import { docLanSaoLuu, ghiLanSaoLuu } from "./sao-luu";
+import { docLanSaoLuu, ghiLanSaoLuu, taoBanSaoLuu, tenTepSaoLuu } from "./sao-luu";
+import { THOI_HAN_THUNG_RAC, duocXoaHan, lyDoKhongXoaDuAn, lyDoKhongXoaHo } from "./rang-buoc";
+import { taiXuong } from "./tai-xuong";
 import { LICH_TRONG, type LichLamViec } from "./lich-lam-viec";
 import { KHOA_TY_LE_CHAM, type GiaiDoanTyLe } from "./chi-tra";
 import { KHOA_KY_BAO_CAO, type KyBaoCao } from "./ky-bao-cao";
@@ -22,6 +24,7 @@ export type Man =
   | { ten: "tra-cuu"; tim?: string }
   | { ten: "doc-scan" }
   | { ten: "kiem-tra-pa" }
+  | { ten: "thung-rac" }
   | { ten: "bao-cao" }
   | { ten: "don-vi" }
   | { ten: "huong-dan" }
@@ -30,8 +33,12 @@ export type Man =
 
 interface NguCanh {
   kho: Kho;
+  /** Dự án đang dùng (không gồm dự án trong thùng rác). */
   dsDuAn: DuAn[];
-  hoCua: (duAnId: string) => Ho[];
+  /** Hồ sơ của dự án (không gồm hồ sơ trong thùng rác; `kemDaXoa` = gồm cả — dùng khi kiểm trùng mã). */
+  hoCua: (duAnId: string, kemDaXoa?: boolean) => Ho[];
+  /** Thùng rác (P0-4): dự án, hồ sơ đã xóa mềm. */
+  thungRac: { duAn: DuAn[]; ho: Ho[] };
   man: Man;
   di: (m: Man) => void;
   /** Quay lại màn trước (nút Quay lại, Alt + ←, nút lùi của chuột). */
@@ -48,8 +55,14 @@ interface NguCanh {
   luuHo: (h: Ho, nhatKy?: string) => Promise<void>;
   /** Lưu nhiều hồ sơ (cập nhật hàng loạt), tải lại một lần; trả về số hồ sơ lưu được và lỗi từng hồ sơ. */
   luuNhieuHo: (ds: { h: Ho; nhatKy: string }[]) => Promise<{ daLuu: number; loi: string[] }>;
-  xoaHo: (id: string) => Promise<void>;
-  xoaDuAn: (id: string) => Promise<void>;
+  /** Xóa mềm (vào thùng rác) — chặn khi có phương án đã chốt/duyệt, chi trả. Trả false nếu bị chặn/lỗi. */
+  xoaHo: (id: string, lyDo: string) => Promise<boolean>;
+  xoaDuAn: (id: string, lyDo: string) => Promise<boolean>;
+  khoiPhucHo: (id: string) => Promise<void>;
+  khoiPhucDuAn: (id: string) => Promise<void>;
+  /** Xóa hẳn khỏi thùng rác: quyền XOA_HAN, sau THOI_HAN_THUNG_RAC ngày. */
+  xoaHanHo: (id: string) => Promise<void>;
+  xoaHanDuAn: (id: string) => Promise<void>;
   chinhSach: (d: DuAn) => BoChinhSach;
   dangTai: boolean;
   nguoiDung: string;
@@ -275,10 +288,12 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
     };
   }, [taiKhoan?.ten, chayTuDong]);
 
+  const dauXoa = (lyDo: string) => ({ luc: new Date().toISOString(), nguoi: nguoiDung, lyDo: lyDo.trim() });
   const giaTri: NguCanh = {
     kho,
-    dsDuAn,
-    hoCua: (id) => dsHo.filter((h) => h.duAnId === id),
+    dsDuAn: dsDuAn.filter((d) => !d.daXoa),
+    hoCua: (id, kemDaXoa) => dsHo.filter((h) => h.duAnId === id && (kemDaXoa || !h.daXoa)),
+    thungRac: { duAn: dsDuAn.filter((d) => d.daXoa), ho: dsHo.filter((h) => h.daXoa && !dsDuAn.find((d) => d.id === h.duAnId)?.daXoa) },
     man,
     di,
     quayLai,
@@ -322,17 +337,73 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
         return { daLuu: 0, loi: [`Chưa cập nhật hộ nào (cả lô bị hủy): ${(e as Error).message}. Dữ liệu đã được tải lại — thực hiện lại thao tác.`] };
       }
     },
-    xoaHo: async (id) => {
+    xoaHo: async (id, lyDo) => {
+      if (chan("SUA_HO_SO")) return false;
+      const h = dsHo.find((x) => x.id === id);
+      if (!h) return false;
+      const ly = lyDoKhongXoaHo(dsDuAn.find((d) => d.id === h.duAnId), h);
+      if (ly.length) return bao(`Không xóa được hồ sơ ${h.ma}: ${ly.join("; ")}. Hủy bản phương án (có lý do) hoặc hủy đợt chi trước.`, "loi"), false;
+      if (!lyDo.trim()) return bao("Xóa hồ sơ cần ghi lý do", "loi"), false;
+      try {
+        await ghi(() => kho.luuHo({ ...h, daXoa: dauXoa(lyDo), nhatKy: [...h.nhatKy, { luc: new Date().toISOString(), nguoi: nguoiDung, noiDung: `Đưa vào thùng rác: ${lyDo.trim()}` }] }));
+      } catch {
+        return false;
+      }
+      await ghiNhatKy("Xóa hồ sơ (vào thùng rác)", `${h.ma} · ${h.ten} — ${lyDo.trim()}`);
+      await taiLai();
+      return true;
+    },
+    khoiPhucHo: async (id) => {
       if (chan("SUA_HO_SO")) return;
       const h = dsHo.find((x) => x.id === id);
-      await ghiNhatKy("Xóa hồ sơ", h ? `${h.ma} · ${h.ten}` : id);
-      await ghi(() => kho.xoaHo(id));
+      if (!h?.daXoa) return;
+      const { daXoa: _bo, ...con } = h;
+      await ghi(() => kho.luuHo({ ...con, nhatKy: [...h.nhatKy, { luc: new Date().toISOString(), nguoi: nguoiDung, noiDung: "Khôi phục từ thùng rác" }] }));
+      await ghiNhatKy("Khôi phục hồ sơ từ thùng rác", `${h.ma} · ${h.ten}`);
       await taiLai();
     },
-    xoaDuAn: async (id) => {
+    xoaHanHo: async (id) => {
+      if (chan("XOA_HAN")) return;
+      const h = dsHo.find((x) => x.id === id);
+      if (!h?.daXoa || !duocXoaHan(h.daXoa)) return bao(`Chỉ xóa hẳn hồ sơ đã nằm trong thùng rác đủ ${THOI_HAN_THUNG_RAC} ngày`, "loi");
+      await ghi(() => kho.ghiLo({ xoaHo: [id] }));
+      await ghiNhatKy("Xóa hẳn hồ sơ", `${h.ma} · ${h.ten} (vào thùng rác ${h.daXoa.luc.slice(0, 10)} bởi ${h.daXoa.nguoi}: ${h.daXoa.lyDo})`);
+      await taiLai();
+    },
+    xoaDuAn: async (id, lyDo) => {
+      if (chan("XOA_DU_AN")) return false;
+      const d = dsDuAn.find((x) => x.id === id);
+      if (!d) return false;
+      const ly = lyDoKhongXoaDuAn(d, dsHo.filter((h) => h.duAnId === id));
+      if (ly.length) return bao(`Không xóa được dự án: ${ly.join("; ")}`, "loi"), false;
+      if (!lyDo.trim()) return bao("Xóa dự án cần ghi lý do", "loi"), false;
+      try {
+        await ghi(() => kho.luuDuAn({ ...d, daXoa: dauXoa(lyDo) }));
+      } catch {
+        return false;
+      }
+      await ghiNhatKy("Xóa dự án (vào thùng rác)", `${d.ten} — ${lyDo.trim()}`);
+      await taiLai();
+      return true;
+    },
+    khoiPhucDuAn: async (id) => {
       if (chan("XOA_DU_AN")) return;
-      await ghiNhatKy("Xóa dự án", dsDuAn.find((d) => d.id === id)?.ten ?? id);
-      await ghi(() => kho.xoaDuAn(id));
+      const d = dsDuAn.find((x) => x.id === id);
+      if (!d?.daXoa) return;
+      const { daXoa: _bo, ...con } = d;
+      await ghi(() => kho.luuDuAn(con));
+      await ghiNhatKy("Khôi phục dự án từ thùng rác", d.ten);
+      await taiLai();
+    },
+    xoaHanDuAn: async (id) => {
+      if (chan("XOA_HAN")) return;
+      const d = dsDuAn.find((x) => x.id === id);
+      if (!d?.daXoa || !duocXoaHan(d.daXoa)) return bao(`Chỉ xóa hẳn dự án đã nằm trong thùng rác đủ ${THOI_HAN_THUNG_RAC} ngày`, "loi");
+      // Bản sao lưu toàn bộ dữ liệu trước khi xóa hẳn (cán bộ chọn nơi lưu; Hủy = không xóa)
+      const { bytes, thongTin } = await taoBanSaoLuu(kho);
+      if (!(await taiXuong(bytes, tenTepSaoLuu(thongTin.luc, "GPMB-truoc-xoa-du-an"), "application/zip"))) return bao("Chưa lưu bản sao lưu trước khi xóa — không xóa dự án", "loi");
+      await ghi(() => kho.ghiLo({ xoaDuAn: [id] }));
+      await ghiNhatKy("Xóa hẳn dự án", `${d.ten} (vào thùng rác ${d.daXoa.luc.slice(0, 10)} bởi ${d.daXoa.nguoi}: ${d.daXoa.lyDo})`);
       await taiLai();
     },
     chinhSach: (d) => BO_CHINH_SACH[d.boChinhSach] ?? BO_CHINH_SACH["sonla-2026-03-31"]!,

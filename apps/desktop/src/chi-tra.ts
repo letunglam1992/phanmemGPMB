@@ -27,7 +27,12 @@ export interface DotChi {
   chungTu: string;
   ghiChu?: string;
   nguoiGhi: string;
+  /** Đợt chi đã hủy (P0-4): giữ lại để truy vết chứng từ, không tính vào số đã chi. */
+  huy?: { luc: string; nguoi: string; lyDo: string };
 }
+
+/** Các đợt chi còn hiệu lực (bỏ đợt đã hủy). */
+export const dotHieuLuc = (ct: Pick<ChiTraHo, "dot"> | undefined | null) => (ct?.dot ?? []).filter((d) => !d.huy);
 
 export interface ChiTraHo {
   /** Ngày QĐ phê duyệt có hiệu lực (mặc định = ngày QĐ); cán bộ sửa nếu QĐ ghi hiệu lực khác. */
@@ -91,7 +96,8 @@ export function tienChamTraKhoan(soTien: Decimal, tuNgay: string, denNgay: strin
 
 export function tinhChiTra(h: Ho, dsPA: PhienBanPA[], giaiDoan: GiaiDoanTyLe[], homNay: string): KetQuaChiTra {
   const ban = hoDaPheDuyet(dsPA).get(h.id) ?? null;
-  const ct = h.chiTra ?? { dot: [] };
+  const ct0 = h.chiTra ?? { dot: [] };
+  const ct = { ...ct0, dot: dotHieuLuc(ct0) };
   const daChi = ct.dot.reduce((s, x) => s.plus(x.soTien || "0"), D(0));
   const canhBao: string[] = [];
   if (!ban || !ban.pheDuyet) {

@@ -39,7 +39,7 @@ export function HopNhapExcel({ duAn, dong }: { duAn: DuAn; dong: () => void }) {
   const [xong, setXong] = useState("");
   const [taiMau, setTaiMau] = useState(false);
 
-  const kq = useMemo(() => (tep && ax ? kiemTraNhap(tep.tep, ax, duAn, hoCua(duAn.id), tep.ten, nguoiDung) : null), [tep, ax, duAn, hoCua, nguoiDung]);
+  const kq = useMemo(() => (tep && ax ? kiemTraNhap(tep.tep, ax, duAn, hoCua(duAn.id, true), tep.ten, nguoiDung) : null), [tep, ax, duAn, hoCua, nguoiDung]);
   const chan = kq ? coLoiChan(kq) : true;
   const soLoi = kq?.loi.filter((l) => l.muc === "LOI").length ?? 0;
   const soCb = (kq?.loi.length ?? 0) - soLoi;

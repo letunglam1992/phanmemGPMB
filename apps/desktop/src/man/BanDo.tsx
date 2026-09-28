@@ -947,7 +947,7 @@ function HopTaoHo(p: {
     if (soNghiVan > 0 && !daXacNhan) return bao("Cần xác nhận đã kiểm tra các thửa có nghi vấn", "loi");
     setDangTao(true);
     // Mã theo mẫu của dự án, tiếp số lớn nhất đang dùng — không trùng hồ sơ đã có (P0-3)
-    const maMoi = boSinhMa(hoCua(p.duAn.id).map((h) => h.ma), mauMaCua(p.duAn));
+    const maMoi = boSinhMa(hoCua(p.duAn.id, true).map((h) => h.ma), mauMaCua(p.duAn));
     const dsMoi: Ho[] = [];
     for (const g of nhom) {
       const h = hoMoi(p.duAn.id, maMoi(), g.ten, /ubnd|cộng đồng|tập thể|công ty|hợp tác/i.test(g.ten) ? "TO_CHUC" : "HO_GIA_DINH");

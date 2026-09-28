@@ -13,7 +13,9 @@
     "KHOI_PHUC",
     "TAI_KHOAN",
     "XEM_NHAT_KY",
-    "CAI_DAT"
+    "CAI_DAT",
+    "XOA_HAN",
+    "XUAT_KHONG_MA_HOA"
   ],
   "LANH_DAO": [
     "SUA_HO_SO",

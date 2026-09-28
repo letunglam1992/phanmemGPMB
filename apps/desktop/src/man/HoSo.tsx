@@ -69,7 +69,7 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
   };
   const luu = async (ghiChu = "Cập nhật hồ sơ") => {
     // Chặn khi đổi sang mã đã dùng; mã trùng có sẵn từ dữ liệu cũ chỉ cảnh báo ở thẻ Thông tin
-    const trung = chuanMa(h.ma) !== chuanMa(goc?.ma ?? "") ? hoTrungMa(hoCua(duAnId), h.ma, h.id) : null;
+    const trung = chuanMa(h.ma) !== chuanMa(goc?.ma ?? "") ? hoTrungMa(hoCua(duAnId, true), h.ma, h.id) : null;
     if (trung || !h.ma.trim()) return bao(trung ? `Mã hồ sơ ${h.ma} đã dùng cho “${trung.ten}” — đổi mã ở thẻ Thông tin` : "Chưa có mã hồ sơ", "loi");
     await luuHo({ ...h, ma: h.ma.trim() }, ghiChu);
     xoaBanNhap(h.id);
@@ -192,7 +192,10 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
           )}
           {choSua && (
             <div className="vung-xoa">
-              <button className="nut-xoa" onClick={async () => { if (confirm(`Xóa hồ sơ ${h.ma} – ${h.ten}? Thao tác không hoàn tác được.`)) { await xoaHo(h.id); di({ ten: "du-an", duAnId, tab: "ho" }); } }}>
+              <button className="nut-xoa" onClick={async () => {
+                const lyDo = prompt(`Đưa hồ sơ ${h.ma} – ${h.ten} vào thùng rác?\nKhôi phục được trong thùng rác (Quản trị → Thùng rác).\n\nLý do xóa (bắt buộc):`)?.trim();
+                if (lyDo && (await xoaHo(h.id, lyDo))) di({ ten: "du-an", duAnId, tab: "ho" });
+              }}>
                 <BieuTuong ten="thungRac" co={19} />
                 <span><b>Xóa hồ sơ</b><small>Xóa vĩnh viễn hồ sơ và toàn bộ dữ liệu liên quan.</small></span>
               </button>
@@ -304,7 +307,7 @@ const VB_DA_BAN_HANH = [
 
 function TabThongTin({ h, doi }: Tab) {
   const { hoCua } = useUngDung();
-  const trung = hoTrungMa(hoCua(h.duAnId), h.ma, h.id);
+  const trung = hoTrungMa(hoCua(h.duAnId, true), h.ma, h.id);
   const s = (k: keyof Ho) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => doi({ ...h, [k]: e.target.value });
   const vb = h.vanBan ?? {};
   return (

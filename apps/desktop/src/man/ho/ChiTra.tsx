@@ -63,10 +63,20 @@ export function TabChiTra({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) =>
           <thead><tr><th>Ngày</th><th className="so">Số tiền (đ)</th><th>Hình thức</th><th>Chứng từ</th><th>Ghi chú</th><th>Người ghi</th><th /></tr></thead>
           <tbody>
             {[...ct.dot].sort((a, b) => a.ngay.localeCompare(b.ngay)).map((d) => (
-              <tr key={d.id}>
+              <tr key={d.id} style={d.huy ? { textDecoration: "line-through", opacity: 0.6 } : undefined} title={d.huy ? `Đã hủy lúc ${new Date(d.huy.luc).toLocaleString("vi-VN")} bởi ${d.huy.nguoi}: ${d.huy.lyDo}` : undefined}>
                 <td>{ngayVN(d.ngay)}{r.hanChi && d.ngay > r.hanChi && <span className="nhan nhan-do" style={{ marginLeft: 4 }}>sau hạn</span>}</td>
                 <td className="so">{dinhDang(D(d.soTien), 0)}</td><td>{TEN_HINH_THUC[d.hinhThuc]}</td><td>{d.chungTu}</td><td className="chu-nho">{d.ghiChu}</td><td className="chu-nho">{d.nguoiGhi}</td>
-                <td><button className="nut nut-nho nut-nguy" onClick={() => confirm("Xóa đợt chi này?") && datCt({ dot: ct.dot.filter((x) => x.id !== d.id) })}>Xóa</button></td>
+                <td>
+                  {d.huy ? (
+                    <span className="nhan nhan-xam" style={{ textDecoration: "none" }}>Đã hủy</span>
+                  ) : (
+                    <button className="nut nut-nho nut-nguy" title="Hủy đợt chi ghi sai (giữ lại dòng để truy vết, không tính vào số đã chi)" onClick={() => {
+                      const lyDo = prompt("Lý do hủy đợt chi (bắt buộc, vd. ghi nhầm số tiền, nhầm hộ):")?.trim();
+                      if (!lyDo) return;
+                      datCt({ dot: ct.dot.map((x) => (x.id === d.id ? { ...x, huy: { luc: new Date().toISOString(), nguoi: nguoiDung, lyDo } } : x)) });
+                    }}>Hủy</button>
+                  )}
+                </td>
               </tr>
             ))}
             {ct.dot.length === 0 && <tr><td colSpan={7} className="trong">Chưa ghi đợt chi nào.</td></tr>}
