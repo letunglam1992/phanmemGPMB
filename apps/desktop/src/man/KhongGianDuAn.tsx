@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { TabCuon } from "../thanh-phan/TabCuon";
 import { useUngDung } from "../ung-dung";
 import { tinhHo } from "../tinh-ho";
 import { BUOC_CHUNG, TEN_TRANG_THAI_DU_AN, type DuAn } from "../mo-hinh";
@@ -87,7 +88,7 @@ export function KhongGianDuAn({ duAnId, tab = "tong-quan", ma, hoId }: { duAnId:
         </div>
       </div>
       <div className="the the-tab">
-        <div className="tab tab-bt" role="tablist">
+        <TabCuon chon={tab}>
           {THE.map((t) => (
             <button key={t.ma} role="tab" aria-selected={tab === t.ma} className={tab === t.ma ? "chon" : ""} onClick={() => moThe(t.ma)}>
               <BieuTuong ten={t.bt} co={18} />{t.ten}
@@ -96,7 +97,7 @@ export function KhongGianDuAn({ duAnId, tab = "tong-quan", ma, hoId }: { duAnId:
               {t.ma === "thong-tin" && thieu.length > 0 && <span className="dem" style={{ background: "var(--vang-nen)", color: "var(--vang)" }}>!</span>}
             </button>
           ))}
-        </div>
+        </TabCuon>
       </div>
       {thieu.length > 0 && tab !== "thong-tin" && (
         <div className="thong-bao thong-bao-vang">

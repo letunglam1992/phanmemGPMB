@@ -1,4 +1,5 @@
 import { useRef, Fragment, useEffect, useMemo, useState } from "react";
+import { TabCuon } from "../thanh-phan/TabCuon";
 import { kiemTraDuyetBuoc } from "../tai-khoan";
 import { hanCuaBuoc, tinhHanBuoc } from "../han-buoc";
 import { TT_GPMB, homNayIso, trangThaiHo, type TrangThaiGpmb } from "../trang-thai";
@@ -134,7 +135,7 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
       </div>
 
       <div className="the the-tab">
-        <div className="tab tab-bt" role="tablist">
+        <TabCuon chon={tab}>
           {CAC_TAB.map(([ma, ten, bt]) => (
             <button key={ma} role="tab" aria-selected={tab === ma} className={tab === ma ? "chon" : ""} onClick={() => setTab(ma)}>
               <BieuTuong ten={bt} co={18} />
@@ -142,7 +143,7 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
               {dem[ma] ? <span className="dem">{dem[ma]}</span> : null}
             </button>
           ))}
-        </div>
+        </TabCuon>
       </div>
 
       {/* Cột "Thông tin hồ sơ" hiện ở các tab nhập liệu gọn; tab bảng rộng (thửa, kiểm đếm, tính toán, tiến độ, chi trả) dùng toàn bộ chiều ngang */}

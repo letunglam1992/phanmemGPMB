@@ -37,6 +37,13 @@ export function UngDung() {
   const { man, di, dsDuAn, hopSaoLuu, moSaoLuu, taiKhoan, quyen, dangXuat, hopCaiDat, moCaiDat, quayLai, coTheQuayLai, dsDonVi, anhNen, taiLai, bao, ghiNhatKy, thungRac, hoCua } = useUngDung();
   const [menu, setMenu] = useState(false);
   const [chuong, setChuong] = useState(false);
+  const [benGon, setBenGon] = useState(() => {
+    try {
+      return localStorage.getItem("gpmb-ben-gon") === "1";
+    } catch {
+      return false;
+    }
+  });
   // Dự án làm việc gần nhất — mục "Hồ sơ" mở lại dự án này
   const [duAnGanNhat, setDuAnGanNhat] = useState<string | null>(null);
   useEffect(() => { if ("duAnId" in man && man.duAnId) setDuAnGanNhat(man.duAnId); }, [man]);
@@ -108,11 +115,22 @@ export function UngDung() {
     },
   ];
   const cheDo = docCheDo();
+  const doiBenGon = (v: boolean) => {
+    setBenGon(v);
+    try {
+      localStorage.setItem("gpmb-ben-gon", v ? "1" : "");
+    } catch {
+      /* không lưu được: chỉ áp dụng phiên này */
+    }
+  };
   const homNay = new Date().toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
 
   return (
-    <div className="khung">
+    <div className={`khung${benGon ? " ben-gon" : ""}`}>
       <aside className="thanh-ben" aria-label="Điều hướng">
+        <button className="ben-thu-gon" title={benGon ? "Mở rộng thanh bên" : "Thu gọn thanh bên (chỉ hiện biểu tượng)"} aria-label={benGon ? "Mở rộng thanh bên" : "Thu gọn thanh bên"} aria-pressed={benGon} onClick={() => doiBenGon(!benGon)}>
+          <BieuTuong ten="thuGon" co={16} />
+        </button>
         <div className="ben-logo">
           <span className="ben-logo-nui" aria-hidden>
             <svg width="44" height="30" viewBox="0 0 44 30" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinejoin="round" strokeLinecap="round"><path d="M2 27L15 7l7 10 5-6 15 16z" /><path d="M11 27l7-9 5 6" /></svg>
@@ -157,7 +175,7 @@ export function UngDung() {
           </div>
           <div className="nut-tren-nhom">
             {(quyen("SAO_LUU") || quyen("KHOI_PHUC")) && (
-              <button className="nut-tren nut-tren-chinh" onClick={() => moSaoLuu(true)}><BieuTuong ten="saoLuu" co={16} /> Sao lưu, khôi phục</button>
+              <button className="nut-tren nut-tren-chinh" title="Sao lưu, khôi phục" onClick={() => moSaoLuu(true)}><BieuTuong ten="saoLuu" co={16} /> <span className="chu-nut">Sao lưu, khôi phục</span></button>
             )}
             <button className="nut-tren nut-tren-bt" title={giaoDien === "toi" ? "Giao diện sáng" : "Giao diện tối"} aria-label="Đổi giao diện sáng/tối" onClick={() => setGiaoDien(giaoDien === "toi" ? "sang" : "toi")}>
               <BieuTuong ten={giaoDien === "toi" ? "sang" : "toi"} co={17} />
@@ -183,12 +201,13 @@ export function UngDung() {
               )}
             </div>
             <div className="menu-nguoi">
-              <button className="nut-tren nut-nguoi" aria-haspopup="menu" aria-expanded={menu} onClick={() => setMenu(!menu)}>
-                <span className="anh-dai-dien" aria-hidden>{vietTat || <BieuTuong ten="taiKhoan" co={15} />}</span> {taiKhoan.hoTen} · {TEN_VAI_TRO[taiKhoan.vaiTro]} <BieuTuong ten="xuong" co={14} />
+              <button className="nut-tren nut-nguoi" aria-haspopup="menu" aria-expanded={menu} title={`${taiKhoan.hoTen} · ${TEN_VAI_TRO[taiKhoan.vaiTro]}`} onClick={() => setMenu(!menu)}>
+                <span className="anh-dai-dien" aria-hidden>{vietTat || <BieuTuong ten="taiKhoan" co={15} />}</span> <span className="ten-nguoi">{taiKhoan.hoTen} · {TEN_VAI_TRO[taiKhoan.vaiTro]}</span> <BieuTuong ten="xuong" co={14} />
               </button>
               {menu && (
                 <div className="menu-tha" role="menu" onMouseLeave={() => setMenu(false)}>
                   <div className="menu-nhan">Đăng nhập: {taiKhoan.ten}</div>
+                  <div className="menu-nhan menu-meta">{homNay} · {moTaCheDo(cheDo)}</div>
                   <button role="menuitem" onClick={() => { setHop("mat-khau"); setMenu(false); }}><BieuTuong ten="khoa" co={16} /> Đổi mật khẩu</button>
                   <button role="menuitem" onClick={() => { moCaiDat(true); setMenu(false); }}><BieuTuong ten="caiDat" co={16} /> Cài đặt chung</button>
                   <button role="menuitem" onClick={() => { di({ ten: "huong-dan" }); setMenu(false); }}><BieuTuong ten="hoiDap" co={16} /> Hướng dẫn sử dụng</button>

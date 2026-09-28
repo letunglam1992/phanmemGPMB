@@ -934,3 +934,63 @@ kbd.phim { display: inline-block; min-width: 20px; padding: 1px 6px; border: 1px
 .buoc button.KHONG_AP_DUNG .vach { background: repeating-linear-gradient(90deg, var(--vien) 0 4px, transparent 4px 8px); }
 .buoc-tron li.KHONG_AP_DUNG .so, .ttho-buoc li.KHONG_AP_DUNG .so, .td-chung-o.KHONG_AP_DUNG .so { border-style: dashed; color: var(--chu-mo); background: transparent; }
 .buoc-tron li.KHONG_AP_DUNG::before { background: var(--chinh); }
+
+/* ---------- P1-7: laptop 1366×768 ---------- */
+/* Dải tab cuộn ngang có mũi tên */
+.tab-cuon { position: relative; }
+.tab-mui-ten { position: absolute; top: 0; bottom: 0; z-index: 2; width: 30px; border: 0; cursor: pointer; font-size: 22px; line-height: 1; color: var(--chu-phu); background: linear-gradient(90deg, var(--be-mat) 60%, transparent); }
+.tab-mui-ten.phai { right: 0; background: linear-gradient(270deg, var(--be-mat) 60%, transparent); }
+.tab-mui-ten.trai { left: 0; }
+.tab-mui-ten:hover { color: var(--chinh); }
+.tab-bt { scrollbar-width: none; }
+.tab-bt::-webkit-scrollbar { display: none; }
+.menu-meta { display: none; }
+
+/* Thanh bên thu gọn theo lựa chọn người dùng */
+.thanh-ben { position: relative; }
+.ben-thu-gon { position: absolute; top: 8px; right: 8px; width: 26px; height: 26px; display: grid; place-items: center; border: 1px solid var(--vien); border-radius: 8px; background: var(--be-mat); color: var(--chu-mo); cursor: pointer; z-index: 1; }
+.ben-thu-gon:hover { color: var(--chu); border-color: var(--vien-dam); }
+.khung.ben-gon { --side-w: 72px; }
+.khung.ben-gon .thanh-ben { align-items: center; padding: 40px 8px 14px; }
+.khung.ben-gon .ben-thu-gon { right: 50%; transform: translateX(50%) scaleX(-1); }
+.khung.ben-gon .ben-logo { margin: 0 0 16px; }
+.khung.ben-gon .ben-logo span:not(.ben-logo-nui), .khung.ben-gon .ben-nhan, .khung.ben-gon .ben-muc .chu, .khung.ben-gon .ben-chan { display: none; }
+.khung.ben-gon .ben-muc { justify-content: center; padding: 11px; position: relative; }
+.khung.ben-gon .ben-muc .dem { position: absolute; top: 2px; right: 0; margin: 0; }
+@media (max-width: 1180px) { .ben-thu-gon { display: none; } }
+
+/* Màn hình thấp hoặc hẹp (laptop): thanh tiêu đề một hàng, dải bước chỉ còn vòng số, khoảng cách gọn */
+@media (max-height: 900px), (max-width: 1440px) {
+  .thanh-tren { flex-wrap: nowrap; padding: 8px 18px; min-height: 0; gap: 12px; }
+  .thanh-tren .phai { flex-direction: row; align-items: center; gap: 8px; }
+  .meta-tren, .thanh-tren .to-chuc, .nut-quay-lai span, .nut-tren-chinh .chu-nut, .nut-nguoi .ten-nguoi { display: none; }
+  .menu-meta { display: block; }
+  .nut-quay-lai { padding: 0 9px; }
+  .nut-tren-chinh { width: 36px; padding: 0; justify-content: center; }
+  .thuong-hieu { gap: 10px; }
+  .thuong-hieu-dau { width: 36px; height: 36px; }
+  .ten-ung-dung { font-size: 16px; white-space: nowrap; }
+  .tim-chung input { height: 36px; }
+  .thanh-ben { padding-top: 14px; }
+  .ben-logo { margin-bottom: 12px; }
+  .ben-muc { padding: 8px 12px; }
+  .ben-nhan { padding-top: 6px; }
+  .ben-nhom { margin-bottom: 4px; }
+  .trang { padding: 14px 20px 36px; }
+  .dong-tieu-de { margin-bottom: 10px; }
+  .dong-tieu-de h1 { font-size: 22px; }
+  .duong-dan-2 { margin-bottom: 6px; }
+  .trang-ho .nhan-trang { display: none; }
+  .the-tong-tien { padding: 6px 14px 6px 8px; }
+  .the-tong-tien .bt { width: 34px; height: 34px; }
+  .the-tong-tien b { font-size: 18px; }
+  .nut-lon { height: 38px; padding: 0 14px; }
+  .the-buoc-tron { padding: 8px 10px 6px; margin-bottom: 10px; }
+  .buoc-tron { min-width: 640px; }
+  .buoc-tron .ten, .buoc-tron-chu { display: none; }
+  .buoc-tron .so { width: 28px; height: 28px; font-size: 12px; }
+  .buoc-tron li::before { top: 13px; left: calc(-50% + 16px); right: calc(50% + 16px); }
+  .the-tab { margin-bottom: 10px; }
+  .tab-bt button { padding: 11px 13px 9px; font-size: 13.5px; }
+  .chan { padding: 4px 20px; }
+}

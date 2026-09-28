@@ -66,3 +66,22 @@ test("§11.1: soát phương án liệt kê vấn đề kèm căn cứ", async (
   await hop.getByRole("button", { name: /^Lưu ý/ }).click();
   await expect(hop.locator("td", { hasText: /^Thu hồi toàn bộ thửa đất ở \(/ })).toHaveCount(0);
 });
+
+test.describe("P1-7: laptop 1366×768", () => {
+  test.use({ viewport: { width: 1366, height: 768 } });
+  test("thanh tiêu đề một hàng ≤ 64 px; nội dung hồ sơ bắt đầu trong nửa trên màn hình; tab có mũi tên; thanh bên thu gọn", async ({ page: p }) => {
+    await vao(p);
+    await moHo(p);
+    expect((await p.locator("header.thanh-tren").boundingBox())!.height).toBeLessThanOrEqual(64);
+    expect((await p.locator(".the-buoc-tron").boundingBox())!.height).toBeLessThanOrEqual(56);
+    expect((await p.locator(".ho-khung").boundingBox())!.y).toBeLessThan(768 / 2);
+    await p.getByRole("button", { name: "Các tab bên phải" }).click();
+    await expect(p.getByRole("button", { name: "Các tab bên trái" })).toBeVisible();
+    await p.locator("[role=tablist] button", { hasText: "Nhật ký" }).click();
+    await expect(p.locator("[role=tablist] button[aria-selected=true]")).toHaveText(/Nhật ký/);
+    await p.getByRole("button", { name: "Thu gọn thanh bên" }).click();
+    expect((await p.locator("aside.thanh-ben").boundingBox())!.width).toBeLessThanOrEqual(72);
+    await p.locator(".nut-nguoi").click();
+    await expect(p.locator(".menu-meta")).toContainText("Máy đơn");
+  });
+});
