@@ -64,7 +64,7 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
         </div>
         <div className="phai" style={{ alignItems: "center" }}>
           <div style={{ textAlign: "right", marginRight: 8 }}>
-            <div className="mo chu-nho">Tổng tạm tính (làm tròn lên nghìn đồng)</div>
+            <div className="mo chu-nho">Tổng tạm tính (sau làm tròn)</div>
             <div style={{ fontSize: 20, fontWeight: 700 }}>{tien(kq.tong.tongLamTron)} đ</div>
           </div>
           {daSua && <span className="nhan nhan-vang">Chưa lưu</span>}

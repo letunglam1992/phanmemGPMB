@@ -75,6 +75,8 @@ export interface KetQuaHo {
   theoCot: Record<CotTongHop, Decimal>;
   tongBoiThuong: Decimal;
   tongHoTro: Decimal;
+  /** Cách làm tròn tổng đã áp dụng (VM-36), để in kèm bảng tính. */
+  moTaLamTron: string;
   khauTru: Decimal;
   conLai: Decimal;
 }
@@ -356,13 +358,16 @@ export function tinhHo(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
     });
 
   const tatCa = nhom.flatMap((x) => x.dong);
-  const tong = tongHo(cs, tatCa.map((x) => x.dong));
+  const lt = duAn.lamTron?.lyDo?.trim() ? duAn.lamTron : null;
+  const csTong: BoChinhSach = lt ? { ...cs, lamTron: { ...cs.lamTron, cach: lt.cach } } : cs;
+  const tong = tongHo(csTong, tatCa.map((x) => x.dong));
   const theoCot = Object.fromEntries(Object.keys(TEN_COT).map((k) => [k, D(0)])) as Record<CotTongHop, Decimal>;
   for (const x of tatCa) if (x.dong.trangThai === "TAM_TINH" && x.dong.thanhTien) theoCot[x.cot] = theoCot[x.cot].plus(x.dong.thanhTien);
   const tongBoiThuong = theoCot.BT_DAT.plus(theoCot.BT_CAY).plus(theoCot.BT_TAI_SAN);
   const tongHoTro = theoCot.HT_DAT.plus(theoCot.HT_TAI_SAN).plus(theoCot.HT_CAY).plus(theoCot.HT_CDN).plus(theoCot.HT_KHAC);
   const khauTru = D(ho.khauTru || "0");
   return {
+    moTaLamTron: moTaLamTron(csTong.lamTron.cach, csTong.lamTron.tienBuoc, lt?.lyDo),
     nhom: nhom.filter((x) => x.dong.length),
     tatCa,
     tong,
@@ -375,3 +380,16 @@ export function tinhHo(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
 }
 
 export const SO_NGUYEN = (d: Decimal | null | undefined, le = 0) => (d ? dinhDang(d, le) : "—");
+
+export const TEN_CACH_LAM_TRON: Record<"LEN" | "NUA_LEN" | "XUONG" | "KHONG", string> = {
+  LEN: "Làm tròn lên",
+  NUA_LEN: "Làm tròn nửa lên (từ 500 đ trở lên thì lên)",
+  XUONG: "Làm tròn xuống",
+  KHONG: "Không làm tròn",
+};
+
+export function moTaLamTron(cach: string, buoc: number, lyDo?: string): string {
+  const ten = TEN_CACH_LAM_TRON[cach as keyof typeof TEN_CACH_LAM_TRON] ?? cach;
+  const co = cach === "KHONG" ? ten : `${ten} đến ${buoc.toLocaleString("vi-VN")} đ ở cấp hộ`;
+  return lyDo ? `${co} — lựa chọn của dự án: ${lyDo} (VM-36)` : `${co} (QD-03)`;
+}

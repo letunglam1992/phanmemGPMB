@@ -68,7 +68,7 @@ export function TabTinhToan({ h, duAn, kq }: { h: Ho; duAn: DuAn; kq: KetQuaHo }
               {phanB.length > 0 && veNhom(phanB, "B", "GIÁ TRỊ HỖ TRỢ")}
               {kq.tatCa.length === 0 && <tr><td colSpan={6} className="trong">Chưa có khoản nào. Nhập thửa đất, kiểm đếm tài sản và chọn hỗ trợ.</td></tr>}
               <tr className="tong"><td /><td colSpan={2}>Tổng cộng (A + B) — chưa làm tròn</td><td className="so">{tien(kq.tong.tongChuaLamTron.toDecimalPlaces(0))}</td><td colSpan={2} className="chu-nho mo">{kq.tong.tongChuaLamTron.isInteger() ? "" : kq.tong.tongChuaLamTron.toString()}</td></tr>
-              <tr className="tong"><td /><td colSpan={2}>Làm tròn lên đến nghìn đồng ở cấp hộ (QD-03)</td><td className="so">{tien(kq.tong.tongLamTron)}</td><td colSpan={2} className="chu-nho mo">Chênh lệch làm tròn: {kq.tong.chenhLechLamTron.toDecimalPlaces(2).toString()} đ</td></tr>
+              <tr className="tong"><td /><td colSpan={2}>Tổng sau làm tròn — {kq.moTaLamTron}</td><td className="so">{tien(kq.tong.tongLamTron)}</td><td colSpan={2} className="chu-nho mo">Chênh lệch làm tròn: {kq.tong.chenhLechLamTron.toDecimalPlaces(2).toString()} đ</td></tr>
               <tr><td /><td colSpan={2}>Khấu trừ nghĩa vụ tài chính</td><td className="so">{tien(kq.khauTru)}</td><td colSpan={2} /></tr>
               <tr className="tong"><td /><td colSpan={2}>Số tiền thực nhận</td><td className="so">{tien(kq.conLai)}</td><td colSpan={2}>{kq.tong.duocChot ? <span className="nhan nhan-xanh">Đủ điều kiện chốt</span> : <span className="nhan nhan-vang">Chưa chốt được</span>}</td></tr>
             </tbody>

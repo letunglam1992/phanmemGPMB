@@ -190,6 +190,11 @@ export interface DuAn {
   giaGao: { dongKg: string; nguon: string } | null;
   hanMucNN: { m2: string; canCu: string } | null;
   heSoGiaDat: { heSo: string; vanBan: string } | null;
+  /**
+   * VM-36: cách làm tròn tổng tiền từng hộ của dự án. Bỏ trống = theo bộ chính sách (QD-03: làm tròn lên
+   * đến 1.000 đ). Chọn khác thì bắt buộc lý do.
+   */
+  lamTron?: { cach: "LEN" | "NUA_LEN" | "XUONG" | "KHONG"; lyDo: string };
   banDo: BanDoDuAn | null;
   /** Thông tin dùng chung khi soạn văn bản (cơ quan, người ký, căn cứ, thành phần…) và số, ngày văn bản cấp dự án. */
   vanBan?: Record<string, string>;

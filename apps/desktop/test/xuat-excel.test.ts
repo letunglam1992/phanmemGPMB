@@ -67,7 +67,7 @@ describe("Xuất Excel theo cấu trúc biểu mẫu", () => {
           expect(r.getCell(5).value).toBe(0.3);
         }
       }
-      if (b === "Làm tròn (lên đến nghìn đồng)") {
+      if (typeof b === "string" && b.startsWith("Tổng sau làm tròn")) {
         expect(r.getCell(7).value).toBe(ds[0]!.k.tong.tongLamTron.toNumber());
         thayTong = true;
       }

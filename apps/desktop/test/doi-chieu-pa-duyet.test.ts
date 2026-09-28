@@ -82,3 +82,16 @@ describe("Đối chiếu phương án đã phê duyệt (ẩn danh)", () => {
     expect(kq.theoCot.BT_CAY.minus(1413166700).toString()).toBe("24791200");
   });
 });
+
+describe("VM-36: cách làm tròn do dự án chọn", () => {
+  it("không làm tròn / xuống / nửa lên; thiếu lý do thì giữ QD-03", () => {
+    const { duAn, ho } = taoDuAnMau();
+    const h = ho[0]!;
+    const goc = tinhHo(cs, duAn, h);
+    const t = goc.tong.tongChuaLamTron;
+    expect(tinhHo(cs, { ...duAn, lamTron: { cach: "KHONG", lyDo: "Theo phương án đã duyệt" } }, h).tong.tongLamTron.eq(t)).toBe(true);
+    expect(tinhHo(cs, { ...duAn, lamTron: { cach: "XUONG", lyDo: "x" } }, h).tong.tongLamTron.toString()).toBe(t.div(1000).floor().mul(1000).toString());
+    expect(tinhHo(cs, { ...duAn, lamTron: { cach: "KHONG", lyDo: " " } }, h).tong.tongLamTron.eq(goc.tong.tongLamTron)).toBe(true);
+    expect(tinhHo(cs, { ...duAn, lamTron: { cach: "KHONG", lyDo: "Theo PA" } }, h).moTaLamTron).toContain("VM-36");
+  });
+});

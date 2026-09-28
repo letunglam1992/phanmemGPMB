@@ -139,7 +139,7 @@ function trangHo(wb: ExcelJS.Workbook, duAn: DuAn, h: Ho, kq: KetQuaHo, ten: str
     dongKe(rt, 1, N);
   };
   tongDong("TỔNG CỘNG (A + B)", kq.tong.tongChuaLamTron);
-  tongDong("Làm tròn (lên đến nghìn đồng)", kq.tong.tongLamTron);
+  tongDong(`Tổng sau làm tròn — ${kq.moTaLamTron}`, kq.tong.tongLamTron);
   tongDong("Khấu trừ nghĩa vụ tài chính", kq.khauTru);
   tongDong("Số tiền thực nhận", kq.conLai);
   r++;

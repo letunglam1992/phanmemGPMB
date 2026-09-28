@@ -1,3 +1,4 @@
+import { TEN_CACH_LAM_TRON } from "../tinh-ho";
 import { useMemo, useState } from "react";
 import { D } from "@gpmb/core";
 import { useUngDung } from "../ung-dung";
@@ -180,6 +181,7 @@ export function HopTaoDuAn({ dong, duAn }: { dong: () => void; duAn?: DuAn }) {
   );
   const hopLe = d.ten.trim() && d.xa;
   const heSoKhac1 = d.heSoGiaDat && d.heSoGiaDat.heSo && d.heSoGiaDat.heSo !== "1";
+  const thieuLyDoLamTron = !!d.lamTron && !d.lamTron.lyDo.trim();
   return (
     <HopThoai
       tieuDe={duAn ? "Thông tin dự án" : "Dự án mới"}
@@ -188,7 +190,7 @@ export function HopTaoDuAn({ dong, duAn }: { dong: () => void; duAn?: DuAn }) {
       chan={
         <>
           <button className="nut" onClick={dong}>Hủy</button>
-          <button className="nut nut-chinh" disabled={!hopLe || (!!heSoKhac1 && !d.heSoGiaDat?.vanBan)} onClick={async () => { await luuDuAn(d); dong(); if (!duAn) di({ ten: "du-an", duAnId: d.id }); }}>Lưu</button>
+          <button className="nut nut-chinh" disabled={!hopLe || (!!heSoKhac1 && !d.heSoGiaDat?.vanBan) || thieuLyDoLamTron} onClick={async () => { await luuDuAn(d); dong(); if (!duAn) di({ ten: "du-an", duAnId: d.id }); }}>Lưu</button>
         </>
       }
     >
@@ -214,6 +216,13 @@ export function HopTaoDuAn({ dong, duAn }: { dong: () => void; duAn?: DuAn }) {
         <O nhan="Hệ số điều chỉnh giá đất" goiY="Mặc định 1. Khác 1 phải ghi văn bản (QD-02)">
           <input className="o-so" value={d.heSoGiaDat?.heSo ?? "1"} onChange={(e) => setD({ ...d, heSoGiaDat: { heSo: e.target.value, vanBan: d.heSoGiaDat?.vanBan ?? "" } })} />
         </O>
+        <O nhan="Làm tròn tổng tiền từng hộ" goiY="Mặc định QD-03: làm tròn lên đến 1.000 đ (VM-36)">
+          <select value={d.lamTron?.cach ?? ""} onChange={(e) => setD({ ...d, lamTron: e.target.value ? { cach: e.target.value as NonNullable<DuAn["lamTron"]>["cach"], lyDo: d.lamTron?.lyDo ?? "" } : undefined })}>
+            <option value="">Theo bộ chính sách (làm tròn lên đến 1.000 đ)</option>
+            {(Object.keys(TEN_CACH_LAM_TRON) as (keyof typeof TEN_CACH_LAM_TRON)[]).map((k) => <option key={k} value={k}>{TEN_CACH_LAM_TRON[k]}{k === "KHONG" ? "" : " đến 1.000 đ"}</option>)}
+          </select>
+        </O>
+        <O nhan="Lý do, căn cứ cách làm tròn"><input className={thieuLyDoLamTron ? "loi-nhap" : ""} value={d.lamTron?.lyDo ?? ""} disabled={!d.lamTron} onChange={(e) => setD({ ...d, lamTron: { cach: d.lamTron!.cach, lyDo: e.target.value } })} /></O>
         <O nhan="Văn bản quyết định hệ số"><input className={heSoKhac1 && !d.heSoGiaDat?.vanBan ? "loi-nhap" : ""} value={d.heSoGiaDat?.vanBan ?? ""} onChange={(e) => setD({ ...d, heSoGiaDat: { heSo: d.heSoGiaDat?.heSo ?? "1", vanBan: e.target.value } })} /></O>
       </div>
     </HopThoai>

@@ -11,7 +11,7 @@ Hồ sơ do người dùng cung cấp ngày 28/9/2026: Tờ trình của Phòng 
 | Đất (54.000 đ/m² × 100%) | 641.628.000 | 641.628.000 | Khớp |
 | Cây trồng | 1.413.166.700 | 1.413.166.700 *(sau khi cán bộ chọn cách tính ở VM-35 và nhập mật độ đào)* | Khớp đến đồng |
 | Hỗ trợ đào tạo, chuyển đổi nghề (3 × 54.000 × DT) | 1.924.884.000 | 1.924.884.000 | Khớp |
-| Tổng | 3.979.678.700 (không làm tròn) | 3.979.679.000 (làm tròn nửa lên ở cấp hộ, QD-03) | Khác do quy tắc làm tròn — VM-36 |
+| Tổng | 3.979.678.700 (không làm tròn) | 3.979.679.000 (mặc định QD-03: làm tròn lên đến nghìn đồng ở cấp hộ); chọn "Không làm tròn" ở thông tin dự án → 3.979.678.700 | Khớp khi chọn như hồ sơ — VM-36 |
 
 ## 2. Số học, đơn giá, dữ liệu nguồn
 
