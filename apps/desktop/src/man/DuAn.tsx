@@ -42,6 +42,7 @@ export function ManDuAn({ duAnId }: { duAnId: string }) {
       <div className="duong-dan"><button onClick={() => di({ ten: "tong-quan" })}>Tổng quan</button> / Dự án</div>
       <div className="dong-tieu-de">
         <div>
+          <div className="nhan-trang">Dự án</div>
           <h1>{duAn.ten}</h1>
           <div className="mo-ta">
             {duAn.xa} · Chủ đầu tư: {duAn.chuDauTu || "—"} · {duAn.canCuThuHoi || "Chưa ghi căn cứ thu hồi"} · TB: {ngayVN(duAn.ngayThongBao) || "—"}
@@ -69,10 +70,10 @@ export function ManDuAn({ duAnId }: { duAnId: string }) {
       <div className="luoi" style={{ gridTemplateColumns: "minmax(0,1fr) 380px", marginBottom: 14 }}>
         <div className="luoi" style={{ alignContent: "start" }}>
           <div className="luoi luoi-4">
-            <TheChiSo bieuTuong="nguoi" nhan="Đã hoàn thành GPMB" giaTri={tk.theoTrangThai.HOAN_THANH} mauSo={tk.soHo} mau="#1f8a4c" />
-            <TheChiSo bieuTuong="hoSo" nhan="Đang xử lý" giaTri={tk.theoTrangThai.DANG_XU_LY} mauSo={tk.soHo} mau="#b98400" />
-            <TheChiSo bieuTuong="canhBao" nhan="Vướng mắc" giaTri={tk.theoTrangThai.VUONG_MAC} mauSo={tk.soHo} mau="#c0392b" />
-            <TheChiSo bieuTuong="thua" nhan="Thửa đã kiểm đếm" giaTri={tk.soThuaDaKiemDem} mauSo={tk.soThua} mau="#2f6fb8" />
+            <TheChiSo bieuTuong="nguoi" nhan="Đã hoàn thành GPMB" giaTri={tk.theoTrangThai.HOAN_THANH} mauSo={tk.soHo} tong="xanh" />
+            <TheChiSo bieuTuong="hoSo" nhan="Đang xử lý" giaTri={tk.theoTrangThai.DANG_XU_LY} mauSo={tk.soHo} tong="vang" />
+            <TheChiSo bieuTuong="canhBao" nhan="Vướng mắc" giaTri={tk.theoTrangThai.VUONG_MAC} mauSo={tk.soHo} tong="do" />
+            <TheChiSo bieuTuong="thua" nhan="Thửa đã kiểm đếm" giaTri={tk.soThuaDaKiemDem} mauSo={tk.soThua} tong="duong" />
           </div>
           <div className="luoi luoi-2">
             <div className="the">
@@ -138,7 +139,7 @@ export function ManDuAn({ duAnId }: { duAnId: string }) {
                     <td className="so"><b>{tien(k.tong.tongLamTron)}</b></td>
                     <td className="so">{tien(k.khauTru)}</td>
                     <td className="so">{tien(k.conLai)}</td>
-                    <td>{(() => { const t = TT_GPMB[ttHo.get(h.id)!]; return <span className="nhan" style={{ background: t.nen, color: "#1c2723" }}>{t.bieuTuong} {t.ten}</span>; })()}</td>
+                    <td>{(() => { const t = TT_GPMB[ttHo.get(h.id)!]; return <span className="nhan" style={{ background: t.nen, color: "var(--chu)" }}>{t.bieuTuong} {t.ten}</span>; })()}</td>
                     <td>
                       {k.tong.duocChot ? <span className="nhan nhan-xanh">Đủ căn cứ</span> : (
                         <span className={`nhan ${k.tong.soDongThieuCanCu ? "nhan-do" : "nhan-vang"}`}>{k.tong.soDongThieuCanCu + k.tong.soDongCanXacNhan} khoản chưa xong</span>

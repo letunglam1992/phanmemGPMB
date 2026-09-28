@@ -44,33 +44,89 @@ export function TongQuan() {
   const capNhat = duLieu.map((x) => x.tk.capNhatCuoi).filter(Boolean).sort().at(-1);
   const tongTien = duLieu.reduce((s, x) => s.plus(x.tong), D(0));
 
+  type CB = (typeof canhBao)[number];
+  const mo = (c: CB) =>
+    "caiDat" in c && c.caiDat ? moCaiDat(true) : "saoLuu" in c && c.saoLuu ? moSaoLuu(true) : c.duAnId && (c.hoId ? di({ ten: "ho", duAnId: c.duAnId, hoId: c.hoId, tab: "tien-do" }) : di({ ten: "du-an", duAnId: c.duAnId }));
+  const cao = canhBao.filter((c) => c.muc === "CAO");
+  const theoDoi = canhBao.filter((c) => c.muc !== "CAO");
+  const chuY = [...cao, ...canhBao.filter((c) => c.muc === "TRUNG_BINH")].slice(0, 3);
+  const tachTieuDe = (nd: string) => {
+    const i = nd.indexOf(": ");
+    return i > 0 && i < 60 ? { dau: nd.slice(0, i), sau: nd.slice(i + 2) } : { dau: "", sau: nd };
+  };
+  const dongCB = (c: CB, i: number) => (
+    <div key={i} className="canh-bao-dong" onClick={() => mo(c)}>
+      <span className={`cb-bt cb-${c.muc}`}>{c.muc === "THONG_TIN" ? "i" : "!"}</span>
+      <div>{c.noiDung}{c.canCu && <div className="can-cu">{c.canCu}</div>}</div>
+    </div>
+  );
+
   return (
     <div className="trang">
       <div className="dong-tieu-de">
         <div>
-          <h1>Tổng quan công tác bồi thường, GPMB</h1>
-          <div className="mo-ta">Hiện trạng từng hồ sơ, tiến độ theo quy trình Sổ tay QĐ 1966 và các cảnh báo cần xử lý.</div>
+          <div className="nhan-trang">Tổng quan điều hành</div>
+          <h1>Tình hình bồi thường, giải phóng mặt bằng</h1>
+          <div className="mo-ta">Hiện trạng từng hồ sơ, tiến độ theo quy trình Sổ tay QĐ 1966 và các việc cần xử lý.</div>
         </div>
-        <div className="phai" style={{ alignItems: "center" }}>
+        <div className="phai">
           <span className="cap-nhat"><BieuTuong ten="dongHo" co={16} />Cập nhật cuối: {capNhat ? new Date(capNhat).toLocaleString("vi-VN") : "—"}</span>
           {dsDuAn.length === 0 && !dangTai && quyen("SUA_HO_SO") && <button className="nut" onClick={napMau}>Nạp dữ liệu mẫu (ẩn danh)</button>}
           {quyen("SUA_HO_SO") && <button className="nut nut-chinh" onClick={() => setTaoMoi(true)}>+ Dự án mới</button>}
         </div>
       </div>
 
-      <div className="luoi luoi-4" style={{ marginBottom: 14 }}>
-        <TheChiSo bieuTuong="nguoi" nhan="Hộ đã hoàn thành GPMB" giaTri={dem.HOAN_THANH} mauSo={soHo} mau="#1f8a4c" phu="Đã xác nhận chi trả (bước 12)" />
-        <TheChiSo bieuTuong="hoSo" nhan="Hồ sơ đang xử lý" giaTri={dem.DANG_XU_LY} mauSo={soHo} mau="#b98400" phu="Từ lập phương án đến chi trả" />
-        <TheChiSo bieuTuong="canhBao" nhan="Vướng mắc cần ưu tiên" giaTri={dem.VUONG_MAC} mauSo={soHo} mau="#c0392b" phu="Ghi vướng mắc, thiếu căn cứ, quá hạn" />
-        <TheChiSo bieuTuong="thua" nhan="Thửa đất đã kiểm đếm" giaTri={cong((x) => x.tk.soThuaDaKiemDem)} mauSo={cong((x) => x.tk.soThua)} mau="#2f6fb8" phu={`Giá trị tạm tính: ${tien(tongTien)} đ`} />
+      <section className="the chu-y" aria-label="Cần chú ý">
+        <h2>Cần chú ý</h2>
+        <p className="tom-tat">
+          Đang theo dõi <b>{dsDuAn.length} dự án</b> với <b>{soHo} hồ sơ</b>, giá trị bồi thường, hỗ trợ tạm tính <b>{tien(tongTien)} đ</b>.{" "}
+          {dem.VUONG_MAC > 0 && <>Có <b>{dem.VUONG_MAC} hồ sơ vướng mắc</b>. </>}
+          {cao.length > 0 ? <>Có <b>{cao.length} việc cần xử lý ngay</b>, {theoDoi.length} việc cần theo dõi.</> : <>Không có việc quá hạn{theoDoi.length ? `; ${theoDoi.length} việc cần theo dõi` : ""}.</>}
+        </p>
+        {chuY.length ? (
+          <div className="chu-y-ds">
+            {chuY.map((c, i) => {
+              const t = tachTieuDe(c.noiDung);
+              return (
+                <div key={i} className={`chu-y-muc ${c.muc}`}>
+                  <div className="loai">{c.muc === "CAO" ? "Cần xử lý ngay" : "Cần theo dõi"}{t.dau && ` · ${t.dau}`}</div>
+                  <div className="tieu-de">{t.sau}</div>
+                  <div className="chi-tiet">{c.canCu}</div>
+                  <button onClick={() => mo(c)}>{c.hoId ? "Mở hồ sơ" : c.duAnId ? "Mở dự án" : "Xem"}</button>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="chu-y-trong">Không có vấn đề cần chú ý.</div>
+        )}
+      </section>
+
+      <div className="nhan-muc">Chỉ số điều hành</div>
+      <div className="luoi luoi-4" style={{ marginBottom: 20 }}>
+        <TheChiSo bieuTuong="nguoi" nhan="Hộ đã hoàn thành GPMB" giaTri={dem.HOAN_THANH} mauSo={soHo} tong="xanh" phu="Đã xác nhận chi trả (bước 12)" />
+        <TheChiSo bieuTuong="hoSo" nhan="Hồ sơ đang xử lý" giaTri={dem.DANG_XU_LY} mauSo={soHo} tong="vang" phu="Từ lập phương án đến chi trả" />
+        <TheChiSo bieuTuong="canhBao" nhan="Vướng mắc cần ưu tiên" giaTri={dem.VUONG_MAC} mauSo={soHo} tong="do" nong={dem.VUONG_MAC > 0} phu="Ghi vướng mắc, thiếu căn cứ, quá hạn" />
+        <TheChiSo bieuTuong="thua" nhan="Thửa đất đã kiểm đếm" giaTri={cong((x) => x.tk.soThuaDaKiemDem)} mauSo={cong((x) => x.tk.soThua)} tong="duong" phu={`Giá trị tạm tính: ${tien(tongTien)} đ`} />
       </div>
 
-      <div className="the" style={{ marginBottom: 14 }}>
+      <div className="the" style={{ marginBottom: 20 }}>
         <div className="the-dau"><h2>Quy trình bồi thường, GPMB</h2><span className="mo chu-nho">Số hộ đã hoàn thành từng chặng</span></div>
         <DaiChang chang={chang} soHo={soHo} bieuTuong={["hoSo", "kiemDem", "phuongAn", "pheDuyet", "chiTra", "banGiao"]} />
       </div>
 
-      <div className="luoi" style={{ gridTemplateColumns: "340px minmax(0,1fr) 360px" }}>
+      <div className="luoi luoi-2" style={{ marginBottom: 20 }}>
+        <div className="the the-cb do">
+          <div className="the-dau"><h3><BieuTuong ten="canhBao" co={16} /> Cần xử lý ngay</h3><span className="dem-cb">{cao.length}</span></div>
+          <div className="bang-cuon" style={{ maxHeight: 330 }}>{cao.map(dongCB)}{cao.length === 0 && <div className="trong">Không có việc quá hạn, vướng mắc cần xử lý ngay.</div>}</div>
+        </div>
+        <div className="the the-cb vang">
+          <div className="the-dau"><h3><BieuTuong ten="dongHo" co={16} /> Cần theo dõi</h3><span className="dem-cb">{theoDoi.length}</span></div>
+          <div className="bang-cuon" style={{ maxHeight: 330 }}>{theoDoi.map(dongCB)}{theoDoi.length === 0 && <div className="trong">Không có việc sắp đến hạn.</div>}</div>
+        </div>
+      </div>
+
+      <div className="luoi" style={{ gridTemplateColumns: "360px minmax(0,1fr)" }}>
         <div className="luoi" style={{ alignContent: "start" }}>
           <div className="the">
             <div className="the-dau"><h3>Hiện trạng hồ sơ</h3><span className="mo chu-nho">{soHo} hộ</span></div>
@@ -84,7 +140,7 @@ export function TongQuan() {
 
         <div className="the" style={{ alignSelf: "start" }}>
           <div className="the-dau"><h2>Dự án</h2><span className="mo chu-nho">{dsDuAn.length}</span></div>
-          <div className="the-than luoi">
+          <div className="the-than luoi" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))" }}>
             {duLieu.length === 0 && <div className="trong">{dangTai ? "Đang tải…" : "Chưa có dự án. Tạo dự án mới hoặc nạp dữ liệu mẫu để xem thử."}</div>}
             {duLieu.map(({ d, tk, tong, cb }) => (
               <div key={d.id} className="the the-du-an" onClick={() => di({ ten: "du-an", duAnId: d.id })}>
@@ -99,19 +155,6 @@ export function TongQuan() {
             ))}
           </div>
         </div>
-
-        <div className="the" style={{ alignSelf: "start" }}>
-          <div className="the-dau"><h3>Cảnh báo tự động</h3><div className="phai"><span className="nhan nhan-do">{canhBao.filter((c) => c.muc === "CAO").length}</span><span className="nhan nhan-vang">{canhBao.filter((c) => c.muc !== "CAO").length}</span></div></div>
-          <div className="bang-cuon" style={{ maxHeight: 520 }}>
-            {canhBao.map((c, i) => (
-              <div key={i} className="canh-bao-dong" onClick={() => ("caiDat" in c && c.caiDat ? moCaiDat(true) : "saoLuu" in c && c.saoLuu ? moSaoLuu(true) : c.duAnId && (c.hoId ? di({ ten: "ho", duAnId: c.duAnId, hoId: c.hoId, tab: "tien-do" }) : di({ ten: "du-an", duAnId: c.duAnId })))}>
-                <span className={`cb-bt cb-${c.muc}`}>{c.muc === "THONG_TIN" ? "i" : "!"}</span>
-                <div>{c.noiDung}{c.canCu && <div className="can-cu">{c.canCu}</div>}</div>
-              </div>
-            ))}
-            {canhBao.length === 0 && <div className="trong">Không có cảnh báo.</div>}
-          </div>
-        </div>
       </div>
       {taoMoi && <HopTaoDuAn dong={() => setTaoMoi(false)} />}
     </div>
@@ -121,7 +164,7 @@ export function TongQuan() {
 function PhanBoTrangThaiGon({ dem, tong }: { dem: Record<TrangThaiGpmb, number>; tong: number }) {
   return (
     <div className="thanh-xep" style={{ height: 8, margin: "10px 0 6px" }} title={THU_TU_TRANG_THAI.map((t) => `${TT_GPMB[t].ten}: ${dem[t]}`).join(" · ")}>
-      {tong === 0 && <span style={{ flex: 1, background: "#e3e8e6" }} />}
+      {tong === 0 && <span style={{ flex: 1, background: "var(--xam-nen)" }} />}
       {THU_TU_TRANG_THAI.filter((t) => dem[t] > 0).map((t) => <span key={t} style={{ flex: dem[t], background: TT_GPMB[t].mau }} />)}
     </div>
   );

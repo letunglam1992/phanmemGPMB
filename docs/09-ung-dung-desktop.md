@@ -71,7 +71,17 @@ cd apps/desktop && npx tauri dev   # cửa sổ desktop (cần Rust + WebView2/W
 |---|---|
 | ![Tổng quan](anh/1-tong-quan.png) | ![Dự án](anh/2-du-an.png) |
 | ![Tính toán, giải trình](anh/3-tinh-toan.png) | ![Kiểm đếm](anh/4-kiem-dem.png) |
-| ![Tiến độ](anh/5-tien-do.png) | Màn bản đồ: không đưa ảnh vào kho vì tệp bản đồ mẫu có tên chủ sử dụng thật |
+| ![Tiến độ](anh/5-tien-do.png) | ![Tổng quan – giao diện tối](anh/6-tong-quan-toi.png) |
+
+Màn bản đồ: không đưa ảnh vào kho vì tệp bản đồ mẫu có tên chủ sử dụng thật.
+
+### Giao diện (từ bản 0.1, đồng bộ với ứng dụng "Theo dõi dự án đầu tư")
+
+- Bố cục: thanh điều hướng trái theo nhóm (Theo dõi / Nghiệp vụ / Quản trị; thu gọn còn biểu tượng khi cửa sổ < 1180px), thanh tiêu đề nền xanh chuyển sắc, nhãn trang trên tiêu đề mỗi màn.
+- Phông **Be Vietnam Pro** (giấy phép SIL OFL 1.1, `public/fonts/OFL.txt`) đóng gói kèm bộ cài — không tải từ Internet.
+- Mã màu, bo góc, đổ bóng khai báo một chỗ bằng biến CSS (`src/giao-dien.css`); 6 màu trạng thái dùng thống nhất cho hồ sơ, cảnh báo, chỉ số.
+- Giao diện sáng/tối: nút trên thanh tiêu đề; lựa chọn lưu trên máy người dùng (mặc định theo cài đặt Windows).
+- Chỉ thay đổi trình bày; không thay đổi cách tính, dữ liệu, quyền.
 
 ## 6. Quy tắc hiện trạng GPMB của hồ sơ (`src/trang-thai.ts`)
 

@@ -36,11 +36,11 @@ export function BanDoNho({ duAn, ttThua }: { duAn: DuAn; ttThua: Map<string, Tra
   if (!hinh) return <div className="trong chu-nho">Đang đọc bản đồ…</div>;
   return (
     <svg viewBox={`0 0 ${hinh.W} ${hinh.H}`} style={{ width: "100%", cursor: "pointer", display: "block" }} onClick={() => di({ ten: "ban-do", duAnId: duAn.id })} role="img" aria-label="Bản đồ nhỏ hiện trạng GPMB">
-      <rect width={hinh.W} height={hinh.H} fill="#fbfcfb" />
+      <rect width={hinh.W} height={hinh.H} fill="var(--ban-do-nen)" />
       {hinh.thua.map((t, i) => (
-        <path key={i} d={t.d} fillRule="evenodd" fill={t.tt ? TT_GPMB[t.tt].mau : "#eef1f0"} fillOpacity={t.tt ? 0.75 : 1} stroke="#fff" strokeWidth={0.4} />
+        <path key={i} d={t.d} fillRule="evenodd" fill={t.tt ? TT_GPMB[t.tt].mau : "var(--xam-nen)"} fillOpacity={t.tt ? 0.75 : 1} stroke="var(--be-mat)" strokeWidth={0.4} />
       ))}
-      {hinh.ranh && <path d={hinh.ranh} fill="none" stroke="#c0392b" strokeWidth={1.6} />}
+      {hinh.ranh && <path d={hinh.ranh} fill="none" stroke="var(--do-to)" strokeWidth={1.6} />}
     </svg>
   );
 }

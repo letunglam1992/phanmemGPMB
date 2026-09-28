@@ -21,11 +21,11 @@ export type TrangThaiGpmb = "HOAN_THANH" | "DANG_XU_LY" | "DA_KIEM_DEM" | "VUONG
 export const THU_TU_TRANG_THAI: TrangThaiGpmb[] = ["HOAN_THANH", "DANG_XU_LY", "DA_KIEM_DEM", "VUONG_MAC", "CHUA_KIEM_DEM"];
 
 export const TT_GPMB: Record<TrangThaiGpmb, { ten: string; mau: string; nen: string; bieuTuong: string }> = {
-  HOAN_THANH: { ten: "Đã hoàn thành GPMB", mau: "#1f8a4c", nen: "rgba(31,138,76,0.42)", bieuTuong: "✓" },
-  DANG_XU_LY: { ten: "Đang xử lý", mau: "#e0a106", nen: "rgba(224,161,6,0.45)", bieuTuong: "◔" },
-  DA_KIEM_DEM: { ten: "Đã kiểm đếm", mau: "#2f6fb8", nen: "rgba(47,111,184,0.40)", bieuTuong: "▤" },
-  VUONG_MAC: { ten: "Vướng mắc / chưa hoàn tất", mau: "#c0392b", nen: "rgba(192,57,43,0.45)", bieuTuong: "!" },
-  CHUA_KIEM_DEM: { ten: "Chưa kiểm đếm", mau: "#aab5b0", nen: "rgba(170,181,176,0.30)", bieuTuong: "○" },
+  HOAN_THANH: { ten: "Đã hoàn thành GPMB", mau: "#44872a", nen: "rgba(68,135,42,0.30)", bieuTuong: "✓" },
+  DANG_XU_LY: { ten: "Đang xử lý", mau: "#c98a1e", nen: "rgba(201,138,30,0.30)", bieuTuong: "◔" },
+  DA_KIEM_DEM: { ten: "Đã kiểm đếm", mau: "#2f6bd0", nen: "rgba(47,107,208,0.26)", bieuTuong: "▤" },
+  VUONG_MAC: { ten: "Vướng mắc / chưa hoàn tất", mau: "#cc3b2e", nen: "rgba(204,59,46,0.28)", bieuTuong: "!" },
+  CHUA_KIEM_DEM: { ten: "Chưa kiểm đếm", mau: "#8b918c", nen: "rgba(139,145,140,0.24)", bieuTuong: "○" },
 };
 
 const xong = (h: Ho, ma: string) => h.tienDo[ma]?.trangThai === "XONG";

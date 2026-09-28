@@ -189,6 +189,7 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
       </div>
       <div className="dong-tieu-de">
         <div>
+          <div className="nhan-trang">Văn bản</div>
           <h1>Soạn văn bản theo mẫu</h1>
           <div className="mo-ta">22 mẫu của Sổ tay ban hành kèm Quyết định số 1966/QĐ-UBND ngày 05/8/2025 · tự điền từ hồ sơ · xuất .docx để chỉnh tiếp trong Word</div>
         </div>

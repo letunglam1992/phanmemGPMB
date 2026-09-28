@@ -5,6 +5,9 @@ import { UngDung } from "./UngDung";
 import { NhaCungCap } from "./ung-dung";
 import type { Kho } from "./kho";
 import { ManLoiKetNoi, moKho } from "./thanh-phan/KetNoi";
+import { apDungGiaoDien, docGiaoDien } from "./giao-dien-sang-toi";
+
+apDungGiaoDien(docGiaoDien());
 
 /** Mở kho theo chế độ của máy (máy đơn / máy chủ / máy trạm) rồi mới dựng giao diện. */
 function KhoiDong() {

@@ -22,6 +22,7 @@ export function TraCuu() {
     <div className="trang">
       <div className="dong-tieu-de">
         <div>
+          <div className="nhan-trang">Tra cứu</div>
           <h1>Tra cứu đơn giá, giá đất, chính sách</h1>
           <div className="mo-ta">Dữ liệu trích xuất từ văn bản gốc, mỗi dòng giữ mã nguồn và số trang để đối chiếu (docs/07).</div>
         </div>

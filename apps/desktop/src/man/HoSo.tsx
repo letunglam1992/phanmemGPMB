@@ -58,6 +58,7 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
       </div>
       <div className="dong-tieu-de">
         <div>
+          <div className="nhan-trang">Hồ sơ hộ, cá nhân, tổ chức</div>
           <h1>{h.ma} · {h.ten}</h1>
           <div className="mo-ta">{h.vuongMac && <span className="nhan nhan-do" style={{ marginRight: 6 }}>! Vướng mắc: {h.vuongMac.noiDung}</span>}{TEN_DOI_TUONG[h.loai]} · {h.diaChi || "Chưa có địa chỉ"} · {h.thua.length} thửa · {h.nhanKhau.length} nhân khẩu</div>
         </div>

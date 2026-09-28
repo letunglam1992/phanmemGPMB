@@ -158,6 +158,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
       </div>
       <div className="dong-tieu-de">
         <div>
+          <div className="nhan-trang">Bản đồ</div>
           <h1>Bản đồ địa chính khu đất thu hồi</h1>
           <div className="mo-ta">
             {duAn.banDo ? `${duAn.banDo.tenTep} · nạp ${new Date(duAn.banDo.ngayNhap).toLocaleDateString("vi-VN")}` : "Chưa nạp bản đồ"} · Tọa độ VN-2000 · Xử lý hoàn toàn trên máy
