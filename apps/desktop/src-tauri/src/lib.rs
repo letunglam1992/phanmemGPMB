@@ -178,6 +178,44 @@ fn luu_tai_xuong(app: tauri::AppHandle, request: Request<'_>) -> Result<String, 
     Ok(dich.display().to_string())
 }
 
+/// Lưu tệp xuất ra máy, cho cán bộ chọn thư mục và tên tệp (hộp thoại "Lưu thành" của Windows).
+/// Header: `ten-tep` tên gợi ý, `thu-muc` thư mục mở sẵn (lần lưu trước; trống = Downloads), `loai-tep` mô tả bộ lọc.
+/// Trả về đường dẫn đã lưu; `None` khi cán bộ bấm Hủy.
+#[tauri::command]
+async fn luu_tep_chon_noi(app: tauri::AppHandle, request: Request<'_>) -> Result<Option<String>, String> {
+    use tauri_plugin_dialog::DialogExt;
+    let InvokeBody::Raw(du_lieu) = request.body() else {
+        return Err("Dữ liệu tệp không đúng dạng".into());
+    };
+    let du_lieu = du_lieu.clone();
+    let ten = ten_tep_an_toan(&tieu_de(&request, "ten-tep")?);
+    let loai = tieu_de(&request, "loai-tep").unwrap_or_else(|_| "Tệp".into());
+    let thu_muc_dau = tieu_de(&request, "thu-muc")
+        .ok()
+        .map(PathBuf::from)
+        .filter(|p| p.is_absolute() && p.is_dir())
+        .or_else(|| thu_muc_tai_ve(&app).ok());
+    let duoi = ten.rsplit_once('.').map(|(_, d)| d.to_string()).filter(|d| !d.is_empty() && d.len() <= 8);
+    let a = app.clone();
+    // Hộp thoại chặn luồng → chạy ở luồng phụ, không treo cửa sổ chính
+    let chon = tauri::async_runtime::spawn_blocking(move || {
+        let mut hop = a.dialog().file().set_title("Chọn nơi lưu tệp").set_file_name(ten);
+        if let Some(d) = thu_muc_dau {
+            hop = hop.set_directory(d);
+        }
+        if let Some(d) = duoi.as_deref() {
+            hop = hop.add_filter(loai, &[d]);
+        }
+        hop.blocking_save_file()
+    })
+    .await
+    .map_err(|e| e.to_string())?;
+    let Some(tep) = chon else { return Ok(None) };
+    let dich = tep.into_path().map_err(|e| format!("Đường dẫn không hợp lệ: {e}"))?;
+    fs::write(&dich, &du_lieu).map_err(|e| format!("Không ghi được {}: {e}", dich.display()))?;
+    Ok(Some(dich.display().to_string()))
+}
+
 // ---------------- Mạng nội bộ ----------------
 
 #[derive(Default)]
@@ -249,12 +287,14 @@ async fn goi_may_chu(request: Request<'_>) -> Result<tauri::ipc::Response, Strin
 pub fn run() {
     let _ = rustls::crypto::ring::default_provider().install_default();
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .manage(TrangThaiMayChu::default())
         .invoke_handler(tauri::generate_handler![
             ghi_sao_luu,
             thu_muc_sao_luu,
             mo_thu_muc_sao_luu,
             luu_tai_xuong,
+            luu_tep_chon_noi,
             bat_may_chu,
             tat_may_chu,
             trang_thai_may_chu,

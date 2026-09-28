@@ -19,7 +19,7 @@ export type Man =
   | { ten: "ho"; duAnId: string; hoId: string; tab?: string }
   | { ten: "ban-do"; duAnId: string }
   | { ten: "van-ban"; duAnId: string; ma?: string; hoId?: string }
-  | { ten: "tra-cuu" }
+  | { ten: "tra-cuu"; tim?: string }
   | { ten: "doc-scan" }
   | { ten: "kiem-tra-pa" }
   | { ten: "bao-cao" }

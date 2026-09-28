@@ -9,7 +9,8 @@ import cs0 from "../../../policy/goi/sonla-2026-03-31.json";
 import bang0 from "../../../policy/nguon/nq152-2025-bang-gia-dat.json";
 import type { BoChinhSach } from "@gpmb/core";
 import { DON_GIA, type BangGiaDat } from "../src/du-lieu";
-import { chonTrang, docTepExcel, kiemTraBang, nhanDienCot, xuatBaoCaoKiemTra, type KetQuaKiemTra, type TrangBang } from "../src/kiem-tra-pa";
+import PizZip from "pizzip";
+import { chonTrang, docTepExcel, docTepPhuongAn, docTepWord, kiemTraBang, soTuChuVN, nhanDienCot, xuatBaoCaoKiemTra, type KetQuaKiemTra, type TrangBang } from "../src/kiem-tra-pa";
 
 const cs = cs0 as unknown as BoChinhSach;
 const bangGia = bang0 as unknown as BangGiaDat;
@@ -135,5 +136,81 @@ describe("Kiểm tra tệp Excel phương án", () => {
     await wb.xlsx.load(b as unknown as ArrayBuffer);
     const ws = wb.getWorksheet("Kết quả kiểm tra")!;
     expect(ws.rowCount).toBeGreaterThan(20);
+  });
+});
+
+/* ---------- Tệp Word (.docx) ---------- */
+type OW = string | { t: string; span?: number; vMerge?: "restart" | "continue" };
+const xmlO = (c: OW) => {
+  const o = typeof c === "string" ? { t: c } : c;
+  const pr = `${o.span ? `<w:gridSpan w:val="${o.span}"/>` : ""}${o.vMerge === "restart" ? '<w:vMerge w:val="restart"/>' : o.vMerge === "continue" ? "<w:vMerge/>" : ""}`;
+  const t = o.t.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  return `<w:tc>${pr ? `<w:tcPr>${pr}</w:tcPr>` : ""}<w:p><w:pPr/><w:r><w:t xml:space="preserve">${t}</w:t></w:r></w:p></w:tc>`;
+};
+const xmlBang = (rows: OW[][]) => `<w:tbl><w:tblPr/><w:tblGrid/>${rows.map((r) => `<w:tr><w:trPr/>${r.map(xmlO).join("")}</w:tr>`).join("")}</w:tbl>`;
+const TIEU_DE: OW[][] = [
+  ["STT", "Nội dung", "ĐVT", "Khối lượng", "Đơn giá", "Tỷ lệ (%)", { t: "Thành tiền (đồng)", vMerge: "restart" }],
+  ["", "", "", "", "(đồng)", "", { t: "", vMerge: "continue" }],
+  ["(1)", "(2)", "(3)", "(4)", "(5)", "(6)", "(7)"],
+];
+function taoDocx(): Uint8Array {
+  const b1 = xmlBang([
+    ...TIEU_DE,
+    ["I", { t: "Thửa 1 — đất và cây trồng", span: 5 }, "347.336.200"],
+    ["1", "Đất CLN", "m²", "6.358,8", "54.000", "100%", "343.375.200"],
+    ["2", "Nhãn 30-35", "cây", "1", "3.900.000", "100%", "3.900.000"],
+    ["3", "Xoài 25-30", "cây", "1", "1.900.000", "30%", "570.000"], // sai đơn giá
+  ]);
+  const b2 = xmlBang([
+    ...TIEU_DE,
+    ["II", { t: "Thửa 2", span: 5 }, "298.254.800"],
+    ["1", "Đất CLN", "m²", "5.523,2", "54.000", "100%", "298.252.800"], // đúng
+    ["2", "Rau ngót", "m²", "4", "15.200", "100%", "61.500"], // sai số học
+  ]);
+  const doc = `<?xml version="1.0" encoding="UTF-8"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>PHỤ LỤC II</w:t></w:r></w:p>${b1}<w:p/>${b2}<w:sectPr/></w:body></w:document>`;
+  const z = new PizZip();
+  z.file("word/document.xml", doc);
+  z.file("[Content_Types].xml", "<Types/>");
+  return z.generate({ type: "uint8array" });
+}
+
+describe("Kiểm tra phương án từ tệp Word (.docx)", () => {
+  it("số viết kiểu Việt Nam", () => {
+    expect(soTuChuVN("5.523,2")).toBe(5523.2);
+    expect(soTuChuVN("343.375.200")).toBe(343375200);
+    expect(soTuChuVN("15,5")).toBe(15.5);
+    expect(soTuChuVN("6358.8")).toBe(6358.8);
+    expect(soTuChuVN("100%")).toBe("100%");
+    expect(soTuChuVN("Nhãn 30-35")).toBe("Nhãn 30-35");
+  });
+
+  it("đọc bảng, ô gộp ngang/dọc; gộp các bảng cùng cấu trúc; vị trí B(bảng).(dòng)", async () => {
+    const ds = await docTepWord(taoDocx());
+    expect(ds.map((t) => t.ten)).toEqual(["Gộp 2 bảng cùng cấu trúc (Bảng 1, Bảng 2)", "Bảng 1 (7 dòng)", "Bảng 2 (6 dòng)"]);
+    expect(ds[1]!.o[3]).toEqual(["I", "Thửa 1 — đất và cây trồng", null, null, null, null, 347336200]);
+    expect(ds[1]!.o[1]![6]).toBeNull(); // ô gộp dọc
+    expect(chonTrang(ds)).toBe(0);
+  });
+
+  it("kiểm tra trên bảng gộp: đúng/sai như tệp Excel, báo vị trí trong văn bản", async () => {
+    const ds = await docTepPhuongAn("pa.docx", taoDocx());
+    const kq = kiemTraBang(ds[0]!, { donGia: DON_GIA, bangGia, chinhSach: cs, xa: XA }) as KetQuaKiemTra;
+    expect(kq.anhXa).toMatchObject({ kl: 3, dg: 4, tyLe: 5, tt: 6 });
+    const d = (ten: string, i = 0) => kq.dong.filter((x) => x.ten === ten)[i]!;
+    expect(d("Đất CLN").phatHien.map((p) => p.mucDo)).toEqual(["DUNG", "DUNG"]);
+    expect(d("Đất CLN", 1).viTri).toBe("B2.5");
+    expect(d("Xoài 25-30").phatHien.find((p) => p.loai === "DON_GIA")!.mucDo).toBe("LOI");
+    expect(d("Xoài 25-30").viTri).toBe("B1.7");
+    expect(d("Rau ngót").phatHien.find((p) => p.loai === "SO_HOC")!.mucDo).toBe("LOI");
+    // Nhóm I: 343.375.200 + 3.900.000 + 570.000 = 347.845.200 ≠ 347.336.200; nhóm II: 298.252.800 + 61.500 = 298.314.300 ≠ 298.254.800
+    expect(d("Thửa 1 — đất và cây trồng").phatHien[0]!.mucDo).toBe("LOI");
+    expect(d("Thửa 2").phatHien[0]!.mucDo).toBe("LOI");
+  });
+
+  it("tệp định dạng cũ, tệp không có bảng → báo rõ", async () => {
+    await expect(docTepPhuongAn("pa.doc", new Uint8Array([1]))).rejects.toThrow(/\.docx/);
+    const z = new PizZip();
+    z.file("word/document.xml", '<w:document xmlns:w="x"><w:body><w:p/></w:body></w:document>');
+    await expect(docTepWord(z.generate({ type: "uint8array" }))).rejects.toThrow(/không có bảng/);
   });
 });

@@ -22,6 +22,7 @@ import { ThietLapDonVi } from "./man/ThietLapDonVi";
 import { HuongDan } from "./man/HuongDan";
 import { KhongGianDuAn } from "./man/KhongGianDuAn";
 import { TimKiemChung } from "./thanh-phan/TimKiem";
+import { MenuChuotPhai } from "./thanh-phan/MenuChuotPhai";
 import { useTongHop } from "./thanh-phan/dung-canh-bao";
 import { donViSuDung } from "./don-vi";
 import { HopGioiThieu } from "./thanh-phan/GioiThieu";
@@ -70,7 +71,7 @@ export function UngDung() {
       muc: [
         { ten: "Thiết lập đơn vị", bt: "toaNha", chon: man.ten === "don-vi", bam: () => di({ ten: "don-vi" }) },
         { ten: "Tra cứu đơn giá, giá đất", bt: "traCuu", chon: man.ten === "tra-cuu", bam: () => di({ ten: "tra-cuu" }) },
-        { ten: "Kiểm tra phương án (Excel)", bt: "kiemTra", chon: man.ten === "kiem-tra-pa", bam: () => di({ ten: "kiem-tra-pa" }) },
+        { ten: "Kiểm tra phương án", bt: "kiemTra", chon: man.ten === "kiem-tra-pa", bam: () => di({ ten: "kiem-tra-pa" }) },
         { ten: "Đọc văn bản scan (OCR)", bt: "ocr", chon: man.ten === "doc-scan", bam: () => di({ ten: "doc-scan" }) },
       ],
     },
@@ -197,7 +198,7 @@ export function UngDung() {
         {man.ten === "huong-dan" && <HuongDan />}
         {man.ten === "ho" && <HoSo duAnId={man.duAnId} hoId={man.hoId} tabDau={man.tab} />}
         {man.ten === "ban-do" && <KhongGianDuAn duAnId={man.duAnId} tab="ban-do" />}
-        {man.ten === "tra-cuu" && <TraCuu />}
+        {man.ten === "tra-cuu" && <TraCuu key={man.tim ?? ""} timDau={man.tim} />}
         {man.ten === "doc-scan" && <DocScan />}
         {man.ten === "kiem-tra-pa" && <KiemTraPhuongAn />}
         {man.ten === "bao-cao" && <BaoCao />}
@@ -215,6 +216,7 @@ export function UngDung() {
       {hop === "nhat-ky" && <HopNhatKy dong={() => setHop(null)} />}
       {hopCaiDat && <HopCaiDat />}
       <ThongBaoNhanh />
+      <MenuChuotPhai laToi={giaoDien === "toi"} doiGiaoDien={() => setGiaoDien(giaoDien === "toi" ? "sang" : "toi")} />
     </div>
   );
 }

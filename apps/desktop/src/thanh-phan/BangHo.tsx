@@ -51,7 +51,7 @@ export function BangHo({ ds, homNay, coDuAn, mo, trong }: { ds: DongHo[]; homNay
             const vm = vuongMacHo(duAn, h, k, homNay);
             const thua = h.thua.length ? h.thua : [null];
             return (
-              <tr key={h.id} className="co-the-chon" onClick={() => mo(x)} title="Bấm để mở hồ sơ">
+              <tr key={h.id} className="co-the-chon" data-ho-id={h.id} data-du-an-id={duAn.id} onClick={() => mo(x)} title="Bấm để mở hồ sơ">
                 <td className="so">{i + 1}</td>
                 <td className="c-ten"><b>{h.ten}</b><div className="mo chu-nho">{h.ma}</div></td>
                 {coDuAn && <td className="chu-nho c-da">{duAn.ten}</td>}

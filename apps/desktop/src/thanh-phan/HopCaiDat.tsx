@@ -6,6 +6,7 @@ import { HopThoai } from "./chung";
 import type { GiaiDoanTyLe } from "../chi-tra";
 import { LE_DUONG_LICH_CO_DINH, type LichLamViec, type NgayDacBiet } from "../lich-lam-viec";
 import { Chon } from "./Chon";
+import { datHoiNoiLuu, hoiNoiLuu } from "../tai-xuong";
 
 const THU = ["Chủ nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
 const thu = (iso: string) => THU[new Date(`${iso}T00:00:00Z`).getUTCDay()]!;
@@ -15,7 +16,7 @@ const vn = (iso: string) => iso.split("-").reverse().join("/");
 /** Cài đặt chung: lịch ngày nghỉ (VM-25); các thẻ khác truyền qua `them`. */
 export function HopCaiDat({ them }: { them?: { ma: string; ten: string; noiDung: ReactNode }[] }) {
   const { moCaiDat } = useUngDung();
-  const cacThe = [{ ma: "lich", ten: "Lịch ngày nghỉ", noiDung: <TheLich /> }, { ma: "tu-dong", ten: "Tự động sao lưu", noiDung: <TheTuDong /> }, { ma: "cham-tra", ten: "Tiền chậm trả", noiDung: <TheTyLeCham /> }, { ma: "mang", ten: "Mạng nội bộ", noiDung: <TheMangNoiBo /> }, { ma: "giao-dien", ten: "Giao diện", noiDung: <TheGiaoDien /> }, ...(them ?? [])];
+  const cacThe = [{ ma: "lich", ten: "Lịch ngày nghỉ", noiDung: <TheLich /> }, { ma: "tu-dong", ten: "Tự động sao lưu", noiDung: <TheTuDong /> }, { ma: "cham-tra", ten: "Tiền chậm trả", noiDung: <TheTyLeCham /> }, { ma: "mang", ten: "Mạng nội bộ", noiDung: <TheMangNoiBo /> }, { ma: "luu-tep", ten: "Lưu tệp xuất", noiDung: <TheLuuTep /> }, { ma: "giao-dien", ten: "Giao diện", noiDung: <TheGiaoDien /> }, ...(them ?? [])];
   const [the, setThe] = useState(cacThe[0]!.ma);
   return (
     <HopThoai tieuDe="Cài đặt chung" dong={() => moCaiDat(false)} rong={920}>
@@ -224,6 +225,22 @@ function TheTyLeCham() {
 }
 
 /** Ảnh nền thanh tiêu đề: mặc định là tranh núi đồi tự vẽ; đơn vị có thể chọn ảnh chụp riêng (lưu trong cài đặt, không gửi ra ngoài). */
+/** Nơi lưu tệp xuất (Excel, Word, zip, sao lưu thủ công) — cài đặt theo máy. */
+function TheLuuTep() {
+  const [hoi, setHoi] = useState(hoiNoiLuu());
+  return (
+    <div>
+      <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <input type="checkbox" checked={hoi} onChange={(e) => { datHoiNoiLuu(e.target.checked); setHoi(e.target.checked); }} /> Hỏi nơi lưu mỗi lần xuất tệp (Excel, Word, zip, sao lưu thủ công)
+      </label>
+      <p className="mo chu-nho">
+        Bật: mở hộp thoại “Lưu thành” để chọn thư mục và đặt tên tệp; lần sau mở sẵn thư mục đã lưu gần nhất. Bấm Hủy thì không lưu và không ghi số, ngày văn bản vào hồ sơ.
+        <br />Tắt: lưu thẳng vào thư mục Downloads và mở Explorer chọn sẵn tệp. Cài đặt áp dụng cho máy này. Sao lưu tự động vẫn ghi vào thư mục đặt ở thẻ “Tự động sao lưu”.
+      </p>
+    </div>
+  );
+}
+
 function TheGiaoDien() {
   const { anhNen, luuAnhNen, quyen, bao } = useUngDung();
   const [dang, setDang] = useState(false);

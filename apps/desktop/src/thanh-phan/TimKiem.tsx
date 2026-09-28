@@ -15,8 +15,20 @@ export function TimKiemChung() {
     const phim = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); o.current?.focus(); o.current?.select(); setMo(true); }
     };
+    // Menu chuột phải: "Tìm kiếm nhanh", "Tìm hồ sơ, dự án: <chữ đang chọn>"
+    const tim = (e: Event) => {
+      const t = (e as CustomEvent<string>).detail;
+      if (t) setQ(t);
+      o.current?.focus();
+      if (!t) o.current?.select();
+      setMo(true);
+    };
     window.addEventListener("keydown", phim);
-    return () => window.removeEventListener("keydown", phim);
+    window.addEventListener("gpmb-tim", tim);
+    return () => {
+      window.removeEventListener("keydown", phim);
+      window.removeEventListener("gpmb-tim", tim);
+    };
   }, []);
   const kq = useMemo(() => {
     const t = q.trim();

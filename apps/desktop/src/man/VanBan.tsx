@@ -73,7 +73,7 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
   const [chung, setChung] = useState<Record<string, string>>({});
   const [moChung, setMoChung] = useState(false);
   const [mauTuy, setMauTuy] = useState<string[]>([]);
-  const [thongBao, setThongBao] = useState<{ loai: "xanh" | "do"; noiDung: string } | null>(null);
+  const [thongBao, setThongBao] = useState<{ loai: "xanh" | "do" | "vang"; noiDung: string } | null>(null);
   const [dangTao, setDangTao] = useState(false);
   const [xemTruong, setXemTruong] = useState<string[] | null>(null);
 
@@ -120,7 +120,7 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
       if (mau.phamVi === "DOT") {
         if (!dsHoChon.length) throw new Error("Chọn các hộ, tổ chức trong đợt.");
         const out = dienMau(mauBytes, ghepDuLieu({ mau, duAn, ds: dsHoChon, chung, rieng, so, ngayKy }));
-        await taiXuong(out, `Mau-${ma}_${tenAnToan(mau.ten)}_${dsHoChon.length}-ho.docx`, DOCX);
+        if (!(await taiXuong(out, `Mau-${ma}_${tenAnToan(mau.ten)}_${dsHoChon.length}-ho.docx`, DOCX))) return setThongBao({ loai: "vang", noiDung: "Đã hủy lưu tệp — chưa ghi số, ngày văn bản và nhật ký hồ sơ." });
         const vbMoi: Record<string, string> = { ...(duAn.vanBan ?? {}), ...chung, ...luuRieng };
         if (mau.ghiLai?.capDo === "DU_AN" && so.trim()) Object.assign(vbMoi, { [`${mau.ghiLai.khoa}_so`]: `${so.trim()}/${kyHieu}`, [`${mau.ghiLai.khoa}_ngay`]: ngayChu(ngayKy) });
         await luuDuAn({ ...duAn, vanBan: vbMoi });
@@ -132,22 +132,25 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
         setThongBao({ loai: "xanh", noiDung: `Đã tạo ${mau.ten} cho ${dsHoChon.length} hộ, tổ chức.` });
       } else if (mau.phamVi === "DU_AN") {
         const out = dienMau(mauBytes, ghepDuLieu({ mau, duAn, ds, chung, rieng, so, ngayKy }));
-        await taiXuong(out, `Mau-${ma}_${tenAnToan(mau.ten)}_${tenAnToan(duAn.ten)}.docx`, DOCX);
+        if (!(await taiXuong(out, `Mau-${ma}_${tenAnToan(mau.ten)}_${tenAnToan(duAn.ten)}.docx`, DOCX))) return setThongBao({ loai: "vang", noiDung: "Đã hủy lưu tệp — chưa ghi số, ngày văn bản." });
         if (mau.ghiLai && so.trim()) await luuDuAn({ ...duAn, vanBan: { ...(duAn.vanBan ?? {}), ...chung, [`${mau.ghiLai.khoa}_so`]: `${so.trim()}/${kyHieu}`, [`${mau.ghiLai.khoa}_ngay`]: ngayChu(ngayKy) } });
         setThongBao({ loai: "xanh", noiDung: `Đã tạo Mẫu ${ma} cho dự án.` });
       } else {
         if (!dsHoChon.length) throw new Error("Chọn ít nhất một hộ, tổ chức.");
         const tep: { ten: string; noiDung: Uint8Array }[] = [];
+        const ghiHo: Ho[] = [];
         for (const [i, x] of dsHoChon.entries()) {
           const soHo = soSo !== null ? String(soSo + i) : so;
           const noiDung = dienMau(mauBytes, ghepDuLieu({ mau, duAn, ds, ho: x, chung, rieng, so: soHo, ngayKy }));
           tep.push({ ten: `Mau-${ma}_${tenAnToan(x.h.ma + " " + x.h.ten)}.docx`, noiDung });
           const ghi: Partial<Ho> = { nhatKy: [...x.h.nhatKy, { luc: new Date().toISOString(), nguoi: nguoiDung, noiDung: `Tạo văn bản Mẫu ${ma} – ${mau.ten}${soHo.trim() ? ` số ${soHo}` : ""}` }] };
           if (mau.ghiLai && soHo.trim()) ghi.vanBan = { ...(x.h.vanBan ?? {}), [`${mau.ghiLai.khoa}_so`]: `${soHo.trim()}/${kyHieu}`, [`${mau.ghiLai.khoa}_ngay`]: ngayChu(ngayKy) };
-          await luuHo({ ...x.h, ...ghi });
+          ghiHo.push({ ...x.h, ...ghi });
         }
-        if (tep.length === 1) await taiXuong(tep[0]!.noiDung, tep[0]!.ten, DOCX);
-        else await taiXuong(dongGoiZip(tep), `Mau-${ma}_${tep.length}-ho_${tenAnToan(duAn.ten)}.zip`, "application/zip");
+        const daLuu = tep.length === 1 ? await taiXuong(tep[0]!.noiDung, tep[0]!.ten, DOCX) : await taiXuong(dongGoiZip(tep), `Mau-${ma}_${tep.length}-ho_${tenAnToan(duAn.ten)}.zip`, "application/zip");
+        if (!daLuu) return setThongBao({ loai: "vang", noiDung: "Đã hủy lưu tệp — chưa ghi số, ngày văn bản và nhật ký hồ sơ." });
+        // Ghi số, ngày, nhật ký hồ sơ sau khi đã lưu được tệp
+        for (const x of ghiHo) await luuHo(x);
         setThongBao({ loai: "xanh", noiDung: `Đã tạo ${tep.length} văn bản Mẫu ${ma}${tep.length > 1 ? " (tệp .zip)" : ""}${coGhi ? "; đã ghi nhật ký hồ sơ." : "."}` });
       }
       if (!coGhi) setThongBao({ loai: "xanh", noiDung: "Đã tạo bản dự thảo. Tài khoản chỉ xem: không ghi số, ngày văn bản và nhật ký vào hồ sơ." });

@@ -117,7 +117,7 @@ export function ManDuAn({ duAnId: idVao }: { duAnId?: string }) {
             {hienThiDa.map(({ d, tk, tong }) => {
               const tt = d.trangThaiDuAn ?? "DANG_TRIEN_KHAI";
               return (
-                <div key={d.id} className={`da-the ${d.id === duAnId ? "chon" : ""}`} onClick={() => chon(d.id)} role="button" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && chon(d.id)}>
+                <div key={d.id} data-du-an-id={d.id} className={`da-the ${d.id === duAnId ? "chon" : ""}`} onClick={() => chon(d.id)} role="button" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && chon(d.id)}>
                   <div className="da-the-dau">
                     <span className="da-bt"><BieuTuong ten={BT_LOAI_DU_AN[d.loaiDuAn ?? "KHAC"]} co={22} /></span>
                     <div style={{ minWidth: 0, flex: 1 }}>
@@ -146,7 +146,7 @@ export function ManDuAn({ duAnId: idVao }: { duAnId?: string }) {
                 {hienThiDa.map(({ d, tk, tong }) => {
                   const tt = d.trangThaiDuAn ?? "DANG_TRIEN_KHAI";
                   return (
-                    <tr key={d.id} className={`co-the-chon ${d.id === duAnId ? "dang-chon" : ""}`} onClick={() => chon(d.id)}>
+                    <tr key={d.id} data-du-an-id={d.id} className={`co-the-chon ${d.id === duAnId ? "dang-chon" : ""}`} onClick={() => chon(d.id)}>
                       <td><b>{d.ten}</b></td><td>{d.xa}</td><td><span className={`nhan ${LOP_TT_DU_AN[tt]}`}>{TEN_TRANG_THAI_DU_AN[tt]}</span></td>
                       <td className="so">{tk.soHo}</td><td className="so">{tk.soThua}</td><td className="so">{tien(tong)}</td>
                       <td><div className="td-mini"><span style={{ width: `${Math.round(tk.tienDoChung * 100)}%` }} /></div><span className="chu-nho">{Math.round(tk.tienDoChung * 100)}%</span></td>

@@ -1,6 +1,6 @@
 [package]
 name = "gpmb-sonla"
-version = "0.3.3"
+version = "0.3.4"
 description = "Phần mềm hỗ trợ bồi thường, hỗ trợ, tái định cư – Sơn La"
 edition = "2021"
 
@@ -13,6 +13,8 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 tauri = { version = "2", features = [] }
+# Hộp thoại "Lưu thành" khi xuất tệp (gọi từ lệnh Rust, không mở quyền dialog cho giao diện)
+tauri-plugin-dialog = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 # Máy chủ mạng nội bộ (docs/11): HTTPS tự ký, SQLite, băm mật khẩu PBKDF2

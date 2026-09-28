@@ -175,7 +175,7 @@ export function TongQuan() {
           <div className="the-than luoi" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))" }}>
             {duLieu.length === 0 && <div className="trong">{dangTai ? "Đang tải…" : "Chưa có dự án. Tạo dự án mới hoặc nạp dữ liệu mẫu để xem thử."}</div>}
             {duLieu.map(({ d, tk, tong, cb }) => (
-              <div key={d.id} className="the the-du-an" onClick={() => di({ ten: "du-an", duAnId: d.id })}>
+              <div key={d.id} className="the the-du-an" data-du-an-id={d.id} onClick={() => di({ ten: "du-an", duAnId: d.id })}>
                 <div className="bang-dk-dau">
                   <h3 style={{ flex: 1 }}>{d.ten}</h3>
                   {cb.some((c) => c.muc === "CAO") && <span className="nhan nhan-do">{cb.filter((c) => c.muc === "CAO").length} cảnh báo</span>}

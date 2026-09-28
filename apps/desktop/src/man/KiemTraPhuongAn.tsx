@@ -5,7 +5,7 @@ import {
   TEN_MUC_DO,
   TEN_TRUONG_COT,
   chonTrang,
-  docTepExcel,
+  docTepPhuongAn,
   kiemTraBang,
   nhanDienCot,
   xuatBaoCaoKiemTra,
@@ -63,8 +63,7 @@ export function KiemTraPhuongAn() {
     setDangDoc(true);
     setLoiDoc(null);
     try {
-      if (!/\.xlsx$/i.test(f.name)) throw new Error("Chỉ đọc được tệp .xlsx (Excel 2007 trở lên). Tệp .xls: mở bằng Excel và lưu lại dạng .xlsx.");
-      const ds = await docTepExcel(new Uint8Array(await f.arrayBuffer()));
+      const ds = await docTepPhuongAn(f.name, new Uint8Array(await f.arrayBuffer()));
       if (!ds.length) throw new Error("Tệp không có trang tính nào.");
       setTep({ ten: f.name, trang: ds });
       setSoTrang(chonTrang(ds));
@@ -81,7 +80,7 @@ export function KiemTraPhuongAn() {
     if (!kq || "loi" in kq || !tep) return;
     try {
       const b = await xuatBaoCaoKiemTra(kq, tep.ten, xa);
-      await taiXuong(b, `kiem-tra-${tep.ten.replace(/\.xlsx$/i, "")}.xlsx`, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      await taiXuong(b, `kiem-tra-${tep.ten.replace(/\.(xlsx|docx)$/i, "")}.xlsx`, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     } catch (e) {
       bao(`Không xuất được báo cáo: ${(e as Error).message}`, "loi");
     }
@@ -98,12 +97,12 @@ export function KiemTraPhuongAn() {
         <div>
           <div className="nhan-trang">Công cụ</div>
           <h1>Kiểm tra phương án bồi thường, hỗ trợ, TĐC</h1>
-          <div className="mo-ta">Nạp tệp Excel phương án (phụ lục chi tiết) → kiểm tra số học, đơn giá, giá đất, hệ số, tổng; báo lỗi và cảnh báo theo từng dòng · Xử lý hoàn toàn trên máy</div>
+          <div className="mo-ta">Nạp tệp Excel (.xlsx) hoặc Word (.docx) phương án (phụ lục chi tiết) → kiểm tra số học, đơn giá, giá đất, hệ số, tổng; báo lỗi và cảnh báo theo từng dòng · Xử lý hoàn toàn trên máy</div>
         </div>
         <div className="phai">
           <label className="nut nut-chinh" aria-disabled={dangDoc}>
-            {dangDoc ? "Đang đọc…" : tep ? "Nạp tệp khác" : "Chọn tệp Excel (.xlsx)"}
-            <input ref={inputTep} type="file" accept=".xlsx" style={{ display: "none" }} disabled={dangDoc} onChange={(e) => e.target.files?.[0] && void napTep(e.target.files[0])} />
+            {dangDoc ? "Đang đọc…" : tep ? "Nạp tệp khác" : "Chọn tệp Excel / Word"}
+            <input ref={inputTep} type="file" accept=".xlsx,.docx" style={{ display: "none" }} disabled={dangDoc} onChange={(e) => e.target.files?.[0] && void napTep(e.target.files[0])} />
           </label>
           {ketQua && <button className="nut" onClick={() => void xuat()}>Xuất báo cáo kiểm tra (Excel)</button>}
         </div>
@@ -122,7 +121,7 @@ export function KiemTraPhuongAn() {
             <li>Cây tính tỷ lệ &lt; 100%: nhắc kiểm quỹ mật độ (k4 Đ5 PL VIII); cây không có mật độ trong danh mục → cần xác nhận (VM-35).</li>
           </ul>
           <p className="mo chu-nho" style={{ marginBottom: 0 }}>
-            Tệp cần có một dòng tiêu đề chứa “Đơn giá” và “Thành tiền” (tiêu đề 2 tầng, dòng đánh số cột (1) (2)… được nhận tự động); chọn lại cột nếu nhận sai. Khoản hỗ trợ tính theo mức/điều kiện riêng (ổn định đời sống, tạm cư, TĐC, thưởng…) chỉ kiểm số học. Dữ liệu đơn giá là bản trích xuất (VM-01, VM-02) — kết quả để cán bộ kiểm tra lại, không thay thẩm định.
+            Tệp Word: phần mềm đọc các bảng trong văn bản (số viết kiểu Việt Nam: 5.523,2 — 54.000); các bảng cùng cấu trúc cột được gộp để kiểm tổng thể; vị trí ghi “B2.15” = bảng 2, dòng 15. Tệp cần có một dòng tiêu đề chứa “Đơn giá” và “Thành tiền” (tiêu đề 2 tầng, dòng đánh số cột (1) (2)… được nhận tự động); chọn lại cột nếu nhận sai. Khoản hỗ trợ tính theo mức/điều kiện riêng (ổn định đời sống, tạm cư, TĐC, thưởng…) chỉ kiểm số học. Dữ liệu đơn giá là bản trích xuất (VM-01, VM-02) — kết quả để cán bộ kiểm tra lại, không thay thẩm định.
           </p>
         </div>
       )}
@@ -133,7 +132,7 @@ export function KiemTraPhuongAn() {
             <O nhan="Tệp">
               <input value={tep.ten} readOnly />
             </O>
-            <O nhan="Trang tính">
+            <O nhan={/\.docx$/i.test(tep.ten) ? "Bảng trong văn bản" : "Trang tính"}>
               <Chon value={String(soTrang)} onChange={(e) => { setSoTrang(Number(e.target.value)); setCotTay({}); }}>
                 {tep.trang.map((t, i) => <option key={i} value={i}>{t.ten}</option>)}
               </Chon>
@@ -186,15 +185,15 @@ export function KiemTraPhuongAn() {
             <table className="bang">
               <thead>
                 <tr>
-                  <th>Dòng</th><th>STT</th><th>Nội dung</th><th>ĐVT</th><th className="so">Khối lượng</th><th className="so">Đơn giá</th><th className="so">Tỷ lệ/hệ số</th><th className="so">Thành tiền</th><th style={{ minWidth: 360 }}>Kết quả kiểm tra</th>
+                  <th title="Excel: số dòng; Word: B(bảng).(dòng)">Vị trí</th><th>STT</th><th>Nội dung</th><th>ĐVT</th><th className="so">Khối lượng</th><th className="so">Đơn giá</th><th className="so">Tỷ lệ/hệ số</th><th className="so">Thành tiền</th><th style={{ minWidth: 360 }}>Kết quả kiểm tra</th>
                 </tr>
               </thead>
               <tbody>
                 {dsDong.map((d) => {
                   const m = mucCao(d);
                   return (
-                    <tr key={d.dong} style={d.loai !== "CHI_TIET" ? { fontWeight: 600, background: "var(--be-mat-2)" } : undefined}>
-                      <td className="mo">{d.dong}</td>
+                    <tr key={d.viTri} style={d.loai !== "CHI_TIET" ? { fontWeight: 600, background: "var(--be-mat-2)" } : undefined}>
+                      <td className="mo">{d.viTri}</td>
                       <td>{d.stt}</td>
                       <td>{d.ten}</td>
                       <td>{d.dvt}</td>

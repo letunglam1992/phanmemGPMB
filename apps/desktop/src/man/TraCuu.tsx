@@ -123,10 +123,16 @@ const doc = <T,>(k: string, md: T): T => { try { return (JSON.parse(localStorage
 const ghi = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* bỏ qua */ } };
 type SapXep = "MAC_DINH" | "GIA_TANG" | "GIA_GIAM" | "TEN";
 
-export function TraCuu() {
+export function TraCuu({ timDau }: { timDau?: string } = {}) {
   const { bao } = useUngDung();
-  const [tab, setTab] = useState<Tab>("QĐ32");
-  const [q, setQ] = useState("");
+  // Mở từ menu chuột phải với chữ đang chọn: chọn sẵn danh mục đơn giá có dòng khớp (QĐ 32 → PL VIII → PL V)
+  const [tab, setTab] = useState<Tab>(() => {
+    const tu = khongDau((timDau ?? "").trim()).split(/\s+/).filter(Boolean);
+    if (!tu.length) return "QĐ32";
+    const co = (["QĐ32", "PL VIII", "PL V"] as const).find((t) => DON_GIA.some((r) => r.nguon === t && tu.every((w) => khongDau(`${r.nhom} ${r.ten}`).includes(w))));
+    return co ?? "QĐ32";
+  });
+  const [q, setQ] = useState(timDau ?? "");
   const [nhom, setNhom] = useState("");
   const [mo, setMo] = useState<Set<string>>(new Set());
   const [thuGon, setThuGon] = useState(false);

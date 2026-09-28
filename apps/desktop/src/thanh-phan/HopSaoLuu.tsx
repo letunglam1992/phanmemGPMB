@@ -20,8 +20,8 @@ export function HopSaoLuu() {
 
   const saoLuu = async (tienTo?: string) => {
     const { bytes, thongTin } = await taoBanSaoLuu(kho);
-    await taiXuong(bytes, tenTepSaoLuu(thongTin.luc, tienTo), ZIP);
-    return thongTin;
+    // null: cán bộ bấm Hủy ở hộp thoại chọn nơi lưu
+    return (await taiXuong(bytes, tenTepSaoLuu(thongTin.luc, tienTo), ZIP)) ? thongTin : null;
   };
 
   const taoBan = async () => {
@@ -29,6 +29,7 @@ export function HopSaoLuu() {
     setThongBao(null);
     try {
       const tt = await saoLuu();
+      if (!tt) return setThongBao({ loai: "loi", noiDung: "Đã hủy — chưa tạo bản sao lưu." });
       datLanSaoLuu(tt.luc);
       await ghiNhatKy("Tạo bản sao lưu", `${tt.soDuAn} dự án, ${tt.soHo} hồ sơ, ${tt.soBanDo} bản đồ, ${tt.soMau} mẫu`);
       setThongBao({ loai: "ok", noiDung: `Đã tạo bản sao lưu: ${tt.soDuAn} dự án, ${tt.soHo} hồ sơ, ${tt.soBanDo} bản đồ, ${tt.soMau} mẫu tự chỉnh. Hãy cất tệp .gpmb ra thiết bị khác (USB, ổ mạng nội bộ).` });
@@ -57,7 +58,8 @@ export function HopSaoLuu() {
     setThongBao(null);
     try {
       // bản sao lưu an toàn của dữ liệu hiện có trước khi thay thế
-      if (cheDo === "THAY_THE" && dsDuAn.length) await saoLuu("GPMB-truoc-khoi-phuc");
+      if (cheDo === "THAY_THE" && dsDuAn.length && !(await saoLuu("GPMB-truoc-khoi-phuc")))
+        return setThongBao({ loai: "loi", noiDung: "Chưa lưu bản sao lưu an toàn của dữ liệu hiện có (đã bấm Hủy) — chưa khôi phục. Chọn nơi lưu để tiếp tục." });
       await ghiNhatKy("Khôi phục dữ liệu – bắt đầu", `${ban.ten} (${cheDo === "THAY_THE" ? "thay thế" : "gộp"}); sao lưu lúc ${ban.ban.thongTin.luc}`);
       await khoiPhuc(kho, ban.ban, cheDo);
       await taiLai();

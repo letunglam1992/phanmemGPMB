@@ -17,6 +17,8 @@ export type O = string | number | null;
 export interface TrangBang {
   ten: string;
   o: O[][];
+  /** Nhãn vị trí từng dòng (tệp Word: "Bảng 2, dòng 5"); không có thì dùng số dòng Excel */
+  viTri?: string[];
 }
 
 export type TruongCot = "stt" | "ten" | "dvt" | "kl" | "dg" | "tyLe" | "tt" | "canCu";
@@ -49,6 +51,8 @@ export type LoaiDong = "CHI_TIET" | "NHOM" | "TONG" | "LAM_TRON";
 export interface DongPA {
   /** Số dòng trên Excel (bắt đầu từ 1) */
   dong: number;
+  /** Vị trí hiển thị (tệp Word: bảng, dòng) */
+  viTri: string;
   loai: LoaiDong;
   capNhom: number;
   stt: string;
@@ -118,6 +122,115 @@ export async function docTepExcel(bytes: Uint8Array): Promise<TrangBang[]> {
   return kq;
 }
 
+/* ============================ Đọc Word (.docx) ============================ */
+
+/** Các phần tử con cân bằng `<w:ten …>…</w:ten>` ở cấp ngoài cùng của chuỗi XML (bỏ qua phần tử lồng cùng tên). */
+function phanTuCon(xml: string, ten: string): string[] {
+  const mo = new RegExp(`<${ten}(?=[\\s>/])[^>]*?(/?)>|</${ten}>`, "g");
+  const kq: string[] = [];
+  let sau = 0, batDau = -1;
+  for (let m; (m = mo.exec(xml)); ) {
+    if (m[0].startsWith("</")) {
+      if (--sau === 0 && batDau >= 0) kq.push(xml.slice(batDau, mo.lastIndex));
+    } else if (m[1] === "/") {
+      if (sau === 0) kq.push(m[0]);
+    } else {
+      if (sau++ === 0) batDau = m.index;
+    }
+  }
+  return kq;
+}
+
+const giaiMaXml = (s: string) =>
+  s.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n))).replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16))).replace(/&amp;/g, "&");
+
+/** Chữ trong một ô: các đoạn nối bằng khoảng trắng; bỏ bảng lồng. */
+function chuTrongO(tc: string): string {
+  const khongLong = tc.replace(/<w:tbl[\s>][\s\S]*?<\/w:tbl>/g, " ");
+  return phanTuCon(khongLong, "w:p")
+    .map((p) => giaiMaXml((p.match(/<w:t(?:\s[^>]*)?>[^<]*<\/w:t>|<w:tab\/>|<w:br\/>/g) ?? []).map((x) => (x.startsWith("<w:t") && !x.startsWith("<w:tab") ? x.replace(/<[^>]+>/g, "") : " ")).join("")))
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Số trong văn bản Word theo cách viết Việt Nam: dấu chấm phân cách nghìn, dấu phẩy thập phân ("5.523,2", "54.000").
+ * Chuỗi khác (có chữ, "100%") giữ nguyên để bộ đọc số xử lý.
+ */
+export function soTuChuVN(s: string): O {
+  const t = s.replace(/[\s\u00a0]/g, "");
+  if (!t) return null;
+  if (/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(t)) return Number(t.replace(/\./g, "").replace(",", "."));
+  if (/^-?\d+(,\d+)?$/.test(t)) return Number(t.replace(",", "."));
+  if (/^-?\d+\.\d+$/.test(t)) return Number(t);
+  return s;
+}
+
+function bangWord(tbl: string): O[][] {
+  const o: O[][] = [];
+  for (const tr of phanTuCon(tbl, "w:tr")) {
+    const d: O[] = [];
+    for (const tc of phanTuCon(tr, "w:tc")) {
+      const pr = /<w:tcPr>[\s\S]*?<\/w:tcPr>/.exec(tc)?.[0] ?? "";
+      const span = Number(/<w:gridSpan w:val="(\d+)"/.exec(pr)?.[1] ?? 1);
+      const noiTiep = /<w:vMerge(?:\s*\/>|\s+w:val="continue")/.test(pr); // ô gộp dọc phía dưới: như ô gộp Excel
+      d.push(noiTiep ? null : soTuChuVN(chuTrongO(tc)));
+      for (let i = 1; i < span; i++) d.push(null);
+    }
+    o.push(d);
+  }
+  return o;
+}
+
+/**
+ * Đọc các bảng trong tệp Word (.docx) thành bảng giá trị. Các bảng có cùng cấu trúc cột (phụ lục tách bảng theo hộ,
+ * theo trang) được gộp thêm thành một bảng "Gộp …" để kiểm tổng thể.
+ */
+export async function docTepWord(bytes: Uint8Array): Promise<TrangBang[]> {
+  const { default: PizZip } = await import("pizzip");
+  let xml: string;
+  try {
+    xml = new PizZip(bytes).file("word/document.xml")?.asText() ?? "";
+  } catch {
+    throw new Error("Không đọc được tệp Word — tệp hỏng hoặc không phải .docx (tệp .doc cũ: mở bằng Word và lưu lại dạng .docx).");
+  }
+  if (!xml) throw new Error("Tệp .docx không có nội dung văn bản (word/document.xml).");
+  const than = /<w:body>([\s\S]*)<\/w:body>/.exec(xml)?.[1] ?? xml;
+  const ds: TrangBang[] = phanTuCon(than, "w:tbl").map((tbl, i) => {
+    const o = bangWord(tbl);
+    return { ten: `Bảng ${i + 1} (${o.length} dòng)`, o, viTri: o.map((_, r) => `B${i + 1}.${r + 1}`) };
+  });
+  if (!ds.length) throw new Error("Tệp Word không có bảng nào — phương án cần trình bày dạng bảng.");
+  // Gộp các bảng cùng cấu trúc cột
+  const nhom = new Map<string, { t: TrangBang; nd: NonNullable<ReturnType<typeof nhanDienCot>> }[]>();
+  for (const t of ds) {
+    const nd = nhanDienCot(t.o);
+    if (!nd) continue;
+    const k = JSON.stringify(nd.anhXa);
+    nhom.set(k, [...(nhom.get(k) ?? []), { t, nd }]);
+  }
+  for (const g of nhom.values()) {
+    if (g.length < 2) continue;
+    const [dau, ...con] = g;
+    const o = [...dau!.t.o], viTri = [...dau!.t.viTri!];
+    for (const x of con) {
+      o.push(...x.t.o.slice(x.nd.batDau));
+      viTri.push(...x.t.viTri!.slice(x.nd.batDau));
+    }
+    ds.unshift({ ten: `Gộp ${g.length} bảng cùng cấu trúc (${g.map((x) => x.t.ten.split(" (")[0]).join(", ")})`, o, viTri });
+  }
+  return ds;
+}
+
+/** Đọc tệp phương án theo đuôi: .xlsx hoặc .docx. */
+export async function docTepPhuongAn(ten: string, bytes: Uint8Array): Promise<TrangBang[]> {
+  if (/\.xlsx$/i.test(ten)) return docTepExcel(bytes);
+  if (/\.docx$/i.test(ten)) return docTepWord(bytes);
+  if (/\.(xls|doc)$/i.test(ten)) throw new Error("Tệp định dạng cũ (.xls, .doc): mở bằng Excel/Word và lưu lại dạng .xlsx/.docx.");
+  throw new Error("Chỉ đọc được tệp Excel (.xlsx) hoặc Word (.docx).");
+}
+
 /* ============================ Nhận diện cột ============================ */
 
 const chu = (v: O) => (v == null ? "" : khongDau(String(v)).replace(/\s+/g, " ").trim());
@@ -155,10 +268,16 @@ export function nhanDienCot(o: O[][]): { dongTieuDe: number; anhXa: AnhXaCot; ba
     const daDung = new Set<number>();
     for (const [truong, mau, tru] of MAU_COT) {
       // Tầng dưới cụ thể hơn: ưu tiên ô tầng dưới khớp mẫu
-      const ungVien = tieuDe.map((t, c) => ({ t, c, duoi: ghep ? chu(duoi[c] ?? null) : "" })).filter((x) => !daDung.has(x.c) && mau.test(x.duoi || x.t) && !(tru && tru.test(x.duoi || x.t)));
+      // Tầng dưới được ưu tiên khi chính nó khớp mẫu ("Đơn giá" | "Thành tiền" dưới "Giá trị bồi thường"); không thì xét cả hai tầng
+      const ungVien = tieuDe
+        .map((t, c) => {
+          const d = ghep ? chu(duoi[c] ?? null) : "";
+          return { c, t: d && mau.test(d) ? d : t };
+        })
+        .filter((x) => !daDung.has(x.c) && mau.test(x.t) && !(tru && tru.test(x.t)));
       if (!ungVien.length) continue;
       // Khối lượng: ưu tiên "khối lượng/số lượng", rồi "diện tích thu hồi", rồi "diện tích"
-      const chon = truong === "kl" ? ungVien.find((x) => /khoi luong|so luong/.test(x.duoi || x.t)) ?? ungVien.find((x) => /thu hoi/.test(x.duoi || x.t)) ?? ungVien[ungVien.length - 1]! : ungVien[0]!;
+      const chon = truong === "kl" ? ungVien.find((x) => /khoi luong|so luong/.test(x.t)) ?? ungVien.find((x) => /thu hoi/.test(x.t)) ?? ungVien[ungVien.length - 1]! : ungVien[0]!;
       anhXa[truong] = chon.c;
       daDung.add(chon.c);
     }
@@ -407,7 +526,7 @@ export function kiemTraBang(trang: TrangBang, dl: DuLieuKiemTra, anhXaTay?: AnhX
     else if (dg != null || kl != null) loai = "CHI_TIET";
     else if (tt != null) loai = "NHOM";
     else continue; // dòng ghi chú, tên hộ không có số liệu
-    dong.push({ dong: r + 1, loai, capNhom: capTheoStt(stt), stt, ten, dvt, kl, dg, heSo, tt, canCu, phatHien });
+    dong.push({ dong: r + 1, viTri: trang.viTri?.[r] ?? String(r + 1), loai, capNhom: capTheoStt(stt), stt, ten, dvt, kl, dg, heSo, tt, canCu, phatHien });
   }
 
   const chiTiet = dong.filter((x) => x.loai === "CHI_TIET");
@@ -514,13 +633,13 @@ export async function xuatBaoCaoKiemTra(kq: KetQuaKiemTra, tenTep: string, xa: s
   ws.addRow(["Kết quả do phần mềm đối chiếu với dữ liệu đơn giá, giá đất đã trích xuất; cán bộ có thẩm quyền kiểm tra lại trước khi kết luận."]).font = { italic: true };
   for (const p of kq.chung) ws.addRow([`${TEN_MUC_DO[p.mucDo]}: ${p.noiDung}`]);
   ws.addRow([]);
-  const dau = ws.addRow(["Dòng Excel", "STT", "Nội dung", "ĐVT", "Khối lượng", "Đơn giá", "Tỷ lệ/hệ số", "Thành tiền", "Mức", "Loại kiểm", "Kết quả", "Nguồn đối chiếu"]);
+  const dau = ws.addRow(["Vị trí (dòng)", "STT", "Nội dung", "ĐVT", "Khối lượng", "Đơn giá", "Tỷ lệ/hệ số", "Thành tiền", "Mức", "Loại kiểm", "Kết quả", "Nguồn đối chiếu"]);
   dau.font = { bold: true };
   const MAU: Partial<Record<MucDo, string>> = { LOI: "FFFDE2E1", CANH_BAO: "FFFFF4D6", KHONG_KIEM: "FFEFEFEF" };
   for (const d of kq.dong) {
     const ds = d.phatHien.length ? d.phatHien : [{ mucDo: "THONG_TIN" as MucDo, loai: "DU_LIEU" as LoaiKiem, noiDung: d.loai === "NHOM" ? "Dòng nhóm" : "" }];
     for (const p of ds) {
-      const r = ws.addRow([d.dong, d.stt, d.ten, d.dvt, d.kl ? Number(d.kl.toString()) : null, d.dg ? Number(d.dg.toString()) : null, d.heSo ? Number(d.heSo.toString()) : null, d.tt ? Number(d.tt.toString()) : null, TEN_MUC_DO[p.mucDo], TEN_LOAI_KIEM[p.loai], p.noiDung, p.canCu ?? ""]);
+      const r = ws.addRow([d.viTri, d.stt, d.ten, d.dvt, d.kl ? Number(d.kl.toString()) : null, d.dg ? Number(d.dg.toString()) : null, d.heSo ? Number(d.heSo.toString()) : null, d.tt ? Number(d.tt.toString()) : null, TEN_MUC_DO[p.mucDo], TEN_LOAI_KIEM[p.loai], p.noiDung, p.canCu ?? ""]);
       const mau = MAU[p.mucDo];
       if (mau) r.getCell(9).fill = { type: "pattern", pattern: "solid", fgColor: { argb: mau } };
     }
