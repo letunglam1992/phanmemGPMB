@@ -301,6 +301,22 @@ async fn may_chu_ghi_lo_nguyen_tu() {
     assert_eq!(ma, 409, "{v}");
     assert!(v["loi"].as_str().unwrap().contains("phương án số 1"), "{v}");
 
+    // P1-3: Không áp dụng — chỉ bước tùy chọn (14), cần quyền xác nhận, bắt buộc lý do
+    let mut k = ho("h20", "H020");
+    assert_eq!(m.goi("PUT", "/api/ho/h20", Some(&cb), json!({ "duLieu": k })).await.0, 200);
+    k["tienDo"] = json!({ "14": { "trangThai": "KHONG_AP_DUNG", "ghiChu": "tự nguyện bàn giao" } });
+    assert_eq!(m.goi("PUT", "/api/ho/h20", Some(&cb), json!({ "duLieu": k, "phienBanTruoc": 1 })).await.0, 403);
+    k["tienDo"] = json!({ "13": { "trangThai": "KHONG_AP_DUNG", "ghiChu": "x" } });
+    assert_eq!(m.goi("PUT", "/api/ho/h20", Some(&qt), json!({ "duLieu": k, "phienBanTruoc": 1 })).await.0, 400);
+    k["tienDo"] = json!({ "14": { "trangThai": "KHONG_AP_DUNG", "ghiChu": " " } });
+    assert_eq!(m.goi("PUT", "/api/ho/h20", Some(&qt), json!({ "duLieu": k, "phienBanTruoc": 1 })).await.0, 400);
+    k["tienDo"] = json!({ "14": { "trangThai": "KHONG_AP_DUNG", "ghiChu": "tự nguyện bàn giao" } });
+    let (ma, v) = m.goi("PUT", "/api/ho/h20", Some(&qt), json!({ "duLieu": k, "phienBanTruoc": 1 })).await;
+    assert_eq!(ma, 200, "{v}");
+    assert_eq!(v["duLieu"]["tienDo"]["14"]["duyetBoi"], "quantri");
+    k["tienDo"] = json!({ "14": { "trangThai": "DANG" } });
+    assert_eq!(m.goi("PUT", "/api/ho/h20", Some(&cb), json!({ "duLieu": k, "phienBanTruoc": 2 })).await.0, 403);
+
     d.handle.shutdown();
     let _ = std::fs::remove_dir_all(&dir);
 }

@@ -1,14 +1,16 @@
 /**
  * Hiện trạng GPMB của hồ sơ, thống kê dự án, mốc tiến độ và cảnh báo tự động.
  * Quy tắc xác định trạng thái (thứ tự ưu tiên):
- *   1. HOAN_THANH  – bước 12 "Chi trả" đã xác nhận hoàn thành;
+ *   1. HOAN_THANH  – đã bàn giao mặt bằng (Ho.banGiao, P1-4) — kết thúc GPMB đối với hộ (k5, k6 Đ87 LĐĐ 2024:
+ *                    QĐ thu hồi ban hành sau chi trả; bàn giao là mốc cuối);
+ *   1b. CHO_BAN_GIAO – bước 12 "Chi trả" đã xác nhận hoàn thành, chưa ghi bàn giao mặt bằng;
  *   2. VUONG_MAC   – cán bộ ghi vướng mắc; hoặc bước quá hạn kế hoạch; hoặc phương án đã niêm yết
  *                    (bước 6 trở đi) mà còn khoản "Thiếu căn cứ" (khi đang lập hồ sơ, thiếu căn cứ là bình thường);
  *   3. DANG_XU_LY  – đã bắt đầu từ bước 5 (lập phương án) trở đi;
  *   4. DA_KIEM_DEM – bước 4 (điều tra, kiểm đếm) đã hoàn thành;
  *   5. CHUA_KIEM_DEM.
  */
-import { CAC_BUOC, hoHieuLuc, type DuAn, type Ho } from "./mo-hinh";
+import { CAC_BUOC, daQuaBuoc, hoHieuLuc, tienDoHo, type DuAn, type Ho } from "./mo-hinh";
 import type { KetQuaHo } from "./tinh-ho";
 
 import { hoLechSauPheDuyet } from "./phuong-an";
@@ -16,12 +18,14 @@ import { HAN_BUOC, tinhHanBuoc } from "./han-buoc";
 import { LICH_TRONG, type LichLamViec } from "./lich-lam-viec";
 import { tinhChiTra, type GiaiDoanTyLe } from "./chi-tra";
 import { dinhDang } from "@gpmb/core";
-export type TrangThaiGpmb = "HOAN_THANH" | "DANG_XU_LY" | "DA_KIEM_DEM" | "VUONG_MAC" | "CHUA_KIEM_DEM";
+import { dtDaBanGiao, dtThuHoiHo } from "./ban-giao";
+export type TrangThaiGpmb = "HOAN_THANH" | "CHO_BAN_GIAO" | "DANG_XU_LY" | "DA_KIEM_DEM" | "VUONG_MAC" | "CHUA_KIEM_DEM";
 
-export const THU_TU_TRANG_THAI: TrangThaiGpmb[] = ["HOAN_THANH", "DANG_XU_LY", "DA_KIEM_DEM", "VUONG_MAC", "CHUA_KIEM_DEM"];
+export const THU_TU_TRANG_THAI: TrangThaiGpmb[] = ["HOAN_THANH", "CHO_BAN_GIAO", "DANG_XU_LY", "DA_KIEM_DEM", "VUONG_MAC", "CHUA_KIEM_DEM"];
 
 export const TT_GPMB: Record<TrangThaiGpmb, { ten: string; mau: string; nen: string; bieuTuong: string }> = {
-  HOAN_THANH: { ten: "Đã hoàn thành GPMB", mau: "#44872a", nen: "rgba(68,135,42,0.30)", bieuTuong: "✓" },
+  HOAN_THANH: { ten: "Đã bàn giao mặt bằng", mau: "#44872a", nen: "rgba(68,135,42,0.30)", bieuTuong: "✓" },
+  CHO_BAN_GIAO: { ten: "Đã chi trả, chờ bàn giao", mau: "#1f8a86", nen: "rgba(31,138,134,0.28)", bieuTuong: "◑" },
   DANG_XU_LY: { ten: "Đang xử lý", mau: "#c98a1e", nen: "rgba(201,138,30,0.30)", bieuTuong: "◔" },
   DA_KIEM_DEM: { ten: "Đã kiểm đếm", mau: "#2f6bd0", nen: "rgba(47,107,208,0.26)", bieuTuong: "▤" },
   VUONG_MAC: { ten: "Vướng mắc / chưa hoàn tất", mau: "#cc3b2e", nen: "rgba(204,59,46,0.28)", bieuTuong: "!" },
@@ -29,6 +33,8 @@ export const TT_GPMB: Record<TrangThaiGpmb, { ten: string; mau: string; nen: str
 };
 
 const xong = (h: Ho, ma: string) => h.tienDo[ma]?.trangThai === "XONG";
+/** Đã qua bước (xong hoặc không áp dụng) — dùng cho quá hạn, mốc. */
+const qua = (h: Ho, ma: string) => daQuaBuoc(h.tienDo[ma]?.trangThai);
 const batDau = (h: Ho, ma: string) => {
   const t = h.tienDo[ma]?.trangThai;
   return t === "DANG" || t === "CHO_DUYET" || t === "XONG";
@@ -41,7 +47,7 @@ const dangLapPhuongAn = (h: Ho) => CAC_BUOC.slice(4).some((b) => batDau(h, b.ma)
 export function buocQuaHan(duAn: DuAn, h0: Ho, homNay: string): string[] {
   const h = hoHieuLuc(duAn, h0);
   const kh = duAn.keHoach ?? {};
-  return CAC_BUOC.filter((b) => kh[b.ma] && kh[b.ma]! < homNay && !xong(h, b.ma)).map((b) => b.ma);
+  return CAC_BUOC.filter((b) => kh[b.ma] && kh[b.ma]! < homNay && !qua(h, b.ma)).map((b) => b.ma);
 }
 
 /** Vướng mắc ghi theo từng bước riêng của hộ (5–16). */
@@ -51,7 +57,9 @@ export function vuongMacBuoc(h: Ho): { ma: string; ten: string; noiDung: string;
 
 export function trangThaiHo(duAn: DuAn, h0: Ho, kq: KetQuaHo, homNay: string): TrangThaiGpmb {
   const h = hoHieuLuc(duAn, h0);
-  if (xong(h, "12")) return "HOAN_THANH";
+  if (h0.banGiao?.ngay) return "HOAN_THANH";
+  // Đã chi trả: chờ bàn giao — trừ khi cán bộ ghi vướng mắc (vd. chưa bàn giao do tranh chấp)
+  if (xong(h, "12") && !h.vuongMac?.noiDung && !vuongMacBuoc(h0).length) return "CHO_BAN_GIAO";
   if (h.vuongMac?.noiDung || vuongMacBuoc(h0).length || buocQuaHan(duAn, h, homNay).length || (kq.tong.soDongThieuCanCu > 0 && daNiemYet(h))) return "VUONG_MAC";
   if (CAC_BUOC.slice(4).some((b) => batDau(h, b.ma))) return "DANG_XU_LY";
   if (xong(h, "4")) return "DA_KIEM_DEM";
@@ -63,11 +71,14 @@ export interface ThongKeDuAn {
   theoTrangThai: Record<TrangThaiGpmb, number>;
   soThua: number;
   soThuaDaKiemDem: number;
-  /** Tiến độ chung = số bước đã hoàn thành / (số hộ × 16). */
+  /** Tiến độ chung = số bước đã hoàn thành / tổng số bước áp dụng của các hộ (bỏ bước "không áp dụng" — P1-3). */
   tienDoChung: number;
   /** Số hộ đã qua từng chặng. */
   chang: { ten: string; soHo: number; buoc: string }[];
   capNhatCuoi: string | null;
+  /** Diện tích thu hồi / đã bàn giao mặt bằng (m², P1-4) — chỉ số "% mặt bằng đã bàn giao". */
+  dtThuHoi: number;
+  dtDaBanGiao: number;
 }
 
 export const CAC_CHANG = [
@@ -81,7 +92,7 @@ export const CAC_CHANG = [
 
 export function thongKe(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: string): ThongKeDuAn {
   const theoTrangThai = Object.fromEntries(THU_TU_TRANG_THAI.map((t) => [t, 0])) as Record<TrangThaiGpmb, number>;
-  let soThua = 0, soThuaDaKiemDem = 0, soBuocXong = 0;
+  let soThua = 0, soThuaDaKiemDem = 0, soBuocXong = 0, soBuocApDung = 0, dtThuHoi = 0, dtBanGiao = 0;
   let capNhatCuoi: string | null = null;
   for (const { h: h0, k } of ds) {
     const h = hoHieuLuc(duAn, h0);
@@ -89,7 +100,11 @@ export function thongKe(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: string
     soThua += h.thua.length;
     if (xong(h, "4")) soThuaDaKiemDem += h.thua.length;
     else soThuaDaKiemDem += h.thua.filter((t) => h.taiSan.some((x) => x.thuaId === t.id)).length;
-    soBuocXong += CAC_BUOC.filter((b) => xong(h, b.ma)).length;
+    dtThuHoi += dtThuHoiHo(h0).toNumber();
+    dtBanGiao += dtDaBanGiao(h0).toNumber();
+    const td = tienDoHo(h);
+    soBuocXong += td.xong;
+    soBuocApDung += td.apDung;
     for (const n of h.nhatKy) if (!capNhatCuoi || n.luc > capNhatCuoi) capNhatCuoi = n.luc;
   }
   return {
@@ -97,9 +112,11 @@ export function thongKe(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: string
     theoTrangThai,
     soThua,
     soThuaDaKiemDem,
-    tienDoChung: ds.length ? soBuocXong / (ds.length * CAC_BUOC.length) : 0,
+    tienDoChung: soBuocApDung ? soBuocXong / soBuocApDung : 0,
     chang: CAC_CHANG.map((c) => ({ ...c, soHo: ds.filter(({ h }) => xong(hoHieuLuc(duAn, h), c.buoc)).length })),
     capNhatCuoi,
+    dtThuHoi,
+    dtDaBanGiao: dtBanGiao,
   };
 }
 
@@ -126,7 +143,7 @@ export interface MocTienDo {
 export function mocTienDo(duAn: DuAn, hos0: Ho[], homNay: string): MocTienDo[] {
   const hos = hos0.map((h) => hoHieuLuc(duAn, h));
   return CAC_BUOC.map((b) => {
-    const soXong = hos.filter((h) => xong(h, b.ma)).length;
+    const soXong = hos.filter((h) => qua(h, b.ma)).length;
     const coBatDau = hos.some((h) => batDau(h, b.ma));
     const kh = duAn.keHoach?.[b.ma] ?? null;
     let trangThai: TrangThaiMoc;

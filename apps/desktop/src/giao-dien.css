@@ -929,3 +929,8 @@ kbd.phim { display: inline-block; min-width: 20px; padding: 1px 6px; border: 1px
 .rao-loi { border-left: 4px solid var(--do-to); }
 .rao-loi code { font-size: 12px; background: var(--be-mat-2); padding: 1px 5px; border-radius: 4px; }
 .nhac-nhap { border-color: var(--vang, #c98a00) !important; }
+
+/* Bước không áp dụng (P1-3) */
+.buoc button.KHONG_AP_DUNG .vach { background: repeating-linear-gradient(90deg, var(--vien) 0 4px, transparent 4px 8px); }
+.buoc-tron li.KHONG_AP_DUNG .so, .ttho-buoc li.KHONG_AP_DUNG .so, .td-chung-o.KHONG_AP_DUNG .so { border-style: dashed; color: var(--chu-mo); background: transparent; }
+.buoc-tron li.KHONG_AP_DUNG::before { background: var(--chinh); }

@@ -1,12 +1,12 @@
 import { useMemo, useState } from "react";
 import { useUngDung } from "../ung-dung";
-import { BUOC_CHUNG, CAC_BUOC, TEN_TRANG_THAI_BUOC, laBuocChung, tienDoHieuLuc, type BuocHo, type DuAn, type Ho, type TrangThaiBuoc } from "../mo-hinh";
+import { daQuaBuoc, BUOC_CHUNG, CAC_BUOC, TEN_TRANG_THAI_BUOC, laBuocChung, tienDoHieuLuc, type BuocHo, type DuAn, type Ho, type TrangThaiBuoc } from "../mo-hinh";
 import { kiemTraDuyetBuoc } from "../tai-khoan";
 import { homNayIso } from "../trang-thai";
 import { HopThoai, O, ngayVN } from "./chung";
 import { Chon } from "./Chon";
 
-export const LOP_TRANG_THAI_BUOC: Record<TrangThaiBuoc, string> = { XONG: "nhan-xanh", DANG: "nhan-duong", CHO_DUYET: "nhan-tim", CHUA: "nhan-xam" };
+export const LOP_TRANG_THAI_BUOC: Record<TrangThaiBuoc, string> = { XONG: "nhan-xanh", DANG: "nhan-duong", CHO_DUYET: "nhan-tim", CHUA: "nhan-xam", KHONG_AP_DUNG: "nhan-xam" };
 const BUOC_RIENG = CAC_BUOC.filter((b) => !laBuocChung(b.ma));
 
 /**
@@ -130,9 +130,9 @@ export function BuocChung({ duAn, hos, tiep }: { duAn: DuAn; hos: Ho[]; tiep?: {
 function HangLoat({ duAn, hos }: { duAn: DuAn; hos: Ho[] }) {
   const { luuNhieuHo, taiKhoan, quyen, bao } = useUngDung();
   const td = useMemo(() => new Map(hos.map((h) => [h.id, tienDoHieuLuc(duAn, h)])), [hos, duAn]);
-  const macDinh = BUOC_RIENG.find((b) => hos.some((h) => td.get(h.id)?.[b.ma]?.trangThai !== "XONG"))?.ma ?? "5";
+  const macDinh = BUOC_RIENG.find((b) => hos.some((h) => !daQuaBuoc(td.get(h.id)?.[b.ma]?.trangThai)))?.ma ?? "5";
   const [buoc, setBuoc] = useState(macDinh);
-  const [hanhDong, setHanhDong] = useState<"DANG" | "CHO_DUYET" | "XONG">(quyen("DUYET_BUOC") ? "XONG" : "CHO_DUYET");
+  const [hanhDong, setHanhDong] = useState<"DANG" | "CHO_DUYET" | "XONG" | "KHONG_AP_DUNG">(quyen("DUYET_BUOC") ? "XONG" : "CHO_DUYET");
   const [ngay, setNgay] = useState(homNayIso());
   const [ghiChu, setGhiChu] = useState("");
   const [chon, setChon] = useState<Set<string>>(new Set());
@@ -147,6 +147,11 @@ function HangLoat({ duAn, hos }: { duAn: DuAn; hos: Ho[] }) {
     const bh = h.tienDo[buoc] ?? { trangThai: "CHUA" as TrangThaiBuoc };
     if (bh.trangThai === hanhDong) return `đã ở trạng thái "${TEN_TRANG_THAI_BUOC[hanhDong]}"`;
     if (hanhDong === "XONG") return taiKhoan ? kiemTraDuyetBuoc(taiKhoan.vaiTro, taiKhoan.ten, bh) : "chưa đăng nhập";
+    if (hanhDong === "KHONG_AP_DUNG") {
+      if (!b.tuyChon) return "bước không phải bước tùy chọn";
+      if (!quyen("DUYET_BUOC")) return "cần quyền xác nhận bước";
+      if (bh.trangThai === "XONG") return "bước đã hoàn thành";
+    }
     if (hanhDong === "CHO_DUYET") {
       if (!quyen("GUI_DUYET")) return "tài khoản không có quyền gửi duyệt";
       if (bh.trangThai === "XONG") return "bước đã hoàn thành";
@@ -159,19 +164,20 @@ function HangLoat({ duAn, hos }: { duAn: DuAn; hos: Ho[] }) {
 
   const apDung = async () => {
     const chonDs = hos.filter((h) => chon.has(h.id));
+    if (hanhDong === "KHONG_AP_DUNG" && !ghiChu.trim()) return bao("Ghi lý do không áp dụng (ô nội dung) cho các hộ được chọn", "loi");
     const boQua: string[] = [];
     const ghi: { h: Ho; nhatKy: string }[] = [];
     for (const h of chonDs) {
       const l = kiemTra(h);
       if (l) { boQua.push(`${h.ma} · ${h.ten}: ${l}`); continue; }
       const bh = h.tienDo[buoc] ?? { trangThai: "CHUA" as TrangThaiBuoc };
-      const dau: Partial<BuocHo> = hanhDong === "XONG" ? { duyetBoi: taiKhoan!.ten } : hanhDong === "CHO_DUYET" ? { guiBoi: taiKhoan!.ten, duyetBoi: undefined } : { duyetBoi: undefined };
+      const dau: Partial<BuocHo> = hanhDong === "XONG" || hanhDong === "KHONG_AP_DUNG" ? { duyetBoi: taiKhoan!.ten } : hanhDong === "CHO_DUYET" ? { guiBoi: taiKhoan!.ten, duyetBoi: undefined } : { duyetBoi: undefined };
       const moi: BuocHo = { ...bh, ...dau, trangThai: hanhDong, ngay: ngay || bh.ngay || homNayIso(), ...(ghiChu.trim() ? { ghiChu: ghiChu.trim() } : {}) };
-      ghi.push({ h: { ...h, tienDo: { ...h.tienDo, [buoc]: moi } }, nhatKy: `${hanhDong === "XONG" ? "Xác nhận hoàn thành" : hanhDong === "CHO_DUYET" ? "Gửi duyệt" : "Đang thực hiện"} bước ${b.ma}. ${b.ten} (cập nhật hàng loạt ${chonDs.length} hộ)` });
+      ghi.push({ h: { ...h, tienDo: { ...h.tienDo, [buoc]: moi } }, nhatKy: `${hanhDong === "XONG" ? "Xác nhận hoàn thành" : hanhDong === "CHO_DUYET" ? "Gửi duyệt" : hanhDong === "KHONG_AP_DUNG" ? `Không áp dụng (${ghiChu.trim()})` : "Đang thực hiện"} bước ${b.ma}. ${b.ten} (cập nhật hàng loạt ${chonDs.length} hộ)` });
     }
     if (!ghi.length) return setKetQua({ daLuu: 0, boQua });
     // Không chặn theo thứ tự (có bước làm song song hoặc không phát sinh, vd. cưỡng chế) — chỉ nhắc để cán bộ kiểm tra
-    const chuaXongTruoc = truoc ? ghi.filter(({ h }) => td.get(h.id)?.[truoc.ma]?.trangThai !== "XONG").map(({ h }) => h.ma) : [];
+    const chuaXongTruoc = truoc ? ghi.filter(({ h }) => !daQuaBuoc(td.get(h.id)?.[truoc.ma]?.trangThai)).map(({ h }) => h.ma) : [];
     const nhac = chuaXongTruoc.length ? `\n\nLưu ý: ${chuaXongTruoc.length} hộ chưa hoàn thành bước ${truoc!.ma}. ${truoc!.ten} (${chuaXongTruoc.slice(0, 8).join(", ")}${chuaXongTruoc.length > 8 ? "…" : ""}).` : "";
     if (!confirm(`${TEN_TRANG_THAI_BUOC[hanhDong]} — bước ${b.ma}. ${b.ten} cho ${ghi.length} hộ${boQua.length ? ` (bỏ qua ${boQua.length} hộ)` : ""}?${nhac}`)) return;
     setDang(true);
@@ -190,7 +196,7 @@ function HangLoat({ duAn, hos }: { duAn: DuAn; hos: Ho[] }) {
     <div className="luoi" style={{ gap: 12 }}>
       <div className="luoi" style={{ gridTemplateColumns: "minmax(0,2fr) minmax(0,1.2fr) minmax(0,1fr)", gap: 10 }}>
         <O nhan="Bước">
-          <Chon value={buoc} onChange={(e) => { setBuoc(e.target.value); setChon(new Set()); setKetQua(null); }}>
+          <Chon value={buoc} onChange={(e) => { setBuoc(e.target.value); setChon(new Set()); setKetQua(null); if (hanhDong === "KHONG_AP_DUNG" && !CAC_BUOC.find((x) => x.ma === e.target.value)?.tuyChon) setHanhDong("XONG"); }}>
             {BUOC_RIENG.map((x) => {
               const xong = hos.filter((h) => td.get(h.id)?.[x.ma]?.trangThai === "XONG").length;
               return <option key={x.ma} value={x.ma}>{x.ma}. {x.ten} — {xong}/{hos.length} hộ xong</option>;
@@ -202,6 +208,7 @@ function HangLoat({ duAn, hos }: { duAn: DuAn; hos: Ho[] }) {
             <option value="DANG">Đang thực hiện</option>
             <option value="CHO_DUYET">Gửi duyệt (chờ xác nhận)</option>
             <option value="XONG">Xác nhận hoàn thành</option>
+            {b.tuyChon && <option value="KHONG_AP_DUNG">Không áp dụng (bước tùy chọn — bắt buộc lý do)</option>}
           </Chon>
         </O>
         <O nhan="Ngày thực hiện / hoàn thành"><input type="date" value={ngay} onChange={(e) => setNgay(e.target.value)} /></O>

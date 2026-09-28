@@ -20,6 +20,7 @@ import { thongTinChungMacDinh } from "../van-ban/du-lieu";
 import { truongVanBanTuDonVi } from "../don-vi";
 import { Chon } from "../thanh-phan/Chon";
 import { RaoLoi } from "../thanh-phan/RaoLoi";
+import { CauHinhThuongBanGiao } from "../thanh-phan/CauHinhThuong";
 import { MAU_MA_MAC_DINH, loiMauMa, maHoTiepTheo, mauMaCua, nhomMaTrung, taoMa } from "../ma-ho";
 
 /**
@@ -147,7 +148,10 @@ function TheTongQuan({ duAn, kq, moHo, capNhatTd, keHoach }: { duAn: DuAn; kq: K
         </div>
         <div className="the">
           <div className="the-dau"><h3>Tiến độ chung</h3><span className="cap-nhat" style={{ marginLeft: "auto" }}><BieuTuong ten="dongHo" co={14} />{tk.capNhatCuoi ? new Date(tk.capNhatCuoi).toLocaleString("vi-VN") : "—"}</span></div>
-          <div className="the-than"><VongTienDo tyLe={tk.tienDoChung} nhan="Số bước đã xong / tổng số bước" /></div>
+          <div className="the-than" style={{ display: "flex", gap: 18, flexWrap: "wrap", alignItems: "center" }}>
+            <VongTienDo tyLe={tk.tienDoChung} nhan="Số bước đã xong / số bước áp dụng" />
+            <VongTienDo tyLe={tk.dtThuHoi ? tk.dtDaBanGiao / tk.dtThuHoi : 0} nhan={`Mặt bằng đã bàn giao: ${Math.round(tk.dtDaBanGiao).toLocaleString("vi-VN")} / ${Math.round(tk.dtThuHoi).toLocaleString("vi-VN")} m²`} />
+          </div>
           <div className="chu-nho" style={{ padding: "0 16px", fontWeight: 600 }}>Tiến độ theo quy trình</div>
           <div style={{ padding: "0 8px 10px" }}><DaiChang chang={tk.chang} soHo={tk.soHo} bieuTuong={["hoSo", "kiemDem", "phuongAn", "pheDuyet", "chiTra", "banGiao"]} bam={(i) => di({ ten: "ds-ho", duAnId: duAn.id, chang: tk.chang[i]!.buoc })} /></div>
         </div>
@@ -199,6 +203,7 @@ function TheThongTin({ duAn, tiep }: { duAn: DuAn; tiep: () => void }) {
           <div className="the-dau"><h3>Thông tin dự án</h3><span className="mo chu-nho">dùng cho tính toán</span></div>
           <div className="the-than"><FormDuAn d={d} setD={setD} /></div>
         </div>
+        <CauHinhThuongBanGiao d={d} setD={setD} />
         <div className="the" style={{ gridColumn: "1" }}>
           <div className="the-dau"><h3>Mẫu mã hồ sơ</h3><span className="mo chu-nho">do đơn vị đặt</span></div>
           <div className="the-than">

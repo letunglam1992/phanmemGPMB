@@ -213,6 +213,9 @@ pub fn kiem_tra_ho(st: &MayChu, cu: Option<&Value>, moi: &mut Value, u: &NguoiGo
     kiem_tra_buoc(st, &buoc_cu, moi.get_mut("tienDo"), u)
 }
 
+/// Bước tùy chọn được đánh dấu "Không áp dụng" (đồng bộ với CAC_BUOC.tuyChon ở mo-hinh.ts).
+const BUOC_TUY_CHON: &[&str] = &["14"];
+
 /// Chuyển trạng thái bước (của hộ hoặc bước chung cấp dự án): gửi duyệt cần GUI_DUYET, xác nhận hoàn thành /
 /// mở lại bước đã xong cần DUYET_BUOC, người gửi không tự xác nhận; máy chủ tự ghi người gửi/duyệt.
 fn kiem_tra_buoc(st: &MayChu, buoc_cu: &Value, moi: Option<&mut Value>, u: &NguoiGoi) -> Kq<()> {
@@ -236,7 +239,17 @@ fn kiem_tra_buoc(st: &MayChu, buoc_cu: &Value, moi: Option<&mut Value>, u: &Nguo
             }
             continue;
         }
-        if tt == "XONG" {
+        if tt == "KHONG_AP_DUNG" {
+            // P1-3: chỉ bước tùy chọn (mo-hinh.ts CAC_BUOC.tuyChon), cần quyền xác nhận bước, bắt buộc lý do
+            if !BUOC_TUY_CHON.contains(&ma.as_str()) {
+                return Err(loi(StatusCode::BAD_REQUEST, format!("Bước {ma} không phải bước tùy chọn — không đánh dấu \"Không áp dụng\"")));
+            }
+            can(st, u, "DUYET_BUOC").map_err(|_| loi(StatusCode::FORBIDDEN, format!("Bước {ma}: cần quyền xác nhận bước để đánh dấu Không áp dụng")))?;
+            if b["ghiChu"].as_str().unwrap_or("").trim().is_empty() {
+                return Err(loi(StatusCode::BAD_REQUEST, format!("Bước {ma}: Không áp dụng phải ghi lý do")));
+            }
+            b["duyetBoi"] = json!(u.ten);
+        } else if tt == "XONG" {
             can(st, u, "DUYET_BUOC").map_err(|_| loi(StatusCode::FORBIDDEN, format!("Bước {ma}: tài khoản không có quyền xác nhận hoàn thành — dùng \"Gửi duyệt\"")))?;
             if tt_cu == "CHO_DUYET" && buoc_cu[ma]["guiBoi"].as_str() == Some(&u.ten) {
                 return Err(loi(StatusCode::FORBIDDEN, format!("Bước {ma}: người gửi duyệt không tự xác nhận bước của mình")));
@@ -251,7 +264,7 @@ fn kiem_tra_buoc(st: &MayChu, buoc_cu: &Value, moi: Option<&mut Value>, u: &Nguo
             if let Some(o) = b.as_object_mut() {
                 o.remove("duyetBoi");
             }
-        } else if tt_cu == "XONG" {
+        } else if tt_cu == "XONG" || tt_cu == "KHONG_AP_DUNG" {
             can(st, u, "DUYET_BUOC").map_err(|_| loi(StatusCode::FORBIDDEN, format!("Bước {ma}: chỉ người có quyền duyệt mới mở lại bước đã hoàn thành")))?;
         }
     }

@@ -21,9 +21,13 @@ describe("Hiện trạng GPMB của hồ sơ", () => {
     expect(trangThaiHo(duAn, h, k(h), "2026-09-27")).toBe("VUONG_MAC");
     expect(canhBaoDuAn(duAn, [{ h, k: k(h) }], "2026-09-27").some((c) => c.muc === "CAO" && c.noiDung.includes("niêm yết"))).toBe(true);
   });
-  it("chi trả xong = Hoàn thành (ưu tiên cao nhất); ghi vướng mắc = Vướng mắc", () => {
+  it("chi trả xong = Chờ bàn giao; ghi bàn giao mặt bằng = Hoàn thành (P1-3); ghi vướng mắc = Vướng mắc", () => {
     const h = voiBuoc(ho[1]!, { "12": { trangThai: "XONG" } });
-    expect(trangThaiHo(duAn, h, k(h), "2026-09-27")).toBe("HOAN_THANH");
+    expect(trangThaiHo(duAn, h, k(h), "2026-09-27")).toBe("CHO_BAN_GIAO");
+    const bg = { ...h, banGiao: { ngay: "2026-09-20", bienBan: "01/BB", nguoiGhi: "a" } };
+    expect(trangThaiHo(duAn, bg, k(bg), "2026-09-27")).toBe("HOAN_THANH");
+    const vm = { ...h, vuongMac: { noiDung: "Chưa bàn giao do tranh chấp", ngay: "2026-09-21" } };
+    expect(trangThaiHo(duAn, vm, k(vm), "2026-09-27")).toBe("VUONG_MAC");
     const v = { ...ho[0]!, vuongMac: { noiDung: "Chưa nhận tiền", ngay: "2026-09-01" } };
     expect(trangThaiHo(duAn, v, k(v), "2026-09-27")).toBe("VUONG_MAC");
   });
@@ -96,5 +100,18 @@ describe("Bước chung 1–4 cấp dự án", () => {
     const ds = [hoTrong("A"), hoTrong("B")];
     const cb = canhBaoDuAn(da, ds.map((h) => ({ h, k: k(h) })), "2026-09-27");
     expect(cb.filter((c) => c.noiDung.includes("chờ duyệt"))).toHaveLength(1);
+  });
+});
+
+describe("Bước không áp dụng (P1-3)", () => {
+  it("không tính vào mẫu số tiến độ; bước hiện tại bỏ qua bước không áp dụng", async () => {
+    const { tienDoHo, buocHienTai, CAC_BUOC } = await import("../src/mo-hinh");
+    const tat = Object.fromEntries(CAC_BUOC.map((b) => [b.ma, { trangThai: "XONG" as const }]));
+    expect(tienDoHo({ tienDo: tat })).toEqual({ xong: 16, apDung: 16, tyLe: 1 });
+    const khong14 = { ...tat, "14": { trangThai: "KHONG_AP_DUNG" as const, ghiChu: "tự nguyện bàn giao" } };
+    expect(tienDoHo({ tienDo: khong14 })).toEqual({ xong: 15, apDung: 15, tyLe: 1 });
+    const den13 = Object.fromEntries(CAC_BUOC.slice(0, 13).map((b) => [b.ma, { trangThai: "XONG" as const }]));
+    const h = { tienDo: { ...den13, "14": { trangThai: "KHONG_AP_DUNG" as const } } } as unknown as Parameters<typeof buocHienTai>[0];
+    expect(CAC_BUOC[buocHienTai(h)]!.ma).toBe("15");
   });
 });

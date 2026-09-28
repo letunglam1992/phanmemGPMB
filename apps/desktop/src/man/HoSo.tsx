@@ -5,7 +5,7 @@ import { TT_GPMB, homNayIso, trangThaiHo, type TrangThaiGpmb } from "../trang-th
 import { useUngDung } from "../ung-dung";
 import { tienBoiThuongDatO, tienSddTdc, tinhHo, type KetQuaHo } from "../tinh-ho";
 import { dienTichSuatToiThieu } from "@gpmb/core";
-import { BUOC_CHUNG, CAC_BUOC, TEN_DOI_TUONG, TEN_HINH_THUC_TDC, type HinhThucTdc, type TaiDinhCuHo, TEN_TRANG_THAI_BUOC, hoHieuLuc, laBuocChung, taoId, tienDoHieuLuc, type DuAn, type Ho, type LoaiDoiTuong, type TrangThaiBuoc } from "../mo-hinh";
+import { tienDoHo, daQuaBuoc, BUOC_CHUNG, CAC_BUOC, TEN_DOI_TUONG, TEN_HINH_THUC_TDC, type HinhThucTdc, type TaiDinhCuHo, TEN_TRANG_THAI_BUOC, hoHieuLuc, laBuocChung, taoId, tienDoHieuLuc, type DuAn, type Ho, type LoaiDoiTuong, type TrangThaiBuoc } from "../mo-hinh";
 import { NhanDong, O, ngayVN, tien } from "../thanh-phan/chung";
 import { BieuTuong } from "../thanh-phan/BieuDo";
 import { TabThua } from "./ho/Thua";
@@ -19,6 +19,7 @@ import { tenTep } from "../ten-tep";
 import type { DiChuyen } from "@gpmb/core";
 import { Chon } from "../thanh-phan/Chon";
 import { RaoLoi } from "../thanh-phan/RaoLoi";
+import { TheBanGiao } from "../thanh-phan/TheBanGiao";
 import { chuanMa, hoTrungMa } from "../ma-ho";
 import { ghiBanNhap, layBanNhap, xoaBanNhap } from "../ban-nhap";
 import { OSo } from "../thanh-phan/OSo";
@@ -168,7 +169,12 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
           </fieldset>
           {tab === "tinh" && <TabTinhToan h={h} duAn={duAn} kq={kq} />}
           {tab === "chi-tra" && <fieldset className="khung-quyen" disabled={!choSua}><TabChiTra h={h} duAn={duAn} doi={doi} /></fieldset>}
-          {tab === "tien-do" && <TabTienDo h={h} duAn={duAn} doi={doi} moDuAn={() => di({ ten: "du-an", duAnId, tab: "buoc-chung" })} soanMau={(ma) => di({ ten: "van-ban", duAnId, ma, hoId: h.id })} luuNgay={async (moi, nk) => { setH(moi); await luuHo(moi, nk); xoaBanNhap(hoId); setDaSua(false); }} />}
+          {tab === "tien-do" && (
+            <>
+              <TabTienDo h={h} duAn={duAn} doi={doi} moDuAn={() => di({ ten: "du-an", duAnId, tab: "buoc-chung" })} soanMau={(ma) => di({ ten: "van-ban", duAnId, ma, hoId: h.id })} luuNgay={async (moi, nk) => { setH(moi); await luuHo(moi, nk); xoaBanNhap(hoId); setDaSua(false); }} />
+              <TheBanGiao h={h} duAn={duAn} kq={kq} luuNgay={async (moi, nk) => { setH(moi); await luuHo(moi, nk); xoaBanNhap(hoId); setDaSua(false); }} moThongTinDuAn={() => di({ ten: "du-an", duAnId, tab: "thong-tin" })} />
+            </>
+          )}
           {tab === "van-ban" && <TabVanBanHo h={h} duAn={duAn} kq={kq} hieuLuc={hieuLuc} soan={(ma) => di({ ten: "van-ban", duAnId, ma, hoId: h.id })} />}
           {tab === "nhat-ky" && (
             <div className="the">
@@ -210,7 +216,7 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
 
 /** Thanh bước dạng vòng tròn đánh số; bước chung (1–4) được nhóm dưới nhãn "Bước chung của dự án". */
 function BuocTron({ ho, onChon }: { ho: Ho; onChon: (ma: string) => void }) {
-  const hienTai = CAC_BUOC.findIndex((b) => ho.tienDo[b.ma]?.trangThai !== "XONG");
+  const hienTai = CAC_BUOC.findIndex((b) => !daQuaBuoc(ho.tienDo[b.ma]?.trangThai));
   return (
     <ol className="buoc-tron">
       {CAC_BUOC.map((b, i) => {
@@ -218,7 +224,7 @@ function BuocTron({ ho, onChon }: { ho: Ho; onChon: (ma: string) => void }) {
         return (
           <li key={b.ma} className={`${t} ${i === hienTai ? "hien-tai" : ""} ${laBuocChung(b.ma) ? "chung" : ""}`}>
             <button onClick={() => onChon(b.ma)} title={`Bước ${b.ma}. ${b.ten} — ${TEN_TRANG_THAI_BUOC[t]}${laBuocChung(b.ma) ? " (bước chung của dự án)" : ""}`}>
-              <span className="so">{t === "XONG" && i !== hienTai ? "✓" : b.ma}</span>
+              <span className="so">{t === "XONG" && i !== hienTai ? "✓" : t === "KHONG_AP_DUNG" ? "–" : b.ma}</span>
               <span className="ten">{b.ten}</span>
             </button>
           </li>
@@ -232,9 +238,9 @@ function TheThongTinHo({ h, hieuLuc, tt, moTab, soanVanBan }: { h: Ho; hieuLuc: 
   const [menu, setMenu] = useState(false);
   const [tatCa, setTatCa] = useState(false);
   const soXong = CAC_BUOC.filter((b) => hieuLuc.tienDo[b.ma]?.trangThai === "XONG").length;
-  const iHienTai = CAC_BUOC.findIndex((b) => hieuLuc.tienDo[b.ma]?.trangThai !== "XONG");
+  const iHienTai = CAC_BUOC.findIndex((b) => !daQuaBuoc(hieuLuc.tienDo[b.ma]?.trangThai));
   const buocHt = iHienTai < 0 ? CAC_BUOC.length : iHienTai + 1;
-  const phanTram = Math.round((soXong / CAC_BUOC.length) * 100);
+  const phanTram = Math.round(tienDoHo(hieuLuc).tyLe * 100); // trên các bước áp dụng (P1-3)
   const dau = Math.max(0, Math.min(iHienTai < 0 ? CAC_BUOC.length - 5 : iHienTai - 1, CAC_BUOC.length - 5));
   const hienThi = tatCa ? CAC_BUOC : CAC_BUOC.slice(dau, dau + 5);
   const dong = (bt: string, nhan: string, gt: React.ReactNode, tab?: string) => (
@@ -280,7 +286,7 @@ function TheThongTinHo({ h, hieuLuc, tt, moTab, soanVanBan }: { h: Ho; hieuLuc: 
             const laHt = CAC_BUOC[iHienTai]?.ma === b.ma;
             return (
               <li key={b.ma} className={`${t} ${laHt ? "hien-tai" : ""}`} onClick={() => moTab("tien-do")}>
-                <span className="so">{t === "XONG" ? "✓" : b.ma}</span>
+                <span className="so">{t === "XONG" ? "✓" : t === "KHONG_AP_DUNG" ? "–" : b.ma}</span>
                 <div>
                   <div className="ten">{b.ten}{bh?.tuDuAn && <span className="nhan nhan-xam" style={{ marginLeft: 6, fontSize: 10.5 }}>chung</span>}</div>
                   {(laHt || t !== "CHUA") && <div className="tt">{TEN_TRANG_THAI_BUOC[t]}{bh?.ngay ? ` · ${ngayVN(bh.ngay)}` : ""}</div>}
@@ -507,7 +513,7 @@ function TabHoTro({ h, doi, duAn, kq }: Tab & { duAn: DuAn; kq: KetQuaHo }) {
 function TabTienDo({ h, duAn, doi, luuNgay, soanMau, moDuAn }: Tab & { duAn: DuAn; luuNgay: (h: Ho, nk: string) => Promise<void>; soanMau: (ma: string) => void; moDuAn: () => void }) {
   const td = tienDoHieuLuc(duAn, h);
   const BUOC_HO = CAC_BUOC.filter((x) => !laBuocChung(x.ma));
-  const [chon, setChon] = useState((BUOC_HO.find((x) => td[x.ma]?.trangThai !== "XONG") ?? BUOC_HO[BUOC_HO.length - 1]!).ma);
+  const [chon, setChon] = useState((BUOC_HO.find((x) => !daQuaBuoc(td[x.ma]?.trangThai)) ?? BUOC_HO[BUOC_HO.length - 1]!).ma);
   const b = CAC_BUOC.find((x) => x.ma === chon)!;
   const bh = h.tienDo[chon] ?? { trangThai: "CHUA" as TrangThaiBuoc };
   const { taiKhoan, quyen, bao, lich } = useUngDung();
@@ -519,12 +525,13 @@ function TabTienDo({ h, duAn, doi, luuNgay, soanMau, moDuAn }: Tab & { duAn: DuA
   const datBuoc = (p: Partial<typeof bh>) => {
     if (p.trangThai === "XONG" && bh.trangThai !== "XONG") return void doiTrangThai("XONG", `Xác nhận hoàn thành bước ${b.ma}. ${b.ten}`);
     if (p.trangThai === "CHO_DUYET" && bh.trangThai !== "CHO_DUYET") return void doiTrangThai("CHO_DUYET", `Gửi duyệt bước ${b.ma}. ${b.ten}`);
-    if (bh.trangThai === "XONG" && p.trangThai && p.trangThai !== "XONG" && !quyen("DUYET_BUOC")) return bao("Chỉ người có quyền duyệt mới mở lại bước đã hoàn thành", "loi");
+    if (daQuaBuoc(bh.trangThai) && p.trangThai && p.trangThai !== bh.trangThai && !quyen("DUYET_BUOC")) return bao("Chỉ người có quyền duyệt mới mở lại bước đã hoàn thành / không áp dụng", "loi");
     doi({ ...h, tienDo: { ...h.tienDo, [chon]: { ...bh, ...p } } });
   };
-  const doiTrangThai = (tt: TrangThaiBuoc, nk: string) => {
+  const doiTrangThai = (tt: TrangThaiBuoc, nk: string, lyDo?: string) => {
     if (tt === "XONG" && loiDuyet) return bao(loiDuyet, "loi");
-    const ghi = tt === "XONG" ? { duyetBoi: taiKhoan!.ten } : tt === "CHO_DUYET" ? { guiBoi: taiKhoan!.ten, duyetBoi: undefined } : {};
+    if (tt === "KHONG_AP_DUNG" && !quyen("DUYET_BUOC")) return bao("Cần quyền xác nhận bước để đánh dấu Không áp dụng", "loi");
+    const ghi = tt === "XONG" || tt === "KHONG_AP_DUNG" ? { duyetBoi: taiKhoan!.ten, ...(lyDo ? { ghiChu: lyDo } : {}) } : tt === "CHO_DUYET" ? { guiBoi: taiKhoan!.ten, duyetBoi: undefined } : {};
     return luuNgay({ ...h, tienDo: { ...h.tienDo, [chon]: { ...bh, ...ghi, trangThai: tt, ngay: bh.ngay || new Date().toISOString().slice(0, 10) } } }, nk);
   };
   const giaiQuyet = () => {
@@ -538,6 +545,10 @@ function TabTienDo({ h, duAn, doi, luuNgay, soanMau, moDuAn }: Tab & { duAn: DuA
     void luuNgay({ ...h, tienDo: moi }, "Bỏ tiến độ bước 1–4 nhập riêng ở hộ — theo bước chung của dự án");
   };
   const lopTt = (t: TrangThaiBuoc) => (t === "XONG" ? "nhan-xanh" : t === "DANG" ? "nhan-duong" : t === "CHO_DUYET" ? "nhan-tim" : "nhan-xam");
+  const khongApDung = () => {
+    const lyDo = prompt(`Bước ${b.ma}. ${b.ten} — không áp dụng với hộ này?\nVí dụ: hộ tự nguyện bàn giao, không phải cưỡng chế.\n\nLý do (bắt buộc, ghi vào nhật ký hồ sơ):`)?.trim();
+    if (lyDo) doiTrangThai("KHONG_AP_DUNG", `Bước ${b.ma}. ${b.ten}: không áp dụng — ${lyDo}`, lyDo);
+  };
   return (
     <div className="luoi" style={{ gap: 14 }}>
       <div className="the td-chung">
@@ -552,7 +563,7 @@ function TabTienDo({ h, duAn, doi, luuNgay, soanMau, moDuAn }: Tab & { duAn: DuA
             const t = td[ma]?.trangThai ?? "CHUA";
             return (
               <div key={ma} className={`td-chung-o ${t}`}>
-                <span className="so">{t === "XONG" ? "✓" : ma}</span>
+                <span className="so">{t === "XONG" ? "✓" : t === "KHONG_AP_DUNG" ? "–" : ma}</span>
                 <div>
                   <b>{x.ten}</b>
                   <div className="chu-nho"><span className={`nhan ${lopTt(t)}`}>{TEN_TRANG_THAI_BUOC[t]}</span>{td[ma]?.ngay ? ` · ${ngayVN(td[ma]!.ngay)}` : ""}</div>
@@ -638,11 +649,15 @@ function TabTienDo({ h, duAn, doi, luuNgay, soanMau, moDuAn }: Tab & { duAn: DuA
             <div className="nhom-nut">
               <button className="nut" disabled={bh.trangThai === "CHO_DUYET" || bh.trangThai === "XONG" || !quyen("GUI_DUYET")} onClick={() => doiTrangThai("CHO_DUYET", `Gửi duyệt bước ${b.ma}. ${b.ten}`)}>Gửi duyệt</button>
               <button className="nut nut-chinh" disabled={bh.trangThai === "XONG" || !!loiDuyet} title={loiDuyet ?? undefined} onClick={() => doiTrangThai("XONG", `Xác nhận hoàn thành bước ${b.ma}. ${b.ten}`)}>Xác nhận hoàn thành</button>
+              {b.tuyChon && bh.trangThai !== "KHONG_AP_DUNG" && (
+                <button className="nut" disabled={!quyen("DUYET_BUOC")} title="Bước tùy chọn không phát sinh với hộ này — không tính vào tiến độ; bắt buộc lý do" onClick={khongApDung}>Không áp dụng</button>
+              )}
             </div>
+            {bh.trangThai === "KHONG_AP_DUNG" && <div className="thong-bao">Không áp dụng: {bh.ghiChu || "—"}{bh.duyetBoi ? ` (${bh.duyetBoi})` : ""}</div>}
             <div className="mo chu-nho">
               {bh.guiBoi && <>Gửi duyệt: <b>{bh.guiBoi}</b>. </>}
               {bh.duyetBoi && <>Xác nhận: <b>{bh.duyetBoi}</b>. </>}
-              {bh.trangThai !== "XONG" && loiDuyet && <>{loiDuyet}.</>}
+              {!daQuaBuoc(bh.trangThai) && loiDuyet && <>{loiDuyet}.</>}
             </div>
             {DANH_MUC_MAU.some((m) => m.buoc === b.ma) && (
               <div>
@@ -766,7 +781,7 @@ function TheTaiDinhCu({ h, doi, duAn, kq }: Tab & { duAn: DuAn; kq: KetQuaHo }) 
 function TabVanBanHo({ h, duAn, kq, hieuLuc, soan }: { h: Ho; duAn: DuAn; kq: KetQuaHo; hieuLuc: Ho; soan: (ma: string) => void }) {
   const { kho, hoCua, chinhSach, dsDonVi, bao } = useUngDung();
   const [dang, setDang] = useState<string | null>(null);
-  const buocHt = CAC_BUOC.find((b) => hieuLuc.tienDo[b.ma]?.trangThai !== "XONG")?.ma;
+  const buocHt = CAC_BUOC.find((b) => !daQuaBuoc(hieuLuc.tienDo[b.ma]?.trangThai))?.ma;
   const vb = h.vanBan ?? {};
   const nhom = CAC_BUOC.map((b) => ({ b, ds: DANH_MUC_MAU.filter((m) => m.buoc === b.ma && m.phamVi === "HO") })).filter((x) => x.ds.length);
   const tao = async (ma: string, ten: string) => {

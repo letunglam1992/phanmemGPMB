@@ -166,7 +166,24 @@ export interface TaiDinhCuHo {
   ghiChu?: string;
 }
 
-export type TrangThaiBuoc = "CHUA" | "DANG" | "XONG" | "CHO_DUYET";
+/**
+ * Trạng thái bước. KHONG_AP_DUNG (P1-3): bước tùy chọn không phát sinh với hộ (vd. bước 14 "Cưỡng chế (nếu có)"),
+ * bắt buộc ghi lý do, cần quyền xác nhận bước; không tính vào mẫu số tiến độ.
+ */
+export type TrangThaiBuoc = "CHUA" | "DANG" | "XONG" | "CHO_DUYET" | "KHONG_AP_DUNG";
+
+/** Bàn giao mặt bằng của hộ (P1-4). */
+export interface BanGiaoHo {
+  ngay: string;
+  /** Diện tích đã bàn giao (m², chuẩn máy). Trống = toàn bộ DT thu hồi. */
+  dienTich?: string;
+  /** Số, ngày biên bản bàn giao mặt bằng. */
+  bienBan: string;
+  ghiChu?: string;
+  nguoiGhi: string;
+  /** Thưởng bàn giao trước hạn đã xét (C13, Đ15 PL II QĐ 106/2025) — lưu kết quả để in quyết định (Mẫu 20, 21). */
+  thuong?: { moc: string; soTien: string; canCu: string };
+}
 
 export interface BuocHo {
   trangThai: TrangThaiBuoc;
@@ -222,6 +239,8 @@ export interface Ho {
   chiTra?: import("./chi-tra").ChiTraHo;
   /** Xóa mềm (P0-4): hồ sơ nằm trong thùng rác, không tính vào danh sách, tổng hợp, báo cáo. */
   daXoa?: import("./rang-buoc").DauXoa;
+  /** Bàn giao mặt bằng (P1-4) — có ngày thì hộ "Đã bàn giao mặt bằng" (hoàn thành GPMB). */
+  banGiao?: BanGiaoHo;
   /** Phiên bản cấu trúc dữ liệu (P0-2: 2 = số đã chuẩn hóa). */
   phienBanCauTruc?: number;
 }
@@ -269,6 +288,8 @@ export interface DuAn {
   banDo: BanDoDuAn | null;
   /** Mẫu mã hồ sơ do người dùng đặt (ma-ho.ts), vd. "H###", "CM-2026-####". Trống = "H###". */
   mauMaHo?: string;
+  /** Thưởng bàn giao mặt bằng trước hạn (P1-4, C13): mốc, tỷ lệ, mức tối đa, cơ sở tính do cán bộ khai báo kèm căn cứ. */
+  thuongBanGiao?: import("./ban-giao").CauHinhThuong;
   /** Phiên bản cấu trúc dữ liệu (P0-2: 2 = số đã chuẩn hóa). */
   phienBanCauTruc?: number;
   /** Xóa mềm (P0-4): dự án nằm trong thùng rác. */
@@ -285,7 +306,7 @@ export interface DuAn {
 }
 
 /** 16 bước theo Sổ tay QĐ 1966/QĐ-UBND (docs/05). */
-export const CAC_BUOC: { ma: string; ten: string; thoiHan?: string; mau?: string; canCu: string }[] = [
+export const CAC_BUOC: { ma: string; ten: string; thoiHan?: string; mau?: string; canCu: string; tuyChon?: boolean }[] = [
   { ma: "1", ten: "Kế hoạch, điều tra, khảo sát", canCu: "k1 Đ86 LĐĐ" },
   { ma: "2", ten: "Họp với người có đất", canCu: "k1 Đ87 LĐĐ" },
   { ma: "3", ten: "Thông báo thu hồi đất", thoiHan: "≥ 90 N (NN) / 180 N (PNN) trước QĐ thu hồi", mau: "01", canCu: "Đ85, k2 Đ87 LĐĐ" },
@@ -299,7 +320,7 @@ export const CAC_BUOC: { ma: string; ten: string; thoiHan?: string; mau?: string
   { ma: "11", ten: "Gửi QĐ đến từng người", thoiHan: "≤ 3 NLV", mau: "16", canCu: "k4 b Đ87 LĐĐ" },
   { ma: "12", ten: "Chi trả", thoiHan: "≤ 30 N từ QĐ duyệt PA", mau: "17, 18, 19", canCu: "k3, k4 Đ94 LĐĐ" },
   { ma: "13", ten: "Quyết định thu hồi đất", thoiHan: "≤ 10 N khi đủ điều kiện", mau: "15", canCu: "k5, k6 Đ87 LĐĐ" },
-  { ma: "14", ten: "Cưỡng chế (nếu có)", mau: "22", canCu: "Đ89 LĐĐ" },
+  { ma: "14", ten: "Cưỡng chế (nếu có)", mau: "22", canCu: "Đ89 LĐĐ", tuyChon: true },
   { ma: "15", ten: "Chỉnh lý hồ sơ địa chính", thoiHan: "≤ 3 NLV sau chi trả", canCu: "Mục XVIII Sổ tay" },
   { ma: "16", ten: "Quản lý đất đã thu hồi", canCu: "k5 Đ86 LĐĐ" },
 ];
@@ -335,6 +356,7 @@ export const TEN_TRANG_THAI_BUOC: Record<TrangThaiBuoc, string> = {
   CHUA: "Chưa thực hiện",
   DANG: "Đang thực hiện",
   CHO_DUYET: "Chờ duyệt",
+  KHONG_AP_DUNG: "Không áp dụng",
   XONG: "Hoàn thành",
 };
 
@@ -350,9 +372,21 @@ export function hoMoi(duAnId: string, ma: string, ten: string, loai: LoaiDoiTuon
   };
 }
 
-/** Bước hiện tại của hộ: bước đầu tiên chưa hoàn thành. */
+/** Bước đã qua: hoàn thành hoặc không áp dụng (P1-3). */
+export const daQuaBuoc = (t: TrangThaiBuoc | undefined) => t === "XONG" || t === "KHONG_AP_DUNG";
+/** Bước được đánh dấu "không áp dụng" (chỉ bước tùy chọn). */
+export const laTuyChon = (ma: string) => !!CAC_BUOC.find((b) => b.ma === ma)?.tuyChon;
+
+/** Tiến độ của hộ trên các bước áp dụng: số bước xong / số bước áp dụng (bỏ bước "không áp dụng"). */
+export function tienDoHo(ho: Pick<Ho, "tienDo">): { xong: number; apDung: number; tyLe: number } {
+  const apDung = CAC_BUOC.filter((b) => ho.tienDo[b.ma]?.trangThai !== "KHONG_AP_DUNG");
+  const xong = apDung.filter((b) => ho.tienDo[b.ma]?.trangThai === "XONG").length;
+  return { xong, apDung: apDung.length, tyLe: apDung.length ? xong / apDung.length : 1 };
+}
+
+/** Bước hiện tại của hộ: bước đầu tiên chưa hoàn thành (bỏ qua bước không áp dụng). */
 export function buocHienTai(ho: Ho): number {
-  const i = CAC_BUOC.findIndex((b) => ho.tienDo[b.ma]?.trangThai !== "XONG");
+  const i = CAC_BUOC.findIndex((b) => !daQuaBuoc(ho.tienDo[b.ma]?.trangThai));
   return i < 0 ? CAC_BUOC.length : i;
 }
 

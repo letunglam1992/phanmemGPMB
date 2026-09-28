@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { dinhDang, type DongTinh } from "@gpmb/core";
 import type Decimal from "decimal.js";
-import { CAC_BUOC, TEN_TRANG_THAI_BUOC, type Ho } from "../mo-hinh";
+import { daQuaBuoc, CAC_BUOC, TEN_TRANG_THAI_BUOC, type Ho } from "../mo-hinh";
 
 export const tien = (d: Decimal | null | undefined) => (d ? dinhDang(d, 0) : "—");
 
@@ -42,7 +42,7 @@ export function O(p: { nhan: string; children: ReactNode; goiY?: ReactNode; styl
 }
 
 export function ThanhBuoc({ ho, chon, onChon }: { ho: Ho; chon?: string; onChon?: (ma: string) => void }) {
-  const hienTai = CAC_BUOC.findIndex((b) => ho.tienDo[b.ma]?.trangThai !== "XONG");
+  const hienTai = CAC_BUOC.findIndex((b) => !daQuaBuoc(ho.tienDo[b.ma]?.trangThai));
   return (
     <div className="buoc">
       {CAC_BUOC.map((b, i) => {

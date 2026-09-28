@@ -1,6 +1,6 @@
 import { D } from "@gpmb/core";
 import type Decimal from "decimal.js";
-import { CAC_BUOC, hoHieuLuc, type DuAn, type Ho } from "../mo-hinh";
+import { tienDoHo, daQuaBuoc, CAC_BUOC, hoHieuLuc, type DuAn, type Ho } from "../mo-hinh";
 import type { KetQuaHo } from "../tinh-ho";
 import { TT_GPMB, vuongMacHo, type TrangThaiGpmb } from "../trang-thai";
 import { tien } from "./chung";
@@ -47,7 +47,7 @@ export function BangHo({ ds, homNay, coDuAn, mo, trong }: { ds: DongHo[]; homNay
             const { h, k, duAn, tt } = x;
             const hl = hoHieuLuc(duAn, h);
             const soXong = CAC_BUOC.filter((b) => hl.tienDo[b.ma]?.trangThai === "XONG").length;
-            const iHt = CAC_BUOC.findIndex((b) => hl.tienDo[b.ma]?.trangThai !== "XONG");
+            const iHt = CAC_BUOC.findIndex((b) => !daQuaBuoc(hl.tienDo[b.ma]?.trangThai));
             const b = CAC_BUOC[iHt];
             const vm = vuongMacHo(duAn, h, k, homNay);
             const thua = h.thua.length ? h.thua : [null];
@@ -66,7 +66,7 @@ export function BangHo({ ds, homNay, coDuAn, mo, trong }: { ds: DongHo[]; homNay
                 <td className="so"><b>{tien(k.tong.tongLamTron)}</b></td>
                 <td>
                   <div className="chu-nho">{b ? `Bước ${b.ma}. ${b.ten}` : "Đã hoàn thành 16 bước"}</div>
-                  <div className="td-mini"><span style={{ width: `${Math.round((soXong / CAC_BUOC.length) * 100)}%` }} /></div>
+                  <div className="td-mini"><span style={{ width: `${Math.round(tienDoHo(hl).tyLe * 100)}%` }} /></div>
                   <span className="nhan" style={{ background: TT_GPMB[tt].nen, color: "var(--chu)", fontSize: 11 }}>{TT_GPMB[tt].bieuTuong} {TT_GPMB[tt].ten}</span>
                 </td>
                 <td className="chu-nho">

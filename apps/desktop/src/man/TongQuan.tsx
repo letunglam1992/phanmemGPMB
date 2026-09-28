@@ -121,8 +121,9 @@ export function TongQuan() {
         <span className="bt"><BieuTuong ten="bieuDo" co={20} /></span>
         <div><h2>Chỉ số điều hành</h2><div className="mo">Các chỉ số tổng quan về tình hình thực hiện bồi thường, giải phóng mặt bằng trên địa bàn tỉnh. Bấm vào chỉ số để xem danh sách hồ sơ.</div></div>
       </div>
-      <div className="luoi luoi-4" style={{ marginBottom: 16 }}>
-        <TheKpi bt="nguoi" nhan="Hộ đã hoàn thành GPMB" gt={dem.HOAN_THANH} ms={soHo} tong="xanh" phu="Đã xác nhận chi trả (bước 12)" bam={() => di({ ten: "ds-ho", trangThai: "HOAN_THANH" })} />
+      <div className="luoi" style={{ marginBottom: 16, gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))" }}>
+        <TheKpi bt="thua" nhan="Mặt bằng đã bàn giao (m²)" gt={Math.round(cong((x) => x.tk.dtDaBanGiao))} ms={Math.round(cong((x) => x.tk.dtThuHoi))} tong="xanh" phu="Diện tích đã bàn giao / diện tích thu hồi" bam={() => di({ ten: "ds-ho", trangThai: "HOAN_THANH" })} />
+        <TheKpi bt="nguoi" nhan="Hộ đã hoàn thành GPMB" gt={dem.HOAN_THANH} ms={soHo} tong="xanh" phu={`Đã bàn giao mặt bằng · ${dem.CHO_BAN_GIAO} hộ đã chi trả, chờ bàn giao`} bam={() => di({ ten: "ds-ho", trangThai: "HOAN_THANH" })} />
         <TheKpi bt="hoSo" nhan="Hồ sơ đang xử lý" gt={dem.DANG_XU_LY} ms={soHo} tong="vang" phu="Từ lập phương án đến chi trả" bam={() => di({ ten: "ds-ho", trangThai: "DANG_XU_LY" })} />
         <TheKpi bt="canhBao" nhan="Vướng mắc cần ưu tiên" gt={dem.VUONG_MAC} ms={soHo} tong="do" phu="Ghi vướng mắc, thiếu căn cứ, quá hạn" bam={() => di({ ten: "ds-ho", trangThai: "VUONG_MAC" })} />
         <TheKpi bt="thua" nhan="Thửa đất đã kiểm đếm" gt={cong((x) => x.tk.soThuaDaKiemDem)} ms={cong((x) => x.tk.soThua)} tong="duong" phu={`Giá trị tạm tính: ${tien(tongTien)} đ`} bam={() => di({ ten: "ds-ho", chang: "4" })} />
