@@ -60,7 +60,7 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
                     </td>
                     <td>
                       {/* P2-5: tình trạng pháp lý (danh mục) + diễn giải nguồn gốc (chữ) */}
-                      <select value={t.phapLy ?? ""} title="Tình trạng pháp lý nguồn gốc đất — để lọc, thống kê; điều kiện bồi thường do cán bộ xác định (Điều 95 LĐĐ 2024)" className={t.phapLy ? "" : "nhac-nhap"} onChange={(e) => sua(t.id, { phapLy: (e.target.value || undefined) as NhomPhapLy | undefined })} style={{ marginBottom: 4 }}>
+                      <select value={t.phapLy ?? ""} aria-label="Tình trạng pháp lý nguồn gốc" title="Tình trạng pháp lý nguồn gốc đất — để lọc, thống kê; điều kiện bồi thường do cán bộ xác định (Điều 95 LĐĐ 2024)" className={t.phapLy ? "" : "nhac-nhap"} onChange={(e) => sua(t.id, { phapLy: (e.target.value || undefined) as NhomPhapLy | undefined })} style={{ marginBottom: 4 }}>
                         <option value="">— Pháp lý{goiYPhapLy(t) ? ` (gợi ý: ${NHOM_PHAP_LY[goiYPhapLy(t)!].ngan})` : ""} —</option>
                         {THU_TU_PHAP_LY.map((k) => <option key={k} value={k}>{NHOM_PHAP_LY[k].ngan}</option>)}
                       </select>

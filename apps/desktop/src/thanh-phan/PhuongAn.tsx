@@ -25,6 +25,7 @@ import {
   type PhienBanPA,
 } from "../phuong-an";
 import { Chon } from "./Chon";
+import { QUY_TAC_SOAT, TEN_MUC_SOAT, demSoat, soatPhuongAn, type KetQuaSoat } from "../soat-phuong-an";
 
 const dong = (x: string | null | undefined) => (x == null ? "—" : dinhDang(D(x), 0));
 const dau = (x: string) => (D(x).gt(0) ? "+" : "") + dinhDang(D(x), 0);
@@ -35,7 +36,7 @@ const TEN_LOAI: Record<LoaiThayDoi, [string, string]> = { THEM: ["Thêm", "nhan-
 export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo }[] }) {
   const { chinhSach, luuDuAn, luuHo, nguoiDung, quyen, ghiNhatKy, tyLeCham } = useUngDung();
   const ds = useMemo(() => [...(duAn.phuongAn ?? [])].sort((a, b) => b.so - a.so), [duAn.phuongAn]);
-  const [hop, setHop] = useState<null | { loai: "chot" } | { loai: "duyet" | "huy" | "xem"; p: PhienBanPA } | { loai: "so-sanh"; a?: string; b?: string }>(null);
+  const [hop, setHop] = useState<null | { loai: "chot" } | { loai: "soat" } | { loai: "duyet" | "huy" | "xem"; p: PhienBanPA } | { loai: "so-sanh"; a?: string; b?: string }>(null);
   const [toanVen, setToanVen] = useState<Record<string, boolean>>({});
   const [loi, setLoi] = useState("");
   const lech = hoLechSauPheDuyet(ds, kq);
@@ -68,6 +69,7 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
         <div className="phai">
           <button className="nut" disabled={kq.length === 0} title="Nghiệm thu: số phần mềm tính từng khoản, cột nhập số phương án đã được phê duyệt thực tế, tự tính chênh lệch" onClick={() => void xuatPhieuDoiChieu(duAn, kq)}>Phiếu đối chiếu</button>
           <button className="nut" disabled={!ds.some((p) => p.trangThai === "DA_PHE_DUYET")} title="Phải trả, đã chi, còn lại, tiền chậm trả tạm tính theo bản đã phê duyệt" onClick={() => void xuatExcelChiTra(duAn, kq.map((x) => x.h), tyLeCham, homNayIso())}>Theo dõi chi trả (Excel)</button>
+          <button className="nut" disabled={kq.length === 0} title="Kiểm tra chéo hồ sơ trước khi chốt: DT thu hồi, thửa trùng, khoản thiếu căn cứ, TĐC, ổn định đời sống…" onClick={() => setHop({ loai: "soat" })}>Soát phương án</button>
           <button className="nut" disabled={ds.length === 0} onClick={() => setHop({ loai: "so-sanh" })}>So sánh</button>
           {quyen("CHOT_PA") && <button className="nut nut-chinh" disabled={kq.length === 0} onClick={() => setHop({ loai: "chot" })}>Chốt phương án…</button>}
         </div>
@@ -115,6 +117,15 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
           </table>
         </div>
       )}
+      {hop?.loai === "soat" && (
+        <HopThoai tieuDe="Soát phương án" dong={() => setHop(null)} rong={1000}>
+          <KetQuaSoatPA ds={soatPhuongAn(duAn, kq)} duAnId={duAn.id} />
+          <details style={{ marginTop: 10 }}>
+            <summary className="mo">Các quy tắc đã soát ({QUY_TAC_SOAT.length})</summary>
+            <table className="bang"><tbody>{QUY_TAC_SOAT.map((q) => <tr key={q.ma}><td>{q.ten}</td><td className="chu-nho">{q.canCu}</td></tr>)}</tbody></table>
+          </details>
+        </HopThoai>
+      )}
       {hop?.loai === "chot" && <HopChot duAn={duAn} kq={kq} dong={() => setHop(null)} />}
       {hop?.loai === "duyet" && (
         <HopPheDuyet
@@ -152,6 +163,8 @@ function HopChot({ duAn, kq, dong: dongHop }: { duAn: DuAn; kq: { h: Ho; k: KetQ
   const dsChon = kq.filter(({ h }) => chon.has(h.id));
   const canLyDo = dsChon.some(({ h }) => daDuyet.has(h.id));
   const tong = dsChon.reduce((s, x) => s.plus(x.k.tong.tongLamTron), D(0));
+  const soat = useMemo(() => soatPhuongAn(duAn, dsChon).filter((x) => x.muc !== "THONG_TIN" && x.quyTac !== "KHOAN_CHUA_DU"), [duAn, dsChon]);
+  const [xemSoat, setXemSoat] = useState(false);
 
   const chot = async () => {
     setDang(true);
@@ -184,6 +197,13 @@ function HopChot({ duAn, kq, dong: dongHop }: { duAn: DuAn; kq: { h: Ho; k: KetQ
       <div className="thong-bao thong-bao-xanh">
         Khi chốt, phần mềm lưu bản sao hồ sơ từng hộ, tham số dự án (giá gạo, hạn mức, hệ số giá đất), kết quả từng khoản và mã kiểm tra. Sửa hồ sơ sau đó không làm thay đổi bản đã chốt. Chỉ hộ không còn khoản "Thiếu căn cứ" hoặc "Cần xác nhận" mới được chốt (QD-03).
       </div>
+      {soat.length > 0 && (
+        <div className="thong-bao thong-bao-vang" style={{ marginTop: 8 }}>
+          Soát phương án các hộ đã chọn: {demSoat(soat).LOI} lỗi, {demSoat(soat).CANH_BAO} mục cần kiểm tra (không chặn chốt).{" "}
+          <button className="nut nut-nho" onClick={() => setXemSoat(!xemSoat)}>{xemSoat ? "Ẩn" : "Xem"}</button>
+          {xemSoat && <div style={{ marginTop: 8 }}><KetQuaSoatPA ds={soat} duAnId={duAn.id} /></div>}
+        </div>
+      )}
       <div className="luoi luoi-2">
         <O nhan="Tên phiên bản"><input value={ten} onChange={(e) => setTen(e.target.value)} /></O>
         <O nhan={canLyDo ? "Lý do điều chỉnh, bổ sung (bắt buộc)" : "Ghi chú / lý do (nếu có)"} goiY={canLyDo ? "Có hộ đã nằm trong phương án đã phê duyệt" : undefined}>
@@ -364,5 +384,40 @@ function HopSoSanh({ ds, kq, dong: dongHop }: { ds: PhienBanPA[]; kq: { h: Ho; k
         </tbody>
       </table>
     </HopThoai>
+  );
+}
+
+const NHAN_MUC: Record<KetQuaSoat["muc"], string> = { LOI: "nhan-do", CANH_BAO: "nhan-vang", THONG_TIN: "nhan-xam" };
+
+/** Bảng kết quả soát phương án (§11.1) — mỗi dòng: mức, hồ sơ, nội dung, căn cứ; bấm mã hộ để mở hồ sơ. */
+export function KetQuaSoatPA({ ds, duAnId }: { ds: KetQuaSoat[]; duAnId: string }) {
+  const { di } = useUngDung();
+  const [loc, setLoc] = useState<KetQuaSoat["muc"] | "">("");
+  const dem = demSoat(ds);
+  if (!ds.length) return <div className="thong-bao thong-bao-xanh">Không phát hiện vấn đề theo các quy tắc soát. Kết quả soát không thay cho việc thẩm định phương án.</div>;
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8, flexWrap: "wrap" }}>
+        {(["", "LOI", "CANH_BAO", "THONG_TIN"] as const).map((m) => (
+          <button key={m} className={`nut nut-nho${loc === m ? " nut-chinh" : ""}`} onClick={() => setLoc(m)}>
+            {m ? `${TEN_MUC_SOAT[m]} (${dem[m]})` : `Tất cả (${ds.length})`}
+          </button>
+        ))}
+        <span className="mo chu-nho" style={{ marginLeft: "auto" }}>Chỉ để nhắc — phần mềm không kết luận điều kiện bồi thường, hỗ trợ, TĐC.</span>
+      </div>
+      <table className="bang">
+        <thead><tr><th>Mức</th><th>Hồ sơ</th><th>Nội dung</th><th>Căn cứ</th></tr></thead>
+        <tbody>
+          {ds.filter((x) => !loc || x.muc === loc).map((x, i) => (
+            <tr key={i}>
+              <td><span className={`nhan ${NHAN_MUC[x.muc]}`}>{TEN_MUC_SOAT[x.muc]}</span></td>
+              <td className="chu-nho">{x.hoId ? <a href="#" onClick={(e) => { e.preventDefault(); di({ ten: "ho", duAnId, hoId: x.hoId! }); }}>{x.doiTuong}</a> : x.doiTuong}</td>
+              <td>{x.noiDung}</td>
+              <td className="chu-nho">{x.canCu}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
