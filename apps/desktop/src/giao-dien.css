@@ -901,3 +901,10 @@ textarea.o-vuong-mac { border-color: var(--do-to); background: var(--do-nen); }
 .tdc-so > div { border: 1px solid var(--vien); border-radius: 10px; padding: 8px 12px; display: flex; flex-direction: column; gap: 2px; }
 .tdc-so span { font-size: 12px; color: var(--chu-phu); }
 .tdc-so b { font-variant-numeric: tabular-nums; }
+/* Giới thiệu, phiên bản */
+.ben-phien-ban { background: none; border: 0; text-align: left; padding: 2px 6px; font-size: 11.5px; line-height: 1.45; color: var(--chu-phu); cursor: pointer; border-radius: 6px; }
+.ben-phien-ban:hover { background: var(--be-mat-2); color: var(--chu); }
+.gt-dau { display: flex; gap: 14px; align-items: center; margin-bottom: 14px; }
+.gt-logo { display: grid; place-items: center; width: 70px; height: 60px; border-radius: 14px; border: 1px solid var(--vien); color: var(--chinh); flex: none; }
+.gt-ten { font-size: 16px; font-weight: 700; margin-bottom: 3px; }
+.gt-bang th { width: 160px; text-transform: none; font-size: 12.5px; letter-spacing: 0; position: static; }

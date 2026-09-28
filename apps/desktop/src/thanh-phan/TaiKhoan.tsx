@@ -20,6 +20,7 @@ import { HopKetNoi } from "./KetNoi";
 import { BieuTuong } from "./BieuDo";
 import { docCheDo, laKhoMang } from "../kho-mang";
 import { Chon } from "./Chon";
+import { BAN_QUYEN, moTaPhienBan } from "../phien-ban";
 
 const ngayGio = (iso?: string) => (iso ? new Date(iso).toLocaleString("vi-VN", { hour12: false }) : "—");
 
@@ -69,8 +70,10 @@ export function ManDangNhap() {
     <div className="man-dang-nhap">
       <form className="o-dang-nhap" onSubmit={gui}>
         <div className="dn-thuong-hieu">
-          <div className="dn-logo" aria-hidden>GP</div>
-          <div className="dn-ten">GPMB SƠN LA</div>
+          <div className="dn-logo" aria-hidden>
+            <svg width="40" height="28" viewBox="0 0 44 30" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinejoin="round" strokeLinecap="round"><path d="M2 27L15 7l7 10 5-6 15 16z" /><path d="M11 27l7-9 5 6" /></svg>
+          </div>
+          <div className="dn-ten">UBND TỈNH SƠN LA</div>
           <div className="dn-mo-ta">Hệ thống quản lý bồi thường, hỗ trợ và tái định cư</div>
         </div>
         <div className="dn-than">
@@ -124,7 +127,7 @@ export function ManDangNhap() {
           </div>
         </div>
         <div className="dn-chan">
-          <span>Phiên bản thử nghiệm 0.2</span>
+          <span title={`© ${BAN_QUYEN.nam} ${BAN_QUYEN.tacGia} – ${BAN_QUYEN.donVi} · ĐT ${BAN_QUYEN.dienThoai}`}>{moTaPhienBan()} · © {BAN_QUYEN.nam} {BAN_QUYEN.tacGia}</span>
           <button type="button" onClick={() => setKetNoi(true)} title="Chế độ kết nối: máy đơn, máy chủ, máy trạm">
             <BieuTuong ten="caiDat" co={15} /> Cài đặt
           </button>

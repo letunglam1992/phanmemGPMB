@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
-import { D, dinhDang } from "@gpmb/core";
+import { useEffect, useState } from "react";
 import { useUngDung } from "./ung-dung";
 import { TongQuan } from "./man/TongQuan";
 import { ManDuAn } from "./man/DuAn";
@@ -16,7 +15,6 @@ import { HopCaiDat } from "./thanh-phan/HopCaiDat";
 import { BieuTuong } from "./thanh-phan/BieuDo";
 import { docCheDo } from "./kho-mang";
 import { moTaCheDo } from "./thanh-phan/KetNoi";
-import { tinhHo } from "./tinh-ho";
 import { docGiaoDien, ghiGiaoDien, type GiaoDien } from "./giao-dien-sang-toi";
 import { DanhSachHo } from "./man/DanhSachHo";
 import { ThietLapDonVi } from "./man/ThietLapDonVi";
@@ -25,11 +23,13 @@ import { KhongGianDuAn } from "./man/KhongGianDuAn";
 import { TimKiemChung } from "./thanh-phan/TimKiem";
 import { useTongHop } from "./thanh-phan/dung-canh-bao";
 import { donViSuDung } from "./don-vi";
+import { HopGioiThieu } from "./thanh-phan/GioiThieu";
+import { BAN_QUYEN, MA_BUILD, moTaPhienBan } from "./phien-ban";
 
 type MucBen = { ten: string; bt: string; chon?: boolean; bam: () => void; tat?: boolean; an?: boolean };
 
 export function UngDung() {
-  const { man, di, dsDuAn, hoCua, chinhSach, hopSaoLuu, moSaoLuu, taiKhoan, quyen, dangXuat, hopCaiDat, moCaiDat, quayLai, coTheQuayLai, dsDonVi, anhNen } = useUngDung();
+  const { man, di, dsDuAn, hopSaoLuu, moSaoLuu, taiKhoan, quyen, dangXuat, hopCaiDat, moCaiDat, quayLai, coTheQuayLai, dsDonVi, anhNen } = useUngDung();
   const [menu, setMenu] = useState(false);
   const [chuong, setChuong] = useState(false);
   // Dự án làm việc gần nhất — mục "Hồ sơ" mở lại dự án này
@@ -47,15 +47,7 @@ export function UngDung() {
   const [hop, setHop] = useState<null | "mat-khau" | "tai-khoan" | "nhat-ky">(null);
   const [giaoDien, setGiaoDien] = useState<GiaoDien>(docGiaoDien);
   useEffect(() => ghiGiaoDien(giaoDien), [giaoDien]);
-  const tongQuat = useMemo(() => {
-    let soHo = 0;
-    let tien = D(0);
-    for (const d of dsDuAn) for (const h of hoCua(d.id)) {
-      soHo++;
-      tien = tien.plus(tinhHo(chinhSach(d), d, h).tong.tongLamTron);
-    }
-    return { soHo, tien };
-  }, [dsDuAn, hoCua, chinhSach]);
+  const [gioiThieu, setGioiThieu] = useState(false);
   if (!taiKhoan) return (<><ManDangNhap /><ThongBaoNhanh /></>);
 
   const duAnId = ("duAnId" in man && man.duAnId) || (duAnGanNhat && dsDuAn.some((d) => d.id === duAnGanNhat) ? duAnGanNhat : dsDuAn[0]?.id);
@@ -82,7 +74,10 @@ export function UngDung() {
     },
     {
       nhan: "Trợ giúp",
-      muc: [{ ten: "Hướng dẫn sử dụng", bt: "hoiDap", chon: man.ten === "huong-dan", bam: () => di({ ten: "huong-dan" }) }],
+      muc: [
+        { ten: "Hướng dẫn sử dụng", bt: "hoiDap", chon: man.ten === "huong-dan", bam: () => di({ ten: "huong-dan" }) },
+        { ten: "Giới thiệu, bản quyền", bt: "thongTin", chon: false, bam: () => setGioiThieu(true) },
+      ],
     },
     {
       nhan: "Quản trị",
@@ -104,7 +99,7 @@ export function UngDung() {
           <span className="ben-logo-nui" aria-hidden>
             <svg width="44" height="30" viewBox="0 0 44 30" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinejoin="round" strokeLinecap="round"><path d="M2 27L15 7l7 10 5-6 15 16z" /><path d="M11 27l7-9 5 6" /></svg>
           </span>
-          <span>GPMB<br />Tỉnh Sơn La</span>
+          <span>UBND<br />Tỉnh Sơn La</span>
         </div>
         {nhom.map((n) => (
           <nav className="ben-nhom" key={n.nhan} aria-label={n.nhan}>
@@ -119,7 +114,9 @@ export function UngDung() {
         ))}
         <div className="ben-chan">
           <span className="chip" title={moTaCheDo(cheDo)}><span className="cham" style={cheDo.cheDo === "MAY_DON" ? undefined : { background: "var(--xanh-duong-to)" }} />{cheDo.cheDo === "MAY_DON" ? "Lưu trên máy này" : cheDo.cheDo === "MAY_CHU" ? "Máy chủ mạng nội bộ" : "Máy trạm"}</span>
-          <span className="mo chu-nho" style={{ padding: "0 6px" }}>Bản thử nghiệm 0.2</span>
+          <button className="ben-phien-ban" onClick={() => setGioiThieu(true)} title={`${moTaPhienBan()}${MA_BUILD ? ` · mã ${MA_BUILD}` : ""} — bấm để xem giới thiệu, bản quyền`}>
+            {moTaPhienBan()}<br />© {BAN_QUYEN.nam} {BAN_QUYEN.tacGia}
+          </button>
         </div>
       </aside>
 
@@ -132,9 +129,6 @@ export function UngDung() {
           <div>
             <div className="to-chuc" title={dvSuDung ? `Đơn vị sử dụng: ${dvSuDung.ten}` : "Chưa thiết lập đơn vị (Công cụ → Thiết lập đơn vị)"}>{dvSuDung ? dvSuDung.ten : "Tỉnh Sơn La"}</div>
             <div className="ten-ung-dung">Bồi thường, hỗ trợ, tái định cư</div>
-            <div className="phu-de">
-              <button onClick={() => di({ ten: "du-an" })}>{dsDuAn.length} dự án</button> · <button onClick={() => di({ ten: "ds-ho" })}>{tongQuat.soHo} hồ sơ</button> · {dinhDang(tongQuat.tien, 0)} đ tạm tính
-            </div>
           </div>
         </div>
         <TimKiemChung />
@@ -180,6 +174,7 @@ export function UngDung() {
                   <button role="menuitem" onClick={() => { setHop("mat-khau"); setMenu(false); }}><BieuTuong ten="khoa" co={16} /> Đổi mật khẩu</button>
                   <button role="menuitem" onClick={() => { moCaiDat(true); setMenu(false); }}><BieuTuong ten="caiDat" co={16} /> Cài đặt chung</button>
                   <button role="menuitem" onClick={() => { di({ ten: "huong-dan" }); setMenu(false); }}><BieuTuong ten="hoiDap" co={16} /> Hướng dẫn sử dụng</button>
+                  <button role="menuitem" onClick={() => { setGioiThieu(true); setMenu(false); }}><BieuTuong ten="thongTin" co={16} /> Giới thiệu, bản quyền</button>
                   {quyen("TAI_KHOAN") && <button role="menuitem" onClick={() => { setHop("tai-khoan"); setMenu(false); }}><BieuTuong ten="taiKhoan" co={16} /> Quản lý tài khoản</button>}
                   {quyen("XEM_NHAT_KY") && <button role="menuitem" onClick={() => { setHop("nhat-ky"); setMenu(false); }}><BieuTuong ten="nhatKy" co={16} /> Nhật ký hệ thống</button>}
                   <div className="menu-vach" />
@@ -211,6 +206,7 @@ export function UngDung() {
       </footer>
       {!quyen("SUA_HO_SO") && <div className="dai-chi-xem">Tài khoản chỉ xem: không sửa được dữ liệu</div>}
       {hopSaoLuu && <HopSaoLuu />}
+      {gioiThieu && <HopGioiThieu dong={() => setGioiThieu(false)} />}
       {(hop === "mat-khau" || taiKhoan.phaiDoiMatKhau) && <HopDoiMatKhau batBuoc={taiKhoan.phaiDoiMatKhau} dong={() => setHop(null)} />}
       {hop === "tai-khoan" && <HopQuanLyTaiKhoan dong={() => setHop(null)} />}
       {hop === "nhat-ky" && <HopNhatKy dong={() => setHop(null)} />}

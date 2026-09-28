@@ -1,3 +1,4 @@
+import { execSync } from "node:child_process";
 import { createReadStream, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
@@ -36,9 +37,25 @@ function ocrTaiNguyen(): Plugin {
   };
 }
 
+/** Số phiên bản (package.json), ngày build, mã commit — hiện ở thanh bên, màn đăng nhập, hộp Giới thiệu. */
+const PHIEN_BAN = (JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8")) as { version: string }).version;
+function maCommit(): string {
+  if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA.slice(0, 7);
+  try {
+    return execSync("git rev-parse --short HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
+  } catch {
+    return "";
+  }
+}
+
 // Tauri: cổng cố định, không xóa màn hình để thấy lỗi Rust
 export default defineConfig({
   plugins: [react(), ocrTaiNguyen()],
+  define: {
+    __PHIEN_BAN__: JSON.stringify(PHIEN_BAN),
+    __NGAY_BUILD__: JSON.stringify(new Date().toISOString().slice(0, 10)),
+    __MA_BUILD__: JSON.stringify(maCommit()),
+  },
   clearScreen: false,
   server: { port: 5173, strictPort: true, fs: { allow: ["../.."] } },
   build: { target: "es2022", chunkSizeWarningLimit: 4000 },
