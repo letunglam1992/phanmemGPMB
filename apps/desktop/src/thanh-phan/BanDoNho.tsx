@@ -12,7 +12,7 @@ export function BanDoNho({ duAn, ttThua }: { duAn: DuAn; ttThua: Map<string, Tra
   useEffect(() => {
     if (!duAn.banDo) return;
     let huy = false;
-    napBanDoDuAn(kho, duAn.id).then((d) => !huy && setDl(d)).catch((e) => setLoi(String(e.message ?? e)));
+    napBanDoDuAn(kho, duAn).then((d) => !huy && setDl(d)).catch((e) => setLoi(String(e.message ?? e)));
     return () => { huy = true; };
   }, [duAn.id, duAn.banDo, kho]);
 

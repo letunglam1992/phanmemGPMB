@@ -1,5 +1,8 @@
+import { laCfb } from "./cfb.js";
+import { docDgnV8 } from "./dgn-v8.js";
+
 /**
- * Bộ đọc tệp MicroStation DGN phiên bản 7 (ISFF), 2D và 3D.
+ * Bộ đọc tệp MicroStation DGN phiên bản 7 (ISFF), 2D và 3D. Tệp V8/V8i chuyển sang dgn-v8.ts.
  *
  * Chỉ đọc; không ghi. Cấu trúc bản ghi theo đặc tả ISFF (Intergraph Standard File
  * Format) — cùng cách đọc với trình điều khiển DGN của GDAL, dùng để đối chiếu kết quả.
@@ -61,6 +64,8 @@ export interface PhanTuChu extends PhanTuCoSo {
   chieuCao: number;
   gocXoay: number;
   font: number;
+  /** stt của nút chữ (text node, kiểu 7) chứa dòng chữ này, nếu có. Thứ tự dòng = thứ tự trong tệp. */
+  nut?: number;
 }
 
 export interface PhanTuKhac extends PhanTuCoSo {
@@ -89,6 +94,7 @@ export interface KetQuaDocDgn {
 }
 
 export class LoiDgn extends Error {}
+
 
 /** int32 "middle-endian" của DGN V7: 2 từ 16 bit, từ cao trước, mỗi từ little-endian. */
 function int32(dv: DataView, o: number): number {
@@ -157,6 +163,7 @@ function xapXiCung(
 
 export function docDgn(duLieu: ArrayBuffer | Uint8Array): KetQuaDocDgn {
   const u8 = duLieu instanceof Uint8Array ? duLieu : new Uint8Array(duLieu);
+  if (laCfb(u8)) return docDgnV8(u8); // MicroStation V8 / V8i (tệp ghép OLE)
   const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
   const canhBao: string[] = [];
   const phanTu: PhanTu[] = [];
@@ -164,6 +171,7 @@ export function docDgn(duLieu: ArrayBuffer | Uint8Array): KetQuaDocDgn {
   let bangMau: string[] | null = null;
   let phucHienTai: PhanTuPhuc | null = null;
   let conLaiPhuc = 0;
+  let nutHienTai: number | null = null;
   let soDinhNghia = 0;
 
   if (u8.byteLength < 4) throw new LoiDgn("Tệp quá ngắn, không phải DGN.");
@@ -171,7 +179,7 @@ export function docDgn(duLieu: ArrayBuffer | Uint8Array): KetQuaDocDgn {
   const dau1 = dv.getUint8(1);
   if (!((dau0 === 0x08 || dau0 === 0xc8) && dau1 === 0x09)) {
     throw new LoiDgn(
-      "Không nhận dạng được tệp DGN V7 (thiếu bản ghi TCB đầu tệp). Tệp DGN V8 cần lưu lại dưới dạng V7 trong MicroStation.",
+      "Không nhận dạng được tệp DGN: không phải DGN V7 (thiếu bản ghi TCB đầu tệp) cũng không phải DGN V8 (tệp ghép OLE).",
     );
   }
 
@@ -344,6 +352,10 @@ export function docDgn(duLieu: ArrayBuffer | Uint8Array): KetQuaDocDgn {
       default:
         pt = { ...coSo, loai: "KHAC" };
     }
+
+    if (kieu === 7) nutHienTai = sttHienTai;
+    else if (!laThanhPhan) nutHienTai = null;
+    else if (pt.loai === "CHU" && nutHienTai !== null) pt.nut = nutHienTai;
 
     if (laThanhPhan && phucHienTai && conLaiPhuc > 0 && pt !== phucHienTai) {
       conLaiPhuc--;

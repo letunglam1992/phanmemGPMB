@@ -30,6 +30,17 @@ export interface CauHinhLop {
   dienTichToiThieu: number;
   /** Lệch tương đối cho phép giữa diện tích ghi trên bản đồ và diện tích hình học. */
   lechDienTichChoPhep: number;
+  /**
+   * Nút chữ thuộc tính thửa (text node nhiều dòng đặt trong thửa, vd. bản đồ lập bằng gCadas:
+   * tờ / thửa / địa chỉ / loại đất / chủ). `dong` = chỉ số dòng (từ 0) của từng trường trong nút.
+   */
+  nutThuocTinh?: CauHinhNut | null;
+}
+
+export type TruongNut = "soTo" | "soThua" | "loaiDat" | "chuSuDung";
+export interface CauHinhNut {
+  lop: number[];
+  dong: Partial<Record<TruongNut, number>>;
 }
 
 /**
@@ -63,6 +74,10 @@ export interface NhanDoc {
   chu: string;
   diem: Diem;
   stt: number;
+  /** Trường lấy từ nút chữ thuộc tính (nếu dòng chữ thuộc nút đã cấu hình). */
+  truongNut?: TruongNut;
+  /** Vị trí dòng đầu của nút — nút được gán trọn cho thửa chứa điểm này. */
+  neoNut?: Diem;
 }
 
 export interface ThuaBanDo {
@@ -177,16 +192,30 @@ export function dungThua(ban: KetQuaDocDgn, ch: CauHinhLop = CAU_HINH_MAC_DINH):
 
   const duongRanh: Geometry[] = [];
   const nhan: NhanDoc[] = [];
+  const nutCh = ch.nutThuocTinh?.lop.length ? ch.nutThuocTinh : null;
+  const truongTheoDong = new Map<number, TruongNut>();
+  if (nutCh) for (const [k, v] of Object.entries(nutCh.dong)) if (v !== undefined) truongTheoDong.set(v, k as TruongNut);
+  const dongTrongNut = new Map<number, number>(); // stt nút -> số dòng đã gặp
+  const neo = new Map<number, Diem>(); // stt nút -> vị trí dòng đầu
   for (const pt of ban.phanTu) {
     if (thuoc(ch.ranhThua, pt.lop) && laHinhTuyen(pt)) {
       const g = thanhDuong(pt.diem);
       if (g) duongRanh.push(g);
     }
     if (pt.loai === "CHU") {
+      if (nutCh && pt.nut !== undefined && thuoc(nutCh.lop, pt.lop)) {
+        const i = dongTrongNut.get(pt.nut) ?? 0;
+        dongTrongNut.set(pt.nut, i + 1);
+        if (i === 0) neo.set(pt.nut, pt.goc);
+        const truong = truongTheoDong.get(i);
+        if (truong) nhan.push({ lop: pt.lop, chu: giaiMaNhan(pt), diem: pt.goc, stt: pt.stt, truongNut: truong, neoNut: neo.get(pt.nut) ?? pt.goc });
+        continue;
+      }
       const laNhan = [ch.nhanThua, ch.soThua, ch.soTo, ch.chuSuDung].some((ds) => thuoc(ds, pt.lop));
       if (laNhan) nhan.push({ lop: pt.lop, chu: giaiMaNhan(pt), diem: pt.goc, stt: pt.stt });
     }
   }
+  const tuNut = (ds: NhanDoc[], t: TruongNut) => ds.filter((n) => n.truongNut === t && n.chu);
 
   const vung = khepVung(duongRanh);
   const giuLai = vung.filter((p) => p.getArea() > ch.dienTichToiThieu);
@@ -195,14 +224,11 @@ export function dungThua(ban: KetQuaDocDgn, ch: CauHinhLop = CAU_HINH_MAC_DINH):
   const thua: ThuaBanDo[] = giuLai.map((p, i) => {
     const vong = vongCua(p);
     const env = p.getEnvelopeInternal();
-    const nhanTrong = nhan.filter(
-      (n) =>
-        n.diem.x >= env.getMinX() &&
-        n.diem.x <= env.getMaxX() &&
-        n.diem.y >= env.getMinY() &&
-        n.diem.y <= env.getMaxY() &&
-        diemTrongThua(n.diem, vong),
-    );
+    // Nhãn đơn: theo vị trí của chính nhãn; dòng của nút thuộc tính: theo vị trí dòng đầu của nút
+    const nhanTrong = nhan.filter((n) => {
+      const d = n.neoNut ?? n.diem;
+      return d.x >= env.getMinX() && d.x <= env.getMaxX() && d.y >= env.getMinY() && d.y <= env.getMaxY() && diemTrongThua(d, vong);
+    });
     nhanTrong.forEach((n) => daGan.add(n.stt));
     const dtHinhHoc = p.getArea();
     const co: CoThua[] = [];
@@ -212,14 +238,18 @@ export function dungThua(ban: KetQuaDocDgn, ch: CauHinhLop = CAU_HINH_MAC_DINH):
     const loai: NhanDoc[] = [];
     const dt: { dt: number; n: NhanDoc }[] = [];
     const so: NhanDoc[] = [];
-    for (const n of nhanTrong.filter((n) => thuoc(ch.nhanThua, n.lop))) {
+    for (const n of nhanTrong.filter((n) => !n.truongNut && thuoc(ch.nhanThua, n.lop))) {
       const m = RE_GOP.exec(n.chu);
       if (m) gop.push({ loai: m[1]!, so: m[2]!, dt: soThuc(m[3]!), n });
       else if (RE_LOAI.test(n.chu)) loai.push(n);
       else if (RE_DT.test(n.chu)) dt.push({ dt: soThuc(n.chu), n });
       else if (RE_SO.test(n.chu)) so.push(n);
     }
-    const soLop4 = nhanTrong.filter((n) => thuoc(ch.soThua, n.lop) && RE_SO.test(n.chu));
+    loai.push(...tuNut(nhanTrong, "loaiDat").filter((n) => RE_LOAI.test(n.chu)));
+    const soLop4 = [
+      ...nhanTrong.filter((n) => !n.truongNut && thuoc(ch.soThua, n.lop) && RE_SO.test(n.chu)),
+      ...tuNut(nhanTrong, "soThua").filter((n) => RE_SO.test(n.chu)),
+    ];
 
     // Diện tích ghi: chọn giá trị gần diện tích hình học nhất (thửa có thể chứa nhãn của thửa lân cận)
     const tatCaDt = [...gop.map((g) => ({ dt: g.dt, n: g.n })), ...dt];
@@ -252,12 +282,14 @@ export function dungThua(ban: KetQuaDocDgn, ch: CauHinhLop = CAU_HINH_MAC_DINH):
     if (!loaiDatBanDo) co.push("THIEU_LOAI_DAT");
 
     const soTo = motHoacCo(
-      nhanTrong.filter((n) => thuoc(ch.soTo, n.lop)).map((n) => n.chu),
+      [...nhanTrong.filter((n) => !n.truongNut && thuoc(ch.soTo, n.lop)), ...tuNut(nhanTrong, "soTo")].map((n) => n.chu),
       "THIEU_SO_TO",
       "NHIEU_SO_TO",
       co,
     );
-    const chuDs = nhanTrong.filter((n) => thuoc(ch.chuSuDung, n.lop)).map((n) => vietHoaDauTu(n.chu));
+    const chuDs = [...nhanTrong.filter((n) => !n.truongNut && thuoc(ch.chuSuDung, n.lop)), ...tuNut(nhanTrong, "chuSuDung")].map((n) =>
+      vietHoaDauTu(n.chu),
+    );
     const chuSuDung = motHoacCo(chuDs, "THIEU_CHU", "NHIEU_CHU", co);
 
     const tam = InteriorPointArea.getInteriorPoint(p);

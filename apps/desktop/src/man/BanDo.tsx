@@ -5,8 +5,11 @@ import {
   docDgn,
   giaiMaNhan,
   dungThua,
+  goiYCauHinh,
+  thongKeLop,
   tinhDienTichThuHoi,
   type CauHinhLop,
+  type TruongNut,
   type DienTichThuHoi,
   type KetQuaDocDgn,
   type KetQuaDungThua,
@@ -15,7 +18,7 @@ import {
 } from "@gpmb/gis";
 import { useUngDung } from "../ung-dung";
 import { taoId, type DuAn, type Ho } from "../mo-hinh";
-import { HopThoai } from "../thanh-phan/chung";
+import { HopThoai, O } from "../thanh-phan/chung";
 import { hoMoi } from "./DuAn";
 import { tinhHo } from "../tinh-ho";
 import { THU_TU_TRANG_THAI, TT_GPMB, homNayIso, trangThaiHo, type TrangThaiGpmb } from "../trang-thai";
@@ -25,18 +28,23 @@ interface DuLieuBanDo {
   ban: KetQuaDocDgn;
   kq: KetQuaDungThua;
   pham: { minX: number; minY: number; maxX: number; maxY: number };
+  /** Cấu hình lớp đã dùng để dựng thửa */
+  cauHinh: CauHinhLop;
+  /** true: cấu hình do phần mềm gợi ý (cán bộ chưa chốt) */
+  laGoiY: boolean;
+  ghiChuGoiY: string[];
 }
 
 const boNho = new Map<string, DuLieuBanDo>();
 
 /** Nạp bản đồ đã lưu của dự án (dùng lại bộ nhớ đệm) — cho bản đồ nhỏ ở màn Dự án. */
-export async function napBanDoDuAn(kho: { docBanDo(id: string): Promise<Uint8Array | null> }, duAnId: string): Promise<DuLieuBanDo | null> {
-  const co = boNho.get(duAnId);
+export async function napBanDoDuAn(kho: { docBanDo(id: string): Promise<Uint8Array | null> }, duAn: DuAn): Promise<DuLieuBanDo | null> {
+  const co = boNho.get(duAn.id);
   if (co) return co;
-  const b = await kho.docBanDo(duAnId);
+  const b = await kho.docBanDo(duAn.id);
   if (!b) return null;
-  const d = phanTich(b, CAU_HINH_MAC_DINH);
-  boNho.set(duAnId, d);
+  const d = phanTich(b, duAn.banDo?.cauHinh);
+  boNho.set(duAn.id, d);
   return d;
 }
 export type { DuLieuBanDo };
@@ -53,9 +61,16 @@ const TEN_CO: Record<string, string> = {
   THIEU_CHU: "Thiếu chủ",
 };
 
-function phanTich(bytes: Uint8Array, ch: CauHinhLop): DuLieuBanDo {
+/** Đọc tệp và dựng thửa; không có cấu hình đã chốt thì dùng cấu hình gợi ý từ cấu trúc tệp. */
+function phanTich(bytes: Uint8Array, daChot?: CauHinhLop): DuLieuBanDo {
   const ban = docDgn(bytes);
-  const kq = dungThua(ban, ch);
+  const goiY = daChot ? null : goiYCauHinh(ban, CAU_HINH_MAC_DINH);
+  const cauHinh = daChot ?? goiY!.cauHinh;
+  return dungLai(ban, cauHinh, !daChot, goiY?.ghiChu ?? []);
+}
+
+function dungLai(ban: KetQuaDocDgn, cauHinh: CauHinhLop, laGoiY: boolean, ghiChuGoiY: string[]): DuLieuBanDo {
+  const kq = dungThua(ban, cauHinh);
   const pham = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
   for (const t of kq.thua)
     for (const d of t.vong[0]!) {
@@ -71,7 +86,7 @@ function phanTich(bytes: Uint8Array, ch: CauHinhLop): DuLieuBanDo {
       pham.maxX = Math.max(pham.maxX, d.x);
       pham.maxY = Math.max(pham.maxY, d.y);
     }
-  return { ban, kq, pham };
+  return { ban, kq, pham, cauHinh, laGoiY, ghiChuGoiY };
 }
 
 export function BanDo({ duAnId }: { duAnId: string }) {
@@ -83,13 +98,14 @@ export function BanDo({ duAnId }: { duAnId: string }) {
   const [chon, setChon] = useState<ThuaBanDo | null>(null);
   const [loc, setLoc] = useState<"TRONG_RANH" | "TAT_CA" | "CO_CO">("TRONG_RANH");
   const [taoHo, setTaoHo] = useState(false);
+  const [moCauHinh, setMoCauHinh] = useState(false);
 
   useEffect(() => {
     if (dl || !duAn?.banDo) return;
     void kho.docBanDo(duAnId).then((b) => {
       if (!b) return;
       try {
-        const d = phanTich(b, CAU_HINH_MAC_DINH);
+        const d = phanTich(b, duAn.banDo?.cauHinh);
         boNho.set(duAnId, d);
         setDl(d);
       } catch (e) {
@@ -131,7 +147,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
     setLoi(null);
     try {
       const bytes = new Uint8Array(await f.arrayBuffer());
-      const d = phanTich(bytes, CAU_HINH_MAC_DINH);
+      const d = phanTich(bytes);
       await kho.luuBanDo(duAnId, bytes);
       boNho.set(duAnId, d);
       setDl(d);
@@ -141,6 +157,20 @@ export function BanDo({ duAnId }: { duAnId: string }) {
     } finally {
       setDangDoc(false);
     }
+  };
+
+  const apDungCauHinh = async (ch: CauHinhLop | null) => {
+    if (!dl || !duAn.banDo) return;
+    const goiY = ch ? null : goiYCauHinh(dl.ban, CAU_HINH_MAC_DINH);
+    const d = dungLai(dl.ban, ch ?? goiY!.cauHinh, !ch, goiY?.ghiChu ?? []);
+    boNho.set(duAnId, d);
+    setDl(d);
+    setChon(null);
+    const { cauHinh: _bo, ...banDo } = duAn.banDo;
+    const vungChon = d.kq.vungGpmb.some((v) => v.ma === banDo.vungChon) ? banDo.vungChon : null;
+    await luuDuAn({ ...duAn, banDo: ch ? { ...banDo, vungChon, cauHinh: ch } : { ...banDo, vungChon } });
+    setMoCauHinh(false);
+    bao(ch ? "Đã chốt cấu hình lớp và dựng lại thửa" : "Đã quay về cấu hình gợi ý");
   };
 
   const dsThua = dl
@@ -165,6 +195,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
           </div>
         </div>
         <div className="phai">
+          {dl && <button className="nut" onClick={() => setMoCauHinh(true)}>Cấu hình lớp{dl.laGoiY ? " (gợi ý)" : ""}</button>}
           <label className="nut">
             {dangDoc ? "Đang đọc…" : duAn.banDo ? "Nạp tệp khác" : "Nạp tệp DGN"}
             <input type="file" accept=".dgn,.DGN" style={{ display: "none" }} onChange={(e) => e.target.files?.[0] && napTep(e.target.files[0])} />
@@ -173,11 +204,17 @@ export function BanDo({ duAnId }: { duAnId: string }) {
         </div>
       </div>
       {loi && <div className="thong-bao thong-bao-do">{loi}</div>}
+      {dl && dl.laGoiY && dl.ghiChuGoiY.length > 0 && (
+        <div className="thong-bao thong-bao-vang" style={{ marginBottom: 12 }}>
+          <b>Cấu hình lớp đang dùng là gợi ý, chưa được chốt.</b> {dl.ghiChuGoiY.join(" ")}{" "}
+          <button className="nut nut-chu nut-nho" onClick={() => setMoCauHinh(true)}>Xem và chốt</button>
+        </div>
+      )}
       {!dl && !loi && (
         <div className="the the-than" style={{ textAlign: "center", padding: 50 }}>
-          <h2>Nạp bản đồ DGN (MicroStation V7)</h2>
-          <p className="mo">Phần mềm khép thửa từ đường ranh, đọc nhãn số tờ, số thửa, loại đất, diện tích, chủ sử dụng (phông TCVN3). Kết quả là dữ liệu đề xuất để cán bộ kiểm tra.</p>
-          <p className="mo chu-nho">Lớp mặc định: ranh thửa 10 · nhãn thửa 13 · số thửa 4 · số tờ 5 · chủ sử dụng 6 · ranh GPMB 30 (theo tệp mẫu). Tệp DGN V8 cần lưu lại dạng V7.</p>
+          <h2>Nạp bản đồ DGN (MicroStation V7, V8/V8i)</h2>
+          <p className="mo">Phần mềm khép thửa từ đường ranh, đọc nhãn số tờ, số thửa, loại đất, diện tích, chủ sử dụng (phông TCVN3 hoặc Unicode). Kết quả là dữ liệu đề xuất để cán bộ kiểm tra.</p>
+          <p className="mo chu-nho">Lớp mặc định: ranh thửa 10 · nhãn thửa 13 · số thửa 4 · số tờ 5 · chủ sử dụng 6 · ranh GPMB 30. Bản đồ lập bằng gCadas: phần mềm tự nhận nút thuộc tính thửa; cán bộ xem và chốt ở “Cấu hình lớp”.</p>
         </div>
       )}
       {dl && (
@@ -250,10 +287,126 @@ export function BanDo({ duAnId }: { duAnId: string }) {
         </div>
       )}
       {dl && dl.ban.canhBao.length > 0 && <div className="mo chu-nho" style={{ marginTop: 8 }}>Ghi chú đọc tệp: {dl.ban.canhBao.join(" ")}</div>}
+      {moCauHinh && dl && <HopCauHinhLop dl={dl} sua={quyen("SUA_HO_SO")} apDung={apDungCauHinh} dong={() => setMoCauHinh(false)} />}
       {taoHo && dl && vung && (
         <HopTaoHo duAn={duAn} dl={dl} thuHoi={thuHoi} khoaThua={khoaThua} daLienKet={daLienKet} soHo={hos.length} dong={() => setTaoHo(false)} />
       )}
     </div>
+  );
+}
+
+const TEN_TRUONG_NUT: Record<TruongNut, string> = { soTo: "Số tờ", soThua: "Số thửa", loaiDat: "Loại đất", chuSuDung: "Chủ sử dụng" };
+const dsLop = (x: string) => [...new Set(x.split(/[,;\s]+/).filter(Boolean).map(Number).filter((n) => Number.isInteger(n) && n >= 0))];
+
+/** Cấu hình lớp: thống kê lớp trong tệp để cán bộ chọn; gợi ý tự động chỉ là điểm xuất phát. */
+function HopCauHinhLop(p: { dl: DuLieuBanDo; sua: boolean; apDung: (ch: CauHinhLop | null) => void; dong: () => void }) {
+  const tk = useMemo(() => thongKeLop(p.dl.ban), [p.dl.ban]);
+  const c0 = p.dl.cauHinh;
+  const [f, setF] = useState(() => ({
+    ranhThua: c0.ranhThua.join(", "),
+    nhanThua: c0.nhanThua.join(", "),
+    soThua: c0.soThua.join(", "),
+    soTo: c0.soTo.join(", "),
+    chuSuDung: c0.chuSuDung.join(", "),
+    ranhGpmb: c0.ranhGpmb.join(", "),
+    dienTichToiThieu: String(c0.dienTichToiThieu),
+    lechPhanTram: String(Math.round(c0.lechDienTichChoPhep * 1000) / 10),
+    lopNut: c0.nutThuocTinh?.lop.join(", ") ?? "",
+    dong: Object.fromEntries((["soTo", "soThua", "loaiDat", "chuSuDung"] as TruongNut[]).map((k) => [k, c0.nutThuocTinh?.dong[k] !== undefined ? String(c0.nutThuocTinh.dong[k]! + 1) : ""])) as Record<TruongNut, string>,
+  }));
+  const dat = (k: keyof typeof f, v: string) => setF({ ...f, [k]: v });
+  const dtMin = Number(f.dienTichToiThieu.replace(",", "."));
+  const lech = Number(f.lechPhanTram.replace(",", "."));
+  const loi: string[] = [];
+  if (!dsLop(f.ranhThua).length) loi.push("Chưa có lớp ranh thửa.");
+  if (!(dtMin >= 0)) loi.push("Diện tích tối thiểu không hợp lệ.");
+  if (!(lech > 0 && lech < 100)) loi.push("Tỷ lệ lệch diện tích phải trong khoảng (0; 100) %.");
+  const lopNut = dsLop(f.lopNut);
+  const dongNut: Partial<Record<TruongNut, number>> = {};
+  for (const [k, v] of Object.entries(f.dong)) {
+    if (!v.trim()) continue;
+    const n = Number(v);
+    if (!Number.isInteger(n) || n < 1) loi.push(`Dòng của “${TEN_TRUONG_NUT[k as TruongNut]}” phải là số nguyên ≥ 1.`);
+    else dongNut[k as TruongNut] = n - 1;
+  }
+  if (new Set(Object.values(dongNut)).size !== Object.values(dongNut).length) loi.push("Hai trường của nút thuộc tính trùng dòng.");
+  if (lopNut.length && !Object.keys(dongNut).length) loi.push("Đã chọn lớp nút thuộc tính nhưng chưa chọn dòng nào.");
+  const ketQua = (): CauHinhLop => ({
+    ranhThua: dsLop(f.ranhThua),
+    nhanThua: dsLop(f.nhanThua),
+    soThua: dsLop(f.soThua),
+    soTo: dsLop(f.soTo),
+    chuSuDung: dsLop(f.chuSuDung),
+    ranhGpmb: dsLop(f.ranhGpmb),
+    dienTichToiThieu: dtMin,
+    lechDienTichChoPhep: lech / 100,
+    nutThuocTinh: lopNut.length ? { lop: lopNut, dong: dongNut } : null,
+  });
+  const truong = (k: "ranhThua" | "nhanThua" | "soThua" | "soTo" | "chuSuDung" | "ranhGpmb", nhan: string, goiY: string) => (
+    <O nhan={nhan} goiY={goiY}><input value={f[k]} onChange={(e) => dat(k, e.target.value)} disabled={!p.sua} /></O>
+  );
+  return (
+    <HopThoai
+      tieuDe="Cấu hình lớp bản đồ"
+      rong={980}
+      dong={p.dong}
+      chan={
+        <>
+          {!p.dl.laGoiY && p.sua && <button className="nut" onClick={() => p.apDung(null)}>Bỏ chốt, dùng gợi ý</button>}
+          <button className="nut" onClick={p.dong}>Đóng</button>
+          {p.sua && <button className="nut nut-chinh" disabled={loi.length > 0} onClick={() => p.apDung(ketQua())}>Chốt cấu hình và dựng lại thửa</button>}
+        </>
+      }
+    >
+      <div className="luoi" style={{ gap: 16, alignItems: "start", gridTemplateColumns: "minmax(0, 1.15fr) minmax(0, 1fr)" }}>
+        <div style={{ display: "grid", gap: 10, minWidth: 0 }}>
+          <div className="mo chu-nho">Nhiều lớp cách nhau bằng dấu phẩy. {p.dl.laGoiY ? "Các giá trị đang là gợi ý từ cấu trúc tệp — cán bộ đối chiếu bảng thống kê bên phải trước khi chốt." : "Cấu hình đã được chốt cho tệp này."}</div>
+          <div className="luoi" style={{ gap: 8, gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}>
+            {truong("ranhThua", "Ranh thửa", "đường khép thửa")}
+            {truong("nhanThua", "Nhãn thửa", "loại đất, số thửa, DT")}
+            {truong("ranhGpmb", "Ranh GPMB", "đường/vùng ranh thu hồi")}
+            {truong("soThua", "Số thửa (riêng)", "")}
+            {truong("soTo", "Số tờ (riêng)", "")}
+            {truong("chuSuDung", "Chủ sử dụng (riêng)", "")}
+          </div>
+          <div className="the" style={{ padding: 10 }}>
+            <b className="chu-nho">Nút chữ thuộc tính thửa (gCadas)</b>
+            <div className="mo chu-nho" style={{ margin: "2px 0 8px" }}>Nút chữ nhiều dòng đặt trong thửa; nút được gán cho thửa chứa dòng đầu. Để trống lớp nếu tệp không có.</div>
+            <div className="luoi" style={{ gap: 8, gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
+              <O nhan="Lớp nút" style={{ gridColumn: "1 / -1" }}><input value={f.lopNut} onChange={(e) => dat("lopNut", e.target.value)} disabled={!p.sua} /></O>
+              {(Object.keys(TEN_TRUONG_NUT) as TruongNut[]).map((k) => (
+                <O key={k} nhan={`${TEN_TRUONG_NUT[k]}: dòng`}>
+                  <input value={f.dong[k]} inputMode="numeric" onChange={(e) => setF({ ...f, dong: { ...f.dong, [k]: e.target.value } })} disabled={!p.sua || !lopNut.length} />
+                </O>
+              ))}
+            </div>
+          </div>
+          <div className="luoi" style={{ gap: 8, gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
+            <O nhan="Bỏ vùng nhỏ hơn (m²)" goiY="mảnh vụn do vẽ chồng nét"><input value={f.dienTichToiThieu} onChange={(e) => dat("dienTichToiThieu", e.target.value)} disabled={!p.sua} /></O>
+            <O nhan="Cờ lệch DT ghi/hình học (%)"><input value={f.lechPhanTram} onChange={(e) => dat("lechPhanTram", e.target.value)} disabled={!p.sua} /></O>
+          </div>
+          {loi.length > 0 && <div className="thong-bao thong-bao-do chu-nho">{loi.join(" ")}</div>}
+          {p.dl.ghiChuGoiY.length > 0 && <div className="mo chu-nho">Gợi ý: {p.dl.ghiChuGoiY.join(" ")}</div>}
+        </div>
+        <div className="bang-cuon" style={{ maxHeight: 440 }}>
+          <table className="bang">
+            <thead><tr><th className="so">Lớp</th><th className="so">Đường</th><th className="so">Vùng</th><th className="so">Chữ</th><th className="so">Nút</th><th>Chữ mẫu</th></tr></thead>
+            <tbody>
+              {tk.map((x) => (
+                <tr key={x.lop}>
+                  <td className="so"><b>{x.lop}</b></td>
+                  <td className="so">{x.soDuong || ""}</td>
+                  <td className="so">{x.soVung || ""}</td>
+                  <td className="so">{x.soChu || ""}</td>
+                  <td className="so">{x.soNut || ""}</td>
+                  <td className="chu-nho mo" style={{ maxWidth: 240, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={x.mau.join(" · ")}>{x.mau.join(" · ")}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </HopThoai>
   );
 }
 

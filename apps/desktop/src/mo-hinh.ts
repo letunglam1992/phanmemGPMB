@@ -1,3 +1,4 @@
+import type { CauHinhLop } from "@gpmb/gis";
 /**
  * Mô hình dữ liệu hồ sơ GPMB. Số liệu (diện tích, khối lượng, đơn giá) lưu dạng chuỗi để giữ
  * nguyên số thập phân như người dùng nhập; khối lượng được phép là biểu thức "=10*9.8".
@@ -182,6 +183,8 @@ export interface BanDoDuAn {
   ngayNhap: string;
   /** Vùng ranh GPMB cán bộ đã chọn (mã vùng ứng viên). */
   vungChon: string | null;
+  /** Cấu hình lớp cán bộ đã chốt cho tệp này; chưa có thì dùng gợi ý tự động (goiYCauHinh). */
+  cauHinh?: CauHinhLop;
 }
 
 export interface DuAn {
