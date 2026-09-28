@@ -77,3 +77,16 @@ describe("Sao lưu, khôi phục dữ liệu", () => {
     expect(tenTepSaoLuu("2026-09-27T08:05:00.000Z")).toBe("GPMB-sao-luu_2026-09-27_0805.gpmb");
   });
 });
+
+describe("Xóa bản đồ của dự án", () => {
+  it("xóa tệp bản đồ để nạp bản đồ mới; không ảnh hưởng dự án khác, hồ sơ", async () => {
+    const { kho, duAn, ho } = await khoCoDuLieu();
+    await kho.luuBanDo("du-an-khac", new Uint8Array([1]));
+    await kho.xoaBanDo(duAn.id);
+    expect(await kho.docBanDo(duAn.id)).toBeNull();
+    expect(await kho.dsBanDo()).toEqual(["du-an-khac"]);
+    expect((await kho.dsHo(duAn.id)).length).toBe(ho.length);
+    await kho.luuBanDo(duAn.id, new Uint8Array([4, 5]));
+    expect([...(await kho.docBanDo(duAn.id))!]).toEqual([4, 5]);
+  });
+});

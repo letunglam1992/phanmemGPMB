@@ -39,16 +39,26 @@ interface DuLieuBanDo {
   ghiChuGoiY: string[];
 }
 
-const boNho = new Map<string, DuLieuBanDo>();
+/**
+ * Bộ nhớ đệm bản đồ đã dựng, theo dự án. Gắn với lần nạp (`ngayNhap`): nạp tệp khác, xóa bản đồ,
+ * hoặc máy khác (mạng nội bộ) nạp bản đồ mới thì bản đệm cũ không còn được dùng.
+ */
+const boNho = new Map<string, { ngayNhap: string; d: DuLieuBanDo }>();
+
+function layDem(duAn: DuAn): DuLieuBanDo | null {
+  const c = boNho.get(duAn.id);
+  return c && duAn.banDo && c.ngayNhap === duAn.banDo.ngayNhap ? c.d : null;
+}
 
 /** Nạp bản đồ đã lưu của dự án (dùng lại bộ nhớ đệm) — cho bản đồ nhỏ ở màn Dự án. */
 export async function napBanDoDuAn(kho: { docBanDo(id: string): Promise<Uint8Array | null> }, duAn: DuAn): Promise<DuLieuBanDo | null> {
-  const co = boNho.get(duAn.id);
+  if (!duAn.banDo) return null;
+  const co = layDem(duAn);
   if (co) return co;
   const b = await kho.docBanDo(duAn.id);
   if (!b) return null;
-  const d = phanTich(b, duAn.banDo?.cauHinh);
-  boNho.set(duAn.id, d);
+  const d = phanTich(b, duAn.banDo.cauHinh);
+  boNho.set(duAn.id, { ngayNhap: duAn.banDo.ngayNhap, d });
   return d;
 }
 export type { DuLieuBanDo };
@@ -90,33 +100,64 @@ function dungLai(ban: KetQuaDocDgn, cauHinh: CauHinhLop, laGoiY: boolean, ghiChu
       pham.maxX = Math.max(pham.maxX, d.x);
       pham.maxY = Math.max(pham.maxY, d.y);
     }
+  // Không dựng được thửa/vùng nào (sai cấu hình lớp): lấy phạm vi theo mọi phần tử hình để vẫn vẽ được nền
+  if (!Number.isFinite(pham.minX))
+    for (const e of ban.phanTu)
+      if ("diem" in e)
+        for (const d of e.diem) {
+          pham.minX = Math.min(pham.minX, d.x);
+          pham.minY = Math.min(pham.minY, d.y);
+          pham.maxX = Math.max(pham.maxX, d.x);
+          pham.maxY = Math.max(pham.maxY, d.y);
+        }
+  if (!Number.isFinite(pham.minX)) Object.assign(pham, { minX: 0, minY: 0, maxX: 1, maxY: 1 });
+  if (pham.maxX - pham.minX < 1e-6) pham.maxX = pham.minX + 1;
+  if (pham.maxY - pham.minY < 1e-6) pham.maxY = pham.minY + 1;
   return { ban, kq, pham, cauHinh, laGoiY, ghiChuGoiY };
 }
 
 export function BanDo({ duAnId }: { duAnId: string }) {
   const { dsDuAn, kho, luuDuAn, hoCua, di, chinhSach, quyen, bao } = useUngDung();
   const duAn = dsDuAn.find((d) => d.id === duAnId);
-  const [dl, setDl] = useState<DuLieuBanDo | null>(boNho.get(duAnId) ?? null);
+  // Bản đồ đang hiển thị luôn lấy theo lần nạp hiện tại của dự án (không giữ bản của tệp trước / dự án trước)
+  const [, setPhien] = useState(0);
+  const veLai = () => setPhien((x) => x + 1);
+  const dl = duAn ? layDem(duAn) : null;
   const [loi, setLoi] = useState<string | null>(null);
   const [dangDoc, setDangDoc] = useState(false);
   const [chon, setChon] = useState<ThuaBanDo | null>(null);
   const [loc, setLoc] = useState<"TRONG_RANH" | "TAT_CA" | "CO_CO">("TRONG_RANH");
   const [taoHo, setTaoHo] = useState(false);
   const [moCauHinh, setMoCauHinh] = useState(false);
+  const [cheDoChonThua, setCheDoChonThua] = useState(false);
+  const inputTep = useRef<HTMLInputElement>(null);
+  const khoaNap = duAn?.banDo ? `${duAnId}|${duAn.banDo.ngayNhap}` : "";
+
+  // Đổi dự án hoặc đổi bản đồ: bỏ thửa đang chọn, chế độ chọn thửa, lỗi của lần nạp trước
+  useEffect(() => {
+    setChon(null);
+    setCheDoChonThua(false);
+    setLoi(null);
+  }, [khoaNap]);
 
   useEffect(() => {
-    if (dl || !duAn?.banDo) return;
-    void kho.docBanDo(duAnId).then((b) => {
-      if (!b) return;
-      try {
-        const d = phanTich(b, duAn.banDo?.cauHinh);
-        boNho.set(duAnId, d);
-        setDl(d);
-      } catch (e) {
-        setLoi((e as Error).message);
-      }
-    });
-  }, [duAnId, duAn?.banDo, dl, kho]);
+    if (dl || !duAn?.banDo || dangDoc) return;
+    const banDo = duAn.banDo;
+    let huy = false;
+    kho
+      .docBanDo(duAnId)
+      .then((b) => {
+        if (huy) return;
+        if (!b) return setLoi("Không tìm thấy tệp bản đồ đã nạp của dự án. Hãy xóa bản đồ và nạp lại tệp DGN.");
+        const d = phanTich(b, banDo.cauHinh);
+        boNho.set(duAnId, { ngayNhap: banDo.ngayNhap, d });
+        veLai();
+      })
+      .catch((e) => !huy && setLoi((e as Error).message));
+    return () => {
+      huy = true;
+    };
+  }, [duAnId, duAn?.banDo, dl, dangDoc, kho]);
 
   // Phạm vi thu hồi = hợp các vùng ranh / vùng thửa thu hồi đã chọn ∪ các thửa chọn trực tiếp
   const maVungChon = duAn?.banDo?.vungChonDs ?? (duAn?.banDo?.vungChon ? [duAn.banDo.vungChon] : []);
@@ -137,7 +178,6 @@ export function BanDo({ duAnId }: { duAnId: string }) {
   }, [dl, maVungChon.join("|"), thuaChon]); // eslint-disable-line react-hooks/exhaustive-deps
   const coPhamVi = vungDs.length > 0 || thuaChon.size > 0;
   const khoaThua = (t: ThuaBanDo) => t.ma + "#" + dl!.kq.thua.indexOf(t);
-  const [cheDoChonThua, setCheDoChonThua] = useState(false);
   const [thieuPhamVi, setThieuPhamVi] = useState(false);
   const luuBanDoDa = (p: Partial<NonNullable<DuAn["banDo"]>>) => duAn?.banDo && luuDuAn({ ...duAn, banDo: { ...duAn.banDo, ...p } });
   const doiThuaChon = (ds: string[]) => void luuBanDoDa({ thuaChon: ds });
@@ -166,13 +206,46 @@ export function BanDo({ duAnId }: { duAnId: string }) {
     if (!quyen("SUA_HO_SO")) return bao("Tài khoản không có quyền nạp bản đồ", "loi");
     setDangDoc(true);
     setLoi(null);
+    setChon(null);
+    setCheDoChonThua(false);
     try {
       const bytes = new Uint8Array(await f.arrayBuffer());
       const d = phanTich(bytes);
+      const ngayNhap = new Date().toISOString();
       await kho.luuBanDo(duAnId, bytes);
-      boNho.set(duAnId, d);
-      setDl(d);
-      await luuDuAn({ ...duAn, banDo: { tenTep: f.name, ngayNhap: new Date().toISOString(), vungChon: null, vungChonDs: [], thuaChon: [] } });
+      boNho.set(duAnId, { ngayNhap, d });
+      // Bản đồ mới: bỏ phạm vi thu hồi, thửa chọn và cấu hình lớp đã chốt của tệp cũ
+      await luuDuAn({ ...duAn, banDo: { tenTep: f.name, ngayNhap, vungChon: null, vungChonDs: [], thuaChon: [] } });
+      bao(`Đã nạp bản đồ ${f.name}: ${d.kq.thua.length} thửa`);
+    } catch (e) {
+      setLoi((e as Error).message);
+    } finally {
+      setDangDoc(false);
+      if (inputTep.current) inputTep.current.value = ""; // chọn lại cùng tệp vẫn nạp được
+    }
+  };
+
+  const xoaBanDo = async () => {
+    if (!duAn.banDo) return;
+    if (!quyen("SUA_HO_SO")) return bao("Tài khoản không có quyền xóa bản đồ", "loi");
+    const soLienKet = daLienKet.size;
+    if (
+      !confirm(
+        `Xóa bản đồ "${duAn.banDo.tenTep}" khỏi dự án?\n\n` +
+          "Sẽ xóa: tệp DGN đã nạp, cấu hình lớp đã chốt, phạm vi thu hồi và các thửa đã chọn trên bản đồ.\n" +
+          `Giữ nguyên: toàn bộ hồ sơ hộ và số liệu thửa đã tạo${soLienKet ? ` (${soLienKet} thửa đang liên kết bản đồ sẽ liên kết lại khi nạp bản đồ có cùng số tờ, số thửa)` : ""}.`,
+      )
+    )
+      return;
+    setDangDoc(true);
+    try {
+      await kho.xoaBanDo(duAnId);
+      boNho.delete(duAnId);
+      setChon(null);
+      setCheDoChonThua(false);
+      setLoi(null);
+      await luuDuAn({ ...duAn, banDo: null });
+      bao("Đã xóa bản đồ. Có thể nạp tệp DGN mới.");
     } catch (e) {
       setLoi((e as Error).message);
     } finally {
@@ -184,8 +257,8 @@ export function BanDo({ duAnId }: { duAnId: string }) {
     if (!dl || !duAn.banDo) return;
     const goiY = ch ? null : goiYCauHinh(dl.ban, CAU_HINH_MAC_DINH);
     const d = dungLai(dl.ban, ch ?? goiY!.cauHinh, !ch, goiY?.ghiChu ?? []);
-    boNho.set(duAnId, d);
-    setDl(d);
+    boNho.set(duAnId, { ngayNhap: duAn.banDo.ngayNhap, d });
+    veLai();
     setChon(null);
     const { cauHinh: _bo, ...banDo } = duAn.banDo;
     const vungChon = d.kq.vungGpmb.some((v) => v.ma === banDo.vungChon) ? banDo.vungChon : null;
@@ -218,10 +291,15 @@ export function BanDo({ duAnId }: { duAnId: string }) {
         </div>
         <div className="phai">
           {dl && <button className="nut" onClick={() => setMoCauHinh(true)}>Cấu hình lớp{dl.laGoiY ? " (gợi ý)" : ""}</button>}
-          <label className="nut">
+          <label className="nut" aria-disabled={dangDoc}>
             {dangDoc ? "Đang đọc…" : duAn.banDo ? "Nạp tệp khác" : "Nạp tệp DGN"}
-            <input type="file" accept=".dgn,.DGN" style={{ display: "none" }} onChange={(e) => e.target.files?.[0] && napTep(e.target.files[0])} />
+            <input ref={inputTep} type="file" accept=".dgn,.DGN" disabled={dangDoc} style={{ display: "none" }} onChange={(e) => e.target.files?.[0] && void napTep(e.target.files[0])} />
           </label>
+          {duAn.banDo && (
+            <button className="nut nut-nguy" disabled={dangDoc || !quyen("SUA_HO_SO")} onClick={() => void xoaBanDo()} title="Xóa tệp bản đồ đã nạp để nạp bản đồ mới; hồ sơ hộ giữ nguyên">
+              Xóa bản đồ
+            </button>
+          )}
           {dl && <button className="nut nut-chinh" onClick={() => (coPhamVi ? setTaoHo(true) : setThieuPhamVi(true))}>Tạo hồ sơ từ thửa thu hồi</button>}
         </div>
       </div>
@@ -232,7 +310,8 @@ export function BanDo({ duAnId }: { duAnId: string }) {
           <button className="nut nut-chu nut-nho" onClick={() => setMoCauHinh(true)}>Xem và chốt</button>
         </div>
       )}
-      {!dl && !loi && (
+      {!dl && !loi && duAn.banDo && <div className="the the-than trong" style={{ textAlign: "center", padding: 40 }}>Đang đọc bản đồ {duAn.banDo.tenTep}…</div>}
+      {!dl && !loi && !duAn.banDo && (
         <div className="the the-than" style={{ textAlign: "center", padding: 50 }}>
           <h2>Nạp bản đồ DGN (MicroStation V7, V8/V8i)</h2>
           <p className="mo">Phần mềm khép thửa từ đường ranh, đọc nhãn số tờ, số thửa, loại đất, diện tích, chủ sử dụng (phông TCVN3 hoặc Unicode). Kết quả là dữ liệu đề xuất để cán bộ kiểm tra.</p>
@@ -241,7 +320,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
       )}
       {dl && (
         <div className="ban-do-khung">
-          <KhungVe dl={dl} vungChon={maVungChon} thuHoi={thuHoi} khoaThua={khoaThua} chon={chon} setChon={setChon} daLienKet={daLienKet} ttThua={ttThua} bamThua={cheDoChonThua && quyen("SUA_HO_SO") ? batTatThua : undefined} thuaChon={thuaChon} />
+          <KhungVe key={khoaNap} dl={dl} vungChon={maVungChon} thuHoi={thuHoi} khoaThua={khoaThua} chon={chon} setChon={setChon} daLienKet={daLienKet} ttThua={ttThua} bamThua={cheDoChonThua && quyen("SUA_HO_SO") ? batTatThua : undefined} thuaChon={thuaChon} />
           <div className="ben-phai">
             <KiemTraBanDo dl={dl} coPhamVi={coPhamVi} soVung={dl.kq.vungGpmb.length} moCauHinh={() => setMoCauHinh(true)} ttThua={ttThua} />
             <div className="the co-dinh">

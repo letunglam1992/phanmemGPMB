@@ -15,6 +15,8 @@ export interface Kho {
   xoaHo(id: string): Promise<void>;
   luuBanDo(duAnId: string, bytes: Uint8Array): Promise<void>;
   docBanDo(duAnId: string): Promise<Uint8Array | null>;
+  /** Xóa tệp bản đồ đã nạp của dự án (để nạp bản đồ mới). */
+  xoaBanDo(duAnId: string): Promise<void>;
   /** Mẫu văn bản do cán bộ tự chỉnh (thay mẫu gốc). */
   luuMau(ma: string, bytes: Uint8Array, tenTep: string): Promise<void>;
   docMau(ma: string): Promise<{ bytes: Uint8Array; tenTep: string; luc: string } | null>;
@@ -95,6 +97,9 @@ export function taoKhoIndexedDb(): Kho {
     },
     async docBanDo(duAnId) {
       return ((await yc((await store("banDo")).get(duAnId))) as Uint8Array | undefined) ?? null;
+    },
+    async xoaBanDo(duAnId) {
+      await yc((await store("banDo", "readwrite")).delete(duAnId));
     },
     async luuMau(ma, bytes, tenTep) {
       await yc((await store("mauVanBan", "readwrite")).put({ bytes, tenTep, luc: new Date().toISOString() }, ma));
@@ -181,6 +186,9 @@ export function taoKhoBoNho(): Kho {
     },
     async docBanDo(id) {
       return banDo.get(id) ?? null;
+    },
+    async xoaBanDo(id) {
+      banDo.delete(id);
     },
     async luuMau(ma, bytes, tenTep) {
       mau.set(ma, { bytes, tenTep, luc: new Date().toISOString() });

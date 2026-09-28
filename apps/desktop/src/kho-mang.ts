@@ -151,6 +151,9 @@ export function taoKhoMang(ketNoi: KetNoi, gui: GuiYeuCau = guiQuaVo(ketNoi)): K
       const r = await goi("GET", `/api/tep/banDo/${ma(duAnId)}`, { cho404: true });
       return r.ma === 404 ? null : r.than;
     },
+    async xoaBanDo(duAnId) {
+      await goi("DELETE", `/api/tep/banDo/${ma(duAnId)}`);
+    },
     async luuMau(m, bytes, tenTep) {
       await goi("PUT", `/api/tep/mau/${ma(m)}`, { than: bytes, meta: ma(JSON.stringify({ tenTep, luc: new Date().toISOString() })) });
     },

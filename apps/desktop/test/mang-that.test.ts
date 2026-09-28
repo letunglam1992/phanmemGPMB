@@ -65,6 +65,9 @@ describe.skipIf(!bien)("Nối thật máy trạm ↔ máy chủ Rust", () => {
     expect(Object.values(daLuu[0]!.tienDo).some((b) => b.trangThai === "XONG" && b.duyetBoi === "lanhdao")).toBe(true);
     await k.luuBanDo(duAn.id, new Uint8Array([8, 9, 10]));
     expect([...(await k.docBanDo(duAn.id))!]).toEqual([8, 9, 10]);
+    await k.xoaBanDo(duAn.id);
+    expect(await k.docBanDo(duAn.id)).toBeNull();
+    await k.luuBanDo(duAn.id, new Uint8Array([8, 9, 10]));
     await expect(k.luuMau("05", new Uint8Array([1]), "mẫu.docx")).rejects.toThrow(/THAY_MAU/);
 
     // lãnh đạo chốt và ghi nhận phê duyệt phương án
