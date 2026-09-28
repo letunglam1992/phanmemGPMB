@@ -202,13 +202,15 @@ export function canhBaoDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: st
 }
 
 /** Cảnh báo chung: văn bản phân cấp, ủy quyền QĐ 27/2026 hết hiệu lực 01/3/2027 (VM-18) — báo trước 60 ngày. */
-export function canhBaoChung(homNay: string, lich?: LichLamViec): { noiDung: string; canCu: string; muc?: "TRUNG_BINH"; caiDat?: boolean }[] {
+export function canhBaoChung(homNay: string, lich?: LichLamViec, thieuKhoaKhoiPhuc = false): { noiDung: string; canCu: string; muc?: "TRUNG_BINH"; caiDat?: boolean }[] {
   const het = "2027-03-01";
   const con = soNgay(homNay, het);
   const out: ReturnType<typeof canhBaoChung> = [];
   const nam = Number(homNay.slice(0, 4));
   if (lich && !lich.namDaDu.includes(nam))
     out.push({ noiDung: `Chưa xác nhận danh mục ngày nghỉ lễ, Tết năm ${nam} — hạn tính theo ngày làm việc hiện chỉ trừ thứ Bảy, Chủ nhật`, canCu: "VM-25 · bấm để mở Cài đặt → Lịch ngày nghỉ", muc: "TRUNG_BINH", caiDat: true });
+  if (thieuKhoaKhoiPhuc)
+    out.push({ noiDung: "Chưa đặt mật khẩu khôi phục cho sao lưu — quên mật khẩu sao lưu thì không mở được tệp; máy hỏng thì không mở được bản sao lưu tự động trên máy khác", canCu: "P0-5 · bấm để mở Cài đặt → Tự động sao lưu (tài khoản Quản trị)", muc: "TRUNG_BINH", caiDat: true });
   if (con <= 60) return [...out, { noiDung: con > 0 ? `QĐ 27/2026/QĐ-UBND (phân cấp, ủy quyền) hết hiệu lực sau ${con} ngày` : "QĐ 27/2026/QĐ-UBND đã hết hiệu lực — kiểm tra thẩm quyền", canCu: "Điều 6 QĐ 27/2026/QĐ-UBND (VM-18)" }];
   return out;
 }

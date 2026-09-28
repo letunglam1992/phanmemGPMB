@@ -31,6 +31,10 @@ getrandom = "0.2"
 ureq = { version = "2", default-features = false, features = ["tls"] }
 if-addrs = "0.13"
 
+# DPAPI (bọc khóa sao lưu tự động bằng tài khoản Windows — P0-5)
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59", features = ["Win32_Foundation", "Win32_Security_Cryptography"] }
+
 [profile.release]
 codegen-units = 1
 lto = true

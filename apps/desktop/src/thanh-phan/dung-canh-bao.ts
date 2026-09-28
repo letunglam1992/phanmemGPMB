@@ -17,7 +17,7 @@ export interface MucCanhBao {
 
 /** Số liệu tổng hợp mọi dự án + danh sách cảnh báo (dùng ở Tổng quan và chuông thông báo trên thanh tiêu đề). */
 export function useTongHop() {
-  const { dsDuAn, hoCua, chinhSach, lich, tyLeCham, lanSaoLuu, quyen, di, moCaiDat, moSaoLuu } = useUngDung();
+  const { dsDuAn, hoCua, chinhSach, lich, tyLeCham, lanSaoLuu, quyen, di, moCaiDat, moSaoLuu, khoaKhoiPhuc } = useUngDung();
   const homNay = homNayIso();
   const duLieu = useMemo(
     () =>
@@ -29,7 +29,7 @@ export function useTongHop() {
   );
   const nhacSaoLuu = quyen("SAO_LUU") ? canhBaoSaoLuu(lanSaoLuu, homNay, dsDuAn.length > 0) : null;
   const canhBao: MucCanhBao[] = [
-    ...canhBaoChung(homNay, lich).map((c) => ({ ...c, muc: c.muc ?? ("CAO" as const), duAnId: "" })),
+    ...canhBaoChung(homNay, lich, quyen("KHOI_PHUC") && !khoaKhoiPhuc && dsDuAn.length > 0).map((c) => ({ ...c, muc: c.muc ?? ("CAO" as const), duAnId: "" })),
     ...(nhacSaoLuu ? [{ noiDung: nhacSaoLuu, canCu: "Bấm để mở Sao lưu, khôi phục", muc: "TRUNG_BINH" as const, duAnId: "", saoLuu: true }] : []),
     ...duLieu.flatMap((x) => x.cb),
   ];

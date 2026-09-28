@@ -1292,6 +1292,7 @@ dependencies = [
  "tauri-plugin-dialog",
  "tokio",
  "ureq",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]

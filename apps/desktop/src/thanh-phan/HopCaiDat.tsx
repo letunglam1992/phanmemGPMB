@@ -7,6 +7,7 @@ import type { GiaiDoanTyLe } from "../chi-tra";
 import { LE_DUONG_LICH_CO_DINH, type LichLamViec, type NgayDacBiet } from "../lich-lam-viec";
 import { Chon } from "./Chon";
 import { datHoiNoiLuu, hoiNoiLuu } from "../tai-xuong";
+import { loiMatKhau, taoKhoaKhoiPhuc, thuMatKhauKhoiPhuc } from "../ma-hoa";
 
 const THU = ["Chủ nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
 const thu = (iso: string) => THU[new Date(`${iso}T00:00:00Z`).getUTCDay()]!;
@@ -115,6 +116,60 @@ function TheLich() {
   );
 }
 
+/** Mật khẩu khôi phục (P0-5): mở được mọi bản sao lưu (tự động, thủ công) trên máy khác khi quên mật khẩu sao lưu. */
+function KhoiPhucMatKhau() {
+  const { khoaKhoiPhuc, luuKhoaKhoiPhuc, quyen, bao, nguoiDung } = useUngDung();
+  const [mk, setMk] = useState("");
+  const [mk2, setMk2] = useState("");
+  const [thu, setThu] = useState("");
+  const [dang, setDang] = useState(false);
+  const loi = loiMatKhau(mk) ?? (mk !== mk2 ? "Hai lần nhập không khớp" : null);
+  const choSua = quyen("KHOI_PHUC");
+  return (
+    <div className="the" style={{ padding: 12, marginTop: 14 }}>
+      <h3 style={{ marginTop: 0 }}>Mật khẩu khôi phục</h3>
+      <p className="mo chu-nho" style={{ marginTop: 0 }}>
+        Bản sao lưu được mã hóa. Sao lưu tự động mở được trên chính máy này (tài khoản Windows); trên <b>máy khác</b> (máy hỏng, cài lại) cần <b>mật khẩu khôi phục</b>. Bản sao lưu thủ công mở được bằng mật khẩu sao lưu <i>hoặc</i> mật khẩu khôi phục. Máy không lưu mật khẩu này.
+        Đề nghị: ghi mật khẩu ra giấy, niêm phong, giao lãnh đạo đơn vị hoặc người thứ hai giữ; ghi vào sổ bàn giao khi thay đổi cán bộ quản trị.
+      </p>
+      <div className="mo-ta">
+        Trạng thái: {khoaKhoiPhuc ? <span className="nhan nhan-xanh">Đã đặt — khóa {khoaKhoiPhuc.vanTay}, {new Date(khoaKhoiPhuc.taoLuc).toLocaleString("vi-VN")}, {khoaKhoiPhuc.nguoi}</span> : <span className="nhan nhan-vang">Chưa đặt</span>}
+      </div>
+      {choSua ? (
+        <>
+          <div className="luoi luoi-2" style={{ marginTop: 8 }}>
+            <div className="o-nhap"><label>{khoaKhoiPhuc ? "Mật khẩu khôi phục mới" : "Mật khẩu khôi phục"}</label><input type="password" autoComplete="new-password" value={mk} onChange={(e) => setMk(e.target.value)} /></div>
+            <div className="o-nhap"><label>Nhập lại</label><input type="password" autoComplete="new-password" value={mk2} onChange={(e) => setMk2(e.target.value)} /></div>
+          </div>
+          {mk && loi && <div className="chu-do chu-nho">{loi}</div>}
+          {khoaKhoiPhuc && <p className="mo chu-nho">Đổi mật khẩu chỉ áp dụng cho bản sao lưu tạo sau khi đổi; bản cũ vẫn mở bằng mật khẩu cũ — giữ lại mật khẩu cũ cùng các bản sao lưu cũ.</p>}
+          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+            <button className="nut nut-chinh" disabled={!!loi || dang} onClick={async () => {
+              setDang(true);
+              try {
+                await luuKhoaKhoiPhuc(await taoKhoaKhoiPhuc(mk, nguoiDung));
+                setMk("");
+                setMk2("");
+                bao("Đã đặt mật khẩu khôi phục — cất giữ mật khẩu theo quy chế của cơ quan");
+              } finally {
+                setDang(false);
+              }
+            }}>{dang ? "Đang tạo khóa…" : khoaKhoiPhuc ? "Đổi mật khẩu khôi phục" : "Đặt mật khẩu khôi phục"}</button>
+          </div>
+        </>
+      ) : (
+        <p className="mo chu-nho">Chỉ tài khoản Quản trị đặt, đổi mật khẩu khôi phục.</p>
+      )}
+      {khoaKhoiPhuc && (
+        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+          <input type="password" placeholder="Thử lại mật khẩu khôi phục (kiểm tra còn nhớ đúng)" value={thu} onChange={(e) => setThu(e.target.value)} style={{ flex: 1 }} />
+          <button className="nut" disabled={!thu} onClick={async () => { bao((await thuMatKhauKhoiPhuc(khoaKhoiPhuc, thu)) ? "Mật khẩu khôi phục đúng" : "Mật khẩu khôi phục KHÔNG đúng", undefined); setThu(""); }}>Thử</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function TheTuDong() {
   const { tuDong, luuTuDong, saoLuuTuDongNgay, quyen, bao } = useUngDung();
   const [ban, setBan] = useState<CaiDatTuDong>(tuDong);
@@ -132,7 +187,7 @@ function TheTuDong() {
   return (
     <div>
       <p className="mo" style={{ marginTop: 0 }}>
-        Phần mềm tự tạo tệp sao lưu <b>.gpmb</b> (như sao lưu thủ công) theo chu kỳ khi đang mở, ghi vào thư mục trên máy hoặc ổ mạng nội bộ do cán bộ chọn, và chỉ giữ lại số bản mới nhất. Không gửi dữ liệu ra ngoài. Tệp không mã hóa, chứa thông tin cá nhân — đặt thư mục ở nơi được bảo vệ theo quy chế của cơ quan. Bản sao lưu cùng ổ đĩa không thay được việc cất bản sao ra thiết bị khác.
+        Phần mềm tự tạo tệp sao lưu <b>.gpmb</b> (như sao lưu thủ công) theo chu kỳ khi đang mở, ghi vào thư mục trên máy hoặc ổ mạng nội bộ do cán bộ chọn, và chỉ giữ lại số bản mới nhất. Không gửi dữ liệu ra ngoài. Tệp được mã hóa (AES-256) bằng tài khoản Windows của máy này và mật khẩu khôi phục bên dưới; vẫn nên đặt thư mục ở nơi được bảo vệ theo quy chế của cơ quan. Bản sao lưu cùng ổ đĩa không thay được việc cất bản sao ra thiết bị khác.
       </p>
       {!coVo && <div className="thong-bao thong-bao-vang">Chức năng này chỉ hoạt động trong bản cài Windows (không có khi chạy thử trên trình duyệt).</div>}
       <div className="luoi luoi-2">
@@ -169,6 +224,7 @@ function TheTuDong() {
         {choSua && <button className="nut nut-chinh" disabled={!daSua} onClick={() => void luuTuDong(ban)}>Lưu cài đặt</button>}
       </div>
       {!choSua && <p className="mo chu-nho">Chỉ tài khoản Lãnh đạo hoặc Quản trị sửa được cài đặt.</p>}
+      <KhoiPhucMatKhau />
     </div>
   );
 }

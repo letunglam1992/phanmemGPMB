@@ -216,6 +216,61 @@ async fn luu_tep_chon_noi(app: tauri::AppHandle, request: Request<'_>) -> Result
     Ok(Some(dich.display().to_string()))
 }
 
+// ---------------- DPAPI (P0-5) ----------------
+
+/// Bọc / mở khóa dữ liệu sao lưu bằng Windows DPAPI của tài khoản Windows đang dùng (không cần mật khẩu;
+/// chỉ mở được trên cùng máy, cùng tài khoản). Entropy riêng của phần mềm để tách khỏi ứng dụng khác.
+#[cfg(windows)]
+mod dpapi {
+    use windows_sys::Win32::Foundation::LocalFree;
+    use windows_sys::Win32::Security::Cryptography::{CryptProtectData, CryptUnprotectData, CRYPTPROTECT_UI_FORBIDDEN, CRYPT_INTEGER_BLOB};
+
+    const ENTROPY: &[u8] = b"gpmb-sonla-sao-luu-v2";
+
+    fn blob(b: &[u8]) -> CRYPT_INTEGER_BLOB {
+        CRYPT_INTEGER_BLOB { cbData: b.len() as u32, pbData: b.as_ptr() as *mut u8 }
+    }
+
+    pub fn chay(du: &[u8], boc: bool) -> Result<Vec<u8>, String> {
+        let vao = blob(du);
+        let en = blob(ENTROPY);
+        let mut ra = CRYPT_INTEGER_BLOB { cbData: 0, pbData: std::ptr::null_mut() };
+        // SAFETY: các con trỏ trỏ vào vùng nhớ hợp lệ trong suốt lời gọi; `ra` do hệ thống cấp, giải phóng bằng LocalFree.
+        let ok = unsafe {
+            if boc {
+                CryptProtectData(&vao, std::ptr::null(), &en, std::ptr::null(), std::ptr::null(), CRYPTPROTECT_UI_FORBIDDEN, &mut ra)
+            } else {
+                CryptUnprotectData(&vao, std::ptr::null_mut(), &en, std::ptr::null(), std::ptr::null(), CRYPTPROTECT_UI_FORBIDDEN, &mut ra)
+            }
+        };
+        if ok == 0 {
+            return Err(format!("DPAPI lỗi {}", std::io::Error::last_os_error()));
+        }
+        // SAFETY: `ra.pbData` có `ra.cbData` byte do CryptProtectData/CryptUnprotectData cấp.
+        let v = unsafe { std::slice::from_raw_parts(ra.pbData, ra.cbData as usize).to_vec() };
+        unsafe { LocalFree(ra.pbData as _) };
+        Ok(v)
+    }
+}
+#[cfg(not(windows))]
+mod dpapi {
+    pub fn chay(_: &[u8], _: bool) -> Result<Vec<u8>, String> {
+        Err("DPAPI chỉ có trên Windows".into())
+    }
+}
+
+#[tauri::command]
+fn dpapi_boc(request: Request<'_>) -> Result<tauri::ipc::Response, String> {
+    let InvokeBody::Raw(du) = request.body() else { return Err("Dữ liệu không đúng dạng".into()) };
+    Ok(tauri::ipc::Response::new(dpapi::chay(du, true)?))
+}
+
+#[tauri::command]
+fn dpapi_mo(request: Request<'_>) -> Result<tauri::ipc::Response, String> {
+    let InvokeBody::Raw(du) = request.body() else { return Err("Dữ liệu không đúng dạng".into()) };
+    Ok(tauri::ipc::Response::new(dpapi::chay(du, false)?))
+}
+
 // ---------------- Mạng nội bộ ----------------
 
 #[derive(Default)]
@@ -295,6 +350,8 @@ pub fn run() {
             mo_thu_muc_sao_luu,
             luu_tai_xuong,
             luu_tep_chon_noi,
+            dpapi_boc,
+            dpapi_mo,
             bat_may_chu,
             tat_may_chu,
             trang_thai_may_chu,

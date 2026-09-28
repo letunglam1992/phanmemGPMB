@@ -1,14 +1,15 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { KHOA_TU_DONG, MAC_DINH_TU_DONG, coVoWindows, denHan, saoLuuTuDong, type CaiDatTuDong } from "./tu-dong-sao-luu";
+import { KHOA_KHOI_PHUC, KHOA_TU_DONG, MAC_DINH_TU_DONG, cachTuDong, coVoWindows, denHan, saoLuuTuDong, type CaiDatTuDong } from "./tu-dong-sao-luu";
 import type { BoChinhSach } from "@gpmb/core";
 import { BO_CHINH_SACH } from "./du-lieu";
 import { taoKhoIndexedDb, type Kho } from "./kho";
 import { LoiMayChu, docCheDo, laKhoMang } from "./kho-mang";
 import type { DuAn, Ho } from "./mo-hinh";
-import { docLanSaoLuu, ghiLanSaoLuu, taoBanSaoLuu, tenTepSaoLuu } from "./sao-luu";
+import { docLanSaoLuu, ghiLanSaoLuu, maHoaBanSaoLuu, taoBanSaoLuu, tenTepSaoLuu } from "./sao-luu";
 import { THOI_HAN_THUNG_RAC, duocXoaHan, lyDoKhongXoaDuAn, lyDoKhongXoaHo } from "./rang-buoc";
 import { taiXuong } from "./tai-xuong";
 import { chuyenDoiDuAn, chuyenDoiHo } from "./ra-soat-so";
+import type { KhoaKhoiPhuc } from "./ma-hoa";
 import { LICH_TRONG, type LichLamViec } from "./lich-lam-viec";
 import { KHOA_TY_LE_CHAM, type GiaiDoanTyLe } from "./chi-tra";
 import { KHOA_KY_BAO_CAO, type KyBaoCao } from "./ky-bao-cao";
@@ -50,6 +51,9 @@ interface NguCanh {
   dsDonVi: DonVi[];
   /** Ảnh nền thanh tiêu đề do đơn vị chọn (data URL); null = ảnh núi đồi mặc định. */
   anhNen: string | null;
+  /** Khóa khôi phục cho sao lưu (P0-5); null = quản trị chưa đặt mật khẩu khôi phục. */
+  khoaKhoiPhuc: KhoaKhoiPhuc | null;
+  luuKhoaKhoiPhuc: (k: KhoaKhoiPhuc) => Promise<void>;
   luuAnhNen: (url: string | null) => Promise<void>;
   luuDonVi: (ds: DonVi[]) => Promise<void>;
   /** Lưu dự án; mặc định cần quyền SUA_HO_SO (chốt/duyệt phương án truyền quyền riêng). */
@@ -124,6 +128,7 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
   const kho = useMemo(() => khoVao ?? taoKhoIndexedDb(), [khoVao]);
   const [dsDuAn, setDsDuAn] = useState<DuAn[]>([]);
   const [dsHo, setDsHo] = useState<Ho[]>([]);
+  const [khoaKhoiPhuc, setKhoaKhoiPhuc] = useState<KhoaKhoiPhuc | null>(null);
   const [man, setMan] = useState<Man>({ ten: "tong-quan" });
   const [lichSu, setLichSu] = useState<Man[]>([]);
   const [dsDonVi, setDsDonVi] = useState<DonVi[]>([]);
@@ -205,6 +210,7 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
     setKyBaoCao((await kho.docCaiDat<KyBaoCao[]>(KHOA_KY_BAO_CAO)) ?? []);
     setDsDonVi((await kho.docCaiDat<DonVi[]>(KHOA_DON_VI)) ?? []);
     setAnhNen((await kho.docCaiDat<string>("anhNen")) ?? null);
+    setKhoaKhoiPhuc((await kho.docCaiDat<KhoaKhoiPhuc>(KHOA_KHOI_PHUC)) ?? null);
     const da = await kho.dsDuAn();
     const hos = (await Promise.all(da.map((d) => kho.dsHo(d.id)))).flat();
     setDsDuAn(da.sort((a, b) => b.taoLuc.localeCompare(a.taoLuc)));
@@ -328,6 +334,13 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
       setAnhNen(url);
       await ghiNhatKy(url ? "Đổi ảnh nền thanh tiêu đề" : "Dùng lại ảnh nền mặc định");
     },
+    khoaKhoiPhuc,
+    luuKhoaKhoiPhuc: async (k) => {
+      if (chan("KHOI_PHUC")) return;
+      await ghi(() => kho.luuCaiDat(KHOA_KHOI_PHUC, k));
+      setKhoaKhoiPhuc(k);
+      await ghiNhatKy(khoaKhoiPhuc ? "Đổi mật khẩu khôi phục sao lưu" : "Đặt mật khẩu khôi phục sao lưu", `khóa ${k.vanTay}`);
+    },
     luuDonVi: async (ds) => {
       if (chan("CAI_DAT")) return;
       await ghi(() => kho.luuCaiDat(KHOA_DON_VI, ds));
@@ -422,8 +435,9 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
       const d = dsDuAn.find((x) => x.id === id);
       if (!d?.daXoa || !duocXoaHan(d.daXoa)) return bao(`Chỉ xóa hẳn dự án đã nằm trong thùng rác đủ ${THOI_HAN_THUNG_RAC} ngày`, "loi");
       // Bản sao lưu toàn bộ dữ liệu trước khi xóa hẳn (cán bộ chọn nơi lưu; Hủy = không xóa)
-      const { bytes, thongTin } = await taoBanSaoLuu(kho);
-      if (!(await taiXuong(bytes, tenTepSaoLuu(thongTin.luc, "GPMB-truoc-xoa-du-an"), "application/zip"))) return bao("Chưa lưu bản sao lưu trước khi xóa — không xóa dự án", "loi");
+      const ban = await taoBanSaoLuu(kho);
+      const bytes = await maHoaBanSaoLuu(ban, await cachTuDong(kho)); // mã hóa bằng khóa khôi phục / DPAPI (P0-5)
+      if (!(await taiXuong(bytes, tenTepSaoLuu(ban.thongTin.luc, "GPMB-truoc-xoa-du-an"), "application/zip"))) return bao("Chưa lưu bản sao lưu trước khi xóa — không xóa dự án", "loi");
       await ghi(() => kho.ghiLo({ xoaDuAn: [id] }));
       await ghiNhatKy("Xóa hẳn dự án", `${d.ten} (vào thùng rác ${d.daXoa.luc.slice(0, 10)} bởi ${d.daXoa.nguoi}: ${d.daXoa.lyDo})`);
       await taiLai();

@@ -38,3 +38,16 @@ Xem docs/11. Tóm tắt: máy chủ đặt IP tĩnh, bật phần mềm trong gi
 | Tiền chậm trả | Tỷ lệ tiền chậm nộp (%/ngày) theo giai đoạn, kèm căn cứ Luật Quản lý thuế hiện hành |
 | Tự động sao lưu | Như mục 3 |
 | Mạng nội bộ | Chế độ, địa chỉ, vân tay; đưa dữ liệu máy đơn lên máy chủ |
+
+## Mã hóa sao lưu và giữ mật khẩu (từ phiên bản 0.4 — P0-5)
+
+- **Tệp sao lưu `.gpmb` được mã hóa AES-256-GCM.** Tệp chứa họ tên, số định danh, số điện thoại của người có đất thu hồi — là dữ liệu cá nhân (Nghị định 13/2023/NĐ-CP; Luật Bảo vệ dữ liệu cá nhân năm 2025 — cần đối chiếu điều khoản cụ thể và văn bản hướng dẫn hiện hành).
+- **Sao lưu thủ công:** bắt buộc đặt mật khẩu sao lưu (≥ 12 ký tự có chữ và số, hoặc cụm từ ≥ 16 ký tự). Chỉ tài khoản Quản trị được xuất tệp **không mã hóa**, phải đánh dấu xác nhận; việc xuất được ghi nhật ký hệ thống ("Xuất bản sao lưu KHÔNG MÃ HÓA").
+- **Sao lưu tự động:** mã hóa bằng tài khoản Windows của máy (DPAPI — mở được trên chính máy đó, không cần mật khẩu) và bằng **mật khẩu khôi phục**. Không có cách mã hóa nào thì phần mềm không ghi tệp và báo lỗi (không ghi tệp rõ).
+- **Mật khẩu khôi phục** (Cài đặt chung → Tự động sao lưu; chỉ Quản trị): mở được mọi bản sao lưu tạo sau khi đặt, kể cả trên máy khác. Máy chỉ lưu khóa công khai và khóa bí mật đã mã hóa, không lưu mật khẩu.
+- **Quy trình giữ mật khẩu (đề xuất):**
+  1. Quản trị đặt mật khẩu khôi phục ngay sau khi cài đặt; bấm "Thử" định kỳ để chắc còn nhớ đúng.
+  2. Ghi mật khẩu ra giấy, cho vào phong bì niêm phong có chữ ký, giao lãnh đạo đơn vị (hoặc người thứ hai được giao) cất giữ; ghi sổ theo dõi.
+  3. Khi đổi mật khẩu khôi phục hoặc thay đổi cán bộ quản trị: lập biên bản bàn giao; **giữ lại mật khẩu cũ** cùng các bản sao lưu cũ (bản cũ chỉ mở được bằng mật khẩu cũ).
+  4. Quên cả mật khẩu sao lưu lẫn mật khẩu khôi phục thì **không mở được tệp** — không có cách phục hồi.
+- Tệp phiên bản cũ (không mã hóa) vẫn khôi phục được; sau khi khôi phục nên xóa tệp cũ và tạo lại bản sao lưu mã hóa.

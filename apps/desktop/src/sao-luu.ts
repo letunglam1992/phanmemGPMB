@@ -5,10 +5,16 @@
  *   ban-do/<id>.dgn – bản đồ DGN đã nạp theo dự án
  *   mau/<ma>.docx   – mẫu văn bản cán bộ tự chỉnh (+ mau/danh-sach.json)
  * Tệp chỉ tạo và đọc trên máy; không gửi đi đâu.
+ *
+ * Phiên bản 2 (P0-5, mã hóa): tệp .gpmb ngoài chỉ gồm
+ *   thong-tin.json  – định dạng, phiên bản 2, thời điểm, số lượng, tham số mã hóa (không có dữ liệu cá nhân)
+ *   du-lieu.bin     – tệp phiên bản 1 ở trên, mã hóa AES-256-GCM (ma-hoa.ts)
+ * Tệp phiên bản 1 (không mã hóa) vẫn đọc được để không mất bản cũ.
  */
 import PizZip from "pizzip";
 import type { Kho } from "./kho";
 import type { DuAn, Ho } from "./mo-hinh";
+import { LoiMaHoa, giaiMa, maHoa, moTaCachMo, type CachMaHoa, type GoiMaHoa } from "./ma-hoa";
 
 export const DINH_DANG = "gpmb-sonla-sao-luu";
 export const KHOA_LICH = "lichLamViec";
@@ -82,8 +88,60 @@ export async function taoBanSaoLuu(kho: Kho, ungDung = "0.1"): Promise<{ bytes: 
   return { bytes: zip.generate({ type: "uint8array", compression: "DEFLATE" }), thongTin };
 }
 
-/** Đọc và kiểm tra tệp sao lưu (định dạng, phiên bản, mã băm, số lượng). */
-export async function docBanSaoLuu(bytes: Uint8Array | ArrayBuffer): Promise<BanSaoLuu> {
+export const PHIEN_BAN_MA_HOA = 2;
+
+/** Thông tin ngoài của tệp mã hóa (đọc được khi chưa có mật khẩu). */
+export interface ThongTinMaHoa extends Omit<ThongTinSaoLuu, "bamDuLieu"> {
+  maHoa: GoiMaHoa;
+}
+
+/** Tệp cần mật khẩu: giao diện hỏi mật khẩu rồi gọi lại docBanSaoLuu. */
+export class LoiCanMatKhau extends LoiSaoLuu {
+  constructor(public thongTin: ThongTinMaHoa, loi?: string) {
+    super(loi ?? `Tệp sao lưu đã mã hóa — nhập ${moTaCachMo(thongTin.maHoa)}.`);
+  }
+}
+
+/** Mã hóa một bản sao lưu (phiên bản 1) thành tệp phiên bản 2. */
+export async function maHoaBanSaoLuu(ban: { bytes: Uint8Array; thongTin: ThongTinSaoLuu }, cach: CachMaHoa): Promise<Uint8Array> {
+  const { goi, bytes } = await maHoa(ban.bytes, cach);
+  const { bamDuLieu: _bo, ...tt } = ban.thongTin;
+  const ngoai: ThongTinMaHoa = { ...tt, phienBan: PHIEN_BAN_MA_HOA, maHoa: goi };
+  const zip = new PizZip();
+  zip.file("thong-tin.json", JSON.stringify(ngoai, null, 2));
+  zip.file("du-lieu.bin", bytes);
+  return zip.generate({ type: "uint8array", compression: "STORE" });
+}
+
+/** Đọc thông tin ngoài: null nếu là tệp phiên bản 1 (không mã hóa). */
+export function thongTinMaHoa(bytes: Uint8Array | ArrayBuffer): ThongTinMaHoa | null {
+  try {
+    const tt = JSON.parse(new PizZip(bytes).file("thong-tin.json")?.asText() ?? "{}") as Partial<ThongTinMaHoa>;
+    return tt.dinhDang === DINH_DANG && tt.maHoa ? (tt as ThongTinMaHoa) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Đọc và kiểm tra tệp sao lưu (định dạng, phiên bản, mã băm, số lượng). Tệp mã hóa: giải mã bằng `cach`
+ * (DPAPI của máy, mật khẩu sao lưu hoặc mật khẩu khôi phục); chưa mở được → LoiCanMatKhau.
+ */
+export async function docBanSaoLuu(bytes: Uint8Array | ArrayBuffer, cach: { matKhau?: string; dpapiMo?: ((b: Uint8Array) => Promise<Uint8Array>) | null } = {}): Promise<BanSaoLuu> {
+  const mh = thongTinMaHoa(bytes);
+  if (mh) {
+    if (mh.phienBan > PHIEN_BAN_MA_HOA) throw new LoiSaoLuu(`Bản sao lưu phiên bản ${mh.phienBan} mới hơn phần mềm — cần cập nhật phần mềm.`);
+    const du = new PizZip(bytes).file("du-lieu.bin")?.asUint8Array();
+    if (!du) throw new LoiSaoLuu("Tệp thiếu dữ liệu (du-lieu.bin).");
+    let trong: Uint8Array;
+    try {
+      trong = await giaiMa(mh.maHoa, du, cach);
+    } catch (e) {
+      if (e instanceof LoiMaHoa && /hỏng|bị sửa/.test(e.message)) throw new LoiSaoLuu(e.message);
+      throw new LoiCanMatKhau(mh, cach.matKhau ? (e as Error).message : undefined);
+    }
+    return docBanSaoLuu(trong);
+  }
   let zip: PizZip;
   try {
     zip = new PizZip(bytes);
