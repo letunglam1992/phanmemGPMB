@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { dinhDang } from "@gpmb/core";
 import { useUngDung } from "../ung-dung";
 import { tinhHo } from "../tinh-ho";
@@ -11,6 +11,8 @@ import { taiXuong } from "../tai-xuong";
 import { TheChiSo } from "../thanh-phan/BieuDo";
 import { HopThoai, O, ngayVN, tien } from "../thanh-phan/chung";
 import { PhanBoTrangThaiGon } from "./TongQuan";
+import { BieuDoKy } from "../thanh-phan/BieuDoKy";
+import { chotKy, kiemTraKy, kyTruoc, sapXepKy, soSanhKyTruoc, tongKy, type KyBaoCao } from "../ky-bao-cao";
 
 const KHOA_TT = "gpmb-bao-cao-thong-tin";
 const TT_MAC_DINH: ThongTinBaoCao = {
@@ -40,7 +42,7 @@ function docTt(): ThongTinBaoCao {
 const LOP_TT: Record<TinhTrangDuAn, string> = { HOAN_THANH: "nhan nhan-xanh", CO_VUONG_MAC: "nhan nhan-do", DANG_THUC_HIEN: "nhan nhan-duong", CHUA_CO_HO_SO: "nhan nhan-xam" };
 
 export function BaoCao() {
-  const { dsDuAn, hoCua, chinhSach, lich, tyLeCham, di, bao } = useUngDung();
+  const { dsDuAn, hoCua, chinhSach, lich, tyLeCham, di, bao, kyBaoCao, themKyBaoCao, xoaKyBaoCao, quyen, nguoiDung } = useUngDung();
   const [xa, setXa] = useState("");
   const [tinhTrang, setTinhTrang] = useState<TinhTrangDuAn | "">("");
   const [denNgay, setDenNgay] = useState(homNayIso());
@@ -51,10 +53,13 @@ export function BaoCao() {
     [dsDuAn, hoCua, chinhSach, xa, tinhTrang, denNgay, lich, tyLeCham],
   );
   const s = bc.tong;
+  const truoc = useMemo(() => kyTruoc(kyBaoCao, denNgay), [kyBaoCao, denNgay]);
+  const ss = useMemo(() => (truoc ? soSanhKyTruoc(bc, truoc) : null), [bc, truoc]);
+  const [hopChot, setHopChot] = useState(false);
   const tenTep = `Bao-cao-tong-hop-GPMB-${denNgay}`;
 
   async function xuatExcel() {
-    const wb = await taoWorkbookBaoCao(bc, docTt().coQuan);
+    const wb = await taoWorkbookBaoCao(bc, docTt().coQuan, kyBaoCao);
     taiXuong(new Uint8Array(await wb.xlsx.writeBuffer()), `${tenTep}.xlsx`, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     bao("Đã xuất Excel báo cáo tổng hợp");
   }
@@ -108,6 +113,8 @@ export function BaoCao() {
         <TheChiSo bieuTuong="chiTra" nhan="Đã chi trả / đã duyệt" giaTri={`${tien(s.daChi)} đ`} tong="duong" phu={`Đã duyệt ${tien(s.daDuyet)} đ · còn phải chi ${tien(s.conPhaiChi)} đ`} />
         <TheChiSo bieuTuong="canhBao" nhan="Cảnh báo cần xử lý ngay" giaTri={s.canhBaoCao} tong={s.canhBaoCao ? "do" : "xam"} nong={s.canhBaoCao > 0} phu={`Tạm tính toàn bộ: ${tien(s.tamTinh)} đ`} />
       </div>
+
+      <DienBien bc={bc} ky={kyBaoCao} ss={ss} coQuyen={quyen("CAI_DAT")} moChot={() => setHopChot(true)} xoa={xoaKyBaoCao} />
 
       <div className="the" style={{ marginBottom: 16 }}>
         <div className="the-dau"><h3>Kết quả từng dự án</h3><span className="mo chu-nho">Bấm một dòng để mở dự án</span></div>
@@ -165,12 +172,26 @@ export function BaoCao() {
         </div>
       </div>
 
+      {hopChot && (
+        <HopChot
+          denNgay={denNgay}
+          trung={kyBaoCao.find((k) => k.denNgay === denNgay)}
+          dong={() => setHopChot(false)}
+          chot={async (ten) => {
+            // Kỳ luôn chụp TẤT CẢ dự án (không theo bộ lọc) để so sánh được với mọi bộ lọc sau này
+            const toanBo = lapBaoCao(dsDuAn, (d) => hoCua(d.id).map((h) => ({ h, k: tinhHo(chinhSach(d), d, h) })), { denNgay }, lich, tyLeCham);
+            await themKyBaoCao(await chotKy(toanBo, ten, nguoiDung));
+            bao(`Đã chốt số liệu kỳ "${ten}"`);
+            setHopChot(false);
+          }}
+        />
+      )}
       {hop && <HopWord dong={() => setHop(false)} xuat={async (tt) => {
         try {
           localStorage.setItem(KHOA_TT, JSON.stringify({ ...tt, so: "", ngayKy: "" }));
         } catch { /* lưu tạm không được thì bỏ qua */ }
         const mau = await (await fetch("/mau-van-ban/bao-cao-tong-hop.docx")).arrayBuffer();
-        taiXuong(dienMau(mau, duLieuBaoCaoWord(bc, tt)), `${tenTep}.docx`, "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+        taiXuong(dienMau(mau, duLieuBaoCaoWord(bc, tt, ss)), `${tenTep}.docx`, "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
         bao("Đã tạo báo cáo Word (dự thảo) — kiểm tra trước khi trình ký");
         setHop(false);
       }} />}
@@ -204,6 +225,108 @@ function HopWord({ dong, xuat }: { dong: () => void; xuat: (t: ThongTinBaoCao) =
         {o("kienNghi", "Đề xuất, kiến nghị", 3)}
         {o("ketThuc", "Câu kết", 2)}
         {o("noiNhan", "Nơi nhận (mỗi dòng một nơi)", 3)}
+      </div>
+    </HopThoai>
+  );
+}
+
+const nhanKy = (k: KyBaoCao) => k.ten || ngayVN(k.denNgay);
+const tyLe = (a: number, b: number) => (b ? (a / b) * 100 : null);
+const dau = (v: number) => (v > 0 ? `+${v}` : v < 0 ? `${v}` : "không đổi");
+const dauTien = (v: { isZero: () => boolean; gt: (n: number) => boolean }) => (v.isZero() ? "không đổi" : `${v.gt(0) ? "+" : ""}${tien(v as never)} đ`);
+
+function DienBien(p: { bc: ReturnType<typeof lapBaoCao>; ky: KyBaoCao[]; ss: ReturnType<typeof soSanhKyTruoc> | null; coQuyen: boolean; moChot: () => void; xoa: (id: string, lyDo: string) => Promise<void> }) {
+  const { bc, ss } = p;
+  const ds = useMemo(() => sapXepKy(p.ky), [p.ky]);
+  const [hopLe, setHopLe] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    let huy = false;
+    void Promise.all(ds.map(async (k) => [k.id, await kiemTraKy(k)] as const)).then((r) => !huy && setHopLe(Object.fromEntries(r)));
+    return () => void (huy = true);
+  }, [ds]);
+  const tong = ds.map((k) => tongKy(k, bc.loc));
+  // Điểm "hiện tại" chỉ thêm khi ngày báo cáo sau kỳ chốt cuối cùng
+  const coHienTai = !ds.length || bc.loc.denNgay > ds.at(-1)!.denNgay;
+  const s = bc.tong;
+  const nhan = [...ds.map(nhanKy), ...(coHienTai ? [`Hiện tại ${ngayVN(bc.loc.denNgay).slice(0, 5)}`] : [])];
+  const tlHt = [...tong.map((t) => tyLe(t.hoanThanh, t.soHo)), ...(coHienTai ? [tyLe(s.theoTrangThai.HOAN_THANH, s.soHo)] : [])];
+  const tlChi = [...tong.map((t) => tyLe(t.daChi.toNumber(), t.daDuyet.toNumber())), ...(coHienTai ? [tyLe(s.daChi.toNumber(), s.daDuyet.toNumber())] : [])];
+  const ty = (v: { toNumber: () => number }) => v.toNumber() / 1e9;
+  const duyet = [...tong.map((t) => ty(t.daDuyet)), ...(coHienTai ? [ty(s.daDuyet)] : [])];
+  const chi = [...tong.map((t) => ty(t.daChi)), ...(coHienTai ? [ty(s.daChi)] : [])];
+  const hienTai = coHienTai ? nhan.length - 1 : undefined;
+  return (
+    <div className="the" style={{ marginBottom: 16 }}>
+      <div className="the-dau">
+        <h3>Diễn biến theo kỳ báo cáo</h3>
+        <span className="mo chu-nho">{ds.length} kỳ đã chốt{bc.loc.xa || bc.loc.tinhTrang ? " · số liệu kỳ lọc theo bộ lọc hiện tại" : ""}</span>
+        <div className="phai">{p.coQuyen && <button className="nut nut-nho nut-chinh" onClick={p.moChot}>Chốt số liệu kỳ này…</button>}</div>
+      </div>
+      <div className="the-than">
+        {ss ? (
+          <div className="chu-y-trong" style={{ marginBottom: 14 }}>
+            <b>So với kỳ trước ({nhanKy(ss.truoc.ky)}, số liệu đến {ngayVN(ss.truoc.ky.denNgay)}):</b>{" "}
+            hộ hoàn thành GPMB {dau(ss.hoanThanh)}; hộ được phê duyệt phương án {dau(ss.soHoDaDuyet)}; kinh phí đã duyệt {dauTien(ss.daDuyet)}; chi trả {dauTien(ss.daChi)}; hộ vướng mắc {dau(ss.vuongMac)}; cảnh báo cần xử lý ngay {dau(ss.canhBaoCao)}
+            {ss.duAnMoi.length > 0 && <>; dự án mới: {ss.duAnMoi.join(", ")}</>}.
+          </div>
+        ) : (
+          <div className="mo chu-nho" style={{ marginBottom: 14 }}>
+            {ds.length ? "Chưa có kỳ nào trước ngày báo cáo đang chọn để so sánh." : "Chưa có kỳ nào được chốt. Chốt số liệu định kỳ (cuối tháng, quý) để theo dõi diễn biến và so sánh với kỳ trước; số liệu kỳ đã chốt không thay đổi khi hồ sơ được sửa sau đó."}
+          </div>
+        )}
+        {nhan.length >= 2 && (
+          <div className="luoi luoi-2" style={{ marginBottom: 14 }}>
+            <div>
+              <div className="nhan-muc">Tỷ lệ hoàn thành, chi trả (%)</div>
+              <BieuDoKy kieu="duong" nhanKy={nhan} hienTai={hienTai} maxY={100} dinhDang={(v) => `${dinhDang(v, 0)}%`} moTa="Tỷ lệ hộ hoàn thành GPMB và tỷ lệ đã chi trả so với kinh phí đã duyệt theo kỳ"
+                chuoi={[{ ten: "Hộ hoàn thành GPMB / tổng số hộ", giaTri: tlHt }, { ten: "Đã chi trả / kinh phí đã duyệt", giaTri: tlChi }]} />
+            </div>
+            <div>
+              <div className="nhan-muc">Kinh phí đã duyệt, đã chi trả (tỷ đồng)</div>
+              <BieuDoKy kieu="cot" nhanKy={nhan} hienTai={hienTai} dinhDang={(v) => dinhDang(v, v < 10 ? 2 : 1)} moTa="Kinh phí đã duyệt và đã chi trả theo kỳ, tỷ đồng"
+                chuoi={[{ ten: "Kinh phí đã duyệt", giaTri: duyet }, { ten: "Đã chi trả", giaTri: chi }]} />
+            </div>
+          </div>
+        )}
+        {ds.length > 0 && (
+          <div className="bang-cuon">
+            <table className="bang">
+              <thead><tr><th>Kỳ</th><th>Số liệu đến</th><th>Chốt bởi</th><th className="so">Dự án</th><th className="so">Hộ hoàn thành</th><th className="so">Đã duyệt (đ)</th><th className="so">Đã chi (đ)</th><th>Toàn vẹn</th><th /></tr></thead>
+              <tbody>
+                {[...tong].reverse().map((t) => (
+                  <tr key={t.ky.id}>
+                    <td><b>{nhanKy(t.ky)}</b></td>
+                    <td>{ngayVN(t.ky.denNgay)}</td>
+                    <td className="chu-nho">{t.ky.nguoi}<div className="can-cu">{new Date(t.ky.chotLuc).toLocaleString("vi-VN")}</div></td>
+                    <td className="so">{t.soDuAn}</td>
+                    <td className="so">{t.hoanThanh}/{t.soHo}</td>
+                    <td className="so">{tien(t.daDuyet)}</td>
+                    <td className="so">{tien(t.daChi)}</td>
+                    <td>{hopLe[t.ky.id] === undefined ? "…" : hopLe[t.ky.id] ? <span className="nhan nhan-xanh">Nguyên vẹn</span> : <span className="nhan nhan-do">Đã bị sửa</span>}</td>
+                    <td>{p.coQuyen && <button className="nut nut-nho nut-chu" onClick={() => { const ly = window.prompt(`Xóa kỳ "${nhanKy(t.ky)}"? Nhập lý do (ghi vào nhật ký hệ thống):`); if (ly?.trim()) void p.xoa(t.ky.id, ly.trim()); }}>Xóa</button>}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function HopChot({ denNgay, trung, dong, chot }: { denNgay: string; trung?: KyBaoCao; dong: () => void; chot: (ten: string) => Promise<void> }) {
+  const [y, m] = denNgay.split("-");
+  const [ten, setTen] = useState(`Tháng ${Number(m)}/${y}`);
+  const [dang, setDang] = useState(false);
+  return (
+    <HopThoai tieuDe="Chốt số liệu kỳ báo cáo" dong={dong} rong={560} chan={<><button className="nut" onClick={dong}>Hủy</button><button className="nut nut-chinh" disabled={!ten.trim() || dang} onClick={async () => { setDang(true); try { await chot(ten); } finally { setDang(false); } }}>Chốt số liệu</button></>}>
+      <div className="luoi">
+        <O nhan="Tên kỳ" goiY="vd. Tháng 9/2026, Quý III/2026, 6 tháng đầu năm 2026"><input value={ten} onChange={(e) => setTen(e.target.value)} /></O>
+        <div className="chu-nho">
+          Chụp số liệu của <b>tất cả dự án</b> (không theo bộ lọc) tính đến ngày <b>{ngayVN(denNgay)}</b>: số hộ, hiện trạng, diện tích, kinh phí tạm tính, đã duyệt, đã chi, cảnh báo. Kỳ đã chốt có mã băm SHA-256, không thay đổi khi hồ sơ được sửa sau đó; việc chốt được ghi vào nhật ký hệ thống.
+        </div>
+        {trung && <div className="chu-y-trong" style={{ color: "var(--vang)" }}>Đã có kỳ "{nhanKy(trung)}" cùng ngày số liệu {ngayVN(denNgay)}. Chốt thêm sẽ tạo kỳ mới; nên xóa kỳ cũ nếu chốt lại.</div>}
       </div>
     </HopThoai>
   );

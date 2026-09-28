@@ -33,6 +33,8 @@
   --vang: #7f520c;   --vang-nen: #f8ecd6;   --vang-to: #c98a1e;
   --do: #a02b20;     --do-nen: #fae6e2;     --do-to: #cc3b2e;
   --xanh-duong: #1f52a8; --xanh-duong-nen: #e6eefb; --xanh-duong-to: #2f6bd0;
+  /* Chuỗi dữ liệu biểu đồ (đã kiểm tra: độ sáng, độ bão hòa, phân biệt khi mù màu, tương phản) */
+  --bd-1: #138a6b; --bd-2: #2f6bd0;
   --tim: #5a47a3;    --tim-nen: #eee9f8;
   --xam: #4f5652;    --xam-nen: #eceeeb;    --xam-to: #8b918c;
   --lam: #085f6e;    --lam-nen: #e1f2f5;    --lam-to: #0a9bb0;
@@ -66,6 +68,7 @@
   --vang: #efc882;   --vang-nen: #3a2c12;   --vang-to: #c28a2a;
   --do: #f5a79c;     --do-nen: #40201b;     --do-to: #dd5646;
   --xanh-duong: #a9c6f4; --xanh-duong-nen: #1a2c48; --xanh-duong-to: #4c84d6;
+  --bd-1: #28a383; --bd-2: #4c84d6;
   --tim: #bba8ef;    --tim-nen: #2a2342;
   --xam: #c3c9c5;    --xam-nen: #28302c;    --xam-to: #6f7773;
   --lam: #8fd9e4;    --lam-nen: #0f3239;    --lam-to: #179aad;
@@ -402,3 +405,16 @@ table.bang { width: 100%; border-collapse: collapse; font-size: 13px; }
   .thanh-tren { padding: 16px 22px; }
   .chu-y-ds { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* Biểu đồ diễn biến theo kỳ */
+.bd-khung { position: relative; }
+.bd-khung svg { display: block; width: 100%; overflow: visible; }
+.bd-luoi { stroke: var(--vien); stroke-width: 1; }
+.bd-truc { fill: var(--chu-mo); font-size: 11px; }
+.bd-nhan { fill: var(--chu-phu); font-size: 11px; font-weight: 600; }
+.bd-chu-giai { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--chu-phu); margin-bottom: 6px; }
+.bd-chu-giai i { display: inline-block; width: 12px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+.bd-goi-y { position: absolute; pointer-events: none; background: var(--be-mat); border: 1px solid var(--vien-dam); border-radius: var(--r-sm); box-shadow: var(--bong); padding: 8px 10px; font-size: 12px; min-width: 170px; z-index: 5; }
+.bd-goi-y b { display: block; margin-bottom: 4px; }
+.bd-goi-y div { display: flex; justify-content: space-between; gap: 12px; color: var(--chu-phu); }
+.bd-goi-y span { font-variant-numeric: tabular-nums; color: var(--chu); }

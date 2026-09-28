@@ -1,6 +1,7 @@
 /** Dữ liệu điền mẫu Word "Báo cáo tổng hợp" (public/mau-van-ban/bao-cao-tong-hop.docx). */
 import { dinhDang } from "@gpmb/core";
 import { TEN_TINH_TRANG, type BaoCao } from "./bao-cao";
+import type { SoSanhKy } from "./ky-bao-cao";
 
 export interface ThongTinBaoCao {
   coQuanCapTren: string;
@@ -25,7 +26,7 @@ const tien = (v: { toFixed: (n: number) => string }) => dinhDang(v.toFixed(0), 0
 const phanTram = (a: number, b: number) => (b ? `${dinhDang((a / b) * 100, 1).replace(/,0$/, "")}%` : "—");
 const ngayVN = (iso: string) => iso.split("-").reverse().join("/");
 
-export function duLieuBaoCaoWord(bc: BaoCao, t: ThongTinBaoCao): Record<string, unknown> {
+export function duLieuBaoCaoWord(bc: BaoCao, t: ThongTinBaoCao, ss?: SoSanhKy | null): Record<string, unknown> {
   const s = bc.tong;
   const [y, m, d] = t.ngayKy ? t.ngayKy.split("-") : ["", "", ""];
   const tongQuat = [
@@ -35,7 +36,8 @@ export function duLieuBaoCaoWord(bc: BaoCao, t: ThongTinBaoCao): Record<string, 
       ? `Đã phê duyệt phương án cho ${s.soHoDaDuyet}/${s.soHo} hộ với kinh phí ${tien(s.daDuyet)} đồng; đã chi trả ${tien(s.daChi)} đồng (${phanTram(s.daChi.toNumber(), s.daDuyet.toNumber())} kinh phí đã duyệt), còn phải chi ${tien(s.conPhaiChi)} đồng.`
       : "Chưa có phương án được phê duyệt.",
     `Đã hoàn thành giải phóng mặt bằng ${s.theoTrangThai.HOAN_THANH}/${s.soHo} hộ (${phanTram(s.theoTrangThai.HOAN_THANH, s.soHo)})${s.theoTrangThai.VUONG_MAC ? `; ${s.theoTrangThai.VUONG_MAC} hộ đang vướng mắc` : ""}.`,
-  ].join(" ");
+    ss ? cauSoSanh(ss) : "",
+  ].filter(Boolean).join(" ");
   const noiNhan = t.noiNhan.split("\n").map((x) => x.trim()).filter(Boolean);
   return {
     CO_QUAN_CAP_TREN: t.coQuanCapTren.toUpperCase(),
@@ -77,4 +79,18 @@ export function duLieuBaoCaoWord(bc: BaoCao, t: ThongTinBaoCao): Record<string, 
     quyen_han: t.quyenHan.toUpperCase(),
     nguoi_ky: t.nguoiKy,
   };
+}
+
+const dau = (v: number) => (v > 0 ? `tăng ${v} hộ` : v < 0 ? `giảm ${-v} hộ` : "không đổi");
+
+/** "So với kỳ trước (…)": chỉ nêu chênh lệch tính được từ số liệu đã chốt. */
+export function cauSoSanh(ss: SoSanhKy): string {
+  const k = ss.truoc.ky;
+  const phan = [
+    `số hộ hoàn thành giải phóng mặt bằng ${dau(ss.hoanThanh)}`,
+    `số hộ được phê duyệt phương án ${dau(ss.soHoDaDuyet)}`,
+    ss.daChi.gt(0) ? `chi trả thêm ${tien(ss.daChi)} đồng` : "chưa chi trả thêm",
+    `số hộ vướng mắc ${dau(ss.vuongMac)}`,
+  ];
+  return `So với kỳ trước (${k.ten}, số liệu đến ${ngayVN(k.denNgay)}): ${phan.join("; ")}${ss.duAnMoi.length ? `; thêm ${ss.duAnMoi.length} dự án` : ""}.`;
 }

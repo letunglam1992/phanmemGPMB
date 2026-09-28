@@ -8,6 +8,7 @@ import type { DuAn, Ho } from "./mo-hinh";
 import { docLanSaoLuu, ghiLanSaoLuu } from "./sao-luu";
 import { LICH_TRONG, type LichLamViec } from "./lich-lam-viec";
 import { KHOA_TY_LE_CHAM, type GiaiDoanTyLe } from "./chi-tra";
+import { KHOA_KY_BAO_CAO, type KyBaoCao } from "./ky-bao-cao";
 import { KHOA_LICH } from "./sao-luu";
 import { coQuyen, dungMatKhau, taoTaiKhoan, tenHienThi, type NguoiDung, type Quyen, type VaiTro } from "./tai-khoan";
 
@@ -63,6 +64,11 @@ interface NguCanh {
   luuTyLeCham: (ds: GiaiDoanTyLe[]) => Promise<void>;
   tuDong: CaiDatTuDong;
   luuTuDong: (c: CaiDatTuDong) => Promise<void>;
+  /** Các kỳ báo cáo đã chốt số liệu (src/ky-bao-cao.ts). */
+  kyBaoCao: KyBaoCao[];
+  /** Thêm kỳ đã chốt — quyền CAI_DAT (lãnh đạo, quản trị). */
+  themKyBaoCao: (k: KyBaoCao) => Promise<void>;
+  xoaKyBaoCao: (id: string, lyDo: string) => Promise<void>;
   /** Sao lưu tự động ngay (bỏ qua chu kỳ). */
   saoLuuTuDongNgay: () => Promise<CaiDatTuDong>;
 }
@@ -95,6 +101,7 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
   const [hopCaiDat, moCaiDat] = useState(false);
   const [tyLeCham, setTyLeCham] = useState<GiaiDoanTyLe[]>([]);
   const [tuDong, setTuDong] = useState<CaiDatTuDong>(MAC_DINH_TU_DONG);
+  const [kyBaoCao, setKyBaoCao] = useState<KyBaoCao[]>([]);
   const dangTuDong = useRef(false);
   const [sai, setSai] = useState<{ lan: number; den: number }>({ lan: 0, den: 0 });
   const nguoiDung = tenHienThi(taiKhoan);
@@ -123,6 +130,7 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
     setTyLeCham((await kho.docCaiDat<GiaiDoanTyLe[]>(KHOA_TY_LE_CHAM)) ?? []);
     const td = await kho.docCaiDat<CaiDatTuDong>(KHOA_TU_DONG);
     if (td) setTuDong({ ...MAC_DINH_TU_DONG, ...td });
+    setKyBaoCao((await kho.docCaiDat<KyBaoCao[]>(KHOA_KY_BAO_CAO)) ?? []);
     const da = await kho.dsDuAn();
     const hos = (await Promise.all(da.map((d) => kho.dsHo(d.id)))).flat();
     setDsDuAn(da.sort((a, b) => b.taoLuc.localeCompare(a.taoLuc)));
@@ -329,6 +337,25 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
       await ghiNhatKy("Cập nhật tự động sao lưu", `${c.bat ? "bật" : "tắt"}; ${c.soNgay} ngày/lần; giữ ${c.giuLai} bản; thư mục: ${c.thuMuc || "mặc định"}`);
     },
     saoLuuTuDongNgay: () => chayTuDong(true),
+    kyBaoCao,
+    themKyBaoCao: async (k) => {
+      if (chan("CAI_DAT")) return;
+      // Đọc lại ngay trước khi ghi: máy khác trong mạng nội bộ có thể vừa chốt kỳ
+      const ds = [...((await kho.docCaiDat<KyBaoCao[]>(KHOA_KY_BAO_CAO)) ?? []), k];
+      await ghi(() => kho.luuCaiDat(KHOA_KY_BAO_CAO, ds));
+      setKyBaoCao(ds);
+      await ghiNhatKy("Chốt số liệu kỳ báo cáo", `${k.ten} — số liệu đến ${k.denNgay}; ${k.dong.length} dự án; SHA-256 ${k.bam.slice(0, 16)}…`);
+    },
+    xoaKyBaoCao: async (id, lyDo) => {
+      if (chan("CAI_DAT")) return;
+      const cu = (await kho.docCaiDat<KyBaoCao[]>(KHOA_KY_BAO_CAO)) ?? [];
+      const k = cu.find((x) => x.id === id);
+      if (!k) return;
+      const ds = cu.filter((x) => x.id !== id);
+      await ghi(() => kho.luuCaiDat(KHOA_KY_BAO_CAO, ds));
+      setKyBaoCao(ds);
+      await ghiNhatKy("Xóa kỳ báo cáo đã chốt", `${k.ten} (số liệu đến ${k.denNgay}) — lý do: ${lyDo}`);
+    },
   };
   return <Ctx.Provider value={giaTri}>{children}</Ctx.Provider>;
 }

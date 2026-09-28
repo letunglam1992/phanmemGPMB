@@ -12,6 +12,7 @@ async function khoCoDuLieu() {
   await kho.luuBanDo(duAn.id, new Uint8Array([8, 9, 0xfe, 1, 2, 3]));
   await kho.luuMau("05", new Uint8Array([0x50, 0x4b, 3, 4]), "mau-05-cua-xa.docx");
   await kho.luuCaiDat("lichLamViec", { nghi: [{ ngay: "2026-09-02", ten: "Quốc khánh" }], lamBu: [], namDaDu: [2026] });
+  await kho.luuCaiDat("kyBaoCao", [{ id: "ky-1", ten: "Tháng 8/2026", denNgay: "2026-08-31", chotLuc: "", nguoi: "", dong: [], bam: "" }]);
   return { kho, duAn, ho };
 }
 
@@ -30,6 +31,7 @@ describe("Sao lưu, khôi phục dữ liệu", () => {
     expect(m?.tenTep).toBe("mau-05-cua-xa.docx");
     expect([...m!.bytes]).toEqual([0x50, 0x4b, 3, 4]);
     expect(await moi.docCaiDat("lichLamViec")).toMatchObject({ namDaDu: [2026] });
+    expect(await moi.docCaiDat("kyBaoCao")).toMatchObject([{ ten: "Tháng 8/2026" }]);
   });
 
   it("THAY_THE xóa dữ liệu cũ; GOP giữ dữ liệu khác mã", async () => {

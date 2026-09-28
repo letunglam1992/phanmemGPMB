@@ -9,6 +9,8 @@ import { lapBaoCao } from "../src/bao-cao";
 import type { DuAn, Ho } from "../src/mo-hinh";
 import { taoWorkbookBaoCao } from "../src/xuat-excel";
 import ExcelJS from "exceljs";
+import { chotKy, kiemTraKy, kyTruoc, soSanhKyTruoc, tongKy } from "../src/ky-bao-cao";
+import { cauSoSanh } from "../src/bao-cao-van-ban";
 
 const cs = cs0 as unknown as BoChinhSach;
 
@@ -110,5 +112,39 @@ describe("Báo cáo tổng hợp — mẫu Word", () => {
     const t2 = new PizZip(dienMau(mau, duLieuBaoCaoWord(bcXa, { coQuanCapTren: "", coQuan: "", kyHieu: "", diaDanh: "", kinhGui: "", so: "", ngayKy: "", moDau: "", khoKhanKhac: "", nhiemVu: "", kienNghi: "", ketThuc: "", noiNhan: "", quyenHan: "", nguoiKy: "" }))).file("word/document.xml")!.asText().replace(/<w:p[ >]/g, "\n<w:p ").replace(/<[^>]+>/g, "");
     expect(t2).toContain("các dự án trên địa bàn xã Mai Sơn");
     expect(t2.split("\n").filter((d) => d.trim() === "").length).toBeLessThan(t.split("\n").filter((d) => d.trim() === "").length + 3);
+  });
+});
+
+describe("Chốt số liệu kỳ báo cáo, so sánh kỳ trước", () => {
+  it("chốt từ báo cáo không lọc; mã băm phát hiện sửa; số liệu kỳ không đổi khi hồ sơ sửa sau", async () => {
+    const { duAnA, duAnB, duLieu } = await haiDuAn();
+    await expect(chotKy(lapBaoCao([duAnA, duAnB], duLieu, { denNgay: "2026-10-31", xa: "Xã Mai Sơn" }), "x", "a")).rejects.toThrow(/không lọc/);
+    const k = await chotKy(lapBaoCao([duAnA, duAnB], duLieu, { denNgay: "2026-10-31" }), "Tháng 10/2026", "Lãnh đạo mẫu", "2026-11-01T01:00:00Z");
+    expect(k.dong).toHaveLength(2);
+    expect(await kiemTraKy(k)).toBe(true);
+    expect(await kiemTraKy({ ...k, dong: k.dong.map((x, i) => (i === 0 ? { ...x, daChi: "999" } : x)) })).toBe(false);
+    expect(tongKy(k, { xa: "Xã Mai Sơn" }).soDuAn).toBe(1);
+    expect(tongKy(k, {}).daChi.toNumber()).toBe(100_000_000);
+  });
+
+  it("so sánh với kỳ gần nhất trước ngày báo cáo, cùng bộ lọc; câu so sánh trong báo cáo Word", async () => {
+    const { duAnA, duAnB, duLieu, phaiTra } = await haiDuAn();
+    const k10 = await chotKy(lapBaoCao([duAnA, duAnB], duLieu, { denNgay: "2026-10-31" }), "Tháng 10/2026", "a");
+    const k9 = await chotKy(lapBaoCao([duAnA, duAnB], duLieu, { denNgay: "2026-09-30" }), "Tháng 9/2026", "a");
+    expect(kyTruoc([k10, k9], "2026-12-31")?.ten).toBe("Tháng 10/2026");
+    expect(kyTruoc([k10, k9], "2026-10-15")?.ten).toBe("Tháng 9/2026");
+    expect(kyTruoc([k10, k9], "2026-09-30")).toBeNull();
+    const bc = lapBaoCao([duAnA, duAnB], duLieu, { denNgay: "2026-12-31" });
+    const ss = soSanhKyTruoc(bc, k10);
+    expect(ss.daChi.toString()).toBe(phaiTra.minus(100_000_000).toString()); // đợt chi 20/12
+    expect(ss.hoanThanh).toBe(0);
+    expect(cauSoSanh(ss)).toMatch(/^So với kỳ trước \(Tháng 10\/2026, số liệu đến 31\/10\/2026\): số hộ hoàn thành giải phóng mặt bằng không đổi; số hộ được phê duyệt phương án không đổi; chi trả thêm [\d.]+ đồng; số hộ vướng mắc/);
+    // Bộ lọc xã áp cho cả số liệu kỳ trước
+    expect(soSanhKyTruoc(lapBaoCao([duAnA, duAnB], duLieu, { denNgay: "2026-12-31", xa: "Xã Mai Sơn" }), k10).daChi.toNumber()).toBe(0);
+    // Excel có trang Diễn biến: 2 kỳ + hiện tại
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(await (await taoWorkbookBaoCao(bc, "x", [k10, k9])).xlsx.writeBuffer());
+    const db = wb.getWorksheet("Diễn biến")!;
+    expect([2, 3, 4].map((r) => db.getRow(r).getCell(1).value)).toEqual(["Tháng 9/2026", "Tháng 10/2026", "Hiện tại (chưa chốt)"]);
   });
 });

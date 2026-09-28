@@ -13,6 +13,7 @@ import { tenTep } from "./ten-tep";
 import { tinhChiTra, type GiaiDoanTyLe } from "./chi-tra";
 import { TEN_COT, type CotTongHop, type KetQuaHo } from "./tinh-ho";
 import { TEN_TINH_TRANG, type BaoCao, type SoLieu } from "./bao-cao";
+import { sapXepKy, tongKy, type KyBaoCao } from "./ky-bao-cao";
 
 const FONT = "Times New Roman";
 const so = (d: Decimal | null | undefined) => (d ? d.toDecimalPlaces(0).toNumber() : null);
@@ -399,7 +400,7 @@ export async function xuatExcelHo(duAn: DuAn, h: Ho, k: KetQuaHo) {
 }
 
 /** Báo cáo tổng hợp nhiều dự án: trang "Tổng hợp" (nhóm theo xã, cộng xã, tổng cộng) và "Vướng mắc". */
-export async function taoWorkbookBaoCao(bc: BaoCao, coQuan: string): Promise<ExcelJS.Workbook> {
+export async function taoWorkbookBaoCao(bc: BaoCao, coQuan: string, dsKy: KyBaoCao[] = []): Promise<ExcelJS.Workbook> {
   const { default: Excel } = await import("exceljs");
   const wb = new Excel.Workbook();
   wb.creator = "GPMB Sơn La";
@@ -484,5 +485,30 @@ export async function taoWorkbookBaoCao(bc: BaoCao, coQuan: string): Promise<Exc
       dongKe(row, 1, 5);
     }
   if (!i) vm.getCell(2, 1).value = "Không có cảnh báo cần xử lý ngay.";
+
+  // Diễn biến theo các kỳ đã chốt (cùng bộ lọc) + số liệu hiện tại
+  if (dsKy.length) {
+    const db = wb.addWorksheet("Diễn biến");
+    const c3 = ["Kỳ", "Số liệu đến", "Người chốt", "Số dự án", "Số hộ", "Hộ hoàn thành", "Tỷ lệ hoàn thành", "Hộ đã duyệt PA", "Kinh phí đã duyệt (đ)", "Đã chi trả (đ)", "Tỷ lệ chi / duyệt", "Hộ vướng mắc", "Mã băm SHA-256"];
+    db.columns = c3.map((_, k) => ({ width: [22, 12, 18, 9, 9, 11, 10, 11, 18, 18, 10, 10, 30][k] }));
+    const hd3 = db.getRow(1);
+    hd3.values = c3;
+    hd3.font = { name: FONT, bold: true };
+    hd3.alignment = { wrapText: true, vertical: "middle", horizontal: "center" };
+    dongKe(hd3, 1, c3.length);
+    const dong = (v: unknown[], dam = false) => {
+      const row = db.addRow(v);
+      row.font = { name: FONT, bold: dam };
+      for (const k of [9, 10]) row.getCell(k).numFmt = DINH_DANG_TIEN;
+      for (const k of [7, 11]) row.getCell(k).numFmt = "0%";
+      dongKe(row, 1, c3.length);
+    };
+    for (const k of sapXepKy(dsKy)) {
+      const t = tongKy(k, bc.loc);
+      dong([k.ten, k.denNgay.split("-").reverse().join("/"), k.nguoi, t.soDuAn, t.soHo, t.hoanThanh, t.soHo ? t.hoanThanh / t.soHo : 0, t.soHoDaDuyet, so(t.daDuyet), so(t.daChi), t.daDuyet.gt(0) ? t.daChi.div(t.daDuyet).toNumber() : 0, t.vuongMac, k.bam]);
+    }
+    const s = bc.tong;
+    dong(["Hiện tại (chưa chốt)", ngay, "", s.soDuAn, s.soHo, s.theoTrangThai.HOAN_THANH, s.soHo ? s.theoTrangThai.HOAN_THANH / s.soHo : 0, s.soHoDaDuyet, so(s.daDuyet), so(s.daChi), s.daDuyet.gt(0) ? s.daChi.div(s.daDuyet).toNumber() : 0, s.theoTrangThai.VUONG_MAC, ""], true);
+  }
   return wb;
 }

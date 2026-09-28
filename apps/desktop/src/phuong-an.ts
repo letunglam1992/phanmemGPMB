@@ -65,7 +65,7 @@ export class LoiPhuongAn extends Error {}
 
 const s = (d: Decimal) => d.toFixed();
 
-async function sha256(x: string): Promise<string> {
+export async function sha256(x: string): Promise<string> {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(x));
   return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
