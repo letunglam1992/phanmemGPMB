@@ -4,7 +4,8 @@
 
 - Bộ cài `GPMB Son La_x.y.z_x64-setup.exe` (cài theo người dùng, không cần quyền quản trị máy; kèm WebView2 nếu máy chưa có). Chưa có chữ ký số → Windows SmartScreen có thể cảnh báo: chọn "More info" → "Run anyway" (hoặc nhờ bộ phận CNTT cho phép).
 - **Nâng cấp:** tạo bản sao lưu thủ công trước; cài bản mới đè lên bản cũ (không cần gỡ). Mạng nội bộ: nâng cấp máy chủ trước, sau đó các máy trạm.
-- Thư mục dữ liệu: `%LOCALAPPDATA%\vn.sonla.gpmb\` (dữ liệu máy đơn trong WebView2; dữ liệu máy chủ trong `may-chu\`). **Gỡ cài đặt có thể xóa dữ liệu máy đơn** — sao lưu trước khi gỡ.
+- Thư mục dữ liệu: `%LOCALAPPDATA%\vn.sonla.gpmb\` — máy đơn (từ 0.6.0) trong `may-don\gpmb-may-don.sqlite`; máy chủ trong `may-chu\`; dữ liệu máy đơn bản ≤ 0.5 trong WebView2 (IndexedDB — tự chuyển sang SQLite lần đầu mở 0.6.0, bản cũ giữ nguyên). **Gỡ cài đặt có thể xóa dữ liệu máy đơn** — sao lưu trước khi gỡ.
+- Lịch sử bản ghi (0.6.0): nằm trong CSDL (`may-don` hoặc `may-chu`), **không có trong tệp `.gpmb`**; sao chép thư mục CSDL khi đã tắt phần mềm nếu cần giữ. Thời hạn giữ: Cài đặt chung → Lịch sử bản ghi (Quản trị).
 
 ## 2. Tài khoản
 
@@ -20,7 +21,8 @@
 | Sao lưu thủ công | Nút **Sao lưu, khôi phục** (thanh trên) → Tạo bản sao lưu → cất tệp `.gpmb` ra USB / ổ mạng nội bộ |
 | Tự động | Cài đặt chung → Tự động sao lưu: chu kỳ, số bản giữ lại, thư mục (nên chọn ổ mạng nội bộ). Chạy trên máy đơn / máy chủ khi phần mềm đang mở |
 | Khôi phục (quản trị) | Sao lưu, khôi phục → chọn tệp → xem thông tin, kiểm tra toàn vẹn → *Thay thế toàn bộ* (phần mềm tự tải bản sao lưu dữ liệu hiện có trước) hoặc *Gộp* |
-| Máy chủ mạng nội bộ | Ngoài tệp `.gpmb`, định kỳ sao chép thư mục `%LOCALAPPDATA%\vn.sonla.gpmb\may-chu\` **khi đã tắt phần mềm** (chứa tài khoản, nhật ký hệ thống, chứng chỉ) |
+| Máy chủ mạng nội bộ | Ngoài tệp `.gpmb`, định kỳ sao chép thư mục `%LOCALAPPDATA%\vn.sonla.gpmb\may-chu\` **khi đã tắt phần mềm** (chứa tài khoản, nhật ký hệ thống, lịch sử bản ghi, chứng chỉ) |
+| Máy đơn (0.6.0) | Ngoài tệp `.gpmb`, sao chép thư mục `may-don\` khi đã tắt phần mềm (tài khoản, nhật ký hệ thống, lịch sử bản ghi) |
 
 Tệp sao lưu **không mã hóa**, có thông tin cá nhân → cất giữ theo quy chế bảo mật của cơ quan.
 
