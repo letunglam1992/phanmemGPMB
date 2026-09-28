@@ -1,4 +1,8 @@
 import { useMemo } from "react";
+import type { BoChinhSach } from "@gpmb/core";
+import type { DuAn, Ho } from "../mo-hinh";
+import type { LichLamViec } from "../lich-lam-viec";
+import type { GiaiDoanTyLe } from "../chi-tra";
 import { D } from "@gpmb/core";
 import { useUngDung } from "../ung-dung";
 import { tinhHo } from "../tinh-ho";
@@ -15,18 +19,27 @@ export interface MucCanhBao {
   caiDat?: boolean;
 }
 
+type ThamSo = Parameters<typeof tinhTongHop>;
+let lanCuoi: { vao: ThamSo; ra: ReturnType<typeof tinhTongHop> } | null = null;
+
+function tinhTongHop(dsDuAn: DuAn[], hoCua: (id: string) => Ho[], chinhSach: (d: DuAn) => BoChinhSach, homNay: string, lich: LichLamViec, tyLeCham: GiaiDoanTyLe[]) {
+  return dsDuAn.map((d) => {
+    const ds = hoCua(d.id).map((h) => ({ h, k: tinhHo(chinhSach(d), d, h) }));
+    return { d, ds, tk: thongKe(d, ds, homNay), cb: canhBaoDuAn(d, ds, homNay, lich, tyLeCham), tong: ds.reduce((s, x) => s.plus(x.k.tong.tongLamTron), D(0)) };
+  });
+}
+/** P1-1: thanh tiêu đề (chuông) và Tổng quan dùng chung một lần tính cho cùng dữ liệu vào. */
+function tongHopNho(...vao: ThamSo) {
+  if (lanCuoi && lanCuoi.vao.every((x, i) => x === vao[i])) return lanCuoi.ra;
+  lanCuoi = { vao, ra: tinhTongHop(...vao) };
+  return lanCuoi.ra;
+}
+
 /** Số liệu tổng hợp mọi dự án + danh sách cảnh báo (dùng ở Tổng quan và chuông thông báo trên thanh tiêu đề). */
 export function useTongHop() {
   const { dsDuAn, hoCua, chinhSach, lich, tyLeCham, lanSaoLuu, quyen, di, moCaiDat, moSaoLuu, khoaKhoiPhuc } = useUngDung();
   const homNay = homNayIso();
-  const duLieu = useMemo(
-    () =>
-      dsDuAn.map((d) => {
-        const ds = hoCua(d.id).map((h) => ({ h, k: tinhHo(chinhSach(d), d, h) }));
-        return { d, ds, tk: thongKe(d, ds, homNay), cb: canhBaoDuAn(d, ds, homNay, lich, tyLeCham), tong: ds.reduce((s, x) => s.plus(x.k.tong.tongLamTron), D(0)) };
-      }),
-    [dsDuAn, hoCua, chinhSach, homNay, lich, tyLeCham],
-  );
+  const duLieu = useMemo(() => tongHopNho(dsDuAn, hoCua, chinhSach, homNay, lich, tyLeCham), [dsDuAn, hoCua, chinhSach, homNay, lich, tyLeCham]);
   const nhacSaoLuu = quyen("SAO_LUU") ? canhBaoSaoLuu(lanSaoLuu, homNay, dsDuAn.length > 0) : null;
   const canhBao: MucCanhBao[] = [
     ...canhBaoChung(homNay, lich, quyen("KHOI_PHUC") && !khoaKhoiPhuc && dsDuAn.length > 0).map((c) => ({ ...c, muc: c.muc ?? ("CAO" as const), duAnId: "" })),

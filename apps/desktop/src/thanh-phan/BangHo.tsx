@@ -1,4 +1,6 @@
+import { useMemo } from "react";
 import { D } from "@gpmb/core";
+import { useCuaSo } from "./cua-so";
 import type Decimal from "decimal.js";
 import { tienDoHo, daQuaBuoc, CAC_BUOC, hoHieuLuc, type DuAn, type Ho } from "../mo-hinh";
 import type { KetQuaHo } from "../tinh-ho";
@@ -22,9 +24,11 @@ const dtThuHoi = (h: Ho) => h.thua.reduce((s, t) => s.plus(soD(t.dienTichThuHoi)
 export function BangHo({ ds, homNay, coDuAn, mo, trong }: { ds: DongHo[]; homNay: string; coDuAn?: boolean; mo: (x: DongHo) => void; trong?: string }) {
   const tong = (f: (x: DongHo) => Decimal) => ds.reduce((s, x) => s.plus(f(x)), D(0));
   const soCot = coDuAn ? 14 : 13;
+  const khoa = useMemo(() => ds.map((x) => x.h.id), [ds]);
+  const cs = useCuaSo(khoa);
   return (
     <div className="bang-cuon bang-ho">
-      <table className="bang">
+      <table className="bang" ref={(e) => void (cs.bang.current = e)}>
         <thead>
           <tr>
             <th className="so" style={{ width: 44 }}>STT</th>
@@ -43,7 +47,9 @@ export function BangHo({ ds, homNay, coDuAn, mo, trong }: { ds: DongHo[]; homNay
           </tr>
         </thead>
         <tbody>
-          {ds.map((x, i) => {
+          {cs.dem_tren > 0 && <tr aria-hidden style={{ height: cs.dem_tren }}><td colSpan={soCot} /></tr>}
+          {ds.slice(cs.dau, cs.cuoi).map((x, j0) => {
+            const i = cs.dau + j0;
             const { h, k, duAn, tt } = x;
             const hl = hoHieuLuc(duAn, h);
             const iHt = CAC_BUOC.findIndex((b) => !daQuaBuoc(hl.tienDo[b.ma]?.trangThai));
@@ -51,7 +57,7 @@ export function BangHo({ ds, homNay, coDuAn, mo, trong }: { ds: DongHo[]; homNay
             const vm = vuongMacHo(duAn, h, k, homNay);
             const thua = h.thua.length ? h.thua : [null];
             return (
-              <tr key={h.id} className="co-the-chon" data-ho-id={h.id} data-du-an-id={duAn.id} onClick={() => mo(x)} title="Bấm để mở hồ sơ">
+              <tr key={h.id} ref={cs.bat ? cs.do_(h.id) : undefined} className="co-the-chon" data-ho-id={h.id} data-du-an-id={duAn.id} onClick={() => mo(x)} title="Bấm để mở hồ sơ">
                 <td className="so">{i + 1}</td>
                 <td className="c-ten"><b>{h.ten}</b><div className="mo chu-nho">{h.ma}</div></td>
                 {coDuAn && <td className="chu-nho c-da">{duAn.ten}</td>}
@@ -74,6 +80,7 @@ export function BangHo({ ds, homNay, coDuAn, mo, trong }: { ds: DongHo[]; homNay
               </tr>
             );
           })}
+          {cs.dem_duoi > 0 && <tr aria-hidden style={{ height: cs.dem_duoi }}><td colSpan={soCot} /></tr>}
           {ds.length === 0 && <tr><td colSpan={soCot} className="trong">{trong ?? "Không có hồ sơ."}</td></tr>}
           {ds.length > 0 && (
             <tr className="tong">

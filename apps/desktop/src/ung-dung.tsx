@@ -110,6 +110,8 @@ interface NguCanh {
 }
 
 const Ctx = createContext<NguCanh | null>(null);
+const KHONG_CO_HO: Ho[] = [];
+const chinhSach = (d: DuAn): BoChinhSach => BO_CHINH_SACH[d.boChinhSach] ?? BO_CHINH_SACH["sonla-2026-03-31"]!;
 
 /** Lỗi đã báo cho người dùng (xung đột, không có quyền trên máy chủ…) — người gọi không cần xử lý thêm. */
 export class DaBaoLoi extends Error {}
@@ -317,11 +319,26 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
   }, [taiKhoan?.ten, chayTuDong]);
 
   const dauXoa = (lyDo: string) => ({ luc: new Date().toISOString(), nguoi: nguoiDung, lyDo: lyDo.trim() });
+  // P1-1: danh sách dẫn xuất ghi nhớ theo dữ liệu gốc — màn hình dùng useMemo phụ thuộc các giá trị này không tính lại
+  // khi chỉ có trạng thái giao diện thay đổi
+  const dsDuAnCon = useMemo(() => dsDuAn.filter((d) => !d.daXoa), [dsDuAn]);
+  const hoTheoDuAn = useMemo(() => {
+    const m = new Map<string, { tat: Ho[]; con: Ho[] }>();
+    for (const h of dsHo) {
+      let x = m.get(h.duAnId);
+      if (!x) m.set(h.duAnId, (x = { tat: [], con: [] }));
+      x.tat.push(h);
+      if (!h.daXoa) x.con.push(h);
+    }
+    return m;
+  }, [dsHo]);
+  const hoCua = useCallback((id: string, kemDaXoa?: boolean) => (kemDaXoa ? hoTheoDuAn.get(id)?.tat : hoTheoDuAn.get(id)?.con) ?? KHONG_CO_HO, [hoTheoDuAn]);
+  const thungRac = useMemo(() => ({ duAn: dsDuAn.filter((d) => d.daXoa), ho: dsHo.filter((h) => h.daXoa && !dsDuAn.find((d) => d.id === h.duAnId)?.daXoa) }), [dsDuAn, dsHo]);
   const giaTri: NguCanh = {
     kho,
-    dsDuAn: dsDuAn.filter((d) => !d.daXoa),
-    hoCua: (id, kemDaXoa) => dsHo.filter((h) => h.duAnId === id && (kemDaXoa || !h.daXoa)),
-    thungRac: { duAn: dsDuAn.filter((d) => d.daXoa), ho: dsHo.filter((h) => h.daXoa && !dsDuAn.find((d) => d.id === h.duAnId)?.daXoa) },
+    dsDuAn: dsDuAnCon,
+    hoCua,
+    thungRac,
     man,
     di,
     quayLai,
@@ -442,7 +459,7 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
       await ghiNhatKy("Xóa hẳn dự án", `${d.ten} (vào thùng rác ${d.daXoa.luc.slice(0, 10)} bởi ${d.daXoa.nguoi}: ${d.daXoa.lyDo})`);
       await taiLai();
     },
-    chinhSach: (d) => BO_CHINH_SACH[d.boChinhSach] ?? BO_CHINH_SACH["sonla-2026-03-31"]!,
+    chinhSach,
     dangTai,
     nguoiDung,
     taiLai,

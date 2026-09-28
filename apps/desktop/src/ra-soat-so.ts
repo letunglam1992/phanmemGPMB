@@ -100,6 +100,9 @@ const ktHopLyHo = (h: Ho): Omit<MucRaSoat, "duAnId" | "doiTuong">[] => {
   return out;
 };
 
+/** P1-1: kết quả rà soát từng hồ sơ ghi nhớ theo đối tượng hồ sơ (bất biến trong giao diện). */
+const DEM_RS = new WeakMap<Ho, { duAnId: string; ds: MucRaSoat[] }>();
+
 /** Danh sách rà soát của các dự án đang dùng (bỏ bản ghi trong thùng rác). */
 export function raSoat(dsDuAn: DuAn[], hoCua: (id: string) => Ho[]): MucRaSoat[] {
   const out: MucRaSoat[] = [];
@@ -119,9 +122,16 @@ export function raSoat(dsDuAn: DuAn[], hoCua: (id: string) => Ho[]): MucRaSoat[]
     xet(d.id, d.ten, undefined, truongSoDuAn(d));
     for (const m of ktHopLyDuAn(d)) out.push({ ...m, duAnId: d.id, doiTuong: d.ten });
     for (const h of hoCua(d.id)) {
-      const ten = `${h.ma} – ${h.ten}`;
-      xet(d.id, ten, h.id, truongSoHo(h), truongBieuThucHo(h));
-      for (const m of ktHopLyHo(h)) out.push({ ...m, duAnId: d.id, hoId: h.id, doiTuong: ten });
+      let c = DEM_RS.get(h);
+      if (!c || c.duAnId !== d.id) {
+        const truoc = out.length;
+        const ten = `${h.ma} – ${h.ten}`;
+        xet(d.id, ten, h.id, truongSoHo(h), truongBieuThucHo(h));
+        for (const m of ktHopLyHo(h)) out.push({ ...m, duAnId: d.id, hoId: h.id, doiTuong: ten });
+        DEM_RS.set(h, (c = { duAnId: d.id, ds: out.slice(truoc) }));
+        continue;
+      }
+      out.push(...c.ds);
     }
   }
   return out;

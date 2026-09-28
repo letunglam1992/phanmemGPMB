@@ -280,7 +280,24 @@ function dongCayThua(cs: BoChinhSach, t: Thua, cay: Extract<TaiSan, { loai: "CAY
  * "Thiếu căn cứ" nêu đúng trường, giá trị; phần còn lại tính trên bản sao đã bỏ giá trị lỗi. Tổng không được chốt
  * khi còn dòng này (tongHo: duocChot = false). Lỗi bất ngờ trong khi tính cũng trả về dòng "Thiếu căn cứ".
  */
+/**
+ * Bộ nhớ đệm kết quả tính (P1-1): hồ sơ, dự án, bộ chính sách là dữ liệu bất biến trong giao diện (mỗi lần sửa tạo đối
+ * tượng mới) nên kết quả được ghi nhớ theo bộ ba tham chiếu; đối tượng cũ bị thu hồi thì mục đệm tự mất (WeakMap).
+ * Nơi sửa trực tiếp đối tượng rồi tính lại (không tạo đối tượng mới) phải dùng `tinhHoMoi`.
+ */
+const DEM = new WeakMap<Ho, WeakMap<DuAn, WeakMap<BoChinhSach, KetQuaHo>>>();
 export function tinhHo(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
+  let a = DEM.get(ho);
+  if (!a) DEM.set(ho, (a = new WeakMap()));
+  let b = a.get(duAn);
+  if (!b) a.set(duAn, (b = new WeakMap()));
+  let k = b.get(cs);
+  if (!k) b.set(cs, (k = tinhHoMoi(cs, duAn, ho)));
+  return k;
+}
+
+/** Tính không qua bộ nhớ đệm. */
+export function tinhHoMoi(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
   const loiHo = truongLoi(truongSoHo(ho));
   const loiDa = truongLoi(truongSoDuAn(duAn));
   let hoTinh = ho, daTinh = duAn;

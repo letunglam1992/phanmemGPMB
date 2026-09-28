@@ -338,8 +338,23 @@ export const laBuocChung = (ma: string) => (BUOC_CHUNG as readonly string[]).inc
  * Tiến độ có hiệu lực của hộ: bước chung lấy theo dự án, trừ khi hộ đánh dấu theo dõi riêng; dự án chưa
  * cập nhật bước chung thì giữ giá trị cũ trong hồ sơ hộ (dữ liệu nhập trước khi có bước chung).
  */
+/** P1-1: ghi nhớ theo (hồ sơ, dự án) — cả hai là đối tượng bất biến trong giao diện. */
+const DEM_HL = new WeakMap<Ho, WeakMap<object, Ho>>();
+function nho<T>(h: Ho, duAn: object, f: () => Ho): Ho {
+  let m = DEM_HL.get(h);
+  if (!m) DEM_HL.set(h, (m = new WeakMap()));
+  let v = m.get(duAn);
+  if (!v) m.set(duAn, (v = f()));
+  return v as Ho & T;
+}
+
 export function tienDoHieuLuc(duAn: Pick<DuAn, "tienDoChung"> | undefined | null, h: Ho): Record<string, BuocHo> {
-  const chung = duAn?.tienDoChung;
+  if (!duAn?.tienDoChung) return h.tienDo;
+  return hoHieuLuc(duAn, h).tienDo;
+}
+
+function tinhTienDoHieuLuc(duAn: Pick<DuAn, "tienDoChung">, h: Ho): Record<string, BuocHo> {
+  const chung = duAn.tienDoChung;
   if (!chung) return h.tienDo;
   const out = { ...h.tienDo };
   for (const ma of BUOC_CHUNG) {
@@ -352,7 +367,7 @@ export function tienDoHieuLuc(duAn: Pick<DuAn, "tienDoChung"> | undefined | null
 
 /** Hồ sơ với tiến độ có hiệu lực — dùng cho mọi chỗ ĐỌC tiến độ (thống kê, cảnh báo, thanh bước). */
 export const hoHieuLuc = (duAn: Pick<DuAn, "tienDoChung"> | undefined | null, h: Ho): Ho =>
-  duAn?.tienDoChung ? { ...h, tienDo: tienDoHieuLuc(duAn, h) } : h;
+  duAn?.tienDoChung ? nho(h, duAn, () => ({ ...h, tienDo: tinhTienDoHieuLuc(duAn, h) })) : h;
 
 export const TEN_TRANG_THAI_BUOC: Record<TrangThaiBuoc, string> = {
   CHUA: "Chưa thực hiện",

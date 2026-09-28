@@ -55,7 +55,17 @@ export function vuongMacBuoc(h: Ho): { ma: string; ten: string; noiDung: string;
   return CAC_BUOC.filter((b) => h.tienDo[b.ma]?.vuongMac?.trim()).map((b) => ({ ma: b.ma, ten: b.ten, noiDung: h.tienDo[b.ma]!.vuongMac!.trim(), ngay: h.tienDo[b.ma]!.vuongMacNgay }));
 }
 
+const DEM_TT = new WeakMap<Ho, { duAn: DuAn; kq: KetQuaHo; homNay: string; tt: TrangThaiGpmb }>();
+/** Hiện trạng GPMB của hồ sơ — ghi nhớ theo (hồ sơ, dự án, kết quả tính, ngày) (P1-1). */
 export function trangThaiHo(duAn: DuAn, h0: Ho, kq: KetQuaHo, homNay: string): TrangThaiGpmb {
+  const c = DEM_TT.get(h0);
+  if (c && c.duAn === duAn && c.kq === kq && c.homNay === homNay) return c.tt;
+  const tt = tinhTrangThaiHo(duAn, h0, kq, homNay);
+  DEM_TT.set(h0, { duAn, kq, homNay, tt });
+  return tt;
+}
+
+function tinhTrangThaiHo(duAn: DuAn, h0: Ho, kq: KetQuaHo, homNay: string): TrangThaiGpmb {
   const h = hoHieuLuc(duAn, h0);
   if (h0.banGiao?.ngay) return "HOAN_THANH";
   // Đã chi trả: chờ bàn giao — trừ khi cán bộ ghi vướng mắc (vd. chưa bàn giao do tranh chấp)
@@ -90,7 +100,28 @@ export const CAC_CHANG = [
   { ten: "Thu hồi, bàn giao", buoc: "13" },
 ];
 
+/**
+ * P1-1: ghi nhớ kết quả tổng hợp một dự án theo (dự án, ngày, từng phần tử danh sách) — danh sách tạo lại nhưng các
+ * phần tử (hồ sơ, kết quả tính) giữ nguyên tham chiếu thì dùng lại kết quả, so sánh O(n) thay vì tính lại.
+ */
+function nhoDuAn<A extends object, R>() {
+  const m = new WeakMap<DuAn, { homNay: string; ds: A[]; khoa: (a: A) => unknown[]; r: R }>();
+  return (duAn: DuAn, ds: A[], homNay: string, khoa: (a: A) => unknown[], tinh: () => R): R => {
+    const c = m.get(duAn);
+    if (c && c.homNay === homNay && c.ds.length === ds.length && ds.every((x, i) => khoa(x).every((v, j) => v === c.khoa(c.ds[i]!)[j]))) return c.r;
+    const r = tinh();
+    m.set(duAn, { homNay, ds, khoa, r });
+    return r;
+  };
+}
+const nhoThongKe = nhoDuAn<{ h: Ho; k: KetQuaHo }, ThongKeDuAn>();
+const nhoMoc = nhoDuAn<Ho, MocTienDo[]>();
+
 export function thongKe(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: string): ThongKeDuAn {
+  return nhoThongKe(duAn, ds, homNay, (x) => [x.h, x.k], () => tinhThongKe(duAn, ds, homNay));
+}
+
+function tinhThongKe(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: string): ThongKeDuAn {
   const theoTrangThai = Object.fromEntries(THU_TU_TRANG_THAI.map((t) => [t, 0])) as Record<TrangThaiGpmb, number>;
   let soThua = 0, soThuaDaKiemDem = 0, soBuocXong = 0, soBuocApDung = 0, dtThuHoi = 0, dtBanGiao = 0;
   let capNhatCuoi: string | null = null;
@@ -141,6 +172,10 @@ export interface MocTienDo {
 
 /** Mốc tiến độ cấp dự án: tổng hợp trạng thái bước của mọi hộ so với kế hoạch. */
 export function mocTienDo(duAn: DuAn, hos0: Ho[], homNay: string): MocTienDo[] {
+  return nhoMoc(duAn, hos0, homNay, (h) => [h], () => tinhMocTienDo(duAn, hos0, homNay));
+}
+
+function tinhMocTienDo(duAn: DuAn, hos0: Ho[], homNay: string): MocTienDo[] {
   const hos = hos0.map((h) => hoHieuLuc(duAn, h));
   return CAC_BUOC.map((b) => {
     const soXong = hos.filter((h) => qua(h, b.ma)).length;
