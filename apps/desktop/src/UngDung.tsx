@@ -5,6 +5,7 @@ import { ManDuAn } from "./man/DuAn";
 import { HoSo } from "./man/HoSo";
 import { BanDo } from "./man/BanDo";
 import { TraCuu } from "./man/TraCuu";
+import { KiemTraPhuongAn } from "./man/KiemTraPhuongAn";
 import { DocScan } from "./man/DocScan";
 import { BaoCao } from "./man/BaoCao";
 import { VanBan } from "./man/VanBan";
@@ -69,6 +70,7 @@ export function UngDung() {
       muc: [
         { ten: "Thiết lập đơn vị", bt: "toaNha", chon: man.ten === "don-vi", bam: () => di({ ten: "don-vi" }) },
         { ten: "Tra cứu đơn giá, giá đất", bt: "traCuu", chon: man.ten === "tra-cuu", bam: () => di({ ten: "tra-cuu" }) },
+        { ten: "Kiểm tra phương án (Excel)", bt: "kiemTra", chon: man.ten === "kiem-tra-pa", bam: () => di({ ten: "kiem-tra-pa" }) },
         { ten: "Đọc văn bản scan (OCR)", bt: "ocr", chon: man.ten === "doc-scan", bam: () => di({ ten: "doc-scan" }) },
       ],
     },
@@ -197,6 +199,7 @@ export function UngDung() {
         {man.ten === "ban-do" && <KhongGianDuAn duAnId={man.duAnId} tab="ban-do" />}
         {man.ten === "tra-cuu" && <TraCuu />}
         {man.ten === "doc-scan" && <DocScan />}
+        {man.ten === "kiem-tra-pa" && <KiemTraPhuongAn />}
         {man.ten === "bao-cao" && <BaoCao />}
         {man.ten === "van-ban" && <KhongGianDuAn duAnId={man.duAnId} tab="van-ban" ma={man.ma} hoId={man.hoId} />}
       </main>

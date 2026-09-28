@@ -21,6 +21,7 @@ export type Man =
   | { ten: "van-ban"; duAnId: string; ma?: string; hoId?: string }
   | { ten: "tra-cuu" }
   | { ten: "doc-scan" }
+  | { ten: "kiem-tra-pa" }
   | { ten: "bao-cao" }
   | { ten: "don-vi" }
   | { ten: "huong-dan" }
