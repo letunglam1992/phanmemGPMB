@@ -23,6 +23,7 @@ export type Man =
   | { ten: "doc-scan" }
   | { ten: "bao-cao" }
   | { ten: "don-vi" }
+  | { ten: "huong-dan" }
   /** Danh sách hồ sơ (mọi dự án hoặc một dự án) lọc theo hiện trạng, chặng quy trình, từ khóa — đích khi bấm vào các chỉ số. */
   | { ten: "ds-ho"; duAnId?: string; trangThai?: string; chang?: string; tim?: string };
 

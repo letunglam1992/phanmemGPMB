@@ -20,6 +20,7 @@ import { tinhHo } from "./tinh-ho";
 import { docGiaoDien, ghiGiaoDien, type GiaoDien } from "./giao-dien-sang-toi";
 import { DanhSachHo } from "./man/DanhSachHo";
 import { ThietLapDonVi } from "./man/ThietLapDonVi";
+import { HuongDan } from "./man/HuongDan";
 import { TimKiemChung } from "./thanh-phan/TimKiem";
 import { useTongHop } from "./thanh-phan/dung-canh-bao";
 import { donViSuDung } from "./don-vi";
@@ -80,6 +81,10 @@ export function UngDung() {
         { ten: "Tra cứu đơn giá, giá đất", bt: "traCuu", chon: man.ten === "tra-cuu", bam: () => di({ ten: "tra-cuu" }) },
         { ten: "Đọc văn bản scan (OCR)", bt: "ocr", chon: man.ten === "doc-scan", bam: () => di({ ten: "doc-scan" }) },
       ],
+    },
+    {
+      nhan: "Trợ giúp",
+      muc: [{ ten: "Hướng dẫn sử dụng", bt: "hoiDap", chon: man.ten === "huong-dan", bam: () => di({ ten: "huong-dan" }) }],
     },
     {
       nhan: "Quản trị",
@@ -176,6 +181,7 @@ export function UngDung() {
                   <div className="menu-nhan">Đăng nhập: {taiKhoan.ten}</div>
                   <button role="menuitem" onClick={() => { setHop("mat-khau"); setMenu(false); }}><BieuTuong ten="khoa" co={16} /> Đổi mật khẩu</button>
                   <button role="menuitem" onClick={() => { moCaiDat(true); setMenu(false); }}><BieuTuong ten="caiDat" co={16} /> Cài đặt chung</button>
+                  <button role="menuitem" onClick={() => { di({ ten: "huong-dan" }); setMenu(false); }}><BieuTuong ten="hoiDap" co={16} /> Hướng dẫn sử dụng</button>
                   {quyen("TAI_KHOAN") && <button role="menuitem" onClick={() => { setHop("tai-khoan"); setMenu(false); }}><BieuTuong ten="taiKhoan" co={16} /> Quản lý tài khoản</button>}
                   {quyen("XEM_NHAT_KY") && <button role="menuitem" onClick={() => { setHop("nhat-ky"); setMenu(false); }}><BieuTuong ten="nhatKy" co={16} /> Nhật ký hệ thống</button>}
                   <div className="menu-vach" />
@@ -192,6 +198,7 @@ export function UngDung() {
         {man.ten === "du-an" && <ManDuAn duAnId={man.duAnId ?? duAnId} />}
         {man.ten === "ds-ho" && <DanhSachHo key={JSON.stringify(man)} duAnId={man.duAnId} trangThai={man.trangThai} chang={man.chang} tim={man.tim} />}
         {man.ten === "don-vi" && <ThietLapDonVi />}
+        {man.ten === "huong-dan" && <HuongDan />}
         {man.ten === "ho" && <HoSo duAnId={man.duAnId} hoId={man.hoId} tabDau={man.tab} />}
         {man.ten === "ban-do" && <BanDo duAnId={man.duAnId} />}
         {man.ten === "tra-cuu" && <TraCuu />}
