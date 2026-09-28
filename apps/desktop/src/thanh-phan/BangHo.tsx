@@ -46,7 +46,6 @@ export function BangHo({ ds, homNay, coDuAn, mo, trong }: { ds: DongHo[]; homNay
           {ds.map((x, i) => {
             const { h, k, duAn, tt } = x;
             const hl = hoHieuLuc(duAn, h);
-            const soXong = CAC_BUOC.filter((b) => hl.tienDo[b.ma]?.trangThai === "XONG").length;
             const iHt = CAC_BUOC.findIndex((b) => !daQuaBuoc(hl.tienDo[b.ma]?.trangThai));
             const b = CAC_BUOC[iHt];
             const vm = vuongMacHo(duAn, h, k, homNay);

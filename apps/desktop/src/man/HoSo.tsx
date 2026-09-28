@@ -237,7 +237,6 @@ function BuocTron({ ho, onChon }: { ho: Ho; onChon: (ma: string) => void }) {
 function TheThongTinHo({ h, hieuLuc, tt, moTab, soanVanBan }: { h: Ho; hieuLuc: Ho; tt: TrangThaiGpmb; moTab: (t: string) => void; soanVanBan: () => void }) {
   const [menu, setMenu] = useState(false);
   const [tatCa, setTatCa] = useState(false);
-  const soXong = CAC_BUOC.filter((b) => hieuLuc.tienDo[b.ma]?.trangThai === "XONG").length;
   const iHienTai = CAC_BUOC.findIndex((b) => !daQuaBuoc(hieuLuc.tienDo[b.ma]?.trangThai));
   const buocHt = iHienTai < 0 ? CAC_BUOC.length : iHienTai + 1;
   const phanTram = Math.round(tienDoHo(hieuLuc).tyLe * 100); // trên các bước áp dụng (P1-3)
