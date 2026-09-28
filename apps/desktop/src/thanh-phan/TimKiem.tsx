@@ -58,7 +58,7 @@ export function TimKiemChung() {
           if (e.key === "ArrowDown") { e.preventDefault(); setChon((c) => Math.min(c + 1, muc.length - 1)); }
           else if (e.key === "ArrowUp") { e.preventDefault(); setChon((c) => Math.max(c - 1, 0)); }
           else if (e.key === "Enter") chay(chon);
-          else if (e.key === "Escape") { setMo(false); o.current?.blur(); }
+          else if (e.key === "Escape") { e.preventDefault(); setMo(false); o.current?.blur(); }
         }}
       />
       <kbd>Ctrl K</kbd>

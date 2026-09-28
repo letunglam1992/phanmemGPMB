@@ -387,7 +387,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
                     {dsThua.slice(0, 800).map((t) => {
                       const th = thuHoi.get(khoaThua(t));
                       return (
-                        <tr key={khoaThua(t)} className={`co-the-chon ${chon === t ? "dang-chon" : ""}`} onClick={() => setChon(t)}>
+                        <tr key={khoaThua(t)} data-phim-chon className={`co-the-chon ${chon === t ? "dang-chon" : ""}`} onClick={() => setChon(t)}>
                           <td onClick={(e) => e.stopPropagation()}><input type="checkbox" disabled={!quyen("SUA_HO_SO")} checked={thuaChon.has(t.ma)} onChange={() => batTatThua(t)} aria-label={`Chọn thửa ${t.soTo ?? "?"}-${t.soThua ?? "?"} là thửa thu hồi`} title="Chọn tay là thửa thu hồi" /></td>
                           <td style={{ whiteSpace: "nowrap" }}>{t.soTo ?? "?"}-{t.soThua ?? "?"}{t.co.length > 0 && <span className="nhan nhan-vang" style={{ marginLeft: 4 }} title={t.co.map((c) => TEN_CO[c]).join(", ")}>!</span>}</td>
                           <td>{t.loaiDatBanDo ?? "—"}</td>

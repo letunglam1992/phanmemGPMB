@@ -192,6 +192,7 @@ export function MenuChuotPhai({ laToi, doiGiaoDien }: { laToi: boolean; doiGiaoD
         { nhan: "Sao lưu, khôi phục", tat: !(quyen("SAO_LUU") || quyen("KHOI_PHUC")), lam: () => moSaoLuu(true) },
         { nhan: laToi ? "Giao diện sáng" : "Giao diện tối", lam: doiGiaoDien },
         { nhan: "Hướng dẫn sử dụng", lam: () => di({ ten: "huong-dan" }) },
+        { nhan: "Phím tắt", phim: "F1", lam: () => void window.dispatchEvent(new KeyboardEvent("keydown", { key: "F1" })) },
       ],
     });
     return nhom;
@@ -206,8 +207,15 @@ export function MenuChuotPhai({ laToi, doiGiaoDien }: { laToi: boolean; doiGiaoD
       if ((e.target as Element).closest("[data-menu-rieng]")) return;
       e.preventDefault();
       moLuc.current = performance.now();
-      setMenu({ x: e.clientX, y: e.clientY, nhom: dungRef.current(e) });
-      setChon(-1);
+      // Mở bằng bàn phím (Shift + F10, phím Menu): đặt menu tại phần tử đang chọn
+      let { clientX: x, clientY: y } = e;
+      if (x === 0 && y === 0 && document.activeElement && document.activeElement !== document.body) {
+        const r = document.activeElement.getBoundingClientRect();
+        x = r.left + Math.min(24, r.width / 2);
+        y = r.top + Math.min(r.height, 28);
+      }
+      setMenu({ x, y, nhom: dungRef.current(e) });
+      setChon(0);
       setViTri(null);
     };
     window.addEventListener("contextmenu", mo);
@@ -226,7 +234,7 @@ export function MenuChuotPhai({ laToi, doiGiaoDien }: { laToi: boolean; doiGiaoD
     if (!menu) return;
     const ngoai = (e: MouseEvent) => !hop.current?.contains(e.target as Node) && dong();
     const phim = (e: KeyboardEvent) => {
-      if (e.key === "Escape") return dong();
+      if (e.key === "Escape") { e.preventDefault(); return dong(); }
       const bat = tat.map((m, i) => (m.tat ? -1 : i)).filter((i) => i >= 0);
       if (!bat.length) return;
       if (e.key === "ArrowDown" || e.key === "ArrowUp") {

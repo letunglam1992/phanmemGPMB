@@ -102,8 +102,8 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
           </div>
           {daSua && <span className="nhan nhan-vang">Chưa lưu</span>}
           {choSua && <button className="nut nut-lon" disabled={!daSua} onClick={() => { setH(goc); setDaSua(false); }}><BieuTuong ten="hoanTac" co={17} /> Hoàn tác</button>}
-          {choSua && <button className={`nut nut-lon ${ke ? "" : "nut-chinh"}`} disabled={!daSua} onClick={() => luu()}><BieuTuong ten="luu" co={17} /> Lưu hồ sơ</button>}
-          {choSua && ke && <button className="nut nut-chinh nut-lon" title="Lưu (nếu có thay đổi) rồi chuyển sang thẻ tiếp theo" onClick={() => void luuTiep()}>{daSua ? "Lưu và tiếp" : "Tiếp"}: {ke[1]} →</button>}
+          {choSua && <button className={`nut nut-lon ${ke ? "" : "nut-chinh"}`} disabled={!daSua} data-phim="luu" title="Lưu hồ sơ (Ctrl + S)" onClick={() => luu()}><BieuTuong ten="luu" co={17} /> Lưu hồ sơ</button>}
+          {choSua && ke && <button className="nut nut-chinh nut-lon" data-phim="luu-tiep" title="Lưu (nếu có thay đổi) rồi chuyển sang thẻ tiếp theo (Ctrl + Enter)" onClick={() => void luuTiep()}>{daSua ? "Lưu và tiếp" : "Tiếp"}: {ke[1]} →</button>}
         </div>
       </div>
 
@@ -547,7 +547,7 @@ function TabTienDo({ h, duAn, doi, luuNgay, soanMau, moDuAn }: Tab & { duAn: DuA
                   const t = td[x.ma]?.trangThai ?? "CHUA";
                   const vm = h.tienDo[x.ma]?.vuongMac;
                   return (
-                    <tr key={x.ma} className={`co-the-chon ${chon === x.ma ? "dang-chon" : ""}`} onClick={() => setChon(x.ma)}>
+                    <tr key={x.ma} data-phim-chon className={`co-the-chon ${chon === x.ma ? "dang-chon" : ""}`} onClick={() => setChon(x.ma)}>
                       <td>{x.ma}</td>
                       <td>{x.ten}<div className="can-cu">{x.canCu}{x.mau ? ` · Mẫu ${x.mau}` : ""}</div></td>
                       <td className="chu-nho">{x.thoiHan ?? "—"}</td>

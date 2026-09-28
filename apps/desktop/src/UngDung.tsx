@@ -23,6 +23,7 @@ import { HuongDan } from "./man/HuongDan";
 import { KhongGianDuAn } from "./man/KhongGianDuAn";
 import { TimKiemChung } from "./thanh-phan/TimKiem";
 import { MenuChuotPhai } from "./thanh-phan/MenuChuotPhai";
+import { BanPhim, type MucPhim } from "./thanh-phan/BanPhim";
 import { useTongHop } from "./thanh-phan/dung-canh-bao";
 import { donViSuDung } from "./don-vi";
 import { HopGioiThieu } from "./thanh-phan/GioiThieu";
@@ -31,7 +32,7 @@ import { BAN_QUYEN, MA_BUILD, moTaPhienBan } from "./phien-ban";
 type MucBen = { ten: string; bt: string; chon?: boolean; bam: () => void; tat?: boolean; an?: boolean };
 
 export function UngDung() {
-  const { man, di, dsDuAn, hopSaoLuu, moSaoLuu, taiKhoan, quyen, dangXuat, hopCaiDat, moCaiDat, quayLai, coTheQuayLai, dsDonVi, anhNen } = useUngDung();
+  const { man, di, dsDuAn, hopSaoLuu, moSaoLuu, taiKhoan, quyen, dangXuat, hopCaiDat, moCaiDat, quayLai, coTheQuayLai, dsDonVi, anhNen, taiLai, bao } = useUngDung();
   const [menu, setMenu] = useState(false);
   const [chuong, setChuong] = useState(false);
   // Dự án làm việc gần nhất — mục "Hồ sơ" mở lại dự án này
@@ -56,6 +57,15 @@ export function UngDung() {
   const dvSuDung = donViSuDung(dsDonVi);
   const cao = canhBao.filter((c) => c.muc === "CAO");
   const vietTat = taiKhoan ? taiKhoan.hoTen.trim().split(/\s+/).slice(-2).map((x) => x[0]).join("").toUpperCase() : "";
+  // Alt + 1…6: chuyển màn bằng bàn phím
+  const diMuc: MucPhim[] = [
+    { phim: "1", ten: "Tổng quan", bam: () => di({ ten: "tong-quan" }) },
+    { phim: "2", ten: "Dự án", bam: () => di({ ten: "du-an" }) },
+    { phim: "3", ten: "Hồ sơ (dự án đang làm)", bam: () => duAnId && di({ ten: "du-an", duAnId }) },
+    { phim: "4", ten: "Báo cáo tổng hợp", bam: () => di({ ten: "bao-cao" }) },
+    { phim: "5", ten: "Tra cứu đơn giá, giá đất", bam: () => di({ ten: "tra-cuu" }) },
+    { phim: "6", ten: "Kiểm tra phương án", bam: () => di({ ten: "kiem-tra-pa" }) },
+  ];
   const nhom: { nhan: string; muc: MucBen[] }[] = [
     {
       nhan: "Theo dõi",
@@ -216,6 +226,7 @@ export function UngDung() {
       {hop === "nhat-ky" && <HopNhatKy dong={() => setHop(null)} />}
       {hopCaiDat && <HopCaiDat />}
       <ThongBaoNhanh />
+      <BanPhim diMuc={diMuc} napLai={taiLai} bao={bao} />
       <MenuChuotPhai laToi={giaoDien === "toi"} doiGiaoDien={() => setGiaoDien(giaoDien === "toi" ? "sang" : "toi")} />
     </div>
   );

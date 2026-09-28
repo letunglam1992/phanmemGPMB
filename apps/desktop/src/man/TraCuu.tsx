@@ -312,7 +312,7 @@ export function TraCuu({ timDau }: { timDau?: string } = {}) {
                         <thead><tr><th style={{ width: 36 }} /><th style={{ width: 44 }}>STT</th><th>Mã nguồn</th><th>Hạng mục</th><th>ĐVT</th><th className="so">{tab === "GIA_DAT" ? "Giá (VT1)" : "Đơn giá (đ)"}</th><th className="so">Trang</th></tr></thead>
                         <tbody>
                           {ds.map((m, i) => (
-                            <tr key={m.id} className={`co-the-chon ${chon?.id === m.id ? "dang-chon" : ""}`} onClick={() => setChon(m)}>
+                            <tr key={m.id} data-phim-chon className={`co-the-chon ${chon?.id === m.id ? "dang-chon" : ""}`} onClick={() => setChon(m)}>
                               <td onClick={(e) => e.stopPropagation()}><input type="checkbox" checked={daChon.has(m.id)} aria-label={`Chọn ${m.ma}`} onChange={() => { const s = new Set(daChon); if (s.has(m.id)) s.delete(m.id); else s.add(m.id); setDaChon(s); }} /></td>
                               <td>{i + 1}</td>
                               <td className="chu-nho" style={{ whiteSpace: "nowrap" }}>{m.ma}{ghim.includes(m.ma) && <span title="Đã ghim"> 📌</span>}</td>

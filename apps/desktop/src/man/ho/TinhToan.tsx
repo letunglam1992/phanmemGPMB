@@ -32,7 +32,7 @@ export function TabTinhToan({ h, duAn, kq }: { h: Ho; duAn: DuAn; kq: KetQuaHo }
                   stt++;
                   const ts = Object.entries(x.dong.thamSo).slice(0, 2).map(([k, v]) => `${k}: ${v}`).join(" · ");
                   return (
-                    <tr key={j} className={`co-the-chon ${lopDong(x.dong)} ${chonHienTai === x ? "dang-chon" : ""}`} onClick={() => setChon(x)}>
+                    <tr key={j} data-phim-chon className={`co-the-chon ${lopDong(x.dong)} ${chonHienTai === x ? "dang-chon" : ""}`} onClick={() => setChon(x)}>
                       <td className="mo">{stt}</td>
                       <td>{x.dong.noiDung}</td>
                       <td className="chu-nho mo" style={{ maxWidth: 360 }}>{ts || x.dong.canhBao[0]}</td>
