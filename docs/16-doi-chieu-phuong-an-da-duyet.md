@@ -33,7 +33,7 @@ Hồ sơ do người dùng cung cấp ngày 28/9/2026: Tờ trình của Phòng 
 - **B13 — đất nguồn gốc nông, lâm trường (k9 Đ6 QĐ 14/2026):** đã làm. Cán bộ chọn trường hợp cho từng thửa (9.1.a/b/c, 9.2.a/b) và ghi hồ sơ xác nhận nguồn gốc. Chạy lại hồ sơ đối chiếu với trường hợp 9.1.a: khoản đất 641.628.000 đ chuyển sang **Hỗ trợ về đất**, cây trồng 1.413.166.700 đ sang **Hỗ trợ cây trồng**, kèm căn cứ điểm a mục 9.1; số tiền không đổi. Dòng "Hỗ trợ ổn định đời sống" ở trạng thái Cần xác nhận cho đến khi nhập DT đất NN đang sử dụng (VM-38).
 - 9.1.b, 9.1.c (có nhà ở, đất ở, khấu trừ nghĩa vụ tài chính): phần mềm **chưa tính tự động** — dòng Cần xác nhận, cán bộ tính và nhập kèm căn cứ.
 - Làm tròn: chọn "Không làm tròn" ở thông tin dự án thì tổng khớp hồ sơ (3.979.678.700 đ) — VM-36.
-- Mẫu Tờ trình, QĐ phê duyệt phương án của xã: đang làm.
+- Mẫu Tờ trình, QĐ phê duyệt phương án của xã: đã đưa vào danh mục (R4, R5 — docs/10 §3a).
 
 ## 5. Nội dung văn bản cần xem lại (để người dùng cân nhắc — phần mềm không sửa hồ sơ)
 

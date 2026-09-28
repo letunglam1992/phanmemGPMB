@@ -188,6 +188,22 @@ export function duLieuDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[]): Record<str
   const hoTro = cong((k) => k.tongHoTro);
   const tongLamTron = cong((k) => k.tong.tongLamTron);
   const toChuc = ds.filter((x) => x.h.loai === "TO_CHUC").length;
+  // Mẫu phê duyệt phương án của xã: các khoản a, b, c… theo nhóm của bảng tính (chỉ khoản Tạm tính)
+  const theoNhom = new Map<string, { ten: string; tien: Decimal }>();
+  for (const { k } of ds)
+    for (const n of k.nhom) {
+      const v = n.dong.reduce((s, x) => (x.dong.trangThai === "TAM_TINH" && x.dong.thanhTien ? s.plus(x.dong.thanhTien) : s), D(0));
+      if (v.isZero()) continue;
+      const cu = theoNhom.get(n.ma);
+      theoNhom.set(n.ma, { ten: n.ten, tien: (cu?.tien ?? D(0)).plus(v) });
+    }
+  const khoan = [...theoNhom].sort(([a], [b]) => a.localeCompare(b)).map(([, x]) => ({ ten: x.ten, tien: x.tien }));
+  const chenhLech = tongLamTron.minus(khoan.reduce((s, x) => s.plus(x.tien), D(0)));
+  if (!chenhLech.isZero()) khoan.push({ ten: `Chênh lệch làm tròn (${ds[0]?.k.moTaLamTron ?? "QD-03"})`, tien: chenhLech });
+  const CHU = "abcdđeghiklmnopqrstuvxy";
+  const demLoai = (["HO_GIA_DINH", "CA_NHAN", "TO_CHUC"] as const)
+    .map((l) => [ds.filter((x) => x.h.loai === l).length, TEN_DOI_TUONG[l].toLowerCase()] as const)
+    .filter(([n]) => n > 0);
   return {
     ten_du_an: duAn.ten,
     ten_xa: lower1(duAn.xa),
@@ -216,6 +232,9 @@ export function duLieuDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[]): Record<str
       dt_thu_hoi: soM2(h.thua.reduce((s, t) => s.plus(t.dienTichThuHoi || 0), D(0))),
     })),
     ds_thuong: [],
+    khoan_pa: khoan.map((x, i) => ({ chu: CHU[i] ?? String(i + 1), ten: x.ten, tien: dinhDang(x.tien, 2).replace(/,00$/, "") })),
+    so_doi_tuong_pa: demLoai.map(([n, ten]) => `${String(n).padStart(2, "0")} ${ten}`).join(", ") || CHAM,
+    pa_doi_tuong: ds.length === 1 ? `đối với ${ds[0]!.h.ten}` : `đối với ${ds.length} đối tượng có đất thu hồi (có danh sách kèm theo)`,
     so_doi_tuong_mo_ta: [soHo ? `${soHo} hộ gia đình, cá nhân` : "", soTc ? `${soTc} tổ chức` : ""].filter(Boolean).join(" và ") || "…",
     dt_duoc_bt: soM2(btHo.tong.plus(btTc.tong)),
     dt_duoc_bt_ho: soM2(btHo.tong),
@@ -307,6 +326,12 @@ export function ghepDuLieu(p: {
     kq.tong_gia_tri = dinhDang(tong, 0);
     kq.tong_gia_tri_chu = docSoTien(tong.toFixed(0));
   }
+  const tenTo = (p.rieng.ten_to_ban_do || "tờ bản đồ số").trim();
+  kq.ds_thua_pa = p.ds.flatMap(({ h }) =>
+    h.thua
+      .filter((t) => D(t.dienTichThuHoi || 0).gt(0))
+      .map((t) => ({ mo_ta: `Thửa số ${t.soThua}; ${tenTo} ${t.soTo}, Diện tích ${soM2(t.dienTichThuHoi)} m², loại đất: ${t.loaiDat}.` })),
+  );
   if (!kq.ky_hieu) kq.ky_hieu = "";
   if (!kq.ngay_hieu_luc) kq.ngay_hieu_luc = "ký";
   return kq;

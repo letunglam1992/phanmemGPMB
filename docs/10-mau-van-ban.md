@@ -48,7 +48,7 @@
 - Ô để trống → in "…………" để viết tay; số và ngày ký để trống → chừa khoảng cho văn thư.
 - Tạo cho nhiều hộ: nhập số bắt đầu → tự tăng; kết quả đóng gói `.zip`; mỗi hồ sơ được ghi nhật ký.
 
-## 3a. Mẫu riêng của xã (R1–R3), song song với mẫu Sổ tay
+## 3a. Mẫu riêng của xã (R1–R5), song song với mẫu Sổ tay
 
 Dựng từ 03 tệp người dùng gửi (Tờ trình đề nghị thu hồi đất, Báo cáo thẩm định, QĐ thu hồi đất theo đợt) bằng `tools/mau-van-ban/mau-rieng.py`: giữ thể thức, bố cục, bảng danh sách 17 cột (có cột giấy chứng nhận) của bản gốc; thay nội dung cụ thể bằng trường tự điền.
 
@@ -57,6 +57,10 @@ Dựng từ 03 tệp người dùng gửi (Tờ trình đề nghị thu hồi đ
 | R1 | Tờ trình đề nghị thu hồi đất (bước 13) | Phòng chuyên môn | Theo đợt (chọn hộ) | Số tờ trình vào dự án |
 | R2 | Báo cáo thẩm định hồ sơ thu hồi đất | Phòng chuyên môn | Theo đợt | — |
 | R3 | Quyết định thu hồi đất theo đợt | UBND xã | Theo đợt | Số QĐ thu hồi vào từng hộ trong đợt |
+| R4 | Tờ trình đề nghị phê duyệt phương án (bước 8) | Phòng chuyên môn | Theo đợt | Số tờ trình vào dự án (R5 dẫn lại) |
+| R5 | Quyết định phê duyệt phương án (bước 9) | UBND xã | Theo đợt | Số QĐ phê duyệt vào dự án |
+
+R4, R5 dựng từ 02 tệp người dùng gửi ngày 28/9/2026 bằng `tools/mau-van-ban/mau-rieng-pa.py` (hàm dùng chung: `tien_ich_mau.py`; cấu hình tên người ký, chuỗi cấm `thay-the-pa.json` để ngoài kho mã). Tự điền: danh sách thửa ("Thửa số …; mảnh trích đo địa chính số …" — cách ghi tờ bản đồ sửa được), số đối tượng theo loại ("01 cá nhân"), tổng giá trị và bằng chữ, **các khoản a, b, c… lấy theo nhóm của bảng tính** (Bồi thường về đất / Hỗ trợ về đất / Hỗ trợ cây trồng… — tên khoản đúng loại bồi thường hay hỗ trợ, VM-37), dòng "Chênh lệch làm tròn" nếu tổng sau làm tròn khác tổng các khoản. So với bản gốc: Điều 4 dẫn "có tên tại Phụ lục kèm theo", nơi nhận mặc định "Như Điều 4" (docs/16 §5, điểm 6, 7).
 
 - **Ẩn danh hóa:** đã xóa toàn bộ tên người, số văn bản, địa danh cụ thể, **ảnh chữ ký tay** có trong tệp gốc, thông tin tác giả (email) trong thuộc tính tệp. Kịch bản dựng tự kiểm tra lại và dừng nếu còn sót.
 - **Theo đợt:** chọn các hộ trong đợt (mặc định tất cả) → một văn bản chung; diện tích, danh sách thửa, số đối tượng tính trên các hộ được chọn. Trường `pham_vi_dot` (ví dụ "đợt 1") in trong ngoặc sau tên dự án nếu có.
@@ -76,6 +80,7 @@ Dựng từ 03 tệp người dùng gửi (Tờ trình đề nghị thu hồi đ
 - `apps/desktop/test/van-ban.test.ts`: điền đủ 22 mẫu với dữ liệu mẫu ẩn danh, không còn trường chưa thay; kiểm tra số liệu Mẫu 14 (diện tích theo loại đất, bằng chữ, căn cứ, nơi nhận), Mẫu 15 (diện tích, mô tả thửa, lý do), cộng chi phí tổ chức vào tổng giá trị, ô trống in dấu chấm.
 - `apps/desktop/test/doc-so.test.ts`: đọc số tiền thành chữ (linh, mốt, tư, lăm, không trăm…).
 - Mẫu riêng R1–R3: điền với 1 hộ + 1 tổ chức, 1 thửa đánh dấu không bồi thường; kiểm tra phạm vi đợt, số đối tượng, diện tích được/không được bồi thường theo loại đất, dòng GCN, nơi nhận, người ký theo cơ quan; không còn tên thật trong tệp.
+- Mẫu riêng R4, R5: điền với dữ liệu mẫu; kiểm tra danh sách thửa, số đối tượng, các khoản a, b, c… cộng đúng tổng sau làm tròn, dẫn số Tờ trình R4 vào R5, "Như Điều 4". Đã xem bản PDF dựng bằng LibreOffice.
 - Chạy thử giao diện: tạo Mẫu 15 cho 2 hộ (số tự tăng 25, 26), Mẫu 14 cho dự án; đã mở tệp kiểm tra nội dung; kết xuất PDF bằng LibreOffice để xem thể thức.
 
 ## 6. Hạn chế

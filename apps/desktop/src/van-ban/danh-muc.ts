@@ -129,5 +129,44 @@ DANH_MUC_MAU.push(
   },
 );
 
+const PA_RIENG = (): TruongNhap[] => [
+  ...TRUONG_DOT,
+  { truong: "ten_to_ban_do", nhan: "Cách ghi tờ bản đồ trong danh sách thửa", macDinh: "mảnh trích đo địa chính số", goiY: "vd. tờ bản đồ số / mảnh trích đo địa chính số" },
+  ...PHUONG_AN().map((t) =>
+    t.truong === "chi_phi_to_chuc" ? { ...t, macDinh: "Thực hiện theo quy định hiện hành.", goiY: "Nhập số tiền (đồng) thì được cộng vào tổng giá trị phương án" }
+    : t.truong === "tien_do_thuc_hien" ? { ...t, nhieuDong: true, macDinh: "Trong thời hạn 30 ngày kể từ ngày quyết định phê duyệt phương án bồi thường, hỗ trợ có hiệu lực thi hành, đơn vị thực hiện nhiệm vụ bồi thường phải chi trả tiền bồi thường, hỗ trợ cho người có đất thu hồi, chủ sở hữu tài sản." }
+    : t.truong === "y_kien_kien_nghi" ? { ...t, macDinh: "Không." }
+    : t,
+  ).filter((t) => !["bt_dau_tu_con_lai", "ho_tro_ban_giao_som", "noi_dung_khac"].includes(t.truong)),
+];
+
+/** Mẫu phê duyệt phương án của xã (QD-23): số liệu các khoản lấy từ bảng tính, tên khoản theo nhóm bồi thường / hỗ trợ. */
+DANH_MUC_MAU.push(
+  {
+    ma: "R4", ten: "Tờ trình đề nghị phê duyệt phương án (mẫu của xã)", buoc: "8", phamVi: "DOT", coQuan: "PHONG", nguon: "RIENG", tep: "rieng-to-trinh-pa.docx",
+    moTa: "Phòng chuyên môn trình Chủ tịch UBND xã phê duyệt phương án; các khoản a, b, c… tự lấy theo nhóm của bảng tính. Kèm Phụ lục I, II xuất từ Excel phương án.",
+    ghiLai: { khoa: "tt_phe_duyet_pa", capDo: "DU_AN", kyHieu: "TTr-{ky_hieu_phong}" },
+    nhapThem: [
+      { truong: "ket_qua_tham_dinh", nhan: "Kết quả thẩm định (văn bản, số, ngày)", nhieuDong: true, goiY: "vd. Báo cáo số …/BC-HĐBT ngày … về thẩm định phương án …" },
+      { truong: "tt_don_vi_so", nhan: "Tờ trình đề nghị thẩm định của đơn vị bồi thường số" }, { truong: "tt_don_vi_ngay", nhan: "ngày" },
+      ...PA_RIENG(),
+      { truong: "noi_nhan", nhan: "Nơi nhận (mỗi dòng một nơi)", nhieuDong: true, macDinh: "Như kính gửi\nLưu: VT" },
+    ],
+  },
+  {
+    ma: "R5", ten: "Quyết định phê duyệt phương án (mẫu của xã)", buoc: "9", phamVi: "DOT", coQuan: "UBND", nguon: "RIENG", tep: "rieng-qd-pa.docx",
+    moTa: "Chủ tịch UBND xã phê duyệt phương án; dẫn số Tờ trình (mẫu R4) đã ghi. Điều 4 dẫn “có tên tại Phụ lục kèm theo”; nơi nhận mặc định “Như Điều 4”.",
+    ghiLai: { khoa: "qd_phe_duyet", capDo: "DU_AN", kyHieu: "QĐ-UBND" },
+    nhapThem: [
+      { truong: "chuc_danh_de_nghi", nhan: "Chức danh người đề nghị", goiY: "Để trống = Trưởng + tên phòng" },
+      ...PA_RIENG(),
+      { truong: "ben_nhan_mat_bang", nhan: "Đơn vị nhận bàn giao mặt bằng", macDinh: "đơn vị thi công thực hiện dự án" },
+      HIEU_LUC,
+      { truong: "co_quan_thi_hanh", nhan: "Các cơ quan chịu trách nhiệm thi hành (Điều 4)", nhieuDong: true, macDinh: "Chánh Văn phòng Hội đồng nhân dân và Ủy ban nhân dân; Trưởng Phòng Kinh tế; Trưởng Phòng Văn hóa - Xã hội; Thủ trưởng đơn vị thực hiện nhiệm vụ bồi thường, giải phóng mặt bằng; Hội đồng bồi thường, hỗ trợ, tái định cư dự án; các cơ quan, đơn vị liên quan" },
+      { truong: "noi_nhan", nhan: "Nơi nhận (mỗi dòng một nơi)", nhieuDong: true, macDinh: "Chủ tịch UBND tỉnh (để b/c)\nCác Phó Chủ tịch UBND tỉnh (để b/c)\nSở Nông nghiệp và Môi trường (để b/c)\nThường trực Đảng ủy xã\nThường trực HĐND xã\nChủ tịch, PCT UBND xã\nNhư Điều 4\nTrang thông tin điện tử\nLưu: VT" },
+    ],
+  },
+);
+
 export const mauTheoMa = (ma: string) => DANH_MUC_MAU.find((m) => m.ma === ma)!;
 export const tepMau = (m: MauVanBan) => m.tep ?? `mau-${m.ma}.docx`;

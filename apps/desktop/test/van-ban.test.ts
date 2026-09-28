@@ -16,9 +16,9 @@ const docMau = (ma: string) => readFileSync(new URL(`../public/mau-van-ban/${tep
 const vanBan = (u8: Uint8Array) => new PizZip(u8).file("word/document.xml")!.asText().replace(/<w:p[ >]/g, "\n<w:p ").replace(/<[^>]+>/g, "");
 
 describe("22 mẫu văn bản QĐ 1966/QĐ-UBND", () => {
-  it("đủ 22 mẫu Sổ tay + 3 mẫu riêng, mỗi mẫu có tệp và trường hợp lệ", () => {
+  it("đủ 22 mẫu Sổ tay + 5 mẫu riêng, mỗi mẫu có tệp và trường hợp lệ", () => {
     expect(DANH_MUC_MAU.filter((m) => m.nguon !== "RIENG").map((m) => m.ma)).toEqual(Array.from({ length: 22 }, (_, i) => String(i + 1).padStart(2, "0")));
-    expect(DANH_MUC_MAU.filter((m) => m.nguon === "RIENG").map((m) => m.ma)).toEqual(["R1", "R2", "R3"]);
+    expect(DANH_MUC_MAU.filter((m) => m.nguon === "RIENG").map((m) => m.ma)).toEqual(["R1", "R2", "R3", "R4", "R5"]);
     for (const m of DANH_MUC_MAU) expect(truongTrongMau(docMau(m.ma)).length).toBeGreaterThan(3);
   });
 
@@ -31,7 +31,7 @@ describe("22 mẫu văn bản QĐ 1966/QĐ-UBND", () => {
       expect(t).toMatch(/CỘNG HO(À|À) XÃ HỘI CHỦ NGHĨA VIỆT NAM|CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM/);
       if (m.phamVi === "HO") expect(t).toContain("Hộ mẫu 01");
       if (m.coQuan === "UBND") expect(t).toMatch(/Số: 12\//);
-      if (m.nguon === "RIENG") expect(t).not.toMatch(/Vân Hồ|Hòa Bình|UBND XÃ VÂN/i);
+      if (m.nguon === "RIENG") expect(t).not.toMatch(/Vân Hồ|Hòa Bình|UBND XÃ VÂN|Mai Sơn|Tô Hiệu|455/i);
     });
   }
 
@@ -90,6 +90,37 @@ describe("22 mẫu văn bản QĐ 1966/QĐ-UBND", () => {
       if (ma === "R2") expect(t).toContain("- Luật Tổ chức chính quyền địa phương số 72/2025/QH15;");
       else expect(t).toContain("Căn cứ Luật Tổ chức chính quyền địa phương số 72/2025/QH15;");
     }
+  });
+
+  it("mẫu riêng phê duyệt phương án (R4, R5): thửa, đối tượng, các khoản theo nhóm, dẫn Tờ trình", () => {
+    const tong = ds.reduce((s, x) => s + x.k.tong.tongLamTron.toNumber(), 0);
+    const chung = { ...thongTinChungMacDinh(duAn), ten_don_vi_bt: "Ban Quản lý dự án mẫu" };
+    const duAnCoTt = { ...duAn, vanBan: { tt_phe_duyet_pa_so: "07/TTr-KT", tt_phe_duyet_pa_ngay: "20/9/2026" } };
+    for (const ma of ["R4", "R5"]) {
+      const m = DANH_MUC_MAU.find((x) => x.ma === ma)!;
+      const rieng = Object.fromEntries(m.nhapThem.map((t) => [t.truong, t.macDinh ?? ""]));
+      const du = ghepDuLieu({ mau: m, duAn: duAnCoTt, ds, chung, rieng: { ...rieng, ket_qua_tham_dinh: "Báo cáo thẩm định số 01/BC-HĐBT ngày 15/9/2026" }, so: "12", ngayKy: "2026-09-27" });
+      const t = vanBan(dienMau(docMau(ma), du));
+      expect(t).toContain("Thửa số 85; mảnh trích đo địa chính số 5, Diện tích 9.222,10 m², loại đất: CLN.");
+      expect(t).toContain("Tổng số đối tượng có đất thu hồi: 02 hộ gia đình.");
+      expect(t).toContain(`Tổng giá trị phương án: ${tong.toLocaleString("vi-VN")} đồng (`);
+      expect(t).toMatch(/a, Bồi thường về đất: [\d.]+ đồng;/);
+      expect(t).toContain("Hỗ trợ đào tạo, chuyển đổi nghề và tìm kiếm việc làm");
+      expect(t).toContain("Chi phí bảo đảm cho việc tổ chức thực hiện bồi thường, hỗ trợ, tái định cư: Thực hiện theo quy định hiện hành.");
+      if (ma === "R4") {
+        expect(t).toContain("Căn cứ Báo cáo thẩm định số 01/BC-HĐBT ngày 15/9/2026.");
+        expect(t).toContain("Số: 12/TTr-KT");
+      } else {
+        expect(t).toContain("tại Tờ trình số 07/TTr-KT ngày 20/9/2026.");
+        expect(t).toContain("có tên tại Phụ lục kèm theo chịu trách nhiệm thi hành");
+        expect(t).toContain("- Như Điều 4;");
+        expect(t).toContain("Ban Quản lý dự án mẫu chủ trì");
+      }
+    }
+    // Các khoản a, b, c… cộng lại đúng tổng sau làm tròn
+    const du = ghepDuLieu({ mau: DANH_MUC_MAU.find((x) => x.ma === "R4")!, duAn, ds, chung, rieng: {}, so: "", ngayKy: "" });
+    const cong = (du.khoan_pa as { tien: string }[]).reduce((s, x) => s + Number(x.tien.replace(/\./g, "").replace(",", ".")), 0);
+    expect(cong).toBeCloseTo(tong, 2);
   });
 
   it("trường bỏ trống in thành dấu chấm", () => {
