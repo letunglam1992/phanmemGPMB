@@ -107,6 +107,17 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
                           </div>
                         </div>
                         <div className="mo chu-nho" style={{ marginTop: 6 }}>Thứ tự tính cây = thứ tự dòng ở thẻ Kiểm đếm (chủ sở hữu lựa chọn, k4 Đ5 PL VIII QĐ 106/2025).</div>
+                        <div className="luoi" style={{ gridTemplateColumns: "260px 1fr", alignItems: "end", marginTop: 10 }}>
+                          <div className="o-nhap"><label>Cây không có mật độ trên thửa trồng xen (VM-35)</label>
+                            <select value={t.cayXen?.khongMatDo ?? ""} onChange={(e) => sua(t.id, { cayXen: { dienTichTru: t.cayXen?.dienTichTru ?? "", lyDoTru: t.cayXen?.lyDoTru ?? "", cachXep: t.cayXen?.cachXep ?? "DUNG_KHI_VUOT", lyDoKhongMatDo: t.cayXen?.lyDoKhongMatDo ?? "", khongMatDo: (e.target.value || undefined) as "TINH_100" | "TINH_30" | undefined } })}>
+                              <option value="">Chưa chọn (cần xác nhận)</option>
+                              <option value="TINH_100">Tính 100% đơn giá</option>
+                              <option value="TINH_30">Tính 30% như số cây còn lại</option>
+                            </select>
+                          </div>
+                          <div className="o-nhap"><label>Lý do, căn cứ lựa chọn (bắt buộc)</label><input value={t.cayXen?.lyDoKhongMatDo ?? ""} onChange={(e) => sua(t.id, { cayXen: { dienTichTru: t.cayXen?.dienTichTru ?? "", lyDoTru: t.cayXen?.lyDoTru ?? "", cachXep: t.cayXen?.cachXep ?? "DUNG_KHI_VUOT", khongMatDo: t.cayXen?.khongMatDo, lyDoKhongMatDo: e.target.value } })} /></div>
+                        </div>
+                        <div className="mo chu-nho" style={{ marginTop: 4 }}>Áp dụng cho cây hàng năm, hoa màu tính theo m² và loài chưa có mật độ (vd. đào, táo: nhập mật độ ở thẻ Kiểm đếm thì được xếp vào quỹ).</div>
                       </td>
                     </tr>
                   )}

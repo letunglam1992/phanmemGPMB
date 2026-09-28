@@ -25,6 +25,7 @@
 | [docs/13-huong-dan-su-dung.md](docs/13-huong-dan-su-dung.md) | Hướng dẫn sử dụng theo vai trò và luồng công việc |
 | [docs/14-huong-dan-quan-tri.md](docs/14-huong-dan-quan-tri.md) | Hướng dẫn quản trị: cài đặt, tài khoản, sao lưu, mạng nội bộ |
 | [docs/15-cap-nhat-bo-chinh-sach.md](docs/15-cap-nhat-bo-chinh-sach.md) | Cập nhật bộ chính sách khi có văn bản mới |
+| [docs/16-doi-chieu-phuong-an-da-duyet.md](docs/16-doi-chieu-phuong-an-da-duyet.md) | Đối chiếu với phương án đã phê duyệt thực tế; nội dung văn bản cần xem lại |
 
 ## Dữ liệu và công cụ
 

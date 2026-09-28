@@ -148,6 +148,7 @@ function dongNhaCongTrinh(cs: BoChinhSach, ts: Extract<TaiSan, { loai: "NHA_CT" 
 function dongCayThua(cs: BoChinhSach, t: Thua, cay: Extract<TaiSan, { loai: "CAY" }>[]): DongKetQua[] {
   const out: DongKetQua[] = [];
   const theoMatDo: { ts: (typeof cay)[number]; dong: DongCayXen }[] = [];
+  const khongMatDo: { ts: (typeof cay)[number]; sl: Decimal }[] = [];
   for (const c of cay) {
     const sl = soLuong(c, c.soLuong, "A14");
     if (sl.loi) {
@@ -157,11 +158,39 @@ function dongCayThua(cs: BoChinhSach, t: Thua, cay: Extract<TaiSan, { loai: "CAY
     const donViCay = c.donVi !== "m²" && c.donVi !== "m";
     if (donViCay && c.matDoHa) {
       theoMatDo.push({ ts: c, dong: { ten: c.ten, maDonGia: c.maDonGia, donVi: c.donVi, donGia: c.donGia, soLuong: sl.v!, matDoHa: c.matDoHa } });
-    } else {
-      const d = cayTrong(cs, { ten: c.ten, maDonGia: c.maDonGia, donVi: (c.donVi as "cây" | "m²" | "trụ" | "m") ?? "cây", donGia: c.donGia, soLuong: sl.v! });
-      const kl = c.donVi === "m²" ? sl.v!.toDecimalPlaces(2) : sl.v!;
-      out.push({ dong: d, bieu: [{ dvt: c.donVi, kl, heSo: D(1), donGia: D(c.donGia) }], cot: "BT_CAY", thuaId: t.id, taiSanId: c.id });
+    } else khongMatDo.push({ ts: c, sl: sl.v! });
+  }
+  // VM-35: thửa đã có cây tính theo quỹ mật độ (trồng xen) → dòng không có mật độ phải được cán bộ chọn cách tính.
+  const xen = theoMatDo.length > 0;
+  const chon = t.cayXen?.khongMatDo;
+  const lyDo = t.cayXen?.lyDoKhongMatDo?.trim() ?? "";
+  for (const { ts: c, sl } of khongMatDo) {
+    const d0 = cayTrong(cs, { ten: c.ten, maDonGia: c.maDonGia, donVi: (c.donVi as "cây" | "m²" | "trụ" | "m") ?? "cây", donGia: c.donGia, soLuong: sl });
+    const kl = c.donVi === "m²" ? sl.toDecimalPlaces(2) : sl;
+    if (!xen) {
+      out.push({ dong: d0, bieu: [{ dvt: c.donVi, kl, heSo: D(1), donGia: D(c.donGia) }], cot: "BT_CAY", thuaId: t.id, taiSanId: c.id });
+      continue;
     }
+    const heSo = chon === "TINH_30" ? D(cs.cayTrong.tyLePhanVuot) : D(1);
+    const daChon = !!chon && !!lyDo;
+    const d: DongTinh = {
+      ...d0,
+      thanhTien: d0.thanhTien ? d0.thanhTien.mul(heSo) : d0.thanhTien,
+      congThuc: chon === "TINH_30" ? `${d0.congThuc} × ${heSo.mul(100).toString()}%` : d0.congThuc,
+      trangThai: daChon ? d0.trangThai : "CAN_XAC_NHAN",
+      luaChon: daChon ? [...d0.luaChon, { ma: "VM-35", giaTri: chon === "TINH_30" ? "Tính 30% như số cây còn lại (k4 Đ5 PL VIII)" : "Tính 100% đơn giá", lyDo }] : d0.luaChon,
+      canhBao: [
+        ...d0.canhBao,
+        ...(daChon
+          ? []
+          : [
+              chon
+                ? "Đã chọn cách tính cây không có mật độ trên thửa trồng xen nhưng chưa ghi lý do (VM-35)"
+                : "Thửa có cây trồng xen tính theo quỹ mật độ; dòng này không có mật độ quy định — chọn tính 100% hay 30% ở thẻ Thửa đất (VM-35)",
+            ]),
+      ],
+    };
+    out.push({ dong: d, bieu: [{ ...(chon === "TINH_30" ? { ghiChu: "Trồng xen, không có mật độ quy định" } : {}), dvt: c.donVi, kl, heSo, donGia: D(c.donGia) }], cot: "BT_CAY", thuaId: t.id, taiSanId: c.id });
   }
   if (theoMatDo.length) {
     const tuy = t.cayXen;

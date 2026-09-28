@@ -52,7 +52,17 @@ export interface Thua {
   /** Mã thửa trên bản đồ (T{tờ}-{thửa}), nếu tạo từ bản đồ. */
   maBanDo?: string;
   dienTichBanDo?: number;
-  cayXen?: { dienTichTru: string; lyDoTru: string; cachXep: "DUNG_KHI_VUOT" | "LAP_DAY" };
+  cayXen?: {
+    dienTichTru: string;
+    lyDoTru: string;
+    cachXep: "DUNG_KHI_VUOT" | "LAP_DAY";
+    /**
+     * VM-35: dòng cây không có mật độ quy định (cây hàng năm, hoa màu tính m², loài chưa có mật độ)
+     * trên thửa có cây tính theo quỹ mật độ. Chưa chọn → "Cần xác nhận". Chọn thì bắt buộc lý do.
+     */
+    khongMatDo?: "TINH_100" | "TINH_30";
+    lyDoKhongMatDo?: string;
+  };
   ghiChu?: string;
 }
 
