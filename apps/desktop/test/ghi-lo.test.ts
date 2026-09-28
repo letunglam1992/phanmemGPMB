@@ -54,7 +54,8 @@ describe("Ghi lô nguyên tử (kho)", () => {
 
 describe("Ghi lô nguyên tử (IndexedDB — máy đơn)", () => {
   it("một bản ghi không ghi được → hủy cả giao dịch; xóa dự án gồm hồ sơ, bản đồ", async () => {
-    await import("fake-indexeddb/auto");
+    const fake = await import("fake-indexeddb");
+    Object.assign(globalThis, { indexedDB: fake.indexedDB, IDBKeyRange: fake.IDBKeyRange });
     const { taoKhoIndexedDb } = await import("../src/kho");
     const kho = taoKhoIndexedDb();
     const { duAn, ho } = taoDuAnMau();
