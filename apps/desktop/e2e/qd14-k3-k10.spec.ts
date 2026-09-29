@@ -61,5 +61,5 @@ test("k8: chênh lệch giá đất ở chi tiết thửa; k5: ổn định sả
   await expect(kq).toContainText("C03.K5");
   await p.getByRole("button", { name: "Lưu hồ sơ" }).click();
   await p.locator("[role=tablist] button", { hasText: "Tính toán" }).click();
-  await expect(p.getByText(/Hỗ trợ về đất – CLN/).first().or(p.getByText(/B14/).first())).toBeVisible();
+  await expect(p.getByText(/Hỗ trợ về đất – Đất trồng cây lâu năm \(CLN\)/).first().or(p.getByText(/B14/).first())).toBeVisible();
 });

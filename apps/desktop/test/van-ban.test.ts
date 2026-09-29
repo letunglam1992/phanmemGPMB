@@ -101,7 +101,7 @@ describe("22 mẫu văn bản QĐ 1966/QĐ-UBND", () => {
       const rieng = Object.fromEntries(m.nhapThem.map((t) => [t.truong, t.macDinh ?? ""]));
       const du = ghepDuLieu({ mau: m, duAn: duAnCoTt, ds, chung, rieng: { ...rieng, ket_qua_tham_dinh: "Báo cáo thẩm định số 01/BC-HĐBT ngày 15/9/2026" }, so: "12", ngayKy: "2026-09-27" });
       const t = vanBan(dienMau(docMau(ma), du));
-      expect(t).toContain("Thửa số 85; mảnh trích đo địa chính số 5, Diện tích 9.222,10 m², loại đất: CLN.");
+      expect(t).toContain("Thửa số 85; mảnh trích đo địa chính số 5, Diện tích 9.222,10 m², loại đất: Đất trồng cây lâu năm (CLN).");
       expect(t).toContain("Tổng số đối tượng có đất thu hồi: 02 hộ gia đình.");
       expect(t).toContain(`Tổng giá trị phương án: ${tong.toLocaleString("vi-VN")} đồng (`);
       expect(t).toMatch(/a, Bồi thường về đất: [\d.]+ đồng;/);

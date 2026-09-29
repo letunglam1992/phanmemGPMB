@@ -1084,3 +1084,6 @@ kbd.phim { display: inline-block; min-width: 20px; padding: 1px 6px; border: 1px
 .o-ngay-lich { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); border: 0; background: transparent; color: var(--chu-phu); padding: 4px; cursor: pointer; display: inline-flex; border-radius: 6px; }
 .o-ngay-lich:hover { color: var(--chu); background: var(--nen-nhat, rgba(0,0,0,.05)); }
 .o-ngay-an { position: absolute; right: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; border: 0; padding: 0; }
+
+/* Loại đất ghi đủ tên (Điều 9 Luật Đất đai 2024): mỗi thửa một dòng, thẳng hàng với cột tờ/thửa */
+.o-loai-dat { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px; }

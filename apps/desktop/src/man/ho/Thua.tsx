@@ -6,6 +6,7 @@ import { PhanLop } from "./PhanLop";
 import { TEN_CHENH_LECH, laDatNN } from "../../tinh-ho";
 import { TEN_NHOM_HANH_LANG, TEN_TRUONG_HOP_NN, dinhDang, phanBoDatNN, phanBoDatO, type NhomDatHanhLang, type TruongHopDatNN } from "@gpmb/core";
 import { TEN_KHONG_GIAY_TO } from "../../tinh-ho";
+import { tenDayDu } from "../../van-ban/loai-dat";
 import { ONgay } from "../../thanh-phan/ONgay";
 import type { KhongGiayTo } from "../../mo-hinh";
 import { useUngDung } from "../../ung-dung";
@@ -39,7 +40,7 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
         <table className="bang">
           <thead>
             <tr>
-              <th style={{ width: 70 }}>Tờ</th><th style={{ width: 80 }}>Thửa</th><th style={{ width: 100 }}>Loại đất</th>
+              <th style={{ width: 70 }}>Tờ</th><th style={{ width: 80 }}>Thửa</th><th style={{ width: 250 }}>Loại đất</th>
               <th className="so" style={{ width: 120 }}>DT thửa (m²)</th><th className="so" style={{ width: 120 }}>DT thu hồi (m²)</th>
               <th>Nguồn gốc sử dụng</th><th>Giá đất (bảng giá)</th><th style={{ width: 80 }} />
             </tr>
@@ -54,9 +55,9 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
                     <td data-lich-su={`thua:${t.id}.soTo`} data-lich-su-ten={`Tờ bản đồ (thửa ${t.soThua})`}><input value={t.soTo} onChange={(e) => sua(t.id, { soTo: e.target.value })} /></td>
                     <td data-lich-su={`thua:${t.id}.soThua`} data-lich-su-ten={`Số thửa (tờ ${t.soTo})`}><input value={t.soThua} onChange={(e) => sua(t.id, { soThua: e.target.value })} /></td>
                     <td data-lich-su={`thua:${t.id}.loaiDat`} data-lich-su-ten={`Loại đất thửa ${t.soThua} tờ ${t.soTo}`}>
-                      <Chon value={t.loaiDat} onChange={(e) => sua(t.id, { loaiDat: e.target.value, gia: null })}>
+                      <Chon value={t.loaiDat} aria-label={`Loại đất thửa ${t.soThua} tờ ${t.soTo}`} title={tenDayDu(t.loaiDat)} onChange={(e) => sua(t.id, { loaiDat: e.target.value, gia: null })}>
                         {!LOAI_DAT.includes(t.loaiDat) && <option>{t.loaiDat}</option>}
-                        {LOAI_DAT.map((l) => <option key={l}>{l}</option>)}
+                        {LOAI_DAT.map((l) => <option key={l} value={l}>{tenDayDu(l)}</option>)}
                       </Chon>
                     </td>
                     <td data-lich-su={`thua:${t.id}.dienTich`} data-lich-su-ten={`DT thửa ${t.soThua} tờ ${t.soTo}`}><OSo className="o-so" value={t.dienTich} onChange={(v) => sua(t.id, { dienTich: v })} /></td>
@@ -149,7 +150,7 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
                                   <div className="o-nhap"><label>Loại đất hiện trạng</label>
                                     <Chon value={t.chenhLech.loaiHienTrang} aria-label="Loại đất hiện trạng" onChange={(e) => sua(t.id, { chenhLech: { ...t.chenhLech!, loaiHienTrang: e.target.value, giaHienTrang: "", nguonGia: "" } })}>
                                       <option value="">—</option>
-                                      {LOAI_DAT.filter((l) => laDatNN(l)).map((l) => <option key={l}>{l}</option>)}
+                                      {LOAI_DAT.filter((l) => laDatNN(l)).map((l) => <option key={l} value={l}>{tenDayDu(l)}</option>)}
                                     </Chon>
                                   </div>
                                   <div className="o-nhap"><label>Giá đất hiện trạng (nghìn đ/m²)</label>
@@ -331,7 +332,7 @@ function KhongGiayToThua({ t, h, duAn, sua, moChonGia }: { t: Thua; h: Ho; duAn:
       </div>
       {k && k.dieu !== "D12" && (
         <>
-          {laNN && <div className="chu-do chu-nho mt-4">Điều 8, 9, 10 áp dụng cho thửa đất có nhà ở — loại đất của thửa đang là {t.loaiDat}; giá đất ở lấy theo giá đã chọn cho thửa.</div>}
+          {laNN && <div className="chu-do chu-nho mt-4">Điều 8, 9, 10 áp dụng cho thửa đất có nhà ở — loại đất của thửa đang là {tenDayDu(t.loaiDat)}; giá đất ở lấy theo giá đã chọn cho thửa.</div>}
           <div className="luoi mt-6" style={{ gridTemplateColumns: "repeat(4, minmax(140px, 1fr))", alignItems: "end" }}>
             <div className="o-nhap"><label>DT đã xây nhà ở, công trình đời sống (m²)</label><OSo className="o-so" aria-label="DT đã xây dựng nhà ở" value={k.dtXayDung ?? ""} onChange={(v) => dat({ dtXayDung: v })} /></div>
             {k.dieu !== "D9" && <div className="o-nhap"><label>DT sử dụng SXKD phi NN, TMDV (m²)</label><OSo className="o-so" aria-label="DT sản xuất kinh doanh" value={k.dtSxkd ?? ""} onChange={(v) => dat({ dtSxkd: v })} /></div>}
@@ -350,9 +351,9 @@ function KhongGiayToThua({ t, h, duAn, sua, moChonGia }: { t: Thua; h: Ho; duAn:
             )}
             <div className="o-nhap"><label>{k.dieu === "D10" ? "Giá đất phần còn lại (theo hiện trạng / đất NN)" : "Giá đất NN phần còn lại (điểm d)"}</label>
               <div className="nhom-nut">
-                <Chon value={loaiCl} onChange={(e) => setLoaiCl(e.target.value)} style={{ width: 90 }}>{LOAI_DAT.map((l) => <option key={l}>{l}</option>)}</Chon>
+                <Chon value={loaiCl} onChange={(e) => setLoaiCl(e.target.value)} style={{ width: 220 }}>{LOAI_DAT.map((l) => <option key={l} value={l}>{tenDayDu(l)}</option>)}</Chon>
                 <button className="nut nut-nho" aria-label="Chọn giá đất phần còn lại" onClick={() => moChonGia("CL", loaiCl)}>Bảng giá…</button>
-                <span className="chu-nho">{k.giaConLai ? `${k.giaConLai.loaiDat}: ${dinhDang(Number(k.giaConLai.giaNghinDong) * 1000)} đ/m² — ${k.giaConLai.nguon}` : "chưa chọn"}</span>
+                <span className="chu-nho">{k.giaConLai ? `${tenDayDu(k.giaConLai.loaiDat)}: ${dinhDang(Number(k.giaConLai.giaNghinDong) * 1000)} đ/m² — ${k.giaConLai.nguon}` : "chưa chọn"}</span>
               </div>
             </div>
           </div>
@@ -390,7 +391,7 @@ function KhongGiayToThua({ t, h, duAn, sua, moChonGia }: { t: Thua; h: Ho; duAn:
             <div className="o-nhap"><label>Văn bản quyết định hỗ trợ (k7)</label><input value={k.hoTroK7?.canCu ?? ""} onChange={(e) => dat({ hoTroK7: { soTien: k.hoTroK7?.soTien ?? "", canCu: e.target.value } })} /></div>
           </div>
           <label className="chu-nho mt-6" style={{ display: "block" }}><input type="checkbox" checked={!!k.truoc2004TrucTiepSx} onChange={(e) => dat({ truoc2004TrucTiepSx: e.target.checked || undefined })} /> Sử dụng ổn định trước 01/7/2004, trực tiếp sản xuất NN nhưng không đủ điều kiện cấp GCN (khoản 4 Điều 12)</label>
-          {!laNN && <div className="chu-do chu-nho mt-4">Điều 12 áp dụng cho đất thuộc nhóm đất nông nghiệp — loại đất của thửa đang là {t.loaiDat}.</div>}
+          {!laNN && <div className="chu-do chu-nho mt-4">Điều 12 áp dụng cho đất thuộc nhóm đất nông nghiệp — loại đất của thửa đang là {tenDayDu(t.loaiDat)}.</div>}
         </>
       )}
       {tomTat && <div className="mo chu-nho mt-4" data-tom-tat-kgt>{tomTat}. {h.loai === "TO_CHUC" ? "Điều 8–12 NĐ 88 áp dụng cho hộ gia đình, cá nhân — kiểm tra." : "Phần mềm không tự xác định điều kiện bồi thường (Điều 5); cán bộ chọn trường hợp."}</div>}

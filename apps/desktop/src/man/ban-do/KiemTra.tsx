@@ -3,6 +3,7 @@ import { loaiHienTrangBanDo, tenLopPl21, LOP_RANH_THUA_PL21, type DienTichThuHoi
 import { type Ho } from "../../mo-hinh";
 import { TT_GPMB, type TrangThaiGpmb } from "../../trang-thai";
 import { type DuLieuBanDo, TEN_CO } from "./du-lieu";
+import { tenDayDu } from "../../van-ban/loai-dat";
 
 export function TomTatThuHoi({ thuHoi }: { thuHoi: Map<string, DienTichThuHoi> }) {
   const ds = [...thuHoi.values()];
@@ -92,7 +93,7 @@ export function ChiTietThua({ t, th, ho, tt, moHo }: { t: ThuaBanDo; th?: DienTi
     <div className="the">
       <div className="the-dau"><h3>Tờ {t.soTo ?? "?"}, thửa {t.soThua ?? "?"}</h3></div>
       <div className="the-than chu-nho" style={{ display: "grid", gap: 4 }}>
-        <div>Chủ sử dụng: <b>{t.chuSuDung ?? "—"}</b> · Loại (bản đồ): <b>{t.loaiDatBanDo ?? "—"}</b></div>
+        <div>Chủ sử dụng: <b>{t.chuSuDung ?? "—"}</b> · Loại (bản đồ): <b>{t.loaiDatBanDo ? tenDayDu(t.loaiDatBanDo) : "—"}</b></div>
         <div>DT ghi: <b>{t.dienTichGhi ?? "—"}</b> m² · DT hình học: <b>{t.dienTichHinhHoc.toFixed(2)}</b> m²{th && th.phamVi !== "NGOAI" ? <> · Thu hồi: <b>{th.dienTichThuHoi.toFixed(2)}</b> m² ({th.phamVi === "TOAN_BO" ? "toàn bộ" : "một phần"})</> : null}</div>
         {t.co.length > 0 && <div className="nhom-nut">{t.co.map((c) => <span key={c} className="nhan nhan-vang">{TEN_CO[c]}</span>)}</div>}
         {t.hienTrangBanDo && (

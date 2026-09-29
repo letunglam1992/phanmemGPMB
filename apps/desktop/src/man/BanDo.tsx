@@ -12,6 +12,7 @@ import { HopCauHinhLop } from "./ban-do/CauHinhLop";
 import { TomTatThuHoi, KiemTraBanDo, ChiTietThua } from "./ban-do/KiemTra";
 import { KhungVe } from "./ban-do/KhungVe";
 import { HopTaoHo } from "./ban-do/TaoHo";
+import { tenDayDu } from "../van-ban/loai-dat";
 /** Nạp bản đồ đã lưu của dự án (dùng lại bộ nhớ đệm) — cho bản đồ nhỏ ở màn Dự án. */
 export async function napBanDoDuAn(kho: { docBanDo(id: string): Promise<Uint8Array | null> }, duAn: DuAn): Promise<DuLieuBanDo | null> {
   if (!duAn.banDo) return null;
@@ -298,7 +299,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
                         <tr key={khoaThua(t)} data-phim-chon className={`co-the-chon ${chon === t ? "dang-chon" : ""}`} onClick={() => setChon(t)}>
                           <td onClick={(e) => e.stopPropagation()}><input type="checkbox" disabled={!quyen("SUA_HO_SO")} checked={thuaChon.has(t.ma)} onChange={() => batTatThua(t)} aria-label={`Chọn thửa ${t.soTo ?? "?"}-${t.soThua ?? "?"} là thửa thu hồi`} title="Chọn tay là thửa thu hồi" /></td>
                           <td className="khong-xuong-dong">{t.soTo ?? "?"}-{t.soThua ?? "?"}{t.co.length > 0 && <span className="nhan nhan-vang" style={{ marginLeft: 4 }} title={t.co.map((c) => TEN_CO[c]).join(", ")}>!</span>}</td>
-                          <td>{t.loaiDatBanDo ?? "—"}</td>
+                          <td title={t.loaiDatBanDo ?? undefined}>{t.loaiDatBanDo ? tenDayDu(t.loaiDatBanDo) : "—"}</td>
                           <td className="so">{t.dienTichGhi ?? "—"}</td>
                           <td className="so">{th ? (th.phamVi === "NGOAI" ? "—" : th.dienTichThuHoi.toFixed(1)) : ""}</td>
                           <td className="chu-nho">{t.chuSuDung ?? "—"}</td>

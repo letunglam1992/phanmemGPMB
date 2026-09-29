@@ -1,4 +1,5 @@
 import { Fragment, useState } from "react";
+import { tenDayDu } from "../../van-ban/loai-dat";
 import { D } from "@gpmb/core";
 import type Decimal from "decimal.js";
 import type { DuAn, Ho } from "../../mo-hinh";
@@ -12,7 +13,7 @@ export function TabTinhToan({ h, duAn, kq }: { h: Ho; duAn: DuAn; kq: KetQuaHo }
   const cong = (ds: DongKetQua[]) => ds.reduce((s, x) => (x.dong.trangThai === "TAM_TINH" && x.dong.thanhTien ? s.plus(x.dong.thanhTien) : s), D(0) as Decimal);
   const tenThua = (id?: string) => {
     const t = h.thua.find((x) => x.id === id);
-    return t ? `Thửa ${t.soThua}, tờ ${t.soTo} (${t.loaiDat}, ${t.dienTichThuHoi} m²)` : "Chung cho hộ";
+    return t ? `Thửa ${t.soThua}, tờ ${t.soTo} (${tenDayDu(t.loaiDat)}, ${t.dienTichThuHoi} m²)` : "Chung cho hộ";
   };
   const phanA = kq.nhom.filter((n) => n.ma.startsWith("A"));
   const phanB = kq.nhom.filter((n) => n.ma.startsWith("B"));

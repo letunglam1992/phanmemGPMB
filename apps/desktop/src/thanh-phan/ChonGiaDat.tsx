@@ -3,6 +3,7 @@ import { napBangGiaDat, type BangGiaDat, type DongGiaTuyen } from "../du-lieu";
 import type { GiaThua } from "../mo-hinh";
 import { HopThoai, O } from "./chung";
 import { Chon } from "./Chon";
+import { tenDayDu } from "../van-ban/loai-dat";
 
 type Bang = "NN" | "DAT_O" | "TMDV" | "SKC" | "KCN";
 const TEN_BANG: Record<Bang, string> = {
@@ -68,8 +69,8 @@ export function ChonGiaDat(p: { xa: string; loaiDat: string; dong: () => void; c
                 <tbody>
                   {bg.dat_nong_nghiep.filter((r) => r.xa === xa).map((r, i) => (
                     <tr key={i} className={r.loai_dat === p.loaiDat.toUpperCase() ? "dang-chon" : ""}>
-                      <td>{r.bang}</td><td>{r.stt}</td><td>{r.loai_dat}</td><td className="so">{r.gia}</td>
-                      <td><button className="nut nut-nho" onClick={() => p.chon({ giaNghinDong: String(r.gia), nguon: `Bảng ${r.bang}, STT ${r.stt}, ${r.xa}, ${r.loai_dat}` })}>Chọn</button></td>
+                      <td>{r.bang}</td><td>{r.stt}</td><td>{tenDayDu(r.loai_dat)}</td><td className="so">{r.gia}</td>
+                      <td><button className="nut nut-nho" onClick={() => p.chon({ giaNghinDong: String(r.gia), nguon: `Bảng ${r.bang}, STT ${r.stt}, ${r.xa}, ${tenDayDu(r.loai_dat)}` })}>Chọn</button></td>
                     </tr>
                   ))}
                 </tbody>

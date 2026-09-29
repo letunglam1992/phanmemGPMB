@@ -8,7 +8,7 @@ import { TEN_DOI_TUONG, type DuAn, type Ho } from "../mo-hinh";
 import type { KetQuaHo } from "../tinh-ho";
 import { docSoTien } from "./doc-so";
 import type { MauVanBan } from "./danh-muc";
-import { tenLoaiDat } from "./loai-dat";
+import { tenDayDu, tenLoaiDat } from "./loai-dat";
 import { soD } from "../so";
 
 export const CHAM = "…………";
@@ -96,7 +96,7 @@ export function duLieuHo(h: Ho, k: KetQuaHo): Record<string, unknown> {
       stt: i + 1,
       so_to: t.soTo,
       so_thua: t.soThua,
-      loai_dat: t.loaiDat,
+      loai_dat: tenDayDu(t.loaiDat),
       dien_tich: soM2(t.dienTich),
       dt_thu_hoi: soM2(t.dienTichThuHoi),
       pham_vi: soD(t.dienTichThuHoi).gte(soD(t.dienTich)) ? "Thu hồi toàn bộ" : "Thu hồi một phần",
@@ -169,16 +169,16 @@ export function duLieuDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[]): Record<str
           so_to: t.soTo,
           so_thua: t.soThua,
           dt_thu_hoi: soM2(tong),
-          loai_dat: t.loaiDat,
+          loai_dat: tenDayDu(t.loaiDat),
           gcn_seri: t.gcn?.seri ?? "",
           gcn_to: t.gcn?.soTo ?? "",
           gcn_thua: t.gcn?.soThua ?? "",
           gcn_dien_tich: t.gcn?.dienTich ? soM2(t.gcn.dienTich) : "",
-          gcn_loai_dat: t.gcn?.loaiDat ?? "",
+          gcn_loai_dat: tenDayDu(t.gcn?.loaiDat ?? ""),
           dt_co_gcn: coGcn.gt(0) ? soM2(coGcn) : "",
-          loai_dat_co_gcn: coGcn.gt(0) ? t.gcn?.loaiDatThuHoi || t.loaiDat : "",
+          loai_dat_co_gcn: coGcn.gt(0) ? tenDayDu(t.gcn?.loaiDatThuHoi || t.loaiDat) : "",
           dt_khong_gcn: khongGcn.gt(0) ? soM2(khongGcn) : "",
-          loai_dat_khong_gcn: khongGcn.gt(0) ? t.loaiDat : "",
+          loai_dat_khong_gcn: khongGcn.gt(0) ? tenDayDu(t.loaiDat) : "",
           nguon_goc: t.nguonGoc,
           ghi_chu: t.ghiChu ?? "",
         });
@@ -229,7 +229,7 @@ export function duLieuDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[]): Record<str
       ho_ten: h.ten,
       dia_chi: h.diaChi,
       to_thua: h.thua.map((t) => `${t.soTo}/${t.soThua}`).join(", "),
-      loai_dat: [...new Set(h.thua.map((t) => t.loaiDat))].join(", "),
+      loai_dat: [...new Set(h.thua.map((t) => tenDayDu(t.loaiDat)))].join(", "),
       dt_thu_hoi: soM2(h.thua.reduce((s, t) => s.plus(soD(t.dienTichThuHoi)), D(0))),
     })),
     ds_thuong: [],
@@ -331,7 +331,7 @@ export function ghepDuLieu(p: {
   kq.ds_thua_pa = p.ds.flatMap(({ h }) =>
     h.thua
       .filter((t) => soD(t.dienTichThuHoi).gt(0))
-      .map((t) => ({ mo_ta: `Thửa số ${t.soThua}; ${tenTo} ${t.soTo}, Diện tích ${soM2(t.dienTichThuHoi)} m², loại đất: ${t.loaiDat}.` })),
+      .map((t) => ({ mo_ta: `Thửa số ${t.soThua}; ${tenTo} ${t.soTo}, Diện tích ${soM2(t.dienTichThuHoi)} m², loại đất: ${tenDayDu(t.loaiDat)}.` })),
   );
   if (!kq.ky_hieu) kq.ky_hieu = "";
   if (!kq.ngay_hieu_luc) kq.ngay_hieu_luc = "ký";

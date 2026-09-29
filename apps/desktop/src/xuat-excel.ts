@@ -6,6 +6,7 @@
  * Tệp được tạo trên máy, không gửi đi đâu.
  */
 import type ExcelJS from "exceljs";
+import { tenDayDu } from "./van-ban/loai-dat";
 import { D } from "@gpmb/core";
 import type Decimal from "decimal.js";
 import type { DuAn, Ho } from "./mo-hinh";
@@ -71,7 +72,7 @@ function trangHo(wb: ExcelJS.Workbook, duAn: DuAn, h: Ho, kq: KetQuaHo, ten: str
   r++;
   h.thua.forEach((t, i) => {
     const row = ws.getRow(r++);
-    row.values = [i + 1, `Tờ ${t.soTo}, thửa ${t.soThua}`, t.loaiDat, Number(t.dienTich) || null, "", Number(t.dienTichThuHoi) || null, "", t.nguonGoc || ""];
+    row.values = [i + 1, `Tờ ${t.soTo}, thửa ${t.soThua}`, tenDayDu(t.loaiDat), Number(t.dienTich) || null, "", Number(t.dienTichThuHoi) || null, "", t.nguonGoc || ""];
     row.getCell(4).numFmt = "#,##0.00";
     row.getCell(6).numFmt = "#,##0.00";
     row.font = { name: FONT };
@@ -176,7 +177,7 @@ export async function taoWorkbook(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], ban?
   wd.getCell(1, 1).alignment = { horizontal: "center" };
   if (ban) dongBan(wd, 6 + loaiDat.length, ban);
   const hd = wd.getRow(3);
-  hd.values = ["STT", "Chủ sử dụng", "Địa chỉ", "Tờ", "Thửa", "DT thu hồi (m²)", ...loaiDat];
+  hd.values = ["STT", "Chủ sử dụng", "Địa chỉ", "Tờ", "Thửa", "DT thu hồi (m²)", ...loaiDat.map(tenDayDu)];
   hd.font = { name: FONT, bold: true };
   dongKe(hd, 1, 6 + loaiDat.length);
   let r = 4;

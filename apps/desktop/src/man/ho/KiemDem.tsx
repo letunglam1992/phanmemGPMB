@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { tenDayDu } from "../../van-ban/loai-dat";
 import type { LoaiDuong, LoaiVatNuoi } from "@gpmb/core";
 import { thuTinh } from "../../bieu-thuc";
 import { taoId, type DuAn, type Ho, type TaiSan, type Thua } from "../../mo-hinh";
@@ -110,7 +111,7 @@ function TheThua(p: {
     <div className="the">
       <div className="the-dau">
         <h3>Thửa {t.soThua || "?"}, tờ {t.soTo || "?"}</h3>
-        <span className="mo chu-nho">{t.loaiDat} · DT thu hồi {t.dienTichThuHoi || "—"} m²</span>
+        <span className="mo chu-nho">{tenDayDu(t.loaiDat)} · DT thu hồi {t.dienTichThuHoi || "—"} m²</span>
         {p.cs.hoTroKhac?.cayKhongDuDieuKien && (
           <Chon value={t.cayK7 ?? ""} aria-label={`Cây trồng thửa ${t.soThua} tờ ${t.soTo}`} title={`Khoản 7 Điều 6 QĐ 14/2026: ${p.cs.hoTroKhac.cayKhongDuDieuKien.dieuKien}`} style={{ maxWidth: 330 }} onChange={(e) => p.suaThua({ cayK7: (e.target.value || undefined) as "A" | "B" | undefined })}>
             <option value="">Cây trồng: bồi thường</option>

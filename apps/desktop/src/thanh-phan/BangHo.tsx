@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { tenDayDu } from "../van-ban/loai-dat";
 import { D } from "@gpmb/core";
 import { useCuaSo } from "./cua-so";
 import type Decimal from "decimal.js";
@@ -65,7 +66,7 @@ export function BangHo({ ds, homNay, coDuAn, mo, trong }: { ds: DongHo[]; homNay
                 <td className="so">{thua.map((t, j) => <div key={j}>{t?.soTo || "—"}</div>)}</td>
                 <td className="so">{thua.map((t, j) => <div key={j}>{t?.soThua || "—"}</div>)}</td>
                 <td className="so">{thua.map((t, j) => <div key={j}>{t ? tien(soD(t.dienTichThuHoi).toDecimalPlaces(2)) : "—"}</div>)}</td>
-                <td>{thua.map((t, j) => <div key={j}>{t?.loaiDat || "—"}</div>)}</td>
+                <td>{thua.map((t, j) => <div key={j} className="o-loai-dat" title={t?.loaiDat ? tenDayDu(t.loaiDat) : ""}>{t?.loaiDat ? tenDayDu(t.loaiDat) : "—"}</div>)}</td>
                 <td className="so">{tien(k.tongBoiThuong)}</td>
                 <td className="so">{tien(k.tongHoTro)}</td>
                 <td className="so"><b>{tien(k.tong.tongLamTron)}</b></td>

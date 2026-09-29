@@ -47,6 +47,7 @@ import { thuTinh } from "./bieu-thuc";
 import type { DuAn, Ho, TaiDinhCuHo, TaiSan, Thua } from "./mo-hinh";
 import { laSoMay, truongLoi, truongSoDuAn, truongSoHo } from "./so";
 import { duAnCuaHo } from "./dot-thu-hoi";
+import { tenDayDu } from "./van-ban/loai-dat";
 
 export const LOAI_DAT_NN = ["LUC", "LUK", "LUN", "BHK", "NHK", "HNK", "CLN", "RSX", "RPH", "RDD", "NTS", "NKH", "LNP"];
 export const laDatNN = (ma: string) => LOAI_DAT_NN.includes(ma.toUpperCase());
@@ -124,10 +125,10 @@ export const nhomPhanLop = (bang: string): "DAT_O" | "PNN" => (bang === "05" ? "
 const nhanThua = (t: Thua) => `Thửa ${t.soThua}, tờ ${t.soTo}`;
 
 function dongDat(duAn: DuAn, t: Thua): DongTinh {
-  if (!t.gia) return thieu("B01", `Bồi thường về đất – ${t.loaiDat} (${nhanThua(t)})`, "Chưa chọn giá đất từ bảng giá", "NQ 152/2025/NQ-HĐND");
+  if (!t.gia) return thieu("B01", `Bồi thường về đất – ${tenDayDu(t.loaiDat)} – ${nhanThua(t)}`, "Chưa chọn giá đất từ bảng giá", "NQ 152/2025/NQ-HĐND");
   const hs = duAn.heSoGiaDat && !D(duAn.heSoGiaDat.heSo).eq(1) ? { heSo: duAn.heSoGiaDat.heSo, vanBan: duAn.heSoGiaDat.vanBan } : undefined;
   const d = boiThuongDat({
-    loaiDat: `${t.loaiDat} (${nhanThua(t)})`,
+    loaiDat: `${tenDayDu(t.loaiDat)} – ${nhanThua(t)}`,
     dienTichM2: t.dienTichThuHoi || "0",
     giaBangGiaNghinDong: t.gia.giaNghinDong,
     nguonGia: t.gia.nguon,
@@ -144,7 +145,7 @@ function dongDat(duAn: DuAn, t: Thua): DongTinh {
 function nongLamTruong(cs: BoChinhSach, duAn: DuAn, t: Thua): { ma: string; dat: DongTinh; bieu?: DongBieu[]; cayHoTro: boolean; canCu: DongTinh["canCu"] } | null {
   if (!t.nongLamTruong) return null;
   const ma = t.nongLamTruong.truongHop;
-  const nd = `${t.loaiDat} (${nhanThua(t)})`;
+  const nd = `${tenDayDu(t.loaiDat)} – ${nhanThua(t)}`;
   const th = cs.nongLamTruong?.truongHop[ma];
   if (!th) {
     return { ma, dat: thieu("B13", `Hỗ trợ về đất nguồn gốc nông, lâm trường – ${nd}`, `Bộ chính sách ${cs.ma} không có quy định trường hợp ${ma}`, "QĐ 14/2026/QĐ-UBND"), cayHoTro: false, canCu: [] };
@@ -415,7 +416,7 @@ function tinhHoGoc(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
       if (t.phanLop && t.phanLop.lop.length) {
         const pl = t.phanLop;
         const kq = datTheoPhanLop(cs, {
-          loaiDat: `${t.loaiDat} (${nhanThua(t)})`,
+          loaiDat: `${tenDayDu(t.loaiDat)} – ${nhanThua(t)}`,
           nhom: nhomPhanLop(pl.tuyen.bang),
           nguonTuyen: `Bảng ${pl.tuyen.bang}, ${pl.tuyen.xa}, STT ${pl.tuyen.stt} (${pl.tuyen.tuyen})`,
           dienTichThuHoiM2: t.dienTichThuHoi,
@@ -530,12 +531,12 @@ function tinhHoGoc(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
 
     if (ho.hoTro.chuyenDoiNghe && laDatNN(t.loaiDat) && D(t.dienTichThuHoi || "0").gt(0)) {
       let d: DongTinh;
-      if (!duAn.hanMucNN) d = thieu("C06", `Hỗ trợ chuyển đổi nghề – ${t.loaiDat} (${nhanThua(t)})`, "Chưa nhập hạn mức giao đất nông nghiệp của dự án (PL I QĐ 106 – TL-24)");
-      else if (!t.gia) d = thieu("C06", `Hỗ trợ chuyển đổi nghề – ${t.loaiDat} (${nhanThua(t)})`, "Chưa chọn giá đất nông nghiệp cùng loại");
+      if (!duAn.hanMucNN) d = thieu("C06", `Hỗ trợ chuyển đổi nghề – ${tenDayDu(t.loaiDat)} – ${nhanThua(t)}`, "Chưa nhập hạn mức giao đất nông nghiệp của dự án (PL I QĐ 106 – TL-24)");
+      else if (!t.gia) d = thieu("C06", `Hỗ trợ chuyển đổi nghề – ${tenDayDu(t.loaiDat)} – ${nhanThua(t)}`, "Chưa chọn giá đất nông nghiệp cùng loại");
       else
         d = chuyenDoiNghe(cs, {
           xa: duAn.xa,
-          loaiDat: `${t.loaiDat} (${nhanThua(t)})`,
+          loaiDat: `${tenDayDu(t.loaiDat)} – ${nhanThua(t)}`,
           dienTichThuHoiM2: t.dienTichThuHoi,
           hanMucM2: duAn.hanMucNN.m2,
           canCuHanMuc: duAn.hanMucNN.canCu,
@@ -851,7 +852,7 @@ function dongOnDinhSanXuatDinhMuc(cs: BoChinhSach, o: NonNullable<NonNullable<Ho
 /** B07 – Điều 3 PL II QĐ 106/2025: chi phí đầu tư vào đất còn lại (không có giấy tờ k3 Đ17 NĐ 88, thực tế đã đầu tư). */
 function dongChiPhiDauTu(cs: BoChinhSach, ho: Ho, t: Thua): DongTinh {
   const c = t.chiPhiDauTu!;
-  const nd = `Chi phí đầu tư vào đất còn lại – ${t.loaiDat} (${nhanThua(t)})`;
+  const nd = `Chi phí đầu tư vào đất còn lại – ${tenDayDu(t.loaiDat)} – ${nhanThua(t)}`;
   const dk = "Điều kiện: người có đất thu hồi không có giấy tờ quy định tại k3 Đ17 NĐ 88/2024 nhưng thực tế đã có đầu tư vào đất — cán bộ xác nhận";
   if (c.cach === "DU_TOAN") {
     if (!c.canCu?.trim()) return thieu("B07", nd, "Chưa ghi dự toán giá trị đầu tư vào đất còn lại được Chủ tịch UBND cấp xã phê duyệt (số, ngày)", "QĐ 106/2025/QĐ-UBND khoản 1 Điều 3 PL II");
@@ -869,7 +870,7 @@ function dongChiPhiDauTu(cs: BoChinhSach, ho: Ho, t: Thua): DongTinh {
   if (!t.gia) return thieu("B07", nd, "Chưa chọn giá đất của loại đất thu hồi từ bảng giá", "QĐ 106/2025/QĐ-UBND khoản 2 Điều 3 PL II");
   const coTyLe = !!(c.thoiHanNam?.trim() || c.conLaiNam?.trim());
   if (coTyLe && !(laSoMay(c.thoiHanNam ?? "") && laSoMay(c.conLaiNam ?? ""))) return thieu("B07", nd, "Nhập đủ thời hạn sử dụng đất còn lại và thời hạn sử dụng đất (năm)", "QĐ 106/2025/QĐ-UBND khoản 2 Điều 3 PL II");
-  const d = chiPhiDauTuTheoGiaDat(cs, { loaiDat: `${t.loaiDat} (${nhanThua(t)})`, dienTichM2: t.dienTichThuHoi || "0", giaNghinDong: t.gia.giaNghinDong, nguonGia: t.gia.nguon, tyLeThoiHan: coTyLe ? { conLaiNam: c.conLaiNam!, thoiHanNam: c.thoiHanNam! } : undefined });
+  const d = chiPhiDauTuTheoGiaDat(cs, { loaiDat: `${tenDayDu(t.loaiDat)} – ${nhanThua(t)}`, dienTichM2: t.dienTichThuHoi || "0", giaNghinDong: t.gia.giaNghinDong, nguonGia: t.gia.nguon, tyLeThoiHan: coTyLe ? { conLaiNam: c.conLaiNam!, thoiHanNam: c.thoiHanNam! } : undefined });
   const them = [dk];
   if (ho.loai === "TO_CHUC" && !coTyLe) them.push("Tổ chức: tính đến tỷ lệ thời hạn sử dụng đất còn lại so với thời hạn sử dụng đất (k4 Đ17 NĐ 88) — nhập thời hạn");
   if (ho.loai !== "TO_CHUC" && coTyLe) them.push("Tỷ lệ thời hạn còn lại áp dụng đối với tổ chức — kiểm tra");
@@ -880,12 +881,12 @@ function dongChiPhiDauTu(cs: BoChinhSach, ho: Ho, t: Thua): DongTinh {
 function dongHanhLang(cs: BoChinhSach, duAn: DuAn, t: Thua): DongTinh {
   const h = t.hanhLang!;
   const ma = h.loai === "DIEN" ? "B08" : "B09";
-  const nd = `Bồi thường đất trong hành lang – ${t.loaiDat} (${nhanThua(t)})`;
+  const nd = `Bồi thường đất trong hành lang – ${tenDayDu(t.loaiDat)} – ${nhanThua(t)}`;
   if (!t.gia) return thieu(ma, nd, "Chưa chọn giá đất cho thửa (giá đất cụ thể bồi thường về đất cùng loại)", "QĐ 106/2025/QĐ-UBND Điều 7 PL II");
   if (!h.dienTich.trim() || !laSoMay(h.dienTich) || !D(h.dienTich).gt(0)) return thieu(ma, nd, "Chưa nhập DT đất nằm trong hành lang", "QĐ 106/2025/QĐ-UBND Điều 7 PL II");
   const hs = duAn.heSoGiaDat && !D(duAn.heSoGiaDat.heSo).eq(1) ? duAn.heSoGiaDat : null;
   const gia = D(t.gia.giaNghinDong).mul(1000).mul(hs ? hs.heSo : 1);
-  const d = boiThuongHanhLang(cs, { loai: h.loai, nhomDat: h.nhomDat, loaiDat: `${t.loaiDat} (${nhanThua(t)})`, dienTichM2: h.dienTich, giaDongM2: gia, nguonGia: `${t.gia.nguon}${hs ? ` × hệ số ${hs.heSo} (${hs.vanBan || "chưa ghi văn bản"})` : ""}` });
+  const d = boiThuongHanhLang(cs, { loai: h.loai, nhomDat: h.nhomDat, loaiDat: `${tenDayDu(t.loaiDat)} – ${nhanThua(t)}`, dienTichM2: h.dienTich, giaDongM2: gia, nguonGia: `${t.gia.nguon}${hs ? ` × hệ số ${hs.heSo} (${hs.vanBan || "chưa ghi văn bản"})` : ""}` });
   const them: string[] = [];
   if (!h.canCu?.trim()) them.push("Chưa ghi căn cứ xác định DT trong hành lang (biên bản, trích đo, văn bản của chủ đầu tư công trình)");
   if (D(h.dienTich).gt(D(t.dienTich || "0")) && D(t.dienTich || "0").gt(0)) them.push("DT trong hành lang lớn hơn DT thửa — kiểm tra");
@@ -906,7 +907,7 @@ export const TEN_CHENH_LECH: Record<"K8_RSX" | "K8_RPH_RDD" | "K10", string> = {
 function dongChenhLech(cs: BoChinhSach, duAn: DuAn, ho: Ho, t: Thua): { nhom: "B.I" | "B.IV"; kq: DongKetQua }[] {
   const c = t.chenhLech!;
   const k = cs.hoTroKhac?.chenhLechDat;
-  const ten = `${t.loaiDat} → hiện trạng ${c.loaiHienTrang || "?"} (${nhanThua(t)})`;
+  const ten = `${tenDayDu(t.loaiDat)} → hiện trạng ${c.loaiHienTrang ? tenDayDu(c.loaiHienTrang) : "?"} – ${nhanThua(t)}`;
   const ndDat = `Hỗ trợ về đất – ${ten}`;
   const cvb = "QĐ 14/2026/QĐ-UBND " + (c.truongHop === "K10" ? "khoản 10 Điều 6" : "khoản 8 Điều 6");
   if (!k) return [{ nhom: "B.I", kq: { dong: thieu("B14", ndDat, `Bộ chính sách ${cs.ma} không có quy định khoản 8, 10 Điều 6`, cvb), cot: "HT_DAT", thuaId: t.id } }];
@@ -1025,7 +1026,7 @@ export const TEN_KHONG_GIAY_TO = {
 function dongKhongGiayTo(cs: BoChinhSach, duAn: DuAn, t: Thua): { nhom: "A.I" | "B.I"; kq: DongKetQua }[] {
   const k = t.khongGiayTo!;
   const out: { nhom: "A.I" | "B.I"; kq: DongKetQua }[] = [];
-  const ten = `${t.loaiDat} (${nhanThua(t)})`;
+  const ten = `${tenDayDu(t.loaiDat)} – ${nhanThua(t)}`;
   const hs = duAn.heSoGiaDat && !D(duAn.heSoGiaDat.heSo).eq(1) ? duAn.heSoGiaDat : null;
   const nhanHs = (g: Decimal) => (hs ? g.mul(hs.heSo) : g);
   const moTaHs = hs ? ` × hệ số ${hs.heSo} (${hs.vanBan || "chưa ghi văn bản"})` : "";
