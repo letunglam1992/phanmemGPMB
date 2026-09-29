@@ -164,7 +164,7 @@ impl MayChu {
 // ---------------- Chuyển đổi cấu trúc CSDL (P2-6), lịch sử bản ghi (P1-5) ----------------
 
 /// Phiên bản cấu trúc CSDL hiện tại (PRAGMA user_version). Mỗi bước chuyển đổi chạy một lần, trong một giao dịch.
-pub const PHIEN_BAN_CSDL: i64 = 2;
+pub const PHIEN_BAN_CSDL: i64 = 3;
 
 pub fn chuyen_doi_csdl(c: &Connection) -> rusqlite::Result<()> {
     let v: i64 = c.query_row("PRAGMA user_version", [], |r| r.get(0))?;
@@ -212,7 +212,69 @@ pub fn chuyen_doi_csdl(c: &Connection) -> rusqlite::Result<()> {
             }
         }
     }
+    if v < 3 {
+        // P2-7: tách tiến độ ("td") và chi trả ("ct") khỏi hồ sơ — mỗi phần một bản ghi con cùng mã hồ sơ, có phiên bản
+        // riêng, để hai người sửa song song (vd. cán bộ cập nhật tiến độ, kế toán ghi chi trả) không xung đột
+        c.execute_batch("BEGIN")?;
+        let r = (|| -> rusqlite::Result<()> {
+            let ds: Vec<(String, String, String, i64)> = {
+                let mut q = c.prepare("SELECT id, du_an_id, noi_dung, phien_ban FROM ban_ghi WHERE loai = 'ho'")?;
+                let x = q.query_map([], |r| Ok((r.get(0)?, r.get::<_, Option<String>>(1)?.unwrap_or_default(), r.get(2)?, r.get(3)?)))?.filter_map(|x| x.ok()).collect();
+                x
+            };
+            for (id, da, nd, pb) in ds {
+                let Ok(mut v) = serde_json::from_str::<Value>(&nd) else { continue };
+                let Some(o) = v.as_object_mut() else { continue };
+                let td = o.remove("tienDo");
+                let ct = o.remove("chiTra");
+                if let Some(td) = td {
+                    let ban = json!({ "id": id, "duAnId": da, "tienDo": td, "nhatKy": [] });
+                    c.execute("INSERT OR REPLACE INTO ban_ghi(loai, id, du_an_id, phien_ban, noi_dung, sua_luc, sua_boi) VALUES ('td', ?1, ?2, 1, ?3, ?4, 'chuyen-doi')", params![id, da, ban.to_string(), bay_gio()])?;
+                }
+                if let Some(ct) = ct.filter(|x| !x.is_null()) {
+                    let ban = json!({ "id": id, "duAnId": da, "chiTra": ct, "nhatKy": [] });
+                    c.execute("INSERT OR REPLACE INTO ban_ghi(loai, id, du_an_id, phien_ban, noi_dung, sua_luc, sua_boi) VALUES ('ct', ?1, ?2, 1, ?3, ?4, 'chuyen-doi')", params![id, da, ban.to_string(), bay_gio()])?;
+                }
+                c.execute("UPDATE ban_ghi SET noi_dung = ?1, phien_ban = ?2 WHERE loai = 'ho' AND id = ?3", params![v.to_string(), pb + 1, id])?;
+            }
+            c.execute_batch("PRAGMA user_version = 3;")
+        })();
+        match r {
+            Ok(()) => c.execute_batch("COMMIT")?,
+            Err(e) => {
+                let _ = c.execute_batch("ROLLBACK");
+                return Err(e);
+            }
+        }
+    }
     Ok(())
+}
+
+/// Tách hồ sơ đầy đủ (dạng giao diện) thành bản ghi chính + tiến độ + chi trả (P2-7).
+pub fn tach_ho(mut h: Value) -> (Value, Value, Option<Value>) {
+    let (id, da) = (h["id"].clone(), h["duAnId"].clone());
+    let (td, ct) = match h.as_object_mut() {
+        Some(o) => (o.remove("tienDo").unwrap_or(json!({})), o.remove("chiTra").filter(|x| !x.is_null())),
+        None => (json!({}), None),
+    };
+    (h, json!({ "id": id, "duAnId": da, "tienDo": td, "nhatKy": [] }), ct.map(|ct| json!({ "id": id, "duAnId": da, "chiTra": ct, "nhatKy": [] })))
+}
+
+/// Ghép bản ghi chính + tiến độ + chi trả thành hồ sơ đầy đủ; nhật ký gộp theo thời điểm.
+pub fn ghep_ho(mut h: Value, td: Option<&Value>, ct: Option<&Value>) -> Value {
+    let mut nk: Vec<Value> = h["nhatKy"].as_array().cloned().unwrap_or_default();
+    for x in [td, ct].into_iter().flatten() {
+        nk.extend(x["nhatKy"].as_array().cloned().unwrap_or_default());
+    }
+    nk.sort_by(|a, b| a["luc"].as_str().unwrap_or("").cmp(b["luc"].as_str().unwrap_or("")));
+    if let Some(o) = h.as_object_mut() {
+        o.insert("tienDo".into(), td.map(|x| x["tienDo"].clone()).unwrap_or(json!({})));
+        if let Some(ct) = ct {
+            o.insert("chiTra".into(), ct["chiTra"].clone());
+        }
+        o.insert("nhatKy".into(), Value::Array(nk));
+    }
+    h
 }
 
 /// Số năm giữ lịch sử bản ghi (cài đặt "giuLichSu": { soNam }); 0 hoặc chưa đặt = giữ không thời hạn.
@@ -248,7 +310,7 @@ fn luu_lich_su_du_an(c: &Connection, du_an_id: &str, ly_do: &str, boi: &str) -> 
     c.execute(
         "INSERT INTO lich_su(loai, id, du_an_id, phien_ban, noi_dung, sua_luc, sua_boi, luu_luc, luu_boi, ly_do)
          SELECT loai, id, du_an_id, phien_ban, noi_dung, sua_luc, sua_boi, ?2, ?3, ?4 FROM ban_ghi
-         WHERE (loai = 'duAn' AND id = ?1) OR (loai IN ('ho', 'pa') AND du_an_id = ?1)",
+         WHERE (loai = 'duAn' AND id = ?1) OR (loai IN ('ho', 'pa', 'td', 'ct') AND du_an_id = ?1)",
         params![du_an_id, bay_gio(), boi, ly_do],
     )
     .map_err(loi_db)?;
@@ -334,8 +396,9 @@ pub fn kiem_luoc_do(loai: &str, cu: Option<&Value>, v: &Value, kiem_so: bool) ->
             for k in ["nhanKhau", "thua", "taiSan", "nhatKy"] {
                 mang(k)?;
             }
-            for k in ["hoTro", "tienDo"] {
-                doi_tuong(k)?;
+            doi_tuong("hoTro")?;
+            if o.get("tienDo").is_some_and(|x| !x.is_null()) || o.get("chiTra").is_some_and(|x| !x.is_null()) {
+                return Err("Bản ghi hồ sơ không chứa tiến độ, chi trả (từ phiên bản 0.7.0 là bản ghi con riêng) — cập nhật phần mềm trên máy này".into());
             }
             for (i, t) in v["thua"].as_array().into_iter().flatten().enumerate() {
                 if !t.is_object() || !t["id"].is_string() {
@@ -353,6 +416,14 @@ pub fn kiem_luoc_do(loai: &str, cu: Option<&Value>, v: &Value, kiem_so: bool) ->
             if o.get("phuongAn").is_some_and(|x| !x.is_null()) {
                 return Err("Bản ghi dự án không chứa phương án (từ phiên bản 0.6.0 mỗi bản phương án là một bản ghi riêng) — cập nhật phần mềm trên máy này".into());
             }
+        }
+        "td" | "ct" => {
+            chuoi("duAnId", true)?;
+            doi_tuong(if loai == "td" { "tienDo" } else { "chiTra" })?;
+            if o.get("nhatKy").is_some_and(|x| !x.is_array()) {
+                return Err("Trường \"nhatKy\" phải là danh sách".into());
+            }
+            return Ok(());
         }
         "pa" => {
             chuoi("duAnId", true)?;
@@ -429,7 +500,7 @@ fn can(st: &MayChu, u: &NguoiGoi, q: &str) -> Kq<()> {
 
 // ---------------- Quy tắc nghiệp vụ kiểm tra lại ở máy chủ ----------------
 
-/// Hồ sơ: tách người gửi – người duyệt bước; máy chủ tự ghi tài khoản gửi/duyệt.
+/// Tiến độ hồ sơ (bản ghi "td", P2-7): tách người gửi – người duyệt bước; máy chủ tự ghi tài khoản gửi/duyệt.
 pub fn kiem_tra_ho(st: &MayChu, cu: Option<&Value>, moi: &mut Value, u: &NguoiGoi) -> Kq<()> {
     if cu.is_none() && u.vai_tro == "QUAN_TRI" {
         return Ok(()); // quản trị khôi phục / đưa dữ liệu lên: giữ nguyên lịch sử người gửi, người duyệt
@@ -539,7 +610,7 @@ fn kiem_tra_xoa_mem(c: &Connection, st: &MayChu, u: &NguoiGoi, loai: &str, id: &
     }
     let mut chan: Vec<String> = vec![];
     if loai == "ho" {
-        if co_chi_tra(moi) {
+        if doc_json(c, "ct", id)?.is_some_and(|x| co_chi_tra(&x)) {
             chan.push("đã ghi chi trả".into());
         }
         chan.extend(co_trong_pa(&ds_pa(c, moi["duAnId"].as_str().unwrap_or(""))?, id));
@@ -548,12 +619,15 @@ fn kiem_tra_xoa_mem(c: &Connection, st: &MayChu, u: &NguoiGoi, loai: &str, id: &
         if ds_pa(c, id)?.iter().any(|p| p["trangThai"] == "DA_PHE_DUYET") {
             chan.push("có bản phương án đã phê duyệt".into());
         }
-        let mut q = c.prepare("SELECT noi_dung FROM ban_ghi WHERE loai = 'ho' AND du_an_id = ?1").map_err(loi_db)?;
+        let mut q = c
+            .prepare("SELECT h.noi_dung, t.noi_dung FROM ban_ghi h JOIN ban_ghi t ON t.loai = 'ct' AND t.id = h.id WHERE h.loai = 'ho' AND h.du_an_id = ?1")
+            .map_err(loi_db)?;
         let n = q
-            .query_map([id], |r| r.get::<_, String>(0))
+            .query_map([id], |r| Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?)))
             .map_err(loi_db)?
-            .filter_map(|x| x.ok().and_then(|s| serde_json::from_str::<Value>(&s).ok()))
-            .filter(|h| !co(h) && co_chi_tra(h))
+            .filter_map(|x| x.ok())
+            .filter_map(|(h, t)| Some((serde_json::from_str::<Value>(&h).ok()?, serde_json::from_str::<Value>(&t).ok()?)))
+            .filter(|(h, t)| !co(h) && co_chi_tra(t))
             .count();
         if n > 0 {
             chan.push(format!("{n} hộ đã ghi chi trả"));
@@ -860,11 +934,12 @@ fn ghi_ban_ghi(c: &Connection, st: &MayChu, u: &NguoiGoi, loai: &str, id: &str, 
     }
     kiem_luoc_do(loai, cu_v.as_ref(), &moi, !ghi_de).map_err(|e| loi(StatusCode::BAD_REQUEST, e))?;
     match loai {
-        "ho" => kiem_tra_ho(st, cu_v.as_ref(), &mut moi, u)?,
+        "td" => kiem_tra_ho(st, cu_v.as_ref(), &mut moi, u)?,
+        "ho" | "ct" => {}
         "pa" => kiem_tra_pa(st, cu_v.as_ref(), &moi, u)?,
         _ => kiem_tra_du_an(st, cu_v.as_ref(), &mut moi, u)?,
     }
-    if !ghi_de && loai != "pa" {
+    if !ghi_de && (loai == "ho" || loai == "duAn") {
         kiem_tra_xoa_mem(c, st, u, loai, id, cu_v.as_ref(), &mut moi)?;
     }
     if cu_v.as_ref() == Some(&moi) {
@@ -936,21 +1011,23 @@ async fn ghi_lo(State(st): State<St>, h: HeaderMap, b: Bytes) -> Kq<Json<Value>>
     for id in xoa_du_an.iter().filter_map(|x| x.as_str()) {
         kiem_tra_xoa_han(&tx, &st, &u, "duAn", id)?;
         luu_lich_su_du_an(&tx, id, "Xóa hẳn", &u.ten)?;
-        tx.execute("DELETE FROM ban_ghi WHERE (loai = 'duAn' AND id = ?1) OR (loai IN ('ho', 'pa') AND du_an_id = ?1)", [id]).map_err(loi_db)?;
+        tx.execute("DELETE FROM ban_ghi WHERE (loai = 'duAn' AND id = ?1) OR (loai IN ('ho', 'pa', 'td', 'ct') AND du_an_id = ?1)", [id]).map_err(loi_db)?;
         tx.execute("DELETE FROM tep WHERE loai = 'banDo' AND id = ?1", [id]).map_err(loi_db)?;
         MayChu::ghi_thay_doi(&tx, "duAn", id, id, &u.ten).map_err(loi_db)?;
     }
     for id in xoa_ho.iter().filter_map(|x| x.as_str()) {
         kiem_tra_xoa_han(&tx, &st, &u, "ho", id)?;
         let du_an: Option<String> = tx.query_row("SELECT du_an_id FROM ban_ghi WHERE loai = 'ho' AND id = ?1", [id], |r| r.get(0)).optional().map_err(loi_db)?;
-        luu_lich_su(&tx, "ho", id, "Xóa hẳn", &u.ten)?;
-        tx.execute("DELETE FROM ban_ghi WHERE loai = 'ho' AND id = ?1", [id]).map_err(loi_db)?;
+        for l in ["ho", "td", "ct"] {
+            luu_lich_su(&tx, l, id, "Xóa hẳn", &u.ten)?;
+        }
+        tx.execute("DELETE FROM ban_ghi WHERE loai IN ('ho', 'td', 'ct') AND id = ?1", [id]).map_err(loi_db)?;
         MayChu::ghi_thay_doi(&tx, "ho", id, &du_an.unwrap_or_default(), &u.ten).map_err(loi_db)?;
     }
     let mut phien_ban = Vec::with_capacity(ghi.len());
     for g in &ghi {
         let loai = match g["loai"].as_str() {
-            Some(l @ ("duAn" | "ho" | "pa")) => l,
+            Some(l @ ("duAn" | "ho" | "pa" | "td" | "ct")) => l,
             _ => return Err(loi(StatusCode::BAD_REQUEST, "Loại bản ghi không hợp lệ")),
         };
         let moi = g["duLieu"].clone();
@@ -991,7 +1068,7 @@ async fn xoa_du_an(State(st): State<St>, h: HeaderMap, Path(id): Path<String>) -
     kiem_tra_xoa_han(&c, &st, &u, "duAn", &id)?;
     let tx = c.transaction().map_err(loi_db)?;
     luu_lich_su_du_an(&tx, &id, "Xóa hẳn", &u.ten)?;
-    tx.execute("DELETE FROM ban_ghi WHERE (loai = 'duAn' AND id = ?1) OR (loai IN ('ho', 'pa') AND du_an_id = ?1)", [&id]).map_err(loi_db)?;
+    tx.execute("DELETE FROM ban_ghi WHERE (loai = 'duAn' AND id = ?1) OR (loai IN ('ho', 'pa', 'td', 'ct') AND du_an_id = ?1)", [&id]).map_err(loi_db)?;
     tx.execute("DELETE FROM tep WHERE loai = 'banDo' AND id = ?1", [&id]).map_err(loi_db)?;
     MayChu::ghi_thay_doi(&tx, "duAn", &id, &id, &u.ten).map_err(loi_db)?;
     tx.commit().map_err(loi_db)?;
@@ -1003,8 +1080,10 @@ async fn xoa_ho(State(st): State<St>, h: HeaderMap, Path(id): Path<String>) -> K
     let c = st.db.lock().unwrap();
     kiem_tra_xoa_han(&c, &st, &u, "ho", &id)?;
     let du_an: Option<String> = c.query_row("SELECT du_an_id FROM ban_ghi WHERE loai = 'ho' AND id = ?1", [&id], |r| r.get(0)).optional().map_err(loi_db)?;
-    luu_lich_su(&c, "ho", &id, "Xóa hẳn", &u.ten)?;
-    c.execute("DELETE FROM ban_ghi WHERE loai = 'ho' AND id = ?1", [&id]).map_err(loi_db)?;
+    for l in ["ho", "td", "ct"] {
+        luu_lich_su(&c, l, &id, "Xóa hẳn", &u.ten)?;
+    }
+    c.execute("DELETE FROM ban_ghi WHERE loai IN ('ho', 'td', 'ct') AND id = ?1", [&id]).map_err(loi_db)?;
     MayChu::ghi_thay_doi(&c, "ho", &id, &du_an.unwrap_or_default(), &u.ten).map_err(loi_db)?;
     Ok(Json(json!({})))
 }
@@ -1161,6 +1240,22 @@ async fn doc_nhieu(State(st): State<St>, h: HeaderMap, b: Bytes) -> Kq<Json<Valu
     Ok(Json(Value::Array(out)))
 }
 
+#[derive(serde::Deserialize)]
+struct LocLoai {
+    loai: String,
+    #[serde(rename = "duAn")]
+    du_an: Option<String>,
+}
+
+/// Danh sách bản ghi con (tiến độ "td", chi trả "ct") theo dự án (P2-7).
+async fn ds_ban_ghi_con(State(st): State<St>, h: HeaderMap, Query(l): Query<LocLoai>) -> Kq<Json<Value>> {
+    xac_thuc(&st, &h)?;
+    if !matches!(l.loai.as_str(), "td" | "ct" | "pa") {
+        return Err(loi(StatusCode::BAD_REQUEST, "Loại bản ghi không hợp lệ"));
+    }
+    Ok(Json(doc_ban_ghi(&st.db.lock().unwrap(), &l.loai, l.du_an.as_deref())?))
+}
+
 async fn api_ds_pa(State(st): State<St>, h: HeaderMap, Query(l): Query<LocDuAn>) -> Kq<Json<Value>> {
     xac_thuc(&st, &h)?;
     Ok(Json(doc_ban_ghi(&st.db.lock().unwrap(), "pa", l.du_an.as_deref())?))
@@ -1229,7 +1324,8 @@ async fn khoi_phuc_ban_ghi(State(st): State<St>, h: HeaderMap, b: Bytes) -> Kq<J
         return Err(loi(StatusCode::BAD_REQUEST, "Chỉ khôi phục được hồ sơ hộ, cá nhân, tổ chức"));
     }
     let id = ls["id"].as_str().unwrap_or("").to_string();
-    let mut moi = ls["duLieu"].clone();
+    // bản trước 0.7.0 còn tiến độ, chi trả nhúng: chỉ khôi phục phần hồ sơ chính (tiến độ, chi trả có lịch sử riêng)
+    let (mut moi, _, _) = tach_ho(ls["duLieu"].clone());
     let du_an_id = moi["duAnId"].as_str().unwrap_or("").to_string();
     if doc_json(&c, "duAn", &du_an_id)?.is_none() {
         return Err(loi(StatusCode::CONFLICT, "Dự án của hồ sơ không còn — không khôi phục được"));
@@ -1264,6 +1360,23 @@ async fn khoi_phuc_ban_ghi(State(st): State<St>, h: HeaderMap, b: Bytes) -> Kq<J
     )
     .map_err(loi_db)?;
     MayChu::ghi_thay_doi(&tx, "ho", &id, &du_an_id, &u.ten).map_err(loi_db)?;
+    if pb_cu.is_none() {
+        // hồ sơ đã xóa hẳn: khôi phục cả tiến độ, chi trả từ bản lưu lúc xóa (nếu có)
+        for l in ["td", "ct"] {
+            let r: Option<(String, Option<i64>)> = tx
+                .query_row("SELECT noi_dung, phien_ban FROM lich_su WHERE loai = ?1 AND id = ?2 AND ly_do = 'Xóa hẳn' ORDER BY stt DESC LIMIT 1", params![l, id], |r| Ok((r.get(0)?, r.get(1)?)))
+                .optional()
+                .map_err(loi_db)?;
+            if let Some((nd, pb)) = r {
+                tx.execute(
+                    "INSERT OR REPLACE INTO ban_ghi(loai, id, du_an_id, phien_ban, noi_dung, sua_luc, sua_boi) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+                    params![l, id, du_an_id, pb.unwrap_or(0) + 1, nd, luc, u.ten],
+                )
+                .map_err(loi_db)?;
+                MayChu::ghi_thay_doi(&tx, l, &id, &du_an_id, &u.ten).map_err(loi_db)?;
+            }
+        }
+    }
     st.ghi_nhat_ky(&tx, &u.ten, &u.ho_ten, "Khôi phục hồ sơ về phiên bản cũ", &format!("{} · {} — {mo_ta}", moi["ma"].as_str().unwrap_or(""), moi["ten"].as_str().unwrap_or(""))).map_err(loi_db)?;
     tx.commit().map_err(loi_db)?;
     Ok(Json(json!({ "duLieu": moi, "phienBan": pb })))
@@ -1314,6 +1427,7 @@ pub fn dinh_tuyen(st: St) -> Router {
         .route("/api/thay-doi", get(thay_doi))
         .route("/api/doc", post(doc_nhieu))
         .route("/api/pa", get(api_ds_pa))
+        .route("/api/ban-ghi", get(ds_ban_ghi_con))
         .route("/api/lich-su", get(lich_su))
         .route("/api/lich-su/da-xoa", get(lich_su_da_xoa))
         .route("/api/lich-su/khoi-phuc", post(khoi_phuc_ban_ghi))
@@ -1393,9 +1507,14 @@ async fn chuyen_du_lieu(State(st): State<St>, b: Bytes) -> Kq<Json<Value>> {
         so_da += 1;
     }
     for h in ds("ho") {
-        let (id, da) = (h["id"].as_str().unwrap_or(""), h["duAnId"].as_str().unwrap_or(""));
+        let (id, da) = (h["id"].as_str().unwrap_or("").to_string(), h["duAnId"].as_str().unwrap_or("").to_string());
         if !id.is_empty() {
-            ghi("ho", id, da, &h)?;
+            let (loi_ho, td, ct) = tach_ho(h);
+            ghi("ho", &id, &da, &loi_ho)?;
+            ghi("td", &id, &da, &td)?;
+            if let Some(ct) = ct {
+                ghi("ct", &id, &da, &ct)?;
+            }
             so_ho += 1;
         }
     }
@@ -1441,8 +1560,17 @@ async fn xuat_noi_bo(State(st): State<St>) -> Kq<Json<Value>> {
         .filter_map(|x| x.ok())
         .map(|(k, v)| json!({ "khoa": k, "giaTri": serde_json::from_str::<Value>(&v).unwrap_or(Value::Null) }))
         .collect();
+    let td = doc("SELECT noi_dung FROM ban_ghi WHERE loai = 'td'")?;
+    let ct = doc("SELECT noi_dung FROM ban_ghi WHERE loai = 'ct'")?;
+    let ho: Vec<Value> = doc("SELECT noi_dung FROM ban_ghi WHERE loai = 'ho'")?
+        .into_iter()
+        .map(|h| {
+            let (a, b) = (td.iter().find(|x| x["id"] == h["id"]), ct.iter().find(|x| x["id"] == h["id"]));
+            ghep_ho(h, a, b)
+        })
+        .collect();
     Ok(Json(json!({
-        "duAn": du_an, "ho": doc("SELECT noi_dung FROM ban_ghi WHERE loai = 'ho'")?, "tep": tep, "caiDat": cai_dat,
+        "duAn": du_an, "ho": ho, "tep": tep, "caiDat": cai_dat,
         "nguoiDung": doc("SELECT noi_dung FROM nguoi_dung")?, "nhatKy": doc("SELECT noi_dung FROM nhat_ky ORDER BY stt")?
     })))
 }

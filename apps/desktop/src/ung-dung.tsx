@@ -299,26 +299,9 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
         seq.current = r.seq;
         if (!lanDau && cuaNguoiKhac.length && !dung) {
           // P1-2: chỉ tải các bản ghi vừa đổi; thay đổi khác (cài đặt, khôi phục toàn bộ) → tải lại hết
-          if (cuaNguoiKhac.every((x) => x.loai === "ho" || x.loai === "duAn" || x.loai === "pa")) {
-            const khoa = [...new Map(cuaNguoiKhac.map((x) => [`${x.loai}:${x.id}`, { loai: x.loai, id: x.id }])).values()];
-            const r = await kho.docNhieu(khoa);
-            const ho = r.flatMap((x) => (x.loai === "ho" && x.duLieu ? [x.duLieu] : []));
-            const xoaHo = r.flatMap((x) => (x.loai === "ho" && !x.duLieu ? [x.id] : []));
-            const xoaDuAn = r.flatMap((x) => (x.loai === "duAn" && !x.duLieu ? [x.id] : []));
-            const pa = r.flatMap((x) => (x.loai === "pa" && x.duLieu ? [x.duLieu] : []));
-            const loiDa = r.flatMap((x) => (x.loai === "duAn" && x.duLieu ? [x.duLieu] : []));
-            setDsDuAn((ds) => {
-              const out = ds.filter((d) => !xoaDuAn.includes(d.id)).map((d) => {
-                const loi = loiDa.find((y) => y.id === d.id);
-                const cuaDa = pa.filter((p) => p.duAnId === d.id);
-                if (!loi && !cuaDa.length) return d;
-                const dsPa = [...(d.phuongAn ?? []).map((p) => cuaDa.find((q) => q.id === p.id)?.pa ?? p), ...cuaDa.filter((q) => !(d.phuongAn ?? []).some((p) => p.id === q.id)).map((q) => q.pa)];
-                return { ...(loi ?? d), ...(dsPa.length ? { phuongAn: dsPa } : {}) };
-              });
-              for (const d of loiDa) if (!ds.some((y) => y.id === d.id)) out.push({ ...d, ...(pa.some((p) => p.duAnId === d.id) ? { phuongAn: pa.filter((p) => p.duAnId === d.id).map((p) => p.pa) } : {}) });
-              return out.sort((a, b) => b.taoLuc.localeCompare(a.taoLuc));
-            });
-            capNhat({ ho, xoaHo, xoaDuAn });
+          if (cuaNguoiKhac.every((x) => ["ho", "duAn", "pa", "td", "ct"].includes(x.loai))) {
+            const r = await kho.docLai(cuaNguoiKhac);
+            capNhat(r);
           } else await taiLai();
           const ai = [...new Set(cuaNguoiKhac.map((x) => x.boi))].join(", ");
           bao(`Dữ liệu vừa được cập nhật bởi ${ai}`);

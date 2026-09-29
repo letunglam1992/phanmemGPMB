@@ -57,6 +57,8 @@ export interface KhoMang extends Kho {
   thayDoi(sau: number | null): Promise<{ seq: number; ds: ThayDoi[] }>;
   /** Đọc lại các bản ghi vừa đổi (P1-2); bản ghi đã xóa → null. Phương án trả về kèm mã dự án. */
   docNhieu(ds: { loai: string; id: string }[]): Promise<BanGhiDoc[]>;
+  /** Đọc lại hồ sơ, dự án (đã ghép phần con) theo danh sách thay đổi của máy chủ. */
+  docLai(ds: ThayDoi[]): Promise<{ ho: Ho[]; xoaHo: string[]; duAn: DuAn[]; xoaDuAn: string[] }>;
   coPhien(): boolean;
 }
 
@@ -66,6 +68,13 @@ export type BanGhiDoc =
   | { loai: "pa"; id: string; duLieu: { id: string; duAnId: string; pa: PhienBanPA } | null };
 
 export const DIA_CHI_NOI_BO = "noi-bo";
+
+/** JSON với khóa sắp xếp, bỏ trường undefined — so sánh nội dung không phụ thuộc thứ tự khóa. */
+export function chuan(v: unknown): string {
+  return JSON.stringify(v, (_k, x: unknown) =>
+    x && typeof x === "object" && !Array.isArray(x) ? Object.fromEntries(Object.entries(x as Record<string, unknown>).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) : x,
+  );
+}
 
 export const laKhoMang = (k: Kho): k is KhoMang => (k as Partial<KhoMang>).mang === true;
 
@@ -118,7 +127,7 @@ export function taoKhoMang(ketNoi: KetNoi, gui: GuiYeuCau = guiQuaVo(ketNoi)): K
    * P1-6: mỗi bản phương án là một bản ghi riêng ("pa") trên máy chủ; giao diện vẫn dùng DuAn.phuongAn. Khi lưu dự án chỉ
    * gửi phần đã đổi (lõi dự án / từng bản phương án) — sửa thông tin dự án không xung đột với người đang chốt phương án.
    */
-  const daDoc = new Map<string, string>(); // "loai:id" → JSON bản đã đọc/ghi gần nhất
+  const daDoc = new Map<string, string>(); // "loai:id" → JSON (khóa sắp xếp) bản đã đọc/ghi gần nhất
   const tach = (d: DuAn) => {
     const { phuongAn, ...loi } = d;
     return { loi: loi as DuAn, pa: (phuongAn ?? []).map((p) => ({ id: p.id, duAnId: d.id, pa: p })) };
@@ -128,7 +137,7 @@ export function taoKhoMang(ketNoi: KetNoi, gui: GuiYeuCau = guiQuaVo(ketNoi)): K
     return ds.length ? { ...loi, phuongAn: ds } : { ...loi };
   };
   const nho = (loai: string, v: { id: string }, pb?: number) => {
-    daDoc.set(`${loai}:${v.id}`, JSON.stringify(v));
+    daDoc.set(`${loai}:${v.id}`, chuan(v));
     if (pb !== undefined) phienBan.set(`${loai}:${v.id}`, pb);
   };
   const muc = (loai: string, duLieu: { id: string }, ghiDe = false) => ({ loai, duLieu, phienBanTruoc: ghiDe ? null : phienBan.get(`${loai}:${duLieu.id}`) ?? null });
@@ -136,28 +145,70 @@ export function taoKhoMang(ketNoi: KetNoi, gui: GuiYeuCau = guiQuaVo(ketNoi)): K
   const mucDuAn = (d: DuAn, ghiDe: boolean) => {
     const { loi, pa } = tach(d);
     const out = [];
-    if (ghiDe || daDoc.get(`duAn:${d.id}`) !== JSON.stringify(loi)) out.push(muc("duAn", loi, ghiDe));
-    for (const p of pa) if (ghiDe || daDoc.get(`pa:${p.id}`) !== JSON.stringify(p)) out.push(muc("pa", p, ghiDe));
+    if (ghiDe || daDoc.get(`duAn:${d.id}`) !== chuan(loi)) out.push(muc("duAn", loi, ghiDe));
+    for (const p of pa) if (ghiDe || daDoc.get(`pa:${p.id}`) !== chuan(p)) out.push(muc("pa", p, ghiDe));
     return out;
   };
+  /**
+   * P2-7: hồ sơ trên máy chủ gồm bản ghi chính ("ho"), tiến độ ("td") và chi trả ("ct") — mỗi phần một phiên bản, để
+   * người ghi chi trả không xung đột với người cập nhật tiến độ hay thông tin hồ sơ. Nhật ký hồ sơ nằm ở phần nào sinh ra
+   * nó; dòng nhật ký mới đi vào phần có thay đổi (ưu tiên bản ghi chính, rồi chi trả, rồi tiến độ). Giao diện vẫn dùng Ho đầy đủ.
+   */
+  type TienDoBg = { id: string; duAnId: string; tienDo: Ho["tienDo"]; nhatKy: Ho["nhatKy"] };
+  type ChiTraBg = { id: string; duAnId: string; chiTra: NonNullable<Ho["chiTra"]>; nhatKy: Ho["nhatKy"] };
+  const docCache = <T,>(k: string): T | null => {
+    const x = daDoc.get(k);
+    return x ? (JSON.parse(x) as T) : null;
+  };
+  const khongNk = <T extends { nhatKy?: unknown }>(x: T | null) => (x ? chuan({ ...x, nhatKy: undefined }) : null);
+  const tachHo = (h: Ho): { loi: Ho; td: TienDoBg; ct: ChiTraBg | null } => {
+    const { tienDo, chiTra, nhatKy, ...con } = h;
+    const [cLoi, cTd, cCt] = [docCache<Ho>(`ho:${h.id}`), docCache<TienDoBg>(`td:${h.id}`), docCache<ChiTraBg>(`ct:${h.id}`)];
+    const loi = { ...con, nhatKy: [] as Ho["nhatKy"] } as Ho;
+    const td: TienDoBg = { id: h.id, duAnId: h.duAnId, tienDo: tienDo ?? {}, nhatKy: [] };
+    const ct: ChiTraBg | null = chiTra ? { id: h.id, duAnId: h.duAnId, chiTra, nhatKy: [] } : null;
+    const bo = (ds: Ho["nhatKy"] | undefined) => new Set((ds ?? []).map((x) => JSON.stringify(x)));
+    const [kLoi, kTd, kCt] = [bo(cLoi?.nhatKy), bo(cTd?.nhatKy), bo(cCt?.nhatKy)];
+    const doiLoi = khongNk(loi) !== khongNk(cLoi), doiCt = !!ct && khongNk(ct) !== khongNk(cCt), doiTd = khongNk(td) !== khongNk(cTd);
+    const dich = doiLoi || !cLoi ? loi : doiCt ? ct! : doiTd ? td : loi;
+    for (const n of nhatKy ?? []) {
+      const k = JSON.stringify(n);
+      (kTd.has(k) ? td : kCt.has(k) && ct ? ct : kLoi.has(k) ? loi : dich).nhatKy.push(n);
+    }
+    return { loi, td, ct };
+  };
+  const ghepHo = (loi: Ho, td: TienDoBg | null, ct: ChiTraBg | null): Ho => {
+    const nk = [...(loi.nhatKy ?? []), ...(td?.nhatKy ?? []), ...(ct?.nhatKy ?? [])].sort((a, b) => a.luc.localeCompare(b.luc));
+    return { ...loi, tienDo: td?.tienDo ?? {}, ...(ct ? { chiTra: ct.chiTra } : {}), nhatKy: nk };
+  };
+  const ghepTuCache = (id: string): Ho | null => {
+    const loi = docCache<Ho>(`ho:${id}`);
+    return loi && ghepHo(loi, docCache<TienDoBg>(`td:${id}`), docCache<ChiTraBg>(`ct:${id}`));
+  };
+  const mucHo = (h: Ho, ghiDe: boolean) => {
+    const t = tachHo(h);
+    const out = [];
+    for (const [loai, v] of [["ho", t.loi], ["td", t.td], ["ct", t.ct]] as const)
+      if (v && (ghiDe || daDoc.get(`${loai}:${h.id}`) !== chuan(v))) out.push(muc(loai, v, ghiDe));
+    return out;
+  };
+
   /** Gửi lô, nhận bản ghi đã lưu; cập nhật phiên bản và bộ nhớ đọc. */
-  async function guiLo(than: Record<string, unknown>, ghi: ReturnType<typeof muc>[], dsDuAnGoc: DuAn[]): Promise<KetQuaGhi> {
+  async function guiLo(than: Record<string, unknown>, ghi: ReturnType<typeof muc>[], dsDuAnGoc: DuAn[], dsHoGoc: Ho[] = []): Promise<KetQuaGhi> {
     const r = await json<{ phienBan: { loai: string; id: string; phienBan: number; duLieu: { id: string } }[] }>("POST", "/api/lo", { json: { ...than, ghi } });
-    const ho: Ho[] = [];
     const loi = new Map<string, DuAn>();
     const pa: { id: string; duAnId: string; pa: PhienBanPA }[] = [];
     for (const x of r.phienBan) {
       nho(x.loai, x.duLieu, x.phienBan);
-      if (x.loai === "ho") ho.push(x.duLieu as Ho);
-      else if (x.loai === "duAn") loi.set(x.id, x.duLieu as DuAn);
-      else pa.push(x.duLieu as { id: string; duAnId: string; pa: PhienBanPA });
+      if (x.loai === "duAn") loi.set(x.id, x.duLieu as DuAn);
+      else if (x.loai === "pa") pa.push(x.duLieu as { id: string; duAnId: string; pa: PhienBanPA });
     }
     const duAn = dsDuAnGoc.map((d) => {
       const t = tach(d);
       const l = loi.get(d.id) ?? t.loi;
       return ghep(l, t.pa.map((p) => pa.find((q) => q.id === p.id) ?? p));
     });
-    return { duAn, ho };
+    return { duAn, ho: dsHoGoc.map((h) => ghepTuCache(h.id) ?? h) };
   }
 
   const dsTep = (loai: string) => json<string[]>("GET", `/api/tep/${loai}`);
@@ -211,11 +262,46 @@ export function taoKhoMang(ketNoi: KetNoi, gui: GuiYeuCau = guiQuaVo(ketNoi)): K
     async xoaDuAn(id) {
       await goi("DELETE", `/api/du-an/${ma(id)}`);
     },
-    dsHo: (duAnId) => dsBanGhi<Ho>("ho", `/api/ho?duAn=${ma(duAnId)}`),
+    async dsHo(duAnId) {
+      const loi = await dsBanGhi<Ho>("ho", `/api/ho?duAn=${ma(duAnId)}`);
+      const td = await dsBanGhi<TienDoBg>("td", `/api/ban-ghi?loai=td&duAn=${ma(duAnId)}`);
+      const ct = await dsBanGhi<ChiTraBg>("ct", `/api/ban-ghi?loai=ct&duAn=${ma(duAnId)}`);
+      for (const x of loi) nho("ho", x);
+      for (const x of td) nho("td", x);
+      for (const x of ct) nho("ct", x);
+      const mTd = new Map(td.map((x) => [x.id, x])), mCt = new Map(ct.map((x) => [x.id, x]));
+      return loi.map((h) => ghepHo(h, mTd.get(h.id) ?? null, mCt.get(h.id) ?? null));
+    },
     async luuHo(h) {
-      const r = await json<{ duLieu: Ho; phienBan: number }>("PUT", `/api/ho/${ma(h.id)}`, { json: { duLieu: h, phienBanTruoc: phienBan.get(`ho:${h.id}`) ?? null } });
-      nho("ho", r.duLieu, r.phienBan);
-      return r.duLieu;
+      const ghi = mucHo(h, false);
+      if (!ghi.length) return ghepTuCache(h.id) ?? h;
+      if (ghi.length === 1 && ghi[0]!.loai === "ho") {
+        const r = await json<{ duLieu: Ho; phienBan: number }>("PUT", `/api/ho/${ma(h.id)}`, { json: { duLieu: ghi[0]!.duLieu, phienBanTruoc: ghi[0]!.phienBanTruoc } });
+        nho("ho", r.duLieu, r.phienBan);
+      } else await guiLo({}, ghi, []);
+      return ghepTuCache(h.id)!;
+    },
+    async docLai(ds) {
+      const hoId = [...new Set(ds.filter((x) => x.loai === "ho" || x.loai === "td" || x.loai === "ct").map((x) => x.id))];
+      const duAnId = [...new Set(ds.flatMap((x) => (x.loai === "duAn" ? [x.id] : x.loai === "pa" && x.duAnId ? [x.duAnId] : [])))];
+      const r = await this.docNhieu([...hoId.flatMap((id) => ["ho", "td", "ct"].map((loai) => ({ loai, id }))), ...duAnId.map((id) => ({ loai: "duAn", id }))]);
+      const out = { ho: [] as Ho[], xoaHo: [] as string[], duAn: [] as DuAn[], xoaDuAn: [] as string[] };
+      for (const id of hoId) {
+        const h = ghepTuCache(id);
+        if (h) out.ho.push(h);
+        else out.xoaHo.push(id);
+      }
+      for (const id of duAnId) {
+        const d = r.find((x) => x.loai === "duAn" && x.id === id)?.duLieu as DuAn | null | undefined;
+        if (!d) {
+          out.xoaDuAn.push(id);
+          continue;
+        }
+        const pa = await dsBanGhi<{ id: string; duAnId: string; pa: PhienBanPA }>("pa", `/api/ban-ghi?loai=pa&duAn=${ma(id)}`);
+        for (const p of pa) nho("pa", p);
+        out.duAn.push(ghep(d, pa));
+      }
+      return out;
     },
     async docNhieu(ds) {
       const r = await json<{ loai: string; id: string; duLieu: { id: string } | null; phienBan: number | null }[]>("POST", "/api/doc", { json: { ds } });
@@ -226,13 +312,17 @@ export function taoKhoMang(ketNoi: KetNoi, gui: GuiYeuCau = guiQuaVo(ketNoi)): K
       return r as BanGhiDoc[];
     },
     async lichSu(loai, id) {
-      return json<{ ds: BanLichSu[]; soNamGiu: number }>("GET", `/api/lich-su?loai=${ma(loai)}&id=${ma(id)}`);
+      const doc = (l: string) => json<{ ds: BanLichSu[]; soNamGiu: number }>("GET", `/api/lich-su?loai=${ma(l)}&id=${ma(id)}`);
+      if (loai !== "ho") return doc(loai);
+      // hồ sơ: gộp lịch sử bản ghi chính, tiến độ, chi trả (P2-7)
+      const [a, b, c] = await Promise.all([doc("ho"), doc("td"), doc("ct")]);
+      return { ds: [...a.ds, ...b.ds, ...c.ds].sort((x, y) => y.stt - x.stt), soNamGiu: a.soNamGiu };
     },
     hoDaXoaHan: (duAnId) => json<BanLichSu[]>("GET", `/api/lich-su/da-xoa?duAn=${ma(duAnId)}`),
     async khoiPhucBanLichSu(stt, lyDo) {
       const r = await json<{ duLieu: Ho; phienBan: number }>("POST", "/api/lich-su/khoi-phuc", { json: { stt, lyDo } });
-      nho("ho", r.duLieu, r.phienBan);
-      return r.duLieu;
+      await this.docNhieu(["ho", "td", "ct"].map((loai) => ({ loai, id: r.duLieu.id })));
+      return ghepTuCache(r.duLieu.id)!;
     },
     async xoaHo(id) {
       await goi("DELETE", `/api/ho/${ma(id)}`);
@@ -245,13 +335,13 @@ export function taoKhoMang(ketNoi: KetNoi, gui: GuiYeuCau = guiQuaVo(ketNoi)): K
       };
       if (lo.xoaTatCa) (phienBan.clear(), daDoc.clear());
       const ghiDe = !!lo.ghiDe || !!lo.xoaTatCa;
-      const ghi = [...(lo.duAn ?? []).flatMap((d) => mucDuAn(d, ghiDe)), ...(lo.ho ?? []).map((h) => muc("ho", h, !!lo.ghiDe))];
+      const ghi = [...(lo.duAn ?? []).flatMap((d) => mucDuAn(d, ghiDe)), ...(lo.ho ?? []).flatMap((h) => mucHo(h, ghiDe))];
       const tep = [
         ...(lo.banDo ?? []).map((x) => ({ loai: "banDo", id: x.duAnId, meta: "{}", noiDung: x.bytes ? b64(x.bytes) : null })),
         ...(lo.mau ?? []).map((m) => ({ loai: "mau", id: m.ma, meta: JSON.stringify({ tenTep: m.tenTep ?? `${m.ma}.docx`, luc: m.luc ?? new Date().toISOString() }), noiDung: m.bytes ? b64(m.bytes) : null })),
       ];
-      const kq = await guiLo({ xoaTatCa: !!lo.xoaTatCa, ghiDe: !!lo.ghiDe, xoaDuAn: lo.xoaDuAn ?? [], xoaHo: lo.xoaHo ?? [], tep }, ghi, lo.duAn ?? []);
-      for (const id of lo.xoaHo ?? []) (phienBan.delete(`ho:${id}`), daDoc.delete(`ho:${id}`));
+      const kq = await guiLo({ xoaTatCa: !!lo.xoaTatCa, ghiDe: !!lo.ghiDe, xoaDuAn: lo.xoaDuAn ?? [], xoaHo: lo.xoaHo ?? [], tep }, ghi, lo.duAn ?? [], lo.ho ?? []);
+      for (const id of lo.xoaHo ?? []) for (const l of ["ho", "td", "ct"]) (phienBan.delete(`${l}:${id}`), daDoc.delete(`${l}:${id}`));
       return kq;
     },
     async luuBanDo(duAnId, bytes) {

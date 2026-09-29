@@ -35,7 +35,7 @@ export interface KetQuaGhi {
 /** Một bản cũ của bản ghi (P1-5). */
 export interface BanLichSu {
   stt: number;
-  loai: "ho" | "duAn" | "pa";
+  loai: "ho" | "duAn" | "pa" | "td" | "ct";
   id: string;
   duAnId: string | null;
   phienBan: number | null;

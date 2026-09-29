@@ -4,6 +4,21 @@ import type { BanLichSu } from "../kho";
 import type { Ho } from "../mo-hinh";
 import { khacBiet } from "../lich-su";
 
+const TEN_PHAN: Record<string, string> = { td: "Tiến độ · ", ct: "Chi trả · " };
+
+/**
+ * Cặp (bản cũ, bản sau) để so sánh. Máy chủ lưu tiến độ ("td"), chi trả ("ct") là bản ghi con riêng (P2-7): so trong phần
+ * tương ứng; bản ghi chính so phần còn lại (bỏ tiến độ, chi trả nếu bản cũ không chứa chúng).
+ */
+function cap(x: BanLichSu, sauLs: BanLichSu | undefined, h: Ho): [Ho, Ho] {
+  const sau = (sauLs?.duLieu ?? null) as Record<string, unknown> | null;
+  const cu = x.duLieu as Record<string, unknown>;
+  if (x.loai === "td") return [{ tienDo: cu.tienDo } as unknown as Ho, { tienDo: sau ? sau.tienDo : h.tienDo } as unknown as Ho];
+  if (x.loai === "ct") return [{ chiTra: cu.chiTra } as unknown as Ho, { chiTra: sau ? sau.chiTra : h.chiTra } as unknown as Ho];
+  const bo = (o: Record<string, unknown>) => ("tienDo" in cu ? o : (({ tienDo: _a, chiTra: _b, ...r }) => r)(o));
+  return [bo(cu) as unknown as Ho, bo((sau ?? h) as unknown as Record<string, unknown>) as unknown as Ho];
+}
+
 const gio = (s: string | null) => (s ? new Date(s).toLocaleString("vi-VN", { hour12: false }) : "—");
 
 /**
@@ -45,12 +60,11 @@ export function LichSuHo({ h }: { h: Ho }) {
           <thead><tr><th>Bản cũ</th><th>Bị thay lúc</th><th>Thay đổi sang bản sau</th><th /></tr></thead>
           <tbody>
             {ds.map((x, i) => {
-              const sau = (i === 0 ? h : (ds[i - 1]!.duLieu as Ho)) as Ho;
-              const kb = khacBiet(x.duLieu as Ho, sau);
+              const kb = khacBiet(...cap(x, ds.slice(0, i).reverse().find((y) => y.loai === x.loai), h));
               return (
                 <Fragment key={x.stt}>
                   <tr>
-                    <td className="chu-nho">{x.phienBan ? `Phiên bản ${x.phienBan}` : "Bản cũ"}{x.suaBoi && <div className="mo">lưu {gio(x.suaLuc)} · {x.suaBoi}</div>}</td>
+                    <td className="chu-nho">{TEN_PHAN[x.loai] ?? ""}{x.phienBan ? `Phiên bản ${x.phienBan}` : "Bản cũ"}{x.suaBoi && <div className="mo">lưu {gio(x.suaLuc)} · {x.suaBoi}</div>}</td>
                     <td className="chu-nho">{gio(x.luuLuc)}<div className="mo">{x.luuBoi || "—"} · {x.lyDo || "Sửa"}</div></td>
                     <td className="chu-nho">
                       {kb.length === 0 ? <span className="mo">Không khác (chỉ nhật ký)</span> : (
@@ -60,7 +74,7 @@ export function LichSuHo({ h }: { h: Ho }) {
                         </>
                       )}
                     </td>
-                    <td style={{ whiteSpace: "nowrap" }}>{quyen("KHOI_PHUC_BAN_GHI") && <button className="nut nut-nho" title="Chỉ quản trị" onClick={() => void khoiPhuc(x)}>Khôi phục bản này</button>}</td>
+                    <td style={{ whiteSpace: "nowrap" }}>{quyen("KHOI_PHUC_BAN_GHI") && x.loai === "ho" && <button className="nut nut-nho" title="Chỉ quản trị" onClick={() => void khoiPhuc(x)}>Khôi phục bản này</button>}</td>
                   </tr>
                 </Fragment>
               );

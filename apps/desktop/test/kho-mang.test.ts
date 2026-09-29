@@ -80,6 +80,37 @@ describe("Kho qua máy chủ mạng nội bộ (phía máy trạm)", () => {
     expect(nhat.length).toBe(n);
   });
 
+  it("P2-7: hồ sơ = bản ghi chính + tiến độ + chi trả; ghi chi trả chỉ gửi phần chi trả kèm dòng nhật ký mới", async () => {
+    const loi = { id: "h1", duAnId: "da1", ma: "H1", ten: "A", nhatKy: [{ luc: "2026-01-01", nguoi: "a", noiDung: "Tạo" }] };
+    const { gui, nhat } = giaLap((pt, dd, than) => {
+      if (dd === "/api/dang-nhap") return { ma: 200, v: { token: "T", nguoiDung: {} } };
+      if (dd === "/api/ho?duAn=da1") return { ma: 200, v: [{ duLieu: loi, phienBan: 4 }] };
+      if (dd === "/api/ban-ghi?loai=td&duAn=da1") return { ma: 200, v: [{ duLieu: { id: "h1", duAnId: "da1", tienDo: { "5": { trangThai: "XONG" } }, nhatKy: [{ luc: "2026-02-01", nguoi: "b", noiDung: "Bước 5" }] }, phienBan: 2 }] };
+      if (dd === "/api/ban-ghi?loai=ct&duAn=da1") return { ma: 200, v: [] };
+      if (pt === "POST" && dd === "/api/lo") {
+        const g = (than as { ghi: { loai: string; duLieu: { id: string } }[] }).ghi;
+        return { ma: 200, v: { phienBan: g.map((x) => ({ loai: x.loai, id: x.duLieu.id, phienBan: 1, duLieu: x.duLieu })) } };
+      }
+      return { ma: 404, v: { loi: "không có" } };
+    });
+    const k = taoKhoMang({ diaChi: "a:1", vanTay: "v" }, gui);
+    await k.dangNhap("a", "b");
+    const [h] = await k.dsHo("da1");
+    expect(h!.tienDo["5"]!.trangThai).toBe("XONG");
+    expect(h!.nhatKy.map((n) => n.noiDung)).toEqual(["Tạo", "Bước 5"]);
+    const moi = { luc: "2026-03-01", nguoi: "c", noiDung: "Ghi chi trả" };
+    const r = await k.luuHo({ ...h!, chiTra: { dot: [] } as never, nhatKy: [...h!.nhatKy, moi] });
+    const g = (nhat.at(-1)!.than as { ghi: { loai: string; duLieu: { nhatKy: unknown[] }; phienBanTruoc: number | null }[] }).ghi;
+    expect(g.map((x) => x.loai)).toEqual(["ct"]);
+    expect(g[0]!.duLieu.nhatKy).toEqual([moi]);
+    expect(r.chiTra).toEqual({ dot: [] });
+    expect(r.nhatKy.map((n) => n.noiDung)).toEqual(["Tạo", "Bước 5", "Ghi chi trả"]);
+    // chỉ đổi tiến độ → chỉ gửi tiến độ, kèm phiên bản trước
+    await k.luuHo({ ...r, tienDo: { ...r.tienDo, "6": { trangThai: "DANG" } } });
+    const g2 = (nhat.at(-1)!.than as { ghi: { loai: string; phienBanTruoc: number | null }[] }).ghi;
+    expect(g2).toMatchObject([{ loai: "td", phienBanTruoc: 2 }]);
+  });
+
   it("401 xóa phiên; 404 tệp trả null; mẫu văn bản đọc tên tệp từ meta; ghi nhật ký không gửi tên người", async () => {
     const { gui, nhat } = giaLap((pt, dd) => {
       if (dd === "/api/dang-nhap") return { ma: 200, v: { token: "T", nguoiDung: {} } };

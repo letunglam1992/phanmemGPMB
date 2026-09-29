@@ -17,11 +17,14 @@ import type { BoChinhSach } from "@gpmb/core";
 const bien = process.env.GPMB_MAY_CHU;
 const [diaChi, vanTay] = (bien ?? "|").split("|") as [string, string];
 
+/** Không dùng lại phiên TLS: phiên nối tiếp (resumption) không trả chứng chỉ để đối chiếu vân tay. */
+const tacTu = new https.Agent({ maxCachedSessions: 0, keepAlive: false });
+
 /** Gửi HTTPS từ Node, kiểm vân tay chứng chỉ như vỏ Rust. */
 const guiNode: GuiYeuCau = (pt, dd, o = {}) =>
   new Promise((ok, loi) => {
     const [host, port] = diaChi.split(":");
-    const rq = https.request({ host, port: Number(port), path: dd, method: pt, rejectUnauthorized: false, headers: { ...(o.token ? { authorization: `Bearer ${o.token}` } : {}), ...(o.meta ? { "x-meta": o.meta } : {}), "content-type": "application/octet-stream" } }, (r) => {
+    const rq = https.request({ host, port: Number(port), path: dd, method: pt, rejectUnauthorized: false, agent: tacTu, headers: { ...(o.token ? { authorization: `Bearer ${o.token}` } : {}), ...(o.meta ? { "x-meta": o.meta } : {}), "content-type": "application/octet-stream" } }, (r) => {
       const fp = (r.socket as import("node:tls").TLSSocket).getPeerCertificate().fingerprint256;
       if (fp !== vanTay) return loi(new Error(`Vân tay không khớp: ${fp}`));
       const ds: Buffer[] = [];
@@ -109,6 +112,18 @@ describe.skipIf(!bien)("Nối thật máy trạm ↔ máy chủ Rust", () => {
     // bản phương án đã phê duyệt: sửa số liệu bị máy chủ chặn
     const [da2] = await k.dsDuAn();
     await expect(k.luuDuAn({ ...da2!, phuongAn: [{ ...d, tong: "1" }] })).rejects.toThrow(/không sửa được/);
+    // P2-7: sửa song song cùng một hộ — cán bộ ghi chi trả, lãnh đạo sửa thông tin, cùng từ bản đang có: không xung đột;
+    // dòng nhật ký của cán bộ đi theo phần chi trả, không làm đổi bản ghi chính
+    const hA = (await k.dsHo(duAn.id))[0]!;
+    const hB = (await l.dsHo(duAn.id)).find((x) => x.id === hA.id)!;
+    await k.luuHo({ ...hA, chiTra: { dot: [] } as unknown as NonNullable<typeof hA.chiTra>, nhatKy: [...hA.nhatKy, { luc: new Date().toISOString(), nguoi: "canbo1", noiDung: "Ghi chi trả đợt 1" }] });
+    await l.luuHo({ ...hB, diaChi: "Bản mẫu (đã đổi)" });
+    const gop = (await k.dsHo(duAn.id)).find((x) => x.id === hA.id)!;
+    expect(gop.diaChi).toBe("Bản mẫu (đã đổi)");
+    expect(gop.chiTra).toEqual({ dot: [] });
+    expect(gop.nhatKy.some((n) => n.noiDung === "Ghi chi trả đợt 1")).toBe(true);
+    expect(Object.values(gop.tienDo).some((b) => b.trangThai === "XONG")).toBe(true);
+
     // thay đổi: cán bộ thấy lãnh đạo vừa sửa
     const td = await k.thayDoi(0);
     expect(td.ds.some((x) => x.boi === "lanhdao" && x.loai === "duAn")).toBe(true);
