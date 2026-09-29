@@ -300,6 +300,8 @@ export interface DuAn {
   vanBan?: Record<string, string>;
   /** Kế hoạch hoàn thành từng bước (ngày ISO) do cán bộ nhập để theo dõi, cảnh báo chậm tiến độ. */
   keHoach?: Record<string, string>;
+  /** §11.2: thời gian dự kiến của các bước không có thời hạn luật định — đơn vị nhập để dự báo tiến độ. */
+  duKienBuoc?: Record<string, { soNgay: number; loai: "N" | "NLV" }>;
   /** Trạng thái các bước chung (BUOC_CHUNG: 1–4) — cập nhật một lần, áp dụng cho mọi hộ của dự án. */
   tienDoChung?: Record<string, BuocHo>;
   /** Các phiên bản phương án đã chốt/phê duyệt (src/phuong-an.ts). */

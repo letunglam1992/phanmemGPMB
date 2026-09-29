@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { THOI_HAN_LUAT } from "../du-bao";
 import { D } from "@gpmb/core";
 import type Decimal from "decimal.js";
 import { useUngDung } from "../ung-dung";
@@ -209,6 +210,7 @@ export function HopThemHo({ duAnId, dong }: { duAnId: string; dong: () => void }
 export function HopKeHoach({ duAn, dong }: { duAn: DuAn; dong: () => void }) {
   const { luuDuAn } = useUngDung();
   const [kh, setKh] = useState<Record<string, string>>(duAn.keHoach ?? {});
+  const [dk, setDk] = useState<NonNullable<DuAn["duKienBuoc"]>>(duAn.duKienBuoc ?? {});
   return (
     <HopThoai
       tieuDe="Kế hoạch hoàn thành từng bước"
@@ -217,18 +219,26 @@ export function HopKeHoach({ duAn, dong }: { duAn: DuAn; dong: () => void }) {
       chan={
         <>
           <button className="nut" onClick={dong}>Hủy</button>
-          <button className="nut nut-chinh" onClick={async () => { await luuDuAn({ ...duAn, keHoach: Object.fromEntries(Object.entries(kh).filter(([, v]) => v)) }); dong(); }}>Lưu kế hoạch</button>
+          <button className="nut nut-chinh" onClick={async () => { await luuDuAn({ ...duAn, keHoach: Object.fromEntries(Object.entries(kh).filter(([, v]) => v)), duKienBuoc: Object.fromEntries(Object.entries(dk).filter(([, v]) => v.soNgay > 0)) }); dong(); }}>Lưu kế hoạch</button>
         </>
       }
     >
-      <div className="thong-bao thong-bao-xanh">Ngày kế hoạch do cán bộ nhập để theo dõi; bước quá ngày kế hoạch mà chưa xong được cảnh báo. Thời hạn luật định của từng bước ghi bên cạnh để tham khảo (docs/05).</div>
+      <div className="thong-bao thong-bao-xanh">Ngày kế hoạch do cán bộ nhập để theo dõi; bước quá ngày kế hoạch mà chưa xong được cảnh báo. Thời hạn luật định của từng bước ghi bên cạnh để tham khảo (docs/05). <b>Dự báo tiến độ</b> dùng thời hạn luật định; bước không có thời hạn luật định dùng <b>thời gian dự kiến do đơn vị nhập</b> ở cột cuối — để trống thì không dự báo được.</div>
       <table className="bang">
-        <thead><tr><th>Bước</th><th>Nội dung</th><th>Thời hạn luật định</th><th style={{ width: 170 }}>Hoàn thành trước ngày</th></tr></thead>
+        <thead><tr><th>Bước</th><th>Nội dung</th><th>Thời hạn luật định</th><th style={{ width: 150 }}>Hoàn thành trước ngày</th><th style={{ width: 150 }}>Thời gian dự kiến (dự báo)</th></tr></thead>
         <tbody>
           {CAC_BUOC.map((b) => (
             <tr key={b.ma}>
               <td>{b.ma}</td><td>{b.ten}<div className="can-cu">{b.canCu}</div></td><td className="chu-nho">{b.thoiHan ?? "—"}</td>
               <td><input type="date" value={kh[b.ma] ?? ""} onChange={(e) => setKh({ ...kh, [b.ma]: e.target.value })} /></td>
+              <td>
+                {THOI_HAN_LUAT[b.ma] ? <span className="chu-nho mo" title={THOI_HAN_LUAT[b.ma]!.canCu}>theo luật: {THOI_HAN_LUAT[b.ma]!.soNgay} {THOI_HAN_LUAT[b.ma]!.loai === "NLV" ? "ngày làm việc" : "ngày"}</span> : (
+                  <div style={{ display: "flex", gap: 4 }}>
+                    <input type="number" min={0} aria-label={`Thời gian dự kiến bước ${b.ma}`} style={{ width: 64 }} value={dk[b.ma]?.soNgay || ""} onChange={(e) => setDk({ ...dk, [b.ma]: { soNgay: Math.max(0, Math.round(Number(e.target.value) || 0)), loai: dk[b.ma]?.loai ?? "N" } })} />
+                    <select value={dk[b.ma]?.loai ?? "N"} onChange={(e) => setDk({ ...dk, [b.ma]: { soNgay: dk[b.ma]?.soNgay ?? 0, loai: e.target.value as "N" | "NLV" } })}><option value="N">ngày</option><option value="NLV">NLV</option></select>
+                  </div>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>
