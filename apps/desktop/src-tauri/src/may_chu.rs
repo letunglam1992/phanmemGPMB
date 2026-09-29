@@ -353,6 +353,10 @@ fn o_so(loai: &str, v: &Value) -> Vec<(String, Value)> {
         them(format!("thua[{i}].cayXen.dienTichTru"), &t["cayXen"]["dienTichTru"]);
         them(format!("thua[{i}].chenhLech.giaHienTrang"), &t["chenhLech"]["giaHienTrang"]);
         them(format!("thua[{i}].chenhLech.hanMuc"), &t["chenhLech"]["hanMuc"]);
+        for k in ["soTien", "conLaiNam", "thoiHanNam"] {
+            them(format!("thua[{i}].chiPhiDauTu.{k}"), &t["chiPhiDauTu"][k]);
+        }
+        them(format!("thua[{i}].hanhLang.dienTich"), &t["hanhLang"]["dienTich"]);
     }
     for (i, ts) in v["taiSan"].as_array().into_iter().flatten().enumerate() {
         for k in ["donGia", "heSo", "T", "T1", "matDoHa", "quangDuongKm", "soTien"] {
@@ -360,6 +364,7 @@ fn o_so(loai: &str, v: &Value) -> Vec<(String, Value)> {
         }
     }
     them("hoTro.onDinh.dienTichNNDangSuDung".into(), &v["hoTro"]["onDinh"]["dienTichNNDangSuDung"]);
+    them("hoTro.onDinh.nhanKhau".into(), &v["hoTro"]["onDinh"]["nhanKhau"]);
     let tdc = &v["hoTro"]["taiDinhCu"];
     for k in ["dienTichGiao", "donGia", "tienSddPhaiNop"] {
         them(format!("hoTro.taiDinhCu.{k}"), &tdc[k]);
@@ -375,6 +380,15 @@ fn o_so(loai: &str, v: &Value) -> Vec<(String, Value)> {
         them(format!("hoTro.khac.khoan[{i}].soTien"), &k["soTien"]);
     }
     them("hoTro.khac.onDinhSanXuat.soTien".into(), &khac["onDinhSanXuat"]["soTien"]);
+    for k in ["hnDt", "hnDinhMuc", "lnDt", "lnChiPhi"] {
+        them(format!("hoTro.khac.onDinhSanXuat.dinhMuc.{k}"), &khac["onDinhSanXuat"]["dinhMuc"][k]);
+    }
+    for k in ["soThang", "nhanKhau"] {
+        them(format!("hoTro.khac.nhaNhaNuoc.{k}"), &khac["nhaNhaNuoc"][k]);
+    }
+    for k in ["thuNhap", "doanhThu"] {
+        them(format!("hoTro.khac.sxkd.{k}"), &khac["sxkd"][k]);
+    }
     them("khauTru".into(), &v["khauTru"]);
     out
 }

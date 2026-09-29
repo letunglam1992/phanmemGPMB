@@ -32,6 +32,6 @@ describe("Bộ chính sách khớp dữ liệu trích xuất từ văn bản g�
     const dm = new Set((nq152 as { danh_muc_xa: string[] }).danh_muc_xa);
     expect(dm.size).toBe(75);
     const tatCa = [...Object.values(cs.tamCu.phanNhom), ...Object.values(cs.chuyenDoiNghe.phanNhom)].flat();
-    expect(tatCa.filter((x) => !dm.has(x))).toEqual([]);
+    expect(tatCa.filter((x) => !x.endsWith("*") && !dm.has(x))).toEqual([]); // "Phường *" = "các phường" (mẫu tiền tố)
   });
 });

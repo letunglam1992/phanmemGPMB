@@ -4,6 +4,7 @@ import { ChonGiaDat } from "../../thanh-phan/ChonGiaDat";
 import { tien } from "../../thanh-phan/chung";
 import { PhanLop } from "./PhanLop";
 import { TEN_CHENH_LECH, laDatNN } from "../../tinh-ho";
+import { TEN_NHOM_HANH_LANG, type NhomDatHanhLang } from "@gpmb/core";
 import { useUngDung } from "../../ung-dung";
 import { Chon } from "../../thanh-phan/Chon";
 import { soD } from "../../so";
@@ -77,7 +78,7 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
                       )}
                     </td>
                     <td className="khong-xuong-dong">
-                      <button className="nut nut-chu nut-nho" title="Giấy chứng nhận, phân lớp đất, tùy chọn cây trồng xen" onClick={() => setMoRong(moRong === t.id ? null : t.id)}>⋯</button>
+                      <button className="nut nut-chu nut-nho" title="Giấy chứng nhận, phân lớp đất, chênh lệch giá, chi phí đầu tư, hành lang, tùy chọn cây trồng xen" onClick={() => setMoRong(moRong === t.id ? null : t.id)}>⋯</button>
                       <button className="nut nut-chu nut-nguy nut-nho" onClick={() => { if (h.taiSan.some((x) => x.thuaId === t.id) && !confirm("Thửa có tài sản kiểm đếm. Xóa cả tài sản?")) return; doi({ ...h, thua: h.thua.filter((x) => x.id !== t.id), taiSan: h.taiSan.filter((x) => x.thuaId !== t.id) }); }}>✕</button>
                     </td>
                   </tr>
@@ -158,7 +159,65 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
                                 </>
                               )}
                             </div>
+                            {t.chenhLech && duAn.heSoGiaDat && soD(duAn.heSoGiaDat.heSo).toString() !== "1" && (
+                              <div className="luoi mt-6" style={{ gridTemplateColumns: "minmax(260px, 1fr) 2fr", alignItems: "end" }}>
+                                <div className="o-nhap"><label>Hệ số điều chỉnh giá đất của dự án ({duAn.heSoGiaDat.heSo}) cho khoản hỗ trợ</label>
+                                  <Chon value={t.chenhLech.heSo ? (t.chenhLech.heSo.apDung ? "CO" : "KHONG") : ""} aria-label="Hệ số điều chỉnh cho hỗ trợ chênh lệch" className={t.chenhLech.heSo?.lyDo.trim() ? "" : "nhac-nhap"} onChange={(e) => sua(t.id, { chenhLech: { ...t.chenhLech!, heSo: e.target.value ? { apDung: e.target.value === "CO", lyDo: t.chenhLech!.heSo?.lyDo ?? "" } : undefined } })}>
+                                    <option value="">Chưa chọn (tạm nhân hệ số — cần xác nhận)</option>
+                                    <option value="CO">Nhân hệ số (giá đất tính tiền bồi thường)</option>
+                                    <option value="KHONG">Không nhân hệ số (giá theo bảng giá)</option>
+                                  </Chon>
+                                </div>
+                                <div className="o-nhap"><label>Lý do lựa chọn (bắt buộc)</label><input aria-label="Lý do chọn hệ số chênh lệch" value={t.chenhLech.heSo?.lyDo ?? ""} disabled={!t.chenhLech.heSo} onChange={(e) => sua(t.id, { chenhLech: { ...t.chenhLech!, heSo: { apDung: t.chenhLech!.heSo!.apDung, lyDo: e.target.value } } })} /></div>
+                              </div>
+                            )}
                             {t.chenhLech && <div className="mo chu-nho mt-4">{t.chenhLech.truongHop === "K8_RPH_RDD" ? "Hỗ trợ về đất bằng giá đất hiện trạng" : "Hỗ trợ về đất bằng chênh lệch giá hiện trạng − giá theo GCN (giá đã chọn cho thửa)"}{t.chenhLech.truongHop !== "K10" ? ", diện tích không vượt hạn mức công nhận" : ""}; chuyển đổi nghề bằng chênh lệch giá đất NN cùng loại theo Điều 14 PL II QĐ 106 (khi hộ có hỗ trợ chuyển đổi nghề). Phần mềm không tự xác định trường hợp.</div>}
+                          </div>
+                        )}
+                        {cs.phuLucII && (
+                          <div data-phu-luc-ii style={{ marginBottom: 12, paddingBottom: 12, borderBottom: "1px solid var(--vien)" }}>
+                            <div className="luoi" style={{ gridTemplateColumns: "minmax(260px, 1.2fr) 150px 1fr", alignItems: "end" }}>
+                              <div className="o-nhap"><label>Chi phí đầu tư vào đất còn lại (Điều 3 PL II QĐ 106)</label>
+                                <Chon value={t.chiPhiDauTu?.cach ?? ""} aria-label="Chi phí đầu tư vào đất còn lại" onChange={(e) => sua(t.id, { chiPhiDauTu: e.target.value ? { ...t.chiPhiDauTu, cach: e.target.value as "DU_TOAN" | "GIA_DAT" } : undefined })}>
+                                  <option value="">Không</option>
+                                  <option value="DU_TOAN">Khoản 1 — theo dự toán được Chủ tịch UBND cấp xã phê duyệt</option>
+                                  <option value="GIA_DAT">Khoản 2 — không đủ căn cứ lập dự toán: 01 lần giá đất bảng giá × DT thu hồi</option>
+                                </Chon>
+                              </div>
+                              {t.chiPhiDauTu?.cach === "DU_TOAN" && (
+                                <>
+                                  <div className="o-nhap"><label>Giá trị theo dự toán (đ)</label><OSo className="o-so" aria-label="Giá trị chi phí đầu tư theo dự toán" value={t.chiPhiDauTu.soTien ?? ""} onChange={(v) => sua(t.id, { chiPhiDauTu: { ...t.chiPhiDauTu!, soTien: v } })} /></div>
+                                  <div className="o-nhap"><label>Dự toán được duyệt (số, ngày — bắt buộc)</label><input aria-label="Dự toán chi phí đầu tư được duyệt" value={t.chiPhiDauTu.canCu ?? ""} onChange={(e) => sua(t.id, { chiPhiDauTu: { ...t.chiPhiDauTu!, canCu: e.target.value } })} /></div>
+                                </>
+                              )}
+                              {t.chiPhiDauTu?.cach === "GIA_DAT" && (
+                                <>
+                                  <div className="o-nhap"><label>Thời hạn còn lại (năm)</label><OSo className="o-so" placeholder={h.loai === "TO_CHUC" ? "Bắt buộc" : "Tổ chức"} value={t.chiPhiDauTu.conLaiNam ?? ""} onChange={(v) => sua(t.id, { chiPhiDauTu: { ...t.chiPhiDauTu!, conLaiNam: v } })} /></div>
+                                  <div className="o-nhap"><label>Thời hạn sử dụng đất (năm, k4 Đ17 NĐ 88)</label><OSo className="o-so" placeholder={h.loai === "TO_CHUC" ? "Bắt buộc" : "Chỉ với tổ chức"} value={t.chiPhiDauTu.thoiHanNam ?? ""} onChange={(v) => sua(t.id, { chiPhiDauTu: { ...t.chiPhiDauTu!, thoiHanNam: v } })} /></div>
+                                </>
+                              )}
+                            </div>
+                            <div className="luoi mt-6" style={{ gridTemplateColumns: "minmax(260px, 1.2fr) minmax(200px, 1fr) 130px 1fr", alignItems: "end" }}>
+                              <div className="o-nhap"><label>Đất trong hành lang bảo vệ an toàn (Điều 7 PL II QĐ 106)</label>
+                                <Chon value={t.hanhLang?.loai ?? ""} aria-label="Đất trong hành lang bảo vệ an toàn" onChange={(e) => sua(t.id, { hanhLang: e.target.value ? { nhomDat: laDatNN(t.loaiDat) ? (["CLN", "RSX"].includes(t.loaiDat) ? "CLN_RSX" : "HNK") : "O_PNN", dienTich: "", ...t.hanhLang, loai: e.target.value as "DIEN" | "KHAC" } : undefined })}>
+                                  <option value="">Không</option>
+                                  <option value="DIEN">Khoản 1 — hành lang đường dây dẫn điện trên không</option>
+                                  <option value="KHAC">Khoản 2 — hành lang bảo vệ công trình khác</option>
+                                </Chon>
+                              </div>
+                              {t.hanhLang && (
+                                <>
+                                  <div className="o-nhap"><label>Nhóm đất</label>
+                                    <Chon value={t.hanhLang.nhomDat} aria-label="Nhóm đất trong hành lang" onChange={(e) => sua(t.id, { hanhLang: { ...t.hanhLang!, nhomDat: e.target.value as NhomDatHanhLang } })}>
+                                      {Object.entries(TEN_NHOM_HANH_LANG).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                                    </Chon>
+                                  </div>
+                                  <div className="o-nhap"><label>DT trong hành lang (m²)</label><OSo className={`o-so ${t.hanhLang.dienTich ? "" : "loi-nhap"}`} aria-label="DT trong hành lang" value={t.hanhLang.dienTich} onChange={(v) => sua(t.id, { hanhLang: { ...t.hanhLang!, dienTich: v } })} /></div>
+                                  <div className="o-nhap"><label>Căn cứ xác định DT (biên bản, trích đo)</label><input aria-label="Căn cứ DT hành lang" value={t.hanhLang.canCu ?? ""} onChange={(e) => sua(t.id, { hanhLang: { ...t.hanhLang!, canCu: e.target.value } })} /></div>
+                                </>
+                              )}
+                            </div>
+                            {(t.chiPhiDauTu || t.hanhLang) && <div className="mo chu-nho mt-4">{t.chiPhiDauTu ? "Chi phí đầu tư: áp dụng khi không có giấy tờ quy định tại k3 Đ17 NĐ 88/2024 nhưng thực tế đã đầu tư vào đất. " : ""}{t.hanhLang ? `Hành lang: phần đất không thu hồi, tính theo giá đất đã chọn cho thửa × hệ số điều chỉnh của dự án (giá đất cụ thể); ${t.hanhLang.loai === "DIEN" ? "80% / 50% / 30% theo nhóm đất" : "50%, không áp dụng cho đất trồng cây hàng năm"}.` : ""}</div>}
                           </div>
                         )}
                         {(t.phanLop || !laDatNN(t.loaiDat)) && (

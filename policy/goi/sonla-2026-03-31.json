@@ -503,7 +503,8 @@
         "Phường Mộc Châu",
         "Phường Mộc Sơn",
         "Phường Vân Sơn",
-        "Phường Thảo Nguyên"
+        "Phường Thảo Nguyên",
+        "Phường *"
       ],
       "XA_NHOM_1": [
         "Xã Quỳnh Nhai",
@@ -545,7 +546,8 @@
         "Phường Mộc Châu",
         "Phường Mộc Sơn",
         "Phường Vân Sơn",
-        "Phường Thảo Nguyên"
+        "Phường Thảo Nguyên",
+        "Phường *"
       ],
       "XA_NHOM_DIEU_14": [
         "Xã Lóng Sập",
@@ -718,6 +720,7 @@
           "Phường Chiềng An",
           "Phường Chiềng Cơi",
           "Phường Chiềng Sinh",
+          "Phường Quyết Tâm",
           "Phường Mộc Châu",
           "Phường Mộc Sơn",
           "Phường Vân Sơn",
@@ -766,6 +769,117 @@
       ],
       "tyLe": "0.2",
       "ghiChu": "VM-28: chưa rõ tính trên tiền SDĐ trước hay sau khi trừ ghi nợ, miễn giảm — mặc định trên tiền SDĐ phải nộp do cán bộ nhập (QD-19)"
+    }
+  },
+  "phuLucII": {
+    "ghiChu": "Tham số theo nguyên văn Phụ lục II QĐ 106/2025 (policy/nguon/qd106-2025-phu-luc-2.md)",
+    "chiPhiDauTu": {
+      "lanGiaDat": "1",
+      "canCu": [
+        {
+          "vanBan": "QĐ 106/2025/QĐ-UBND",
+          "viTri": "Điều 3 Phụ lục II"
+        },
+        {
+          "vanBan": "NĐ 88/2024/NĐ-CP",
+          "viTri": "điểm b khoản 2 Điều 17"
+        }
+      ]
+    },
+    "hanhLangDien": {
+      "O_PNN": "0.8",
+      "CLN_RSX": "0.5",
+      "HNK": "0.3",
+      "canCu": [
+        {
+          "vanBan": "QĐ 106/2025/QĐ-UBND",
+          "viTri": "khoản 1 Điều 7 Phụ lục II"
+        },
+        {
+          "vanBan": "NĐ 88/2024/NĐ-CP",
+          "viTri": "điểm c khoản 1 Điều 18"
+        }
+      ]
+    },
+    "hanhLangKhac": {
+      "tyLe": "0.5",
+      "canCu": [
+        {
+          "vanBan": "QĐ 106/2025/QĐ-UBND",
+          "viTri": "khoản 2 Điều 7 Phụ lục II"
+        }
+      ]
+    },
+    "hanhLangNha": {
+      "tyLe": "0.7",
+      "canCu": [
+        {
+          "vanBan": "QĐ 106/2025/QĐ-UBND",
+          "viTri": "khoản 3 Điều 7 Phụ lục II"
+        },
+        {
+          "vanBan": "NĐ 62/2025/NĐ-CP",
+          "viTri": "khoản 3 Điều 16"
+        }
+      ]
+    },
+    "onDinhSanXuatDat": {
+      "soVu": 2,
+      "tyLeHangNam": "1",
+      "tyLeLauNam": "0.5",
+      "dtToiDaLauNamM2": "10000",
+      "canCu": [
+        {
+          "vanBan": "QĐ 106/2025/QĐ-UBND",
+          "viTri": "khoản 1 Điều 13 Phụ lục II"
+        }
+      ]
+    },
+    "onDinhSxkd": {
+      "tyLeThuNhap": "0.3",
+      "tyLeTamThoi": "0.5",
+      "nguongDoanhThu": "100000000",
+      "mucDuoiNguong": "2400000",
+      "mucTrenNguong": "4800000",
+      "canCuK2": [
+        {
+          "vanBan": "QĐ 106/2025/QĐ-UBND",
+          "viTri": "khoản 2 Điều 13 Phụ lục II"
+        }
+      ],
+      "canCuK3": [
+        {
+          "vanBan": "QĐ 106/2025/QĐ-UBND",
+          "viTri": "khoản 3 Điều 13 Phụ lục II"
+        }
+      ],
+      "canCuK4": [
+        {
+          "vanBan": "QĐ 106/2025/QĐ-UBND",
+          "viTri": "khoản 4 Điều 13 Phụ lục II"
+        },
+        {
+          "vanBan": "NĐ 88/2024/NĐ-CP",
+          "viTri": "khoản 4 Điều 20"
+        }
+      ]
+    },
+    "nhaSoHuuNhaNuoc": {
+      "thangToiDa": 6,
+      "den2Khau": "2000000",
+      "den4Khau": "3500000",
+      "congThemMoiKhau": "500000",
+      "tyLeTuLo": "0.5",
+      "canCu": [
+        {
+          "vanBan": "QĐ 106/2025/QĐ-UBND",
+          "viTri": "Điều 11 Phụ lục II"
+        },
+        {
+          "vanBan": "NĐ 88/2024/NĐ-CP",
+          "viTri": "khoản 2 Điều 24"
+        }
+      ]
     }
   }
 }

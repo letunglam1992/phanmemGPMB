@@ -26,6 +26,13 @@ import {
   hoTroHoNgheo,
   hoTroXayLaiNha,
   hoTroTheoMocXayDung,
+  chiPhiDauTuTheoGiaDat,
+  boiThuongHanhLang,
+  hoTroNhaHanhLang,
+  hoTroNhaSoHuuNhaNuoc,
+  hoTroOnDinhSanXuatDat,
+  hoTroOnDinhSxkd,
+  TEN_NHOM_HANH_LANG,
   tongHo,
   type BoChinhSach,
   type DongCayXen,
@@ -201,6 +208,33 @@ function dongNhaCongTrinh(cs: BoChinhSach, ts: Extract<TaiSan, { loai: "NHA_CT" 
     const them = k3.truongHop === "3.1" ? ["Điểm 3.1: nhà, công trình xây trên đất nông nghiệp — cán bộ xác nhận"] : [];
     return { ...d, thamSo: { ...xm.thamSo, "Trường hợp": TEN_K3[k3.truongHop], ...d.thamSo }, canCu: [...d.canCu, ...canCu], canhBao: [...d.canhBao, ...them] };
   }
+  if (ts.cachTinh === "HANH_LANG") {
+    const hl = ts.hanhLang ?? { diem: "a" as const };
+    const a = hoTroNhaHanhLang(cs, { ten: ts.ten, giaTriTheoDonGia: xm.thanhTien! });
+    if (hl.diem === "a") return { ...a, thamSo: { ...xm.thamSo, "Điểm": "a — đất đủ điều kiện bồi thường", ...a.thamSo }, canCu: [...a.canCu, ...canCu] };
+    // Điểm b: văn bản dẫn chiếu điểm 4.2, 4.3 k4 Điều 17 PL II (đã hết hiệu lực) — người dùng chọn áp dụng mức theo k3 Điều 6 QĐ 14/2026.
+    const nd = `Hỗ trợ nhà, công trình trong hành lang lưới điện (đất không đủ điều kiện) – ${ts.ten}`;
+    const cc = [{ vanBan: "QĐ 106/2025/QĐ-UBND", viTri: "điểm b khoản 3 Điều 7 Phụ lục II" }];
+    const tl = cs.phuLucII?.hanhLangNha;
+    if (!tl) return thieu("A12", nd, `Bộ chính sách ${cs.ma} không có tham số Phụ lục II QĐ 106/2025`);
+    const k3 = ts.k3;
+    if (!k3 || !k3.ngayXayDung || !ngayTB) return thieu("A12", nd, "Điểm b dẫn chiếu điểm 4.2, 4.3 k4 Điều 17 PL II (đã hết hiệu lực từ 31/3/2026): chọn trường hợp, ngày xây dựng theo khoản 3 Điều 6 QĐ 14/2026 làm mức hỗ trợ (và dự án phải có ngày thông báo thu hồi đất)", "QĐ 106/2025/QĐ-UBND điểm b khoản 3 Điều 7 PL II");
+    const m = hoTroTheoMocXayDung(bangK3(cs, k3.truongHop), { ma: MA_K3[k3.truongHop], ten: ts.ten, giaTriTheoDonGia: xm.thanhTien!, ngayXayDung: k3.ngayXayDung, ngayThongBao: ngayTB, luaChon: k3.chonMoc });
+    const lyDo = hl.lyDo?.trim() ?? "";
+    const tyLe = D(tl.tyLe);
+    return {
+      ...m,
+      ma: "A12",
+      noiDung: nd,
+      thamSo: { ...xm.thamSo, "Trường hợp (k3 Đ6 QĐ 14/2026)": TEN_K3[k3.truongHop], ...m.thamSo, "Tỷ lệ Điều 7": `${dinhDang(tyLe.mul(100))}%` },
+      congThuc: `(${m.congThuc}) × ${dinhDang(tyLe.mul(100))}%`,
+      thanhTien: m.thanhTien ? m.thanhTien.mul(tyLe) : null,
+      canCu: [...cc, ...m.canCu, ...canCu],
+      trangThai: !lyDo && m.trangThai === "TAM_TINH" ? "CAN_XAC_NHAN" : m.trangThai,
+      luaChon: lyDo ? [...m.luaChon, { ma: "Đ7.3b", giaTri: "Mức hỗ trợ theo khoản 3 Điều 6 QĐ 14/2026 thay điểm 4.2, 4.3 k4 Điều 17 PL II", lyDo }] : m.luaChon,
+      canhBao: [...m.canhBao, ...(lyDo ? [] : ["Chưa ghi lý do áp dụng mức khoản 3 Điều 6 QĐ 14/2026 thay cho điểm 4.2, 4.3 k4 Điều 17 PL II đã hết hiệu lực"])],
+    };
+  }
   if (ts.cachTinh === "HE_SO") {
     const hs = D(ts.heSo || "1");
     return dong({
@@ -363,7 +397,7 @@ function tinhHoGoc(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
     { ma: "B.IV", ten: "Hỗ trợ đào tạo, chuyển đổi nghề và tìm kiếm việc làm", dong: [] },
     { ma: "B.V", ten: "Hỗ trợ ổn định đời sống, tạm cư, di dời", dong: [] },
     { ma: "B.VI", ten: "Hỗ trợ tái định cư", dong: [] },
-    { ma: "B.VII", ten: "Hỗ trợ khác (Điều 6 QĐ 14/2026)", dong: [] },
+    { ma: "B.VII", ten: "Hỗ trợ khác (Điều 6 QĐ 14/2026; Phụ lục II QĐ 106/2025)", dong: [] },
   ];
   const n = (ma: string) => nhom.find((x) => x.ma === ma)!;
 
@@ -404,6 +438,8 @@ function tinhHoGoc(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
         n("A.I").dong.push({ dong: d, bieu, cot: "BT_DAT", thuaId: t.id });
       }
     }
+    if (t.chiPhiDauTu) n("A.I").dong.push({ dong: dongChiPhiDauTu(cs, ho, t), cot: "BT_DAT", thuaId: t.id });
+    if (t.hanhLang) n("A.I").dong.push({ dong: dongHanhLang(cs, duAn, t), cot: "BT_DAT", thuaId: t.id });
     if (t.chenhLech && D(t.dienTichThuHoi || "0").gt(0)) for (const x of dongChenhLech(cs, duAn, ho, t)) n(x.nhom).dong.push(x.kq);
     const tsThua = ho.taiSan.filter((x) => x.thuaId === t.id);
     for (const ts of tsThua) {
@@ -414,7 +450,8 @@ function tinhHoGoc(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
           ? [{ dvt: ts.donVi, kl: kl.toDecimalPlaces(2), heSo: ts.cachTinh === "HE_SO" ? D(ts.heSo || "1") : null, donGia: D(ts.donGia || "0"), ghiChu: ts.cachTinh === "THIET_HAI_THUC_TE" ? "Thiệt hại thực tế (T, T1)" : undefined }]
           : undefined;
         const dNha = b13 && b13.ma.startsWith("9.1") ? { ...d, canhBao: [...d.canhBao, `Thửa nguồn gốc nông, lâm trường (${b13.ma}): nhà, công trình phục vụ sản xuất nông nghiệp hỗ trợ 100% mức bồi thường; không phục vụ sản xuất nông nghiệp hỗ trợ theo điểm 3.2 k3 Đ6 QĐ 14/2026 — kiểm tra lựa chọn "Bồi thường/Hỗ trợ"`] } : d;
-        if (ts.phan === "BOI_THUONG" && ts.cachTinh !== "MOC_K3") n("A.II").dong.push({ dong: dNha, bieu, cot: "BT_TAI_SAN", thuaId: t.id, taiSanId: ts.id });
+        const laBoiThuong = ts.cachTinh === "HANH_LANG" ? ts.hanhLang?.diem !== "b" : ts.phan === "BOI_THUONG" && ts.cachTinh !== "MOC_K3";
+        if (laBoiThuong) n("A.II").dong.push({ dong: dNha, bieu, cot: "BT_TAI_SAN", thuaId: t.id, taiSanId: ts.id });
         else n("B.II").dong.push({ dong: dNha, bieu, cot: "HT_TAI_SAN", thuaId: t.id, taiSanId: ts.id });
       } else if (ts.loai === "KHAC") {
         const kl = soLuong(ts, ts.khoiLuong, "A03");
@@ -534,17 +571,18 @@ function tinhHoGoc(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
     let d: DongTinh;
     if (!duAn.giaGao) d = thieu("C01", "Hỗ trợ ổn định đời sống", "Chưa nhập giá gạo tẻ trung bình (TL-26)");
     else if (!od.dienTichNNDangSuDung || D(od.dienTichNNDangSuDung).lte(0)) d = thieu("C01", "Hỗ trợ ổn định đời sống", "Chưa nhập diện tích đất NN đang sử dụng");
-    else if (ho.nhanKhau.length === 0) d = thieu("C01", "Hỗ trợ ổn định đời sống", "Chưa có nhân khẩu");
+    else if (khauOnDinh(ho) <= 0 || !Number.isInteger(khauOnDinh(ho))) d = thieu("C01", "Hỗ trợ ổn định đời sống", "Chưa có nhân khẩu");
     else
       d = onDinhDoiSong(cs, {
         dienTichNNThuHoi: dtNN,
         dienTichNNDangSuDung: od.dienTichNNDangSuDung,
         diChuyen: od.diChuyen,
-        nhanKhau: ho.nhanKhau.length,
+        nhanKhau: khauOnDinh(ho),
         giaGaoDongKg: duAn.giaGao.dongKg,
         nguonGiaGao: duAn.giaGao.nguon,
         chonNhom: od.chonNhom,
       });
+    if (od.nhanKhau?.trim() && d.thanhTien) d = { ...d, thamSo: { ...d.thamSo, "Nhân khẩu được hỗ trợ": `${khauOnDinh(ho)} (người có chung quyền sử dụng đất — điểm b k1 Điều 12 PL II QĐ 106; hồ sơ có ${ho.nhanKhau.length})` } };
     n("B.V").dong.push({ dong: d, cot: "HT_KHAC" });
   }
   if (ho.hoTro.tamCu && ho.hoTro.tamCu.soThang > 0)
@@ -662,10 +700,11 @@ function dongSuaChua(ho: Ho, ts: Extract<TaiSan, { loai: "SUA_CHUA" }>): DongTin
 }
 
 const CAN_CU_K = (k: string) => [{ vanBan: "QĐ 14/2026/QĐ-UBND", viTri: `khoản ${k} Điều 6` }];
-export const TEN_KHOAN_KHAC: Record<"K4" | "K13_14" | "KHAC", { ten: string; canCu: { vanBan: string; viTri: string }[]; goiY: string }> = {
+export const TEN_KHOAN_KHAC: Record<"K4" | "K13_14" | "KHAC" | "D13_K4", { ten: string; canCu: { vanBan: string; viTri: string }[]; goiY: string }> = {
   K4: { ten: "Hỗ trợ công trình phục vụ sinh hoạt (gắn với nhà ở) nằm ngoài cọc GPMB bị ảnh hưởng", canCu: CAN_CU_K("4"), goiY: "Hộ bị thu hồi đất ở, phải di chuyển nhà ở; mức không vượt quá 100% đơn giá bồi thường tài sản cùng loại; Chủ tịch UBND cấp xã chỉ đạo, tổ chức thực hiện" },
   K13_14: { ten: "Hỗ trợ khác do UBND cấp xã quyết định cho dự án", canCu: [...CAN_CU_K("13"), ...CAN_CU_K("14")], goiY: "UBND cấp xã quyết định biện pháp, mức hỗ trợ cho từng dự án (k13); trên cơ sở kiến nghị, họp bàn thống nhất, lập biên bản có xác nhận của tổ, bản, tiểu khu, cơ quan chuyên môn UBND cấp xã (k14)" },
   KHAC: { ten: "Khoản hỗ trợ khác", canCu: [], goiY: "Chính sách chưa có sẵn — ghi đầy đủ văn bản làm căn cứ" },
+  D13_K4: { ten: "Trợ cấp ngừng việc cho người lao động (k4 Điều 13 PL II QĐ 106)", canCu: [{ vanBan: "QĐ 106/2025/QĐ-UBND", viTri: "khoản 4 Điều 13 Phụ lục II" }, { vanBan: "NĐ 88/2024/NĐ-CP", viTri: "khoản 4 Điều 20" }], goiY: "Người lao động thuê theo hợp đồng của tổ chức kinh tế, hộ, cá nhân SXKD: trợ cấp ngừng việc theo pháp luật về lao động, tối đa 6 tháng — ghi hợp đồng lao động, bảng tính" },
 };
 
 /**
@@ -708,7 +747,8 @@ function dongHoTroKhac(cs: BoChinhSach, duAn: DuAn, ho: Ho, k: NonNullable<Ho["h
     if (ho.hoTro.onDinh) d = { ...d, canhBao: [...d.canhBao, "Hộ đồng thời có hỗ trợ ổn định đời sống theo Điều 12 Phụ lục II QĐ 106/2025 (thẻ Hỗ trợ) — cần kiểm tra, tránh hỗ trợ trùng"] };
     out.push(d);
   }
-  if (k.onDinhSanXuat) {
+  if (k.onDinhSanXuat?.coSo === "D13" || (k.onDinhSanXuat && k.onDinhSanXuat.dinhMuc)) out.push(dongOnDinhSanXuatDinhMuc(cs, k.onDinhSanXuat));
+  else if (k.onDinhSanXuat) {
     const o = k.onDinhSanXuat;
     const ksx = cs.hoTroKhac?.onDinhSanXuat;
     const nd = o.noiDung?.trim() || "Hỗ trợ ổn định sản xuất (khoản 5 Điều 6 QĐ 14/2026)";
@@ -732,10 +772,19 @@ function dongHoTroKhac(cs: BoChinhSach, duAn: DuAn, ho: Ho, k: NonNullable<Ho["h
         );
     }
   }
+  if (k.nhaNhaNuoc) {
+    const x = k.nhaNhaNuoc;
+    const khau = x.nhanKhau?.trim() ? Number(x.nhanKhau) : ho.nhanKhau.length;
+    out.push(hoTroNhaSoHuuNhaNuoc(cs, { cach: x.cach, nhanKhau: khau, soThang: Number(x.soThang || "0"), xa: duAn.xa }));
+  }
+  if (k.sxkd) {
+    const x = k.sxkd;
+    out.push(hoTroOnDinhSxkd(cs, { cach: x.cach, thuNhapBinhQuanNam: laSoMay(x.thuNhap) ? x.thuNhap : "", doanhThuNam: laSoMay(x.doanhThu) ? x.doanhThu : "", canCuSoLieu: x.canCu }));
+  }
   for (const x of k.khoan) {
     const loai = TEN_KHOAN_KHAC[x.loai];
     const nd = x.noiDung.trim() || loai.ten;
-    const ma = x.loai === "K4" ? "C17.4" : x.loai === "K13_14" ? "C17" : "C17.K";
+    const ma = x.loai === "K4" ? "C17.4" : x.loai === "K13_14" ? "C17" : x.loai === "D13_K4" ? "C05" : "C17.K";
     if (!x.canCu.trim()) out.push(thieu(ma, nd, "Chưa ghi căn cứ (số, ngày văn bản quyết định mức hỗ trợ)", loai.canCu[0] ? `${loai.canCu[0].vanBan} ${loai.canCu[0].viTri}` : "Hồ sơ"));
     else if (!x.soTien.trim() || !laSoMay(x.soTien) || !D(x.soTien).gt(0)) out.push(thieu(ma, nd, "Chưa nhập số tiền", x.canCu));
     else
@@ -749,12 +798,88 @@ function dongHoTroKhac(cs: BoChinhSach, duAn: DuAn, ho: Ho, k: NonNullable<Ho["h
           canCu: [...loai.canCu, { vanBan: x.canCu.trim(), viTri: "" }],
           canhBao: [
             ...(x.loai === "K4" ? ["Mức không vượt quá 100% đơn giá bồi thường tài sản cùng loại (khoản 4 Điều 6 QĐ 14/2026) — cán bộ kiểm tra"] : []),
-            "Khoản 14 Điều 6: hỗ trợ khác phải công khai, minh bạch; xác định người còn khó khăn trên cơ sở kiến nghị, họp bàn thống nhất, lập biên bản có xác nhận của tổ, bản, tiểu khu, cơ quan chuyên môn UBND cấp xã",
+            ...(x.loai === "D13_K4"
+              ? ["Trợ cấp ngừng việc theo pháp luật về lao động, thời gian trợ cấp tối đa không quá 6 tháng (k4 Điều 13 PL II QĐ 106/2025) — cán bộ kiểm tra"]
+              : ["Khoản 14 Điều 6: hỗ trợ khác phải công khai, minh bạch; xác định người còn khó khăn trên cơ sở kiến nghị, họp bàn thống nhất, lập biên bản có xác nhận của tổ, bản, tiểu khu, cơ quan chuyên môn UBND cấp xã"]),
           ],
         }),
       );
   }
   return out;
+}
+
+/** Số nhân khẩu tính ổn định đời sống (Điều 12 PL II QĐ 106): số người dùng nhập, trống = nhân khẩu trong hồ sơ. */
+export const khauOnDinh = (ho: Ho): number => (ho.hoTro.onDinh?.nhanKhau?.trim() ? Number(ho.hoTro.onDinh.nhanKhau) : ho.nhanKhau.length);
+
+/** C03 – ổn định sản xuất theo định mức (k1 Điều 13 PL II QĐ 106), cơ sở D13 (bồi thường bằng đất) hoặc k5 Điều 6 QĐ 14/2026. */
+function dongOnDinhSanXuatDinhMuc(cs: BoChinhSach, o: NonNullable<NonNullable<Ho["hoTro"]["khac"]>["onDinhSanXuat"]>): DongTinh {
+  const k5 = o.coSo !== "D13";
+  const nd = o.noiDung?.trim() || (k5 ? "Hỗ trợ ổn định sản xuất (khoản 5 Điều 6 QĐ 14/2026)" : "Hỗ trợ ổn định sản xuất khi bồi thường bằng đất nông nghiệp");
+  const ma = k5 ? "C03.K5" : "C03";
+  const m = o.dinhMuc;
+  let d: DongTinh;
+  if (!m) {
+    // D13 nhập tay số tiền
+    if (!o.canCu.trim()) return thieu(ma, nd, "Chưa ghi căn cứ mức hỗ trợ (định mức, văn bản)", "QĐ 106/2025/QĐ-UBND khoản 1 Điều 13 PL II");
+    if (!o.soTien.trim() || !laSoMay(o.soTien) || !D(o.soTien).gt(0)) return thieu(ma, nd, "Chưa nhập số tiền hỗ trợ", o.canCu);
+    d = dong({ ma, noiDung: nd, thamSo: { "Số tiền": `${dinhDang(D(o.soTien))} đ` }, congThuc: "Theo định mức (cán bộ nhập)", thanhTien: D(o.soTien), canCu: [...(cs.phuLucII?.onDinhSanXuatDat.canCu ?? []), { vanBan: o.canCu.trim(), viTri: "" }] });
+  } else {
+    const so = (v: string) => v.trim() && laSoMay(v) && D(v).gt(0);
+    const hn = so(m.hnDt) && so(m.hnDinhMuc) ? { dienTichM2: m.hnDt, dinhMucDongHaVu: m.hnDinhMuc } : undefined;
+    const ln = so(m.lnDt) && so(m.lnChiPhi) ? { dienTichM2: m.lnDt, chiPhiDongHa: m.lnChiPhi } : undefined;
+    d = { ...hoTroOnDinhSanXuatDat(cs, { hangNam: hn, lauNam: ln, canCuDinhMuc: o.canCu, noiDung: nd }), ma };
+  }
+  if (k5) {
+    const ksx = cs.hoTroKhac?.onDinhSanXuat;
+    const thieuDk = ksx ? ksx.dieuKien.filter((_, i) => !o.dk[i]) : [];
+    if (ksx) d = { ...d, canCu: [...ksx.canCu, ...d.canCu] };
+    if (thieuDk.length && d.trangThai === "TAM_TINH") d = { ...d, trangThai: "CAN_XAC_NHAN", canhBao: [...d.canhBao, `Chưa xác nhận điều kiện: ${thieuDk.join("; ")}`] };
+  } else d = { ...d, canhBao: [...d.canhBao, "Điều kiện: hộ gia đình, cá nhân bị thu hồi đất nông nghiệp được bồi thường bằng đất nông nghiệp (k1 Điều 13 PL II QĐ 106/2025) — cán bộ xác nhận"] };
+  return d;
+}
+
+/** B07 – Điều 3 PL II QĐ 106/2025: chi phí đầu tư vào đất còn lại (không có giấy tờ k3 Đ17 NĐ 88, thực tế đã đầu tư). */
+function dongChiPhiDauTu(cs: BoChinhSach, ho: Ho, t: Thua): DongTinh {
+  const c = t.chiPhiDauTu!;
+  const nd = `Chi phí đầu tư vào đất còn lại – ${t.loaiDat} (${nhanThua(t)})`;
+  const dk = "Điều kiện: người có đất thu hồi không có giấy tờ quy định tại k3 Đ17 NĐ 88/2024 nhưng thực tế đã có đầu tư vào đất — cán bộ xác nhận";
+  if (c.cach === "DU_TOAN") {
+    if (!c.canCu?.trim()) return thieu("B07", nd, "Chưa ghi dự toán giá trị đầu tư vào đất còn lại được Chủ tịch UBND cấp xã phê duyệt (số, ngày)", "QĐ 106/2025/QĐ-UBND khoản 1 Điều 3 PL II");
+    if (!c.soTien?.trim() || !laSoMay(c.soTien) || !D(c.soTien).gt(0)) return thieu("B07", nd, "Chưa nhập giá trị theo dự toán được duyệt", c.canCu);
+    return dong({
+      ma: "B07",
+      noiDung: nd,
+      thamSo: { "Giá trị theo dự toán": `${dinhDang(D(c.soTien))} đ`, "Dự toán": c.canCu.trim() },
+      congThuc: "Theo dự toán được Chủ tịch UBND cấp xã phê duyệt (cán bộ nhập)",
+      thanhTien: D(c.soTien),
+      canCu: [{ vanBan: "QĐ 106/2025/QĐ-UBND", viTri: "khoản 1 Điều 3 Phụ lục II" }, { vanBan: c.canCu.trim(), viTri: "" }],
+      canhBao: [dk],
+    });
+  }
+  if (!t.gia) return thieu("B07", nd, "Chưa chọn giá đất của loại đất thu hồi từ bảng giá", "QĐ 106/2025/QĐ-UBND khoản 2 Điều 3 PL II");
+  const coTyLe = !!(c.thoiHanNam?.trim() || c.conLaiNam?.trim());
+  if (coTyLe && !(laSoMay(c.thoiHanNam ?? "") && laSoMay(c.conLaiNam ?? ""))) return thieu("B07", nd, "Nhập đủ thời hạn sử dụng đất còn lại và thời hạn sử dụng đất (năm)", "QĐ 106/2025/QĐ-UBND khoản 2 Điều 3 PL II");
+  const d = chiPhiDauTuTheoGiaDat(cs, { loaiDat: `${t.loaiDat} (${nhanThua(t)})`, dienTichM2: t.dienTichThuHoi || "0", giaNghinDong: t.gia.giaNghinDong, nguonGia: t.gia.nguon, tyLeThoiHan: coTyLe ? { conLaiNam: c.conLaiNam!, thoiHanNam: c.thoiHanNam! } : undefined });
+  const them = [dk];
+  if (ho.loai === "TO_CHUC" && !coTyLe) them.push("Tổ chức: tính đến tỷ lệ thời hạn sử dụng đất còn lại so với thời hạn sử dụng đất (k4 Đ17 NĐ 88) — nhập thời hạn");
+  if (ho.loai !== "TO_CHUC" && coTyLe) them.push("Tỷ lệ thời hạn còn lại áp dụng đối với tổ chức — kiểm tra");
+  return { ...d, canhBao: [...d.canhBao, ...them] };
+}
+
+/** B08, B09 – Điều 7 PL II QĐ 106/2025: đất trong hành lang bảo vệ an toàn (không thu hồi). */
+function dongHanhLang(cs: BoChinhSach, duAn: DuAn, t: Thua): DongTinh {
+  const h = t.hanhLang!;
+  const ma = h.loai === "DIEN" ? "B08" : "B09";
+  const nd = `Bồi thường đất trong hành lang – ${t.loaiDat} (${nhanThua(t)})`;
+  if (!t.gia) return thieu(ma, nd, "Chưa chọn giá đất cho thửa (giá đất cụ thể bồi thường về đất cùng loại)", "QĐ 106/2025/QĐ-UBND Điều 7 PL II");
+  if (!h.dienTich.trim() || !laSoMay(h.dienTich) || !D(h.dienTich).gt(0)) return thieu(ma, nd, "Chưa nhập DT đất nằm trong hành lang", "QĐ 106/2025/QĐ-UBND Điều 7 PL II");
+  const hs = duAn.heSoGiaDat && !D(duAn.heSoGiaDat.heSo).eq(1) ? duAn.heSoGiaDat : null;
+  const gia = D(t.gia.giaNghinDong).mul(1000).mul(hs ? hs.heSo : 1);
+  const d = boiThuongHanhLang(cs, { loai: h.loai, nhomDat: h.nhomDat, loaiDat: `${t.loaiDat} (${nhanThua(t)})`, dienTichM2: h.dienTich, giaDongM2: gia, nguonGia: `${t.gia.nguon}${hs ? ` × hệ số ${hs.heSo} (${hs.vanBan || "chưa ghi văn bản"})` : ""}` });
+  const them: string[] = [];
+  if (!h.canCu?.trim()) them.push("Chưa ghi căn cứ xác định DT trong hành lang (biên bản, trích đo, văn bản của chủ đầu tư công trình)");
+  if (D(h.dienTich).gt(D(t.dienTich || "0")) && D(t.dienTich || "0").gt(0)) them.push("DT trong hành lang lớn hơn DT thửa — kiểm tra");
+  return { ...d, canCu: h.canCu?.trim() ? [...d.canCu, { vanBan: h.canCu.trim(), viTri: "" }] : d.canCu, trangThai: them.length && d.trangThai === "TAM_TINH" ? "CAN_XAC_NHAN" : d.trangThai, canhBao: [...d.canhBao, ...them], thamSo: { ...d.thamSo, "Nhóm đất": TEN_NHOM_HANH_LANG[h.nhomDat] } };
 }
 
 export const TEN_CHENH_LECH: Record<"K8_RSX" | "K8_RPH_RDD" | "K10", string> = {
@@ -795,8 +920,11 @@ function dongChenhLech(cs: BoChinhSach, duAn: DuAn, ho: Ho, t: Thua): { nhom: "B
     const canhBao: string[] = [];
     if (donGia.lte(0)) canhBao.push("Giá đất hiện trạng không cao hơn giá theo GCN — không có chênh lệch");
     if (canHanDat && han && dt.gt(han)) canhBao.push(`DT thu hồi vượt hạn mức: phần ${dinhDang(dt.minus(han), 2)} m² không tính hỗ trợ`);
-    if (hs) canhBao.push(`Áp dụng hệ số điều chỉnh giá đất của dự án ${hs.toString()} ("giá đất tính tiền bồi thường") — cán bộ kiểm tra`);
-    const gia = (donGia.gt(0) ? donGia : D(0)).mul(1000).mul(hs ?? 1);
+    // Hệ số điều chỉnh giá đất của dự án: linh động — người dùng chọn áp dụng hay không, ghi lý do (QD-30).
+    const chonHs = hs && c.heSo?.lyDo.trim() ? c.heSo : undefined;
+    const nhanHs = hs && (chonHs ? chonHs.apDung : true) ? hs : null;
+    if (hs && !chonHs) canhBao.push(`Chưa chọn áp dụng hệ số điều chỉnh giá đất của dự án (${hs.toString()}) cho khoản hỗ trợ này — đang tạm nhân hệ số; chọn và ghi lý do ở thẻ Thửa đất`);
+    const gia = (donGia.gt(0) ? donGia : D(0)).mul(1000).mul(nhanHs ?? 1);
     out.push({
       nhom: "B.I",
       kq: {
@@ -809,13 +937,16 @@ function dongChenhLech(cs: BoChinhSach, duAn: DuAn, ho: Ho, t: Thua): { nhom: "B
             ...(c.truongHop !== "K8_RPH_RDD" ? { "Giá đất theo GCN": `${dinhDang(giaGcn!.mul(1000))} đ/m² (${t.gia!.nguon})` } : {}),
             "DT thu hồi": `${dinhDang(dt, 2)} m²`,
             ...(canHanDat ? { "Hạn mức công nhận": `${dinhDang(han!, 2)} m² (${canCuHan})`, "DT tính hỗ trợ": `${dinhDang(dtTinh, 2)} m²` } : {}),
+            ...(hs ? { "Hệ số điều chỉnh của dự án": chonHs ? (chonHs.apDung ? `× ${hs.toString()} (người dùng chọn áp dụng)` : `không nhân ${hs.toString()} (người dùng chọn)`) : `× ${hs.toString()} (chưa chọn)` } : {}),
           },
-          congThuc: c.truongHop === "K8_RPH_RDD" ? "Giá đất hiện trạng × DT (≤ hạn mức)" : `(Giá hiện trạng − giá theo GCN) × DT${canHanDat ? " (≤ hạn mức)" : ""}`,
+          congThuc: (c.truongHop === "K8_RPH_RDD" ? "Giá đất hiện trạng × DT (≤ hạn mức)" : `(Giá hiện trạng − giá theo GCN) × DT${canHanDat ? " (≤ hạn mức)" : ""}`) + (nhanHs ? " × Hệ số điều chỉnh" : ""),
           thanhTien: gia.mul(dtTinh),
+          trangThai: hs && !chonHs ? "CAN_XAC_NHAN" : "TAM_TINH",
+          luaChon: chonHs ? [{ ma: "QD-30", giaTri: chonHs.apDung ? "Nhân hệ số điều chỉnh giá đất của dự án" : "Không nhân hệ số điều chỉnh giá đất của dự án", lyDo: chonHs.lyDo.trim() }] : [],
           canCu: [...canCu, { vanBan: "NQ 152/2025/NQ-HĐND", viTri: c.nguonGia || "" }],
           canhBao: [...canhBao, `Điều kiện: ${c.truongHop === "K10" ? "chuyển mục đích không phải xin phép nhưng chưa đăng ký biến động, chưa bị lập biên bản xử lý vi phạm" : c.diem8 === "b" ? "sử dụng ổn định vào sản xuất NN sau khi cấp GCN đất lâm nghiệp và trước 01/7/2004, không có biên bản xử lý vi phạm, thửa không nằm trong quy hoạch 03 loại rừng" : "sử dụng ổn định vào sản xuất NN trước thời điểm cấp GCN và quy hoạch 03 loại rừng"} — cán bộ xác nhận`],
         }),
-        bieu: [{ dvt: "m²", kl: dtTinh, heSo: hs, donGia: donGia.gt(0) ? donGia.mul(1000) : D(0) }],
+        bieu: [{ dvt: "m²", kl: dtTinh, heSo: nhanHs, donGia: donGia.gt(0) ? donGia.mul(1000) : D(0) }],
         cot: "HT_DAT",
         thuaId: t.id,
       },

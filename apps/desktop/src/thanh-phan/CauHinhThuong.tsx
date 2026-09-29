@@ -48,7 +48,7 @@ export function CauHinhThuongBanGiao({ d, setD }: { d: DuAn; setD: (d: DuAn) => 
         </table>
         <div className="nhom-nut">
           <button className="nut nut-nho" onClick={() => dat({ moc: [...c.moc, { ten: `Mốc ${c.moc.length + 1}`, denNgay: "", tyLe: "", toiDa: "" }] })}>+ Thêm mốc</button>
-          <button className="nut nut-nho" title={GOI_Y_MA_TRAN.canhBao} onClick={() => confirm(GOI_Y_MA_TRAN.canhBao) && dat({ moc: GOI_Y_MA_TRAN.moc.map((m) => ({ ...m })), coSo: [...GOI_Y_MA_TRAN.coSo], canCu: c.canCu || GOI_Y_MA_TRAN.canCu })}>Điền theo ma trận nghiệp vụ (cần đối chiếu)</button>
+          <button className="nut nut-nho" title={GOI_Y_MA_TRAN.canhBao} onClick={() => confirm(GOI_Y_MA_TRAN.canhBao) && dat({ moc: GOI_Y_MA_TRAN.moc.map((m) => ({ ...m })), coSo: [...GOI_Y_MA_TRAN.coSo], canCu: c.canCu || GOI_Y_MA_TRAN.canCu })}>Điền theo Điều 15 PL II QĐ 106</button>
           {d.thuongBanGiao && <button className="nut nut-nho nut-chu" onClick={() => { const { thuongBanGiao: _b, ...con } = d; setD(con); }}>Bỏ khai báo</button>}
         </div>
         {loi && <div className="chu-do chu-nho">{loi}</div>}

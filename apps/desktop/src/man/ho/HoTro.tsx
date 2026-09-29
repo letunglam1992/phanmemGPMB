@@ -33,6 +33,9 @@ export function TabHoTro({ h, doi, duAn, kq }: Tab & { duAn: DuAn; kq: KetQuaHo 
                 <option value="30_70">Từ 30% đến 70% (NĐ 88)</option>
               </Chon>
             </O>
+            <O nhan="Số nhân khẩu được hỗ trợ" goiY="Người có chung quyền sử dụng đất tại thời điểm phê duyệt phương án + thành viên phát sinh sau khi giao đất NN; hộ tự thỏa thuận (điểm b k1 Điều 12 PL II QĐ 106)">
+              <input inputMode="numeric" aria-label="Số nhân khẩu ổn định đời sống" value={ht.onDinh.nhanKhau ?? ""} placeholder={`Trống = ${h.nhanKhau.length} (nhân khẩu trong hồ sơ)`} onChange={(e) => dat({ onDinh: { ...ht.onDinh!, nhanKhau: e.target.value.replace(/\D/g, "") || undefined } })} />
+            </O>
             {ht.onDinh.chonNhom && <O nhan="Lý do lựa chọn *"><input className={ht.onDinh.chonNhom.lyDo ? "" : "loi-nhap"} value={ht.onDinh.chonNhom.lyDo} onChange={(e) => dat({ onDinh: { ...ht.onDinh!, chonNhom: { ...ht.onDinh!.chonNhom!, lyDo: e.target.value } } })} /></O>}
           </div>
         )}

@@ -78,6 +78,10 @@ export function truongSoHo(h: Ho): TruongSo[] {
     them(ds, `${n} — DT trừ (trồng xen)`, t.cayXen, "dienTichTru");
     them(ds, `${n} — giá đất hiện trạng (k8, k10)`, t.chenhLech, "giaHienTrang");
     them(ds, `${n} — hạn mức công nhận (k8, k10)`, t.chenhLech, "hanMuc");
+    them(ds, `${n} — chi phí đầu tư vào đất còn lại (dự toán)`, t.chiPhiDauTu, "soTien");
+    them(ds, `${n} — thời hạn sử dụng đất còn lại (năm)`, t.chiPhiDauTu, "conLaiNam");
+    them(ds, `${n} — thời hạn sử dụng đất (năm)`, t.chiPhiDauTu, "thoiHanNam");
+    them(ds, `${n} — DT trong hành lang`, t.hanhLang, "dienTich");
   }
   for (const ts of h.taiSan) {
     const n = `Tài sản "${ts.ten || "?"}"`;
@@ -99,6 +103,7 @@ export function truongSoHo(h: Ho): TruongSo[] {
     }
   }
   them(ds, "Hỗ trợ ổn định đời sống — DT đất NN đang sử dụng", h.hoTro.onDinh, "dienTichNNDangSuDung");
+  them(ds, "Hỗ trợ ổn định đời sống — số nhân khẩu được hỗ trợ", h.hoTro.onDinh, "nhanKhau");
   const tdc = h.hoTro.taiDinhCu;
   if (tdc) {
     them(ds, "Tái định cư — DT giao", tdc, "dienTichGiao");
@@ -108,6 +113,15 @@ export function truongSoHo(h: Ho): TruongSo[] {
   }
   for (const d of h.hoTro.khac?.doiTuongCs ?? []) them(ds, `Hỗ trợ khác — mức đối tượng chính sách "${d.ten || "?"}"`, d, "muc");
   them(ds, "Hỗ trợ khác — ổn định sản xuất (k5)", h.hoTro.khac?.onDinhSanXuat, "soTien");
+  const dm = h.hoTro.khac?.onDinhSanXuat?.dinhMuc;
+  them(ds, "Ổn định sản xuất — DT cây hàng năm", dm, "hnDt");
+  them(ds, "Ổn định sản xuất — định mức cây hàng năm (đ/ha/vụ)", dm, "hnDinhMuc");
+  them(ds, "Ổn định sản xuất — DT cây lâu năm", dm, "lnDt");
+  them(ds, "Ổn định sản xuất — chi phí năm đầu cây lâu năm (đ/ha)", dm, "lnChiPhi");
+  them(ds, "Nhà ở thuộc sở hữu nhà nước — số tháng thuê", h.hoTro.khac?.nhaNhaNuoc, "soThang");
+  them(ds, "Nhà ở thuộc sở hữu nhà nước — số nhân khẩu", h.hoTro.khac?.nhaNhaNuoc, "nhanKhau");
+  them(ds, "Ổn định SXKD — thu nhập sau thuế bình quân", h.hoTro.khac?.sxkd, "thuNhap");
+  them(ds, "Ổn định SXKD — doanh thu bình quân", h.hoTro.khac?.sxkd, "doanhThu");
   for (const k of h.hoTro.khac?.khoan ?? []) them(ds, `Hỗ trợ khác — khoản "${k.noiDung || "?"}"`, k, "soTien");
   them(ds, "Khấu trừ", h, "khauTru");
   return ds;

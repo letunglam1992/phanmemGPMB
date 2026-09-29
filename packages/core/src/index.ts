@@ -10,3 +10,4 @@ export * from "./gia-dat";
 export * from "./cay-xen";
 export { dong } from "./dong";
 export * from "./phan-lop";
+export * from "./phu-luc-ii";

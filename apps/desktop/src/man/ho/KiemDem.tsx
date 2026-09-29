@@ -195,18 +195,32 @@ function ThamSo({ x, sua, nhaThua, cs, ngayTB }: { x: TaiSan; sua: (id: string, 
   if (x.loai === "NHA_CT")
     return (
       <div style={st}>
-        <Chon value={x.cachTinh} aria-label="Cách tính nhà, công trình" onChange={(e) => { const v = e.target.value as "THIET_HAI_THUC_TE" | "HE_SO" | "MOC_K3"; sua(x.id, v === "MOC_K3" ? { cachTinh: v, phan: "HO_TRO", k3: x.k3 ?? { truongHop: "3.2", ngayXayDung: "" } } : { cachTinh: v }); }} style={{ gridColumn: "1/3" }}>
+        <Chon value={x.cachTinh} aria-label="Cách tính nhà, công trình" onChange={(e) => { const v = e.target.value as "THIET_HAI_THUC_TE" | "HE_SO" | "MOC_K3" | "HANH_LANG"; sua(x.id, v === "MOC_K3" ? { cachTinh: v, phan: "HO_TRO", k3: x.k3 ?? { truongHop: "3.2", ngayXayDung: "" } } : v === "HANH_LANG" ? { cachTinh: v, hanhLang: x.hanhLang ?? { diem: "a" } } : { cachTinh: v }); }} style={{ gridColumn: "1/3" }}>
           <option value="THIET_HAI_THUC_TE">Thiệt hại thực tế (T, T1)</option>
           <option value="HE_SO">KL × hệ số × đơn giá</option>
           <option value="MOC_K3">Hỗ trợ theo mốc xây dựng (k3 Đ6 QĐ14)</option>
+          {(cs.phuLucII || x.cachTinh === "HANH_LANG") && <option value="HANH_LANG">Trong hành lang lưới điện, không di dời (k3 Đ7 PL II)</option>}
         </Chon>
-        {x.cachTinh === "MOC_K3" ? <span className="nhan nhan-xam" style={{ alignSelf: "center" }}>Hỗ trợ</span> : (
+        {x.cachTinh === "HANH_LANG" ? (
+          <Chon value={x.hanhLang?.diem ?? "a"} aria-label="Điểm khoản 3 Điều 7" title="Điểm a: đất đủ điều kiện bồi thường (70% giá trị theo đơn giá xây mới); điểm b: đất không đủ điều kiện" onChange={(e) => sua(x.id, { hanhLang: { ...x.hanhLang, diem: e.target.value as "a" | "b" }, ...(e.target.value === "b" && !x.k3 ? { k3: { truongHop: "3.2" as const, ngayXayDung: "" } } : {}) })}>
+            <option value="a">Điểm a — đất đủ ĐK (bồi thường)</option>
+            <option value="b">Điểm b — đất không đủ ĐK (hỗ trợ)</option>
+          </Chon>
+        ) : x.cachTinh === "MOC_K3" ? <span className="nhan nhan-xam" style={{ alignSelf: "center" }}>Hỗ trợ</span> : (
           <Chon value={x.phan} onChange={(e) => sua(x.id, { phan: e.target.value as "BOI_THUONG" | "HO_TRO" })}>
             <option value="BOI_THUONG">Bồi thường</option>
             <option value="HO_TRO">Hỗ trợ</option>
           </Chon>
         )}
-        {x.cachTinh === "MOC_K3" ? (
+        {x.cachTinh === "HANH_LANG" ? (
+          x.hanhLang?.diem === "b" ? (
+            <>
+              <MocK3 x={x} sua={sua} cs={cs} ngayTB={ngayTB} />
+              <span className="mo chu-nho" style={{ gridColumn: "1/-1" }}>Điểm b dẫn chiếu điểm 4.2, 4.3 k4 Điều 17 PL II (hết hiệu lực từ 31/3/2026) — chọn áp dụng mức theo mốc k3 Điều 6 QĐ 14/2026 × 70% và ghi lý do.</span>
+              <input placeholder="Lý do áp dụng mức k3 Đ6 QĐ 14/2026 *" aria-label="Lý do áp dụng mức điểm b" className={x.hanhLang.lyDo?.trim() ? "" : "loi-nhap"} style={{ gridColumn: "1/-1" }} value={x.hanhLang.lyDo ?? ""} onChange={(e) => sua(x.id, { hanhLang: { diem: "b", lyDo: e.target.value } })} />
+            </>
+          ) : <span className="mo chu-nho" style={{ gridColumn: "3/-1", alignSelf: "center" }}>70% giá trị phần nhà trong hành lang theo đơn giá xây mới — khối lượng nhập là phần nằm trong hành lang</span>
+        ) : x.cachTinh === "MOC_K3" ? (
           <MocK3 x={x} sua={sua} cs={cs} ngayTB={ngayTB} />
         ) : x.cachTinh === "THIET_HAI_THUC_TE" ? (
           <>

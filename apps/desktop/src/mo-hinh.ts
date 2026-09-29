@@ -72,7 +72,24 @@ export interface Thua {
     /** Hạn mức công nhận QSDĐ NN cùng loại (m²); trống = hạn mức của dự án. */
     hanMuc?: string;
     canCuHanMuc?: string;
+    /**
+     * Hệ số điều chỉnh giá đất của dự án cho phần hỗ trợ về đất (linh động — người dùng chọn, ghi lý do). Trống: nhân hệ số
+     * như giá đất tính tiền bồi thường nhưng "Cần xác nhận".
+     */
+    heSo?: { apDung: boolean; lyDo: string };
   };
+  /**
+   * Điều 3 PL II QĐ 106/2025: chi phí đầu tư vào đất còn lại khi không có giấy tờ (k3 Đ17 NĐ 88) nhưng thực tế đã đầu tư.
+   * DU_TOAN: theo dự toán được Chủ tịch UBND cấp xã phê duyệt (k1); GIA_DAT: 01 lần giá đất bảng giá × DT thu hồi (k2),
+   * tổ chức nhân tỷ lệ thời hạn còn lại / thời hạn (k4 Đ17 NĐ 88).
+   */
+  chiPhiDauTu?: { cach: "DU_TOAN" | "GIA_DAT"; soTien?: string; canCu?: string; conLaiNam?: string; thoiHanNam?: string };
+  /**
+   * Điều 7 PL II QĐ 106/2025: phần đất nằm trong hành lang bảo vệ an toàn (không thu hồi, không đổi mục đích, hạn chế khả
+   * năng sử dụng). DIEN: đường dây dẫn điện trên không (k1); KHAC: công trình khác (k2). Giá = giá đất đã chọn cho thửa
+   * × hệ số điều chỉnh của dự án (giá đất cụ thể).
+   */
+  hanhLang?: { loai: "DIEN" | "KHAC"; nhomDat: import("@gpmb/core").NhomDatHanhLang; dienTich: string; canCu?: string };
   /** Mã thửa trên bản đồ (T{tờ}-{thửa}), nếu tạo từ bản đồ. */
   maBanDo?: string;
   dienTichBanDo?: number;
@@ -112,7 +129,14 @@ export interface TaiSanNhaCongTrinh extends TaiSanCoSo {
   donGia: string;
   khoiLuong: string;
   /** MOC_K3: hỗ trợ theo mốc thời gian xây dựng (khoản 3 Điều 6 QĐ 14/2026) — luôn thuộc phần hỗ trợ. */
-  cachTinh: "THIET_HAI_THUC_TE" | "HE_SO" | "MOC_K3";
+  cachTinh: "THIET_HAI_THUC_TE" | "HE_SO" | "MOC_K3" | "HANH_LANG";
+  /**
+   * HANH_LANG — k3 Điều 7 PL II QĐ 106/2025: nhà ở, công trình phục vụ sinh hoạt trong hành lang lưới điện ≤ 220 kV không
+   * phải di dời (khối lượng = phần trong hành lang). Điểm a: đất đủ điều kiện bồi thường → 70% giá trị theo đơn giá xây
+   * mới. Điểm b: đất không đủ điều kiện → 70% mức hỗ trợ điểm 4.2, 4.3 k4 Điều 17 PL II (đã hết hiệu lực) — người dùng
+   * chọn áp dụng mức theo mốc k3 Điều 6 QĐ 14/2026 (trường hợp, ngày ở `k3`), bắt buộc ghi lý do.
+   */
+  hanhLang?: { diem: "a" | "b"; lyDo?: string };
   /** Khoản 3 Điều 6 QĐ 14/2026: trường hợp, ngày xây dựng; ngày trùng đúng mốc (khe văn bản) → người dùng chọn mức, ghi lý do. */
   k3?: { truongHop: "3.1" | "3.2" | "3.3"; ngayXayDung: string; chonMoc?: { moTaMoc: string; lyDo: string } };
   T?: string;
@@ -172,7 +196,11 @@ export interface TaiSanSuaChua extends TaiSanCoSo {
 export type TaiSan = TaiSanNhaCongTrinh | TaiSanCay | TaiSanVatNuoi | TaiSanKhac | TaiSanSuaChua;
 
 export interface HoTroHo {
-  onDinh?: { dienTichNNDangSuDung: string; diChuyen: DiChuyen; chonNhom?: { ma: string; lyDo: string } };
+  /**
+   * `nhanKhau`: số nhân khẩu được hỗ trợ theo điểm b k1 Điều 12 PL II QĐ 106 (người có chung quyền sử dụng đất tại thời điểm
+   * phê duyệt phương án + thành viên phát sinh sau khi giao đất NN; hộ tự thỏa thuận). Trống = số nhân khẩu trong hồ sơ.
+   */
+  onDinh?: { dienTichNNDangSuDung: string; diChuyen: DiChuyen; chonNhom?: { ma: string; lyDo: string }; nhanKhau?: string };
   chuyenDoiNghe: boolean;
   tamCu?: { soThang: number; tdcBangDat: boolean };
   moMa?: { xay: number; khongXay: number };
@@ -200,9 +228,25 @@ export interface HoTroKhacHo {
    */
   khauXayLaiNha?: string;
   /** k5: ổn định sản xuất (như khoản 1 Điều 13 PL II QĐ 106) — điều kiện (đánh dấu từng điều), số tiền theo định mức, căn cứ. */
-  onDinhSanXuat?: { dk: boolean[]; soTien: string; canCu: string; noiDung?: string };
-  /** k4 (công trình sinh hoạt ngoài cọc GPMB, mức do Chủ tịch UBND xã quyết định), k13, k14 và khoản khác: nhập tay, bắt buộc căn cứ. */
-  khoan: { id: string; loai: "K4" | "K13_14" | "KHAC"; noiDung: string; soTien: string; canCu: string }[];
+  onDinhSanXuat?: {
+    dk: boolean[];
+    soTien: string;
+    canCu: string;
+    noiDung?: string;
+    /** Cơ sở: K5 — khoản 5 Điều 6 QĐ 14/2026 (4 điều kiện); D13 — hộ được bồi thường bằng đất NN (k1 Điều 13 PL II). Trống = K5. */
+    coSo?: "K5" | "D13";
+    /** Tính theo định mức (k1 Điều 13 PL II): DT (m²), định mức giống/vật tư (đ/ha/vụ), chi phí năm đầu (đ/ha); trống = nhập số tiền. */
+    dinhMuc?: { hnDt: string; hnDinhMuc: string; lnDt: string; lnChiPhi: string };
+  };
+  /** Điều 11 PL II QĐ 106: người đang sử dụng nhà ở thuộc sở hữu nhà nước — thuê nhà (≤ 6 tháng) hoặc tự lo chỗ ở (50% Điều 10). */
+  nhaNhaNuoc?: { cach: "THUE" | "TU_LO"; soThang: string; nhanKhau?: string };
+  /** k2, k3 Điều 13 PL II QĐ 106: ổn định sản xuất kinh doanh phi nông nghiệp (thu nhập sau thuế / doanh thu kèm căn cứ). */
+  sxkd?: { cach: import("@gpmb/core").CachSxkd; thuNhap: string; doanhThu: string; canCu: string };
+  /**
+   * k4 (công trình sinh hoạt ngoài cọc GPMB, mức do Chủ tịch UBND xã quyết định), k13, k14 và khoản khác: nhập tay, bắt buộc
+   * căn cứ. D13_K4: trợ cấp ngừng việc cho người lao động (k4 Điều 13 PL II QĐ 106 — theo pháp luật lao động, ≤ 6 tháng).
+   */
+  khoan: { id: string; loai: "K4" | "K13_14" | "KHAC" | "D13_K4"; noiDung: string; soTien: string; canCu: string }[];
 }
 
 /** Hình thức bố trí tái định cư (Điều 111 LĐĐ 2024; Điều 23, 24 NĐ 88/2024). */

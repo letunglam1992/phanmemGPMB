@@ -375,6 +375,15 @@ async fn may_chu_lich_su_luoc_do() {
     let mut h3 = h2.clone();
     h3["thua"][0]["dienTichThuHoi"] = json!("abc");
     assert_eq!(m.goi("PUT", "/api/ho/h1", Some(&cb), json!({ "duLieu": h3, "phienBanTruoc": 2 })).await.0, 400);
+    // 0.8.4: ô số Phụ lục II (hành lang, nhà ở thuộc sở hữu nhà nước) cũng được kiểm
+    let mut h5 = h2.clone();
+    h5["thua"][0]["hanhLang"] = json!({ "loai": "DIEN", "nhomDat": "HNK", "dienTich": "50,5" });
+    let (ma, v) = m.goi("PUT", "/api/ho/h1", Some(&cb), json!({ "duLieu": h5, "phienBanTruoc": 2 })).await;
+    assert_eq!(ma, 400, "{v}");
+    assert!(v["loi"].as_str().unwrap().contains("thua[0].hanhLang.dienTich"), "{v}");
+    let mut h6 = h2.clone();
+    h6["hoTro"]["khac"] = json!({ "khoan": [], "nhaNhaNuoc": { "cach": "THUE", "soThang": "3 tháng" } });
+    assert_eq!(m.goi("PUT", "/api/ho/h1", Some(&cb), json!({ "duLieu": h6, "phienBanTruoc": 2 })).await.0, 400);
     let mut h4 = h2.clone();
     h4["thua"][0]["dienTich"] = json!("1000.5");
     assert_eq!(m.goi("PUT", "/api/ho/h1", Some(&cb), json!({ "duLieu": h4, "phienBanTruoc": 2 })).await.0, 200);

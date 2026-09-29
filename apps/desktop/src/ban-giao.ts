@@ -1,10 +1,12 @@
 /**
  * Bàn giao mặt bằng và thưởng bàn giao trước hạn (P1-4).
  *
- * Thưởng (C13 — Điều 15 Phụ lục II QĐ 106/2025/QĐ-UBND; Mục XV.3 Sổ tay): kho dữ liệu chưa có nguyên văn điều khoản
- * (ma trận nghiệp vụ docs/02 chỉ tóm tắt "mốc 1: 10%, ≤ 20 tr; mốc 2: 10%, ≤ 15 tr"), cơ sở tính còn linh động (VM-16,
- * QD-19). Vì vậy phần mềm KHÔNG tự đặt mức: cán bộ khai báo các mốc (hạn bàn giao, tỷ lệ, mức tối đa), cơ sở tính và
- * căn cứ ở Thông tin dự án; phần mềm chỉ tính số học: min(cơ sở × tỷ lệ, mức tối đa) theo mốc chứa ngày bàn giao.
+ * Thưởng (C13 — Điều 15 Phụ lục II QĐ 106/2025/QĐ-UBND, đã đối chiếu nguyên văn: policy/nguon/qd106-2025-phu-luc-2.md):
+ * k1 từ sau khi hoàn thành kiểm đếm đến trước khi niêm yết phương án — 10% giá trị bồi thường về đất và tài sản gắn liền
+ * với đất (không tính các khoản hỗ trợ), tối đa 20 triệu; k2 sau niêm yết đến hết thời hạn phải bàn giao — 10%, tối đa
+ * 15 triệu. Hạn từng mốc phụ thuộc ngày niêm yết, hạn bàn giao của từng dự án nên cán bộ khai báo các mốc, cơ sở tính
+ * và căn cứ ở Thông tin dự án (QD-19); phần mềm tính min(cơ sở × tỷ lệ, mức tối đa) theo mốc chứa ngày bàn giao.
+ * Điểm b k1, k2 dẫn chiếu điểm 10.1 k10 Điều 17 PL II (đã hết hiệu lực từ 31/3/2026) — cán bộ xác định cơ sở tính riêng.
  * Thưởng được quyết định sau khi bàn giao (Mẫu 20, 21) — không cộng vào tổng phương án bồi thường, hỗ trợ.
  */
 import { D, dinhDang } from "@gpmb/core";
@@ -31,15 +33,15 @@ export interface CauHinhThuong {
   canCu: string;
 }
 
-/** Mức theo ma trận nghiệp vụ docs/02 (C13) — CHỈ để điền nhanh, cán bộ phải đối chiếu nguyên văn trước khi dùng. */
+/** Mức theo nguyên văn Điều 15 PL II QĐ 106/2025 — điền nhanh; hạn từng mốc cán bộ nhập theo văn bản của dự án. */
 export const GOI_Y_MA_TRAN: Omit<CauHinhThuong, "canCu"> & { canCu: string; canhBao: string } = {
   moc: [
-    { ten: "Mốc 1", denNgay: "", tyLe: "10", toiDa: "20000000" },
-    { ten: "Mốc 2", denNgay: "", tyLe: "10", toiDa: "15000000" },
+    { ten: "Mốc 1 — trước khi niêm yết phương án", denNgay: "", tyLe: "10", toiDa: "20000000" },
+    { ten: "Mốc 2 — đến hết thời hạn phải bàn giao", denNgay: "", tyLe: "10", toiDa: "15000000" },
   ],
   coSo: ["BT_DAT", "BT_TAI_SAN"],
-  canCu: "Điều 15 Phụ lục II QĐ 106/2025/QĐ-UBND; Mục XV.3 Sổ tay (QĐ 1966/QĐ-UBND)",
-  canhBao: "Điền theo bản tóm tắt ở ma trận nghiệp vụ (docs/02, C13) — đối chiếu nguyên văn Điều 15 Phụ lục II QĐ 106/2025 và nhập hạn của từng mốc theo văn bản của dự án trước khi dùng.",
+  canCu: "Điều 15 Phụ lục II QĐ 106/2025/QĐ-UBND (khoản 1, khoản 2 điểm a)",
+  canhBao: "Điền theo nguyên văn Điều 15 Phụ lục II QĐ 106/2025: Mốc 1 — từ sau khi hoàn thành kiểm đếm đến trước khi niêm yết phương án (10%, tối đa 20.000.000 đ); Mốc 2 — sau niêm yết đến hết thời hạn phải bàn giao (10%, tối đa 15.000.000 đ); cơ sở: giá trị bồi thường về đất và tài sản gắn liền với đất, không tính hỗ trợ. Nhập hạn của từng mốc theo văn bản của dự án. Trường hợp điểm b (điểm 10.1 k10 Điều 17 PL II — đã hết hiệu lực) cán bộ xác định riêng.",
 };
 
 /** Diện tích thu hồi của hộ (m²). */

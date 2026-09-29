@@ -67,6 +67,6 @@ test("Đ5: sửa chữa phần nhà còn lại theo dự toán; Đ6: thẻ Hỗ 
   await expect(kq).toContainText("C17.4"); // khoản k4 chưa có căn cứ → Thiếu căn cứ
   await p.getByRole("button", { name: "Lưu hồ sơ" }).click();
   await p.locator("[role=tablist] button", { hasText: "Tính toán" }).click();
-  await expect(p.getByText("Hỗ trợ khác (Điều 6 QĐ 14/2026)").first()).toBeVisible();
+  await expect(p.getByText("Hỗ trợ khác (Điều 6 QĐ 14/2026; Phụ lục II QĐ 106/2025)").first()).toBeVisible();
   await expect(p.getByText(/Sửa chữa phần còn lại/).first()).toBeVisible();
 });

@@ -88,6 +88,17 @@ export interface BoChinhSach {
     suatToiThieu: { canCu: CanCu[]; datOPhuongM2: string; datOXaM2: string; nhaOM2: string };
     hoTroTienSdd: { canCu: CanCu[]; tyLe: string; ghiChu: string };
   };
+  /** Tham số Phụ lục II QĐ 106/2025 còn hiệu lực (Điều 3, 7, 11, 13) — xem phu-luc-ii.ts. */
+  phuLucII?: {
+    ghiChu: string;
+    chiPhiDauTu: { lanGiaDat: string; canCu: CanCu[] };
+    hanhLangDien: { O_PNN: string; CLN_RSX: string; HNK: string; canCu: CanCu[] };
+    hanhLangKhac: { tyLe: string; canCu: CanCu[] };
+    hanhLangNha: { tyLe: string; canCu: CanCu[] };
+    onDinhSanXuatDat: { soVu: number; tyLeHangNam: string; tyLeLauNam: string; dtToiDaLauNamM2: string; canCu: CanCu[] };
+    onDinhSxkd: { tyLeThuNhap: string; tyLeTamThoi: string; nguongDoanhThu: string; mucDuoiNguong: string; mucTrenNguong: string; canCuK2: CanCu[]; canCuK3: CanCu[]; canCuK4: CanCu[] };
+    nhaSoHuuNhaNuoc: { thangToiDa: number; den2Khau: string; den4Khau: string; congThemMoiKhau: string; tyLeTuLo: string; canCu: CanCu[] };
+  };
   chuyenDoiNghe: {
     canCu: CanCu[];
     heSoMacDinh: string;
@@ -120,5 +131,7 @@ export interface NhomOnDinh {
 /** Tra nhóm địa bàn theo bảng phân nhóm riêng của từng quy định (QD-14). */
 export function nhomDiaBan(phanNhom: Record<string, string[]>, xa: string, macDinh: string): string {
   for (const [nhom, ds] of Object.entries(phanNhom)) if (ds.includes(xa)) return nhom;
+  // Mẫu kết thúc bằng "*" (vd. "Phường *" — văn bản ghi "các phường") khớp theo tiền tố, sau khi không khớp tên cụ thể.
+  for (const [nhom, ds] of Object.entries(phanNhom)) if (ds.some((m) => m.endsWith("*") && xa.startsWith(m.slice(0, -1)))) return nhom;
   return macDinh;
 }
