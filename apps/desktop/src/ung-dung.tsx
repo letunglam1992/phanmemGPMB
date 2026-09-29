@@ -2,7 +2,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { KHOA_KHOI_PHUC, KHOA_TU_DONG, MAC_DINH_TU_DONG, cachTuDong, coVoWindows, denHan, saoLuuTuDong, type CaiDatTuDong } from "./tu-dong-sao-luu";
 import type { BoChinhSach } from "@gpmb/core";
 import { BO_CHINH_SACH } from "./du-lieu";
-import { taoKhoIndexedDb, type Kho } from "./kho";
+import { taoKhoIndexedDb, type CanBo, type Kho } from "./kho";
+import { chiMucNguoi, type HoSoNguoi } from "./nguoi-co-dat";
 import { LoiMayChu, docCheDo, laKhoMang } from "./kho-mang";
 import type { DuAn, Ho } from "./mo-hinh";
 import { docLanSaoLuu, ghiLanSaoLuu, maHoaBanSaoLuu, taoBanSaoLuu, tenTepSaoLuu } from "./sao-luu";
@@ -33,6 +34,10 @@ export type Man =
   | { ten: "bao-cao" }
   | { ten: "don-vi" }
   | { ten: "huong-dan" }
+  /** P3-4: hồ sơ được phân công cho tài khoản đang đăng nhập. */
+  | { ten: "viec-cua-toi" }
+  /** P3-2: người có đất có nhiều hồ sơ (khớp số định danh). */
+  | { ten: "nguoi-co-dat" }
   /** Danh sách hồ sơ (mọi dự án hoặc một dự án) lọc theo hiện trạng, chặng quy trình, từ khóa — đích khi bấm vào các chỉ số. */
   | { ten: "ds-ho"; duAnId?: string; trangThai?: string; chang?: string; tim?: string };
 
@@ -119,6 +124,10 @@ interface NguCanh {
   /** §11.3: ngưỡng lệch diện tích do đơn vị đặt (null = chưa đặt). */
   nguongLechDt: NguongLechDt | null;
   luuNguongLechDt: (n: NguongLechDt | null) => Promise<void>;
+  /** P3-2: chỉ mục số định danh → hồ sơ ở mọi dự án (người có đất dùng chung). */
+  nguoiCoDat: Map<string, HoSoNguoi[]>;
+  /** P3-4: cán bộ để phân công phụ trách hồ sơ. */
+  dsCanBo: CanBo[];
   /** P2-1: gói chính sách đã nạp (ngoài bộ có sẵn). */
   goiDaNap: GoiDaNap[];
   napGoi: (g: Omit<GoiDaNap, "napLuc" | "napBoi">) => Promise<boolean>;
@@ -185,6 +194,7 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
   const [giuLichSu, setGiuLichSu] = useState(0);
   const [nguongLechDt, setNguongLechDt] = useState<NguongLechDt | null>(null);
   const [goiDaNap, setGoiDaNap] = useState<GoiDaNap[]>([]);
+  const [dsCanBo, setDsCanBo] = useState<CanBo[]>([]);
   const dangTuDong = useRef(false);
   const [sai, setSai] = useState<{ lan: number; den: number }>({ lan: 0, den: 0 });
   const nguoiDung = tenHienThi(taiKhoan);
@@ -238,6 +248,7 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
     const goi = (await kho.docCaiDat<GoiDaNap[]>(KHOA_GOI)) ?? [];
     dangKyGoi(goi); // trước khi nạp dự án: tính toán dùng đúng bộ chính sách của dự án
     setGoiDaNap(goi);
+    setDsCanBo(await kho.dsCanBo().catch(() => []));
     const da = await kho.dsDuAn();
     const hos = (await Promise.all(da.map((d) => kho.dsHo(d.id)))).flat();
     setDsDuAn(da.sort((a, b) => b.taoLuc.localeCompare(a.taoLuc)));
@@ -404,8 +415,11 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
   }, [dsHo]);
   const hoCua = useCallback((id: string, kemDaXoa?: boolean) => (kemDaXoa ? hoTheoDuAn.get(id)?.tat : hoTheoDuAn.get(id)?.con) ?? KHONG_CO_HO, [hoTheoDuAn]);
   const thungRac = useMemo(() => ({ duAn: dsDuAn.filter((d) => d.daXoa), ho: dsHo.filter((h) => h.daXoa && !dsDuAn.find((d) => d.id === h.duAnId)?.daXoa) }), [dsDuAn, dsHo]);
+  const nguoiCoDat = useMemo(() => chiMucNguoi(dsDuAn, dsHo), [dsDuAn, dsHo]);
   const giaTri: NguCanh = {
     kho,
+    nguoiCoDat,
+    dsCanBo,
     dsDuAn: dsDuAnCon,
     hoCua,
     thungRac,

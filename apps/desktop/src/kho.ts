@@ -45,6 +45,9 @@ export interface DinhKem {
 export const TOI_DA_DINH_KEM = 20 * 1024 * 1024;
 
 /** Bản ghi đã lưu (máy chủ có thể ghi thêm người gửi/duyệt, dấu xóa…) — giao diện cập nhật trạng thái bằng bản này (P1-2). */
+export type CanBo = Pick<NguoiDung, "ten" | "hoTen" | "chucVu" | "vaiTro" | "hoatDong">;
+export const canBo = (u: NguoiDung): CanBo => ({ ten: u.ten, hoTen: u.hoTen, chucVu: u.chucVu, vaiTro: u.vaiTro, hoatDong: u.hoatDong });
+
 export interface KetQuaGhi {
   duAn: DuAn[];
   ho: Ho[];
@@ -99,6 +102,8 @@ export interface Kho {
   /** Xóa toàn bộ dữ liệu nghiệp vụ (dùng khi khôi phục kiểu thay thế). Không xóa tài khoản, nhật ký hệ thống. */
   xoaTatCa(): Promise<void>;
   dsNguoiDung(): Promise<NguoiDung[]>;
+  /** P3-4: cán bộ để phân công (không có thông tin mật khẩu) — mọi tài khoản đã đăng nhập đọc được. */
+  dsCanBo(): Promise<CanBo[]>;
   luuNguoiDung(u: NguoiDung): Promise<void>;
   /** Ghi nối tiếp một dòng nhật ký hệ thống (chuỗi băm). */
   ghiNhatKy(e: { nguoi: string; hoTen: string; hanhDong: string; chiTiet?: string }): Promise<DongNhatKy>;
@@ -316,6 +321,9 @@ export function taoKhoIndexedDb(): Kho {
     async dsNguoiDung() {
       return yc((await store("nguoiDung")).getAll()) as Promise<NguoiDung[]>;
     },
+    async dsCanBo() {
+      return (await this.dsNguoiDung()).map(canBo);
+    },
     async luuNguoiDung(u) {
       await yc((await store("nguoiDung", "readwrite")).put(u));
     },
@@ -500,6 +508,9 @@ export function taoKhoBoNho(tuyChon: { thuLoi?: (buoc: number) => void } = {}): 
     },
     async dsNguoiDung() {
       return [...nguoi.values()].map((u) => structuredClone(u));
+    },
+    async dsCanBo() {
+      return [...nguoi.values()].map(canBo);
     },
     async luuNguoiDung(u) {
       nguoi.set(u.ten, structuredClone(u));

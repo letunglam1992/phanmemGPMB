@@ -1,3 +1,5 @@
+import { ViecCuaToi } from "./man/ViecCuaToi";
+import { NguoiCoDat } from "./man/NguoiCoDat";
 import { useEffect, useState } from "react";
 import { useUngDung } from "./ung-dung";
 import { TongQuan } from "./man/TongQuan";
@@ -81,6 +83,7 @@ export function UngDung() {
       nhan: "Theo dõi",
       muc: [
         { ten: "Tổng quan", bt: "tongQuan", chon: man.ten === "tong-quan", bam: () => di({ ten: "tong-quan" }) },
+        { ten: "Việc của tôi", bt: "nguoi", chon: man.ten === "viec-cua-toi", bam: () => di({ ten: "viec-cua-toi" }) },
         { ten: "Dự án", bt: "danhSach", chon: man.ten === "du-an" && !man.duAnId, bam: () => di({ ten: "du-an" }) },
         { ten: "Hồ sơ", bt: "hoSo", chon: (man.ten === "du-an" && !!man.duAnId) || man.ten === "ho" || man.ten === "ds-ho" || man.ten === "ban-do" || man.ten === "van-ban", bam: () => duAnId && di({ ten: "du-an", duAnId }), tat: !duAnId },
         { ten: "Báo cáo tổng hợp", bt: "baoCao", chon: man.ten === "bao-cao", bam: () => di({ ten: "bao-cao" }) },
@@ -93,6 +96,7 @@ export function UngDung() {
         { ten: "Tra cứu đơn giá, giá đất", bt: "traCuu", chon: man.ten === "tra-cuu", bam: () => di({ ten: "tra-cuu" }) },
         { ten: `Rà soát số liệu${soRaSoat ? ` (${soRaSoat})` : ""}`, bt: "canhBao", chon: man.ten === "ra-soat-so", bam: () => di({ ten: "ra-soat-so" }) },
         { ten: "Kiểm tra phương án", bt: "kiemTra", chon: man.ten === "kiem-tra-pa", bam: () => di({ ten: "kiem-tra-pa" }) },
+        { ten: "Người có đất nhiều hồ sơ", bt: "traCuu", chon: man.ten === "nguoi-co-dat", bam: () => di({ ten: "nguoi-co-dat" }) },
         { ten: "Đọc văn bản scan (OCR)", bt: "ocr", chon: man.ten === "doc-scan", bam: () => di({ ten: "doc-scan" }) },
       ],
     },
@@ -231,6 +235,8 @@ export function UngDung() {
         {man.ten === "ds-ho" && <DanhSachHo key={JSON.stringify(man)} duAnId={man.duAnId} trangThai={man.trangThai} chang={man.chang} tim={man.tim} />}
         {man.ten === "don-vi" && <ThietLapDonVi />}
         {man.ten === "huong-dan" && <HuongDan />}
+        {man.ten === "viec-cua-toi" && <ViecCuaToi />}
+        {man.ten === "nguoi-co-dat" && <NguoiCoDat />}
         {man.ten === "ho" && <HoSo duAnId={man.duAnId} hoId={man.hoId} tabDau={man.tab} />}
         {man.ten === "ban-do" && <KhongGianDuAn duAnId={man.duAnId} tab="ban-do" />}
         {man.ten === "tra-cuu" && <TraCuu key={man.tim ?? ""} timDau={man.tim} />}

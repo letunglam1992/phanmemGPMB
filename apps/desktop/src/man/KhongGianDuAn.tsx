@@ -28,6 +28,7 @@ import { TheBoChinhSachDuAn } from "../thanh-phan/GoiChinhSach";
 import { TheDoiChieuDt } from "../thanh-phan/DoiChieuDt";
 import { TheDuBao } from "../thanh-phan/DuBao";
 import { TheQuyTdc } from "../thanh-phan/QuyTdc";
+import { HopPhanCong } from "../thanh-phan/PhanCong";
 import { ChonDot, HopXepDot, TheDotThuHoi, TheTongHopDot, loiDsDot } from "../thanh-phan/DotThuHoi";
 import { coDot, khopDot } from "../dot-thu-hoi";
 import { MAU_MA_MAC_DINH, loiMauMa, maHoTiepTheo, mauMaCua, nhomMaTrung, taoMa } from "../ma-ho";
@@ -269,6 +270,9 @@ function TheHo({ duAn, kq }: { duAn: DuAn; kq: Kq }) {
   const { di, quyen } = useUngDung();
   const [locDot, setLocDot] = useState("");
   const [xepDot, setXepDot] = useState(false);
+  const [phanCong, setPhanCong] = useState(false);
+  const [locPc, setLocPc] = useState("");
+  const { dsCanBo } = useUngDung();
   useEffect(() => {
     const nghe = (e: Event) => setLocDot((e as CustomEvent<string>).detail);
     window.addEventListener("gpmb-loc-dot", nghe);
@@ -288,6 +292,7 @@ function TheHo({ duAn, kq }: { duAn: DuAn; kq: Kq }) {
     .map(({ h, k }) => ({ h, k, duAn, tt: trangThaiHo(duAn, h, k, homNay) }))
     .filter((x) => !locTt || x.tt === locTt)
     .filter((x) => khopDot(x.h, locDot, duAn))
+    .filter((x) => !locPc || (locPc === "__chua__" ? !x.h.phuTrach : x.h.phuTrach === locPc))
     .filter((x) => !locPl || x.h.thua.some((t) => Number(t.dienTichThuHoi) > 0 && (t.phapLy ?? "CHUA") === locPl))
     .filter((x) => khopTuKhoa({ h: x.h, duAnTen: "" }, loc));
   return (
@@ -308,6 +313,12 @@ function TheHo({ duAn, kq }: { duAn: DuAn; kq: Kq }) {
           </Chon>
           {coDot(duAn) && <ChonDot duAn={duAn} value={locDot} onChange={setLocDot} style={{ height: 38, borderRadius: 10 }} />}
           {coDot(duAn) && quyen("SUA_HO_SO") && <button className="nut" onClick={() => setXepDot(true)}>Xếp đợt…</button>}
+          <Chon value={locPc} onChange={(e) => setLocPc(e.target.value)} aria-label="Lọc cán bộ phụ trách" style={{ height: 38, borderRadius: 10 }}>
+            <option value="">Mọi cán bộ phụ trách</option>
+            <option value="__chua__">Chưa phân công</option>
+            {dsCanBo.map((c) => <option key={c.ten} value={c.ten}>{c.hoTen}</option>)}
+          </Chon>
+          {quyen("SUA_HO_SO") && <button className="nut" onClick={() => setPhanCong(true)}>Phân công…</button>}
           <Chon value={locPl} onChange={(e) => setLocPl(e.target.value as NhomPhapLy | "CHUA" | "")} aria-label="Lọc pháp lý nguồn gốc" style={{ height: 38, borderRadius: 10 }}>
             <option value="">Mọi pháp lý nguồn gốc</option>
             {THU_TU_PHAP_LY.map((k) => <option key={k} value={k}>{NHOM_PHAP_LY[k].ngan}</option>)}
@@ -316,6 +327,7 @@ function TheHo({ duAn, kq }: { duAn: DuAn; kq: Kq }) {
         </div>
       </div>
       <BangHo ds={ds} homNay={homNay} mo={(x) => di({ ten: "ho", duAnId: duAn.id, hoId: x.h.id })} trong={kq.length ? "Không có hồ sơ khớp điều kiện lọc." : "Chưa có hồ sơ. Bấm “Thêm hộ, tổ chức”, nhập Excel (menu Thêm) hoặc tạo từ bản đồ."} />
+      {phanCong && <HopPhanCong hos={kq.map((x) => x.h)} dong={() => setPhanCong(false)} />}
       {xepDot && <HopXepDot duAn={duAn} hos={kq.map((x) => x.h)} dong={() => setXepDot(false)} />}
     </div>
   );

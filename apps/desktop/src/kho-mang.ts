@@ -3,7 +3,7 @@
  * bằng HTTPS ghim vân tay chứng chỉ. Máy chủ kiểm tra lại quyền và quy tắc nghiệp vụ; kho này chỉ
  * chuyển tiếp, giữ phiên bản bản ghi để phát hiện xung đột khi hai người cùng sửa.
  */
-import type { BanLichSu, DinhKem, Kho, KetQuaGhi } from "./kho";
+import type { BanLichSu, CanBo, DinhKem, Kho, KetQuaGhi } from "./kho";
 import type { PhienBanPA } from "./phuong-an";
 import type { DuAn, Ho } from "./mo-hinh";
 import type { NguoiDung } from "./tai-khoan";
@@ -380,6 +380,7 @@ export function taoKhoMang(ketNoi: KetNoi, gui: GuiYeuCau = guiQuaVo(ketNoi)): K
       daDoc.clear();
     },
     dsNguoiDung: () => json<NguoiDung[]>("GET", "/api/nguoi-dung"),
+    dsCanBo: () => json<CanBo[]>("GET", "/api/can-bo"),
     async luuNguoiDung(u) {
       await goi("PUT", `/api/nguoi-dung/${ma(u.ten)}`, { json: u });
     },

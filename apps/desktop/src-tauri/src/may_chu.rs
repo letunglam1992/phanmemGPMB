@@ -868,6 +868,21 @@ async fn ds_nguoi_dung(State(st): State<St>, h: HeaderMap) -> Kq<Json<Value>> {
     Ok(Json(Value::Array(ds)))
 }
 
+/// P3-4: danh sách cán bộ để phân công phụ trách hồ sơ — mọi tài khoản đã đăng nhập đọc được, chỉ gồm tên đăng nhập,
+/// họ tên, chức vụ, vai trò, trạng thái (không có muối, mã băm mật khẩu, lần đăng nhập).
+async fn ds_can_bo(State(st): State<St>, h: HeaderMap) -> Kq<Json<Value>> {
+    xac_thuc(&st, &h)?;
+    let c = st.db.lock().unwrap();
+    let mut q = c.prepare("SELECT noi_dung FROM nguoi_dung ORDER BY ten").map_err(loi_db)?;
+    let ds: Vec<Value> = q
+        .query_map([], |r| r.get::<_, String>(0))
+        .map_err(loi_db)?
+        .filter_map(|x| x.ok().and_then(|s| serde_json::from_str::<Value>(&s).ok()))
+        .map(|u| json!({ "ten": u["ten"], "hoTen": u["hoTen"], "chucVu": u["chucVu"], "vaiTro": u["vaiTro"], "hoatDong": u["hoatDong"] }))
+        .collect();
+    Ok(Json(Value::Array(ds)))
+}
+
 async fn luu_nguoi_dung(State(st): State<St>, h: HeaderMap, Path(ten): Path<String>, b: Bytes) -> Kq<Json<Value>> {
     let u = xac_thuc(&st, &h)?;
     can(&st, &u, "TAI_KHOAN")?;
@@ -1488,6 +1503,7 @@ pub fn dinh_tuyen(st: St) -> Router {
         .route("/api/dang-xuat", post(dang_xuat))
         .route("/api/doi-mat-khau", post(doi_mat_khau))
         .route("/api/nguoi-dung", get(ds_nguoi_dung))
+        .route("/api/can-bo", get(ds_can_bo))
         .route("/api/nguoi-dung/:ten", put(luu_nguoi_dung))
         .route("/api/du-an", get(ds_du_an))
         .route("/api/du-an/:id", put(luu_du_an).delete(xoa_du_an))

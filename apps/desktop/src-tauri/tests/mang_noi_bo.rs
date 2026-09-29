@@ -620,6 +620,13 @@ async fn may_chu_dot_va_quy_tdc() {
     assert_eq!(goi_router(&r, "POST", "/api/noi-bo/chuyen-du-lieu", None, du_lieu).await.0, 200);
     let (_, v) = goi_router(&r, "POST", "/api/dang-nhap", None, json!({ "ten": "canbo", "matKhau": "Gpmb2026cb" })).await;
     let t = v["token"].as_str().unwrap().to_string();
+    // P3-4: cán bộ (không có quyền Tài khoản) đọc được danh sách cán bộ để phân công — không kèm mã băm mật khẩu
+    let (ma, cb) = goi_router(&r, "GET", "/api/can-bo", Some(&t), Value::Null).await;
+    assert_eq!(ma, 200);
+    assert_eq!(cb.as_array().unwrap().len(), 2);
+    assert!(cb[0].get("bam").is_none() && cb[0].get("muoi").is_none());
+    assert_eq!(goi_router(&r, "GET", "/api/nguoi-dung", Some(&t), Value::Null).await.1.as_array().unwrap().len(), 1);
+    assert_eq!(goi_router(&r, "GET", "/api/can-bo", None, Value::Null).await.0, 401);
     // cán bộ không có quyền xác nhận: không đặt "Hoàn thành" cho bước chung của đợt
     let mut d = du_an.clone();
     d["dotThuHoi"][0]["tienDoChung"] = json!({ "3": { "trangThai": "XONG" } });

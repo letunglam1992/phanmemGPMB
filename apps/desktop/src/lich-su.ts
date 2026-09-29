@@ -23,6 +23,7 @@ const NHAN: Record<string, string> = {
   hoTen: "họ tên", namSinh: "năm sinh", quanHe: "quan hệ", trangThai: "trạng thái", ngay: "ngày", guiBoi: "gửi bởi", duyetBoi: "xác nhận bởi",
   onDinh: "ổn định đời sống", dienTichNNDangSuDung: "DT đất NN đang sử dụng", chuyenDoiNghe: "chuyển đổi nghề", tamCu: "tạm cư", soThang: "số tháng",
   taiDinhCu: "tái định cư", hinhThuc: "hình thức", noiDung: "nội dung", lyDo: "lý do", bienBan: "biên bản",
+  dotId: "Đợt thu hồi", phuTrach: "Cán bộ phụ trách", loId: "lô tái định cư", khuTdc: "khu TĐC", viTriLo: "lô số", dienTichGiao: "DT giao", nguonGia: "văn bản giá",
 };
 const nhan = (k: string) => NHAN[k] ?? k;
 

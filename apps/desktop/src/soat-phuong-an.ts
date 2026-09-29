@@ -11,6 +11,7 @@ import { tienDoHieuLuc, type DuAn, type Ho } from "./mo-hinh";
 import { nhomMaTrung } from "./ma-ho";
 import { hienSo, laSoMay } from "./so";
 import { soatQuyTdc } from "./quy-tdc";
+import { canhBaoHoTroTrung, type HoSoNguoi } from "./nguoi-co-dat";
 import { TEN_CAP, doiChieuDienTich, type NguongLechDt } from "./doi-chieu-dt";
 
 export type MucSoat = "LOI" | "CANH_BAO" | "THONG_TIN";
@@ -41,6 +42,7 @@ export const QUY_TAC_SOAT: { ma: string; ten: string; canCu: string }[] = [
   { ma: "PHAP_LY", ten: "Thửa thu hồi chưa phân loại pháp lý nguồn gốc", canCu: "Điều 95 Luật Đất đai 2024 (cán bộ xác định điều kiện)" },
   { ma: "DT_LECH", ten: "Diện tích lệch giữa bản đồ, hồ sơ, phương án, GCN vượt ngưỡng đơn vị đặt (§11.3)", canCu: "Ngưỡng do đơn vị đặt (Cài đặt chung → Ngưỡng lệch diện tích)" },
   { ma: "TDC_LO", ten: "Tái định cư: hai hộ cùng một lô, hồ sơ khác lô đã giao trong quỹ, một hộ nhận nhiều lô (P3-3)", canCu: "Điều 111 Luật Đất đai 2024; quỹ tái định cư của dự án" },
+  { ma: "HO_TRO_TRUNG", ten: "Cùng số định danh có hồ sơ khác (dự án này hoặc dự án khác) đã ghi khoản hỗ trợ cùng loại (P3-2)", canCu: "Điều 108, 109, 111 Luật Đất đai 2024 (cán bộ kiểm tra điều kiện)" },
   { ma: "NIEM_YET", ten: "Chưa ghi hoàn thành niêm yết công khai phương án", canCu: "điểm a khoản 3 Điều 87 Luật Đất đai 2024" },
 ];
 const canCu = (ma: string) => QUY_TAC_SOAT.find((q) => q.ma === ma)!.canCu;
@@ -48,7 +50,7 @@ const canCu = (ma: string) => QUY_TAC_SOAT.find((q) => q.ma === ma)!.canCu;
 const so = (v: string | undefined) => (v && laSoMay(v) ? D(v) : null);
 const khoaThua = (soTo: string, soThua: string) => `${soTo.trim().replace(/^0+(?=\d)/, "")}/${soThua.trim().replace(/^0+(?=\d)/, "")}`;
 
-export function soatPhuongAn(duAn: DuAn, kq: { h: Ho; k: KetQuaHo }[], nguong?: NguongLechDt | null): KetQuaSoat[] {
+export function soatPhuongAn(duAn: DuAn, kq: { h: Ho; k: KetQuaHo }[], nguong?: NguongLechDt | null, nguoiCoDat?: Map<string, HoSoNguoi[]>): KetQuaSoat[] {
   const out: KetQuaSoat[] = [];
   const bao = (quyTac: string, muc: MucSoat, h: Ho | null, noiDung: string) =>
     out.push({ quyTac, muc, hoId: h?.id, doiTuong: h ? `${h.ma} – ${h.ten}` : "Dự án", noiDung, canCu: canCu(quyTac) });
@@ -121,6 +123,12 @@ export function soatPhuongAn(duAn: DuAn, kq: { h: Ho; k: KetQuaHo }[], nguong?: 
     const h = c.hoId ? kq.find((x) => x.h.id === c.hoId)?.h : undefined;
     out.push({ quyTac: "TDC_LO", muc: c.muc, hoId: h?.id, doiTuong: h ? `${h.ma} – ${h.ten}` : "Dự án", noiDung: c.noiDung, canCu: c.canCu ?? canCu("TDC_LO") });
   }
+
+  // P3-2: hỗ trợ cùng loại đã ghi ở hồ sơ khác của cùng người (không kết luận, chỉ nhắc kiểm tra)
+  if (nguoiCoDat)
+    for (const { h } of kq)
+      for (const c of canhBaoHoTroTrung(nguoiCoDat, h))
+        out.push({ quyTac: "HO_TRO_TRUNG", muc: "CANH_BAO", hoId: h.id, doiTuong: `${h.ma} – ${h.ten}`, noiDung: c.noiDung, canCu: c.canCu });
 
   const thuTu: Record<MucSoat, number> = { LOI: 0, CANH_BAO: 1, THONG_TIN: 2 };
   return out.sort((a, b) => thuTu[a.muc] - thuTu[b.muc]);

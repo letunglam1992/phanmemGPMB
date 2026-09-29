@@ -26,6 +26,7 @@ import { TheBanGiao } from "../thanh-phan/TheBanGiao";
 import { chuanMa, hoTrungMa } from "../ma-ho";
 import { ghiBanNhap, layBanNhap, xoaBanNhap } from "../ban-nhap";
 import { OSo } from "../thanh-phan/OSo";
+import { HO_TRO_THEO_DOI, canhBaoHoTroTrung, hoSoKhac, hoTroDaGhi } from "../nguoi-co-dat";
 import { coDot, dsDot, lyDoKhongDoiDot, tenDot, timDot } from "../dot-thu-hoi";
 
 const CAC_TAB = [
@@ -329,7 +330,9 @@ const VB_DA_BAN_HANH = [
 ] as const;
 
 function TabThongTin({ h, doi, duAn, goc }: Tab & { duAn: DuAn; goc?: Ho }) {
-  const { hoCua } = useUngDung();
+  const { hoCua, nguoiCoDat, dsCanBo, di } = useUngDung();
+  const khac = hoSoKhac(nguoiCoDat, h);
+  const trungHt = canhBaoHoTroTrung(nguoiCoDat, h);
   const trung = hoTrungMa(hoCua(h.duAnId, true), h.ma, h.id);
   const chanDot = goc ? lyDoKhongDoiDot(duAn, goc, h.dotId) : null;
   const s = (k: keyof Ho) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => doi({ ...h, [k]: e.target.value });
@@ -349,6 +352,13 @@ function TabThongTin({ h, doi, duAn, goc }: Tab & { duAn: DuAn; goc?: Ho }) {
         <O nhan={h.loai === "TO_CHUC" ? "Tên tổ chức" : "Họ tên chủ hộ / cá nhân"} lichSu="ten"><input value={h.ten} onChange={s("ten")} /></O>
         <O nhan={h.loai === "TO_CHUC" ? "Mã số thuế / QĐ thành lập" : "Số định danh cá nhân"} lichSu="soDinhDanh" goiY="Thông tin cá nhân chỉ lưu trên máy này"><input value={h.soDinhDanh} onChange={s("soDinhDanh")} /></O>
         <O nhan="Điện thoại" lichSu="dienThoai"><input value={h.dienThoai} onChange={s("dienThoai")} /></O>
+        <O nhan="Cán bộ phụ trách" lichSu="phuTrach" goiY="Hồ sơ hiện trong “Việc của tôi” của cán bộ được phân công">
+          <Chon value={h.phuTrach ?? ""} aria-label="Cán bộ phụ trách" onChange={(e) => doi({ ...h, phuTrach: e.target.value || undefined })}>
+            <option value="">Chưa phân công</option>
+            {dsCanBo.filter((c) => c.hoatDong || c.ten === h.phuTrach).map((c) => <option key={c.ten} value={c.ten}>{c.hoTen} ({c.ten}){c.chucVu ? ` – ${c.chucVu}` : ""}</option>)}
+            {h.phuTrach && !dsCanBo.some((c) => c.ten === h.phuTrach) && <option value={h.phuTrach}>{h.phuTrach}</option>}
+          </Chon>
+        </O>
         {(coDot(duAn) || h.dotId) && (
           <O nhan="Đợt thu hồi" lichSu="dotId" goiY={chanDot ? <span className="chu-do">Không đổi đợt được: {chanDot}</span> : "Phương án chốt, phê duyệt theo đợt"}>
             <Chon className={chanDot ? "loi-nhap" : ""} value={h.dotId ?? ""} aria-label="Đợt thu hồi" onChange={(e) => doi({ ...h, dotId: e.target.value || undefined })}>
@@ -367,6 +377,24 @@ function TabThongTin({ h, doi, duAn, goc }: Tab & { duAn: DuAn; goc?: Ho }) {
         </O>
       </div>
     </div>
+    {khac.length > 0 && (
+      <div className="the" data-nguoi-co-dat>
+        <div className="the-dau"><h3>Hồ sơ khác cùng số định danh</h3><span className="mo chu-nho">Khớp theo số định danh trên dữ liệu trong máy/mạng nội bộ — phần mềm không kết luận, cán bộ kiểm tra</span></div>
+        {trungHt.map((c) => <div key={c.loai} className="thong-bao thong-bao-vang chu-nho" style={{ margin: "0 12px 8px" }}>{c.noiDung} <span className="mo">({c.canCu})</span></div>)}
+        <table className="bang">
+          <thead><tr><th>Dự án</th><th>Mã</th><th>Họ tên</th><th>Hỗ trợ đã ghi</th><th /></tr></thead>
+          <tbody>
+            {khac.map((x) => (
+              <tr key={x.h.id}>
+                <td>{x.duAn.ten}</td><td>{x.h.ma}</td><td>{x.h.ten}</td>
+                <td className="chu-nho">{hoTroDaGhi(x.h).map((l) => HO_TRO_THEO_DOI[l].ten).join("; ") || "—"}</td>
+                <td><button className="nut nut-nho" onClick={() => di({ ten: "ho", duAnId: x.duAn.id, hoId: x.h.id })}>Mở</button></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
     <div className="the">
       <div className="the-dau"><h3>Văn bản đã ban hành cho hộ</h3><span className="mo chu-nho">Tự ghi khi tạo văn bản có số; dùng làm căn cứ cho mẫu sau</span></div>
       <table className="bang">
