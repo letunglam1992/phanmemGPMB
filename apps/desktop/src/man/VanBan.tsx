@@ -218,7 +218,7 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
   const chanSua = !!nhung?.daSua;
 
   return (
-    <div className={nhung ? "vb-nhung" : "trang"} style={nhung ? undefined : { maxWidth: 1600 }}>
+    <div className={nhung ? "vb-nhung" : "trang"}>
       {nhung ? (
         <div className="the vb-nhung-dau">
           <div>

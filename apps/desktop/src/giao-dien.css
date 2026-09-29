@@ -134,7 +134,8 @@ button.chip:hover { border-color: var(--vien-dam); color: var(--chu); }
 .nut-tren-bt { width: 36px; padding: 0; justify-content: center; }
 
 .noi-dung { grid-column: 2; overflow: auto; }
-.trang { max-width: 1560px; padding: 24px 32px 48px; }
+/* Mọi trang dùng hết bề ngang màn hình (như Hồ sơ dự án); nội dung dạng văn bản tự giới hạn độ dài dòng riêng */
+.trang { max-width: none; padding: 24px 32px 48px; }
 .chan { grid-column: 2; font-size: 11.5px; color: var(--chu-mo); padding: 6px 32px; border-top: 1px solid var(--vien); background: var(--be-mat); display: flex; gap: 18px; flex-wrap: wrap; }
 
 .dong-tieu-de { display: flex; align-items: flex-end; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
@@ -757,8 +758,12 @@ table.bang { width: 100%; border-collapse: collapse; font-size: 13px; }
 .da-dau { display: flex; gap: 16px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
 .da-dau h1 { font-size: 28px; }
 .da-dau .mo-ta { color: var(--chu-phu); font-size: 13px; }
-.da-thong-ke { margin-left: auto; flex: 1 1 760px; max-width: 1000px; display: grid; grid-template-columns: repeat(4, minmax(170px, 1fr)); gap: 12px; }
-.chi-so-nho { display: flex; gap: 12px; align-items: center; background: var(--be-mat); border: 1px solid var(--vien); border-radius: var(--r-lg); padding: 14px 16px; box-shadow: var(--bong-1); }
+.da-thong-ke { margin-left: auto; flex: 1 1 760px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.chi-so-nho { display: flex; gap: 12px; align-items: center; background: var(--be-mat); border: 1px solid var(--vien); border-radius: var(--r-lg); padding: 14px 16px; box-shadow: var(--bong-1); min-width: 0; container-type: inline-size; }
+/* nội dung thẻ chỉ số không tràn khỏi thẻ (vd. "795,9 triệu đồng"): co chữ theo bề rộng thẻ, xuống dòng khi cần */
+.chi-so-nho > :not(.bt) { min-width: 0; }
+.chi-so-nho b { overflow-wrap: anywhere; }
+@container (max-width: 250px) { .chi-so-nho b { font-size: 18px; white-space: normal !important; } }
 .chi-so-nho.bam { cursor: pointer; }
 .chi-so-nho.bam:hover { border-color: var(--vien-dam); box-shadow: var(--bong); }
 .chi-so-nho .bt { flex: none; width: 44px; height: 44px; border-radius: 11px; display: grid; place-items: center; background: var(--chinh-nhat); color: var(--chinh); }
