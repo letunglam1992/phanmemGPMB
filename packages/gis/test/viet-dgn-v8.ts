@@ -200,6 +200,23 @@ export function ptChu(chu: string | Uint8Array, x: number, y: number, o: TuyChon
   return b;
 }
 
+/**
+ * Chữ 8 bit không có dấu FF FE (dạng của tệp MicroStation V8i thông thường): uint16 @110 = số byte, chiều cao @112 (UOR × 100),
+ * gốc @152, 2 byte 0 tại @168, chữ tại @170. Cấu trúc xác định từ tệp bản đồ trích đo người dùng cung cấp (không lưu tệp).
+ */
+export function ptChuKhongDau(chu: string, x: number, y: number, o: TuyChonPt & { caoM?: number }): Uint8Array {
+  const bytes = [...chu].map((c) => c.charCodeAt(0) & 0xff);
+  const cuoi = chan(170 + bytes.length);
+  const { b, dv } = khung(17, Math.max(176, cuoi) + 8, Math.max(172, cuoi), o);
+  dv.setUint32(104, 0x9a, true);
+  dv.setUint16(110, bytes.length, true);
+  dv.setFloat64(112, (o.caoM ?? 2) * UOR * 100, true);
+  dv.setFloat64(152, raw(x, GOC_X), true);
+  dv.setFloat64(160, raw(y, GOC_Y), true);
+  b.set(bytes, 170);
+  return b;
+}
+
 /** Khối "Dgn^G/$n": 16 byte đầu (uint32 số phần tử) + zlib(4 byte đầu khối + phần tử), bỏ 4 byte cuối như tệp thật. */
 export function khoiPhanTu(ds: Uint8Array[]): Uint8Array {
   const tong = 4 + ds.reduce((s, x) => s + x.length, 0);

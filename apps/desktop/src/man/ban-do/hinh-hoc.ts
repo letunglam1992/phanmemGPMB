@@ -33,7 +33,10 @@ export interface LopDgn {
 
 const trung = (a: Diem, b: Diem) => Math.abs(a.x - b.x) < 1e-6 && Math.abs(a.y - b.y) < 1e-6;
 
-/** Tách phần tử của tệp thành hình vẽ và chữ; bỏ thành phần của phần tử phức (vẽ qua phần tử cha). */
+/**
+ * Tách phần tử của tệp thành hình vẽ và chữ. Thành phần của chuỗi/vùng phức đã được bộ đọc gộp vào phần tử cha (không có
+ * trong danh sách); thành phần còn lại là của ô (cell: ký hiệu, mốc…) và nút chữ — vẽ như phần tử thường.
+ */
 export function chuanBiVe(ban: KetQuaDocDgn): { hinh: HinhVe[]; chu: ChuVe[]; lop: LopDgn[] } {
   const hinh: HinhVe[] = [];
   const chu: ChuVe[] = [];
@@ -44,7 +47,6 @@ export function chuanBiVe(ban: KetQuaDocDgn): { hinh: HinhVe[]; chu: ChuVe[]; lo
     return x;
   };
   for (const e of ban.phanTu) {
-    if (e.laThanhPhan) continue;
     if (e.loai === "CHU") {
       const s = giaiMaNhan(e);
       if (!s) continue;

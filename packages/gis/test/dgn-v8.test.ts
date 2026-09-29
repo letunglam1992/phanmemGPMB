@@ -18,7 +18,7 @@ import {
   CAU_HINH_MAC_DINH,
   type PhanTuChu,
 } from "../src/index.js";
-import { ptChu, ptDuong, ptKieu, ptNutChu, ptPhuc, vietCfb, vietDgnV8 } from "./viet-dgn-v8.js";
+import { ptChu, ptChuKhongDau, ptDuong, ptKieu, ptNutChu, ptPhuc, vietCfb, vietDgnV8 } from "./viet-dgn-v8.js";
 
 describe("Tệp ghép CFB", () => {
   test("đọc lại luồng nhỏ (mini stream) và luồng lớn (FAT), kho lồng nhau", () => {
@@ -132,6 +132,26 @@ describe("DGN V8", () => {
 
   test("tệp ghép OLE không phải DGN V8 → báo lỗi rõ ràng", () => {
     expect(() => docDgn(vietCfb({ WordDocument: new Uint8Array(10) }))).toThrow(LoiDgn);
+  });
+
+  test("0.8.8: chữ 8 bit không có dấu FF FE (bản đồ trích đo MicroStation V8i thông thường), TCVN3; bỏ Pattern Control Element", () => {
+    const tcvn3Ban = new Uint8Array([0x42, 0xb8, 0x6e]); // "Bán" theo TCVN3 (0xB8 = á)
+    const ten = String.fromCharCode(...tcvn3Ban);
+    const b = docDgn(
+      vietDgnV8([[
+        ptChuKhongDau("CD 35", X0 + 1, Y0 + 2, { lop: 62, caoM: 3.33 }),
+        ptChuKhongDau(ten, X0 + 5, Y0 + 5, { lop: 8 }),
+        ptChuKhongDau("Pattern Control Element", X0, Y0, { lop: 0 }),
+        ptKieu(17, 176, { lop: 64 }),
+      ]]),
+    );
+    const chu = b.phanTu.filter((e): e is PhanTuChu => e.loai === "CHU");
+    expect(chu.map((c) => giaiMaNhan(c))).toEqual(["CD 35", "Bán"]);
+    expect(chu[0]!.goc.x).toBeCloseTo(X0 + 1, 6);
+    expect(chu[0]!.goc.y).toBeCloseTo(Y0 + 2, 6);
+    expect(chu[0]!.chieuCao).toBeCloseTo(3.33, 6);
+    expect(chu[0]!.lop).toBe(62);
+    expect(b.phanTu.filter((e) => e.loai === "KHAC" && e.kieu === 17)).toHaveLength(2);
   });
 });
 

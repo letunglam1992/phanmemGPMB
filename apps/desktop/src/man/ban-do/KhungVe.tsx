@@ -468,14 +468,14 @@ export function KhungVe(p: {
       <div className="bd-thanh" role="toolbar" aria-label="Công cụ bản đồ">
         {CONG_CU.map((c) => (
           <button key={c.ma} className={`nut nut-nho${cong === c.ma ? " chon" : ""}`} aria-pressed={cong === c.ma} title={`${c.ten} — ${c.goiY}`} aria-label={c.ten} onClick={() => doiCong(c.ma)}>
-            <span aria-hidden>{c.ky}</span> {c.ten}
+            <span aria-hidden>{c.ky}</span><span className="bd-chu">{c.ten}</span>
           </button>
         ))}
         <span className="bd-vach" />
         <button className="nut nut-nho" title="Phóng to" aria-label="Phóng to" onClick={() => nhin && setNhin({ ...nhin, tyLe: nhin.tyLe * 1.4 })}>＋</button>
         <button className="nut nut-nho" title="Thu nhỏ" aria-label="Thu nhỏ" onClick={() => nhin && setNhin({ ...nhin, tyLe: nhin.tyLe / 1.4 })}>－</button>
-        <button className="nut nut-nho" title="Vừa vùng thửa, ranh GPMB" onClick={() => setNhin(null)}>⤢ Vùng thửa</button>
-        <button className="nut nut-nho" title="Vừa toàn bộ bản vẽ" disabled={!phamToanBo} onClick={() => phamToanBo && vuaKhung(phamToanBo)}>⛶ Toàn bộ bản vẽ</button>
+        <button className="nut nut-nho" title="Vừa vùng thửa, ranh GPMB" aria-label="Vừa vùng thửa" onClick={() => setNhin(null)}>⤢<span className="bd-chu">Vùng thửa</span></button>
+        <button className="nut nut-nho" title="Vừa toàn bộ bản vẽ" aria-label="Toàn bộ bản vẽ" disabled={!phamToanBo} onClick={() => phamToanBo && vuaKhung(phamToanBo)}>⛶<span className="bd-chu">Toàn bộ bản vẽ</span></button>
         <span className="bd-vach" />
         <label className="chu-nho" title="Bắt vào đỉnh gần nhất khi đo, lấy tọa độ"><input type="checkbox" checked={bat} onChange={(e) => setBat(e.target.checked)} /> Bắt điểm</label>
         <label className="chu-nho"><input type="checkbox" checked={nenToi} onChange={(e) => setNenToi(e.target.checked)} /> Nền đen</label>

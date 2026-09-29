@@ -145,7 +145,16 @@ export function docDgnV8(u8: Uint8Array): KetQuaDocDgn {
             tuDau = q;
             break;
           }
-        if (tuDau < 0 || soByte < 4) {
+        if (tuDau < 0 && soByte > 0 && 170 + soByte <= cuoiHinh) {
+          // Chữ 8 bit không có dấu FF FE (tệp MicroStation V8i thông thường, vd. bản đồ khu đất, trích đo): dữ liệu chữ
+          // tại @170 (sau 2 byte 0), uint16 @110 = số byte. Kiểm chứng trên tệp người dùng cung cấp.
+          // Chiều cao @112 chỉ dùng để hiển thị (tỷ lệ 1/100 đơn vị lưu — đối chiếu bằng mắt với kích thước thửa).
+          const byteChu = z.slice(p + 170, p + 170 + soByte);
+          const ket = byteChu.indexOf(0);
+          const chuoi = String.fromCharCode(...byteChu.slice(0, ket >= 0 ? ket : byteChu.length));
+          if (chuoi === "Pattern Control Element") pt = { ...coSo, loai: "KHAC" }; // phần tử điều khiển mẫu tô, không phải nhãn
+          else pt = { ...coSo, loai: "CHU", goc: dinh(152), byteChu: ket >= 0 ? byteChu.slice(0, ket) : byteChu, chieuCao: (dv.getFloat64(p + 112, true) * heSo) / 100, gocXoay: 0, font: z[p + 104]! } as PhanTuChu;
+        } else if (tuDau < 0 || soByte < 4) {
           pt = { ...coSo, loai: "KHAC" }; // phần tử điều khiển (vd. "Pattern Control Element"), không phải nhãn
         } else {
           const tamBit = z[tuDau + 1] === 0xfe && z[tuDau + 2] === 1;

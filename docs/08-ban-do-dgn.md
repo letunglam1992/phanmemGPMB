@@ -89,7 +89,9 @@ Với cấu hình gợi ý (nút lớp 19 + lớp chủ 54 để đối chiếu)
 
 **Gợi ý cấu hình** (`goiYCauHinh`): chỉ dựa trên cấu trúc thấy trong tệp — nút chữ ≥ 5 nút trên cùng lớp, các dòng cùng vị trí có kiểu giá trị ổn định (số lặp lại ít = số tờ; số khác nhau nhiều = số thửa; mã chữ in hoa 2–4 ký tự = loại đất; họ tên nhiều từ, khác nhau nhiều nhất = chủ); lớp chủ đứng riêng chỉ được thêm khi ≥ 50% tên trùng tên trong nút. Cấu hình đang là gợi ý thì màn Bản đồ hiện dải cảnh báo "chưa được chốt"; cán bộ chốt → lưu theo dự án.
 
-**Hạn chế (chưa đọc, có cảnh báo khi gặp):** cung tròn (kiểu 16) và phần tử 3D ở V8; ô dùng chung (shared cell) và tham chiếu ngoài (reference); các mô hình khác ngoài mô hình mặc định; bảng tên lớp (tên lớp trong MicroStation) chưa giải mã — phần mềm hiển thị mã số lớp. Mới kiểm với **một** tệp V8i thật (gCadas); tệp V8 từ phần mềm khác (Famis, VietMap XM…) cần thử thêm.
+**Hạn chế (chưa đọc, có cảnh báo khi gặp):** cung tròn (kiểu 16) và phần tử 3D ở V8; ô dùng chung (shared cell) và tham chiếu ngoài (reference); các mô hình khác ngoài mô hình mặc định; bảng tên lớp (tên lớp trong MicroStation) chưa giải mã — phần mềm hiển thị mã số lớp. Đã kiểm với 1 tệp gCadas V8i và (0.8.8) 3 tệp bản đồ trích đo khu đất MicroStation V8i 8.11 do người dùng cung cấp (đọc tại chỗ, không lưu vào kho); tệp V8 từ phần mềm khác (Famis, VietMap XM…) cần thử thêm.
+
+**Chữ 8 bit không có dấu (0.8.8):** tệp trích đo V8i thông thường lưu chữ kiểu 17 **không** có dấu FF FE: uint16 @110 = số byte, @112 = chiều cao (đơn vị lưu × 100 — chỉ dùng hiển thị), gốc @152, 2 byte 0 tại @168, chữ (TCVN3) tại @170. Trước 0.8.8 bộ đọc chỉ nhận chữ có dấu nên bỏ sót toàn bộ nhãn của các tệp này (loại đất, số thửa, diện tích, tên chủ, địa danh). Phần tử kiểu 17 chứa "Pattern Control Element" là phần tử điều khiển mẫu tô → bỏ qua. Ba tệp mẫu không lưu tên lớp (các luồng `Dgn^Nm/$n` là định nghĩa ô dùng chung) — lớp đánh số theo Phụ lục 21. Kiểu 33 (kích thước), 35 (ô dùng chung) chưa đọc.
 
 ## 8. Yêu cầu bản đồ, phạm vi thu hồi và nhãn hiện trạng (28/9/2026)
 
