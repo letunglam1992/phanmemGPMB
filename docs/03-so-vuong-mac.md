@@ -19,7 +19,7 @@ Cập nhật đợt 5 (28/9/2026): đối chiếu phương án đã phê duyệt
 | VM-06 | 🔴 | Đ14 k1 b NĐ88; Đ18 k2 c PLII | Tgt = G1 − G1 × T1/T; **T (thời gian khấu hao)** chưa có bảng (Sở Tài chính hướng dẫn); cách xác định T1 (năm đã sử dụng, làm tròn năm/tháng?) | Cần TL-27; tạm thời nhập tay T và T1 có căn cứ | Đã xử lý – QD-11 |
 | VM-07 | 🔴 | QĐ32 PL III k9 | Tường rào "nội suy theo chiều cao" — chưa rõ phương pháp | Tuyến tính theo tỷ lệ chiều cao thực tế/chuẩn — cần xác nhận | Linh động – QD-19 |
 | VM-08 | 🔴 | Chung | Quy tắc làm tròn DT, khối lượng, tiền từng dòng/hộ/tổng | Câu hỏi 3 | Đã xử lý – QD-03 |
-| VM-09 | 🔴 | **Đ6 k3.2 (c, d) và k3.3 (a, b) QĐ14** | Khoảng trống: ngày **01/7/2014** (c: "trước", d: "sau") và **01/7/2004** (a: "trước", b: "từ sau") không thuộc mức nào — **QĐ14 giữ nguyên lỗi của PLII** | Đánh dấu "Cần xác nhận" khi ngày xây trùng mốc | Đã xử lý – QD-12 |
+| VM-09 | 🔴 | **Đ6 k3.2 (c, d) và k3.3 (a, b) QĐ14** | Khoảng trống: ngày **01/7/2014** (c: "trước", d: "sau") và **01/7/2004** (a: "trước", b: "từ sau") không thuộc mức nào — **QĐ14 giữ nguyên lỗi của PLII** | Đánh dấu "Cần xác nhận" khi ngày xây trùng mốc | Đã xử lý – QD-12 **Đã xử lý 0.8.3 (QD-29): ngày trùng mốc → người dùng chọn mức, ghi lý do.** |
 | VM-10 | 🔴 | PLVIII Đ5 k4, k5 | Giới hạn trên phần vượt 150% mật độ; DT tính mật độ; cây không quy định mật độ | Hỏi | Linh động – QD-19 |
 | VM-11 | 🟡 | PLVIII Biểu 03 mục VIII | Công thức thiếu diện tích dù đơn vị đồng/ha/năm | × DT (ha) | Mở |
 | VM-12 | 🔴 | PLVIII Đ3 | Ao đúng 1.000 m² / thu hồi đúng 2/3 không thuộc khoản nào; cách tính "không vượt định mức kỹ thuật" | Hỏi | Đã xử lý – QD-15 |

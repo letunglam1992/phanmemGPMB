@@ -351,6 +351,8 @@ fn o_so(loai: &str, v: &Value) -> Vec<(String, Value)> {
         them(format!("thua[{i}].gcn.dienTich"), &t["gcn"]["dienTich"]);
         them(format!("thua[{i}].gcn.dtThuHoiCoGcn"), &t["gcn"]["dtThuHoiCoGcn"]);
         them(format!("thua[{i}].cayXen.dienTichTru"), &t["cayXen"]["dienTichTru"]);
+        them(format!("thua[{i}].chenhLech.giaHienTrang"), &t["chenhLech"]["giaHienTrang"]);
+        them(format!("thua[{i}].chenhLech.hanMuc"), &t["chenhLech"]["hanMuc"]);
     }
     for (i, ts) in v["taiSan"].as_array().into_iter().flatten().enumerate() {
         for k in ["donGia", "heSo", "T", "T1", "matDoHa", "quangDuongKm", "soTien"] {
@@ -372,6 +374,7 @@ fn o_so(loai: &str, v: &Value) -> Vec<(String, Value)> {
     for (i, k) in khac["khoan"].as_array().into_iter().flatten().enumerate() {
         them(format!("hoTro.khac.khoan[{i}].soTien"), &k["soTien"]);
     }
+    them("hoTro.khac.onDinhSanXuat.soTien".into(), &khac["onDinhSanXuat"]["soTien"]);
     them("khauTru".into(), &v["khauTru"]);
     out
 }

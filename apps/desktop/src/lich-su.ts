@@ -23,7 +23,7 @@ const NHAN: Record<string, string> = {
   hoTen: "họ tên", namSinh: "năm sinh", quanHe: "quan hệ", trangThai: "trạng thái", ngay: "ngày", guiBoi: "gửi bởi", duyetBoi: "xác nhận bởi",
   onDinh: "ổn định đời sống", dienTichNNDangSuDung: "DT đất NN đang sử dụng", chuyenDoiNghe: "chuyển đổi nghề", tamCu: "tạm cư", soThang: "số tháng",
   taiDinhCu: "tái định cư", hinhThuc: "hình thức", noiDung: "nội dung", lyDo: "lý do", bienBan: "biên bản",
-  dotId: "Đợt thu hồi", phuTrach: "Cán bộ phụ trách", khac: "hỗ trợ khác", doiTuongCs: "đối tượng chính sách", muc: "mức", hoNgheo: "hộ nghèo", xayLaiNha: "xây lại nhà", vm17: "VM-17", soTien: "số tiền", xacNhan: "xác nhận", taiSanGocId: "nhà, công trình gốc", loId: "lô tái định cư", khuTdc: "khu TĐC", viTriLo: "lô số", dienTichGiao: "DT giao", nguonGia: "văn bản giá",
+  dotId: "Đợt thu hồi", phuTrach: "Cán bộ phụ trách", khac: "hỗ trợ khác", doiTuongCs: "đối tượng chính sách", muc: "mức", hoNgheo: "hộ nghèo", xayLaiNha: "xây lại nhà", vm17: "VM-17", soTien: "số tiền", xacNhan: "xác nhận", taiSanGocId: "nhà, công trình gốc", cayK7: "cây trồng khoản 7", chenhLech: "chênh lệch giá đất (k8, k10)", giaHienTrang: "giá đất hiện trạng", k3: "mốc xây dựng (k3)", ngayXayDung: "ngày xây dựng", chonMoc: "mức chọn khi trùng mốc", onDinhSanXuat: "ổn định sản xuất (k5)", cachTinh: "cách tính", loId: "lô tái định cư", khuTdc: "khu TĐC", viTriLo: "lô số", dienTichGiao: "DT giao", nguonGia: "văn bản giá",
 };
 const nhan = (k: string) => NHAN[k] ?? k;
 

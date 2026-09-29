@@ -318,6 +318,62 @@
       ],
       "dieuKien": "hộ gia đình, cá nhân bị thu hồi đất có nhà trên đất phải phá dỡ và phải làm lại nhà ở tại địa điểm khác; giá gạo tẻ trung bình của địa phương tại thời điểm hỗ trợ (khoản 6 Điều 6 QĐ 14/2026)",
       "nhanKhau": "Số nhân khẩu được hỗ trợ là những người có chung quyền sử dụng đất tại thời điểm phê duyệt phương án và nhân khẩu là thành viên hộ phát sinh sau thời điểm giao đất nông nghiệp cho hộ (nếu có); do các thành viên trong hộ tự thỏa thuận và chịu trách nhiệm trước pháp luật"
+    },
+    "cayKhongDuDieuKien": {
+      "tyLeA": "1",
+      "canCuA": [
+        {
+          "vanBan": "QĐ 14/2026/QĐ-UBND",
+          "viTri": "điểm a khoản 7 Điều 6"
+        }
+      ],
+      "tyLeB": "0.8",
+      "canCuB": [
+        {
+          "vanBan": "QĐ 14/2026/QĐ-UBND",
+          "viTri": "điểm b khoản 7 Điều 6"
+        }
+      ],
+      "dieuKien": "cây trồng không đủ điều kiện bồi thường tạo lập trước ngày thông báo thu hồi đất, không có biên bản xử phạt vi phạm hành chính của cơ quan có thẩm quyền; điểm b trừ trường hợp điểm 9.1 khoản 9"
+    },
+    "chenhLechDat": {
+      "canCuK8": [
+        {
+          "vanBan": "QĐ 14/2026/QĐ-UBND",
+          "viTri": "điểm a khoản 8 Điều 6"
+        }
+      ],
+      "canCuK8b": [
+        {
+          "vanBan": "QĐ 14/2026/QĐ-UBND",
+          "viTri": "điểm b khoản 8 Điều 6"
+        }
+      ],
+      "canCuK10": [
+        {
+          "vanBan": "QĐ 14/2026/QĐ-UBND",
+          "viTri": "khoản 10 Điều 6"
+        }
+      ],
+      "ghiChu": "Khoản 8: đất rừng sản xuất — chênh lệch giá đất hiện trạng trừ giá đất rừng ghi trên GCN; rừng phòng hộ, đặc dụng — bằng giá đất hiện trạng; diện tích không vượt hạn mức công nhận đất NN cùng loại; chuyển đổi nghề bằng chênh lệch giá đất NN cùng loại trừ giá đất rừng, tính theo Điều 14 PL II QĐ 106/2025. Khoản 10: đất NN sử dụng không đúng mục đích ghi trên GCN (chuyển mục đích không phải xin phép, chưa đăng ký biến động, chưa bị lập biên bản vi phạm) — chênh lệch giá; chuyển đổi nghề không vượt hạn mức, theo Điều 14 PL II."
+    },
+    "onDinhSanXuat": {
+      "canCu": [
+        {
+          "vanBan": "QĐ 14/2026/QĐ-UBND",
+          "viTri": "khoản 5 Điều 6"
+        },
+        {
+          "vanBan": "QĐ 106/2025/QĐ-UBND",
+          "viTri": "khoản 1 Điều 13 Phụ lục II"
+        }
+      ],
+      "dieuKien": [
+        "Hộ gia đình, cá nhân đang trực tiếp sản xuất nông nghiệp có diện tích đất nông nghiệp bị thu hồi",
+        "Có đề nghị được bồi thường bằng đất",
+        "Không có quỹ đất để bồi thường bằng đất, mà bồi thường bằng tiền",
+        "Vẫn còn diện tích đất sản xuất nông nghiệp ở nơi khác"
+      ]
     }
   },
   "onDinhDoiSong": {
@@ -593,7 +649,8 @@
             "vanBan": "QĐ 14/2026/QĐ-UBND",
             "viTri": "điểm b mục 9.1 khoản 9 Điều 6"
           }
-        ]
+        ],
+        "ghiChuChuyenDoiNghe": "Chuyển đổi nghề: văn bản ghi \"Điều 15 phụ lục II\" — đơn vị quyết định áp dụng Điều 14 Phụ lục II QĐ 106/2025 như điểm a, c (QD-29)"
       },
       "9.1.c": {
         "ten": "Đất sử dụng từ 15/10/1993 đến trước 01/7/2014, tại thời điểm thu hồi có nhà ở",

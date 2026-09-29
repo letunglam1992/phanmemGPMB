@@ -10,11 +10,12 @@ import type { Tab } from "./kieu";
 
 /** Các khoản của Điều 6 QĐ 14/2026 đã nhập ở thẻ khác — để cán bộ biết không nhập trùng. */
 const DA_CO_NOI_KHAC: [string, string][] = [
-  ["khoản 3", "Hỗ trợ nhà, công trình (đất sai mục đích, không đủ điều kiện, có biên bản vi phạm) — thẻ Kiểm đếm, chọn \"Hỗ trợ\""],
-  ["khoản 9", "Đất nguồn gốc nông, lâm trường — thẻ Thửa đất"],
+  ["khoản 3", "Hỗ trợ nhà, công trình (đất sai mục đích, không đủ điều kiện, có biên bản vi phạm) — thẻ Kiểm đếm, cách tính \"Hỗ trợ theo mốc xây dựng (k3)\"; ngày trùng đúng mốc thì chọn mức, ghi lý do"],
+  ["khoản 7", "Cây trồng không đủ điều kiện bồi thường (100% / 80%) — thẻ Kiểm đếm, chọn ở tiêu đề từng thửa"],
+  ["khoản 8, 10", "Chênh lệch giá đất, chuyển đổi nghề theo chênh lệch — thẻ Thửa đất, mở chi tiết thửa"],
+  ["khoản 9", "Đất nguồn gốc nông, lâm trường — thẻ Thửa đất (chuyển đổi nghề điểm 9.1.b theo Điều 14 PL II — QD-29)"],
   ["khoản 11", "Hỗ trợ 20% tiền sử dụng đất thửa tái định cư — thẻ Hỗ trợ, mục Tái định cư"],
   ["khoản 12", "Hỗ trợ tạm cư — thẻ Hỗ trợ (mức theo Điều 3 QĐ 14/2026)"],
-  ["khoản 5, 7, 8, 10", "Chưa tính tự động (ổn định sản xuất theo khoản 1 Điều 13 PL II QĐ 106; hỗ trợ cây trồng 100%/80%; chênh lệch giá đất rừng, đất sai mục đích GCN) — nhập ở \"Khoản khác\" bên dưới kèm căn cứ"],
 ];
 
 /**
@@ -27,7 +28,7 @@ export function TabHoTroKhac({ h, doi, duAn, kq }: Tab & { duAn: DuAn; kq: KetQu
   const k: HoTroKhacHo = h.hoTro.khac ?? { khoan: [] };
   const dat = (p: Partial<HoTroKhacHo>) => {
     const moi = { ...k, ...p };
-    const trong = !moi.doiTuongCs?.length && !moi.hoNgheo && !moi.xayLaiNha && !moi.khoan.length && !moi.vm17 && !moi.khauXayLaiNha;
+    const trong = !moi.doiTuongCs?.length && !moi.hoNgheo && !moi.xayLaiNha && !moi.khoan.length && !moi.vm17 && !moi.khauXayLaiNha && !moi.onDinhSanXuat;
     doi({ ...h, hoTro: { ...h.hoTro, khac: trong ? undefined : moi } });
   };
   const suaDt = (id: string, p: Partial<NonNullable<HoTroKhacHo["doiTuongCs"]>[number]>) => dat({ doiTuongCs: k.doiTuongCs!.map((x) => (x.id === id ? { ...x, ...p } : x)) });
@@ -113,6 +114,28 @@ export function TabHoTroKhac({ h, doi, duAn, kq }: Tab & { duAn: DuAn; kq: KetQu
           </div>
         )}
         {k.xayLaiNha && h.hoTro.onDinh && <div className="thong-bao thong-bao-vang chu-nho" style={{ margin: "0 12px 10px" }}>Hộ đồng thời có hỗ trợ ổn định đời sống theo Điều 12 Phụ lục II QĐ 106/2025 (thẻ Hỗ trợ) — cần kiểm tra, tránh hỗ trợ trùng. Phần mềm không tự loại khoản nào.</div>}
+      </div>
+
+      <div className="the" data-k5>
+        <div className="the-dau">
+          <h3>Ổn định sản xuất (còn đất sản xuất nơi khác)</h3>
+          <span className="mo chu-nho">khoản 5 Điều 6 QĐ 14/2026 — như khoản 1 Điều 13 Phụ lục II QĐ 106/2025</span>
+          <div className="phai"><label><input type="checkbox" checked={!!k.onDinhSanXuat} onChange={(e) => dat({ onDinhSanXuat: e.target.checked ? { dk: [false, false, false, false], soTien: "", canCu: "" } : undefined })} /> Áp dụng</label></div>
+        </div>
+        {k.onDinhSanXuat && (
+          <div className="the-than luoi">
+            <div className="luoi luoi-2" style={{ gap: 4 }}>
+              {(cs?.onDinhSanXuat?.dieuKien ?? []).map((dk, i) => (
+                <label key={i} className="chu-nho"><input type="checkbox" checked={!!k.onDinhSanXuat!.dk[i]} onChange={(e) => { const moi = [...k.onDinhSanXuat!.dk]; moi[i] = e.target.checked; dat({ onDinhSanXuat: { ...k.onDinhSanXuat!, dk: moi } }); }} /> {dk}</label>
+              ))}
+            </div>
+            <div className="luoi luoi-3">
+              <O nhan="Số tiền (đ)" goiY="Theo định mức giống, vật tư / chi phí năm đầu (khoản 1 Điều 13 PL II QĐ 106)"><OSo className="o-so" value={k.onDinhSanXuat.soTien} onChange={(v) => dat({ onDinhSanXuat: { ...k.onDinhSanXuat!, soTien: v } })} /></O>
+              <O nhan="Căn cứ định mức, văn bản *" ><input className={k.onDinhSanXuat.canCu.trim() ? "" : "loi-nhap"} value={k.onDinhSanXuat.canCu} placeholder="vd. Định mức kinh tế kỹ thuật … ; bảng tính kèm theo" onChange={(e) => dat({ onDinhSanXuat: { ...k.onDinhSanXuat!, canCu: e.target.value } })} /></O>
+              <O nhan="Nội dung (tùy chọn)"><input value={k.onDinhSanXuat.noiDung ?? ""} onChange={(e) => dat({ onDinhSanXuat: { ...k.onDinhSanXuat!, noiDung: e.target.value || undefined } })} /></O>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="the">

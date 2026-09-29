@@ -76,6 +76,8 @@ export function truongSoHo(h: Ho): TruongSo[] {
     them(ds, `${n} — DT trên GCN`, t.gcn, "dienTich");
     them(ds, `${n} — DT thu hồi có GCN`, t.gcn, "dtThuHoiCoGcn");
     them(ds, `${n} — DT trừ (trồng xen)`, t.cayXen, "dienTichTru");
+    them(ds, `${n} — giá đất hiện trạng (k8, k10)`, t.chenhLech, "giaHienTrang");
+    them(ds, `${n} — hạn mức công nhận (k8, k10)`, t.chenhLech, "hanMuc");
   }
   for (const ts of h.taiSan) {
     const n = `Tài sản "${ts.ten || "?"}"`;
@@ -105,6 +107,7 @@ export function truongSoHo(h: Ho): TruongSo[] {
     for (const k of tdc.khoanKhac) them(ds, `Tái định cư — khoản "${k.noiDung || "?"}"`, k, "soTien");
   }
   for (const d of h.hoTro.khac?.doiTuongCs ?? []) them(ds, `Hỗ trợ khác — mức đối tượng chính sách "${d.ten || "?"}"`, d, "muc");
+  them(ds, "Hỗ trợ khác — ổn định sản xuất (k5)", h.hoTro.khac?.onDinhSanXuat, "soTien");
   for (const k of h.hoTro.khac?.khoan ?? []) them(ds, `Hỗ trợ khác — khoản "${k.noiDung || "?"}"`, k, "soTien");
   them(ds, "Khấu trừ", h, "khauTru");
   return ds;

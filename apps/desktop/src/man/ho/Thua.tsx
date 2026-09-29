@@ -3,7 +3,7 @@ import { taoId, type DuAn, type Ho, type Thua } from "../../mo-hinh";
 import { ChonGiaDat } from "../../thanh-phan/ChonGiaDat";
 import { tien } from "../../thanh-phan/chung";
 import { PhanLop } from "./PhanLop";
-import { laDatNN } from "../../tinh-ho";
+import { TEN_CHENH_LECH, laDatNN } from "../../tinh-ho";
 import { useUngDung } from "../../ung-dung";
 import { Chon } from "../../thanh-phan/Chon";
 import { soD } from "../../so";
@@ -16,6 +16,7 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
   const [chonGia, setChonGia] = useState<string | null>(null);
   const [moRong, setMoRong] = useState<string | null>(null);
   const [chonTuyen, setChonTuyen] = useState<string | null>(null);
+  const [chonGiaHT, setChonGiaHT] = useState<string | null>(null);
   const { chinhSach } = useUngDung();
   const cs = chinhSach(duAn);
   const sua = (id: string, p: Partial<Thua>) => doi({ ...h, thua: h.thua.map((t) => (t.id === id ? { ...t, ...p } : t)) });
@@ -121,6 +122,45 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
                             {t.nongLamTruong && <div className="mo chu-nho mt-4">{cs.nongLamTruong.truongHop[t.nongLamTruong.truongHop].tenKhoanDat}; {cs.nongLamTruong.truongHop[t.nongLamTruong.truongHop].cayTrong === "HO_TRO_100" ? "cây trồng hỗ trợ 100% đơn giá bồi thường" : "cây trồng tính như bồi thường (văn bản không quy định riêng)"}; hỗ trợ ổn định đời sống, chuyển đổi nghề nhập ở thẻ Hỗ trợ. Phần mềm không tự xác định trường hợp.</div>}
                           </div>
                         )}
+                        {cs.hoTroKhac?.chenhLechDat && (
+                          <div data-chenh-lech style={{ marginBottom: 12, paddingBottom: 12, borderBottom: "1px solid var(--vien)" }}>
+                            <div className="luoi" style={{ gridTemplateColumns: "minmax(260px, 1.3fr) 120px 130px 1fr", alignItems: "end" }}>
+                              <div className="o-nhap"><label>Hỗ trợ chênh lệch giá đất (khoản 8, 10 Điều 6 QĐ 14/2026)</label>
+                                <Chon value={t.chenhLech?.truongHop ?? ""} aria-label="Hỗ trợ chênh lệch giá đất" onChange={(e) => sua(t.id, { chenhLech: e.target.value ? { loaiHienTrang: "", giaHienTrang: "", nguonGia: "", ...t.chenhLech, truongHop: e.target.value as "K8_RSX" | "K8_RPH_RDD" | "K10" } : undefined })}>
+                                  <option value="">Không</option>
+                                  {Object.entries(TEN_CHENH_LECH).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                                </Chon>
+                              </div>
+                              {t.chenhLech && t.chenhLech.truongHop !== "K10" && (
+                                <div className="o-nhap"><label>Điểm</label>
+                                  <Chon value={t.chenhLech.diem8 ?? "a"} onChange={(e) => sua(t.id, { chenhLech: { ...t.chenhLech!, diem8: e.target.value as "a" | "b" } })}>
+                                    <option value="a">a</option><option value="b">b</option>
+                                  </Chon>
+                                </div>
+                              )}
+                              {t.chenhLech && (
+                                <>
+                                  <div className="o-nhap"><label>Loại đất hiện trạng</label>
+                                    <Chon value={t.chenhLech.loaiHienTrang} aria-label="Loại đất hiện trạng" onChange={(e) => sua(t.id, { chenhLech: { ...t.chenhLech!, loaiHienTrang: e.target.value, giaHienTrang: "", nguonGia: "" } })}>
+                                      <option value="">—</option>
+                                      {LOAI_DAT.filter((l) => laDatNN(l)).map((l) => <option key={l}>{l}</option>)}
+                                    </Chon>
+                                  </div>
+                                  <div className="o-nhap"><label>Giá đất hiện trạng (nghìn đ/m²)</label>
+                                    <div className="nhom-nut">
+                                      <OSo className={`o-so gian ${t.chenhLech.giaHienTrang ? "" : "loi-nhap"}`} aria-label="Giá đất hiện trạng" value={t.chenhLech.giaHienTrang} onChange={(v) => sua(t.id, { chenhLech: { ...t.chenhLech!, giaHienTrang: v } })} />
+                                      <button className="nut nut-nho" disabled={!t.chenhLech.loaiHienTrang} onClick={() => setChonGiaHT(t.id)}>Bảng giá…</button>
+                                    </div>
+                                  </div>
+                                  <div className="o-nhap"><label>Nguồn giá hiện trạng</label><input value={t.chenhLech.nguonGia} onChange={(e) => sua(t.id, { chenhLech: { ...t.chenhLech!, nguonGia: e.target.value } })} /></div>
+                                  <div className="o-nhap"><label>Hạn mức công nhận đất NN cùng loại (m²)</label><OSo className="o-so" value={t.chenhLech.hanMuc ?? ""} placeholder={duAn.hanMucNN ? `Trống = ${duAn.hanMucNN.m2} (dự án)` : "Bắt buộc"} onChange={(v) => sua(t.id, { chenhLech: { ...t.chenhLech!, hanMuc: v || undefined } })} /></div>
+                                  <div className="o-nhap"><label>Căn cứ hạn mức</label><input value={t.chenhLech.canCuHanMuc ?? ""} disabled={!t.chenhLech.hanMuc} onChange={(e) => sua(t.id, { chenhLech: { ...t.chenhLech!, canCuHanMuc: e.target.value } })} /></div>
+                                </>
+                              )}
+                            </div>
+                            {t.chenhLech && <div className="mo chu-nho mt-4">{t.chenhLech.truongHop === "K8_RPH_RDD" ? "Hỗ trợ về đất bằng giá đất hiện trạng" : "Hỗ trợ về đất bằng chênh lệch giá hiện trạng − giá theo GCN (giá đã chọn cho thửa)"}{t.chenhLech.truongHop !== "K10" ? ", diện tích không vượt hạn mức công nhận" : ""}; chuyển đổi nghề bằng chênh lệch giá đất NN cùng loại theo Điều 14 PL II QĐ 106 (khi hộ có hỗ trợ chuyển đổi nghề). Phần mềm không tự xác định trường hợp.</div>}
+                          </div>
+                        )}
                         {(t.phanLop || !laDatNN(t.loaiDat)) && (
                           <div style={{ marginBottom: 12, paddingBottom: 12, borderBottom: "1px solid var(--vien)" }}>
                             <PhanLop t={t} cs={cs} sua={(p) => sua(t.id, p)} moChonTuyen={() => setChonTuyen(t.id)} />
@@ -168,6 +208,11 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
               setMoRong(t.id);
             }} />
         );
+      })()}
+      {(() => {
+        const t = h.thua.find((x) => x.id === chonGiaHT);
+        if (!t?.chenhLech) return null;
+        return <ChonGiaDat xa={duAn.xa} loaiDat={t.chenhLech.loaiHienTrang} dong={() => setChonGiaHT(null)} chon={(g) => { sua(t.id, { chenhLech: { ...t.chenhLech!, giaHienTrang: g.giaNghinDong, nguonGia: g.nguon } }); setChonGiaHT(null); }} />;
       })()}
       {thuaChon && (
         <ChonGiaDat xa={duAn.xa} loaiDat={thuaChon.loaiDat} dong={() => setChonGia(null)} chon={(g) => { sua(thuaChon.id, { gia: g }); setChonGia(null); }} />

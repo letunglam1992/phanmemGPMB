@@ -174,7 +174,7 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
           {tab === "thong-tin" && <TabThongTin h={h} doi={doi} duAn={duAn} goc={goc} />}
           {tab === "nhan-khau" && <TabNhanKhau h={h} doi={doi} />}
           {tab === "thua" && <TabThua h={h} duAn={duAn} doi={doi} />}
-          {tab === "kiem-dem" && <TabKiemDem h={h} doi={doi} />}
+          {tab === "kiem-dem" && <TabKiemDem h={h} doi={doi} duAn={duAn} />}
           {tab === "ho-tro" && <TabHoTro h={h} doi={doi} duAn={duAn} kq={kq} />}
           {tab === "ho-tro-khac" && <TabHoTroKhac h={h} doi={doi} duAn={duAn} kq={kq} />}
           </fieldset>

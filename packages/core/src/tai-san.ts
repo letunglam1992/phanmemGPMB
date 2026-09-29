@@ -87,18 +87,19 @@ export function hoTroTheoMocXayDung(
 ): DongTinh {
   const kq = chonTheoMoc(p.ngayXayDung, bang.moc, p.ngayThongBao);
   const coSo = { ma: p.ma, noiDung: `Hỗ trợ nhà, công trình – ${p.ten}`, canCu: bang.canCu, congThuc: "Tỷ lệ theo mốc thời gian × giá trị theo đơn giá" };
-  const thamSo = { "Giá trị theo đơn giá": `${dinhDang(p.giaTriTheoDonGia)} đ`, "Ngày xây dựng": p.ngayXayDung, "Ngày thông báo thu hồi": p.ngayThongBao };
+  const vn = (iso: string) => iso.split("-").reverse().join("/");
+  const thamSo = { "Giá trị theo đơn giá": `${dinhDang(p.giaTriTheoDonGia)} đ`, "Ngày xây dựng": vn(p.ngayXayDung), "Ngày thông báo thu hồi": vn(p.ngayThongBao) };
   if (kq.loai === "NGOAI_PHAM_VI") {
     return dong({ ...coSo, thamSo, thanhTien: null, trangThai: "THIEU_CAN_CU", canhBao: ["Ngày xây dựng không thuộc khoảng nào (có thể xây sau thông báo thu hồi đất)"] });
   }
   let khoang = kq.loai === "KHOP" ? kq.khoang : undefined;
   const luaChon: LuaChon[] = [];
   if (kq.loai === "KHOANG_TRONG") {
-    const chon = p.luaChon && kq.lienKe.find((k) => k.moTa === p.luaChon!.moTaMoc);
+    const chon = p.luaChon?.lyDo.trim() ? kq.lienKe.find((k) => k.moTa === p.luaChon!.moTaMoc) : undefined;
     if (!chon) {
       return dong({
         ...coSo, thamSo, thanhTien: null, trangThai: "CAN_XAC_NHAN",
-        canhBao: [`Ngày xây dựng trùng mốc không thuộc khoản nào của văn bản. Chọn một trong: ${kq.lienKe.map((k) => k.moTa).join(" | ")}`],
+        canhBao: [`Ngày xây dựng trùng đúng ngày mốc — văn bản không xếp vào mức nào (VM-09). Người dùng chọn một trong: ${kq.lienKe.map((k) => k.moTa).join(" | ")} (ghi lý do)`],
       });
     }
     khoang = chon;

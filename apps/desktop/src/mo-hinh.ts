@@ -52,6 +52,27 @@ export interface Thua {
   gcn?: { seri: string; soTo: string; soThua: string; dienTich: string; loaiDat: string; dtThuHoiCoGcn: string; loaiDatThuHoi: string };
   /** Diện tích thu hồi thuộc loại không được bồi thường, hỗ trợ về đất (cán bộ xác định, vd. đất rừng phòng hộ do cộng đồng quản lý, đất chưa sử dụng). */
   khongBoiThuong?: boolean;
+  /**
+   * Khoản 7 Điều 6 QĐ 14/2026: cây trồng trên thửa không đủ điều kiện bồi thường — A: đất đủ điều kiện bồi thường nhưng
+   * sai mục đích (hỗ trợ 100%); B: đất không đủ điều kiện bồi thường (80%, trừ điểm 9.1). Trống = bồi thường như thường.
+   */
+  cayK7?: "A" | "B";
+  /**
+   * Khoản 8, 10 Điều 6 QĐ 14/2026: hỗ trợ chênh lệch giá đất (đất rừng dùng sản xuất NN; đất NN sai mục đích GCN chưa đăng ký
+   * biến động) và chuyển đổi nghề theo chênh lệch giá. Giá theo GCN = giá đã chọn cho thửa; giá hiện trạng cán bộ chọn từ bảng giá.
+   */
+  chenhLech?: {
+    truongHop: "K8_RSX" | "K8_RPH_RDD" | "K10";
+    /** Khoản 8: điểm a (GCN đất rừng, sử dụng NN trước khi cấp GCN) hoặc b (sau khi cấp GCN, trước 01/7/2004…). */
+    diem8?: "a" | "b";
+    loaiHienTrang: string;
+    /** Giá đất theo loại đất hiện trạng (nghìn đ/m², bảng giá). */
+    giaHienTrang: string;
+    nguonGia: string;
+    /** Hạn mức công nhận QSDĐ NN cùng loại (m²); trống = hạn mức của dự án. */
+    hanMuc?: string;
+    canCuHanMuc?: string;
+  };
   /** Mã thửa trên bản đồ (T{tờ}-{thửa}), nếu tạo từ bản đồ. */
   maBanDo?: string;
   dienTichBanDo?: number;
@@ -90,7 +111,10 @@ export interface TaiSanNhaCongTrinh extends TaiSanCoSo {
   donVi: string;
   donGia: string;
   khoiLuong: string;
-  cachTinh: "THIET_HAI_THUC_TE" | "HE_SO";
+  /** MOC_K3: hỗ trợ theo mốc thời gian xây dựng (khoản 3 Điều 6 QĐ 14/2026) — luôn thuộc phần hỗ trợ. */
+  cachTinh: "THIET_HAI_THUC_TE" | "HE_SO" | "MOC_K3";
+  /** Khoản 3 Điều 6 QĐ 14/2026: trường hợp, ngày xây dựng; ngày trùng đúng mốc (khe văn bản) → người dùng chọn mức, ghi lý do. */
+  k3?: { truongHop: "3.1" | "3.2" | "3.3"; ngayXayDung: string; chonMoc?: { moTaMoc: string; lyDo: string } };
   T?: string;
   T1?: string;
   canCuKhauHao?: string;
@@ -175,6 +199,8 @@ export interface HoTroKhacHo {
    * sau khi giao đất nông nghiệp; hộ tự thỏa thuận). Trống = số nhân khẩu trong hồ sơ.
    */
   khauXayLaiNha?: string;
+  /** k5: ổn định sản xuất (như khoản 1 Điều 13 PL II QĐ 106) — điều kiện (đánh dấu từng điều), số tiền theo định mức, căn cứ. */
+  onDinhSanXuat?: { dk: boolean[]; soTien: string; canCu: string; noiDung?: string };
   /** k4 (công trình sinh hoạt ngoài cọc GPMB, mức do Chủ tịch UBND xã quyết định), k13, k14 và khoản khác: nhập tay, bắt buộc căn cứ. */
   khoan: { id: string; loai: "K4" | "K13_14" | "KHAC"; noiDung: string; soTien: string; canCu: string }[];
 }

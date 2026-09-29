@@ -17,14 +17,14 @@ Viết tắt: **LĐĐ** = Luật Đất đai 2024 (bản gốc); **NĐ88** = NĐ
 | A05 | Hạng mục chưa có / khác biệt ĐG | — | Dự toán tư vấn / bù trừ PL II QĐ32 | Nhập giá trị đã thẩm định; không tự tính | Đ4 QĐ32; Đ6 k2 b PLII; Đ6 k3.4 QĐ14 | VM-07 |
 | A06 | **Sửa chữa phần nhà còn lại** | Phá dỡ một phần, phần còn lại vẫn bảo đảm tiêu chuẩn kỹ thuật theo pháp luật có liên quan | Dự toán do UBND cấp xã lập, phê duyệt trong phương án | Bồi thường chi phí sửa chữa, hoàn thiện theo thực tế | **Đ5 QĐ14**; điểm a k11 Đ3 NQ 254/2025/QH15 | Đã làm 0.8.1 (đối chiếu nguyên văn 0.8.2) |
 | A07 | Phần còn lại không sử dụng được | Sau giải tỏa một phần | Toàn bộ phần còn lại | Kiểm đếm, bồi thường toàn bộ; chỉ chi trả sau khi bàn giao phá dỡ | Mục XXI.5 Sổ tay | — |
-| A08 | HT nhà, công trình trên đất đủ ĐK BT nhưng sai mục đích (đất NN) | Không có biên bản vi phạm | Ngày xây dựng | < 01/7/2004: 100%; 01/7/2004–< 01/7/2014: 80%; 01/7/2014–< TB: 30% × ĐG | **Đ6 k3.1 QĐ14** | — |
-| A09 | HT nhà, công trình trên đất không đủ ĐK BT | Như trên | Ngày xây dựng | < 15/10/1993: 100%; 15/10/1993–< 01/7/2004: 70%; 01/7/2004–< 01/7/2014: 50%; "sau" 01/7/2014–< TB: 30% | **Đ6 k3.2 QĐ14** | **VM-09** |
-| A10 | HT tháo dỡ khi có biên bản vi phạm | A08/A09 có biên bản đình chỉ/buộc tháo dỡ | Ngày xây dựng | < 01/7/2004: 30%; "từ sau" 01/7/2004: không HT | **Đ6 k3.3 QĐ14** | **VM-09** |
+| A08 | HT nhà, công trình trên đất đủ ĐK BT nhưng sai mục đích (đất NN) | Không có biên bản vi phạm | Ngày xây dựng | < 01/7/2004: 100%; 01/7/2004–< 01/7/2014: 80%; 01/7/2014–< TB: 30% × ĐG | **Đ6 k3.1 QĐ14** | —; **Đã làm 0.8.3: Kiểm đếm → cách tính "theo mốc xây dựng (k3)"** |
+| A09 | HT nhà, công trình trên đất không đủ ĐK BT | Như trên | Ngày xây dựng | < 15/10/1993: 100%; 15/10/1993–< 01/7/2004: 70%; 01/7/2004–< 01/7/2014: 50%; "sau" 01/7/2014–< TB: 30% | **Đ6 k3.2 QĐ14** | **VM-09**; **Đã làm 0.8.3; trùng mốc → người dùng chọn (QD-29)** |
+| A10 | HT tháo dỡ khi có biên bản vi phạm | A08/A09 có biên bản đình chỉ/buộc tháo dỡ | Ngày xây dựng | < 01/7/2004: 30%; "từ sau" 01/7/2004: không HT | **Đ6 k3.3 QĐ14** | **VM-09**; **Đã làm 0.8.3; trùng mốc → người dùng chọn (QD-29)** |
 | A11 | Công trình sinh hoạt nằm ngoài cọc GPMB | Thu hồi đất ở, phải di chuyển nhà | Hạng mục | ≤ 100% ĐG (mức cụ thể do Chủ tịch UBND xã quyết) | **Đ6 k4 QĐ14** | Nhập tay + căn cứ |
 | A12 | Nhà, công trình trong hành lang lưới điện ≤ 220 kV (không di dời) | Xây trước TB, trên đất đủ ĐK BT | DT phần trong hành lang | 70% × GT phần nhà theo ĐG xây mới; đất không đủ ĐK: 70% × mức HT k3.2, k3.3 Đ6 QĐ14 | Đ7 k3 PLII | VM-24 (dẫn chiếu cũ) |
 | A13 | Cây hàng năm | Trước TB | Loại cây, DT | DT × ĐG Biểu 01 | Đ103 k1 LĐĐ; Đ4, Đ5 PLVIII | VM-02 |
 | A14 | Cây lâu năm, lâm nghiệp | Trước TB | Loại cây, giai đoạn, số cây, DT | ≤ 150% mật độ: 100% ĐG; phần vượt: 30%; mật độ thấp: theo thực tế; tre trúc ≤ 500 bụi/ha | Đ103 k2 LĐĐ; Đ5 k4, k5 PLVIII | VM-10 |
-| A15 | Cây trồng không đủ ĐK BT | Trước TB, không có biên bản xử phạt | Loại đất | Đất đủ ĐK BT sai mục đích: 100% ĐG; đất không đủ ĐK: 80% (trừ TH 9.1) | **Đ6 k7 QĐ14** | — |
+| A15 | Cây trồng không đủ ĐK BT | Trước TB, không có biên bản xử phạt | Loại đất | Đất đủ ĐK BT sai mục đích: 100% ĐG; đất không đủ ĐK: 80% (trừ TH 9.1) | **Đ6 k7 QĐ14** | —; **Đã làm 0.8.3: Kiểm đếm, chọn theo thửa (k7a 100%, k7b 80%)** |
 | A16 | Chọn ĐG cây lâu năm chuyển tiếp | Đã kiểm đếm trước 06/10/2025, chưa duyệt PA | Ngày hoàn thành kiểm đếm | Dùng PL II QĐ 48/2025 | Đ2 QĐ106; k3 Đ6 PLVIII | TL-22 |
 | A17 | Rừng trồng dự án lâm nghiệp; công chăm sóc bảo vệ rừng | Hợp đồng với Nhà nước | Số năm, DT (ha) | (Năm giao − năm đã CS) × 500.000 × DT | Biểu 03 mục VII, VIII PLVIII | VM-11 |
 | A18 | Thủy sản | Thiệt hại thực tế ≤ định mức | Loại nuôi, DT ao, DT thu hồi, kg | Theo 4 trường hợp Đ3 PLVIII | Đ103 k4 LĐĐ; Đ3 PLVIII; Biểu 04 | VM-12 |
@@ -49,7 +49,7 @@ Viết tắt: **LĐĐ** = Luật Đất đai 2024 (bản gốc); **NĐ88** = NĐ
 | B11 | BT bằng đất khác mục đích / nhà ở | DT đất NN thu hồi ≥ 1.000 m² (phường) / 1.500 m² (xã) | DT, địa bàn | Kiểm tra điều kiện; chênh lệch giá trị xử lý theo Đ4 k2 NĐ88 | Đ4 NĐ88; Đ5 PLII | VM-13 |
 | B12 | Trừ nghĩa vụ tài chính chưa thực hiện | Còn nợ tiền SDĐ, tiền thuê | Số tiền nợ | Chỉ trừ vào tiền BT đất + chi phí đầu tư vào đất còn lại; **không** trừ vào BT tài sản, hỗ trợ | Đ94 k6 LĐĐ; Đ25 k1 NĐ88 | — |
 | B13 | HT đất nông, lâm trường | TH 9.1, 9.2 | Nguồn gốc, thời điểm, hạn mức | Tổ hợp nhiều khoản | **Đ6 k9 QĐ14** | VM-15; đề xuất v2 |
-| B14 | Đất rừng dùng SX NN; đất NN sai mục đích GCN | k8, k10 Đ6 QĐ14 | Giá đất 2 loại, DT, hạn mức | Chênh lệch giá đất × DT (≤ hạn mức) | **Đ6 k8, k10 QĐ14** | TL-24 |
+| B14 | Đất rừng dùng SX NN; đất NN sai mục đích GCN | k8, k10 Đ6 QĐ14 | Giá đất 2 loại, DT, hạn mức | Chênh lệch giá đất × DT (≤ hạn mức) | **Đ6 k8, k10 QĐ14** | TL-24; **Đã làm 0.8.3: thẻ Thửa, chi tiết thửa (k8 a/b, rừng sản xuất / phòng hộ, đặc dụng; k10)** |
 
 ## C. Hỗ trợ và tái định cư
 
@@ -57,7 +57,7 @@ Viết tắt: **LĐĐ** = Luật Đất đai 2024 (bản gốc); **NĐ88** = NĐ
 |---|---|---|---|---|---|---|
 | C01 | Ổn định đời sống – thu hồi 10% đến < 30% đất NN | Đủ ĐK BT về đất | %, di chuyển, nơi đến, nhân khẩu, giá gạo | Tháng: 10–<20%: 2/3/6; 20–<30%: 3/6/9; tiền = 30 kg × giá gạo × khẩu × tháng | Đ19 k2 NĐ88; Đ12 PLII | VM-19, TL-25, TL-26 |
 | C02 | Ổn định đời sống – thu hồi ≥ 30% đất NN | Như trên | Như trên | 30–70%: 6/12/tối đa 24 tháng; > 70%: 12/24/tối đa 36 tháng; 30 kg gạo/khẩu/tháng; DT tính theo xã, theo từng dự án, không cộng dồn | **Đ19 k1 NĐ88** | VM-19; NĐ 226/2025 có sửa? |
-| C03 | Ổn định sản xuất (BT bằng đất NN) | — | DT, loại cây, định mức | 100% giống, vật tư 2 vụ (cây hàng năm); 50% chi phí năm đầu, ≤ 1 ha (cây lâu năm) | Đ13 k1 PLII; Đ6 k5 QĐ14 | Cần định mức → nhập tay |
+| C03 | Ổn định sản xuất (BT bằng đất NN) | — | DT, loại cây, định mức | 100% giống, vật tư 2 vụ (cây hàng năm); 50% chi phí năm đầu, ≤ 1 ha (cây lâu năm) | Đ13 k1 PLII; Đ6 k5 QĐ14 | Cần định mức → nhập tay; **k5 Đ6: đã làm 0.8.3 (điều kiện + mức theo định mức, cán bộ nhập)** |
 | C04 | Ổn định SXKD phi NN | Có ĐKKD, ngừng SXKD | Thu nhập sau thuế BQ 3 năm / doanh thu | 30% (ngừng hẳn) / 15% (ngừng tạm); hộ không kế toán: 2,4 tr / 4,8 tr | Đ20 NĐ88; Đ13 k2, k3 PLII | — |
 | C05 | Trợ cấp ngừng việc người lao động | Có HĐLĐ | — | ≤ 6 tháng, theo pháp luật lao động | Đ20 k4 NĐ88; Đ13 k4 PLII | — |
 | C06 | Đào tạo, chuyển đổi nghề | Đ22 k1, k2 NĐ88 (loại trừ CBCCVC, hưu trí...) | Loại đất, DT, giá bảng giá NQ152, hạn mức, địa bàn | Hệ số × giá đất NN cùng loại × min(DT, hạn mức); **hiệu lực: 5/4/3 theo phường / 12 xã / còn lại (Đ14 PLII)**; dự thảo: theo tổ, thôn, bản | Đ22 NĐ88; Đ14 PLII; TL-DT1 | VM-04, VM-29 |

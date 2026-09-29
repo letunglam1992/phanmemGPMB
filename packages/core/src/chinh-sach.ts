@@ -35,6 +35,8 @@ export interface BoChinhSach {
         /** HO_TRO_100: cây trồng hỗ trợ 100% đơn giá bồi thường; THEO_BOI_THUONG: văn bản không quy định riêng. */
         cayTrong: "HO_TRO_100" | "THEO_BOI_THUONG";
         canCu: CanCu[];
+        /** Ghi chú căn cứ chuyển đổi nghề (vd. 9.1.b: văn bản ghi Điều 15, đơn vị áp dụng Điều 14 PL II — QD-29). */
+        ghiChuChuyenDoiNghe?: string;
       }
     >;
   };
@@ -48,6 +50,12 @@ export interface BoChinhSach {
     doiTuongChinhSach: { mucs: string[]; diem?: { ma: string; ten: string; muc: string; canCu: CanCu[] }[]; canCu: CanCu[]; ghiChu: string };
     hoNgheo: { soTien: string; canCu: CanCu[]; dieuKien: string };
     xayLaiNha: { kgGaoNhanKhauThang: string; soThang: number; canCu: CanCu[]; dieuKien: string; nhanKhau?: string };
+    /** k7: cây trồng không đủ điều kiện bồi thường — a) đất đủ điều kiện nhưng sai mục đích; b) đất không đủ điều kiện. */
+    cayKhongDuDieuKien?: { tyLeA: string; canCuA: CanCu[]; tyLeB: string; canCuB: CanCu[]; dieuKien: string };
+    /** k8, k10: hỗ trợ chênh lệch giá đất và chuyển đổi nghề theo chênh lệch giá. */
+    chenhLechDat?: { canCuK8: CanCu[]; canCuK8b: CanCu[]; canCuK10: CanCu[]; ghiChu: string };
+    /** k5: ổn định sản xuất như khoản 1 Điều 13 PL II QĐ 106 — mức theo định mức, cán bộ nhập. */
+    onDinhSanXuat?: { canCu: CanCu[]; dieuKien: string[] };
   };
   onDinhDoiSong: {
     kgGaoNhanKhauThang: string;
