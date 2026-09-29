@@ -27,7 +27,7 @@ export class RaoLoi extends Component<{ ten: string; khoa?: string; khiLoi?: (th
     return (
       <div className="the rao-loi" role="alert">
         <div className="the-than">
-          <h3 style={{ marginTop: 0 }}>Không hiển thị được {this.props.ten}</h3>
+          <h3 className="mt-0">Không hiển thị được {this.props.ten}</h3>
           <p className="mo">
             Có lỗi khi hiển thị phần này: <code>{loi.message}</code>. Dữ liệu đang nhập của hồ sơ vẫn được giữ — bấm “Thử lại” hoặc chuyển thẻ; nếu lỗi lặp lại, kiểm tra số liệu vừa nhập (thường là ô số nhập sai định dạng).
           </p>

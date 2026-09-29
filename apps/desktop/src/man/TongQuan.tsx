@@ -100,14 +100,14 @@ export function TongQuan() {
         </div>
         <div className="tq-hai">
           <div className="tq-panel vang">
-            <div className="tq-panel-dau"><span className="tron">!</span><h3>Việc cần theo dõi</h3><span className="dem">({theoDoi.length})</span>{theoDoi.length > 3 && <button className="nut nut-chu nut-nho" style={{ marginLeft: "auto" }} onClick={cuonXuong}>Xem tất cả</button>}</div>
+            <div className="tq-panel-dau"><span className="tron">!</span><h3>Việc cần theo dõi</h3><span className="dem">({theoDoi.length})</span>{theoDoi.length > 3 && <button className="nut nut-chu nut-nho day-phai" onClick={cuonXuong}>Xem tất cả</button>}</div>
             <div className="tq-panel-than">
               {theoDoi.slice(0, 3).map(mucTq)}
               {theoDoi.length === 0 && <div className="tq-trong"><BieuTuong ten="hopThu" co={40} /><span>Không có việc sắp đến hạn.</span></div>}
             </div>
           </div>
           <div className="tq-panel do">
-            <div className="tq-panel-dau"><BieuTuong ten="canhBao" co={22} /><h3>Việc cần xử lý ngay</h3><span className="dem">({cao.length})</span>{cao.length > 3 && <button className="nut nut-chu nut-nho" style={{ marginLeft: "auto" }} onClick={cuonXuong}>Xem tất cả</button>}</div>
+            <div className="tq-panel-dau"><BieuTuong ten="canhBao" co={22} /><h3>Việc cần xử lý ngay</h3><span className="dem">({cao.length})</span>{cao.length > 3 && <button className="nut nut-chu nut-nho day-phai" onClick={cuonXuong}>Xem tất cả</button>}</div>
             <div className="tq-panel-than">
               {cao.slice(0, 3).map(mucTq)}
               {cao.length === 0 && <div className="tq-trong"><BieuTuong ten="hopThu" co={40} /><span>Không có việc quá hạn,<br />vướng mắc cần xử lý ngay.</span></div>}
@@ -178,7 +178,7 @@ export function TongQuan() {
             {duLieu.map(({ d, tk, tong, cb }) => (
               <div key={d.id} className="the the-du-an" data-du-an-id={d.id} onClick={() => di({ ten: "du-an", duAnId: d.id })}>
                 <div className="bang-dk-dau">
-                  <h3 style={{ flex: 1 }}>{d.ten}</h3>
+                  <h3 className="gian">{d.ten}</h3>
                   {cb.some((c) => c.muc === "CAO") && <span className="nhan nhan-do">{cb.filter((c) => c.muc === "CAO").length} cảnh báo</span>}
                 </div>
                 <div className="dong"><span>{d.xa} · {tk.soHo} hộ · {tk.soThua} thửa</span><b style={{ color: "var(--chu)" }}>{tien(tong)} đ</b></div>
@@ -241,7 +241,7 @@ export function FormDuAn({ d, setD }: { d: DuAn; setD: (d: DuAn) => void }) {
   const { heSoKhac1, thieuLyDoLamTron } = kiemTraDuAn(d);
   return (
       <div className="luoi luoi-2">
-        <O nhan="Tên dự án *" style={{ gridColumn: "1/-1" }}><input value={d.ten} onChange={(e) => setD({ ...d, ten: e.target.value })} /></O>
+        <O nhan="Tên dự án *" className="ca-hang"><input value={d.ten} onChange={(e) => setD({ ...d, ten: e.target.value })} /></O>
         <O nhan="Loại dự án" goiY="Dùng cho biểu tượng, lọc danh sách">
           <Chon value={d.loaiDuAn ?? ""} onChange={(e) => setD({ ...d, loaiDuAn: (e.target.value || undefined) as DuAn["loaiDuAn"] })}>
             <option value="">— Chọn —</option>

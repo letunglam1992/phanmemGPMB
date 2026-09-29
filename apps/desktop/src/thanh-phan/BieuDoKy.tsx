@@ -61,7 +61,7 @@ export function BieuDoKy(p: {
       {p.chuoi.length > 1 && (
         <div className="bd-chu-giai">
           {p.chuoi.map((c, i) => <span key={c.ten}><i style={{ background: MAU[i] }} />{c.ten}</span>)}
-          {p.hienTai !== undefined && <span style={{ marginLeft: "auto" }}>○ số liệu hiện tại (chưa chốt)</span>}
+          {p.hienTai !== undefined && <span className="day-phai">○ số liệu hiện tại (chưa chốt)</span>}
         </div>
       )}
       <svg height={CAO} viewBox={`0 0 ${rong} ${CAO}`} role="img" aria-label={p.moTa}>

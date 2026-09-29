@@ -63,7 +63,7 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
   };
 
   return (
-    <div className="the" style={{ marginBottom: 14 }}>
+    <div className="the mb-14">
       <div className="the-dau">
         <h2>Phương án – phiên bản</h2>
         <span className="mo chu-nho">Chốt để đóng băng số liệu; phê duyệt ghi theo quyết định; mọi thay đổi sau đó lập bản điều chỉnh</span>
@@ -103,7 +103,7 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
                   <td className="chu-nho">{new Date(p.luc).toLocaleString("vi-VN", { hour12: false })}<div className="mo">{p.nguoi}</div></td>
                   <td className="chu-nho">{p.pheDuyet ? `${p.pheDuyet.so} ngày ${ngayVN(p.pheDuyet.ngay)}${p.pheDuyet.coQuan ? ` (${p.pheDuyet.coQuan})` : ""}` : "—"}</td>
                   <td>{toanVen[p.id] === undefined ? "…" : toanVen[p.id] ? <span className="nhan nhan-xanh">Khớp</span> : <span className="nhan nhan-do" title="Mã băm không khớp: số liệu bản chốt đã bị sửa ngoài phần mềm">Không khớp</span>}</td>
-                  <td style={{ whiteSpace: "nowrap" }}>
+                  <td className="khong-xuong-dong">
                     <button className="nut nut-nho" onClick={() => setHop({ loai: "xem", p })}>Xem</button>{" "}
                     <button className="nut nut-nho" onClick={() => void xuat(p)}>Excel</button>{" "}
                     {p.trangThai === "DA_CHOT" && (
@@ -122,7 +122,7 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
       {hop?.loai === "soat" && (
         <HopThoai tieuDe="Soát phương án" dong={() => setHop(null)} rong={1000}>
           <KetQuaSoatPA ds={soatPhuongAn(duAn, kq, nguongLechDt, nguoiCoDat)} duAnId={duAn.id} />
-          <details style={{ marginTop: 10 }}>
+          <details className="mt-10">
             <summary className="mo">Các quy tắc đã soát ({QUY_TAC_SOAT.length})</summary>
             <table className="bang"><tbody>{QUY_TAC_SOAT.map((q) => <tr key={q.ma}><td>{q.ten}</td><td className="chu-nho">{q.canCu}</td></tr>)}</tbody></table>
           </details>
@@ -216,14 +216,14 @@ function HopChot({ duAn, kq: kqDuAn, dong: dongHop }: { duAn: DuAn; kq: { h: Ho;
         Khi chốt, phần mềm lưu bản sao hồ sơ từng hộ, tham số dự án (giá gạo, hạn mức, hệ số giá đất), kết quả từng khoản và mã kiểm tra. Sửa hồ sơ sau đó không làm thay đổi bản đã chốt. Chỉ hộ không còn khoản "Thiếu căn cứ" hoặc "Cần xác nhận" mới được chốt (QD-03).
       </div>
       {soat.length > 0 && (
-        <div className="thong-bao thong-bao-vang" style={{ marginTop: 8 }}>
+        <div className="thong-bao thong-bao-vang mt-8">
           Soát phương án các hộ đã chọn: {demSoat(soat).LOI} lỗi, {demSoat(soat).CANH_BAO} mục cần kiểm tra (không chặn chốt).{" "}
           <button className="nut nut-nho" onClick={() => setXemSoat(!xemSoat)}>{xemSoat ? "Ẩn" : "Xem"}</button>
-          {xemSoat && <div style={{ marginTop: 8 }}><KetQuaSoatPA ds={soat} duAnId={duAn.id} /></div>}
+          {xemSoat && <div className="mt-8"><KetQuaSoatPA ds={soat} duAnId={duAn.id} /></div>}
         </div>
       )}
       {coDotTH && (
-        <div className="luoi luoi-2" style={{ marginTop: 8 }}>
+        <div className="luoi luoi-2 mt-8">
           <O nhan="Đợt thu hồi" goiY="Phương án chốt, phê duyệt theo từng đợt — chỉ hộ thuộc đợt">
             <Chon value={dotId} onChange={(e) => doiDot(e.target.value)} aria-label="Đợt của phương án">
               {dsDot(duAn).map((d) => <option key={d.id} value={d.id}>{tenDot(d)} ({kqDuAn.filter((x) => x.h.dotId === d.id).length} hộ)</option>)}
@@ -238,7 +238,7 @@ function HopChot({ duAn, kq: kqDuAn, dong: dongHop }: { duAn: DuAn; kq: { h: Ho;
           <input value={lyDo} onChange={(e) => setLyDo(e.target.value)} />
         </O>
       </div>
-      <table className="bang" style={{ marginTop: 10 }}>
+      <table className="bang mt-10">
         <thead>
           <tr>
             <th><input type="checkbox" aria-label="Chọn tất cả hộ đủ điều kiện" checked={dsChon.length > 0 && dsChon.length === kq.filter(({ h }) => !chua.has(h.id)).length} onChange={(e) => setChon(new Set(e.target.checked ? kq.filter(({ h }) => !chua.has(h.id)).map(({ h }) => h.id) : []))} /></th>
@@ -260,7 +260,7 @@ function HopChot({ duAn, kq: kqDuAn, dong: dongHop }: { duAn: DuAn; kq: { h: Ho;
           ))}
         </tbody>
       </table>
-      {loi && <div className="thong-bao thong-bao-do" style={{ marginTop: 10 }}>{loi}</div>}
+      {loi && <div className="thong-bao thong-bao-do mt-10">{loi}</div>}
     </HopThoai>
   );
 }
@@ -283,7 +283,7 @@ function HopPheDuyet({ duAn, p, dong: dongHop, luu }: { duAn: DuAn; p: PhienBanP
         </>
       }
     >
-      <p className="mo" style={{ marginTop: 0 }}>
+      <p className="mo mt-0">
         Phần mềm chỉ <b>ghi nhận</b> quyết định phê duyệt đã được cấp có thẩm quyền ký ban hành (điểm c khoản 3 Điều 87 Luật Đất đai 2024). Sau khi ghi nhận, bản {p.so} ({p.ho.length} hộ, {dong(p.tong)} đ) không sửa, không hủy được.
       </p>
       <div className="luoi luoi-2">
@@ -294,7 +294,7 @@ function HopPheDuyet({ duAn, p, dong: dongHop, luu }: { duAn: DuAn; p: PhienBanP
       <label style={{ display: "block", marginTop: 8 }}>
         <input type="checkbox" checked={ghi} onChange={(e) => setGhi(e.target.checked)} /> Ghi số, ngày quyết định vào thông tin văn bản của dự án (làm căn cứ cho Mẫu 16 và các mẫu sau)
       </label>
-      {loi && <div className="thong-bao thong-bao-do" style={{ marginTop: 10 }}>{loi}</div>}
+      {loi && <div className="thong-bao thong-bao-do mt-10">{loi}</div>}
     </HopThoai>
   );
 }
@@ -313,7 +313,7 @@ function HopHuy({ p, dong: dongHop, luu }: { p: PhienBanPA; dong: () => void; lu
         </>
       }
     >
-      <p className="mo" style={{ marginTop: 0 }}>Bản bị hủy vẫn được giữ lại để tra cứu, không dùng để phê duyệt.</p>
+      <p className="mo mt-0">Bản bị hủy vẫn được giữ lại để tra cứu, không dùng để phê duyệt.</p>
       <O nhan="Lý do hủy (bắt buộc)"><input value={lyDo} onChange={(e) => setLyDo(e.target.value)} /></O>
     </HopThoai>
   );
@@ -323,7 +323,7 @@ function HopXem({ p, dong: dongHop }: { p: PhienBanPA; dong: () => void }) {
   const [mo, setMo] = useState<string | null>(null);
   return (
     <HopThoai tieuDe={`Bản ${p.so}: ${p.ten}`} dong={dongHop} rong={980}>
-      <div className="mo" style={{ marginBottom: 8 }}>
+      <div className="mo mb-8">
         {TEN_TT_PA[p.trangThai]} · chốt {new Date(p.luc).toLocaleString("vi-VN", { hour12: false })} ({p.nguoi}) · bộ chính sách {p.boChinhSach} · giá gạo {p.thamSoDuAn.giaGao?.dongKg ?? "—"} đ/kg · hệ số giá đất {p.thamSoDuAn.heSoGiaDat?.heSo ?? "1"}
       </div>
       <table className="bang">
@@ -382,7 +382,7 @@ function HopSoSanh({ ds, kq, dong: dongHop }: { ds: PhienBanPA[]; kq: { h: Ho; k
     <HopThoai tieuDe="So sánh phương án" dong={dongHop} rong={1000}>
       <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 10 }}>
         <span>Từ</span>{chon(a, setA, false)}<span>đến</span>{chon(b, setB, true)}
-        <span className="mo" style={{ marginLeft: "auto" }}>{ten(a)}: {dong(kqSs.tongTruoc)} đ → {ten(b)}: {dong(kqSs.tongSau)} đ · chênh <b>{dau(kqSs.chenh)}</b> đ</span>
+        <span className="mo day-phai">{ten(a)}: {dong(kqSs.tongTruoc)} đ → {ten(b)}: {dong(kqSs.tongSau)} đ · chênh <b>{dau(kqSs.chenh)}</b> đ</span>
       </div>
       {b === HIEN_TAI && <div className="thong-bao thong-bao-xanh">So với tạm tính hiện tại chỉ xét các hộ có trong {ten(a)}.</div>}
       <table className="bang">
@@ -431,7 +431,7 @@ export function KetQuaSoatPA({ ds, duAnId }: { ds: KetQuaSoat[]; duAnId: string 
             {m ? `${TEN_MUC_SOAT[m]} (${dem[m]})` : `Tất cả (${ds.length})`}
           </button>
         ))}
-        <span className="mo chu-nho" style={{ marginLeft: "auto" }}>Chỉ để nhắc — phần mềm không kết luận điều kiện bồi thường, hỗ trợ, TĐC.</span>
+        <span className="mo chu-nho day-phai">Chỉ để nhắc — phần mềm không kết luận điều kiện bồi thường, hỗ trợ, TĐC.</span>
       </div>
       <table className="bang">
         <thead><tr><th>Mức</th><th>Hồ sơ</th><th>Nội dung</th><th>Căn cứ</th></tr></thead>

@@ -14,7 +14,7 @@ export function PhanLop({ t, cs, sua, moChonTuyen }: { t: Thua; cs: BoChinhSach;
   const pl = t.phanLop;
   if (!pl)
     return (
-      <div className="nhom-nut" style={{ alignItems: "center" }}>
+      <div className="nhom-nut giua-doc">
         <b className="chu-nho">Tính đất theo phân lớp</b>
         <button className="nut nut-nho" onClick={moChonTuyen}>Chọn tuyến trong bảng giá (Bảng 05–07)…</button>
         <span className="mo chu-nho">Cán bộ tự thêm lớp, vị trí, diện tích; phần mềm điền giá và tỷ lệ giảm theo lớp (k6 Đ4 NQ 152/2025).</span>

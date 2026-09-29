@@ -172,13 +172,13 @@ export function HopDoiMatKhau({ dong, batBuoc }: { dong: () => void; batBuoc?: b
   return (
     <HopThoai tieuDe={batBuoc ? "Cần đổi mật khẩu trước khi tiếp tục" : "Đổi mật khẩu"} dong={batBuoc ? () => undefined : dong} rong={480}
       chan={<>{!batBuoc && <button className="nut" onClick={dong}>Đóng</button>}<button className="nut nut-chinh" disabled={!cu || !moi} onClick={luu}>Đổi mật khẩu</button></>}>
-      {batBuoc && <p className="mo" style={{ marginTop: 0 }}>Mật khẩu vừa được quản trị đặt lại. Đặt mật khẩu riêng của anh/chị.</p>}
+      {batBuoc && <p className="mo mt-0">Mật khẩu vừa được quản trị đặt lại. Đặt mật khẩu riêng của anh/chị.</p>}
       <div className="luoi">
         <O nhan="Mật khẩu hiện tại"><input type="password" value={cu} onChange={(e) => setCu(e.target.value)} /></O>
         <O nhan="Mật khẩu mới" goiY="Tối thiểu 8 ký tự, có chữ và số"><input type="password" value={moi} onChange={(e) => setMoi(e.target.value)} /></O>
         <O nhan="Nhập lại mật khẩu mới"><input type="password" value={moi2} onChange={(e) => setMoi2(e.target.value)} /></O>
       </div>
-      {loi && <div className="thong-bao thong-bao-do" style={{ marginTop: 10 }}>{loi}</div>}
+      {loi && <div className="thong-bao thong-bao-do mt-10">{loi}</div>}
     </HopThoai>
   );
 }
@@ -236,7 +236,7 @@ export function HopQuanLyTaiKhoan({ dong }: { dong: () => void }) {
               </td>
               <td>{u.hoatDong ? <span className="nhan nhan-xanh">Hoạt động</span> : <span className="nhan nhan-xam">Đã khóa</span>}{u.phaiDoiMatKhau && <span className="nhan nhan-vang" style={{ marginLeft: 4 }}>Chờ đổi mật khẩu</span>}</td>
               <td className="chu-nho">{ngayGio(u.dangNhapCuoi)}</td>
-              <td style={{ whiteSpace: "nowrap" }}>
+              <td className="khong-xuong-dong">
                 <button className="nut nut-nho" onClick={() => { setDatLai(u); setMkMoi(""); setLoi(""); }}>Đặt lại mật khẩu</button>{" "}
                 <button className="nut nut-nho" onClick={() => void luu({ ...u, hoatDong: !u.hoatDong }, u.hoatDong ? "Khóa tài khoản" : "Mở khóa tài khoản")}>{u.hoatDong ? "Khóa" : "Mở khóa"}</button>
               </td>
@@ -269,7 +269,7 @@ export function HopQuanLyTaiKhoan({ dong }: { dong: () => void }) {
             </O>
             <O nhan="Mật khẩu ban đầu" goiY={kiemTraMatKhau(v.matKhau, v.ten) ?? "Người dùng nên đổi sau lần đăng nhập đầu"}><input type="password" value={v.matKhau} onChange={(e) => setV({ ...v, matKhau: e.target.value })} /></O>
           </div>
-          {loi && <div className="thong-bao thong-bao-do" style={{ marginTop: 10 }}>{loi}</div>}
+          {loi && <div className="thong-bao thong-bao-do mt-10">{loi}</div>}
         </HopThoai>
       )}
       {datLai && (
@@ -277,9 +277,9 @@ export function HopQuanLyTaiKhoan({ dong }: { dong: () => void }) {
           chan={<><button className="nut" onClick={() => setDatLai(null)}>Đóng</button><button className="nut nut-chinh" onClick={async () => {
             try { const u = await datMatKhau({ ...datLai, phaiDoiMatKhau: datLai.ten !== taiKhoan?.ten }, mkMoi); await luu(u, "Đặt lại mật khẩu"); setDatLai(null); } catch (e) { setLoi((e as Error).message); }
           }}>Đặt lại</button></>}>
-          <p className="mo" style={{ marginTop: 0 }}>Người dùng sẽ phải đổi mật khẩu ở lần đăng nhập sau.</p>
+          <p className="mo mt-0">Người dùng sẽ phải đổi mật khẩu ở lần đăng nhập sau.</p>
           <O nhan="Mật khẩu tạm" goiY="Tối thiểu 8 ký tự, có chữ và số"><input type="password" value={mkMoi} onChange={(e) => setMkMoi(e.target.value)} /></O>
-          {loi && <div className="thong-bao thong-bao-do" style={{ marginTop: 10 }}>{loi}</div>}
+          {loi && <div className="thong-bao thong-bao-do mt-10">{loi}</div>}
         </HopThoai>
       )}
     </HopThoai>

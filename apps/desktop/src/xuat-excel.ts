@@ -15,6 +15,7 @@ import { TEN_COT, type CotTongHop, type KetQuaHo } from "./tinh-ho";
 import { TEN_TINH_TRANG, type BaoCao, type SoLieu } from "./bao-cao";
 import { sapXepKy, tongKy, type KyBaoCao } from "./ky-bao-cao";
 import { taiXuong } from "./tai-xuong";
+import { quyCua, tenLo, trangThaiLo, TEN_TT_LO, TEN_LOAI_LO, TEN_HINH_THUC_GIAO, canBoTriLo } from "./quy-tdc";
 
 const FONT = "Times New Roman";
 const so = (d: Decimal | null | undefined) => (d ? d.toDecimalPlaces(0).toNumber() : null);
@@ -524,7 +525,6 @@ export async function taoWorkbookBaoCao(bc: BaoCao, coQuan: string, dsKy: KyBaoC
  */
 export async function taoWorkbookQuyTdc(duAn: DuAn, hos: Ho[]): Promise<ExcelJS.Workbook> {
   const { default: Excel } = await import("exceljs");
-  const { quyCua, tenLo, trangThaiLo, TEN_TT_LO, TEN_LOAI_LO, TEN_HINH_THUC_GIAO, canBoTriLo } = await import("./quy-tdc");
   const q = quyCua(duAn);
   const tenHo = (id: string) => {
     const h = hos.find((x) => x.id === id);

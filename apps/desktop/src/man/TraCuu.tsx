@@ -315,7 +315,7 @@ export function TraCuu({ timDau }: { timDau?: string } = {}) {
                             <tr key={m.id} data-phim-chon className={`co-the-chon ${chon?.id === m.id ? "dang-chon" : ""}`} onClick={() => setChon(m)}>
                               <td onClick={(e) => e.stopPropagation()}><input type="checkbox" checked={daChon.has(m.id)} aria-label={`Chọn ${m.ma}`} onChange={() => { const s = new Set(daChon); if (s.has(m.id)) s.delete(m.id); else s.add(m.id); setDaChon(s); }} /></td>
                               <td>{i + 1}</td>
-                              <td className="chu-nho" style={{ whiteSpace: "nowrap" }}>{m.ma}{ghim.includes(m.ma) && <span title="Đã ghim"> 📌</span>}</td>
+                              <td className="chu-nho khong-xuong-dong">{m.ma}{ghim.includes(m.ma) && <span title="Đã ghim"> 📌</span>}</td>
                               <td><ToSang chu={m.ten} tu={tu} />{m.canhBao.length > 0 && <div><span className="nhan nhan-vang">{m.canhBao.join("; ")}</span></div>}</td>
                               <td>{m.dvt}</td>
                               <td className="so">{m.gia === null ? "—" : m.gia.toLocaleString("vi-VN")}</td>

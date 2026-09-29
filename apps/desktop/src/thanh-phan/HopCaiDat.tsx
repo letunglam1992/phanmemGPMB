@@ -40,7 +40,7 @@ function TheNguongDt() {
   const loi = loiNguong(n);
   return (
     <div>
-      <p className="mo" style={{ marginTop: 0 }}>
+      <p className="mo mt-0">
         Dùng khi đối chiếu diện tích ba nguồn (Tổng quan dự án → Đối chiếu diện tích) và khi Soát phương án. <b>Ngưỡng do đơn vị tự đặt</b> theo quy định, quy chế
         áp dụng — phần mềm không đặt sẵn. Chênh lệch vượt một trong hai ngưỡng thì cảnh báo; để trống cả hai thì liệt kê mọi chênh lệch.
       </p>
@@ -49,9 +49,9 @@ function TheNguongDt() {
         <O nhan="Chênh lệch tối đa (%)"><OSo className="o-so" value={n.phanTram} disabled={!choSua} onChange={(v) => setN({ ...n, phanTram: v })} /></O>
         <O nhan="Căn cứ đặt ngưỡng (bắt buộc)"><input value={n.canCu} disabled={!choSua} placeholder="Văn bản, quy chế của đơn vị" onChange={(e) => setN({ ...n, canCu: e.target.value })} /></O>
       </div>
-      {loi && <div className="thong-bao thong-bao-vang" style={{ marginTop: 8 }}>{loi}</div>}
+      {loi && <div className="thong-bao thong-bao-vang mt-8">{loi}</div>}
       {nguongLechDt?.luc && <p className="mo chu-nho">Đặt bởi {nguongLechDt.nguoi} lúc {new Date(nguongLechDt.luc).toLocaleString("vi-VN")}</p>}
-      {choSua && <button className="nut nut-chinh" style={{ marginTop: 8 }} disabled={!!loi} onClick={() => void luuNguongLechDt(n)}>Lưu ngưỡng</button>}
+      {choSua && <button className="nut nut-chinh mt-8" disabled={!!loi} onClick={() => void luuNguongLechDt(n)}>Lưu ngưỡng</button>}
     </div>
   );
 }
@@ -65,7 +65,7 @@ function TheLichSu() {
   const hopLe = /^\d{1,3}$/.test(n.trim()) && so <= 100;
   return (
     <div>
-      <p className="mo" style={{ marginTop: 0 }}>
+      <p className="mo mt-0">
         Mỗi lần sửa, xóa hẳn hoặc khôi phục, phần mềm giữ lại bản cũ của hồ sơ, dự án, phương án (xem ở thẻ Nhật ký của hồ sơ; hồ sơ đã xóa hẳn ở Thùng rác).
         Quản trị khôi phục được hồ sơ về bản cũ. Thời hạn giữ do đơn vị quyết định theo quy định về lưu trữ hồ sơ của đơn vị — phần mềm không đặt sẵn;
         <b> 0 = giữ không thời hạn</b>. Bản cũ hơn thời hạn bị xóa vĩnh viễn khi lưu thiết lập và mỗi lần mở dữ liệu.
@@ -82,7 +82,7 @@ function TheLichSu() {
         )}
         <span className="mo chu-nho">Hiện tại: {giuLichSu ? `${giuLichSu} năm` : "không thời hạn"}{!choSua && " · chỉ Quản trị thay đổi"}</span>
       </div>
-      {!hopLe && <div className="thong-bao thong-bao-vang" style={{ marginTop: 8 }}>Nhập số nguyên từ 0 đến 100</div>}
+      {!hopLe && <div className="thong-bao thong-bao-vang mt-8">Nhập số nguyên từ 0 đến 100</div>}
     </div>
   );
 }
@@ -135,13 +135,13 @@ function TheLich() {
 
   return (
     <div>
-      <p className="mo" style={{ marginTop: 0 }}>
+      <p className="mo mt-0">
         Dùng để tính các thời hạn theo <b>ngày làm việc</b> (VM-25). Phần mềm không tự tính lịch âm, ngày nghỉ bù, hoán đổi ngày làm việc: cán bộ nhập theo thông báo nghỉ lễ, Tết hằng năm của cơ quan có thẩm quyền (Tết Âm lịch, Giỗ Tổ Hùng Vương, ngày nghỉ liền kề Quốc khánh, nghỉ bù, làm bù). Nút bên dưới chỉ thêm các ngày lễ cố định theo dương lịch (khoản 1 Điều 112 Bộ luật Lao động 2019).
       </p>
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
         <label>Năm <input type="number" value={nam} min={2024} max={2100} onChange={(e) => setNam(Number(e.target.value))} style={{ width: 90 }} /></label>
         {choSua && <button className="nut" onClick={themCoDinh}>Thêm ngày lễ dương lịch cố định năm {nam}</button>}
-        <span style={{ marginLeft: "auto" }}>{daDu ? <span className="nhan nhan-xanh">Đã xác nhận đủ danh mục năm {nam}</span> : <span className="nhan nhan-vang">Chưa xác nhận danh mục năm {nam}</span>}</span>
+        <span className="day-phai">{daDu ? <span className="nhan nhan-xanh">Đã xác nhận đủ danh mục năm {nam}</span> : <span className="nhan nhan-vang">Chưa xác nhận danh mục năm {nam}</span>}</span>
       </div>
       <div className="luoi luoi-2">
         {bang("nghi", "Ngày nghỉ lễ, Tết, nghỉ bù")}
@@ -158,7 +158,7 @@ function TheLich() {
             <input placeholder="Nội dung, vd. Tết Nguyên đán (theo thông báo số …)" aria-label="Nội dung" value={moi.ten} style={{ flex: 1, minWidth: 260 }} onChange={(e) => setMoi({ ...moi, ten: e.target.value })} />
             <button className="nut" onClick={them}>Thêm</button>
           </div>
-          {loi && <div className="thong-bao thong-bao-do" style={{ marginTop: 8 }}>{loi}</div>}
+          {loi && <div className="thong-bao thong-bao-do mt-8">{loi}</div>}
           <label style={{ display: "block", marginTop: 12 }}>
             <input type="checkbox" checked={daDu} onChange={(e) => setBan({ ...ban, namDaDu: e.target.checked ? [...ban.namDaDu, nam].sort() : ban.namDaDu.filter((y) => y !== nam) })} /> Tôi đã nhập đủ ngày nghỉ, ngày làm bù năm {nam} theo thông báo chính thức
           </label>
@@ -185,8 +185,8 @@ function KhoiPhucMatKhau() {
   const choSua = quyen("KHOI_PHUC");
   return (
     <div className="the" style={{ padding: 12, marginTop: 14 }}>
-      <h3 style={{ marginTop: 0 }}>Mật khẩu khôi phục</h3>
-      <p className="mo chu-nho" style={{ marginTop: 0 }}>
+      <h3 className="mt-0">Mật khẩu khôi phục</h3>
+      <p className="mo chu-nho mt-0">
         Bản sao lưu được mã hóa. Sao lưu tự động mở được trên chính máy này (tài khoản Windows); trên <b>máy khác</b> (máy hỏng, cài lại) cần <b>mật khẩu khôi phục</b>. Bản sao lưu thủ công mở được bằng mật khẩu sao lưu <i>hoặc</i> mật khẩu khôi phục. Máy không lưu mật khẩu này.
         Đề nghị: ghi mật khẩu ra giấy, niêm phong, giao lãnh đạo đơn vị hoặc người thứ hai giữ; ghi vào sổ bàn giao khi thay đổi cán bộ quản trị.
       </p>
@@ -195,7 +195,7 @@ function KhoiPhucMatKhau() {
       </div>
       {choSua ? (
         <>
-          <div className="luoi luoi-2" style={{ marginTop: 8 }}>
+          <div className="luoi luoi-2 mt-8">
             <div className="o-nhap"><label>{khoaKhoiPhuc ? "Mật khẩu khôi phục mới" : "Mật khẩu khôi phục"}</label><input type="password" autoComplete="new-password" value={mk} onChange={(e) => setMk(e.target.value)} /></div>
             <div className="o-nhap"><label>Nhập lại</label><input type="password" autoComplete="new-password" value={mk2} onChange={(e) => setMk2(e.target.value)} /></div>
           </div>
@@ -220,7 +220,7 @@ function KhoiPhucMatKhau() {
       )}
       {khoaKhoiPhuc && (
         <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-          <input type="password" placeholder="Thử lại mật khẩu khôi phục (kiểm tra còn nhớ đúng)" value={thu} onChange={(e) => setThu(e.target.value)} style={{ flex: 1 }} />
+          <input type="password" placeholder="Thử lại mật khẩu khôi phục (kiểm tra còn nhớ đúng)" value={thu} onChange={(e) => setThu(e.target.value)} className="gian" />
           <button className="nut" disabled={!thu} onClick={async () => { bao((await thuMatKhauKhoiPhuc(khoaKhoiPhuc, thu)) ? "Mật khẩu khôi phục đúng" : "Mật khẩu khôi phục KHÔNG đúng", undefined); setThu(""); }}>Thử</button>
         </div>
       )}
@@ -244,7 +244,7 @@ function TheTuDong() {
 
   return (
     <div>
-      <p className="mo" style={{ marginTop: 0 }}>
+      <p className="mo mt-0">
         Phần mềm tự tạo tệp sao lưu <b>.gpmb</b> (như sao lưu thủ công) theo chu kỳ khi đang mở, ghi vào thư mục trên máy hoặc ổ mạng nội bộ do cán bộ chọn, và chỉ giữ lại số bản mới nhất. Không gửi dữ liệu ra ngoài. Tệp được mã hóa (AES-256) bằng tài khoản Windows của máy này và mật khẩu khôi phục bên dưới; vẫn nên đặt thư mục ở nơi được bảo vệ theo quy chế của cơ quan. Bản sao lưu cùng ổ đĩa không thay được việc cất bản sao ra thiết bị khác.
       </p>
       {!coVo && <div className="thong-bao thong-bao-vang">Chức năng này chỉ hoạt động trong bản cài Windows (không có khi chạy thử trên trình duyệt).</div>}
@@ -254,12 +254,12 @@ function TheTuDong() {
         <label className="chu-nho">Chu kỳ (ngày) <input type="number" min={1} max={30} disabled={!choSua} value={ban.soNgay} onChange={(e) => setBan({ ...ban, soNgay: Math.min(30, Math.max(1, Number(e.target.value) || 1)) })} style={{ width: 80 }} /></label>
         <label className="chu-nho">Số bản giữ lại <input type="number" min={1} max={100} disabled={!choSua} value={ban.giuLai} onChange={(e) => setBan({ ...ban, giuLai: Math.min(100, Math.max(1, Number(e.target.value) || 1)) })} style={{ width: 80 }} /></label>
       </div>
-      <div className="o-nhap" style={{ marginTop: 10 }}>
+      <div className="o-nhap mt-10">
         <label>Thư mục lưu (bỏ trống = Documents\GPMB Son La\Sao luu)</label>
         <input disabled={!choSua} value={ban.thuMuc} placeholder="vd. D:\SaoLuuGPMB hoặc \\may-chu\chia-se\GPMB" onChange={(e) => setBan({ ...ban, thuMuc: e.target.value })} />
         {coVo && <span className="goi-y">Đang dùng: {duongDan || "…"}</span>}
       </div>
-      <table className="bang" style={{ marginTop: 12 }}>
+      <table className="bang mt-12">
         <tbody>
           <tr><th>Lần sao lưu tự động gần nhất</th><td>{ngayGio(tuDong.lanCuoi)}</td></tr>
           <tr><th>Tệp gần nhất</th><td className="chu-nho">{tuDong.tepCuoi ?? "—"}</td></tr>
@@ -305,7 +305,7 @@ function TheTyLeCham() {
   };
   return (
     <div>
-      <p className="mo" style={{ marginTop: 0 }}>
+      <p className="mo mt-0">
         Điểm b khoản 3 Điều 94 Luật Đất đai 2024: chậm chi trả thì người có đất thu hồi "được thanh toán thêm một khoản tiền bằng <b>mức tiền chậm nộp theo quy định của Luật Quản lý thuế</b> tính trên số tiền chậm trả và thời gian chậm trả". Phần mềm không tự đặt mức: nhập tỷ lệ %/ngày theo văn bản hiện hành, mỗi lần thay đổi thêm một giai đoạn mới. Thiếu tỷ lệ cho ngày nào thì tiền chậm trả của khoản đó ở trạng thái thiếu căn cứ.
       </p>
       <table className="bang">
@@ -325,7 +325,7 @@ function TheTyLeCham() {
             <input aria-label="Căn cứ" placeholder="Căn cứ: điểm …, khoản …, Điều … Luật Quản lý thuế số …" value={moi.canCu} style={{ flex: 1, minWidth: 280 }} onChange={(e) => setMoi({ ...moi, canCu: e.target.value })} />
             <button className="nut" onClick={them}>Thêm</button>
           </div>
-          {loi && <div className="thong-bao thong-bao-do" style={{ marginTop: 8 }}>{loi}</div>}
+          {loi && <div className="thong-bao thong-bao-do mt-8">{loi}</div>}
           <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
             <button className="nut" disabled={!daSua} onClick={() => setDs(tyLeCham)}>Hoàn tác</button>
             <button className="nut nut-chinh" disabled={!daSua} onClick={() => void luuTyLeCham(ds)}>Lưu</button>
@@ -388,7 +388,7 @@ function TheGiaoDien() {
       <div className="nhom-nut">
         <label className={`nut nut-chinh ${!quyen("CAI_DAT") || dang ? "tat" : ""}`}>
           {dang ? "Đang xử lý…" : "Chọn ảnh…"}
-          <input type="file" accept="image/jpeg,image/png,image/webp" style={{ display: "none" }} disabled={!quyen("CAI_DAT") || dang} onChange={(e) => e.target.files?.[0] && void chon(e.target.files[0])} />
+          <input type="file" accept="image/jpeg,image/png,image/webp" className="an" disabled={!quyen("CAI_DAT") || dang} onChange={(e) => e.target.files?.[0] && void chon(e.target.files[0])} />
         </label>
         <button className="nut" disabled={!anhNen || !quyen("CAI_DAT")} onClick={() => void luuAnhNen(null)}>Dùng ảnh mặc định</button>
       </div>

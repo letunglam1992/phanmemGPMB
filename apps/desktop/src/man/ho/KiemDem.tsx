@@ -41,7 +41,7 @@ export function TabKiemDem({ h, doi }: { h: Ho; doi: (h: Ho) => void }) {
   if (h.thua.length === 0) return <div className="the trong">Thêm thửa đất trước khi kiểm đếm tài sản.</div>;
   return (
     <div className="luoi">
-      <div className="nhom-nut" style={{ alignItems: "center" }}>
+      <div className="nhom-nut giua-doc">
         <span className="chu-nho mo">Đợt kiểm đếm:</span>
         <button className={`nut nut-nho ${dot === "TAT_CA" ? "nut-chinh" : ""}`} onClick={() => setDot("TAT_CA")}>Tất cả</button>
         {Array.from({ length: soDot }, (_, i) => i + 1).map((d) => <button key={d} className={`nut nut-nho ${dot === d ? "nut-chinh" : ""}`} onClick={() => setDot(d)}>Đợt {d}</button>)}
@@ -110,7 +110,7 @@ function TheThua(p: {
               const kl = klVao ? thuTinh(klVao) : { giaTri: null, loi: "Chưa nhập" };
               return (
                 <tr key={x.id}>
-                  <td style={{ whiteSpace: "nowrap" }}>
+                  <td className="khong-xuong-dong">
                     {i + 1}
                     <button className="nut nut-chu nut-nho" title="Lên" onClick={() => p.doiCho(x.id, -1)}>↑</button>
                   </td>

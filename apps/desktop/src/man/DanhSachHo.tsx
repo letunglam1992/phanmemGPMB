@@ -36,7 +36,7 @@ export function DanhSachHo(p: { duAnId?: string; trangThai?: string; chang?: str
           <div className="mo-ta">{ds.length} hồ sơ{duAnId ? ` · ${dsDuAn.find((d) => d.id === duAnId)?.ten ?? ""}` : ` · ${dsDuAn.length} dự án`} · bấm một dòng để xem chi tiết hồ sơ</div>
         </div>
       </div>
-      <div className="the" style={{ marginBottom: 14 }}>
+      <div className="the mb-14">
         <div className="loc-ds">
           <label className="o-tim" style={{ flex: 2 }}>
             <BieuTuong ten="traCuu" co={17} />

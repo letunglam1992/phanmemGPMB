@@ -63,7 +63,7 @@ export function RaSoatSo() {
                 <td className="chu-nho">{m.nhan}</td>
                 <td className="so"><code>{m.gt}</code></td>
                 <td className="chu-nho">{m.noiDung}</td>
-                <td style={{ whiteSpace: "nowrap" }}>
+                <td className="khong-xuong-dong">
                   {m.chon && quyen("SUA_HO_SO") && (
                     <>
                       <button className="nut nut-nho nut-chinh" onClick={() => void chon(m, m.chon!.moi)}>= {hienSo(m.chon.moi)}</button>{" "}

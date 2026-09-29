@@ -86,7 +86,7 @@ export function ThietLapDonVi() {
                 <O nhan="Đơn vị sử dụng phần mềm" goiY="Hiện tên trên thanh tiêu đề, điền sẵn báo cáo tổng hợp">
                   <label style={{ display: "flex", gap: 8, alignItems: "center", height: 38 }}><input type="checkbox" checked={!!dv.suDung} onChange={(e) => sua({ suDung: e.target.checked })} /> Đây là đơn vị đang sử dụng phần mềm</label>
                 </O>
-                <O nhan="Tên đơn vị *" style={{ gridColumn: "1/-1" }} goiY="Ghi đầy đủ, vd. Ủy ban nhân dân xã Chiềng Mung; Ban Quản lý dự án đầu tư xây dựng tỉnh Sơn La">
+                <O nhan="Tên đơn vị *" className="ca-hang" goiY="Ghi đầy đủ, vd. Ủy ban nhân dân xã Chiềng Mung; Ban Quản lý dự án đầu tư xây dựng tỉnh Sơn La">
                   <input value={dv.ten} className={dv.ten.trim() ? "" : "loi-nhap"} onChange={(e) => sua({ ten: e.target.value })} autoFocus />
                 </O>
                 <O nhan="Cơ quan cấp trên (dòng trên tên đơn vị)" goiY="vd. ỦY BAN NHÂN DÂN TỈNH SƠN LA"><input value={dv.capTren} onChange={(e) => sua({ capTren: e.target.value })} /></O>
@@ -100,7 +100,7 @@ export function ThietLapDonVi() {
               </div>
             </fieldset>
             <div className="the-than" style={{ borderTop: "1px solid var(--vien)" }}>
-              <div className="chu-nho mo" style={{ marginBottom: 8 }}>Xem trước tiêu đề văn bản</div>
+              <div className="chu-nho mo mb-8">Xem trước tiêu đề văn bản</div>
               <div className="xem-quoc-hieu">
                 <div>
                   <div>{dv.capTren.toUpperCase() || " "}</div>
@@ -115,7 +115,7 @@ export function ThietLapDonVi() {
                   <i>{dv.diaDanh || "…"}, ngày … tháng … năm …</i>
                 </div>
               </div>
-              <div className="chu-nho mo" style={{ marginTop: 8 }}>
+              <div className="chu-nho mo mt-8">
                 Dùng ở: {dv.loai === "UBND" ? "người ký của UBND trong văn bản" : dv.loai === "DON_VI_BT" ? "tên, cơ quan cấp trên, ký hiệu, người ký của đơn vị bồi thường" : dv.loai === "PHONG" ? "tên, ký hiệu, người ký của phòng chuyên môn" : "tra cứu, ghi chú"}
                 {dv.suDung ? "; tiêu đề phần mềm và báo cáo tổng hợp" : ""}. Soạn văn bản: bấm “Điền từ Thiết lập đơn vị”.
               </div>

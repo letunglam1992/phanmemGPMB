@@ -46,7 +46,7 @@ export function LichSuHo({ h }: { h: Ho }) {
     if (lyDo) await khoiPhucLichSu(x.stt, lyDo);
   };
   return (
-    <div className="the" style={{ marginTop: 14 }}>
+    <div className="the mt-14">
       <div className="the-dau">
         <h2>Lịch sử thay đổi</h2>
         <span className="mo chu-nho">Bản cũ của hồ sơ mỗi lần lưu — giữ {giuLichSu ? `${giuLichSu} năm` : "không thời hạn"} (quản trị đặt ở Cài đặt chung)</span>
@@ -75,7 +75,7 @@ export function LichSuHo({ h }: { h: Ho }) {
                         </>
                       )}
                     </td>
-                    <td style={{ whiteSpace: "nowrap" }}>{quyen("KHOI_PHUC_BAN_GHI") && x.loai === "ho" && <button className="nut nut-nho" title="Chỉ quản trị" onClick={() => void khoiPhuc(x)}>Khôi phục bản này</button>}</td>
+                    <td className="khong-xuong-dong">{quyen("KHOI_PHUC_BAN_GHI") && x.loai === "ho" && <button className="nut nut-nho" title="Chỉ quản trị" onClick={() => void khoiPhuc(x)}>Khôi phục bản này</button>}</td>
                   </tr>
                 </Fragment>
               );
@@ -107,7 +107,7 @@ export function HopLichSuO({ h, khoa, ten, dong }: { h: Ho; khoa: string; ten: s
   }, [kho, h, khoa]);
   return (
     <HopThoai tieuDe={`Lịch sử ô: ${ten || khoa}`} dong={dong} rong={760}>
-      <p className="mo chu-nho" style={{ marginTop: 0 }}>Mỗi dòng: lần lưu làm ô này đổi giá trị — thời điểm, người lưu, từ … thành …. Chỉ gồm các lần lưu từ khi có lịch sử (0.6.0).</p>
+      <p className="mo chu-nho mt-0">Mỗi dòng: lần lưu làm ô này đổi giá trị — thời điểm, người lưu, từ … thành …. Chỉ gồm các lần lưu từ khi có lịch sử (0.6.0).</p>
       <table className="bang">
         <thead><tr><th>Thời điểm</th><th>Người lưu</th><th>Trường</th><th>Từ</th><th>Thành</th></tr></thead>
         <tbody>

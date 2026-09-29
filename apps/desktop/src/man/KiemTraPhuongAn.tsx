@@ -102,7 +102,7 @@ export function KiemTraPhuongAn() {
         <div className="phai">
           <label className="nut nut-chinh" aria-disabled={dangDoc}>
             {dangDoc ? "Đang đọc…" : tep ? "Nạp tệp khác" : "Chọn tệp Excel / Word"}
-            <input ref={inputTep} type="file" accept=".xlsx,.docx" style={{ display: "none" }} disabled={dangDoc} onChange={(e) => e.target.files?.[0] && void napTep(e.target.files[0])} />
+            <input ref={inputTep} type="file" accept=".xlsx,.docx" className="an" disabled={dangDoc} onChange={(e) => e.target.files?.[0] && void napTep(e.target.files[0])} />
           </label>
           {ketQua && <button className="nut" onClick={() => void xuat()}>Xuất báo cáo kiểm tra (Excel)</button>}
         </div>
@@ -112,7 +112,7 @@ export function KiemTraPhuongAn() {
 
       {!tep && (
         <div className="the the-than" style={{ padding: 28 }}>
-          <h2 style={{ marginTop: 0 }}>Phần mềm kiểm tra những gì</h2>
+          <h2 className="mt-0">Phần mềm kiểm tra những gì</h2>
           <ul style={{ lineHeight: 1.7, margin: 0 }}>
             <li><b>Số học</b> từng dòng: Thành tiền = Khối lượng × Đơn giá × Tỷ lệ/hệ số; tổng nhóm (A, I, 1…), dòng Cộng, Tổng cộng, Làm tròn.</li>
             <li><b>Đơn giá</b> nhà, công trình, cây trồng, vật nuôi: đối chiếu danh mục QĐ 32/2025/QĐ-UBND, Phụ lục V, VIII QĐ 106/2025/QĐ-UBND (tìm theo tên, không dấu); sai giá thì nêu mức theo danh mục.</li>
@@ -120,14 +120,14 @@ export function KiemTraPhuongAn() {
             <li><b>Hệ số hỗ trợ đào tạo, chuyển đổi nghề</b> theo xã (Điều 22 NĐ 88/2024/NĐ-CP; Điều 14 Phụ lục II QĐ 106/2025/QĐ-UBND).</li>
             <li>Cây tính tỷ lệ &lt; 100%: nhắc kiểm quỹ mật độ (k4 Đ5 PL VIII); cây không có mật độ trong danh mục → cần xác nhận (VM-35).</li>
           </ul>
-          <p className="mo chu-nho" style={{ marginBottom: 0 }}>
+          <p className="mo chu-nho mb-0">
             Tệp Word: phần mềm đọc các bảng trong văn bản (số viết kiểu Việt Nam: 5.523,2 — 54.000); các bảng cùng cấu trúc cột được gộp để kiểm tổng thể; vị trí ghi “B2.15” = bảng 2, dòng 15. Tệp cần có một dòng tiêu đề chứa “Đơn giá” và “Thành tiền” (tiêu đề 2 tầng, dòng đánh số cột (1) (2)… được nhận tự động); chọn lại cột nếu nhận sai. Khoản hỗ trợ tính theo mức/điều kiện riêng (ổn định đời sống, tạm cư, TĐC, thưởng…) chỉ kiểm số học. Dữ liệu đơn giá là bản trích xuất (VM-01, VM-02) — kết quả để cán bộ kiểm tra lại, không thay thẩm định.
           </p>
         </div>
       )}
 
       {tep && trang && (
-        <div className="the" style={{ marginBottom: 14 }}>
+        <div className="the mb-14">
           <div className="the-than" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
             <O nhan="Tệp">
               <input value={tep.ten} readOnly />
@@ -145,7 +145,7 @@ export function KiemTraPhuongAn() {
             </O>
           </div>
           <div className="the-than" style={{ borderTop: "1px solid var(--vien)" }}>
-            <div className="mo chu-nho" style={{ marginBottom: 8 }}>
+            <div className="mo chu-nho mb-8">
               {tuDong ? `Dòng tiêu đề: ${tuDong.dongTieuDe + 1} · cột nhận tự động — chọn lại nếu sai` : "Không tự nhận được dòng tiêu đề — chọn cột thủ công (dữ liệu tính từ dòng 1)"}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 8 }}>
@@ -171,7 +171,7 @@ export function KiemTraPhuongAn() {
               <span key={m} className={`nhan ${LOP_MUC[m]}`}>{TEN_MUC_DO[m]}: {ketQua.dem[m]}</span>
             ))}
             <span className="mo chu-nho">· {ketQua.dong.filter((d) => d.loai === "CHI_TIET").length} dòng chi tiết, {ketQua.dong.filter((d) => d.loai !== "CHI_TIET").length} dòng nhóm/tổng</span>
-            <span style={{ flex: 1 }} />
+            <span className="gian" />
             <select value={loc} onChange={(e) => setLoc(e.target.value as typeof loc)}>
               <option value="LOI_CB">Chỉ dòng có lỗi, cảnh báo</option>
               <option value="TAT_CA">Tất cả dòng</option>
@@ -180,7 +180,7 @@ export function KiemTraPhuongAn() {
           {ketQua.chung.map((p, i) => (
             <div key={i} className={`thong-bao ${p.mucDo === "CANH_BAO" || p.mucDo === "LOI" ? "thong-bao-vang" : ""}`} style={{ marginBottom: 8 }}>{p.noiDung}</div>
           ))}
-          {!xa && <div className="thong-bao thong-bao-vang" style={{ marginBottom: 8 }}>Chưa chọn xã/phường: giá đất và hệ số chuyển đổi nghề ở trạng thái “Không kiểm được”.</div>}
+          {!xa && <div className="thong-bao thong-bao-vang mb-8">Chưa chọn xã/phường: giá đất và hệ số chuyển đổi nghề ở trạng thái “Không kiểm được”.</div>}
           <div className="the" style={{ overflowX: "auto" }}>
             <table className="bang">
               <thead>

@@ -91,7 +91,7 @@ function BuocChungCua({ duAn, dot, hos, tiep }: { duAn: DuAn; dot?: DotThuHoi; h
 
   return (
     <div className="luoi" style={{ gap: 12 }}>
-      <div className="thong-bao thong-bao-xanh" style={{ marginBottom: 0 }}>
+      <div className="thong-bao thong-bao-xanh mb-0">
         Bước 1–4 (kế hoạch, họp dân, thông báo thu hồi, điều tra – kiểm đếm) thực hiện chung cho cả dự án: cập nhật ở đây một lần là áp dụng cho <b>{hos.length}</b> hộ, cá nhân, tổ chức — không phải tích từng hộ.
         Sau bước chung, nhập hộ, cá nhân, tổ chức (nhập tay, Excel hoặc từ bản đồ); từ bước 5 mỗi hộ có tiến độ riêng và ghi khó khăn, vướng mắc theo từng bước ở hồ sơ hộ.
       </div>
@@ -237,16 +237,16 @@ function HangLoat({ duAn, hos }: { duAn: DuAn; hos: Ho[] }) {
           </Chon>
         </O>
         <O nhan="Ngày thực hiện / hoàn thành"><input type="date" value={ngay} onChange={(e) => setNgay(e.target.value)} /></O>
-        <O nhan="Nội dung thực hiện, số văn bản (ghi cho mọi hộ được chọn; để trống = giữ ghi chú cũ)" style={{ gridColumn: "1 / -1" }}>
+        <O nhan="Nội dung thực hiện, số văn bản (ghi cho mọi hộ được chọn; để trống = giữ ghi chú cũ)" className="ca-hang">
           <input value={ghiChu} onChange={(e) => setGhiChu(e.target.value)} placeholder="vd. Niêm yết tại UBND xã và nhà văn hóa bản từ ngày … đến ngày …" />
         </O>
       </div>
       <div className="chu-nho mo"><b>Căn cứ:</b> {b.canCu}{b.thoiHan ? ` · Thời hạn: ${b.thoiHan}` : ""}. Mỗi hộ vẫn qua quy tắc gửi – duyệt (người gửi không tự xác nhận); hộ không đủ điều kiện được bỏ qua và nêu lý do.</div>
-      <div className="nhom-nut" style={{ alignItems: "center" }}>
+      <div className="nhom-nut giua-doc">
         <input placeholder="Tìm mã, tên…" value={tim} onChange={(e) => setTim(e.target.value)} style={{ width: 220 }} />
         <button className="nut nut-nho" onClick={() => setChon(new Set(hopLe.map((h) => h.id)))}>Chọn tất cả hộ hợp lệ ({hopLe.length})</button>
         <button className="nut nut-nho" disabled={!chon.size} onClick={() => setChon(new Set())}>Bỏ chọn</button>
-        <span className="mo chu-nho" style={{ marginLeft: "auto" }}>Đã chọn <b>{chon.size}</b> hộ</span>
+        <span className="mo chu-nho day-phai">Đã chọn <b>{chon.size}</b> hộ</span>
       </div>
       <div className="bang-cuon" style={{ maxHeight: 340 }}>
         <table className="bang">

@@ -16,7 +16,7 @@ export function TheGoiChinhSach() {
   const doc = async (f: File) => setXem({ ...(await docGoi(await f.text(), Object.keys(BO_CHINH_SACH))), tenTep: f.name });
   return (
     <div>
-      <p className="mo" style={{ marginTop: 0 }}>
+      <p className="mo mt-0">
         Bộ chính sách (mức hỗ trợ, tỷ lệ, cách tính có căn cứ) nạp bằng tệp JSON do đơn vị có thẩm quyền phát hành, không cần cài lại phần mềm. <b>Gói chưa có chữ ký số</b>:
         đối chiếu mã SHA-256 với đơn vị phát hành trước khi dùng. Bảng đơn giá, bảng giá đất chưa nằm trong gói. Dự án chuyển sang bộ mới ở Thông tin dự án (xem chênh lệch từng hộ trước khi áp dụng).
       </p>
@@ -34,7 +34,7 @@ export function TheGoiChinhSach() {
         </tbody>
       </table>
       {quyen("NAP_CHINH_SACH") ? (
-        <label className="nut nut-chinh" style={{ marginTop: 10 }}>Nạp gói chính sách…<input type="file" accept=".json" style={{ display: "none" }} onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void doc(f); }} /></label>
+        <label className="nut nut-chinh mt-10">Nạp gói chính sách…<input type="file" accept=".json" className="an" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void doc(f); }} /></label>
       ) : <p className="mo chu-nho">Chỉ tài khoản Quản trị nạp gói chính sách.</p>}
       {xem && (
         <HopThoai tieuDe={`Kiểm tra gói: ${xem.tenTep}`} dong={() => setXem(null)} rong={720} chan={<><button className="nut" onClick={() => setXem(null)}>Hủy</button><button className="nut nut-chinh" disabled={!xem.goi} onClick={async () => {
@@ -68,7 +68,7 @@ export function TheBoChinhSachDuAn({ duAn }: { duAn: DuAn }) {
   const ds = Object.keys(BO_CHINH_SACH);
   const thieu = !coBoChinhSach(duAn.boChinhSach);
   return (
-    <div className="the" style={{ marginTop: 14 }}>
+    <div className="the mt-14">
       <div className="the-dau"><h3>Bộ chính sách áp dụng</h3><span className="mo chu-nho">bản phương án đã chốt, phê duyệt giữ bộ chính sách của bản đó</span></div>
       <div className="the-than" style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
         <b>{tenBoChinhSach(duAn.boChinhSach)}</b><span className="mo chu-nho">({duAn.boChinhSach})</span>

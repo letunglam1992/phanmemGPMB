@@ -95,7 +95,7 @@ export function HopKetNoi({ dong }: { dong: () => void }) {
         </>
       }
     >
-      <p className="mo" style={{ marginTop: 0 }}>Hiện tại: <b>{moTaCheDo(hienTai)}</b>. Đổi chế độ không xóa dữ liệu; dữ liệu máy đơn vẫn nằm trên máy này.</p>
+      <p className="mo mt-0">Hiện tại: <b>{moTaCheDo(hienTai)}</b>. Đổi chế độ không xóa dữ liệu; dữ liệu máy đơn vẫn nằm trên máy này.</p>
       {!coVo && <div className="thong-bao thong-bao-vang">Chế độ mạng nội bộ chỉ có trong bản cài Windows.</div>}
       <div className="luoi" style={{ gap: 8 }}>
         {(["MAY_DON", "MAY_CHU", "MAY_TRAM"] as const).map((k) => (
@@ -111,7 +111,7 @@ export function HopKetNoi({ dong }: { dong: () => void }) {
       {cheDo === "MAY_CHU" && (
         <div className="the" style={{ padding: 12, marginTop: 12 }}>
           <O nhan="Cổng" goiY="Mặc định 47800. Lần đầu bật, Windows có thể hỏi cho phép qua tường lửa — chọn chỉ mạng riêng (Private) — có thể cần quyền quản trị máy."><input type="number" value={cong} onChange={(e) => setCong(Number(e.target.value))} style={{ width: 120 }} /></O>
-          <p className="mo chu-nho" style={{ marginBottom: 0 }}>
+          <p className="mo chu-nho mb-0">
             Sau khi khởi động lại: tạo tài khoản quản trị của máy chủ (hoặc đưa dữ liệu, tài khoản máy đơn lên ở Cài đặt chung → Mạng nội bộ); xem địa chỉ IP và vân tay chứng chỉ để các máy trạm đối chiếu.
           </p>
         </div>
@@ -119,11 +119,11 @@ export function HopKetNoi({ dong }: { dong: () => void }) {
       {cheDo === "MAY_TRAM" && (
         <div className="the" style={{ padding: 12, marginTop: 12 }}>
           <div style={{ display: "flex", gap: 8, alignItems: "end" }}>
-            <O nhan="Địa chỉ máy chủ (IP[:cổng])" style={{ flex: 1 }}><input value={diaChi} placeholder="vd. 192.168.1.10" onChange={(e) => { setDiaChi(e.target.value); setVanTay(""); setDaDoiChieu(false); }} /></O>
+            <O nhan="Địa chỉ máy chủ (IP[:cổng])" className="gian"><input value={diaChi} placeholder="vd. 192.168.1.10" onChange={(e) => { setDiaChi(e.target.value); setVanTay(""); setDaDoiChieu(false); }} /></O>
             <button className="nut" disabled={dang || !diaChi.trim()} onClick={kiemTra}>{dang ? "Đang kết nối…" : "Kiểm tra kết nối"}</button>
           </div>
           {vanTay && (
-            <div style={{ marginTop: 10 }}>
+            <div className="mt-10">
               <div className="chu-nho">Vân tay chứng chỉ máy chủ:</div>
               <code style={{ display: "block", fontSize: 12, wordBreak: "break-all", background: "var(--nen)", padding: 8, borderRadius: 4 }}>{vanTay}</code>
               <label style={{ display: "block", marginTop: 8 }}>
@@ -134,7 +134,7 @@ export function HopKetNoi({ dong }: { dong: () => void }) {
           )}
         </div>
       )}
-      {loi && <div className="thong-bao thong-bao-do" style={{ marginTop: 10 }}>{loi}</div>}
+      {loi && <div className="thong-bao thong-bao-do mt-10">{loi}</div>}
     </HopThoai>
   );
 }
@@ -172,7 +172,7 @@ export function TheMangNoiBo() {
 
   return (
     <div>
-      <p className="mo" style={{ marginTop: 0 }}>
+      <p className="mo mt-0">
         Chế độ của máy này: <b>{moTaCheDo(cheDo)}</b>. Dữ liệu chỉ truyền trong mạng nội bộ, mã hóa HTTPS; máy trạm ghim vân tay chứng chỉ máy chủ. Máy chủ kiểm tra lại quyền và quy tắc nghiệp vụ; hai người cùng sửa một hồ sơ thì người lưu sau được báo xung đột.
       </p>
       {cheDo.cheDo === "MAY_CHU" && (
@@ -207,7 +207,7 @@ export function ManLoiKetNoi({ loi, thuLai }: { loi: string; thuLai: () => void 
   return (
     <div className="man-dang-nhap">
       <div className="the o-dang-nhap">
-        <h2 style={{ marginTop: 0 }}>Không mở được dữ liệu</h2>
+        <h2 className="mt-0">Không mở được dữ liệu</h2>
         <p className="mo">Chế độ: <b>{moTaCheDo(docCheDo())}</b></p>
         <div className="thong-bao thong-bao-do">{loi}</div>
         <p className="mo chu-nho">Kiểm tra máy chủ đã bật và mở phần mềm, cùng mạng nội bộ, tường lửa cho phép cổng kết nối.</p>

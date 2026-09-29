@@ -53,13 +53,13 @@ export function TheBanGiao({ h, duAn, kq, luuNgay, moThongTinDuAn }: { h: Ho; du
     await luuNgay(con, `Hủy ghi bàn giao mặt bằng (${bg?.bienBan ?? ""}): ${lyDo}`);
   };
   return (
-    <div className="the" style={{ marginTop: 14 }}>
+    <div className="the mt-14">
       <div className="the-dau">
         <h3>Bàn giao mặt bằng</h3>
         {bg?.ngay ? <span className="nhan nhan-xanh">Đã bàn giao {bg.ngay.split("-").reverse().join("/")}</span> : <span className="nhan nhan-xam">Chưa bàn giao</span>}
       </div>
       <div className="the-than">
-        {!chiXong && !bg && <div className="thong-bao thong-bao-vang" style={{ marginBottom: 8 }}>Bước 12 (chi trả) chưa hoàn thành — kiểm tra trước khi ghi bàn giao (k5, k6 Điều 87 LĐĐ 2024).</div>}
+        {!chiXong && !bg && <div className="thong-bao thong-bao-vang mb-8">Bước 12 (chi trả) chưa hoàn thành — kiểm tra trước khi ghi bàn giao (k5, k6 Điều 87 LĐĐ 2024).</div>}
         <fieldset className="khung-quyen" disabled={!choSua}>
           <div className="luoi" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 10 }}>
             <O nhan="Ngày bàn giao"><input type="date" value={ngay} onChange={(e) => setNgay(e.target.value)} /></O>

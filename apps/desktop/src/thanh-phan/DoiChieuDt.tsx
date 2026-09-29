@@ -41,7 +41,7 @@ export function TheDoiChieuDt({ duAn, hos }: { duAn: DuAn; hos: Ho[] }) {
       </div>
       {mo && (
         <HopThoai tieuDe="Đối chiếu diện tích ba nguồn" dong={() => setMo(false)} rong={1060} chan={<><button className="nut" onClick={() => void xuatExcel(duAn, hien, moTaNguong)}>Xuất Excel</button><button className="nut" onClick={() => setMo(false)}>Đóng</button></>}>
-          <p className="mo chu-nho" style={{ marginTop: 0 }}>
+          <p className="mo chu-nho mt-0">
             Chỉ để nhắc kiểm tra — phần mềm không kết luận số liệu nào đúng. Ngưỡng: {moTaNguong}.{" "}
             <label><input type="checkbox" checked={chiVuot} onChange={(e) => setChiVuot(e.target.checked)} /> Chỉ hiện chênh lệch vượt ngưỡng</label>
           </p>

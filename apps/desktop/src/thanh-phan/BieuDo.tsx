@@ -98,7 +98,7 @@ export function TheChiSo(p: { bieuTuong: string; nhan: string; giaTri: number | 
           <span style={{ width: `${tl}%` }} />
         </div>
       )}
-      {p.phu && <div className="chu-nho mo" style={{ marginTop: 6 }}>{p.phu}</div>}
+      {p.phu && <div className="chu-nho mo mt-6">{p.phu}</div>}
     </div>
   );
 }

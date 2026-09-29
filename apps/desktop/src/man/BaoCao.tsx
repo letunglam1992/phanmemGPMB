@@ -125,7 +125,7 @@ export function BaoCao() {
         </div>
       </div>
 
-      <div className="the" style={{ marginBottom: 16 }}>
+      <div className="the mb-16">
         <div className="the-than luoi" style={{ gridTemplateColumns: "repeat(3, minmax(0, 260px))", alignItems: "end" }}>
           <O nhan="Xã, phường">
             <Chon value={xa} onChange={(e) => setXa(e.target.value)}>
@@ -143,7 +143,7 @@ export function BaoCao() {
         </div>
       </div>
 
-      <div className="luoi luoi-4" style={{ marginBottom: 16 }}>
+      <div className="luoi luoi-4 mb-16">
         <TheChiSo bieuTuong="danhSach" nhan="Dự án · hộ" giaTri={`${s.soDuAn} · ${s.soHo}`} tong="chinh" phu={`DT thu hồi ${dinhDang(s.dtThuHoi, 2)} m²`} />
         <TheChiSo bieuTuong="nguoi" nhan="Hộ hoàn thành GPMB" giaTri={s.theoTrangThai.HOAN_THANH} mauSo={s.soHo} tong="xanh" phu={s.theoTrangThai.VUONG_MAC ? `${s.theoTrangThai.VUONG_MAC} hộ vướng mắc` : "Không có hộ vướng mắc"} />
         <TheChiSo bieuTuong="chiTra" nhan="Đã chi trả / đã duyệt" giaTri={`${tien(s.daChi)} đ`} tong="duong" phu={`Đã duyệt ${tien(s.daDuyet)} đ · còn phải chi ${tien(s.conPhaiChi)} đ`} />
@@ -152,7 +152,7 @@ export function BaoCao() {
 
       <DienBien bc={bc} ky={kyBaoCao} ss={ss} coQuyen={quyen("CAI_DAT")} moChot={() => setHopChot(true)} xoa={xoaKyBaoCao} />
 
-      <div className="the" style={{ marginBottom: 16 }}>
+      <div className="the mb-16">
         <div className="the-dau"><h3>Kết quả từng dự án</h3><span className="mo chu-nho">Bấm một dòng để mở dự án</span></div>
         <div className="bang-cuon">
           <table className="bang">
@@ -206,7 +206,7 @@ export function BaoCao() {
             </ul>
           )}
           {hoVm.length > 0 && (
-            <table className="bang" style={{ marginTop: 10 }}>
+            <table className="bang mt-10">
               <thead><tr><th>Hộ vướng mắc</th><th>Dự án</th><th>Bước đang thực hiện</th><th className="so">Số ngày tồn đọng</th><th>Vướng mắc</th></tr></thead>
               <tbody>
                 {hoVm.map((x) => (
@@ -300,18 +300,18 @@ function ChonMauBaoCao({ maMau, setMaMau, duLieuThu, ghiNhatKy }: { maMau: strin
           {ds.map((x) => <option key={x.ma} value={x.ma}>{x.ten}</option>)}
         </Chon>
         <button className="nut nut-nho" onClick={() => void taiMauVe()}>Tải mẫu về sửa</button>
-        {sua && <label className="nut nut-nho">Thay mẫu này…<input type="file" accept=".docx" style={{ display: "none" }} onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) napTep(f, maMau, maMau === MA_MAU_GOC ? "Mẫu báo cáo tổng hợp (đơn vị)" : ds.find((x) => x.ma === maMau)?.ten ?? "Mẫu báo cáo"); }} /></label>}
-        {sua && <label className="nut nut-nho">Thêm mẫu khác…<input type="file" accept=".docx" style={{ display: "none" }} onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; const ten = f && prompt("Tên mẫu (vd. Báo cáo tháng gửi UBND tỉnh):", f.name.replace(/\.docx$/i, ""))?.trim(); if (f && ten) napTep(f, `${TIEN_TO_MAU_KHAC}${Date.now().toString(36)}`, ten); }} /></label>}
+        {sua && <label className="nut nut-nho">Thay mẫu này…<input type="file" accept=".docx" className="an" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) napTep(f, maMau, maMau === MA_MAU_GOC ? "Mẫu báo cáo tổng hợp (đơn vị)" : ds.find((x) => x.ma === maMau)?.ten ?? "Mẫu báo cáo"); }} /></label>}
+        {sua && <label className="nut nut-nho">Thêm mẫu khác…<input type="file" accept=".docx" className="an" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; const ten = f && prompt("Tên mẫu (vd. Báo cáo tháng gửi UBND tỉnh):", f.name.replace(/\.docx$/i, ""))?.trim(); if (f && ten) napTep(f, `${TIEN_TO_MAU_KHAC}${Date.now().toString(36)}`, ten); }} /></label>}
         {sua && maMau === MA_MAU_GOC && coThayGoc && <button className="nut nut-nho" onClick={async () => { await kho.xoaMau(MA_MAU_GOC); await ghiNhatKy("Khôi phục mẫu báo cáo gốc"); await tai(); }}>Khôi phục mẫu của phần mềm</button>}
         {sua && maMau !== MA_MAU_GOC && <button className="nut nut-nho nut-nguy" onClick={async () => { if (!confirm("Xóa mẫu này?")) return; await kho.xoaMau(maMau); await ghiNhatKy("Xóa mẫu báo cáo", ds.find((x) => x.ma === maMau)?.ten); setMaMau(MA_MAU_GOC); await tai(); }}>Xóa mẫu</button>}
         <button className="nut nut-chu nut-nho" onClick={() => setXemTruong(!xemTruong)}>{xemTruong ? "Ẩn" : "Các trường dữ liệu"}</button>
       </div>
       {xemTruong && (
-        <table className="bang" style={{ marginTop: 8 }}>
+        <table className="bang mt-8">
           <tbody>{TRUONG_MAU_BAO_CAO.map(([t, m]) => <tr key={t}><td className="chu-nho" style={{ fontFamily: "monospace" }}>{t}</td><td className="chu-nho">{m}</td></tr>)}</tbody>
         </table>
       )}
-      <div className="mo chu-nho" style={{ marginTop: 6 }}>Sửa mẫu trong Word, giữ nguyên các trường {"{…}"}; mẫu tải lên được điền thử bằng số liệu hiện tại trước khi lưu (sai cú pháp thì báo, không lưu).</div>
+      <div className="mo chu-nho mt-6">Sửa mẫu trong Word, giữ nguyên các trường {"{…}"}; mẫu tải lên được điền thử bằng số liệu hiện tại trước khi lưu (sai cú pháp thì báo, không lưu).</div>
     </div>
   );
 }
@@ -336,7 +336,7 @@ function HopWord({ dong, xuat, duLieuThu, ghiNhatKy }: { dong: () => void; xuat:
   return (
     <HopThoai tieuDe="Soạn báo cáo tổng hợp (Word)" dong={dong} rong={860} chan={<><button className="nut" onClick={dong}>Hủy</button><button className="nut nut-chinh" onClick={() => void xuat(t, maMau)}>Tạo tệp Word</button></>}>
       <ChonMauBaoCao maMau={maMau} setMaMau={setMaMau} duLieuThu={() => duLieuThu(t)} ghiNhatKy={ghiNhatKy} />
-      <div className="mo chu-nho" style={{ marginBottom: 10 }}>Phần số liệu (kết quả chung, bảng từng dự án, vướng mắc) phần mềm tự điền theo bộ lọc hiện tại. Các ô dưới đây cán bộ nhập; thông tin cơ quan, người ký được nhớ cho lần sau trên máy này.</div>
+      <div className="mo chu-nho mb-10">Phần số liệu (kết quả chung, bảng từng dự án, vướng mắc) phần mềm tự điền theo bộ lọc hiện tại. Các ô dưới đây cán bộ nhập; thông tin cơ quan, người ký được nhớ cho lần sau trên máy này.</div>
       <div className="luoi luoi-2">
         {o("coQuanCapTren", "Cơ quan chủ quản")}
         {o("coQuan", "Cơ quan báo cáo")}
@@ -384,7 +384,7 @@ function DienBien(p: { bc: ReturnType<typeof lapBaoCao>; ky: KyBaoCao[]; ss: Ret
   const chi = [...tong.map((t) => ty(t.daChi)), ...(coHienTai ? [ty(s.daChi)] : [])];
   const hienTai = coHienTai ? nhan.length - 1 : undefined;
   return (
-    <div className="the" style={{ marginBottom: 16 }}>
+    <div className="the mb-16">
       <div className="the-dau">
         <h3>Diễn biến theo kỳ báo cáo</h3>
         <span className="mo chu-nho">{ds.length} kỳ đã chốt{bc.loc.xa || bc.loc.tinhTrang ? " · số liệu kỳ lọc theo bộ lọc hiện tại" : ""}</span>
@@ -392,18 +392,18 @@ function DienBien(p: { bc: ReturnType<typeof lapBaoCao>; ky: KyBaoCao[]; ss: Ret
       </div>
       <div className="the-than">
         {ss ? (
-          <div className="chu-y-trong" style={{ marginBottom: 14 }}>
+          <div className="chu-y-trong mb-14">
             <b>So với kỳ trước ({nhanKy(ss.truoc.ky)}, số liệu đến {ngayVN(ss.truoc.ky.denNgay)}):</b>{" "}
             hộ hoàn thành GPMB {dau(ss.hoanThanh)}; hộ được phê duyệt phương án {dau(ss.soHoDaDuyet)}; kinh phí đã duyệt {dauTien(ss.daDuyet)}; chi trả {dauTien(ss.daChi)}; hộ vướng mắc {dau(ss.vuongMac)}; cảnh báo cần xử lý ngay {dau(ss.canhBaoCao)}
             {ss.duAnMoi.length > 0 && <>; dự án mới: {ss.duAnMoi.join(", ")}</>}.
           </div>
         ) : (
-          <div className="mo chu-nho" style={{ marginBottom: 14 }}>
+          <div className="mo chu-nho mb-14">
             {ds.length ? "Chưa có kỳ nào trước ngày báo cáo đang chọn để so sánh." : "Chưa có kỳ nào được chốt. Chốt số liệu định kỳ (cuối tháng, quý) để theo dõi diễn biến và so sánh với kỳ trước; số liệu kỳ đã chốt không thay đổi khi hồ sơ được sửa sau đó."}
           </div>
         )}
         {nhan.length >= 2 && (
-          <div className="luoi luoi-2" style={{ marginBottom: 14 }}>
+          <div className="luoi luoi-2 mb-14">
             <div>
               <div className="nhan-muc">Tỷ lệ hoàn thành, chi trả (%)</div>
               <BieuDoKy kieu="duong" nhanKy={nhan} hienTai={hienTai} maxY={100} dinhDang={(v) => `${dinhDang(v, 0)}%`} moTa="Tỷ lệ hộ hoàn thành GPMB và tỷ lệ đã chi trả so với kinh phí đã duyệt theo kỳ"

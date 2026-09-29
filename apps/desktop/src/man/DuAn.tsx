@@ -1,3 +1,4 @@
+import { coDot, dsDot, tenDot } from "../dot-thu-hoi";
 import { useMemo, useState } from "react";
 import { THOI_HAN_LUAT } from "../du-bao";
 import { D } from "@gpmb/core";
@@ -83,7 +84,7 @@ export function ManDuAn({ duAnId: idVao }: { duAnId?: string }) {
         </div>
       )}
 
-      <div className="the" style={{ marginBottom: 16 }}>
+      <div className="the mb-16">
         <div className="the-dau da-cong-cu">
           <h2>Dự án đang theo dõi</h2><span className="mo">({hienThiDa.length} dự án)</span>
           <div className="phai">
@@ -180,6 +181,8 @@ export function HopThemHo({ duAnId, dong }: { duAnId: string; dong: () => void }
   const trung = hoTrungMa(dsHo, ma);
   const [ten, setTen] = useState("");
   const [loai, setLoai] = useState<LoaiDoiTuong>("HO_GIA_DINH");
+  const duAnHt = dsDuAn.find((d) => d.id === duAnId);
+  const [dotId, setDotId] = useState(() => (duAnHt ? (dsDot(duAnHt).at(-1)?.id ?? "") : ""));
   return (
     <HopThoai
       tieuDe="Thêm hộ, cá nhân, tổ chức"
@@ -188,7 +191,7 @@ export function HopThemHo({ duAnId, dong }: { duAnId: string; dong: () => void }
       chan={
         <>
           <button className="nut" onClick={dong}>Hủy</button>
-          <button className="nut nut-chinh" disabled={!ten.trim() || !ma.trim() || !!trung} onClick={async () => { const h = hoMoi(duAnId, ma.trim(), ten, loai); await luuHo(h, "Tạo hồ sơ"); dong(); di({ ten: "ho", duAnId, hoId: h.id }); }}>Tạo hồ sơ</button>
+          <button className="nut nut-chinh" disabled={!ten.trim() || !ma.trim() || !!trung} onClick={async () => { const h = { ...hoMoi(duAnId, ma.trim(), ten, loai), dotId: dotId || undefined }; await luuHo(h, "Tạo hồ sơ"); dong(); di({ ten: "ho", duAnId, hoId: h.id }); }}>Tạo hồ sơ</button>
         </>
       }
     >
@@ -201,7 +204,15 @@ export function HopThemHo({ duAnId, dong }: { duAnId: string; dong: () => void }
             {Object.entries(TEN_DOI_TUONG).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </Chon>
         </O>
-        <O nhan="Họ tên chủ hộ / tên tổ chức" style={{ gridColumn: "1/-1" }}><input value={ten} onChange={(e) => setTen(e.target.value)} autoFocus /></O>
+        <O nhan="Họ tên chủ hộ / tên tổ chức" className="ca-hang"><input value={ten} onChange={(e) => setTen(e.target.value)} autoFocus /></O>
+        {duAnHt && coDot(duAnHt) && (
+          <O nhan="Đợt thu hồi" className="ca-hang" goiY="Mã hồ sơ vẫn đánh số chung cả dự án">
+            <Chon value={dotId} onChange={(e) => setDotId(e.target.value)} aria-label="Đợt thu hồi của hộ mới">
+              {dsDot(duAnHt).map((d) => <option key={d.id} value={d.id}>{tenDot(d)}</option>)}
+              <option value="">Chưa xếp đợt</option>
+            </Chon>
+          </O>
+        )}
       </div>
     </HopThoai>
   );

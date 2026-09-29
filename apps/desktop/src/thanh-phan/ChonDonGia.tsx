@@ -11,9 +11,9 @@ export function ChonDonGia(p: { nguon: DongDonGia["nguon"][]; dong: () => void; 
   }, [nguon, q]);
   return (
     <HopThoai tieuDe={p.tieuDe} dong={p.dong} rong={1100}>
-      <div className="nhom-nut" style={{ marginBottom: 10 }}>
+      <div className="nhom-nut mb-10">
         {p.nguon.length > 1 && p.nguon.map((n) => <button key={n} className={`nut nut-nho ${n === nguon ? "nut-chinh" : ""}`} onClick={() => setNguon(n)}>{n}</button>)}
-        <input autoFocus placeholder="Tìm: tên, nhóm, mã… (nhiều từ)" value={q} onChange={(e) => setQ(e.target.value)} style={{ flex: 1 }} />
+        <input autoFocus placeholder="Tìm: tên, nhóm, mã… (nhiều từ)" value={q} onChange={(e) => setQ(e.target.value)} className="gian" />
         <span className="mo chu-nho" style={{ alignSelf: "center" }}>{ds.length} dòng</span>
       </div>
       <div className="bang-cuon" style={{ maxHeight: "58vh" }}>
@@ -22,7 +22,7 @@ export function ChonDonGia(p: { nguon: DongDonGia["nguon"][]; dong: () => void; 
           <tbody>
             {ds.slice(0, 400).map((r) => (
               <tr key={r.ma + r.ten} className="co-the-chon" onClick={() => p.chon(r)}>
-                <td className="chu-nho" style={{ whiteSpace: "nowrap" }}>{r.ma}</td>
+                <td className="chu-nho khong-xuong-dong">{r.ma}</td>
                 <td>{r.ten}<div className="can-cu">{r.nhom}</div></td>
                 <td>{r.donVi}</td>
                 <td className="so">{r.donGia.toLocaleString("vi-VN")}</td>

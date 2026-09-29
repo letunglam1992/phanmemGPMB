@@ -31,9 +31,9 @@ export function HopThoai(p: { tieuDe: ReactNode; dong: () => void; children: Rea
   );
 }
 
-export function O(p: { nhan: string; children: ReactNode; goiY?: ReactNode; style?: React.CSSProperties; lichSu?: string }) {
+export function O(p: { nhan: string; children: ReactNode; goiY?: ReactNode; style?: React.CSSProperties; className?: string; lichSu?: string }) {
   return (
-    <div className="o-nhap" style={p.style} data-lich-su={p.lichSu} data-lich-su-ten={p.lichSu ? p.nhan : undefined} title={p.lichSu ? "Chuột phải: lịch sử thay đổi của ô" : undefined}>
+    <div className={p.className ? `o-nhap ${p.className}` : "o-nhap"} style={p.style} data-lich-su={p.lichSu} data-lich-su-ten={p.lichSu ? p.nhan : undefined} title={p.lichSu ? "Chuột phải: lịch sử thay đổi của ô" : undefined}>
       <label>{p.nhan}</label>
       {p.children}
       {p.goiY && <span className="goi-y">{p.goiY}</span>}
@@ -66,11 +66,11 @@ export function ThanhBuoc({ ho, chon, onChon }: { ho: Ho; chon?: string; onChon?
 export function GiaiTrinh({ d }: { d: DongTinh }) {
   return (
     <div className="giai-trinh">
-      <div className="nhom-nut" style={{ alignItems: "center" }}>
+      <div className="nhom-nut giua-doc">
         <span className="mo chu-nho">Mã khoản {d.ma}</span>
         <NhanDong d={d} />
       </div>
-      <h3 style={{ marginTop: 6 }}>{d.noiDung}</h3>
+      <h3 className="mt-6">{d.noiDung}</h3>
       <div className="so-tien">{d.thanhTien ? `${tien(d.thanhTien)} đ` : "Chưa tính được"}</div>
       {d.thanhTien && !d.thanhTien.isInteger() && <div className="mo chu-nho">Giá trị đầy đủ: {d.thanhTien.toString()} đ (làm tròn ở tổng hộ)</div>}
       <div className="cong-thuc">{d.congThuc}</div>

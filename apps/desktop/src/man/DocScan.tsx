@@ -75,9 +75,9 @@ export function DocScan() {
         </div>
         <div className="the-than">
           <input type="file" multiple accept="application/pdf,image/png,image/jpeg,image/bmp,image/webp" disabled={dangChay} onChange={(e) => setTep([...(e.target.files ?? [])])} />
-          <div className="mo chu-nho" style={{ marginTop: 6 }}>PDF scan, ảnh PNG/JPG. Ảnh rõ, thẳng, độ phân giải khoảng 300 dpi cho kết quả tốt nhất; chữ viết tay, con dấu đè chữ thường đọc sai. Nhiều trang có thể mất vài phút.</div>
+          <div className="mo chu-nho mt-6">PDF scan, ảnh PNG/JPG. Ảnh rõ, thẳng, độ phân giải khoảng 300 dpi cho kết quả tốt nhất; chữ viết tay, con dấu đè chữ thường đọc sai. Nhiều trang có thể mất vài phút.</div>
           {tienDo && (
-            <div style={{ marginTop: 10 }}>
+            <div className="mt-10">
               <div className="chu-nho">{tienDo.tep ? `${tienDo.tep} — trang ${tienDo.trang}/${tienDo.soTrang}: ` : ""}{BUOC[tienDo.buoc] ?? tienDo.buoc}</div>
               <div className="thanh-xep" style={{ height: 6, marginTop: 4 }}><span style={{ flex: tienDo.phan, background: "var(--chinh)" }} /><span style={{ flex: 1 - tienDo.phan, background: "var(--xam-nen)" }} /></div>
             </div>
@@ -100,8 +100,8 @@ export function DocScan() {
                     <tr><td>Trích yếu</td><td>{tt.trichYeu || "—"}</td></tr>
                   </tbody>
                 </table>
-                {tt.thieu.length > 0 && <div className="mo chu-nho" style={{ marginTop: 6 }}>Không nhận ra: {tt.thieu.join(", ")} — nhập tay vào câu căn cứ.</div>}
-                <div className="o-nhap" style={{ marginTop: 10 }}>
+                {tt.thieu.length > 0 && <div className="mo chu-nho mt-6">Không nhận ra: {tt.thieu.join(", ")} — nhập tay vào câu căn cứ.</div>}
+                <div className="o-nhap mt-10">
                   <label>Câu căn cứ gợi ý (sửa lại cho đúng bản gốc)</label>
                   <textarea rows={3} value={canCu} onChange={(e) => setCanCu(e.target.value)} />
                 </div>
@@ -127,7 +127,7 @@ export function DocScan() {
             </div>
             <div className="the-than">
               {thap.length > 0 && (
-                <div className="chu-y-trong" style={{ marginBottom: 8 }}>
+                <div className="chu-y-trong mb-8">
                   Độ tin cậy thấp ({thap.map((k) => `${k.tep} tr.${k.trang}: ${k.doTinCay}%`).join("; ")}): ảnh có thể mờ, nghiêng hoặc có chữ viết tay — đọc soát kỹ các số liệu.
                 </div>
               )}

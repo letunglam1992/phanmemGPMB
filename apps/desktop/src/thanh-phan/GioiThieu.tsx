@@ -22,7 +22,7 @@ export function HopGioiThieu({ dong }: { dong: () => void }) {
           <tr><th>Bộ chính sách</th><td>Sơn La, hiệu lực 31/3/2026 (QĐ 106/2025, QĐ 14/2026, QĐ 32/2025, NQ 152/2025)</td></tr>
         </tbody>
       </table>
-      <p className="chu-nho mo" style={{ marginBottom: 0 }}>
+      <p className="chu-nho mo mb-0">
         © {BAN_QUYEN.nam} {BAN_QUYEN.tacGia}. Bảo lưu mọi quyền. Phần mềm hỗ trợ tính toán, theo dõi và soạn thảo; số liệu, văn bản do phần mềm lập là dự thảo — cán bộ có thẩm quyền kiểm tra, phê duyệt theo quy định.
         Dữ liệu hồ sơ lưu trên máy (hoặc máy chủ mạng nội bộ của đơn vị), không gửi ra ngoài.
       </p>

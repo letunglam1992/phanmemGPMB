@@ -116,16 +116,16 @@ export function HopSaoLuu() {
 
   return (
     <HopThoai tieuDe="Sao lưu, khôi phục dữ liệu" dong={() => moSaoLuu(false)} rong={720}>
-      <p className="mo-ta" style={{ marginTop: 0 }}>
+      <p className="mo-ta mt-0">
         Toàn bộ dữ liệu (dự án, hồ sơ hộ, bản đồ đã nạp, mẫu văn bản tự chỉnh) được đóng thành một tệp <b>.gpmb</b> trên máy này. Phần mềm không gửi tệp đi đâu; cán bộ tự cất giữ tệp theo quy định bảo mật của cơ quan (tệp có thông tin cá nhân của người có đất thu hồi).
       </p>
 
       {quyen("SAO_LUU") && <div className="the" style={{ padding: 14, marginBottom: 12 }}>
-        <h3 style={{ marginTop: 0 }}>Tạo bản sao lưu</h3>
+        <h3 className="mt-0">Tạo bản sao lưu</h3>
         <div className="mo-ta">
           Dữ liệu hiện có: {dsDuAn.length} dự án, {soHoHienCo} hồ sơ. Lần sao lưu gần nhất: <b>{lanSaoLuu ? ngayGio(lanSaoLuu) : "chưa có"}</b>.
         </div>
-        <div className="luoi luoi-2" style={{ marginTop: 10 }}>
+        <div className="luoi luoi-2 mt-10">
           <div className="o-nhap"><label>Mật khẩu sao lưu</label><input type="password" autoComplete="new-password" disabled={khongMaHoa} value={mk} onChange={(e) => setMk(e.target.value)} /></div>
           <div className="o-nhap"><label>Nhập lại mật khẩu</label><input type="password" autoComplete="new-password" disabled={khongMaHoa} value={mk2} onChange={(e) => setMk2(e.target.value)} /></div>
         </div>
@@ -143,27 +143,27 @@ export function HopSaoLuu() {
           </div>
         )}
         {!khongMaHoa && mk && loiMk && <div className="chu-do chu-nho">{loiMk}</div>}
-        <button className="nut nut-chinh" style={{ marginTop: 10 }} disabled={dangLam || !dsDuAn.length || !!loiMk || (khongMaHoa && !xnKhongMaHoa)} onClick={taoBan}>
+        <button className="nut nut-chinh mt-10" disabled={dangLam || !dsDuAn.length || !!loiMk || (khongMaHoa && !xnKhongMaHoa)} onClick={taoBan}>
           {khongMaHoa ? "Tạo bản sao lưu KHÔNG mã hóa" : "Tạo bản sao lưu mã hóa (.gpmb)"}
         </button>
       </div>}
 
       {!quyen("KHOI_PHUC") && <p className="mo chu-nho">Khôi phục dữ liệu chỉ dành cho tài khoản Quản trị.</p>}
       {quyen("KHOI_PHUC") && <div className="the" style={{ padding: 14 }}>
-        <h3 style={{ marginTop: 0 }}>Khôi phục từ tệp sao lưu</h3>
+        <h3 className="mt-0">Khôi phục từ tệp sao lưu</h3>
         {laKhoMang(kho) && !kho.noiBo && <div className="thong-bao thong-bao-vang">Đang làm việc trên <b>máy chủ mạng nội bộ</b>: khôi phục thay đổi dữ liệu chung của mọi người dùng.</div>}
         <input type="file" accept=".gpmb,application/zip" aria-label="Chọn tệp sao lưu" disabled={dangLam} onChange={(e) => void chonTep(e.target.files?.[0])} />
         {cho && (
-          <div style={{ marginTop: 10 }}>
+          <div className="mt-10">
             <div className="mo chu-nho">Tệp <b>{cho.ten}</b> đã mã hóa (sao lưu lúc {ngayGio(cho.tt.luc)}; {cho.tt.soDuAn} dự án, {cho.tt.soHo} hồ sơ). Mở bằng {moTaCachMo(cho.tt.maHoa)}.</div>
             <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
-              <input type="password" placeholder="Mật khẩu sao lưu hoặc mật khẩu khôi phục" value={mkMo} onChange={(e) => setMkMo(e.target.value)} onKeyDown={(e) => e.key === "Enter" && void moBangMatKhau()} style={{ flex: 1 }} />
+              <input type="password" placeholder="Mật khẩu sao lưu hoặc mật khẩu khôi phục" value={mkMo} onChange={(e) => setMkMo(e.target.value)} onKeyDown={(e) => e.key === "Enter" && void moBangMatKhau()} className="gian" />
               <button className="nut nut-chinh" disabled={dangLam || !mkMo} onClick={() => void moBangMatKhau()}>{dangLam ? "Đang mở…" : "Mở tệp"}</button>
             </div>
           </div>
         )}
         {ban && (
-          <div style={{ marginTop: 12 }}>
+          <div className="mt-12">
             <table className="bang">
               <tbody>
                 <tr><th>Tệp</th><td>{ban.ten}</td></tr>
@@ -184,7 +184,7 @@ export function HopSaoLuu() {
             <label style={{ display: "block", marginTop: 10 }}>
               <input type="checkbox" checked={xacNhan} onChange={(e) => setXacNhan(e.target.checked)} /> Tôi đã kiểm tra thông tin tệp và đồng ý khôi phục.
             </label>
-            <button className="nut nut-chinh" style={{ marginTop: 10 }} disabled={dangLam || !xacNhan} onClick={khoiPhucNgay}>
+            <button className="nut nut-chinh mt-10" disabled={dangLam || !xacNhan} onClick={khoiPhucNgay}>
               Khôi phục
             </button>
           </div>

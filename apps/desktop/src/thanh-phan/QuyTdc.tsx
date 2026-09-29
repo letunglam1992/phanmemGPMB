@@ -86,7 +86,7 @@ export function TheQuyTdc({ duAn, hos }: { duAn: DuAn; hos: Ho[] }) {
             <div><span>DT đã giao / tổng (m²)</span><b>{hienSo(tk.dtDaGiao.toFixed())} / {hienSo(tk.dtTong.toFixed())}</b></div>
             <div><span>Hộ chờ bố trí lô</span><b>{tk.hoChoLo}</b></div>
           </div>
-          <label className="o-chon-kem" style={{ marginTop: 10 }}>
+          <label className="o-chon-kem mt-10">
             <input type="checkbox" disabled={!choSua} checked={!!q.bocTham} onChange={(e) => void datBocTham(e.target.checked)} aria-label="Giao lô bằng hình thức bốc thăm" />
             <span><b>Giao lô bằng hình thức bốc thăm</b> — bật để ghi nhận kết quả bốc thăm theo biên bản (phần mềm không bốc thăm thay, chỉ ghi nhận kết quả do hội đồng/tổ công tác lập).</span>
           </label>
@@ -131,7 +131,7 @@ export function TheQuyTdc({ duAn, hos }: { duAn: DuAn; hos: Ho[] }) {
                       <td className="chu-nho">{l.canCuGia || (l.gia ? <span className="chu-do">Thiếu căn cứ</span> : "—")}</td>
                       <td><span className={`nhan ${LOP_TT[tt]}`}>{TEN_TT_LO[tt]}</span>{l.giuLai && <div className="mo chu-nho">{l.giuLai}</div>}{e && <div className="chu-do chu-nho">{e}</div>}</td>
                       <td className="chu-nho">{l.giao ? <>{tenHo(l.giao.hoId)}<div className="mo">{TEN_HINH_THUC_GIAO[l.giao.hinhThuc]} {ngayVN(l.giao.ngay)} – {l.giao.canCu}</div></> : "—"}</td>
-                      <td style={{ whiteSpace: "nowrap" }}>
+                      <td className="khong-xuong-dong">
                         {choSua && (
                           <>
                             <button className="nut nut-nho" onClick={() => setHop({ loai: "lo", lo: l })}>Sửa</button>{" "}
@@ -180,7 +180,7 @@ export function TheQuyTdc({ duAn, hos }: { duAn: DuAn; hos: Ho[] }) {
       {(q.huyGiao?.length ?? 0) > 0 && (
         <details className="the" style={{ padding: "8px 14px" }}>
           <summary className="chu-nho" style={{ fontWeight: 600 }}>Lịch sử thu hồi giao lô ({q.huyGiao!.length})</summary>
-          <table className="bang" style={{ marginTop: 8 }}>
+          <table className="bang mt-8">
             <thead><tr><th>Lô</th><th>Hộ</th><th>Giao</th><th>Lý do thu hồi</th><th>Người, lúc</th></tr></thead>
             <tbody>
               {[...q.huyGiao!].reverse().map((x, i) => { const l = q.lo.find((y) => y.id === x.loId); return (
@@ -224,17 +224,17 @@ function HopLo({ duAn, lo, dong }: { duAn: DuAn; lo?: LoTdc; dong: () => void })
         <O nhan={l.loai === "NHA_O" ? "Giá bán nhà ở TĐC (đ/m²)" : "Giá đất ở tại khu TĐC (đ/m²)"} goiY={l.loai === "NHA_O" ? "Do UBND có thẩm quyền quyết định (k3 Đ111 LĐĐ)" : "Theo bảng giá đất tại thời điểm phê duyệt phương án (k3 Đ111 LĐĐ) — đơn vị nhập"}><OSo className="o-so" value={l.gia ?? ""} onChange={(v) => setL({ ...l, gia: v || undefined })} /></O>
         <O nhan="Căn cứ giá" goiY={l.gia ? "Bắt buộc khi có giá" : undefined}><input className={l.gia && !l.canCuGia?.trim() ? "loi-nhap" : ""} value={l.canCuGia ?? ""} onChange={(e) => setL({ ...l, canCuGia: e.target.value || undefined })} placeholder="vd. NQ 152/2025/NQ-HĐND, Bảng 05, vị trí 1" /></O>
         {!lo?.giao && (
-          <O nhan="Tạm giữ lô" style={{ gridColumn: "1/-1" }}>
+          <O nhan="Tạm giữ lô" className="ca-hang">
             <div className="nhom-nut">
               <label><input type="checkbox" checked={giu} onChange={(e) => setGiu(e.target.checked)} /> Tạm giữ (không giao, không bốc thăm)</label>
-              {giu && <input style={{ flex: 1 }} className={!l.giuLai?.trim() ? "loi-nhap" : ""} value={l.giuLai ?? ""} placeholder="Lý do (bắt buộc)" onChange={(e) => setL({ ...l, giuLai: e.target.value })} />}
+              {giu && <input className={`gian${!l.giuLai?.trim() ? " loi-nhap" : ""}`} value={l.giuLai ?? ""} placeholder="Lý do (bắt buộc)" onChange={(e) => setL({ ...l, giuLai: e.target.value })} />}
             </div>
           </O>
         )}
-        <O nhan="Ghi chú" style={{ gridColumn: "1/-1" }}><input value={l.ghiChu ?? ""} onChange={(e) => setL({ ...l, ghiChu: e.target.value || undefined })} /></O>
+        <O nhan="Ghi chú" className="ca-hang"><input value={l.ghiChu ?? ""} onChange={(e) => setL({ ...l, ghiChu: e.target.value || undefined })} /></O>
       </div>
-      {loi && <div className="thong-bao thong-bao-do" style={{ marginTop: 8 }}>{loi}</div>}
-      {doiGia && <div className="thong-bao thong-bao-vang" style={{ marginTop: 8 }}>Lô đã giao: đổi diện tích, giá ở đây không tự sửa hồ sơ hộ — phần mềm sẽ cảnh báo hồ sơ khác lô để cán bộ cập nhật (có kiểm soát).</div>}
+      {loi && <div className="thong-bao thong-bao-do mt-8">{loi}</div>}
+      {doiGia && <div className="thong-bao thong-bao-vang mt-8">Lô đã giao: đổi diện tích, giá ở đây không tự sửa hồ sơ hộ — phần mềm sẽ cảnh báo hồ sơ khác lô để cán bộ cập nhật (có kiểm soát).</div>}
     </HopThoai>
   );
 }
@@ -261,16 +261,16 @@ function HopNhieuLo({ duAn, dong }: { duAn: DuAn; dong: () => void }) {
   return (
     <HopThoai tieuDe="Thêm nhiều lô tái định cư" rong={720} dong={dong} chan={<><button className="nut" onClick={dong}>Hủy</button><button className="nut nut-chinh" disabled={!!loi} onClick={() => void luu()}>Thêm {moi.length} lô</button></>}>
       <div className="luoi luoi-3">
-        <O nhan="Khu, điểm TĐC" style={{ gridColumn: "1/-1" }}><input value={khu} onChange={(e) => setKhu(e.target.value)} /></O>
+        <O nhan="Khu, điểm TĐC" className="ca-hang"><input value={khu} onChange={(e) => setKhu(e.target.value)} /></O>
         <O nhan="Tiền tố số lô"><input value={tien_} placeholder="vd. A-" onChange={(e) => setTien(e.target.value)} /></O>
         <O nhan="Từ số"><input type="number" min={1} value={tu} onChange={(e) => setTu(e.target.value)} /></O>
         <O nhan="Đến số"><input type="number" min={1} value={den} onChange={(e) => setDen(e.target.value)} /></O>
         <O nhan="Loại"><Chon value={loai} onChange={(e) => setLoai(e.target.value as LoaiLo)}>{Object.entries(TEN_LOAI_LO).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</Chon></O>
         <O nhan="DT mỗi lô (m²)"><OSo className="o-so" value={dt} onChange={setDt} /></O>
         <O nhan="Giá (đ/m²)"><OSo className="o-so" value={gia} onChange={setGia} /></O>
-        <O nhan="Căn cứ giá" style={{ gridColumn: "1/-1" }}><input value={canCu} onChange={(e) => setCanCu(e.target.value)} placeholder="Bắt buộc khi có giá" /></O>
+        <O nhan="Căn cứ giá" className="ca-hang"><input value={canCu} onChange={(e) => setCanCu(e.target.value)} placeholder="Bắt buộc khi có giá" /></O>
       </div>
-      {loi && <div className="thong-bao thong-bao-do" style={{ marginTop: 8 }}>{loi}</div>}
+      {loi && <div className="thong-bao thong-bao-do mt-8">{loi}</div>}
     </HopThoai>
   );
 }
@@ -298,11 +298,11 @@ function HopGiao({ duAn, hos, lo, dong }: { duAn: DuAn; hos: Ho[]; lo: LoTdc; do
   };
   return (
     <HopThoai tieuDe={`Giao ${tenLo(lo)}`} rong={720} dong={dong} chan={<><button className="nut" onClick={dong}>Hủy</button><button className="nut nut-chinh" disabled={!h || !canCu.trim() || !ngay} onClick={() => void luu()}>Giao lô</button></>}>
-      <div className="chu-nho mo" style={{ marginBottom: 8 }}>{TEN_LOAI_LO[lo.loai]} · {hienSo(lo.dienTich) || "—"} m² · giá {lo.gia ? `${tien(D(lo.gia))} đ/m² (${lo.canCuGia})` : "chưa nhập"}. Thông tin lô được ghi vào thẻ Hỗ trợ tái định cư của hồ sơ hộ.</div>
+      <div className="chu-nho mo mb-8">{TEN_LOAI_LO[lo.loai]} · {hienSo(lo.dienTich) || "—"} m² · giá {lo.gia ? `${tien(D(lo.gia))} đ/m² (${lo.canCuGia})` : "chưa nhập"}. Thông tin lô được ghi vào thẻ Hỗ trợ tái định cư của hồ sơ hộ.</div>
       <div className="luoi luoi-2">
-        <O nhan="Hộ được giao" style={{ gridColumn: "1/-1" }}>
+        <O nhan="Hộ được giao" className="ca-hang">
           <div className="nhom-nut">
-            <Chon value={hoId} onChange={(e) => setHoId(e.target.value)} aria-label="Hộ được giao" style={{ flex: 1 }}>
+            <Chon value={hoId} onChange={(e) => setHoId(e.target.value)} aria-label="Hộ được giao" className="gian">
               {!dsHo.length && <option value="">— Không có hộ —</option>}
               {dsHo.map((x) => <option key={x.id} value={x.id}>{x.ma} · {x.ten}{daCo.has(x.id) ? " (đã có lô)" : ""}</option>)}
             </Chon>
@@ -311,10 +311,10 @@ function HopGiao({ duAn, hos, lo, dong }: { duAn: DuAn; hos: Ho[]; lo: LoTdc; do
         </O>
         <O nhan="Hình thức"><Chon value={hinhThuc} onChange={(e) => setHinhThuc(e.target.value as HinhThucGiao)}>{Object.entries(TEN_HINH_THUC_GIAO).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</Chon></O>
         <O nhan="Ngày giao"><input type="date" value={ngay} onChange={(e) => setNgay(e.target.value)} /></O>
-        <O nhan="Căn cứ giao (bắt buộc)" style={{ gridColumn: "1/-1" }}><input className={!canCu.trim() ? "loi-nhap" : ""} value={canCu} onChange={(e) => setCanCu(e.target.value)} placeholder={hinhThuc === "BOC_THAM" ? "Biên bản bốc thăm số …, ngày …" : "Quyết định/biên bản giao đất số …, ngày …"} /></O>
+        <O nhan="Căn cứ giao (bắt buộc)" className="ca-hang"><input className={!canCu.trim() ? "loi-nhap" : ""} value={canCu} onChange={(e) => setCanCu(e.target.value)} placeholder={hinhThuc === "BOC_THAM" ? "Biên bản bốc thăm số …, ngày …" : "Quyết định/biên bản giao đất số …, ngày …"} /></O>
       </div>
-      {h && daCo.has(h.id) && <div className="thong-bao thong-bao-vang" style={{ marginTop: 8 }}>Hộ đã được giao lô khác — chỉ giao thêm khi thuộc trường hợp được bố trí nhiều hơn một lô (Điều 111 Luật Đất đai 2024), phần mềm sẽ cảnh báo để kiểm tra.</div>}
-      {loi && <div className="thong-bao thong-bao-do" style={{ marginTop: 8 }}>{loi}</div>}
+      {h && daCo.has(h.id) && <div className="thong-bao thong-bao-vang mt-8">Hộ đã được giao lô khác — chỉ giao thêm khi thuộc trường hợp được bố trí nhiều hơn một lô (Điều 111 Luật Đất đai 2024), phần mềm sẽ cảnh báo để kiểm tra.</div>}
+      {loi && <div className="thong-bao thong-bao-do mt-8">{loi}</div>}
     </HopThoai>
   );
 }
@@ -336,7 +336,7 @@ function HopThuHoi({ duAn, hos, lo, dong }: { duAn: DuAn; hos: Ho[]; lo: LoTdc; 
     <HopThoai tieuDe={`Thu hồi giao ${tenLo(lo)}`} rong={620} dong={dong} chan={<><button className="nut" onClick={dong}>Hủy</button><button className="nut nut-nguy" disabled={!lyDo.trim()} onClick={() => void luu()}>Thu hồi giao</button></>}>
       <p>Lô đang giao cho <b>{h ? `${h.ma} · ${h.ten}` : "(hồ sơ không còn)"}</b>. Thu hồi giao sẽ xóa thông tin lô trong thẻ Hỗ trợ tái định cư của hồ sơ hộ (giữ hình thức và khoản hỗ trợ khác), lưu vết vào lịch sử thu hồi giao.</p>
       <O nhan="Lý do (bắt buộc)"><input value={lyDo} onChange={(e) => setLyDo(e.target.value)} placeholder="vd. Giao nhầm lô; hộ đổi lô theo biên bản …" /></O>
-      {loi && <div className="thong-bao thong-bao-do" style={{ marginTop: 8 }}>{loi}</div>}
+      {loi && <div className="thong-bao thong-bao-do mt-8">{loi}</div>}
     </HopThoai>
   );
 }
@@ -370,7 +370,7 @@ function HopBocTham({ duAn, hos, dong }: { duAn: DuAn; hos: Ho[]; dong: () => vo
       <div className="luoi luoi-3">
         <O nhan="Ngày bốc thăm"><input type="date" value={ngay} onChange={(e) => setNgay(e.target.value)} /></O>
         <O nhan="Biên bản số, ngày (bắt buộc)" style={{ gridColumn: "span 2" }}><input className={!bienBan.trim() ? "loi-nhap" : ""} value={bienBan} onChange={(e) => setBienBan(e.target.value)} placeholder="vd. 05/BB-HĐBT ngày 10/10/2026" /></O>
-        <O nhan="Thành phần chủ trì, chứng kiến" style={{ gridColumn: "1/-1" }}><input value={thanhPhan} onChange={(e) => setThanhPhan(e.target.value)} placeholder="vd. Hội đồng BT, HT, TĐC; UBMTTQ xã; đại diện các hộ" /></O>
+        <O nhan="Thành phần chủ trì, chứng kiến" className="ca-hang"><input value={thanhPhan} onChange={(e) => setThanhPhan(e.target.value)} placeholder="vd. Hội đồng BT, HT, TĐC; UBMTTQ xã; đại diện các hộ" /></O>
       </div>
       <div className="bang-cuon" style={{ maxHeight: 360, marginTop: 8 }}>
         <table className="bang">
@@ -395,7 +395,7 @@ function HopBocTham({ duAn, hos, dong }: { duAn: DuAn; hos: Ho[]; dong: () => vo
           </tbody>
         </table>
       </div>
-      {loi && <div className="thong-bao thong-bao-do" style={{ marginTop: 8 }}>{loi}</div>}
+      {loi && <div className="thong-bao thong-bao-do mt-8">{loi}</div>}
     </HopThoai>
   );
 }

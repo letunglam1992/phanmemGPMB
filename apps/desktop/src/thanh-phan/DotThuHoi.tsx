@@ -12,9 +12,9 @@ import { hienSo } from "../so";
 import { khopTuKhoa } from "../tim-kiem";
 
 /** Chọn đợt để lọc: "" = mọi đợt / cả dự án, CHUA_XEP_DOT = chưa xếp đợt. */
-export function ChonDot({ duAn, value, onChange, nhanTatCa = "Mọi đợt thu hồi", coChuaXep = true, ...p }: { duAn: DuAn; value: string; onChange: (v: string) => void; nhanTatCa?: string; coChuaXep?: boolean; "aria-label"?: string; style?: React.CSSProperties }) {
+export function ChonDot({ duAn, value, onChange, nhanTatCa = "Mọi đợt thu hồi", coChuaXep = true, ...p }: { duAn: DuAn; value: string; onChange: (v: string) => void; nhanTatCa?: string; coChuaXep?: boolean; "aria-label"?: string; style?: React.CSSProperties; className?: string }) {
   return (
-    <Chon value={value} onChange={(e) => onChange(e.target.value)} aria-label={p["aria-label"] ?? "Lọc đợt thu hồi"} style={p.style}>
+    <Chon value={value} onChange={(e) => onChange(e.target.value)} aria-label={p["aria-label"] ?? "Lọc đợt thu hồi"} style={p.style} className={p.className}>
       <option value="">{nhanTatCa}</option>
       {dsDot(duAn).map((d) => <option key={d.id} value={d.id}>{tenDot(d)}</option>)}
       {coChuaXep && <option value={CHUA_XEP_DOT}>Chưa xếp đợt</option>}
@@ -38,7 +38,7 @@ export function TheDotThuHoi({ d, setD, hos }: { d: DuAn; setD: (d: DuAn) => voi
     setD({ ...d, dotThuHoi: con.length ? con : undefined });
   };
   return (
-    <div className="the" style={{ gridColumn: "1 / -1" }}>
+    <div className="the ca-hang">
       <div className="the-dau">
         <h3>Đợt thu hồi</h3>
         <span className="mo chu-nho">Dự án thu hồi nhiều đợt: phương án chốt, phê duyệt theo từng đợt; mã hồ sơ đánh số chung cả dự án; tổng hợp dự án gồm mọi đợt</span>
@@ -102,7 +102,7 @@ export function HopXepDot({ duAn, hos, dong }: { duAn: DuAn; hos: Ho[]; dong: ()
   };
   return (
     <HopThoai tieuDe="Xếp hộ vào đợt thu hồi" rong={860} dong={dong} chan={<><button className="nut" onClick={dong}>Hủy</button><button className="nut nut-chinh" disabled={dang || !chon.size} onClick={() => void luu()}>Xếp {chon.size} hộ</button></>}>
-      <div className="luoi luoi-3" style={{ marginBottom: 10 }}>
+      <div className="luoi luoi-3 mb-10">
         <O nhan="Xếp vào đợt">
           <Chon value={dot} onChange={(e) => setDot(e.target.value)} aria-label="Xếp vào đợt">
             {dsDot(duAn).map((d) => <option key={d.id} value={d.id}>{tenDot(d)}</option>)}
@@ -139,7 +139,7 @@ export function TheTongHopDot({ duAn, kq, moDot }: { duAn: DuAn; kq: { h: Ho; k:
   const ds = useMemo(() => tongHopTheoDot(duAn, kq), [duAn, kq]);
   const cong = (f: (x: (typeof ds)[number]) => number | import("decimal.js").default) => ds.reduce((s, x) => s.plus(f(x)), D(0));
   return (
-    <div className="the" style={{ marginBottom: 14 }}>
+    <div className="the mb-14">
       <div className="the-dau"><h3>Tổng hợp theo đợt thu hồi</h3><span className="mo chu-nho">Phương án chốt, phê duyệt theo đợt; dòng cộng là tổng chung của dự án</span></div>
       <div className="bang-cuon">
         <table className="bang">

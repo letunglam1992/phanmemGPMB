@@ -67,7 +67,7 @@ export function DinhKemHo({ h, duAn }: { h: Ho; duAn: DuAn }) {
           <input style={{ flex: 1, minWidth: 200 }} placeholder="Ghi chú (vd. Biên bản kiểm đếm đã ký ngày …)" value={ghiChu} onChange={(e) => setGhiChu(e.target.value)} />
           <label className={`nut nut-chinh ${dang ? "tat" : ""}`}>
             {dang ? "Đang lưu…" : "Chọn tệp đính kèm…"}
-            <input type="file" multiple accept={DUOI_DINH_KEM.join(",")} style={{ display: "none" }} disabled={dang} onChange={(e) => { const f = e.target.files; if (f?.length) void them(f); e.target.value = ""; }} />
+            <input type="file" multiple accept={DUOI_DINH_KEM.join(",")} className="an" disabled={dang} onChange={(e) => { const f = e.target.files; if (f?.length) void them(f); e.target.value = ""; }} />
           </label>
         </div>
       )}

@@ -32,7 +32,7 @@ export function HopPhanCong({ hos, dong }: { hos: Ho[]; dong: () => void }) {
   };
   return (
     <HopThoai tieuDe="Phân công cán bộ phụ trách" rong={820} dong={dong} chan={<><button className="nut" onClick={dong}>Hủy</button><button className="nut nut-chinh" disabled={dang || !chon.size} onClick={() => void luu()}>Phân công {chon.size} hồ sơ</button></>}>
-      <div className="luoi luoi-3" style={{ marginBottom: 10 }}>
+      <div className="luoi luoi-3 mb-10">
         <O nhan="Giao cho">
           <Chon value={ten} onChange={(e) => setTen(e.target.value)} aria-label="Giao cho cán bộ">
             {canBo.map((c) => <option key={c.ten} value={c.ten}>{c.hoTen} ({c.ten})</option>)}

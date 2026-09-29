@@ -994,3 +994,24 @@ kbd.phim { display: inline-block; min-width: 20px; padding: 1px 6px; border: 1px
   .tab-bt button { padding: 11px 13px 9px; font-size: 13.5px; }
   .chan { padding: 4px 20px; }
 }
+
+/* P2-4: lớp tiện ích thay kiểu nội tuyến lặp lại (!important: giữ hiệu lực như kiểu nội tuyến cũ) */
+.mt-0 { margin-top: 0 !important; }
+.mt-4 { margin-top: 4px !important; }
+.mt-6 { margin-top: 6px !important; }
+.mt-8 { margin-top: 8px !important; }
+.mt-10 { margin-top: 10px !important; }
+.mt-12 { margin-top: 12px !important; }
+.mt-14 { margin-top: 14px !important; }
+.mb-0 { margin-bottom: 0 !important; }
+.mb-8 { margin-bottom: 8px !important; }
+.mb-10 { margin-bottom: 10px !important; }
+.mb-14 { margin-bottom: 14px !important; }
+.mb-16 { margin-bottom: 16px !important; }
+.khong-xuong-dong { white-space: nowrap !important; }
+.ca-hang { grid-column: 1 / -1 !important; }
+.gian { flex: 1 !important; }
+.day-phai { margin-left: auto !important; }
+.an { display: none !important; }
+.giua-doc { align-items: center !important; }
+.chon-cao { height: 38px !important; border-radius: 10px !important; }

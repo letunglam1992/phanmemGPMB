@@ -110,20 +110,20 @@ export function HopNhapExcel({ duAn, dong }: { duAn: DuAn; dong: () => void }) {
         </>
       }
     >
-      <p className="mo" style={{ marginTop: 0 }}>
+      <p className="mo mt-0">
         Dùng <b>tệp mẫu</b> của phần mềm hoặc <b>tệp Excel sẵn có</b> (danh sách hộ, thửa… cấu trúc cột khác): phần mềm tự đoán trang, dòng tiêu đề và cột theo tên cột — anh/chị chỉ cần chỉnh nếu đoán sai, rồi xem bảng xem trước. Tệp không có mã hộ thì chọn cột <b>Tên chủ sử dụng</b>: thửa cùng chủ gộp một hồ sơ. Phần mềm kiểm tra toàn bộ tệp trước; <b>còn lỗi thì không nhập dòng nào</b>. Tệp chỉ đọc trên máy.
       </p>
       <input type="file" accept=".xlsx" aria-label="Chọn tệp Excel" disabled={dang} onChange={(e) => void chon(e.target.files?.[0])} />
       {dang && <span className="mo" style={{ marginLeft: 8 }}>Đang đọc…</span>}
-      {loiDoc && <div className="thong-bao thong-bao-do" style={{ marginTop: 12 }}>{loiDoc}</div>}
-      {xong && <div className="thong-bao thong-bao-xanh" role="status" style={{ marginTop: 12 }}>{xong}</div>}
+      {loiDoc && <div className="thong-bao thong-bao-do mt-12">{loiDoc}</div>}
+      {xong && <div className="thong-bao thong-bao-xanh mt-12" role="status">{xong}</div>}
 
       {tep && ax && (
         <AnhXaCot tep={tep.tep} ax={ax} setAx={setAx} the={the} setThe={setThe} datLai={() => goc && setAx(goc)} />
       )}
 
       {kq && (
-        <div style={{ marginTop: 14 }}>
+        <div className="mt-14">
           <h4 className="nx-tieu-de">3. Kết quả kiểm tra</h4>
           <div className={`thong-bao ${soLoi ? "thong-bao-do" : "thong-bao-xanh"}`} role="status">
             {tep?.ten}: {kq.hoMoi.length} hồ sơ mới, bổ sung {kq.hoBoSung.length} hồ sơ đã có · {kq.dem.nhanKhau} nhân khẩu · {kq.dem.thua} thửa · {kq.dem.kiemDem} dòng kiểm đếm.{" "}
@@ -178,7 +178,7 @@ function AnhXaCot(p: { tep: TepExcel; ax: AnhXa; setAx: (a: AnhXa) => void; the:
   const soDong = p.tep.trang.find((t) => t.ten === a.trang)?.soDong ?? 1;
 
   return (
-    <div style={{ marginTop: 14 }}>
+    <div className="mt-14">
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <h4 className="nx-tieu-de" style={{ margin: 0 }}>1. Ánh xạ cột dữ liệu</h4>
         <span className="tach" />

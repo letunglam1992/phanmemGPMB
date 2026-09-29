@@ -42,7 +42,7 @@ export function ThungRac() {
           <div className="mo-ta">Dự án, hồ sơ đã xóa — khôi phục được. Xóa hẳn chỉ tài khoản Quản trị, sau {THOI_HAN_THUNG_RAC} ngày; phần mềm không tự xóa. Hồ sơ có trong phương án đã chốt/phê duyệt hoặc đã chi trả không xóa được.</div>
         </div>
       </div>
-      <div className="the" style={{ marginBottom: 14 }}>
+      <div className="the mb-14">
         <div className="the-dau"><h3>Dự án</h3><span className="mo">{thungRac.duAn.length}</span></div>
         <table className="bang">
           <thead><tr><th>Tên dự án</th><th>Xóa lúc</th><th>Người xóa</th><th>Lý do</th><th className="so">Số ngày</th><th /></tr></thead>
@@ -51,7 +51,7 @@ export function ThungRac() {
               <tr key={d.id}>
                 <td><b>{d.ten}</b></td>
                 {oXoa(d.daXoa!)}
-                <td style={{ whiteSpace: "nowrap" }}>
+                <td className="khong-xuong-dong">
                   <button className="nut nut-nho" disabled={!quyen("XOA_DU_AN")} onClick={() => void khoiPhucDuAn(d.id)}>Khôi phục</button>{" "}
                   {nutXoaHan(d.daXoa!, () => void xoaHanDuAn(d.id), `dự án "${d.ten}" và toàn bộ hồ sơ (phần mềm yêu cầu lưu một bản sao lưu trước)`)}
                 </td>
@@ -72,7 +72,7 @@ export function ThungRac() {
                 <td><b>{h.ten}</b></td>
                 <td className="chu-nho">{tenDuAn(h.duAnId)}</td>
                 {oXoa(h.daXoa!)}
-                <td style={{ whiteSpace: "nowrap" }}>
+                <td className="khong-xuong-dong">
                   <button className="nut nut-nho" disabled={!quyen("SUA_HO_SO")} onClick={() => void khoiPhucHo(h.id)}>Khôi phục</button>{" "}
                   {nutXoaHan(h.daXoa!, () => void xoaHanHo(h.id), `hồ sơ ${h.ma} – ${h.ten}`)}
                 </td>
@@ -103,7 +103,7 @@ function TheDaXoaHan() {
     };
   }, [kho, dsDuAn, thungRac, lan]);
   return (
-    <div className="the" style={{ marginTop: 14 }}>
+    <div className="the mt-14">
       <div className="the-dau">
         <h3>Hồ sơ đã xóa hẳn (còn trong lịch sử)</h3>
         <span className="mo chu-nho">Giữ {giuLichSu ? `${giuLichSu} năm` : "không thời hạn"}; chỉ Quản trị khôi phục, bắt buộc lý do</span>

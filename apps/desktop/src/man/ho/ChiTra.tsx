@@ -33,8 +33,8 @@ export function TabChiTra({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) =>
   if (r.trangThai === "CHUA_DUYET")
     return (
       <div className="the"><div className="the-than">
-        <div className="thong-bao thong-bao-vang" style={{ marginBottom: 0 }}>Hộ chưa có trong bản phương án đã ghi nhận phê duyệt (màn Dự án → Phương án – phiên bản). Số phải trả chỉ lấy từ bản đã phê duyệt.</div>
-        {r.canhBao.map((c) => <div key={c} className="thong-bao thong-bao-do" style={{ marginTop: 8 }}>{c}</div>)}
+        <div className="thong-bao thong-bao-vang mb-0">Hộ chưa có trong bản phương án đã ghi nhận phê duyệt (màn Dự án → Phương án – phiên bản). Số phải trả chỉ lấy từ bản đã phê duyệt.</div>
+        {r.canhBao.map((c) => <div key={c} className="thong-bao thong-bao-do mt-8">{c}</div>)}
       </div></div>
     );
 

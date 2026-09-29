@@ -31,14 +31,14 @@ export function TheDuBao({ duAn, hos, moKeHoach }: { duAn: DuAn; hos: Ho[]; moKe
             Chưa dự báo được {r.soKhongDuBao}/{conLai.length} hộ: bước {r.buocThieu.map((m) => `${m} (${tenBuoc(m)})`).join(", ")} không có thời hạn luật định và đơn vị chưa nhập thời gian dự kiến.
           </div>
         )}
-        <div style={{ marginTop: 8 }}>
+        <div className="mt-8">
           <button className="nut nut-nho" disabled={!conLai.length} onClick={() => setMo(true)}>Xem từng hộ</button>{" "}
           <button className="nut nut-nho" onClick={moKeHoach}>Nhập thời gian dự kiến…</button>
         </div>
       </div>
       {mo && (
         <HopThoai tieuDe="Dự báo tiến độ từng hộ" dong={() => setMo(false)} rong={960}>
-          <p className="mo chu-nho" style={{ marginTop: 0 }}>
+          <p className="mo chu-nho mt-0">
             Ước tính giả định mỗi bước còn lại dùng hết thời gian: thời hạn luật định ({Object.entries(THOI_HAN_LUAT).map(([m, t]) => `bước ${m}: ${t.soNgay} ${t.loai === "NLV" ? "NLV" : "ngày"}`).join("; ")}) hoặc thời gian dự kiến đơn vị nhập;
             tính từ ngày hoàn thành gần nhất, theo lịch ngày nghỉ. Không phải cam kết tiến độ. Xếp hộ dự kiến muộn nhất trước (đường găng).
           </p>

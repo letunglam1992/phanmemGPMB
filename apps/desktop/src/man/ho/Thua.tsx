@@ -75,7 +75,7 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
                         <button className="nut nut-nho" style={{ borderColor: "var(--do)", color: "var(--do)" }} onClick={() => setChonGia(t.id)}>Chọn giá đất…</button>
                       )}
                     </td>
-                    <td style={{ whiteSpace: "nowrap" }}>
+                    <td className="khong-xuong-dong">
                       <button className="nut nut-chu nut-nho" title="Giấy chứng nhận, phân lớp đất, tùy chọn cây trồng xen" onClick={() => setMoRong(moRong === t.id ? null : t.id)}>⋯</button>
                       <button className="nut nut-chu nut-nguy nut-nho" onClick={() => { if (h.taiSan.some((x) => x.thuaId === t.id) && !confirm("Thửa có tài sản kiểm đếm. Xóa cả tài sản?")) return; doi({ ...h, thua: h.thua.filter((x) => x.id !== t.id), taiSan: h.taiSan.filter((x) => x.thuaId !== t.id) }); }}>✕</button>
                     </td>
@@ -103,7 +103,7 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
                             ))}
                             <div className="o-nhap"><label>Ghi chú (danh sách)</label><input value={t.ghiChu ?? ""} onChange={(e) => sua(t.id, { ghiChu: e.target.value })} /></div>
                           </div>
-                          <div className="mo chu-nho" style={{ marginTop: 4 }}>DT không có trong GCN = DT thu hồi − DT thu hồi có GCN (tự tính).</div>
+                          <div className="mo chu-nho mt-4">DT không có trong GCN = DT thu hồi − DT thu hồi có GCN (tự tính).</div>
                         </div>
                         {cs.nongLamTruong && (
                           <div style={{ marginBottom: 12, paddingBottom: 12, borderBottom: "1px solid var(--vien)" }}>
@@ -118,7 +118,7 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
                                 <input disabled={!t.nongLamTruong} placeholder="Hợp đồng giao khoán, xác nhận của công ty, QĐ thu hồi của UBND tỉnh…" value={t.nongLamTruong?.hoSo ?? ""} onChange={(e) => sua(t.id, { nongLamTruong: { truongHop: t.nongLamTruong!.truongHop, hoSo: e.target.value } })} />
                               </div>
                             </div>
-                            {t.nongLamTruong && <div className="mo chu-nho" style={{ marginTop: 4 }}>{cs.nongLamTruong.truongHop[t.nongLamTruong.truongHop].tenKhoanDat}; {cs.nongLamTruong.truongHop[t.nongLamTruong.truongHop].cayTrong === "HO_TRO_100" ? "cây trồng hỗ trợ 100% đơn giá bồi thường" : "cây trồng tính như bồi thường (văn bản không quy định riêng)"}; hỗ trợ ổn định đời sống, chuyển đổi nghề nhập ở thẻ Hỗ trợ. Phần mềm không tự xác định trường hợp.</div>}
+                            {t.nongLamTruong && <div className="mo chu-nho mt-4">{cs.nongLamTruong.truongHop[t.nongLamTruong.truongHop].tenKhoanDat}; {cs.nongLamTruong.truongHop[t.nongLamTruong.truongHop].cayTrong === "HO_TRO_100" ? "cây trồng hỗ trợ 100% đơn giá bồi thường" : "cây trồng tính như bồi thường (văn bản không quy định riêng)"}; hỗ trợ ổn định đời sống, chuyển đổi nghề nhập ở thẻ Hỗ trợ. Phần mềm không tự xác định trường hợp.</div>}
                           </div>
                         )}
                         {(t.phanLop || !laDatNN(t.loaiDat)) && (
@@ -136,7 +136,7 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
                             </Chon>
                           </div>
                         </div>
-                        <div className="mo chu-nho" style={{ marginTop: 6 }}>Thứ tự tính cây = thứ tự dòng ở thẻ Kiểm đếm (chủ sở hữu lựa chọn, k4 Đ5 PL VIII QĐ 106/2025).</div>
+                        <div className="mo chu-nho mt-6">Thứ tự tính cây = thứ tự dòng ở thẻ Kiểm đếm (chủ sở hữu lựa chọn, k4 Đ5 PL VIII QĐ 106/2025).</div>
                         <div className="luoi" style={{ gridTemplateColumns: "260px 1fr", alignItems: "end", marginTop: 10 }}>
                           <div className="o-nhap"><label>Cây không có mật độ trên thửa trồng xen (VM-35)</label>
                             <Chon value={t.cayXen?.khongMatDo ?? ""} onChange={(e) => sua(t.id, { cayXen: { dienTichTru: t.cayXen?.dienTichTru ?? "", lyDoTru: t.cayXen?.lyDoTru ?? "", cachXep: t.cayXen?.cachXep ?? "DUNG_KHI_VUOT", lyDoKhongMatDo: t.cayXen?.lyDoKhongMatDo ?? "", khongMatDo: (e.target.value || undefined) as "TINH_100" | "TINH_30" | undefined } })}>
@@ -147,7 +147,7 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
                           </div>
                           <div className="o-nhap"><label>Lý do, căn cứ lựa chọn (bắt buộc)</label><input value={t.cayXen?.lyDoKhongMatDo ?? ""} onChange={(e) => sua(t.id, { cayXen: { dienTichTru: t.cayXen?.dienTichTru ?? "", lyDoTru: t.cayXen?.lyDoTru ?? "", cachXep: t.cayXen?.cachXep ?? "DUNG_KHI_VUOT", khongMatDo: t.cayXen?.khongMatDo, lyDoKhongMatDo: e.target.value } })} /></div>
                         </div>
-                        <div className="mo chu-nho" style={{ marginTop: 4 }}>Áp dụng cho cây hàng năm, hoa màu tính theo m² và loài chưa có mật độ (vd. đào, táo: nhập mật độ ở thẻ Kiểm đếm thì được xếp vào quỹ).</div>
+                        <div className="mo chu-nho mt-4">Áp dụng cho cây hàng năm, hoa màu tính theo m² và loài chưa có mật độ (vd. đào, táo: nhập mật độ ở thẻ Kiểm đếm thì được xếp vào quỹ).</div>
                       </td>
                     </tr>
                   )}

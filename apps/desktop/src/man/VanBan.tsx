@@ -253,7 +253,7 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
               <h2>{mau.nguon === "RIENG" ? "" : "Mẫu số "}{mau.ma}. {mau.ten}</h2>
               <div className="phai">
                 <button className="nut nut-nho" onClick={async () => taiXuong(await napMau(), `Mau-${ma}_${tenAnToan(mau.ten)}_mau-trong.docx`, DOCX)} title="Tải mẫu (có các trường {…}) để chỉnh trong Word">Tải mẫu</button>
-                {quyen("THAY_MAU") && <label className="nut nut-nho">Thay mẫu…<input type="file" accept=".docx" style={{ display: "none" }} onChange={(e) => e.target.files?.[0] && thayMau(e.target.files[0])} /></label>}
+                {quyen("THAY_MAU") && <label className="nut nut-nho">Thay mẫu…<input type="file" accept=".docx" className="an" onChange={(e) => e.target.files?.[0] && thayMau(e.target.files[0])} /></label>}
                 {mauTuy.includes(ma) && quyen("THAY_MAU") && <button className="nut nut-nho" onClick={async () => { await kho.xoaMau(ma); setMauTuy(await kho.dsMauTuy()); setThongBao({ loai: "xanh", noiDung: "Đã khôi phục mẫu gốc." }); }}>Khôi phục mẫu gốc</button>}
                 <button className="nut nut-nho" onClick={async () => setXemTruong(truongTrongMau(await napMau()))}>Các trường</button>
               </div>

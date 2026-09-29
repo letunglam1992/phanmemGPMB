@@ -172,7 +172,7 @@ function TheTongQuan({ duAn, kq, moHo, moDot, capNhatTd, keHoach }: { duAn: DuAn
           </div>
         </div>
         <div className="the">
-          <div className="the-dau"><h3>Tiến độ chung</h3><span className="cap-nhat" style={{ marginLeft: "auto" }}><BieuTuong ten="dongHo" co={14} />{tk.capNhatCuoi ? new Date(tk.capNhatCuoi).toLocaleString("vi-VN") : "—"}</span></div>
+          <div className="the-dau"><h3>Tiến độ chung</h3><span className="cap-nhat day-phai"><BieuTuong ten="dongHo" co={14} />{tk.capNhatCuoi ? new Date(tk.capNhatCuoi).toLocaleString("vi-VN") : "—"}</span></div>
           <div className="the-than" style={{ display: "flex", gap: 18, flexWrap: "wrap", alignItems: "center" }}>
             <VongTienDo tyLe={tk.tienDoChung} nhan="Số bước đã xong / số bước áp dụng" />
             <VongTienDo tyLe={tk.dtThuHoi ? tk.dtDaBanGiao / tk.dtThuHoi : 0} nhan={`Mặt bằng đã bàn giao: ${Math.round(tk.dtDaBanGiao).toLocaleString("vi-VN")} / ${Math.round(tk.dtThuHoi).toLocaleString("vi-VN")} m²`} />
@@ -238,7 +238,7 @@ function TheThongTin({ duAn, tiep }: { duAn: DuAn; tiep: () => void }) {
             <O nhan="Mẫu mã" goiY={loiMauMa(d.mauMaHo ?? "") ?? <>Dãy <b>#</b> là chỗ đánh số (số dấu # = số chữ số). Ví dụ: <code>H###</code> → {taoMa("H###", 1)}; <code>CM-2026-####</code> → {taoMa("CM-2026-####", 1)}. Mã kế tiếp: <b>{maTiep}</b></>}>
               <input className={loiMauMa(d.mauMaHo ?? "") ? "loi-nhap" : ""} value={d.mauMaHo ?? ""} placeholder={MAU_MA_MAC_DINH} onChange={(e) => setD({ ...d, mauMaHo: e.target.value })} />
             </O>
-            <p className="mo chu-nho" style={{ marginBottom: 0 }}>Áp dụng cho hồ sơ tạo mới (thêm tay, nhập Excel không có cột mã, tạo từ bản đồ). Hồ sơ đã có giữ nguyên mã; mã luôn duy nhất trong dự án.</p>
+            <p className="mo chu-nho mb-0">Áp dụng cho hồ sơ tạo mới (thêm tay, nhập Excel không có cột mã, tạo từ bản đồ). Hồ sơ đã có giữ nguyên mã; mã luôn duy nhất trong dự án.</p>
           </div>
         </div>
         <div className="the">
@@ -307,19 +307,19 @@ function TheHo({ duAn, kq }: { duAn: DuAn; kq: Kq }) {
         <span className="mo">{ds.length}/{kq.length}</span>
         <div className="phai">
           <label className="o-tim" style={{ minWidth: 300 }}><BieuTuong ten="traCuu" co={16} /><input placeholder="Tìm theo tên, mã, địa chỉ, tờ/thửa (vd. 5/85)…" value={loc} onChange={(e) => setLoc(e.target.value)} aria-label="Tìm hộ trong dự án" /></label>
-          <Chon value={locTt} onChange={(e) => setLocTt(e.target.value as TrangThaiGpmb | "")} aria-label="Lọc hiện trạng" style={{ height: 38, borderRadius: 10 }}>
+          <Chon value={locTt} onChange={(e) => setLocTt(e.target.value as TrangThaiGpmb | "")} aria-label="Lọc hiện trạng" className="chon-cao">
             <option value="">Mọi hiện trạng</option>
             {THU_TU_TRANG_THAI.map((t) => <option key={t} value={t}>{TT_GPMB[t].ten}</option>)}
           </Chon>
-          {coDot(duAn) && <ChonDot duAn={duAn} value={locDot} onChange={setLocDot} style={{ height: 38, borderRadius: 10 }} />}
+          {coDot(duAn) && <ChonDot duAn={duAn} value={locDot} onChange={setLocDot} className="chon-cao" />}
           {coDot(duAn) && quyen("SUA_HO_SO") && <button className="nut" onClick={() => setXepDot(true)}>Xếp đợt…</button>}
-          <Chon value={locPc} onChange={(e) => setLocPc(e.target.value)} aria-label="Lọc cán bộ phụ trách" style={{ height: 38, borderRadius: 10 }}>
+          <Chon value={locPc} onChange={(e) => setLocPc(e.target.value)} aria-label="Lọc cán bộ phụ trách" className="chon-cao">
             <option value="">Mọi cán bộ phụ trách</option>
             <option value="__chua__">Chưa phân công</option>
             {dsCanBo.map((c) => <option key={c.ten} value={c.ten}>{c.hoTen}</option>)}
           </Chon>
           {quyen("SUA_HO_SO") && <button className="nut" onClick={() => setPhanCong(true)}>Phân công…</button>}
-          <Chon value={locPl} onChange={(e) => setLocPl(e.target.value as NhomPhapLy | "CHUA" | "")} aria-label="Lọc pháp lý nguồn gốc" style={{ height: 38, borderRadius: 10 }}>
+          <Chon value={locPl} onChange={(e) => setLocPl(e.target.value as NhomPhapLy | "CHUA" | "")} aria-label="Lọc pháp lý nguồn gốc" className="chon-cao">
             <option value="">Mọi pháp lý nguồn gốc</option>
             {THU_TU_PHAP_LY.map((k) => <option key={k} value={k}>{NHOM_PHAP_LY[k].ngan}</option>)}
             <option value="CHUA">Chưa phân loại</option>

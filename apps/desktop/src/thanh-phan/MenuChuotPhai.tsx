@@ -296,7 +296,7 @@ export function MenuChuotPhai({ laToi, doiGiaoDien }: { laToi: boolean; doiGiaoD
             const so = i;
             return (
               <button key={so} role="menuitem" disabled={m.tat} className={`${chon === so ? "dang-chon" : ""} ${m.nguy ? "nut-nguy" : ""}`} onMouseEnter={() => setChon(so)} onClick={() => chay(m)}>
-                <span style={{ flex: 1 }}>{m.nhan}</span>
+                <span className="gian">{m.nhan}</span>
                 {m.phim && <span className="menu-phim">{m.phim}</span>}
               </button>
             );
