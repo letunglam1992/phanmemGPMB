@@ -14,7 +14,7 @@ const DA_CO_NOI_KHAC: [string, string][] = [
   ["khoản 9", "Đất nguồn gốc nông, lâm trường — thẻ Thửa đất"],
   ["khoản 11", "Hỗ trợ 20% tiền sử dụng đất thửa tái định cư — thẻ Hỗ trợ, mục Tái định cư"],
   ["khoản 12", "Hỗ trợ tạm cư — thẻ Hỗ trợ (mức theo Điều 3 QĐ 14/2026)"],
-  ["khoản 5, 7, 8, 10", "Chưa tính tự động (ổn định sản xuất cần định mức; cây trồng trên đất không đủ điều kiện; chênh lệch giá đất) — nhập ở \"Khoản khác\" bên dưới kèm căn cứ"],
+  ["khoản 5, 7, 8, 10", "Chưa tính tự động (ổn định sản xuất theo khoản 1 Điều 13 PL II QĐ 106; hỗ trợ cây trồng 100%/80%; chênh lệch giá đất rừng, đất sai mục đích GCN) — nhập ở \"Khoản khác\" bên dưới kèm căn cứ"],
 ];
 
 /**
@@ -27,7 +27,7 @@ export function TabHoTroKhac({ h, doi, duAn, kq }: Tab & { duAn: DuAn; kq: KetQu
   const k: HoTroKhacHo = h.hoTro.khac ?? { khoan: [] };
   const dat = (p: Partial<HoTroKhacHo>) => {
     const moi = { ...k, ...p };
-    const trong = !moi.doiTuongCs?.length && !moi.hoNgheo && !moi.xayLaiNha && !moi.khoan.length && !moi.vm17;
+    const trong = !moi.doiTuongCs?.length && !moi.hoNgheo && !moi.xayLaiNha && !moi.khoan.length && !moi.vm17 && !moi.khauXayLaiNha;
     doi({ ...h, hoTro: { ...h.hoTro, khac: trong ? undefined : moi } });
   };
   const suaDt = (id: string, p: Partial<NonNullable<HoTroKhacHo["doiTuongCs"]>[number]>) => dat({ doiTuongCs: k.doiTuongCs!.map((x) => (x.id === id ? { ...x, ...p } : x)) });
@@ -41,25 +41,30 @@ export function TabHoTroKhac({ h, doi, duAn, kq }: Tab & { duAn: DuAn; kq: KetQu
       <div className="luoi luoi-2">
         <div className="the">
           <div className="the-dau">
-            <h3>Hộ có đối tượng chính sách phải di chuyển chỗ ở</h3>
+            <h3>Người hưởng trợ cấp xã hội phải di chuyển chỗ ở</h3>
             <span className="mo chu-nho">khoản 1 Điều 6 QĐ 14/2026</span>
             <div className="phai"><button className="nut nut-nho" onClick={() => dat({ doiTuongCs: [...(k.doiTuongCs ?? []), { id: taoId(), ten: "", muc: "", xacNhan: "" }] })}><BieuTuong ten="cong" co={14} /> Thêm đối tượng</button></div>
           </div>
           <div className="the-than luoi">
-            <div className="mo chu-nho">Cán bộ chọn mức theo đối tượng và xác nhận của phòng chuyên môn; hộ có nhiều đối tượng chỉ hưởng một mức cao nhất.</div>
-            {(k.doiTuongCs ?? []).map((x) => (
-              <div key={x.id} className="luoi" style={{ gridTemplateColumns: "1.2fr 170px 1.2fr 36px", gap: 6, alignItems: "end" }}>
-                <O nhan="Đối tượng (họ tên, diện chính sách)"><input value={x.ten} onChange={(e) => suaDt(x.id, { ten: e.target.value })} /></O>
-                <O nhan="Mức hỗ trợ">
-                  <Chon value={x.muc} aria-label="Mức hỗ trợ đối tượng chính sách" className={x.muc ? "" : "loi-nhap"} onChange={(e) => suaDt(x.id, { muc: e.target.value })}>
-                    <option value="">— Chọn mức —</option>
-                    {(cs?.doiTuongChinhSach.mucs ?? []).map((m) => <option key={m} value={m}>{dinhDang(D(m))} đ</option>)}
-                  </Chon>
-                </O>
-                <O nhan="Xác nhận của phòng chuyên môn *"><input className={x.xacNhan.trim() ? "" : "loi-nhap"} value={x.xacNhan} placeholder="Số, ngày văn bản xác nhận" onChange={(e) => suaDt(x.id, { xacNhan: e.target.value })} /></O>
-                <button className="nut nut-chu nut-nguy nut-nho" aria-label="Xóa đối tượng" onClick={() => { const con = k.doiTuongCs!.filter((y) => y.id !== x.id); dat({ doiTuongCs: con.length ? con : undefined }); }}><BieuTuong ten="thungRac" co={15} /></button>
-              </div>
-            ))}
+            <div className="mo chu-nho">Hộ có người đang hưởng chế độ trợ cấp xã hội của Nhà nước phải di chuyển chỗ ở. Chọn đối tượng theo điểm a–đ (mức theo điểm), ghi xác nhận của Phòng Văn hóa – Xã hội (hoặc Kinh tế, Văn hóa, Xã hội) UBND cấp xã. Hộ có nhiều tiêu chuẩn chỉ hưởng một mức cao nhất; điểm đ không áp dụng cho hộ nghèo (khoản 2).</div>
+            {(k.doiTuongCs ?? []).map((x) => {
+              const dm = cs?.doiTuongChinhSach.diem?.find((y) => y.ma === x.diem);
+              return (
+                <div key={x.id} className="luoi" style={{ gridTemplateColumns: "1fr 1.6fr 1.1fr 36px", gap: 6, alignItems: "end" }}>
+                  <O nhan="Họ tên người hưởng"><input value={x.ten} onChange={(e) => suaDt(x.id, { ten: e.target.value })} /></O>
+                  <O nhan="Đối tượng (điểm, mức)">
+                    <Chon value={x.diem ?? (x.muc ? "__muc" : "")} aria-label="Đối tượng hưởng trợ cấp" className={x.diem || x.muc ? "" : "loi-nhap"} title={dm?.ten} onChange={(e) => { const m = cs?.doiTuongChinhSach.diem?.find((y) => y.ma === e.target.value); suaDt(x.id, { diem: m?.ma, muc: m?.muc ?? "" }); }}>
+                      <option value="">— Chọn đối tượng —</option>
+                      {!x.diem && x.muc && <option value="__muc">Mức {dinhDang(D(x.muc))} đ (chưa chọn điểm)</option>}
+                      {(cs?.doiTuongChinhSach.diem ?? []).map((m) => <option key={m.ma} value={m.ma} title={m.ten}>Điểm {m.ma} – {dinhDang(D(m.muc))} đ: {m.ten.length > 70 ? `${m.ten.slice(0, 70)}…` : m.ten}</option>)}
+                    </Chon>
+                  </O>
+                  <O nhan="Xác nhận của phòng chuyên môn *"><input className={x.xacNhan.trim() ? "" : "loi-nhap"} value={x.xacNhan} placeholder="Số, ngày văn bản xác nhận" onChange={(e) => suaDt(x.id, { xacNhan: e.target.value })} /></O>
+                  <button className="nut nut-chu nut-nguy nut-nho" aria-label="Xóa đối tượng" onClick={() => { const con = k.doiTuongCs!.filter((y) => y.id !== x.id); dat({ doiTuongCs: con.length ? con : undefined }); }}><BieuTuong ten="thungRac" co={15} /></button>
+                  {dm && <div className="chu-nho mo ca-hang">Điểm {dm.ma}: {dm.ten}</div>}
+                </div>
+              );
+            })}
           </div>
         </div>
         <div className="the">
@@ -95,17 +100,25 @@ export function TabHoTroKhac({ h, doi, duAn, kq }: Tab & { duAn: DuAn; kq: KetQu
 
       <div className="the">
         <div className="the-dau">
-          <h3>Ổn định đời sống khi phá dỡ nhà ở, làm lại nhà nơi khác</h3>
+          <h3>Ổn định đời sống trong thời gian xây dựng lại nhà ở</h3>
           <span className="mo chu-nho">khoản 6 Điều 6 QĐ 14/2026{cs ? ` · ${cs.xayLaiNha.kgGaoNhanKhauThang} kg gạo × giá gạo × nhân khẩu × ${cs.xayLaiNha.soThang} tháng` : ""}</span>
           <div className="phai"><label><input type="checkbox" checked={!!k.xayLaiNha} onChange={(e) => dat({ xayLaiNha: e.target.checked || undefined })} /> Áp dụng</label></div>
         </div>
+        {k.xayLaiNha && (
+          <div className="the-than luoi luoi-2">
+            <O nhan="Số nhân khẩu được hỗ trợ" goiY={cs?.xayLaiNha.nhanKhau ?? "Người có chung quyền sử dụng đất tại thời điểm phê duyệt phương án"}>
+              <input inputMode="numeric" aria-label="Số nhân khẩu được hỗ trợ khoản 6" value={k.khauXayLaiNha ?? ""} placeholder={`Trống = ${h.nhanKhau.length} (nhân khẩu trong hồ sơ)`} onChange={(e) => dat({ khauXayLaiNha: e.target.value.replace(/\D/g, "") || undefined })} />
+            </O>
+            <div className="mo chu-nho" style={{ alignSelf: "center" }}>Hộ có nhà trên đất phải phá dỡ và phải làm lại nhà ở tại địa điểm khác. Giá gạo tẻ trung bình của địa phương tại thời điểm hỗ trợ (nhập ở Thông tin dự án).</div>
+          </div>
+        )}
         {k.xayLaiNha && h.hoTro.onDinh && <div className="thong-bao thong-bao-vang chu-nho" style={{ margin: "0 12px 10px" }}>Hộ đồng thời có hỗ trợ ổn định đời sống theo Điều 12 Phụ lục II QĐ 106/2025 (thẻ Hỗ trợ) — cần kiểm tra, tránh hỗ trợ trùng. Phần mềm không tự loại khoản nào.</div>}
       </div>
 
       <div className="the">
         <div className="the-dau">
           <h3>Khoản hỗ trợ khác nhập tay</h3>
-          <span className="mo chu-nho">khoản 4, 13, 14 Điều 6 và chính sách chưa có sẵn — bắt buộc căn cứ</span>
+          <span className="mo chu-nho">khoản 4, 13 Điều 6 và chính sách chưa có sẵn — bắt buộc căn cứ; khoản 14: công khai, minh bạch, có biên bản họp bàn</span>
           <div className="phai">
             {(["K4", "K13_14", "KHAC"] as const).map((l) => (
               <button key={l} className="nut nut-nho" title={TEN_KHOAN_KHAC[l].goiY} onClick={() => dat({ khoan: [...k.khoan, { id: taoId(), loai: l, noiDung: l === "KHAC" ? "" : TEN_KHOAN_KHAC[l].ten, soTien: "", canCu: "" }] })}>

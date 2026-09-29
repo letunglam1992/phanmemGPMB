@@ -105,7 +105,7 @@ function TheThua(p: {
           <button className="nut nut-nho" onClick={() => p.themDanhMuc("PL VIII")}>+ Cây trồng (PL VIII)</button>
           <button className="nut nut-nho" onClick={p.themVatNuoi}>+ Di dời vật nuôi</button>
           <button className="nut nut-nho" onClick={p.themKhac}>+ Ngoài danh mục</button>
-          <button className="nut nut-nho" title="Điều 5 QĐ 14/2026: nhà, công trình phục vụ đời sống phải tháo dỡ, phá dỡ một phần mà phần còn lại vẫn bảo đảm tiêu chuẩn kỹ thuật — bồi thường chi phí sửa chữa theo dự toán" onClick={p.themSuaChua}>+ Sửa chữa phần còn lại (Đ5 QĐ14)</button>
+          <button className="nut nut-nho" title="Điều 5 QĐ 14/2026 (điểm a khoản 11 Điều 3 NQ 254/2025/QH15): nhà, công trình phục vụ đời sống phá dỡ một phần mà phần còn lại vẫn bảo đảm tiêu chuẩn kỹ thuật — bồi thường chi phí sửa chữa theo thực tế; UBND cấp xã lập dự toán, phê duyệt trong phương án" onClick={p.themSuaChua}>+ Sửa chữa phần còn lại (Đ5 QĐ14)</button>
         </div>
       </div>
       <div className="bang-cuon">
@@ -170,7 +170,7 @@ function ThamSo({ x, sua, nhaThua }: { x: TaiSan; sua: (id: string, p: Partial<T
           <option value="">— Nhà, công trình bị phá dỡ một phần —</option>
           {nhaThua.map((n) => <option key={n.id} value={n.id}>{n.ten}</option>)}
         </Chon>
-        <input placeholder="Dự toán được duyệt: số, ngày *" aria-label="Căn cứ dự toán sửa chữa" className={x.canCu.trim() ? "" : "loi-nhap"} value={x.canCu} onChange={(e) => sua(x.id, { canCu: e.target.value })} />
+        <input placeholder="Dự toán do UBND cấp xã lập: số, ngày *" aria-label="Căn cứ dự toán sửa chữa" className={x.canCu.trim() ? "" : "loi-nhap"} value={x.canCu} onChange={(e) => sua(x.id, { canCu: e.target.value })} />
         <input placeholder="Văn bản xác nhận phần còn lại bảo đảm tiêu chuẩn kỹ thuật *" aria-label="Xác nhận phần còn lại bảo đảm tiêu chuẩn kỹ thuật" className={x.xacNhan.trim() ? "" : "loi-nhap"} value={x.xacNhan} onChange={(e) => sua(x.id, { xacNhan: e.target.value })} />
       </div>
     );

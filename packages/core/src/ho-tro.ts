@@ -209,30 +209,43 @@ const thieuCs = (ma: string, noiDung: string, cs: BoChinhSach): DongTinh =>
   dong({ ma, noiDung, congThuc: "—", thanhTien: null, canCu: [{ vanBan: "Bộ chính sách", viTri: cs.ma }], trangThai: "THIEU_CAN_CU", canhBao: [`Bộ chính sách ${cs.ma} không có quy định khoản này`] });
 
 /**
- * C14 – khoản 1 Điều 6 QĐ 14/2026: hộ có đối tượng chính sách phải di chuyển chỗ ở. Cán bộ chọn mức cho từng đối tượng
- * theo xác nhận của phòng chuyên môn (phần mềm không có danh sách đối tượng – mức); hộ có nhiều đối tượng chỉ hưởng mức cao nhất.
+ * C14 – khoản 1 Điều 6 QĐ 14/2026: hộ có người đang hưởng chế độ trợ cấp xã hội phải di chuyển chỗ ở. Cán bộ chọn
+ * điểm (a–đ) cho từng đối tượng theo xác nhận của phòng chuyên môn — mức theo điểm; hộ có nhiều tiêu chuẩn chỉ hưởng
+ * một mức cao nhất. Điểm đ trừ đối tượng khoản 2 (hộ nghèo) → hộ có khoản 2 không tính điểm đ.
+ * Dữ liệu cũ chỉ có `muc` (không có điểm) vẫn tính nếu mức thuộc các mức quy định.
  */
-export function hoTroDoiTuongChinhSach(cs: BoChinhSach, p: { doiTuong: { ten: string; muc: SoVao; xacNhan: string }[] }): DongTinh {
-  const nd = "Hỗ trợ hộ gia đình có đối tượng chính sách phải di chuyển chỗ ở";
+export function hoTroDoiTuongChinhSach(cs: BoChinhSach, p: { doiTuong: { ten: string; diem?: string; muc?: SoVao; xacNhan: string }[]; coHoNgheo?: boolean }): DongTinh {
+  const nd = "Hỗ trợ hộ gia đình có người hưởng chế độ trợ cấp xã hội phải di chuyển chỗ ở";
   const k = cs.hoTroKhac?.doiTuongChinhSach;
   if (!k) return thieuCs("C14", nd, cs);
-  if (!p.doiTuong.length) return dong({ ma: "C14", noiDung: nd, congThuc: "—", thanhTien: null, canCu: k.canCu, trangThai: "THIEU_CAN_CU", canhBao: ["Chưa khai đối tượng chính sách"] });
+  if (!p.doiTuong.length) return dong({ ma: "C14", noiDung: nd, congThuc: "—", thanhTien: null, canCu: k.canCu, trangThai: "THIEU_CAN_CU", canhBao: ["Chưa khai đối tượng"] });
   const canhBao: string[] = [];
-  const hopLe = p.doiTuong.filter((x) => k.mucs.some((m) => D(m).eq(D(x.muc || "0"))));
-  if (hopLe.length < p.doiTuong.length) canhBao.push(`Mức không thuộc các mức quy định (${k.mucs.map((m) => dinhDang(D(m))).join("; ")} đ) — chọn lại`);
+  const ds = p.doiTuong.map((x) => {
+    const dm = x.diem ? k.diem?.find((y) => y.ma === x.diem) : undefined;
+    const muc = dm ? dm.muc : x.muc && k.mucs.some((m) => D(m).eq(D(x.muc!))) ? String(x.muc) : null;
+    return { ...x, dm, muc };
+  });
+  const chuaChon = ds.filter((x) => !x.muc);
+  if (chuaChon.length) canhBao.push(`Chưa chọn đối tượng (điểm a–đ khoản 1 Điều 6) cho: ${chuaChon.map((x) => x.ten || "(chưa ghi tên)").join(", ")}`);
+  let hopLe = ds.filter((x) => x.muc);
+  if (p.coHoNgheo && hopLe.some((x) => x.diem === "đ")) {
+    canhBao.push("Điểm đ khoản 1 Điều 6 trừ đối tượng khoản 2 (hộ nghèo) — hộ đã hưởng khoản 2 không tính điểm đ");
+    hopLe = hopLe.filter((x) => x.diem !== "đ");
+  }
   if (!hopLe.length) return dong({ ma: "C14", noiDung: nd, congThuc: "—", thanhTien: null, canCu: k.canCu, trangThai: "THIEU_CAN_CU", canhBao });
-  const cao = hopLe.reduce((a, x) => (D(x.muc).gt(D(a.muc)) ? x : a));
-  const thieuXn = p.doiTuong.filter((x) => !x.xacNhan.trim());
-  if (thieuXn.length) canhBao.push(`Chưa ghi giấy xác nhận của phòng chuyên môn cho: ${thieuXn.map((x) => x.ten || "(chưa ghi tên)").join(", ")}`);
-  if (p.doiTuong.length > 1) canhBao.push("Hộ có nhiều đối tượng chính sách: chỉ hưởng một mức cao nhất (khoản 1 Điều 6 QĐ 14/2026)");
+  const cao = hopLe.reduce((a, x) => (D(x.muc!).gt(D(a.muc!)) ? x : a));
+  const thieuXn = ds.filter((x) => !x.xacNhan.trim());
+  if (thieuXn.length) canhBao.push(`Chưa ghi xác nhận của Phòng Văn hóa – Xã hội (hoặc Kinh tế, Văn hóa, Xã hội) UBND cấp xã cho: ${thieuXn.map((x) => x.ten || "(chưa ghi tên)").join(", ")}`);
+  if (hopLe.length > 1) canhBao.push("Hộ có nhiều tiêu chuẩn: chỉ được xét hưởng một mức hỗ trợ cao nhất (khoản 1 Điều 6 QĐ 14/2026)");
+  canhBao.push("Điều kiện: hộ phải di chuyển chỗ ở do bị thu hồi đất — cán bộ xác nhận");
   return dong({
     ma: "C14",
     noiDung: nd,
-    thamSo: Object.fromEntries(p.doiTuong.map((x, i) => [`Đối tượng ${i + 1}`, `${x.ten || "—"}: ${dinhDang(D(x.muc || "0"))} đ${x.xacNhan.trim() ? ` (${x.xacNhan.trim()})` : ""}`])),
-    congThuc: p.doiTuong.length > 1 ? "Mức cao nhất trong các đối tượng" : "Mức theo đối tượng (cán bộ chọn)",
-    thanhTien: D(cao.muc),
-    canCu: k.canCu,
-    trangThai: thieuXn.length || hopLe.length < p.doiTuong.length ? "CAN_XAC_NHAN" : "TAM_TINH",
+    thamSo: Object.fromEntries(ds.map((x, i) => [`Đối tượng ${i + 1}`, `${x.ten || "—"}: ${x.diem ? `điểm ${x.diem}, ` : ""}${x.muc ? `${dinhDang(D(x.muc))} đ/hộ` : "chưa chọn"}${x.xacNhan.trim() ? ` (${x.xacNhan.trim()})` : ""}`])),
+    congThuc: hopLe.length > 1 ? "Mức cao nhất trong các tiêu chuẩn của hộ" : "Mức theo điểm của đối tượng (đ/hộ)",
+    thanhTien: D(cao.muc!),
+    canCu: cao.dm ? cao.dm.canCu : k.canCu,
+    trangThai: thieuXn.length || chuaChon.length ? "CAN_XAC_NHAN" : "TAM_TINH",
     canhBao,
   });
 }
@@ -257,10 +270,12 @@ export function hoTroHoNgheo(cs: BoChinhSach, p: { xacNhan: string }): DongTinh 
 
 /** C16 – khoản 6 Điều 6 QĐ 14/2026: ổn định đời sống khi nhà ở phải phá dỡ, làm lại nơi khác: kg gạo × giá gạo × nhân khẩu × số tháng. */
 export function hoTroXayLaiNha(cs: BoChinhSach, p: { nhanKhau: number; giaGaoDongKg: SoVao; nguonGiaGao: string }): DongTinh {
-  const nd = "Hỗ trợ ổn định đời sống khi phá dỡ nhà ở, làm lại nhà nơi khác";
+  const nd = "Hỗ trợ ổn định đời sống trong thời gian xây dựng lại nhà ở";
   const k = cs.hoTroKhac?.xayLaiNha;
   if (!k) return thieuCs("C16", nd, cs);
   const tien = D(k.kgGaoNhanKhauThang).mul(D(p.giaGaoDongKg)).mul(p.nhanKhau).mul(k.soThang);
+  const canhBao = [`Điều kiện: ${k.dieuKien} — cán bộ xác nhận`];
+  if (k.nhanKhau) canhBao.push(k.nhanKhau);
   return dong({
     ma: "C16",
     noiDung: nd,
@@ -268,6 +283,6 @@ export function hoTroXayLaiNha(cs: BoChinhSach, p: { nhanKhau: number; giaGaoDon
     congThuc: "kg gạo × giá gạo × nhân khẩu × số tháng",
     thanhTien: tien,
     canCu: k.canCu,
-    canhBao: [`Điều kiện: ${k.dieuKien} — cán bộ xác nhận`],
+    canhBao,
   });
 }

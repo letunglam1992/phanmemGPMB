@@ -232,13 +232,70 @@
         "4500000",
         "3000000"
       ],
+      "diem": [
+        {
+          "ma": "a",
+          "ten": "Người hoạt động cách mạng trước năm 1945, anh hùng lực lượng vũ trang, bà mẹ Việt Nam anh hùng, anh hùng lao động, thân nhân của liệt sỹ đang hưởng tiền tuất nuôi dưỡng hàng tháng và thương binh, bệnh binh, người đang hưởng chính sách như thương binh, bệnh binh bị mất sức lao động từ 81% trở lên",
+          "muc": "6000000",
+          "canCu": [
+            {
+              "vanBan": "QĐ 14/2026/QĐ-UBND",
+              "viTri": "điểm a khoản 1 Điều 6"
+            }
+          ]
+        },
+        {
+          "ma": "b",
+          "ten": "Thương binh, bệnh binh, người hưởng chính sách như thương binh, bệnh binh bị mất sức lao động từ 61% đến dưới 81%",
+          "muc": "5500000",
+          "canCu": [
+            {
+              "vanBan": "QĐ 14/2026/QĐ-UBND",
+              "viTri": "điểm b khoản 1 Điều 6"
+            }
+          ]
+        },
+        {
+          "ma": "c",
+          "ten": "Thương binh, bệnh binh, người hưởng chính sách như thương binh, bệnh binh bị mất sức lao động từ 41% đến dưới 61%",
+          "muc": "5000000",
+          "canCu": [
+            {
+              "vanBan": "QĐ 14/2026/QĐ-UBND",
+              "viTri": "điểm c khoản 1 Điều 6"
+            }
+          ]
+        },
+        {
+          "ma": "d",
+          "ten": "Gia đình liệt sỹ, người có công giúp đỡ cách mạng đang hưởng trợ cấp hàng tháng, thương binh, bệnh binh, người hưởng chính sách như thương binh, bệnh binh bị mất sức lao động từ 21% đến dưới 41%",
+          "muc": "4500000",
+          "canCu": [
+            {
+              "vanBan": "QĐ 14/2026/QĐ-UBND",
+              "viTri": "điểm d khoản 1 Điều 6"
+            }
+          ]
+        },
+        {
+          "ma": "đ",
+          "ten": "Hộ gia đình có người đang hưởng chế độ trợ cấp xã hội khác của Nhà nước trừ các đối tượng quy định tại các điểm a, b, c, d khoản 1 và khoản 2 Điều 6",
+          "muc": "3000000",
+          "canCu": [
+            {
+              "vanBan": "QĐ 14/2026/QĐ-UBND",
+              "viTri": "điểm đ khoản 1 Điều 6"
+            }
+          ]
+        }
+      ],
       "canCu": [
         {
           "vanBan": "QĐ 14/2026/QĐ-UBND",
           "viTri": "khoản 1 Điều 6"
         }
       ],
-      "ghiChu": "Hộ gia đình có đối tượng chính sách phải di chuyển chỗ ở, có xác nhận của phòng chuyên môn; nhiều đối tượng chỉ hưởng mức cao nhất. Cán bộ chọn mức theo đối tượng (docs/02 C14)."
+      "ghiChu": "Hộ gia đình có người đang hưởng chế độ trợ cấp xã hội của Nhà nước (có xác nhận của Phòng Văn hóa – Xã hội hoặc Phòng Kinh tế, Văn hóa, Xã hội thuộc UBND cấp xã) phải di chuyển chỗ ở do bị thu hồi đất; một hộ có nhiều tiêu chuẩn chỉ được xét hưởng một mức cao nhất (khoản 1 Điều 6 QĐ 14/2026)."
     },
     "hoNgheo": {
       "soTien": "4000000",
@@ -248,7 +305,7 @@
           "viTri": "khoản 2 Điều 6"
         }
       ],
-      "dieuKien": "hộ nghèo phải di chuyển chỗ ở hoặc ngừng sản xuất, kinh doanh (docs/02 C15)"
+      "dieuKien": "hộ gia đình có giấy chứng nhận hộ nghèo bị thu hồi đất, phải di chuyển chỗ ở hoặc ngừng sản xuất, kinh doanh (khoản 2 Điều 6 QĐ 14/2026)"
     },
     "xayLaiNha": {
       "kgGaoNhanKhauThang": "30",
@@ -259,7 +316,8 @@
           "viTri": "khoản 6 Điều 6"
         }
       ],
-      "dieuKien": "nhà ở bị phá dỡ, hộ làm lại nhà ở nơi khác (docs/02 C16)"
+      "dieuKien": "hộ gia đình, cá nhân bị thu hồi đất có nhà trên đất phải phá dỡ và phải làm lại nhà ở tại địa điểm khác; giá gạo tẻ trung bình của địa phương tại thời điểm hỗ trợ (khoản 6 Điều 6 QĐ 14/2026)",
+      "nhanKhau": "Số nhân khẩu được hỗ trợ là những người có chung quyền sử dụng đất tại thời điểm phê duyệt phương án và nhân khẩu là thành viên hộ phát sinh sau thời điểm giao đất nông nghiệp cho hộ (nếu có); do các thành viên trong hộ tự thỏa thuận và chịu trách nhiệm trước pháp luật"
     }
   },
   "onDinhDoiSong": {

@@ -57,7 +57,7 @@ test("Đ5: sửa chữa phần nhà còn lại theo dự toán; Đ6: thẻ Hỗ 
   await p.getByLabel("Căn cứ dự toán sửa chữa").last().fill("Dự toán số 12 ngày 01/9/2026 (thử)");
   await p.getByLabel("Xác nhận phần còn lại bảo đảm tiêu chuẩn kỹ thuật").last().fill("Biên bản số 5 (thử)");
   await p.locator("[role=tablist] button", { hasText: "Hỗ trợ khác" }).click();
-  const hn = p.locator(".the", { hasText: "Hộ nghèo" }).first();
+  const hn = p.locator(".the", { has: p.locator("h3", { hasText: /^Hộ nghèo$/ }) });
   await hn.getByLabel("Áp dụng").check();
   await oNhap(p, "Giấy tờ xác nhận hộ nghèo *").fill("QĐ công nhận hộ nghèo số 3 (thử)");
   await p.getByRole("button", { name: /Công trình ngoài cọc/ }).click();

@@ -159,14 +159,22 @@ export interface HoTroHo {
 
 /** Hỗ trợ khác (Điều 6 QĐ 14/2026) — các khoản chưa có ở thẻ Hỗ trợ, Kiểm đếm, Tái định cư. */
 export interface HoTroKhacHo {
-  /** k1: đối tượng chính sách trong hộ phải di chuyển chỗ ở — cán bộ chọn mức; nhiều đối tượng chỉ hưởng mức cao nhất. */
-  doiTuongCs?: { id: string; ten: string; muc: string; xacNhan: string }[];
+  /**
+   * k1: người đang hưởng chế độ trợ cấp xã hội trong hộ phải di chuyển chỗ ở — cán bộ chọn điểm a–đ (mức theo điểm);
+   * nhiều tiêu chuẩn chỉ hưởng mức cao nhất. `muc` = mức theo điểm (dữ liệu 0.8.1 chỉ có mức, không có điểm).
+   */
+  doiTuongCs?: { id: string; ten: string; diem?: string; muc: string; xacNhan: string }[];
   /** k2: hộ nghèo — giấy tờ xác nhận. */
   hoNgheo?: { xacNhan: string };
   /** VM-17 (linh động, cán bộ chọn): hộ vừa có k1 vừa có k2 → cộng cả hai hay chỉ lấy khoản cao hơn; bắt buộc lý do. */
   vm17?: { cach: "CONG" | "CAO_HON"; lyDo: string };
   /** k6: nhà ở phá dỡ, làm lại nơi khác — cán bộ tích áp dụng. */
   xayLaiNha?: boolean;
+  /**
+   * k6: số nhân khẩu được hỗ trợ (người có chung quyền sử dụng đất tại thời điểm phê duyệt phương án + thành viên phát sinh
+   * sau khi giao đất nông nghiệp; hộ tự thỏa thuận). Trống = số nhân khẩu trong hồ sơ.
+   */
+  khauXayLaiNha?: string;
   /** k4 (công trình sinh hoạt ngoài cọc GPMB, mức do Chủ tịch UBND xã quyết định), k13, k14 và khoản khác: nhập tay, bắt buộc căn cứ. */
   khoan: { id: string; loai: "K4" | "K13_14" | "KHAC"; noiDung: string; soTien: string; canCu: string }[];
 }

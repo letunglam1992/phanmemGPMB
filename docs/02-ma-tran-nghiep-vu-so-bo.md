@@ -15,7 +15,7 @@ Viết tắt: **LĐĐ** = Luật Đất đai 2024 (bản gốc); **NĐ88** = NĐ
 | A03 | BT nhà, công trình khác – thiệt hại thực tế | Không thuộc A02 | G1, T (khấu hao), T1 (đã sử dụng) | Tgt = G1 − G1 × T1/T *(công thức dạng ảnh, cần khôi phục)*; Mức BT = Tgt + 20% × Tgt, **không thấp hơn 60% G1, không quá 100% G1** | điểm b k2 Đ102 LĐĐ; Đ14 k1 a, b NĐ88; Đ6 k1 PLII | **VM-05, VM-06, VM-22** |
 | A04 | Nhà, công trình không đủ tiêu chuẩn kỹ thuật | điểm d k1 Đ14 NĐ88 | Hạng mục | Có trong ĐG tỉnh: 100% ĐG; không có: dự toán được thẩm định (nhập tay + số văn bản) | Đ6 k2 PLII | — |
 | A05 | Hạng mục chưa có / khác biệt ĐG | — | Dự toán tư vấn / bù trừ PL II QĐ32 | Nhập giá trị đã thẩm định; không tự tính | Đ4 QĐ32; Đ6 k2 b PLII; Đ6 k3.4 QĐ14 | VM-07 |
-| A06 | **Sửa chữa phần nhà còn lại** | Phá dỡ một phần, phần còn lại vẫn đảm bảo TCKT | Dự toán do UBND xã lập | Bồi thường chi phí sửa chữa theo thực tế (dự toán được duyệt trong PA) | điểm c k1 Đ14 NĐ88; **Đ5 QĐ14** | — |
+| A06 | **Sửa chữa phần nhà còn lại** | Phá dỡ một phần, phần còn lại vẫn bảo đảm tiêu chuẩn kỹ thuật theo pháp luật có liên quan | Dự toán do UBND cấp xã lập, phê duyệt trong phương án | Bồi thường chi phí sửa chữa, hoàn thiện theo thực tế | **Đ5 QĐ14**; điểm a k11 Đ3 NQ 254/2025/QH15 | Đã làm 0.8.1 (đối chiếu nguyên văn 0.8.2) |
 | A07 | Phần còn lại không sử dụng được | Sau giải tỏa một phần | Toàn bộ phần còn lại | Kiểm đếm, bồi thường toàn bộ; chỉ chi trả sau khi bàn giao phá dỡ | Mục XXI.5 Sổ tay | — |
 | A08 | HT nhà, công trình trên đất đủ ĐK BT nhưng sai mục đích (đất NN) | Không có biên bản vi phạm | Ngày xây dựng | < 01/7/2004: 100%; 01/7/2004–< 01/7/2014: 80%; 01/7/2014–< TB: 30% × ĐG | **Đ6 k3.1 QĐ14** | — |
 | A09 | HT nhà, công trình trên đất không đủ ĐK BT | Như trên | Ngày xây dựng | < 15/10/1993: 100%; 15/10/1993–< 01/7/2004: 70%; 01/7/2004–< 01/7/2014: 50%; "sau" 01/7/2014–< TB: 30% | **Đ6 k3.2 QĐ14** | **VM-09** |
@@ -68,10 +68,10 @@ Viết tắt: **LĐĐ** = Luật Đất đai 2024 (bản gốc); **NĐ88** = NĐ
 | C11 | **Hỗ trợ 20% tiền SDĐ thửa TĐC** | Thu hồi đất ở, TĐC bằng đất ở | Tiền SDĐ phải nộp của thửa TĐC | 20% × tiền SDĐ phải nộp (dự thảo bổ sung loại trừ TH k4 Đ111 LĐĐ) | **Đ6 k11 QĐ14**; TL-DT1 | VM-28 |
 | C12 | Ghi nợ tiền SDĐ khi giao đất TĐC | Tiền BT đất < tiền SDĐ | Giá bảng giá tại thời điểm duyệt PA | Nợ = tiền SDĐ − giá trị BT về đất | Đ26 NĐ88 | — |
 | C13 | Thưởng bàn giao mặt bằng trước hạn | Tự nguyện bàn giao trong các mốc | Ngày bàn giao, các mốc, tổng BT đất + tài sản | Mốc 1: 10%, ≤ 20 tr; mốc 2: 10%, ≤ 15 tr | Đ15 PLII; Mục XV.3 Sổ tay | VM-16 |
-| C14 | Hộ có đối tượng chính sách phải di chuyển | Có xác nhận phòng chuyên môn | Loại đối tượng | 6,0/5,5/5,0/4,5/3,0 tr; chỉ **mức cao nhất** | **Đ6 k1 QĐ14** | — |
-| C15 | Hộ nghèo | Di chuyển chỗ ở / ngừng SXKD | — | 4.000.000 đ/hộ | **Đ6 k2 QĐ14** | VM-17 |
-| C16 | Ổn định đời sống khi xây lại nhà | Nhà phá dỡ, làm lại nơi khác | Nhân khẩu, giá gạo | 30 kg × giá gạo × khẩu × 6 tháng | **Đ6 k6 QĐ14** | TL-26 |
-| C17 | Hỗ trợ khác do UBND xã quyết | Theo dự án, có hồ sơ kiến nghị | Nội dung, mức | Nhập tay + số QĐ | k2 Đ108 LĐĐ; Đ6 k13, k14 QĐ14; Mục XI.2 Sổ tay | — |
+| C14 | Hộ có người hưởng chế độ trợ cấp xã hội phải di chuyển chỗ ở | Xác nhận của Phòng VH-XH (hoặc KT-VH-XH) UBND cấp xã | Điểm a–đ | a) 6,0 tr; b) 5,5 tr; c) 5,0 tr; d) 4,5 tr; đ) 3,0 tr (đ/hộ); nhiều tiêu chuẩn chỉ **mức cao nhất**; điểm đ trừ đối tượng khoản 2 (hộ nghèo) | **Đ6 k1 QĐ14** | Đã làm (0.8.2 theo nguyên văn) |
+| C15 | Hộ nghèo | Có giấy chứng nhận hộ nghèo, bị thu hồi đất, phải di chuyển chỗ ở hoặc ngừng SXKD | — | 4.000.000 đ/hộ | **Đ6 k2 QĐ14** | VM-17 (cán bộ chọn, QD-28) |
+| C16 | Ổn định đời sống trong thời gian xây dựng lại nhà ở | Nhà trên đất phải phá dỡ, phải làm lại nhà ở tại địa điểm khác | Nhân khẩu có chung quyền sử dụng đất tại thời điểm duyệt PA (+ thành viên phát sinh sau giao đất NN; hộ tự thỏa thuận), giá gạo tẻ TB địa phương tại thời điểm hỗ trợ | 30 kg × giá gạo × khẩu × 6 tháng | **Đ6 k6 QĐ14** | TL-26; đã làm |
+| C17 | Hỗ trợ khác do UBND cấp xã quyết định | Theo dự án; kiến nghị của người bị ảnh hưởng, họp bàn thống nhất, biên bản có xác nhận tổ/bản/tiểu khu, cơ quan chuyên môn UBND cấp xã; công khai, minh bạch | Nội dung, mức | Nhập tay + số QĐ | k2 Đ108 LĐĐ; **Đ6 k13, k14 QĐ14**; Mục XI.2 Sổ tay | Đã làm (nhập tay) |
 | C18 | **Lưu ý:** Hỗ trợ thủ tục về nhà mới 2.000.000 đ/hộ (Đ17 k3 PLII cũ) **không còn** trong QĐ14 | — | — | Chỉ áp dụng cho PA theo bộ chính sách trước 31/3/2026 | Đ2 k2 QĐ14 | Xác nhận |
 
 ## D. Quy trình, thẩm quyền, kinh phí tổ chức

@@ -45,9 +45,9 @@ export interface BoChinhSach {
    * Không có → bộ chính sách không có các khoản này (tính "Thiếu căn cứ").
    */
   hoTroKhac?: {
-    doiTuongChinhSach: { mucs: string[]; canCu: CanCu[]; ghiChu: string };
+    doiTuongChinhSach: { mucs: string[]; diem?: { ma: string; ten: string; muc: string; canCu: CanCu[] }[]; canCu: CanCu[]; ghiChu: string };
     hoNgheo: { soTien: string; canCu: CanCu[]; dieuKien: string };
-    xayLaiNha: { kgGaoNhanKhauThang: string; soThang: number; canCu: CanCu[]; dieuKien: string };
+    xayLaiNha: { kgGaoNhanKhauThang: string; soThang: number; canCu: CanCu[]; dieuKien: string; nhanKhau?: string };
   };
   onDinhDoiSong: {
     kgGaoNhanKhauThang: string;

@@ -30,6 +30,7 @@ describe("Đ5 QĐ 14/2026 — sửa chữa phần nhà còn lại", () => {
     expect(a06(sc({ canCu: "" })).dong.trangThai).toBe("THIEU_CAN_CU");
     expect(a06(sc({ soTien: "" })).dong.trangThai).toBe("THIEU_CAN_CU");
     expect(a06(sc({ xacNhan: "" })).dong.trangThai).toBe("CAN_XAC_NHAN");
+    expect(a06(sc({})).dong.canCu[1]).toEqual({ vanBan: "Nghị quyết 254/2025/QH15", viTri: "điểm a khoản 11 Điều 3" });
   });
 });
 
@@ -54,6 +55,10 @@ describe("Hỗ trợ khác — Điều 6 QĐ 14/2026", () => {
     const coGao = { ...duAn, giaGao: { dongKg: "15000", nguon: "Thông báo giá (thử)" } };
     const d2 = tinhHo(cs, coGao, voi({ xayLaiNha: true, khoan: [] })).nhom.find((x) => x.ma === "B.VII")!.dong[0]!.dong;
     expect(d2.thanhTien!.toString()).toBe(String(30 * 15000 * h0.nhanKhau.length * 6));
+    // số nhân khẩu theo khoản 6 (người có chung quyền sử dụng đất) do cán bộ xác định
+    const d3 = tinhHo(cs, coGao, voi({ xayLaiNha: true, khauXayLaiNha: "2", khoan: [] })).nhom.find((x) => x.ma === "B.VII")!.dong[0]!.dong;
+    expect(d3.thanhTien!.toString()).toBe(String(30 * 15000 * 2 * 6));
+    expect(d3.canhBao.join(" ")).toMatch(/chung quyền sử dụng đất/);
   });
   it("k4, k13, k14: nhập tay, bắt buộc căn cứ", () => {
     const ds = b7(voi({ khoan: [{ id: "1", loai: "K4", noiDung: "Bếp ngoài cọc", soTien: "3000000", canCu: "QĐ 7 của Chủ tịch UBND xã" }, { id: "2", loai: "K13_14", noiDung: "", soTien: "1000000", canCu: "" }] }));
