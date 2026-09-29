@@ -237,7 +237,7 @@ function ThamSo({ x, sua, nhaThua, cs, ngayTB }: { x: TaiSan; sua: (id: string, 
     return (
       <div style={{ ...st, gridTemplateColumns: "140px 1fr" }}>
         <OSo placeholder="Mật độ (cây/ha)" value={x.matDoHa ?? ""} onChange={(v) => sua(x.id, { matDoHa: v || null })} />
-        <span className="chu-nho mo" style={{ alignSelf: "center" }}>{x.matDoHa ? "Tính theo quỹ mật độ của thửa" : x.donVi === "m²" ? "Tính theo diện tích" : "Không mật độ: cần xác nhận"}</span>
+        <span className="chu-nho mo" style={{ alignSelf: "center" }}>{/ha\/\s*năm/i.test(x.donVi) ? "Số lượng = (số năm được giao − số năm đã chăm sóc) × DT (ha), vd. =(10-4)*0,5" : x.matDoHa ? "Tính theo quỹ mật độ của thửa" : x.donVi === "m²" ? "Tính theo diện tích" : "Không mật độ: cần xác nhận"}</span>
       </div>
     );
   if (x.loai === "VAT_NUOI")

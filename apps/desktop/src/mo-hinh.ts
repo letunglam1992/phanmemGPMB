@@ -90,6 +90,13 @@ export interface Thua {
    * × hệ số điều chỉnh của dự án (giá đất cụ thể).
    */
   hanhLang?: { loai: "DIEN" | "KHAC"; nhomDat: import("@gpmb/core").NhomDatHanhLang; dienTich: string; canCu?: string };
+  /**
+   * B03, B04, B05 — bồi thường về đất khi không có giấy tờ, có vi phạm trước 01/7/2014, giao không đúng thẩm quyền
+   * (Điều 5, 8, 9, 10, 12 NĐ 88/2024). Có mục này thì dòng bồi thường về đất của thửa được thay bằng các dòng phân bổ.
+   * Giá theo GCN/loại đất của thửa là giá đất ở (Điều 8–10) hoặc giá đất NN (Điều 12); giá SXKD, giá đất NN phần còn lại
+   * cán bộ chọn từ bảng giá (nghìn đ/m²).
+   */
+  khongGiayTo?: KhongGiayTo;
   /** Mã thửa trên bản đồ (T{tờ}-{thửa}), nếu tạo từ bản đồ. */
   maBanDo?: string;
   dienTichBanDo?: number;
@@ -110,6 +117,36 @@ export interface Thua {
    */
   nongLamTruong?: { truongHop: import("@gpmb/core").MaNongLamTruong; hoSo: string };
   ghiChu?: string;
+}
+
+export interface KhongGiayTo {
+  dieu: import("@gpmb/core").DieuDatO | "D12";
+  /** Thời điểm bắt đầu sử dụng đất ổn định (ISO). */
+  ngaySuDung: string;
+  dtXayDung?: string;
+  dtSxkd?: string;
+  giaSxkd?: { giaNghinDong: string; nguon: string };
+  /** Giá đất NN (phần còn lại, điểm d) hoặc giá theo hiện trạng (điểm b k3 Đ10), nghìn đ/m². */
+  giaConLai?: { giaNghinDong: string; nguon: string; loaiDat: string };
+  /** Hạn mức riêng của thửa (m²) thay hạn mức dự án, kèm căn cứ. */
+  hanMuc?: string;
+  canCuHanMuc?: string;
+  /** Tiền SDĐ phải nộp như khi cấp GCN đối với phần đất ở vượt hạn mức (đoạn 2 điểm a k1, k2 Điều 8), đ. */
+  tienSdd?: string;
+  canCuTienSdd?: string;
+  d140?: boolean;
+  giayToNopTien?: boolean;
+  lanChiem?: boolean;
+  vungKhoKhan?: boolean;
+  /** Điều 9: phần DT còn lại (văn bản không quy định) — người dùng chọn, bắt buộc lý do. */
+  conLai?: { cach: "NN" | "KHONG"; lyDo: string };
+  /** VM-39: điểm b k1 Điều 8 (DT thu hồi < hạn mức ≤ DT thửa) — người dùng xác nhận cách hiểu. */
+  lyDoVm39?: string;
+  /** Điều 12. */
+  truongHopNN?: import("@gpmb/core").TruongHopDatNN;
+  truoc2004TrucTiepSx?: boolean;
+  /** Phần vượt hạn mức: hỗ trợ khác theo k7 Điều 12 (UBND tỉnh quyết định cho dự án) — cán bộ nhập. */
+  hoTroK7?: { soTien: string; canCu: string };
 }
 
 interface TaiSanCoSo {
@@ -420,6 +457,8 @@ export interface DuAn {
   boChinhSach: string;
   giaGao: { dongKg: string; nguon: string } | null;
   hanMucNN: { m2: string; canCu: string } | null;
+  /** Hạn mức công nhận đất ở (k5 Đ141 LĐĐ) và hạn mức giao đất ở (k2 Đ195, k2 Đ196 LĐĐ) do UBND tỉnh quy định — Điều 8, 9 NĐ 88. */
+  hanMucDatO?: { congNhan: string; giao: string; canCu: string };
   heSoGiaDat: { heSo: string; vanBan: string } | null;
   /**
    * VM-36: cách làm tròn tổng tiền từng hộ của dự án. Bỏ trống = theo bộ chính sách (QD-03: làm tròn lên

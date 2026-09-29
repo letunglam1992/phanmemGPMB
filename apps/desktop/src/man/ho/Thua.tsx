@@ -4,7 +4,10 @@ import { ChonGiaDat } from "../../thanh-phan/ChonGiaDat";
 import { tien } from "../../thanh-phan/chung";
 import { PhanLop } from "./PhanLop";
 import { TEN_CHENH_LECH, laDatNN } from "../../tinh-ho";
-import { TEN_NHOM_HANH_LANG, type NhomDatHanhLang } from "@gpmb/core";
+import { TEN_NHOM_HANH_LANG, TEN_TRUONG_HOP_NN, dinhDang, phanBoDatNN, phanBoDatO, type NhomDatHanhLang, type TruongHopDatNN } from "@gpmb/core";
+import { TEN_KHONG_GIAY_TO } from "../../tinh-ho";
+import { ONgay } from "../../thanh-phan/ONgay";
+import type { KhongGiayTo } from "../../mo-hinh";
 import { useUngDung } from "../../ung-dung";
 import { Chon } from "../../thanh-phan/Chon";
 import { soD } from "../../so";
@@ -18,6 +21,7 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
   const [moRong, setMoRong] = useState<string | null>(null);
   const [chonTuyen, setChonTuyen] = useState<string | null>(null);
   const [chonGiaHT, setChonGiaHT] = useState<string | null>(null);
+  const [chonGiaKgt, setChonGiaKgt] = useState<{ id: string; loai: "KD" | "CL"; loaiDat: string } | null>(null);
   const { chinhSach } = useUngDung();
   const cs = chinhSach(duAn);
   const sua = (id: string, p: Partial<Thua>) => doi({ ...h, thua: h.thua.map((t) => (t.id === id ? { ...t, ...p } : t)) });
@@ -78,7 +82,7 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
                       )}
                     </td>
                     <td className="khong-xuong-dong">
-                      <button className="nut nut-chu nut-nho" title="Giấy chứng nhận, phân lớp đất, chênh lệch giá, chi phí đầu tư, hành lang, tùy chọn cây trồng xen" onClick={() => setMoRong(moRong === t.id ? null : t.id)}>⋯</button>
+                      <button className="nut nut-chu nut-nho" title="Giấy chứng nhận, phân lớp đất, không có giấy tờ (NĐ 88), chênh lệch giá, chi phí đầu tư, hành lang, tùy chọn cây trồng xen" onClick={() => setMoRong(moRong === t.id ? null : t.id)}>⋯</button>
                       <button className="nut nut-chu nut-nguy nut-nho" onClick={() => { if (h.taiSan.some((x) => x.thuaId === t.id) && !confirm("Thửa có tài sản kiểm đếm. Xóa cả tài sản?")) return; doi({ ...h, thua: h.thua.filter((x) => x.id !== t.id), taiSan: h.taiSan.filter((x) => x.thuaId !== t.id) }); }}>✕</button>
                     </td>
                   </tr>
@@ -107,6 +111,7 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
                           </div>
                           <div className="mo chu-nho mt-4">DT không có trong GCN = DT thu hồi − DT thu hồi có GCN (tự tính).</div>
                         </div>
+                        <KhongGiayToThua t={t} h={h} duAn={duAn} sua={(k) => sua(t.id, { khongGiayTo: k })} moChonGia={(loai, loaiDat) => setChonGiaKgt({ id: t.id, loai, loaiDat })} />
                         {cs.nongLamTruong && (
                           <div style={{ marginBottom: 12, paddingBottom: 12, borderBottom: "1px solid var(--vien)" }}>
                             <div className="luoi" style={{ gridTemplateColumns: "minmax(260px, 1.2fr) 1fr", alignItems: "end" }}>
@@ -273,9 +278,122 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
         if (!t?.chenhLech) return null;
         return <ChonGiaDat xa={duAn.xa} loaiDat={t.chenhLech.loaiHienTrang} dong={() => setChonGiaHT(null)} chon={(g) => { sua(t.id, { chenhLech: { ...t.chenhLech!, giaHienTrang: g.giaNghinDong, nguonGia: g.nguon } }); setChonGiaHT(null); }} />;
       })()}
+      {(() => {
+        const t = h.thua.find((x) => x.id === chonGiaKgt?.id);
+        if (!t?.khongGiayTo || !chonGiaKgt) return null;
+        const k = t.khongGiayTo;
+        return <ChonGiaDat xa={duAn.xa} loaiDat={chonGiaKgt.loaiDat} dong={() => setChonGiaKgt(null)} chon={(g) => { sua(t.id, { khongGiayTo: chonGiaKgt.loai === "KD" ? { ...k, giaSxkd: g } : { ...k, giaConLai: { ...g, loaiDat: chonGiaKgt.loaiDat } } }); setChonGiaKgt(null); }} />;
+      })()}
       {thuaChon && (
         <ChonGiaDat xa={duAn.xa} loaiDat={thuaChon.loaiDat} dong={() => setChonGia(null)} chon={(g) => { sua(thuaChon.id, { gia: g }); setChonGia(null); }} />
       )}
+    </div>
+  );
+}
+
+/** B03, B04, B05 — bồi thường về đất khi không có giấy tờ, vi phạm, giao không đúng thẩm quyền (Điều 5, 8, 9, 10, 12 NĐ 88/2024). */
+function KhongGiayToThua({ t, h, duAn, sua, moChonGia }: { t: Thua; h: Ho; duAn: DuAn; sua: (k: KhongGiayTo | undefined) => void; moChonGia: (loai: "KD" | "CL", loaiDat: string) => void }) {
+  const k = t.khongGiayTo;
+  const [loaiKd, setLoaiKd] = useState("SKC");
+  const [loaiCl, setLoaiCl] = useState(k?.giaConLai?.loaiDat || "CLN");
+  const dat = (p: Partial<KhongGiayTo>) => sua({ ...k!, ...p });
+  const laNN = laDatNN(t.loaiDat);
+  const so = (v?: string) => (v && !isNaN(Number(v)) ? v : "0");
+  let tomTat = "";
+  if (k && k.dieu !== "D12") {
+    const r = phanBoDatO({ dieu: k.dieu, ngaySuDung: k.ngaySuDung, dtThuHoi: so(t.dienTichThuHoi), dtThua: so(t.dienTich || t.dienTichThuHoi), dtXayDung: so(k.dtXayDung), dtSxkd: so(k.dtSxkd), hanMucCongNhan: k.hanMuc || duAn.hanMucDatO?.congNhan || null, hanMucGiao: k.hanMuc || duAn.hanMucDatO?.giao || null, d140: k.d140, giayToNopTien: k.giayToNopTien, lanChiem: k.lanChiem });
+    tomTat = r.loi ? `⚠ ${r.loi}` : `${r.khoan}: đất ở ${dinhDang(r.datO, 2)} m²${r.sxkd.gt(0) ? `; SXKD ${dinhDang(r.sxkd, 2)} m²` : ""}${r.conLai.gt(0) ? `; còn lại ${dinhDang(r.conLai, 2)} m² (${r.conLaiLoai === "NN" ? "theo đất NN" : r.conLaiLoai === "HIEN_TRANG" ? "theo hiện trạng" : r.conLaiLoai === "KHONG_BT" ? "không bồi thường" : "Điều 9 không quy định — chọn cách xử lý"})` : ""}${r.datOVuot.gt(0) ? `; phần đất ở vượt hạn mức ${dinhDang(r.datOVuot, 2)} m² trừ tiền SDĐ` : ""}`;
+  } else if (k?.dieu === "D12" && k.truongHopNN) {
+    const hm = k.hanMuc || (k.truongHopNN === "K2_KHAI_HOANG" ? "" : duAn.hanMucNN?.m2 || "");
+    if (hm || k.truongHopNN === "K5A") {
+      const r = phanBoDatNN({ truongHop: k.truongHopNN, dtThuHoi: so(t.dienTichThuHoi), hanMuc: hm || "0", truoc2004TrucTiepSx: k.truoc2004TrucTiepSx });
+      tomTat = `${r.khoan}: bồi thường ${dinhDang(r.boiThuong, 2)} m²${r.vuot.gt(0) ? `; vượt hạn mức ${dinhDang(r.vuot, 2)} m² — hỗ trợ khác (k7)` : ""}`;
+    } else tomTat = "⚠ Chưa có hạn mức";
+  }
+  return (
+    <div data-khong-giay-to style={{ marginBottom: 12, paddingBottom: 12, borderBottom: "1px solid var(--vien)" }}>
+      <div className="luoi" style={{ gridTemplateColumns: "minmax(280px, 1.3fr) 150px 1fr", alignItems: "end" }}>
+        <div className="o-nhap"><label>Bồi thường về đất khi không có giấy tờ, vi phạm, giao không đúng thẩm quyền (NĐ 88/2024)</label>
+          <Chon value={k?.dieu ?? ""} aria-label="Bồi thường về đất không có giấy tờ" onChange={(e) => sua(e.target.value ? { ngaySuDung: "", ...k, dieu: e.target.value as KhongGiayTo["dieu"] } : undefined)}>
+            <option value="">Không (bồi thường theo giá đất của thửa)</option>
+            {(Object.keys(TEN_KHONG_GIAY_TO) as (keyof typeof TEN_KHONG_GIAY_TO)[]).map((d) => <option key={d} value={d}>{TEN_KHONG_GIAY_TO[d]}</option>)}
+          </Chon>
+        </div>
+        {k && k.dieu !== "D12" && <div className="o-nhap"><label>Sử dụng ổn định từ</label><ONgay aria-label="Thời điểm sử dụng đất ổn định" value={k.ngaySuDung} onChange={(e) => dat({ ngaySuDung: e.target.value })} /></div>}
+        {k?.dieu === "D12" && (
+          <div className="o-nhap" style={{ gridColumn: "2/-1" }}><label>Trường hợp (Điều 12)</label>
+            <Chon value={k.truongHopNN ?? ""} aria-label="Trường hợp Điều 12" onChange={(e) => dat({ truongHopNN: (e.target.value || undefined) as TruongHopDatNN | undefined })}>
+              <option value="">— Chọn —</option>
+              {(Object.keys(TEN_TRUONG_HOP_NN) as TruongHopDatNN[]).map((x) => <option key={x} value={x}>{TEN_TRUONG_HOP_NN[x]}</option>)}
+            </Chon>
+          </div>
+        )}
+      </div>
+      {k && k.dieu !== "D12" && (
+        <>
+          {laNN && <div className="chu-do chu-nho mt-4">Điều 8, 9, 10 áp dụng cho thửa đất có nhà ở — loại đất của thửa đang là {t.loaiDat}; giá đất ở lấy theo giá đã chọn cho thửa.</div>}
+          <div className="luoi mt-6" style={{ gridTemplateColumns: "repeat(4, minmax(140px, 1fr))", alignItems: "end" }}>
+            <div className="o-nhap"><label>DT đã xây nhà ở, công trình đời sống (m²)</label><OSo className="o-so" aria-label="DT đã xây dựng nhà ở" value={k.dtXayDung ?? ""} onChange={(v) => dat({ dtXayDung: v })} /></div>
+            {k.dieu !== "D9" && <div className="o-nhap"><label>DT sử dụng SXKD phi NN, TMDV (m²)</label><OSo className="o-so" aria-label="DT sản xuất kinh doanh" value={k.dtSxkd ?? ""} onChange={(v) => dat({ dtSxkd: v })} /></div>}
+            <div className="o-nhap"><label>Hạn mức riêng của thửa (m²)</label><OSo className="o-so" value={k.hanMuc ?? ""} placeholder={duAn.hanMucDatO ? `Trống = dự án (${duAn.hanMucDatO.congNhan || "—"} / ${duAn.hanMucDatO.giao || "—"})` : "Nhập ở Thông tin dự án"} onChange={(v) => dat({ hanMuc: v || undefined })} /></div>
+            <div className="o-nhap"><label>Căn cứ hạn mức riêng</label><input value={k.canCuHanMuc ?? ""} disabled={!k.hanMuc} onChange={(e) => dat({ canCuHanMuc: e.target.value })} /></div>
+          </div>
+          <div className="luoi mt-6" style={{ gridTemplateColumns: "1fr 1fr", alignItems: "end" }}>
+            {k.dieu !== "D9" && (
+              <div className="o-nhap"><label>Giá đất SXKD / TMDV (điểm c)</label>
+                <div className="nhom-nut">
+                  <Chon value={loaiKd} onChange={(e) => setLoaiKd(e.target.value)} style={{ width: 90 }}><option>SKC</option><option>TMD</option></Chon>
+                  <button className="nut nut-nho" onClick={() => moChonGia("KD", loaiKd)}>Bảng giá…</button>
+                  <span className="chu-nho">{k.giaSxkd ? `${dinhDang(Number(k.giaSxkd.giaNghinDong) * 1000)} đ/m² — ${k.giaSxkd.nguon}` : "chưa chọn"}</span>
+                </div>
+              </div>
+            )}
+            <div className="o-nhap"><label>{k.dieu === "D10" ? "Giá đất phần còn lại (theo hiện trạng / đất NN)" : "Giá đất NN phần còn lại (điểm d)"}</label>
+              <div className="nhom-nut">
+                <Chon value={loaiCl} onChange={(e) => setLoaiCl(e.target.value)} style={{ width: 90 }}>{LOAI_DAT.map((l) => <option key={l}>{l}</option>)}</Chon>
+                <button className="nut nut-nho" aria-label="Chọn giá đất phần còn lại" onClick={() => moChonGia("CL", loaiCl)}>Bảng giá…</button>
+                <span className="chu-nho">{k.giaConLai ? `${k.giaConLai.loaiDat}: ${dinhDang(Number(k.giaConLai.giaNghinDong) * 1000)} đ/m² — ${k.giaConLai.nguon}` : "chưa chọn"}</span>
+              </div>
+            </div>
+          </div>
+          <div className="nhom-nut mt-6 chu-nho">
+            {k.dieu === "D8" && <label><input type="checkbox" checked={!!k.vungKhoKhan} onChange={(e) => dat({ vungKhoKhan: e.target.checked || undefined })} /> Hộ được giao đất NN (k1 Đ118 LĐĐ), thường trú tại vùng KT-XH khó khăn/ĐBKK (khoản 4 Điều 8)</label>}
+            {k.dieu === "D9" && <label><input type="checkbox" checked={!!k.lanChiem} onChange={(e) => dat({ lanChiem: e.target.checked || undefined })} /> Lấn đất, chiếm đất (khoản 4 Điều 9)</label>}
+            {k.dieu === "D10" && <label><input type="checkbox" checked={!!k.d140} onChange={(e) => dat({ d140: e.target.checked || undefined })} /> Thuộc điểm a, b khoản 3 Điều 140 LĐĐ (khoản 3 Điều 10)</label>}
+            {k.dieu === "D10" && <label><input type="checkbox" checked={!!k.giayToNopTien} onChange={(e) => dat({ giayToNopTien: e.target.checked || undefined })} /> Có giấy tờ chứng minh đã nộp tiền để được sử dụng đất (khoản 4 Điều 10)</label>}
+          </div>
+          <div className="luoi mt-6" style={{ gridTemplateColumns: "180px 1fr 1fr", alignItems: "end" }}>
+            <div className="o-nhap"><label>Tiền SDĐ phải nộp phần vượt (đ)</label><OSo className="o-so" aria-label="Tiền sử dụng đất phải nộp phần vượt" value={k.tienSdd ?? ""} onChange={(v) => dat({ tienSdd: v })} /></div>
+            <div className="o-nhap"><label>Căn cứ tiền SDĐ (thông báo thuế, bảng tính)</label><input aria-label="Căn cứ tiền sử dụng đất" value={k.canCuTienSdd ?? ""} onChange={(e) => dat({ canCuTienSdd: e.target.value })} /></div>
+            <div className="o-nhap"><label>Lý do xác nhận VM-39 (khi được nhắc)</label><input aria-label="Lý do VM-39" value={k.lyDoVm39 ?? ""} onChange={(e) => dat({ lyDoVm39: e.target.value || undefined })} /></div>
+          </div>
+          {k.dieu === "D9" && (
+            <div className="luoi mt-6" style={{ gridTemplateColumns: "minmax(240px, 1fr) 2fr", alignItems: "end" }}>
+              <div className="o-nhap"><label>Phần DT còn lại (Điều 9 không quy định)</label>
+                <Chon value={k.conLai?.cach ?? ""} aria-label="Phần còn lại Điều 9" onChange={(e) => dat({ conLai: e.target.value ? { cach: e.target.value as "NN" | "KHONG", lyDo: k.conLai?.lyDo ?? "" } : undefined })}>
+                  <option value="">Chưa chọn (cần xác nhận)</option>
+                  <option value="NN">Tính theo loại đất nông nghiệp</option>
+                  <option value="KHONG">Không bồi thường về đất</option>
+                </Chon>
+              </div>
+              <div className="o-nhap"><label>Lý do (bắt buộc)</label><input aria-label="Lý do phần còn lại Điều 9" value={k.conLai?.lyDo ?? ""} disabled={!k.conLai} onChange={(e) => dat({ conLai: { cach: k.conLai!.cach, lyDo: e.target.value } })} /></div>
+            </div>
+          )}
+        </>
+      )}
+      {k?.dieu === "D12" && (
+        <>
+          <div className="luoi mt-6" style={{ gridTemplateColumns: "repeat(4, minmax(140px, 1fr))", alignItems: "end" }}>
+            <div className="o-nhap"><label>Hạn mức riêng (m²)</label><OSo className="o-so" aria-label="Hạn mức đất NN riêng" value={k.hanMuc ?? ""} placeholder={k.truongHopNN === "K2_KHAI_HOANG" ? "Bắt buộc (UBND tỉnh quy định)" : duAn.hanMucNN ? `Trống = ${duAn.hanMucNN.m2} (dự án)` : "Bắt buộc"} onChange={(v) => dat({ hanMuc: v || undefined })} /></div>
+            <div className="o-nhap"><label>Căn cứ hạn mức riêng</label><input value={k.canCuHanMuc ?? ""} disabled={!k.hanMuc} onChange={(e) => dat({ canCuHanMuc: e.target.value })} /></div>
+            <div className="o-nhap"><label>Hỗ trợ khác phần vượt — số tiền (đ)</label><OSo className="o-so" value={k.hoTroK7?.soTien ?? ""} onChange={(v) => dat({ hoTroK7: { soTien: v, canCu: k.hoTroK7?.canCu ?? "" } })} /></div>
+            <div className="o-nhap"><label>Văn bản quyết định hỗ trợ (k7)</label><input value={k.hoTroK7?.canCu ?? ""} onChange={(e) => dat({ hoTroK7: { soTien: k.hoTroK7?.soTien ?? "", canCu: e.target.value } })} /></div>
+          </div>
+          <label className="chu-nho mt-6" style={{ display: "block" }}><input type="checkbox" checked={!!k.truoc2004TrucTiepSx} onChange={(e) => dat({ truoc2004TrucTiepSx: e.target.checked || undefined })} /> Sử dụng ổn định trước 01/7/2004, trực tiếp sản xuất NN nhưng không đủ điều kiện cấp GCN (khoản 4 Điều 12)</label>
+          {!laNN && <div className="chu-do chu-nho mt-4">Điều 12 áp dụng cho đất thuộc nhóm đất nông nghiệp — loại đất của thửa đang là {t.loaiDat}.</div>}
+        </>
+      )}
+      {tomTat && <div className="mo chu-nho mt-4" data-tom-tat-kgt>{tomTat}. {h.loai === "TO_CHUC" ? "Điều 8–12 NĐ 88 áp dụng cho hộ gia đình, cá nhân — kiểm tra." : "Phần mềm không tự xác định điều kiện bồi thường (Điều 5); cán bộ chọn trường hợp."}</div>}
     </div>
   );
 }

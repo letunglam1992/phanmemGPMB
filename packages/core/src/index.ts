@@ -11,3 +11,4 @@ export * from "./cay-xen";
 export { dong } from "./dong";
 export * from "./phan-lop";
 export * from "./phu-luc-ii";
+export * from "./dat-khong-giay-to";

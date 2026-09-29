@@ -271,6 +271,13 @@ export function FormDuAn({ d, setD }: { d: DuAn; setD: (d: DuAn) => void }) {
           <OSo canhBao={(v) => (Number(v) < 100 ? "Nhỏ hơn 100 m² — kiểm tra đơn vị (m²) và cách ghi số" : null)} value={d.hanMucNN?.m2 ?? ""} onChange={(v) => setD({ ...d, hanMucNN: v ? { m2: v, canCu: d.hanMucNN?.canCu ?? "" } : null })} />
         </O>
         <O nhan="Căn cứ hạn mức"><input value={d.hanMucNN?.canCu ?? ""} disabled={!d.hanMucNN} onChange={(e) => setD({ ...d, hanMucNN: { m2: d.hanMucNN!.m2, canCu: e.target.value } })} /></O>
+        <O nhan="Hạn mức công nhận đất ở (m²)" goiY="k5 Đ141 LĐĐ — dùng cho đất có nhà ở không có giấy tờ trước 15/10/1993 (Điều 8, 9 NĐ 88)">
+          <OSo aria-label="Hạn mức công nhận đất ở" value={d.hanMucDatO?.congNhan ?? ""} onChange={(v) => setD({ ...d, hanMucDatO: { congNhan: v, giao: d.hanMucDatO?.giao ?? "", canCu: d.hanMucDatO?.canCu ?? "" } })} />
+        </O>
+        <O nhan="Hạn mức giao đất ở (m²)" goiY="k2 Đ195, k2 Đ196 LĐĐ — dùng cho giai đoạn 15/10/1993 đến trước 01/7/2014">
+          <OSo aria-label="Hạn mức giao đất ở" value={d.hanMucDatO?.giao ?? ""} onChange={(v) => setD({ ...d, hanMucDatO: { congNhan: d.hanMucDatO?.congNhan ?? "", giao: v, canCu: d.hanMucDatO?.canCu ?? "" } })} />
+        </O>
+        <O nhan="Căn cứ hạn mức đất ở (QĐ của UBND tỉnh)"><input aria-label="Căn cứ hạn mức đất ở" value={d.hanMucDatO?.canCu ?? ""} disabled={!d.hanMucDatO} onChange={(e) => setD({ ...d, hanMucDatO: { ...d.hanMucDatO!, canCu: e.target.value } })} /></O>
         <O nhan="Hệ số điều chỉnh giá đất" goiY="Mặc định 1. Khác 1 phải ghi văn bản (QD-02)">
           <OSo className="o-so" value={d.heSoGiaDat?.heSo ?? "1"} onChange={(v) => setD({ ...d, heSoGiaDat: { heSo: v, vanBan: d.heSoGiaDat?.vanBan ?? "" } })} />
         </O>

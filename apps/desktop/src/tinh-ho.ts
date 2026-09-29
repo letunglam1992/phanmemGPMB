@@ -33,6 +33,9 @@ import {
   hoTroOnDinhSanXuatDat,
   hoTroOnDinhSxkd,
   TEN_NHOM_HANH_LANG,
+  phanBoDatO,
+  phanBoDatNN,
+  TEN_TRUONG_HOP_NN,
   tongHo,
   type BoChinhSach,
   type DongCayXen,
@@ -405,6 +408,8 @@ function tinhHoGoc(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
     const b13 = nongLamTruong(cs, duAn, t);
     if (b13 && D(t.dienTichThuHoi || "0").gt(0)) {
       n("B.I").dong.push({ dong: b13.dat, bieu: b13.bieu, cot: "HT_DAT", thuaId: t.id });
+    } else if (t.khongGiayTo && D(t.dienTichThuHoi || "0").gt(0)) {
+      for (const x of dongKhongGiayTo(cs, duAn, t)) n(x.nhom).dong.push(x.kq);
     } else if (D(t.dienTichThuHoi || "0").gt(0)) {
       const hs = duAn.heSoGiaDat && !D(duAn.heSoGiaDat.heSo).eq(1) ? { heSo: duAn.heSoGiaDat.heSo, vanBan: duAn.heSoGiaDat.vanBan } : undefined;
       if (t.phanLop && t.phanLop.lop.length) {
@@ -485,6 +490,11 @@ function tinhHoGoc(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
     const cay = tsThua.filter((x): x is Extract<TaiSan, { loai: "CAY" }> => x.loai === "CAY");
     if (cay.length) {
       let ds = dongCayThua(cs, t, cay);
+      // VM-11 (QD-31): đơn giá đồng/ha/năm (Biểu 03 mục VIII PL VIII) nhân diện tích — khối lượng = số năm còn lại × DT (ha).
+      ds = ds.map((x) => {
+        const c = cay.find((y) => y.id === x.taiSanId);
+        return c && /ha\/\s*năm/i.test(c.donVi) ? { ...x, dong: { ...x.dong, canhBao: [...x.dong.canhBao, "Đơn giá đồng/ha/năm: khối lượng = (tổng số năm được giao chăm sóc, bảo vệ − số năm đã chăm sóc, bảo vệ) × diện tích (ha), vd. =(10-4)*0,5 (VM-11, QD-31)"] } } : x;
+      });
       const k7 = cs.hoTroKhac?.cayKhongDuDieuKien;
       if (t.cayK7 && b13) ds = ds.map((x) => ({ ...x, dong: { ...x.dong, canhBao: [...x.dong.canhBao, `Thửa có nguồn gốc nông, lâm trường (${b13.ma}) — cây trồng tính theo khoản 9, không áp dụng khoản 7 Điều 6`] } }));
       if (t.cayK7 && !b13 && k7) {
@@ -582,7 +592,7 @@ function tinhHoGoc(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
         nguonGiaGao: duAn.giaGao.nguon,
         chonNhom: od.chonNhom,
       });
-    if (od.nhanKhau?.trim() && d.thanhTien) d = { ...d, thamSo: { ...d.thamSo, "Nhân khẩu được hỗ trợ": `${khauOnDinh(ho)} (người có chung quyền sử dụng đất — điểm b k1 Điều 12 PL II QĐ 106; hồ sơ có ${ho.nhanKhau.length})` } };
+    if (od.nhanKhau?.trim() && d.thanhTien) d = { ...d, thamSo: { ...d.thamSo, "Nhân khẩu được hỗ trợ": `${khauOnDinh(ho)} (người có chung quyền sử dụng đất — điểm d k1 Đ19 NĐ 88 bổ sung bởi NĐ 226/2025; điểm b k1 Điều 12 PL II QĐ 106; hồ sơ có ${ho.nhanKhau.length})` } };
     n("B.V").dong.push({ dong: d, cot: "HT_KHAC" });
   }
   if (ho.hoTro.tamCu && ho.hoTro.tamCu.soThang > 0)
@@ -981,4 +991,133 @@ export function moTaLamTron(cach: string, buoc: number, lyDo?: string): string {
   const ten = TEN_CACH_LAM_TRON[cach as keyof typeof TEN_CACH_LAM_TRON] ?? cach;
   const co = cach === "KHONG" ? ten : `${ten} đến ${buoc.toLocaleString("vi-VN")} đ ở cấp hộ`;
   return lyDo ? `${co} — lựa chọn của dự án: ${lyDo} (VM-36)` : `${co} (QD-03)`;
+}
+
+/** Giá đất ở (đ/m²) của thửa: giá đã chọn, hoặc đơn giá bình quân theo phân lớp. */
+function giaDatOThua(cs: BoChinhSach, t: Thua): { gia: Decimal; nguon: string; binhQuan: boolean } | null {
+  if (t.phanLop && t.phanLop.lop.length) {
+    const pl = t.phanLop;
+    const kq = datTheoPhanLop(cs, {
+      loaiDat: t.loaiDat,
+      nhom: nhomPhanLop(pl.tuyen.bang),
+      nguonTuyen: `Bảng ${pl.tuyen.bang}, STT ${pl.tuyen.stt}`,
+      dienTichThuHoiM2: t.dienTichThuHoi,
+      lop: pl.lop.map((l) => ({ lop: l.lop, viTri: l.viTri, giaViTriNghinDong: pl.tuyen.vt[l.viTri - 1] ?? 0, dienTichM2: l.dienTich || "0", giaTuyChinhNghinDong: l.giaTuyChinh, lyDo: l.lyDo })),
+    });
+    const dt = D(t.dienTichThuHoi || "0");
+    if (!kq.dong.thanhTien || dt.lte(0)) return null;
+    return { gia: kq.dong.thanhTien.div(dt), nguon: `bình quân phân lớp — Bảng ${pl.tuyen.bang}, STT ${pl.tuyen.stt}`, binhQuan: true };
+  }
+  return t.gia ? { gia: D(t.gia.giaNghinDong).mul(1000), nguon: t.gia.nguon, binhQuan: false } : null;
+}
+
+export const TEN_KHONG_GIAY_TO = {
+  D8: "Điều 8 — không có giấy tờ về quyền sử dụng đất",
+  D9: "Điều 9 — làm nhà ở có vi phạm trước 01/7/2014",
+  D10: "Điều 10 — giao không đúng thẩm quyền trước 01/8/2024",
+  D12: "Điều 12 — đất nông nghiệp (không giấy tờ, vi phạm, giao sai thẩm quyền)",
+} as const;
+
+/**
+ * B03, B04 (Điều 8, 9, 10 NĐ 88) và B05 (Điều 12): thay dòng bồi thường về đất của thửa bằng các dòng theo phân bổ DT.
+ * Giá đất nhân hệ số điều chỉnh của dự án (giá đất tính tiền bồi thường, QD-02).
+ */
+function dongKhongGiayTo(cs: BoChinhSach, duAn: DuAn, t: Thua): { nhom: "A.I" | "B.I"; kq: DongKetQua }[] {
+  const k = t.khongGiayTo!;
+  const out: { nhom: "A.I" | "B.I"; kq: DongKetQua }[] = [];
+  const ten = `${t.loaiDat} (${nhanThua(t)})`;
+  const hs = duAn.heSoGiaDat && !D(duAn.heSoGiaDat.heSo).eq(1) ? duAn.heSoGiaDat : null;
+  const nhanHs = (g: Decimal) => (hs ? g.mul(hs.heSo) : g);
+  const moTaHs = hs ? ` × hệ số ${hs.heSo} (${hs.vanBan || "chưa ghi văn bản"})` : "";
+  const push = (nhom: "A.I" | "B.I", d: DongTinh, bieu?: DongBieu[]) => out.push({ nhom, kq: { dong: d, bieu, cot: nhom === "A.I" ? "BT_DAT" : "HT_DAT", thuaId: t.id } });
+  const vb = "NĐ 88/2024/NĐ-CP";
+  const dongDt = (ma: string, noiDung: string, dt: Decimal, gia: { gia: Decimal; nguon: string } | null, canCu: DongTinh["canCu"], them: Partial<DongTinh> = {}, loiGia = "Chưa chọn giá đất từ bảng giá") => {
+    if (dt.lte(0)) return;
+    if (!gia) return push("A.I", thieu(ma, noiDung, loiGia, vb));
+    const g = nhanHs(gia.gia);
+    push("A.I", dong({ ma, noiDung, thamSo: { "Diện tích": `${dinhDang(dt, 2)} m²`, "Giá đất": `${dinhDang(gia.gia)} đ/m² (${gia.nguon})${moTaHs}` }, congThuc: `Diện tích × Giá đất${hs ? " × Hệ số" : ""}`, thanhTien: dt.mul(g), canCu: [...canCu, { vanBan: "NQ 152/2025/NQ-HĐND", viTri: gia.nguon }], ...them }), [{ dvt: "m²", kl: dt, heSo: hs ? D(hs.heSo) : D(1), donGia: gia.gia }]);
+  };
+  const giaCl = k.giaConLai?.giaNghinDong && laSoMay(k.giaConLai.giaNghinDong) ? { gia: D(k.giaConLai.giaNghinDong).mul(1000), nguon: `${k.giaConLai.loaiDat || "?"} — ${k.giaConLai.nguon}` } : null;
+
+  if (k.dieu === "D12") {
+    const nd = `Bồi thường về đất nông nghiệp – ${ten}`;
+    if (!k.truongHopNN) return (push("A.I", thieu("B05", nd, "Chưa chọn trường hợp (khoản 1, 2, 3, 5 Điều 12 NĐ 88)", vb)), out);
+    const hmStr = k.hanMuc?.trim() || (k.truongHopNN === "K2_KHAI_HOANG" ? "" : duAn.hanMucNN?.m2 || "");
+    const canCuHm = k.hanMuc?.trim() ? k.canCuHanMuc?.trim() || "chưa ghi căn cứ" : duAn.hanMucNN?.canCu || "";
+    if (k.truongHopNN !== "K5A" && (!hmStr || !laSoMay(hmStr)))
+      return (push("A.I", thieu("B05", nd, k.truongHopNN === "K2_KHAI_HOANG" ? "Chưa nhập hạn mức giao đất nông nghiệp do UBND tỉnh quy định (đất tự khai hoang — đoạn 2 khoản 2 Điều 12)" : "Chưa có hạn mức giao đất nông nghiệp (Điều 176 LĐĐ) — nhập ở thửa hoặc Thông tin dự án", vb)), out);
+    const r = phanBoDatNN({ truongHop: k.truongHopNN, dtThuHoi: t.dienTichThuHoi, hanMuc: hmStr || "0", truoc2004TrucTiepSx: k.truoc2004TrucTiepSx });
+    const gia = t.gia ? { gia: D(t.gia.giaNghinDong).mul(1000), nguon: t.gia.nguon } : null;
+    dongDt("B05", nd, r.boiThuong, gia, r.canCu, {
+      thamSo: undefined,
+      canhBao: [...r.canhBao, `Điều kiện: ${TEN_TRUONG_HOP_NN[k.truongHopNN]} — cán bộ xác nhận`],
+    });
+    const d = out[out.length - 1]?.kq.dong;
+    if (d && d.thanhTien) d.thamSo = { "Trường hợp": TEN_TRUONG_HOP_NN[k.truongHopNN], "DT thu hồi": `${dinhDang(lamTronDienTich(t.dienTichThuHoi), 2)} m²`, ...(k.truongHopNN !== "K5A" ? { "Hạn mức": `${hmStr} m² (${canCuHm})` } : {}), "DT được bồi thường": `${dinhDang(r.boiThuong, 2)} m²`, ...d.thamSo, "Giá đất": `${dinhDang(gia!.gia)} đ/m² (${gia!.nguon})${moTaHs}` };
+    if (r.vuot.gt(0)) {
+      const ndK7 = `Hỗ trợ khác phần DT vượt hạn mức (${dinhDang(r.vuot, 2)} m²) – ${ten}`;
+      const h = k.hoTroK7;
+      if (!h?.canCu.trim()) push("B.I", thieu("B05.K7", ndK7, "Khoản 7 Điều 12: UBND cấp tỉnh quyết định hỗ trợ khác đối với từng dự án — nhập số tiền kèm văn bản quyết định", `${vb} khoản 7 Điều 12`));
+      else if (!h.soTien.trim() || !laSoMay(h.soTien)) push("B.I", thieu("B05.K7", ndK7, "Chưa nhập số tiền hỗ trợ", h.canCu));
+      else push("B.I", dong({ ma: "B05.K7", noiDung: ndK7, thamSo: { "DT vượt hạn mức": `${dinhDang(r.vuot, 2)} m²`, "Số tiền": `${dinhDang(D(h.soTien))} đ` }, congThuc: "Theo văn bản quyết định hỗ trợ (cán bộ nhập)", thanhTien: D(h.soTien), canCu: [{ vanBan: vb, viTri: "khoản 7 Điều 12" }, { vanBan: h.canCu.trim(), viTri: "" }] }));
+    }
+    return out;
+  }
+
+  // Điều 8, 9, 10
+  const hmCn = k.hanMuc?.trim() || duAn.hanMucDatO?.congNhan || "";
+  const hmGiao = k.hanMuc?.trim() || duAn.hanMucDatO?.giao || "";
+  const r = phanBoDatO({ dieu: k.dieu, ngaySuDung: k.ngaySuDung, dtThuHoi: t.dienTichThuHoi, dtThua: t.dienTich || t.dienTichThuHoi, dtXayDung: laSoMay(k.dtXayDung ?? "") ? k.dtXayDung : 0, dtSxkd: laSoMay(k.dtSxkd ?? "") ? k.dtSxkd : 0, hanMucCongNhan: laSoMay(hmCn) ? hmCn : null, hanMucGiao: laSoMay(hmGiao) ? hmGiao : null, d140: k.d140, giayToNopTien: k.giayToNopTien, lanChiem: k.lanChiem });
+  const nd0 = `Bồi thường về đất – ${ten}`;
+  if (r.loi) return (push("A.I", thieu("B03", nd0, r.loi, `${vb} ${r.khoan || TEN_KHONG_GIAY_TO[k.dieu]}`)), out);
+  const canCuHm = k.hanMuc?.trim() ? k.canCuHanMuc?.trim() || "chưa ghi căn cứ" : duAn.hanMucDatO?.canCu || "chưa ghi căn cứ";
+  const thamSoChung: Record<string, string> = {
+    "Trường hợp": `${r.khoan} — ${r.moTa}`,
+    "Thời điểm sử dụng ổn định": k.ngaySuDung.split("-").reverse().join("/"),
+    ...(r.hanMucM2 ? { [r.hanMuc === "GIAO" ? "Hạn mức giao đất ở" : "Hạn mức công nhận đất ở"]: `${dinhDang(r.hanMucM2, 2)} m² (${canCuHm})` } : {}),
+    "DT thu hồi": `${dinhDang(lamTronDienTich(t.dienTichThuHoi), 2)} m²`,
+  };
+  const dieuKien = `Điều kiện: ${TEN_KHONG_GIAY_TO[k.dieu]} (${k.dieu === "D8" ? "khoản 1" : k.dieu === "D9" ? "khoản 2" : "khoản 3"} Điều 5 NĐ 88)${k.vungKhoKhan ? "; hộ thuộc đối tượng giao đất NN (k1 Đ118 LĐĐ), đăng ký thường trú tại vùng KT-XH khó khăn/ĐBKK (khoản 4 Điều 8)" : ""} — cán bộ xác nhận`;
+  const xn = r.canXacNhan.length && !k.lyDoVm39?.trim();
+  if (r.conLaiLoai === "KHONG_BT" && r.datO.isZero()) {
+    push("A.I", dong({ ma: "B04", noiDung: nd0, thamSo: thamSoChung, congThuc: r.moTa, thanhTien: D(0), canCu: r.canCu, canhBao: [dieuKien] }));
+    return out;
+  }
+  const giaO = giaDatOThua(cs, t);
+  const maO = k.dieu === "D8" ? "B03" : "B04";
+  dongDt(maO, `Bồi thường về đất ở – ${ten}`, r.datO, giaO, r.canCu, {
+    thamSo: undefined,
+    trangThai: xn ? "CAN_XAC_NHAN" : "TAM_TINH",
+    luaChon: r.canXacNhan.length && !xn ? [{ ma: "VM-39", giaTri: "Bồi thường đất ở toàn bộ DT thu hồi (như khoản 2, 3 Điều 8)", lyDo: k.lyDoVm39!.trim() }] : [],
+    canhBao: [...r.canhBao, ...r.canXacNhan, dieuKien, ...(giaO?.binhQuan ? ["Đơn giá đất ở bình quân theo phân lớp của thửa — cán bộ kiểm tra vị trí phần đất ở"] : [])],
+  }, "Chưa chọn giá đất ở cho thửa");
+  const dO = out.find((x) => x.kq.dong.ma === maO)?.kq.dong;
+  if (dO && dO.thanhTien) dO.thamSo = { ...thamSoChung, "DT đất ở được bồi thường": `${dinhDang(r.datO, 2)} m²`, ...dO.thamSo };
+  if (r.datOVuot.gt(0)) {
+    const ndT = `Trừ tiền sử dụng đất phải nộp phần đất ở vượt hạn mức (${dinhDang(r.datOVuot, 2)} m²) – ${ten}`;
+    if (!k.canCuTienSdd?.trim()) push("A.I", thieu(`${maO}.T`, ndT, "Chưa ghi căn cứ tiền sử dụng đất phải nộp như khi cấp GCN (thông báo của cơ quan thuế / bảng tính tại thời điểm phê duyệt phương án)", `${vb} đoạn 2 điểm a ${r.khoan.includes("khoản 2 Điều 8") ? "khoản 2" : "khoản 1"} Điều 8`));
+    else if (!k.tienSdd?.trim() || !laSoMay(k.tienSdd)) push("A.I", thieu(`${maO}.T`, ndT, "Chưa nhập số tiền sử dụng đất phải nộp", k.canCuTienSdd));
+    else push("A.I", dong({ ma: `${maO}.T`, noiDung: ndT, thamSo: { "Tiền SDĐ phải nộp": `${dinhDang(D(k.tienSdd))} đ` }, congThuc: "− Tiền sử dụng đất phải nộp như khi được cấp GCN đối với phần vượt hạn mức", thanhTien: D(k.tienSdd).neg(), canCu: [{ vanBan: vb, viTri: "đoạn 2 điểm a khoản 1, 2 Điều 8" }, { vanBan: k.canCuTienSdd.trim(), viTri: "" }] }));
+  }
+  const giaKd = k.giaSxkd?.giaNghinDong && laSoMay(k.giaSxkd.giaNghinDong) ? { gia: D(k.giaSxkd.giaNghinDong).mul(1000), nguon: k.giaSxkd.nguon } : null;
+  dongDt(`${maO}.KD`, `Bồi thường đất sản xuất, kinh doanh phi nông nghiệp, thương mại, dịch vụ – ${ten}`, r.sxkd, giaKd, [{ vanBan: vb, viTri: `điểm c ${r.khoan.replace(/^điểm \w /, "")}` }], { canhBao: ["Loại đất tính bồi thường như đất được Nhà nước giao có thu tiền sử dụng đất, thời hạn ổn định lâu dài — chọn giá đất SXKD/TMDV phù hợp"] }, "Chưa chọn giá đất sản xuất, kinh doanh / thương mại, dịch vụ");
+  if (r.conLai.gt(0)) {
+    if (r.conLaiLoai === "CHUA_QUY_DINH") {
+      const c = k.conLai?.lyDo.trim() ? k.conLai : undefined;
+      const ndC = `Phần DT còn lại của thửa (${dinhDang(r.conLai, 2)} m²) – ${ten}`;
+      if (!c) push("A.I", dong({ ma: `${maO}.CL`, noiDung: ndC, congThuc: "—", thanhTien: null, canCu: r.canCu, trangThai: "CAN_XAC_NHAN", canhBao: ["Điều 9 NĐ 88 không quy định phần DT thu hồi còn lại sau phần được bồi thường — chọn tính theo loại đất nông nghiệp hoặc không bồi thường về đất, ghi lý do"] }));
+      else if (c.cach === "KHONG") push("A.I", dong({ ma: `${maO}.CL`, noiDung: ndC, congThuc: "Không bồi thường về đất (người dùng chọn)", thanhTien: D(0), canCu: r.canCu, luaChon: [{ ma: "Đ9-CL", giaTri: "Không bồi thường về đất phần còn lại", lyDo: c.lyDo.trim() }] }));
+      else dongDt(`${maO}.CL`, `Bồi thường theo loại đất nông nghiệp phần còn lại – ${ten}`, r.conLai, giaCl, r.canCu, { luaChon: [{ ma: "Đ9-CL", giaTri: "Tính theo loại đất nông nghiệp", lyDo: c.lyDo.trim() }] }, "Chưa chọn giá đất nông nghiệp cho phần còn lại");
+    } else
+      dongDt(
+        `${maO}.NN`,
+        r.conLaiLoai === "HIEN_TRANG" ? `Bồi thường theo hiện trạng sử dụng đất phần còn lại – ${ten}` : `Bồi thường theo loại đất nông nghiệp phần còn lại – ${ten}`,
+        r.conLai,
+        giaCl,
+        [{ vanBan: vb, viTri: r.conLaiLoai === "HIEN_TRANG" ? "điểm b khoản 3 Điều 10" : `điểm d ${r.khoan.replace(/^.*?(khoản \d Điều 8).*$/, "$1")}` }],
+        {},
+        r.conLaiLoai === "HIEN_TRANG" ? "Chưa chọn giá đất theo hiện trạng sử dụng cho phần còn lại" : "Chưa chọn giá đất nông nghiệp cho phần còn lại",
+      );
+  }
+  return out;
 }

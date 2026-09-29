@@ -38,9 +38,9 @@ Viết tắt: **LĐĐ** = Luật Đất đai 2024 (bản gốc); **NĐ88** = NĐ
 |---|---|---|---|---|---|---|
 | B01 | BT đất bằng tiền | Đủ ĐK (Đ95 LĐĐ; Đ5 NĐ88) | Loại đất, DT, **giá đất BT** | DT × giá đất BT. Bản LĐĐ đã nhận: **giá đất cụ thể** tại thời điểm phê duyệt PA | k2 Đ91, điểm e k1 Đ160 LĐĐ (bản gốc) | **VM-20** |
 | B02 | Xác định DT bồi thường khi đo thực tế ≠ GCN | — | DT GCN, DT đo | Nhỏ hơn: theo đo thực tế; lớn hơn, không tranh chấp: theo đo thực tế | Đ6 NĐ88 | — |
-| B03 | BT đất ở không giấy tờ (theo mốc 18/12/1980; 15/10/1993; 01/7/2014) | k1 Đ5 NĐ88 | Thời điểm sử dụng, DT thu hồi, DT xây dựng, hạn mức | Phân bổ DT: đất ở (≤ hạn mức công nhận / hạn mức giao), đất SXKD, phần còn lại theo đất NN | Đ8 NĐ88 | TL-24 (hạn mức) |
-| B04 | BT đất ở có vi phạm trước 01/7/2014; giao sai thẩm quyền | k2, k3 Đ5 NĐ88 | Như trên | Theo Đ9, Đ10 NĐ88 | Đ9, Đ10 NĐ88 | TL-24 |
-| B05 | BT đất nông nghiệp của hộ, cá nhân | Các TH Đ12 NĐ88 | DT, nguồn gốc, hạn mức Đ176 | ≤ hạn mức giao đất NN; phần vượt: hỗ trợ khác do tỉnh quyết | Đ12 NĐ88; Đ176 LĐĐ | — |
+| B03 | BT đất ở không giấy tờ (theo mốc 18/12/1980; 15/10/1993; 01/7/2014) | k1 Đ5 NĐ88 | Thời điểm sử dụng, DT thu hồi, DT xây dựng, hạn mức | Phân bổ DT: đất ở (≤ hạn mức công nhận / hạn mức giao), đất SXKD, phần còn lại theo đất NN | Đ8 NĐ88 | TL-24 (hạn mức); **đã làm 0.8.5** (Đ8: phân bổ đất ở/SXKD/NN theo mốc 18/12/1980, 15/10/1993, 01/7/2014; trừ tiền SDĐ phần vượt k1, k2 — QD-31) |
+| B04 | BT đất ở có vi phạm trước 01/7/2014; giao sai thẩm quyền | k2, k3 Đ5 NĐ88 | Như trên | Theo Đ9, Đ10 NĐ88 | Đ9, Đ10 NĐ88 | TL-24; **đã làm 0.8.5** (Đ9, Đ10; VM-40) |
+| B05 | BT đất nông nghiệp của hộ, cá nhân | Các TH Đ12 NĐ88 | DT, nguồn gốc, hạn mức Đ176 | ≤ hạn mức giao đất NN; phần vượt: hỗ trợ khác do tỉnh quyết | Đ12 NĐ88; Đ176 LĐĐ | —; **đã làm 0.8.5** (k1–k5; phần vượt k7 nhập kèm căn cứ) |
 | B06 | BT đất PNN không phải đất ở có thời hạn, bằng tiền | k7 Đ13 NĐ88 | G, S, T1, T2 | Tbt = G × S × T2/T1 *(công thức dạng ảnh, cần khôi phục)* | Đ13 NĐ88 | VM-22 |
 | B07 | Chi phí đầu tư vào đất còn lại | Có/không có chứng từ | P1..P4, T1, T2 hoặc giá bảng giá | Có chứng từ: P = (P1+P2+P3+P4)/T1 × T2 *(ảnh)*; không chứng từ: dự toán hoặc 1 × giá bảng giá × tỷ lệ thời hạn còn lại (tổ chức) | Đ17 NĐ88; Đ3 PLII | VM-22; **Đ3 PLII đã làm 0.8.4** (dự toán / 01 lần giá đất) |
 | B08 | Đất trong hành lang lưới điện | Không đổi mục đích, hạn chế sử dụng | Loại đất, DT, giá đất cụ thể | 80% / 50% / 30% × giá đất cụ thể × DT | Đ18 k1 c NĐ88; Đ7 k1 PLII | **Đã làm 0.8.4** (giá thửa × hệ số dự án) |

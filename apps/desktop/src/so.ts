@@ -82,6 +82,14 @@ export function truongSoHo(h: Ho): TruongSo[] {
     them(ds, `${n} — thời hạn sử dụng đất còn lại (năm)`, t.chiPhiDauTu, "conLaiNam");
     them(ds, `${n} — thời hạn sử dụng đất (năm)`, t.chiPhiDauTu, "thoiHanNam");
     them(ds, `${n} — DT trong hành lang`, t.hanhLang, "dienTich");
+    const k = t.khongGiayTo;
+    them(ds, `${n} — DT đã xây dựng nhà ở (NĐ 88)`, k, "dtXayDung");
+    them(ds, `${n} — DT sản xuất kinh doanh (NĐ 88)`, k, "dtSxkd");
+    them(ds, `${n} — hạn mức riêng (NĐ 88)`, k, "hanMuc");
+    them(ds, `${n} — tiền SDĐ phải nộp phần vượt (NĐ 88)`, k, "tienSdd");
+    them(ds, `${n} — hỗ trợ khác phần vượt hạn mức (k7 Đ12)`, k?.hoTroK7, "soTien");
+    them(ds, `${n} — giá đất SXKD (NĐ 88)`, k?.giaSxkd, "giaNghinDong");
+    them(ds, `${n} — giá đất phần còn lại (NĐ 88)`, k?.giaConLai, "giaNghinDong");
   }
   for (const ts of h.taiSan) {
     const n = `Tài sản "${ts.ten || "?"}"`;
@@ -131,6 +139,8 @@ export function truongSoDuAn(d: DuAn): TruongSo[] {
   const ds: TruongSo[] = [];
   them(ds, "Dự án — giá gạo (đ/kg)", d.giaGao, "dongKg");
   them(ds, "Dự án — hạn mức giao đất NN (m²)", d.hanMucNN, "m2");
+  them(ds, "Dự án — hạn mức công nhận đất ở (m²)", d.hanMucDatO, "congNhan");
+  them(ds, "Dự án — hạn mức giao đất ở (m²)", d.hanMucDatO, "giao");
   them(ds, "Dự án — hệ số điều chỉnh giá đất", d.heSoGiaDat, "heSo");
   return ds;
 }
