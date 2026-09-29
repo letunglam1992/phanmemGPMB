@@ -7,6 +7,9 @@
 - Thư mục dữ liệu: `%LOCALAPPDATA%\vn.sonla.gpmb\` — máy đơn (từ 0.6.0) trong `may-don\gpmb-may-don.sqlite`; máy chủ trong `may-chu\`; dữ liệu máy đơn bản ≤ 0.5 trong WebView2 (IndexedDB — tự chuyển sang SQLite lần đầu mở 0.6.0, bản cũ giữ nguyên). **Gỡ cài đặt có thể xóa dữ liệu máy đơn** — sao lưu trước khi gỡ.
 - Gói chính sách (0.7.0): Cài đặt chung → Gói chính sách — chỉ Quản trị nạp; **gói chưa có chữ ký số**, đối chiếu mã SHA-256 hiển thị với đơn vị phát hành trước khi nạp. Không gỡ được gói đã nạp.
 - Tệp đính kèm (0.7.0): ≤ 20 MB mỗi tệp, nằm trong CSDL và trong tệp sao lưu `.gpmb` (bản sao lưu lớn hơn khi nhiều tệp).
+- Phân công (0.8.0): mọi tài khoản thấy danh sách cán bộ (họ tên, chức vụ) để phân công hồ sơ — tài khoản đã khóa không hiện trong danh sách chọn. Phân công không thay đổi quyền.
+- Người có đất nhiều hồ sơ (0.8.0): so khớp số định danh giữa các dự án (đơn vị đã nhất trí, QD-27) chạy trên máy trạm với dữ liệu trong mạng nội bộ; màn hình che giữa số định danh. Khi cung cấp dữ liệu cho bên ngoài vẫn phải tuân thủ quy định bảo vệ dữ liệu cá nhân.
+- Nâng cấp 0.8.0: dữ liệu cũ dùng được ngay (không đổi cấu trúc CSDL); dự án chưa khai báo đợt vẫn chốt phương án như trước. Máy trạm nên cùng phiên bản với máy chủ.
 - Lịch sử bản ghi (0.6.0): nằm trong CSDL (`may-don` hoặc `may-chu`), **không có trong tệp `.gpmb`**; sao chép thư mục CSDL khi đã tắt phần mềm nếu cần giữ. Thời hạn giữ: Cài đặt chung → Lịch sử bản ghi (Quản trị).
 
 ## 2. Tài khoản

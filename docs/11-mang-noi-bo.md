@@ -40,6 +40,10 @@
 - **Tiến độ, chi trả là bản ghi con (P2-7, 0.7.0):** hồ sơ gồm bản ghi chính (`ho`), tiến độ (`td`), chi trả (`ct`) cùng mã, mỗi phần một phiên bản — sửa song song các phần của cùng một hộ không xung đột. Quy tắc gửi/duyệt bước kiểm trên `td`. Máy trạm cũ gửi hồ sơ kèm tiến độ nhúng bị từ chối, báo cần cập nhật.
 - **Tệp đính kèm (P2-2, 0.7.0):** bảng `tep` loại `dinhKem` (thông tin: hồ sơ, dự án, bước), tối đa 20 MB (413 nếu vượt), `GET /api/dinh-kem?duAn=` liệt kê; xóa hẳn hộ/dự án xóa tệp kèm.
 - **Gói chính sách (P2-1, 0.7.0):** lưu ở cài đặt `goiChinhSach`; chỉ quyền `NAP_CHINH_SACH` (Quản trị) được ghi.
+- **Đợt thu hồi (P3-1, 0.8.0):** `dotThuHoi` nằm trong bản ghi dự án; bước chung riêng của từng đợt (`dotThuHoi[].tienDoChung`) qua cùng quy tắc gửi – duyệt như bước chung dự án (so với bản cũ của đúng đợt theo `id`). Bản phương án của đợt có `dotId`.
+- **Quỹ tái định cư (P3-3, 0.8.0):** `quyTdc` trong bản ghi dự án; máy chủ từ chối lô trùng (khu + số lô), lô có giá mà thiếu căn cứ giá, thông tin giao không có hộ. Giao lô ghi dự án và hồ sơ hộ trong một lô `POST /api/lo` (một giao dịch).
+- **Danh sách cán bộ (P3-4, 0.8.0):** `GET /api/can-bo` — mọi tài khoản đã đăng nhập đọc được tên đăng nhập, họ tên, chức vụ, vai trò, trạng thái để phân công; **không trả muối, mã băm mật khẩu**. `GET /api/nguoi-dung` vẫn chỉ trả toàn bộ cho quyền Tài khoản.
+- **So khớp số định danh (P3-2, 0.8.0):** chạy ở máy trạm trên hồ sơ đã tải (không thêm bảng, chỉ mục dữ liệu cá nhân ở máy chủ); không gửi ra ngoài mạng nội bộ.
 - **Phiên bản CSDL (P2-6):** `PRAGMA user_version` — 1: bảng lịch sử; 2: tách phương án; 3: tách tiến độ, chi trả. Mỗi bước chạy một lần, trong một giao dịch.
 
 ## 5. Sao lưu

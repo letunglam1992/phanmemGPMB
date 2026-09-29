@@ -205,6 +205,8 @@ Mô hình dữ liệu là **tài liệu (document)**: mỗi `DuAn` và mỗi `Ho
 >
 > **Cập nhật 29/9/2026 (phiên bản 0.7.0) — Giai đoạn 4:** P2-7, §11.2 (thời gian bước không có thời hạn luật định do đơn vị nhập), §11.3 (ngưỡng lệch do đơn vị tự đặt), §11.4 (mẫu báo cáo hiện có, người dùng sửa, thêm mẫu khác), §11.5, P2-2 (đính kèm có trong sao lưu), P2-1 (chưa ký số) đã triển khai — chi tiết ở docs/09, docs/11.
 
+> **Cập nhật 29/9/2026 (phiên bản 0.8.0) — Giai đoạn 5 (phần nghiệp vụ):** P3-1 (phương án theo đợt, mã hồ sơ chung), P3-3 (giá lô do đơn vị nhập kèm căn cứ, ghi nhận bốc thăm khi chọn), P3-2 (so khớp số định danh giữa dự án — người dùng nhất trí), P3-4 và P2-4 đã triển khai (QD-27) — chi tiết ở docs/09, docs/11. Phần "sản phẩm thương mại" của GĐ5 (ký số bộ cài và gói chính sách, cơ chế bản quyền/kích hoạt, hợp đồng hỗ trợ) **chưa làm**: cần chứng thư số và quyết định của đơn vị.
+
 | Mã | Vấn đề → Nguyên nhân | Giải pháp | Lợi ích | Độ khó | Rủi ro |
 |---|---|---|---|---|---|
 | P0-1 | Trắng màn hình khi nhập "9222,1" → `D()` trên chuỗi thô, không ErrorBoundary | (a) ErrorBoundary theo màn, giữ bản nháp, báo ô lỗi; (b) `tinhHo` bọc từng dòng: giá trị không phải số → dòng "Thiếu căn cứ: DT không hợp lệ" thay vì ném lỗi | Không bao giờ mất dữ liệu đang nhập | Thấp (1–2 ngày) | Thấp |
