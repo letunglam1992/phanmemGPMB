@@ -1,3 +1,4 @@
+import { ONgay } from "./ONgay";
 import { useMemo, useState } from "react";
 import { useUngDung } from "../ung-dung";
 import { daQuaBuoc, BUOC_CHUNG, CAC_BUOC, TEN_TRANG_THAI_BUOC, laBuocChung, tienDoHieuLuc, type BuocHo, type DuAn, type Ho, type TrangThaiBuoc, type DotThuHoi } from "../mo-hinh";
@@ -125,7 +126,7 @@ function BuocChungCua({ duAn, dot, hos, tiep }: { duAn: DuAn; dot?: DotThuHoi; h
                     </Chon>
                   )}
                 </td>
-                <td><input type="date" value={b.ngay ?? ""} onChange={(e) => dat(ma, { ngay: e.target.value || undefined })} /></td>
+                <td><ONgay value={b.ngay ?? ""} onChange={(e) => dat(ma, { ngay: e.target.value || undefined })} /></td>
                 <td><input value={b.ghiChu ?? ""} placeholder="vd. TB số 12/TB-UBND ngày…" onChange={(e) => dat(ma, { ghiChu: e.target.value || undefined })} /></td>
                 <td>
                   <div className="nhom-nut" style={{ flexWrap: "nowrap" }}>
@@ -236,7 +237,7 @@ function HangLoat({ duAn, hos }: { duAn: DuAn; hos: Ho[] }) {
             {b.tuyChon && <option value="KHONG_AP_DUNG">Không áp dụng (bước tùy chọn — bắt buộc lý do)</option>}
           </Chon>
         </O>
-        <O nhan="Ngày thực hiện / hoàn thành"><input type="date" value={ngay} onChange={(e) => setNgay(e.target.value)} /></O>
+        <O nhan="Ngày thực hiện / hoàn thành"><ONgay value={ngay} onChange={(e) => setNgay(e.target.value)} /></O>
         <O nhan="Nội dung thực hiện, số văn bản (ghi cho mọi hộ được chọn; để trống = giữ ghi chú cũ)" className="ca-hang">
           <input value={ghiChu} onChange={(e) => setGhiChu(e.target.value)} placeholder="vd. Niêm yết tại UBND xã và nhà văn hóa bản từ ngày … đến ngày …" />
         </O>

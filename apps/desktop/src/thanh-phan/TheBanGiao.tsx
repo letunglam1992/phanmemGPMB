@@ -1,3 +1,4 @@
+import { ONgay } from "./ONgay";
 import { useEffect, useState } from "react";
 import { dinhDang } from "@gpmb/core";
 import { useUngDung } from "../ung-dung";
@@ -62,7 +63,7 @@ export function TheBanGiao({ h, duAn, kq, luuNgay, moThongTinDuAn }: { h: Ho; du
         {!chiXong && !bg && <div className="thong-bao thong-bao-vang mb-8">Bước 12 (chi trả) chưa hoàn thành — kiểm tra trước khi ghi bàn giao (k5, k6 Điều 87 LĐĐ 2024).</div>}
         <fieldset className="khung-quyen" disabled={!choSua}>
           <div className="luoi" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 10 }}>
-            <O nhan="Ngày bàn giao"><input type="date" value={ngay} onChange={(e) => setNgay(e.target.value)} /></O>
+            <O nhan="Ngày bàn giao"><ONgay value={ngay} onChange={(e) => setNgay(e.target.value)} /></O>
             <O nhan="Số, ngày biên bản bàn giao"><input value={bienBan} placeholder="vd. 12/BB-BGMB ngày …" onChange={(e) => setBienBan(e.target.value)} /></O>
             <O nhan="Diện tích bàn giao (m²)" goiY={`Để trống = toàn bộ DT thu hồi (${hienSo(dtTh.toDecimalPlaces(2).toString())} m²)`}><OSo value={dienTich} onChange={setDienTich} /></O>
             <O nhan="Ghi chú"><input value={ghiChu} onChange={(e) => setGhiChu(e.target.value)} /></O>

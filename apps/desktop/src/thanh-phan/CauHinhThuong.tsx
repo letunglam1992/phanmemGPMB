@@ -1,3 +1,4 @@
+import { ONgay } from "./ONgay";
 import type { DuAn } from "../mo-hinh";
 import { GOI_Y_MA_TRAN, loiCauHinhThuong, type CauHinhThuong, type MocThuong } from "../ban-giao";
 import { TEN_COT, type CotTongHop } from "../tinh-ho";
@@ -36,7 +37,7 @@ export function CauHinhThuongBanGiao({ d, setD }: { d: DuAn; setD: (d: DuAn) => 
             {c.moc.map((m, i) => (
               <tr key={i}>
                 <td><input value={m.ten} onChange={(e) => suaMoc(i, { ten: e.target.value })} style={{ width: 90 }} /></td>
-                <td><input type="date" value={m.denNgay} onChange={(e) => suaMoc(i, { denNgay: e.target.value })} /></td>
+                <td><ONgay value={m.denNgay} onChange={(e) => suaMoc(i, { denNgay: e.target.value })} /></td>
                 <td><OSo value={m.tyLe} onChange={(v) => suaMoc(i, { tyLe: v })} style={{ width: 70 }} /></td>
                 <td><OSo value={m.toiDa} onChange={(v) => suaMoc(i, { toiDa: v })} style={{ width: 130 }} /></td>
                 <td><button className="nut nut-chu nut-nguy nut-nho" onClick={() => dat({ moc: c.moc.filter((_, j) => j !== i) })}>✕</button></td>

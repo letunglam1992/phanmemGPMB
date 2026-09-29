@@ -1,3 +1,4 @@
+import { ONgay } from "../thanh-phan/ONgay";
 import { useEffect, useMemo, useState } from "react";
 import { useUngDung } from "../ung-dung";
 import { tinhHo } from "../tinh-ho";
@@ -282,7 +283,7 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
               )}
               <div className="luoi luoi-3">
                 <O nhan="Số văn bản" goiY={mau.phamVi === "HO" && chonHo.size > 1 ? "Nhập số → tăng dần cho từng hộ. Để trống để văn thư ghi khi ký." : "Để trống để văn thư ghi khi ký"}><input value={so} onChange={(e) => setSo(e.target.value)} /></O>
-                <O nhan="Ngày ký" goiY="Để trống = để trống ngày tháng"><input type="date" value={ngayKy} onChange={(e) => setNgayKy(e.target.value)} /></O>
+                <O nhan="Ngày ký" goiY="Để trống = để trống ngày tháng"><ONgay value={ngayKy} onChange={(e) => setNgayKy(e.target.value)} /></O>
               </div>
               {mau.nhapThem.length > 0 && (
                 <div className="luoi luoi-2">

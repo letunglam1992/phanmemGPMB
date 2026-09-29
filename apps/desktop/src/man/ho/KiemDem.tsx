@@ -11,6 +11,7 @@ const TEN_LOAI: Record<TaiSan["loai"], [string, string]> = {
   CAY: ["Cây trồng", "nhan-xanh"],
   VAT_NUOI: ["Vật nuôi", "nhan-vang"],
   KHAC: ["Ngoài DM", "nhan-tim"],
+  SUA_CHUA: ["Sửa chữa", "nhan-xam"],
 };
 const VAT_NUOI: Record<LoaiVatNuoi, string> = {
   TRAU_BO_NGUA: "Trâu, bò, ngựa",
@@ -54,6 +55,11 @@ export function TabKiemDem({ h, doi }: { h: Ho; doi: (h: Ho) => void }) {
           themDanhMuc={(nguon) => setThem({ thuaId: t.id, nguon })}
           themKhac={() => themTs({ id: taoId(), thuaId: t.id, dot: dotMoi, loai: "KHAC", ten: "", donVi: "", khoiLuong: "", heSo: "1", donGia: "", canCu: "", phan: "HO_TRO" })}
           themVatNuoi={() => themTs({ id: taoId(), thuaId: t.id, dot: dotMoi, loai: "VAT_NUOI", ten: "Di dời vật nuôi", loaiDuong: "CUNG_HOA", loaiVatNuoi: "LON", khoiLuong: "", quangDuongKm: "" })}
+          themSuaChua={() => {
+            const nha = h.taiSan.find((x) => x.thuaId === t.id && x.loai === "NHA_CT");
+            themTs({ id: taoId(), thuaId: t.id, dot: dotMoi, loai: "SUA_CHUA", ten: `Sửa chữa phần còn lại${nha ? ` – ${nha.ten}` : ""}`, taiSanGocId: nha?.id, soTien: "", canCu: "", xacNhan: "" });
+          }}
+          nhaThua={h.taiSan.filter((x) => x.thuaId === t.id && x.loai === "NHA_CT")}
         />
       ))}
       {them && (
@@ -85,6 +91,8 @@ function TheThua(p: {
   themDanhMuc: (n: "QĐ32" | "PL VIII") => void;
   themKhac: () => void;
   themVatNuoi: () => void;
+  themSuaChua: () => void;
+  nhaThua: TaiSan[];
 }) {
   const { t, ds, sua } = p;
   return (
@@ -97,6 +105,7 @@ function TheThua(p: {
           <button className="nut nut-nho" onClick={() => p.themDanhMuc("PL VIII")}>+ Cây trồng (PL VIII)</button>
           <button className="nut nut-nho" onClick={p.themVatNuoi}>+ Di dời vật nuôi</button>
           <button className="nut nut-nho" onClick={p.themKhac}>+ Ngoài danh mục</button>
+          <button className="nut nut-nho" title="Điều 5 QĐ 14/2026: nhà, công trình phục vụ đời sống phải tháo dỡ, phá dỡ một phần mà phần còn lại vẫn bảo đảm tiêu chuẩn kỹ thuật — bồi thường chi phí sửa chữa theo dự toán" onClick={p.themSuaChua}>+ Sửa chữa phần còn lại (Đ5 QĐ14)</button>
         </div>
       </div>
       <div className="bang-cuon">
@@ -106,7 +115,7 @@ function TheThua(p: {
           </thead>
           <tbody>
             {ds.map((x, i) => {
-              const klVao = x.loai === "CAY" ? x.soLuong : x.khoiLuong;
+              const klVao = x.loai === "CAY" ? x.soLuong : x.loai === "SUA_CHUA" ? "" : x.khoiLuong;
               const kl = klVao ? thuTinh(klVao) : { giaTri: null, loi: "Chưa nhập" };
               return (
                 <tr key={x.id}>
@@ -126,17 +135,17 @@ function TheThua(p: {
                     {"maDonGia" in x && <div className="can-cu">{x.maDonGia}</div>}
                   </td>
                   <td>
-                    {x.loai === "KHAC" ? <input value={x.donVi} onChange={(e) => sua(x.id, { donVi: e.target.value })} /> : x.loai === "VAT_NUOI" ? (VAT_NUOI_DV[x.loaiVatNuoi]) : x.donVi}
+                    {x.loai === "KHAC" ? <input value={x.donVi} onChange={(e) => sua(x.id, { donVi: e.target.value })} /> : x.loai === "VAT_NUOI" ? (VAT_NUOI_DV[x.loaiVatNuoi]) : x.loai === "SUA_CHUA" ? "đồng" : x.donVi}
                   </td>
-                  <td data-lich-su={`taiSan:${x.id}.${x.loai === "CAY" ? "soLuong" : "khoiLuong"}`} data-lich-su-ten={`${x.loai === "CAY" ? "Số lượng" : "Khối lượng"} "${x.ten}"`}>
+                  {x.loai === "SUA_CHUA" ? <td className="mo chu-nho">Theo dự toán</td> : <td data-lich-su={`taiSan:${x.id}.${x.loai === "CAY" ? "soLuong" : "khoiLuong"}`} data-lich-su-ten={`${x.loai === "CAY" ? "Số lượng" : "Khối lượng"} "${x.ten}"`}>
                     <input className={`o-so ${klVao && kl.loi ? "loi-nhap" : ""}`} value={klVao} title={kl.loi ?? ""} onChange={(e) => sua(x.id, x.loai === "CAY" ? { soLuong: e.target.value } : { khoiLuong: e.target.value })} />
                     {klVao.startsWith("=") && kl.giaTri && <div className="chu-nho mo" style={{ textAlign: "right" }}>= {kl.giaTri.toString().replace(".", ",")}</div>}
                     {klVao && kl.loi && <div className="chu-nho" style={{ color: "var(--do)" }}>{kl.loi}</div>}
-                  </td>
+                  </td>}
                   <td className="so" data-lich-su={`taiSan:${x.id}.donGia`} data-lich-su-ten={`Đơn giá "${x.ten}"`}>
-                    {x.loai === "KHAC" || x.loai === "NHA_CT" ? <OSo className="o-so" value={x.donGia} onChange={(v) => sua(x.id, { donGia: v })} /> : x.loai === "CAY" ? Number(x.donGia).toLocaleString("vi-VN") : <span className="mo">theo PL V</span>}
+                    {x.loai === "SUA_CHUA" ? <OSo className={`o-so ${x.soTien ? "" : "loi-nhap"}`} aria-label="Chi phí sửa chữa theo dự toán" title="Chi phí sửa chữa theo dự toán được duyệt (đ)" value={x.soTien} onChange={(v) => sua(x.id, { soTien: v })} /> : x.loai === "KHAC" || x.loai === "NHA_CT" ? <OSo className="o-so" value={x.donGia} onChange={(v) => sua(x.id, { donGia: v })} /> : x.loai === "CAY" ? Number(x.donGia).toLocaleString("vi-VN") : <span className="mo">theo PL V</span>}
                   </td>
-                  <td><ThamSo x={x} sua={sua} /></td>
+                  <td><ThamSo x={x} sua={sua} nhaThua={p.nhaThua} /></td>
                   <td><input type="number" min={1} value={x.dot} onChange={(e) => sua(x.id, { dot: Math.max(1, Number(e.target.value)) })} /></td>
                   <td><button className="nut nut-chu nut-nguy nut-nho" onClick={() => p.xoa(x.id)}>✕</button></td>
                 </tr>
@@ -152,8 +161,19 @@ function TheThua(p: {
 
 const VAT_NUOI_DV: Record<LoaiVatNuoi, string> = { TRAU_BO_NGUA: "tấn", LON: "tấn", DE_CUU_HUOU_CHO_THO_NHIM: "tấn", GIA_CAM: "tấn", CON_TRUNG_SINH_VAT_NHO: "kg" };
 
-function ThamSo({ x, sua }: { x: TaiSan; sua: (id: string, p: Partial<TaiSan>) => void }) {
+function ThamSo({ x, sua, nhaThua }: { x: TaiSan; sua: (id: string, p: Partial<TaiSan>) => void; nhaThua: TaiSan[] }) {
   const st = { display: "grid", gap: 4, gridTemplateColumns: "1fr 1fr 1fr" } as const;
+  if (x.loai === "SUA_CHUA")
+    return (
+      <div style={{ ...st, gridTemplateColumns: "1fr" }}>
+        <Chon value={x.taiSanGocId ?? ""} aria-label="Nhà, công trình bị phá dỡ một phần" onChange={(e) => sua(x.id, { taiSanGocId: e.target.value || undefined })}>
+          <option value="">— Nhà, công trình bị phá dỡ một phần —</option>
+          {nhaThua.map((n) => <option key={n.id} value={n.id}>{n.ten}</option>)}
+        </Chon>
+        <input placeholder="Dự toán được duyệt: số, ngày *" aria-label="Căn cứ dự toán sửa chữa" className={x.canCu.trim() ? "" : "loi-nhap"} value={x.canCu} onChange={(e) => sua(x.id, { canCu: e.target.value })} />
+        <input placeholder="Văn bản xác nhận phần còn lại bảo đảm tiêu chuẩn kỹ thuật *" aria-label="Xác nhận phần còn lại bảo đảm tiêu chuẩn kỹ thuật" className={x.xacNhan.trim() ? "" : "loi-nhap"} value={x.xacNhan} onChange={(e) => sua(x.id, { xacNhan: e.target.value })} />
+      </div>
+    );
   if (x.loai === "NHA_CT")
     return (
       <div style={st}>

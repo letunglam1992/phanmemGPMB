@@ -136,6 +136,8 @@ interface NguCanh {
 }
 
 const Ctx = createContext<NguCanh | null>(null);
+/** "yyyy-mm-dd…" → "dd/mm/yyyy" cho nội dung nhật ký. */
+const vn = (iso: string) => iso.slice(0, 10).split("-").reverse().join("/");
 const KHONG_CO_HO: Ho[] = [];
 const chinhSach = (d: DuAn): BoChinhSach => BO_CHINH_SACH[d.boChinhSach] ?? BO_CHINH_SACH["sonla-2026-03-31"]!;
 
@@ -513,7 +515,7 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
       if (!h?.daXoa || !duocXoaHan(h.daXoa)) return bao(`Chỉ xóa hẳn hồ sơ đã nằm trong thùng rác đủ ${THOI_HAN_THUNG_RAC} ngày`, "loi");
       await ghi(() => kho.ghiLo({ xoaHo: [id] }));
       capNhat({ xoaHo: [id] });
-      await ghiNhatKy("Xóa hẳn hồ sơ", `${h.ma} · ${h.ten} (vào thùng rác ${h.daXoa.luc.slice(0, 10)} bởi ${h.daXoa.nguoi}: ${h.daXoa.lyDo})`);
+      await ghiNhatKy("Xóa hẳn hồ sơ", `${h.ma} · ${h.ten} (vào thùng rác ${vn(h.daXoa.luc)} bởi ${h.daXoa.nguoi}: ${h.daXoa.lyDo})`);
     },
     xoaDuAn: async (id, lyDo) => {
       if (chan("XOA_DU_AN")) return false;
@@ -548,7 +550,7 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
       if (!(await taiXuong(bytes, tenTepSaoLuu(ban.thongTin.luc, "GPMB-truoc-xoa-du-an"), "application/zip"))) return bao("Chưa lưu bản sao lưu trước khi xóa — không xóa dự án", "loi");
       await ghi(() => kho.ghiLo({ xoaDuAn: [id] }));
       capNhat({ xoaDuAn: [id] });
-      await ghiNhatKy("Xóa hẳn dự án", `${d.ten} (vào thùng rác ${d.daXoa.luc.slice(0, 10)} bởi ${d.daXoa.nguoi}: ${d.daXoa.lyDo})`);
+      await ghiNhatKy("Xóa hẳn dự án", `${d.ten} (vào thùng rác ${vn(d.daXoa.luc)} bởi ${d.daXoa.nguoi}: ${d.daXoa.lyDo})`);
     },
     chinhSach,
     dangTai,
@@ -634,7 +636,7 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
       if (chan("CAI_DAT")) return;
       await ghi(() => kho.luuCaiDat(KHOA_TY_LE_CHAM, ds));
       setTyLeCham(ds);
-      await ghiNhatKy("Cập nhật tỷ lệ tiền chậm trả", ds.map((g) => `từ ${g.tuNgay}: ${g.tyLe}%/ngày (${g.canCu})`).join("; ") || "xóa hết");
+      await ghiNhatKy("Cập nhật tỷ lệ tiền chậm trả", ds.map((g) => `từ ${vn(g.tuNgay)}: ${g.tyLe}%/ngày (${g.canCu})`).join("; ") || "xóa hết");
     },
     tuDong,
     luuTuDong: async (c) => {
@@ -651,7 +653,7 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
       const ds = [...((await kho.docCaiDat<KyBaoCao[]>(KHOA_KY_BAO_CAO)) ?? []), k];
       await ghi(() => kho.luuCaiDat(KHOA_KY_BAO_CAO, ds));
       setKyBaoCao(ds);
-      await ghiNhatKy("Chốt số liệu kỳ báo cáo", `${k.ten} — số liệu đến ${k.denNgay}; ${k.dong.length} dự án; SHA-256 ${k.bam.slice(0, 16)}…`);
+      await ghiNhatKy("Chốt số liệu kỳ báo cáo", `${k.ten} — số liệu đến ${vn(k.denNgay)}; ${k.dong.length} dự án; SHA-256 ${k.bam.slice(0, 16)}…`);
     },
     khoiPhucLichSu: async (stt, lyDo) => {
       if (chan("KHOI_PHUC_BAN_GHI")) return false;
@@ -722,7 +724,7 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
       const ds = cu.filter((x) => x.id !== id);
       await ghi(() => kho.luuCaiDat(KHOA_KY_BAO_CAO, ds));
       setKyBaoCao(ds);
-      await ghiNhatKy("Xóa kỳ báo cáo đã chốt", `${k.ten} (số liệu đến ${k.denNgay}) — lý do: ${lyDo}`);
+      await ghiNhatKy("Xóa kỳ báo cáo đã chốt", `${k.ten} (số liệu đến ${vn(k.denNgay)}) — lý do: ${lyDo}`);
     },
   };
   return <Ctx.Provider value={giaTri}>{children}</Ctx.Provider>;

@@ -73,7 +73,7 @@ test("P3-3: quỹ tái định cư — thêm lô kèm căn cứ giá, ghi nhận
   await vao(p);
   // hộ 1 được bố trí TĐC giao đất ở
   await moHo(p);
-  await p.locator("[role=tablist] button", { hasText: "Hỗ trợ" }).click();
+  await p.getByRole("tab", { name: "Hỗ trợ", exact: true }).click();
   const tdc = p.locator(".the", { hasText: "Hỗ trợ tái định cư" });
   await tdc.getByLabel("Áp dụng").check();
   await luuHo(p);
@@ -100,7 +100,7 @@ test("P3-3: quỹ tái định cư — thêm lô kèm căn cứ giá, ghi nhận
   await expect(p.locator(".the", { hasText: "Kết quả bốc thăm" }).last()).toContainText("05/BB-HĐ");
   // hồ sơ hộ nhận thông tin lô
   await moHo(p);
-  await p.locator("[role=tablist] button", { hasText: "Hỗ trợ" }).click();
+  await p.getByRole("tab", { name: "Hỗ trợ", exact: true }).click();
   await expect(p.getByText(/Lô, căn được giao từ quỹ tái định cư/)).toContainText("Khu TĐC thử – lô 2");
   await expect(oNhap(p, "Lô số / vị trí")).toHaveValue("2");
 });

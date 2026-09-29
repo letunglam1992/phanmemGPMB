@@ -27,7 +27,7 @@ Cập nhật đợt 5 (28/9/2026): đối chiếu phương án đã phê duyệt
 | VM-14 | 🔴 | Đ7 k2 PLII | Hành lang công trình khác: đất cây hàng năm không có mức | "Thiếu căn cứ" | Linh động – QD-19 |
 | VM-15 | 🟠 | **Đ6 k9.1 b QĐ14** (trước đây Đ17 k10.1 b PLII) | Dẫn chiếu "Điều 15 phụ lục II" (cơ chế thưởng) cho hỗ trợ chuyển đổi nghề — các điểm a, c dẫn **Điều 14**. **QĐ14 giữ nguyên lỗi** | Hiểu là Điều 14 — cần xác nhận | Đã xử lý – QD-13 |
 | VM-16 | 🔴 | Đ15 PLII | Cơ sở tính thưởng có gồm cây trồng, vật nuôi, mồ mả? Trần theo hộ hay theo người đồng sử dụng? | Hỏi | Linh động – QD-19 |
-| VM-17 | 🟠 | **Đ6 k1, k2 QĐ14** | Hộ vừa có đối tượng chính sách vừa là hộ nghèo: cộng hai khoản? ("mức cao nhất" chỉ nêu trong k1) | Hỏi | Linh động – QD-19 |
+| VM-17 | 🟠 | **Đ6 k1, k2 QĐ14** | Hộ vừa có đối tượng chính sách vừa là hộ nghèo: cộng hai khoản? ("mức cao nhất" chỉ nêu trong k1) | **Đã xử lý (0.8.1, QD-28)**: cán bộ chọn cộng cả hai hoặc chỉ lấy khoản cao hơn, bắt buộc lý do; chưa chọn thì hai khoản "Cần xác nhận" | Linh động – QD-19, QD-28 |
 | VM-18 | 🟠 | QĐ 27/2026 Đ6 | Hết hiệu lực 01/3/2027 | Bảng thẩm quyền có hiệu lực đến 28/02/2027, cảnh báo trước 60 ngày | Mở |
 | VM-19 | 🟠 | Đ19 k1 a NĐ88; Đ12 PLII; **Đ6 k9 QĐ14** | Ngưỡng **đúng 30%**: NĐ88 "từ 30% đến 70%" (thuộc k1); Đ12 PLII "dưới 30%"; nhưng Đ6 k9 QĐ14 dùng "trên 30%" và "từ 10% đến 30%" → 30% rơi vào nhóm dưới | Theo NĐ88 (văn bản cấp trên) — cần xác nhận | Đã xử lý – QD-16 |
 | VM-20 | 🔴 | k2 Đ91, điểm e k1 Đ160 LĐĐ (bản gốc) | Bản LĐĐ đã nhận quy định BT theo **giá đất cụ thể**; chưa có NQ 254/2025 và NĐ 49/2026 để biết có thay đổi hay không | Câu hỏi 2; cần TL-11, TL-13 | Đã xử lý – QD-02 |

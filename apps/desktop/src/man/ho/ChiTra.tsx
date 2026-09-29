@@ -1,3 +1,4 @@
+import { ONgay } from "../../thanh-phan/ONgay";
 import { useState } from "react";
 import { D, dinhDang } from "@gpmb/core";
 import type Decimal from "decimal.js";
@@ -51,7 +52,7 @@ export function TabChiTra({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) =>
         <div className="the-dau"><h3>Thời hạn chi trả</h3><span className="mo chu-nho">điểm a khoản 3 Điều 94 Luật Đất đai 2024</span></div>
         <div className="the-than luoi luoi-3">
           <O nhan="Ngày QĐ phê duyệt có hiệu lực" goiY={`Mặc định ngày QĐ ${ngayVN(r.ban!.pheDuyet!.ngay)}; sửa nếu QĐ quy định hiệu lực khác`}>
-            <input type="date" value={r.ngayHieuLuc ?? ""} onChange={(e) => datCt({ ngayHieuLuc: e.target.value || undefined })} />
+            <ONgay value={r.ngayHieuLuc ?? ""} onChange={(e) => datCt({ ngayHieuLuc: e.target.value || undefined })} />
           </O>
           <O nhan="Hạn chi trả (30 ngày)"><input readOnly value={ngayVN(r.hanChi ?? undefined)} /></O>
           <O nhan="Trạng thái"><input readOnly value={{ CHUA_CHI: "Chưa chi", CHI_MOT_PHAN: "Chi một phần", DA_CHI_DU: "Đã chi đủ", CHI_VUOT: "Chi vượt", CHUA_DUYET: "" }[r.trangThai]} /></O>
@@ -84,7 +85,7 @@ export function TabChiTra({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) =>
           </tbody>
         </table>
         <div className="the-than" style={{ display: "flex", gap: 8, alignItems: "end", flexWrap: "wrap" }}>
-          <O nhan="Ngày chi"><input type="date" value={moi.ngay} onChange={(e) => setMoi({ ...moi, ngay: e.target.value })} /></O>
+          <O nhan="Ngày chi"><ONgay value={moi.ngay} onChange={(e) => setMoi({ ...moi, ngay: e.target.value })} /></O>
           <O nhan="Số tiền (đ)"><OSo className="o-so" value={moi.soTien} placeholder={r.conLai?.gt(0) ? r.conLai.toFixed(0) : ""} onChange={(v) => setMoi({ ...moi, soTien: v })} /></O>
           <O nhan="Hình thức">
             <Chon value={moi.hinhThuc} onChange={(e) => setMoi({ ...moi, hinhThuc: e.target.value as HinhThucChi })}>

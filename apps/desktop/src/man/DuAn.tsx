@@ -1,3 +1,4 @@
+import { ONgay } from "../thanh-phan/ONgay";
 import { coDot, dsDot, tenDot } from "../dot-thu-hoi";
 import { useMemo, useState } from "react";
 import { THOI_HAN_LUAT } from "../du-bao";
@@ -241,7 +242,7 @@ export function HopKeHoach({ duAn, dong }: { duAn: DuAn; dong: () => void }) {
           {CAC_BUOC.map((b) => (
             <tr key={b.ma}>
               <td>{b.ma}</td><td>{b.ten}<div className="can-cu">{b.canCu}</div></td><td className="chu-nho">{b.thoiHan ?? "—"}</td>
-              <td><input type="date" value={kh[b.ma] ?? ""} onChange={(e) => setKh({ ...kh, [b.ma]: e.target.value })} /></td>
+              <td><ONgay value={kh[b.ma] ?? ""} onChange={(e) => setKh({ ...kh, [b.ma]: e.target.value })} /></td>
               <td>
                 {THOI_HAN_LUAT[b.ma] ? <span className="chu-nho mo" title={THOI_HAN_LUAT[b.ma]!.canCu}>theo luật: {THOI_HAN_LUAT[b.ma]!.soNgay} {THOI_HAN_LUAT[b.ma]!.loai === "NLV" ? "ngày làm việc" : "ngày"}</span> : (
                   <div style={{ display: "flex", gap: 4 }}>

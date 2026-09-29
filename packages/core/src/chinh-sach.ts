@@ -39,6 +39,16 @@ export interface BoChinhSach {
     >;
   };
   moMa: { canCu: CanCu[]; mucXay: string; mucKhongXay: string };
+  /**
+   * Các trường hợp hỗ trợ khác (Điều 6 QĐ 14/2026): k1 hộ có đối tượng chính sách phải di chuyển chỗ ở (cán bộ chọn mức,
+   * nhiều đối tượng chỉ hưởng mức cao nhất); k2 hộ nghèo; k6 ổn định đời sống khi phá dỡ nhà, làm lại nơi khác.
+   * Không có → bộ chính sách không có các khoản này (tính "Thiếu căn cứ").
+   */
+  hoTroKhac?: {
+    doiTuongChinhSach: { mucs: string[]; canCu: CanCu[]; ghiChu: string };
+    hoNgheo: { soTien: string; canCu: CanCu[]; dieuKien: string };
+    xayLaiNha: { kgGaoNhanKhauThang: string; soThang: number; canCu: CanCu[]; dieuKien: string };
+  };
   onDinhDoiSong: {
     kgGaoNhanKhauThang: string;
     canCu: CanCu[];

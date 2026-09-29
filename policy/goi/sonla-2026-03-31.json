@@ -223,6 +223,45 @@
     "mucXay": "25000000",
     "mucKhongXay": "15000000"
   },
+  "hoTroKhac": {
+    "doiTuongChinhSach": {
+      "mucs": [
+        "6000000",
+        "5500000",
+        "5000000",
+        "4500000",
+        "3000000"
+      ],
+      "canCu": [
+        {
+          "vanBan": "QĐ 14/2026/QĐ-UBND",
+          "viTri": "khoản 1 Điều 6"
+        }
+      ],
+      "ghiChu": "Hộ gia đình có đối tượng chính sách phải di chuyển chỗ ở, có xác nhận của phòng chuyên môn; nhiều đối tượng chỉ hưởng mức cao nhất. Cán bộ chọn mức theo đối tượng (docs/02 C14)."
+    },
+    "hoNgheo": {
+      "soTien": "4000000",
+      "canCu": [
+        {
+          "vanBan": "QĐ 14/2026/QĐ-UBND",
+          "viTri": "khoản 2 Điều 6"
+        }
+      ],
+      "dieuKien": "hộ nghèo phải di chuyển chỗ ở hoặc ngừng sản xuất, kinh doanh (docs/02 C15)"
+    },
+    "xayLaiNha": {
+      "kgGaoNhanKhauThang": "30",
+      "soThang": 6,
+      "canCu": [
+        {
+          "vanBan": "QĐ 14/2026/QĐ-UBND",
+          "viTri": "khoản 6 Điều 6"
+        }
+      ],
+      "dieuKien": "nhà ở bị phá dỡ, hộ làm lại nhà ở nơi khác (docs/02 C16)"
+    }
+  },
   "onDinhDoiSong": {
     "kgGaoNhanKhauThang": "30",
     "canCu": [

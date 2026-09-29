@@ -1,3 +1,4 @@
+import { ONgay } from "./ONgay";
 import { useMemo, useState } from "react";
 import { D } from "@gpmb/core";
 import { useUngDung } from "../ung-dung";
@@ -59,7 +60,7 @@ export function TheDotThuHoi({ d, setD, hos }: { d: DuAn; setD: (d: DuAn) => voi
                     <td><input type="number" min={1} aria-label={`Số thứ tự ${tenDot(x)}`} value={x.so} onChange={(e) => sua(x.id, { so: Number(e.target.value) })} /></td>
                     <td><input className={l ? "loi-nhap" : ""} title={l ?? undefined} aria-label="Tên đợt" value={x.ten} onChange={(e) => sua(x.id, { ten: e.target.value })} /></td>
                     <td><input aria-label={`Căn cứ thu hồi ${tenDot(x)}`} value={x.canCuThuHoi ?? ""} placeholder={d.canCuThuHoi ? `Trống = theo dự án: ${d.canCuThuHoi}` : "vd. Thông báo thu hồi đất số …/TB-UBND"} onChange={(e) => sua(x.id, { canCuThuHoi: e.target.value || undefined })} /></td>
-                    <td><input type="date" aria-label={`Ngày thông báo ${tenDot(x)}`} value={x.ngayThongBao ?? ""} onChange={(e) => sua(x.id, { ngayThongBao: e.target.value || undefined })} /></td>
+                    <td><ONgay aria-label={`Ngày thông báo ${tenDot(x)}`} value={x.ngayThongBao ?? ""} onChange={(e) => sua(x.id, { ngayThongBao: e.target.value || undefined })} /></td>
                     <td><input aria-label={`Phạm vi ${tenDot(x)}`} value={x.phamVi ?? ""} placeholder="vd. Km0+000 – Km2+500; bản Mé" onChange={(e) => sua(x.id, { phamVi: e.target.value || undefined })} /></td>
                     <td className="so">{hos.filter((h) => h.dotId === x.id && !h.daXoa).length}</td>
                     <td><button className="nut nut-chu nut-nguy nut-nho" aria-label={`Xóa ${tenDot(x)}`} onClick={() => xoa(x)}><BieuTuong ten="thungRac" co={15} /></button></td>

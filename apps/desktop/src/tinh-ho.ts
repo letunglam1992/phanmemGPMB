@@ -22,6 +22,9 @@ import {
   hoTroTuLoChoO,
   hoTroSuatToiThieu,
   hoTroTienSddTdc,
+  hoTroDoiTuongChinhSach,
+  hoTroHoNgheo,
+  hoTroXayLaiNha,
   tongHo,
   type BoChinhSach,
   type DongCayXen,
@@ -31,7 +34,7 @@ import {
 import type Decimal from "decimal.js";
 import { thuTinh } from "./bieu-thuc";
 import type { DuAn, Ho, TaiDinhCuHo, TaiSan, Thua } from "./mo-hinh";
-import { truongLoi, truongSoDuAn, truongSoHo } from "./so";
+import { laSoMay, truongLoi, truongSoDuAn, truongSoHo } from "./so";
 
 export const LOAI_DAT_NN = ["LUC", "LUK", "LUN", "BHK", "NHK", "HNK", "CLN", "RSX", "RPH", "RDD", "NTS", "NKH", "LNP"];
 export const laDatNN = (ma: string) => LOAI_DAT_NN.includes(ma.toUpperCase());
@@ -339,6 +342,7 @@ function tinhHoGoc(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
     { ma: "B.IV", ten: "Hỗ trợ đào tạo, chuyển đổi nghề và tìm kiếm việc làm", dong: [] },
     { ma: "B.V", ten: "Hỗ trợ ổn định đời sống, tạm cư, di dời", dong: [] },
     { ma: "B.VI", ten: "Hỗ trợ tái định cư", dong: [] },
+    { ma: "B.VII", ten: "Hỗ trợ khác (Điều 6 QĐ 14/2026)", dong: [] },
   ];
   const n = (ma: string) => nhom.find((x) => x.ma === ma)!;
 
@@ -411,6 +415,8 @@ function tinhHoGoc(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
         const bieu = kl.v ? [{ dvt: ts.donVi, kl: kl.v, heSo: D(ts.heSo || "1"), donGia: D(ts.donGia || "0") }] : undefined;
         if (ts.phan === "BOI_THUONG") n("A.II").dong.push({ dong: d, bieu, cot: "BT_TAI_SAN", thuaId: t.id, taiSanId: ts.id });
         else n("B.II").dong.push({ dong: d, bieu, cot: "HT_TAI_SAN", thuaId: t.id, taiSanId: ts.id });
+      } else if (ts.loai === "SUA_CHUA") {
+        n("A.II").dong.push({ dong: dongSuaChua(ho, ts), cot: "BT_TAI_SAN", thuaId: t.id, taiSanId: ts.id });
       } else if (ts.loai === "VAT_NUOI") {
         const kl = soLuong(ts, ts.khoiLuong, "C09");
         const d = kl.loi ?? diDoiVatNuoi(cs, { loaiDuong: ts.loaiDuong, loaiVatNuoi: ts.loaiVatNuoi, khoiLuong: kl.v!, quangDuongKm: ts.quangDuongKm || "0" });
@@ -500,6 +506,8 @@ function tinhHoGoc(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
       cot: "HT_KHAC",
     });
 
+  if (ho.hoTro.khac) for (const d of dongHoTroKhac(cs, duAn, ho, ho.hoTro.khac)) n("B.VII").dong.push({ dong: d, cot: "HT_KHAC" });
+
   const tdc = ho.hoTro.taiDinhCu;
   if (tdc) for (const d of dongTaiDinhCu(cs, duAn, ho, tdc, tienBoiThuongDatO(ho, n("A.I").dong))) n("B.VI").dong.push({ dong: d, cot: "HT_KHAC" });
 
@@ -573,6 +581,99 @@ function dongTaiDinhCu(cs: BoChinhSach, duAn: DuAn, ho: Ho, t: TaiDinhCuHo, btDa
     if (!k.canCu.trim()) out.push(thieu("C.TĐC", nd, "Chưa ghi căn cứ (số, ngày văn bản của UBND xã hoặc văn bản quy định)"));
     else if (!k.soTien.trim() || !D(k.soTien).gt(0)) out.push(thieu("C.TĐC", nd, "Chưa nhập số tiền", k.canCu));
     else out.push(dong({ ma: "C.TĐC", noiDung: nd, thamSo: { "Số tiền": `${dinhDang(D(k.soTien))} đ` }, congThuc: "Theo văn bản (cán bộ nhập)", thanhTien: D(k.soTien), canCu: [{ vanBan: k.canCu, viTri: "" }] }));
+  }
+  return out;
+}
+
+/**
+ * A06 – Điều 5 QĐ 14/2026: bồi thường chi phí sửa chữa phần nhà, công trình còn lại (phá dỡ một phần, phần còn lại vẫn
+ * bảo đảm tiêu chuẩn kỹ thuật) theo dự toán được duyệt — cán bộ nhập số tiền, căn cứ dự toán, văn bản xác nhận.
+ */
+const CAN_CU_SUA_CHUA = [{ vanBan: "QĐ 14/2026/QĐ-UBND", viTri: "Điều 5" }];
+function dongSuaChua(ho: Ho, ts: Extract<TaiSan, { loai: "SUA_CHUA" }>): DongTinh {
+  const nd = ts.ten.trim() || "Bồi thường chi phí sửa chữa phần nhà, công trình còn lại";
+  if (!ts.soTien.trim() || !laSoMay(ts.soTien) || !D(ts.soTien).gt(0)) return thieu("A06", nd, "Chưa nhập chi phí sửa chữa theo dự toán được duyệt", "QĐ 14/2026/QĐ-UBND Điều 5");
+  if (!ts.canCu.trim()) return thieu("A06", nd, "Chưa ghi số, ngày dự toán sửa chữa được duyệt", "QĐ 14/2026/QĐ-UBND Điều 5");
+  const canhBao: string[] = [];
+  if (!ts.xacNhan.trim()) canhBao.push("Chưa ghi văn bản xác nhận phần còn lại vẫn bảo đảm tiêu chuẩn kỹ thuật theo pháp luật về xây dựng (điều kiện Điều 5)");
+  const goc = ts.taiSanGocId ? ho.taiSan.find((x) => x.id === ts.taiSanGocId) : undefined;
+  if (ts.taiSanGocId && !goc) canhBao.push("Nhà, công trình bị phá dỡ một phần không còn trong danh sách kiểm đếm");
+  return dong({
+    ma: "A06",
+    noiDung: nd,
+    thamSo: { "Chi phí theo dự toán": `${dinhDang(D(ts.soTien))} đ`, "Dự toán": ts.canCu.trim(), ...(goc ? { "Nhà, công trình": goc.ten } : {}), "Xác nhận kỹ thuật": ts.xacNhan.trim() || "—" },
+    congThuc: "Theo dự toán được duyệt (cán bộ nhập)",
+    thanhTien: D(ts.soTien),
+    canCu: [...CAN_CU_SUA_CHUA, { vanBan: ts.canCu.trim(), viTri: "" }],
+    trangThai: ts.xacNhan.trim() ? "TAM_TINH" : "CAN_XAC_NHAN",
+    canhBao,
+  });
+}
+
+const CAN_CU_K = (k: string) => [{ vanBan: "QĐ 14/2026/QĐ-UBND", viTri: `khoản ${k} Điều 6` }];
+export const TEN_KHOAN_KHAC: Record<"K4" | "K13_14" | "KHAC", { ten: string; canCu: { vanBan: string; viTri: string }[]; goiY: string }> = {
+  K4: { ten: "Hỗ trợ công trình sinh hoạt nằm ngoài cọc GPMB (thu hồi đất ở, phải di chuyển nhà)", canCu: CAN_CU_K("4"), goiY: "Mức tối đa 100% đơn giá bồi thường, mức cụ thể do Chủ tịch UBND xã quyết định" },
+  K13_14: { ten: "Hỗ trợ khác do UBND xã quyết định", canCu: [...CAN_CU_K("13"), ...CAN_CU_K("14")], goiY: "Theo quyết định của UBND xã cho dự án (ghi số, ngày quyết định)" },
+  KHAC: { ten: "Khoản hỗ trợ khác", canCu: [], goiY: "Chính sách chưa có sẵn — ghi đầy đủ văn bản làm căn cứ" },
+};
+
+/**
+ * B.VII – Hỗ trợ khác (Điều 6 QĐ 14/2026): k1 đối tượng chính sách (mức cán bộ chọn, chỉ mức cao nhất), k2 hộ nghèo,
+ * VM-17 (có cả k1, k2: cán bộ chọn cộng hay chỉ lấy khoản cao hơn, có lý do — chưa chọn thì "Cần xác nhận"),
+ * k6 ổn định đời sống khi xây lại nhà (cán bộ tích; hộ có ổn định đời sống Điều 12 PL II thì nhắc kiểm tra, không tự loại),
+ * k4, k13, k14 và khoản khác nhập tay kèm căn cứ.
+ */
+function dongHoTroKhac(cs: BoChinhSach, duAn: DuAn, ho: Ho, k: NonNullable<Ho["hoTro"]["khac"]>): DongTinh[] {
+  const out: DongTinh[] = [];
+  const khongDiChuyen = ho.hoTro.onDinh?.diChuyen === "KHONG_DI_CHUYEN";
+  let c14 = k.doiTuongCs?.length ? hoTroDoiTuongChinhSach(cs, { doiTuong: k.doiTuongCs }) : null;
+  let c15 = k.hoNgheo ? hoTroHoNgheo(cs, { xacNhan: k.hoNgheo.xacNhan }) : null;
+  if (c14 && khongDiChuyen) c14 = { ...c14, canhBao: [...c14.canhBao, "Thẻ Hỗ trợ ghi hộ không phải di chuyển chỗ ở — khoản 1 Điều 6 áp dụng cho hộ phải di chuyển chỗ ở, kiểm tra"] };
+  if (c14 && c15 && c14.thanhTien && c15.thanhTien) {
+    const v = k.vm17?.lyDo.trim() ? k.vm17 : undefined;
+    if (!v) {
+      const nhac = "VM-17: hộ vừa có đối tượng chính sách (k1) vừa là hộ nghèo (k2) — chọn cộng cả hai hay chỉ lấy khoản cao hơn, ghi lý do";
+      c14 = { ...c14, trangThai: "CAN_XAC_NHAN", canhBao: [...c14.canhBao, nhac] };
+      c15 = { ...c15, trangThai: "CAN_XAC_NHAN", canhBao: [...c15.canhBao, nhac] };
+    } else {
+      const lc = { ma: "VM-17", giaTri: v.cach === "CONG" ? "Cộng cả hai khoản k1, k2" : "Chỉ lấy khoản cao hơn", lyDo: v.lyDo.trim() };
+      c14 = { ...c14, luaChon: [...c14.luaChon, lc] };
+      c15 = { ...c15, luaChon: [...c15.luaChon, lc] };
+      if (v.cach === "CAO_HON") {
+        if (c14.thanhTien!.gte(c15.thanhTien!)) c15 = null;
+        else c14 = null;
+      }
+    }
+  }
+  if (c14) out.push(c14);
+  if (c15) out.push(c15);
+  if (k.xayLaiNha) {
+    const nd = "Hỗ trợ ổn định đời sống khi phá dỡ nhà ở, làm lại nhà nơi khác";
+    let d: DongTinh;
+    if (!duAn.giaGao) d = thieu("C16", nd, "Chưa nhập giá gạo tẻ trung bình (Thông tin dự án)");
+    else if (!ho.nhanKhau.length) d = thieu("C16", nd, "Chưa có nhân khẩu");
+    else d = hoTroXayLaiNha(cs, { nhanKhau: ho.nhanKhau.length, giaGaoDongKg: duAn.giaGao.dongKg, nguonGiaGao: duAn.giaGao.nguon });
+    if (ho.hoTro.onDinh) d = { ...d, canhBao: [...d.canhBao, "Hộ đồng thời có hỗ trợ ổn định đời sống theo Điều 12 Phụ lục II QĐ 106/2025 (thẻ Hỗ trợ) — cần kiểm tra, tránh hỗ trợ trùng"] };
+    out.push(d);
+  }
+  for (const x of k.khoan) {
+    const loai = TEN_KHOAN_KHAC[x.loai];
+    const nd = x.noiDung.trim() || loai.ten;
+    const ma = x.loai === "K4" ? "C17.4" : x.loai === "K13_14" ? "C17" : "C17.K";
+    if (!x.canCu.trim()) out.push(thieu(ma, nd, "Chưa ghi căn cứ (số, ngày văn bản quyết định mức hỗ trợ)", loai.canCu[0] ? `${loai.canCu[0].vanBan} ${loai.canCu[0].viTri}` : "Hồ sơ"));
+    else if (!x.soTien.trim() || !laSoMay(x.soTien) || !D(x.soTien).gt(0)) out.push(thieu(ma, nd, "Chưa nhập số tiền", x.canCu));
+    else
+      out.push(
+        dong({
+          ma,
+          noiDung: nd,
+          thamSo: { "Số tiền": `${dinhDang(D(x.soTien))} đ` },
+          congThuc: "Theo văn bản (cán bộ nhập)",
+          thanhTien: D(x.soTien),
+          canCu: [...loai.canCu, { vanBan: x.canCu.trim(), viTri: "" }],
+          canhBao: x.loai === "K4" ? ["Mức tối đa 100% đơn giá bồi thường của công trình (khoản 4 Điều 6 QĐ 14/2026) — cán bộ kiểm tra theo quyết định của Chủ tịch UBND xã"] : [],
+        }),
+      );
   }
   return out;
 }

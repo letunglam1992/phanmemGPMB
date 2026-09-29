@@ -103,11 +103,11 @@ export function duLieuHo(h: Ho, k: KetQuaHo): Record<string, unknown> {
     })),
     tai_san: h.taiSan.map((x, i) => {
       const t = thuaTheoId.get(x.thuaId);
-      const kl = x.loai === "CAY" ? x.soLuong : x.khoiLuong;
+      const kl = x.loai === "CAY" ? x.soLuong : x.loai === "SUA_CHUA" ? "" : x.khoiLuong;
       return {
         stt: i + 1,
         ten: x.ten,
-        dvt: x.loai === "VAT_NUOI" ? "tấn/kg" : x.donVi,
+        dvt: x.loai === "VAT_NUOI" ? "tấn/kg" : x.loai === "SUA_CHUA" ? "đồng" : x.donVi,
         khoi_luong: kl.replace(/^=/, ""),
         thua: t ? `${t.soThua}/${t.soTo}` : "",
         dot: x.dot,

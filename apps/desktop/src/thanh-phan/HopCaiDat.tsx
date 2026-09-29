@@ -1,3 +1,4 @@
+import { ONgay } from "./ONgay";
 import { useEffect, useState, type ReactNode } from "react";
 import { TheMangNoiBo } from "./KetNoi";
 import { coVoWindows, moThuMucSaoLuu, thuMucSaoLuu, type CaiDatTuDong } from "../tu-dong-sao-luu";
@@ -154,7 +155,7 @@ function TheLich() {
               <option value="nghi">Ngày nghỉ</option>
               <option value="lamBu">Ngày làm bù</option>
             </Chon>
-            <input type="date" aria-label="Ngày" value={moi.ngay} onChange={(e) => setMoi({ ...moi, ngay: e.target.value })} />
+            <ONgay aria-label="Ngày" value={moi.ngay} onChange={(e) => setMoi({ ...moi, ngay: e.target.value })} />
             <input placeholder="Nội dung, vd. Tết Nguyên đán (theo thông báo số …)" aria-label="Nội dung" value={moi.ten} style={{ flex: 1, minWidth: 260 }} onChange={(e) => setMoi({ ...moi, ten: e.target.value })} />
             <button className="nut" onClick={them}>Thêm</button>
           </div>
@@ -320,7 +321,7 @@ function TheTyLeCham() {
       {choSua ? (
         <>
           <div style={{ display: "flex", gap: 8, alignItems: "end", marginTop: 12, flexWrap: "wrap" }}>
-            <input type="date" aria-label="Áp dụng từ ngày" value={moi.tuNgay} onChange={(e) => setMoi({ ...moi, tuNgay: e.target.value })} />
+            <ONgay aria-label="Áp dụng từ ngày" value={moi.tuNgay} onChange={(e) => setMoi({ ...moi, tuNgay: e.target.value })} />
             <input aria-label="Tỷ lệ %/ngày" placeholder="%/ngày" value={moi.tyLe} style={{ width: 100 }} onChange={(e) => setMoi({ ...moi, tyLe: e.target.value })} />
             <input aria-label="Căn cứ" placeholder="Căn cứ: điểm …, khoản …, Điều … Luật Quản lý thuế số …" value={moi.canCu} style={{ flex: 1, minWidth: 280 }} onChange={(e) => setMoi({ ...moi, canCu: e.target.value })} />
             <button className="nut" onClick={them}>Thêm</button>

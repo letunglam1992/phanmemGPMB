@@ -1,3 +1,4 @@
+import { ONgay } from "../thanh-phan/ONgay";
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { dinhDang } from "@gpmb/core";
 import { useUngDung } from "../ung-dung";
@@ -139,7 +140,7 @@ export function BaoCao() {
               {(Object.keys(TEN_TINH_TRANG) as TinhTrangDuAn[]).map((k) => <option key={k} value={k}>{TEN_TINH_TRANG[k]}</option>)}
             </Chon>
           </O>
-          <O nhan="Tính đến ngày" goiY="Chi trả ghi sau ngày này không tính"><input type="date" value={denNgay} onChange={(e) => e.target.value && setDenNgay(e.target.value)} /></O>
+          <O nhan="Tính đến ngày" goiY="Chi trả ghi sau ngày này không tính"><ONgay value={denNgay} onChange={(e) => e.target.value && setDenNgay(e.target.value)} /></O>
         </div>
       </div>
 
@@ -343,7 +344,7 @@ function HopWord({ dong, xuat, duLieuThu, ghiNhatKy }: { dong: () => void; xuat:
         {o("kyHieu", "Ký hiệu (…/BC-?)")}
         {o("so", "Số báo cáo", 1, "Để trống: văn thư ghi khi ký")}
         {o("diaDanh", "Địa danh")}
-        <O nhan="Ngày ký"><input type="date" value={t.ngayKy} onChange={(e) => setT({ ...t, ngayKy: e.target.value })} /></O>
+        <O nhan="Ngày ký"><ONgay value={t.ngayKy} onChange={(e) => setT({ ...t, ngayKy: e.target.value })} /></O>
         {o("kinhGui", "Kính gửi")}
         {o("quyenHan", "Quyền hạn, chức vụ người ký")}
         {o("nguoiKy", "Họ tên người ký")}

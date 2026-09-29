@@ -1,3 +1,4 @@
+import { ONgay } from "./ONgay";
 import { useMemo, useState } from "react";
 import { useUngDung } from "../ung-dung";
 import type { DuAn, Ho } from "../mo-hinh";
@@ -310,7 +311,7 @@ function HopGiao({ duAn, hos, lo, dong }: { duAn: DuAn; hos: Ho[]; lo: LoTdc; do
           </div>
         </O>
         <O nhan="Hình thức"><Chon value={hinhThuc} onChange={(e) => setHinhThuc(e.target.value as HinhThucGiao)}>{Object.entries(TEN_HINH_THUC_GIAO).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</Chon></O>
-        <O nhan="Ngày giao"><input type="date" value={ngay} onChange={(e) => setNgay(e.target.value)} /></O>
+        <O nhan="Ngày giao"><ONgay value={ngay} onChange={(e) => setNgay(e.target.value)} /></O>
         <O nhan="Căn cứ giao (bắt buộc)" className="ca-hang"><input className={!canCu.trim() ? "loi-nhap" : ""} value={canCu} onChange={(e) => setCanCu(e.target.value)} placeholder={hinhThuc === "BOC_THAM" ? "Biên bản bốc thăm số …, ngày …" : "Quyết định/biên bản giao đất số …, ngày …"} /></O>
       </div>
       {h && daCo.has(h.id) && <div className="thong-bao thong-bao-vang mt-8">Hộ đã được giao lô khác — chỉ giao thêm khi thuộc trường hợp được bố trí nhiều hơn một lô (Điều 111 Luật Đất đai 2024), phần mềm sẽ cảnh báo để kiểm tra.</div>}
@@ -368,7 +369,7 @@ function HopBocTham({ duAn, hos, dong }: { duAn: DuAn; hos: Ho[]; dong: () => vo
     <HopThoai tieuDe="Ghi nhận kết quả bốc thăm" rong={940} dong={dong} chan={<><button className="nut" onClick={dong}>Hủy</button><button className="nut nut-chinh" disabled={!bienBan.trim() || !daChon.size} onClick={() => void luu()}>Ghi nhận {daChon.size} kết quả</button></>}>
       <div className="thong-bao thong-bao-xanh chu-nho">Nhập đúng theo biên bản bốc thăm. Hộ không tham gia/vắng mặt: để trống cột lô. Mỗi hộ, mỗi lô chỉ xuất hiện một lần; lô được giao sẽ ghi vào hồ sơ hộ.</div>
       <div className="luoi luoi-3">
-        <O nhan="Ngày bốc thăm"><input type="date" value={ngay} onChange={(e) => setNgay(e.target.value)} /></O>
+        <O nhan="Ngày bốc thăm"><ONgay value={ngay} onChange={(e) => setNgay(e.target.value)} /></O>
         <O nhan="Biên bản số, ngày (bắt buộc)" style={{ gridColumn: "span 2" }}><input className={!bienBan.trim() ? "loi-nhap" : ""} value={bienBan} onChange={(e) => setBienBan(e.target.value)} placeholder="vd. 05/BB-HĐBT ngày 10/10/2026" /></O>
         <O nhan="Thành phần chủ trì, chứng kiến" className="ca-hang"><input value={thanhPhan} onChange={(e) => setThanhPhan(e.target.value)} placeholder="vd. Hội đồng BT, HT, TĐC; UBMTTQ xã; đại diện các hộ" /></O>
       </div>

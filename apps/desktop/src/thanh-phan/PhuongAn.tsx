@@ -1,3 +1,4 @@
+import { ONgay } from "./ONgay";
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { D, dinhDang } from "@gpmb/core";
 import { useUngDung } from "../ung-dung";
@@ -288,7 +289,7 @@ function HopPheDuyet({ duAn, p, dong: dongHop, luu }: { duAn: DuAn; p: PhienBanP
       </p>
       <div className="luoi luoi-2">
         <O nhan="Số quyết định"><input value={so} placeholder="…/QĐ-UBND" onChange={(e) => setSo(e.target.value)} /></O>
-        <O nhan="Ngày quyết định"><input type="date" value={ngay} onChange={(e) => setNgay(e.target.value)} /></O>
+        <O nhan="Ngày quyết định"><ONgay value={ngay} onChange={(e) => setNgay(e.target.value)} /></O>
       </div>
       <O nhan="Cơ quan ban hành"><input value={coQuan} onChange={(e) => setCoQuan(e.target.value)} /></O>
       <label style={{ display: "block", marginTop: 8 }}>

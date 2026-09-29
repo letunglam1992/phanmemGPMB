@@ -128,7 +128,24 @@ export interface TaiSanKhac extends TaiSanCoSo {
   phan: "BOI_THUONG" | "HO_TRO";
 }
 
-export type TaiSan = TaiSanNhaCongTrinh | TaiSanCay | TaiSanVatNuoi | TaiSanKhac;
+/**
+ * Điều 5 QĐ 14/2026: nhà ở, công trình phục vụ đời sống gắn liền với đất phải tháo dỡ hoặc phá dỡ một phần mà phần còn lại
+ * vẫn bảo đảm tiêu chuẩn kỹ thuật theo pháp luật về xây dựng — bồi thường chi phí sửa chữa phần còn lại theo dự toán được
+ * duyệt (cán bộ nhập, không tự tính).
+ */
+export interface TaiSanSuaChua extends TaiSanCoSo {
+  loai: "SUA_CHUA";
+  /** Nhà, công trình bị phá dỡ một phần (tài sản kiểm đếm cùng thửa), nếu có. */
+  taiSanGocId?: string;
+  /** Chi phí sửa chữa theo dự toán được duyệt (đ, chuẩn máy). */
+  soTien: string;
+  /** Số, ngày dự toán / văn bản phê duyệt dự toán (bắt buộc). */
+  canCu: string;
+  /** Văn bản xác nhận phần còn lại vẫn bảo đảm tiêu chuẩn kỹ thuật (bắt buộc). */
+  xacNhan: string;
+}
+
+export type TaiSan = TaiSanNhaCongTrinh | TaiSanCay | TaiSanVatNuoi | TaiSanKhac | TaiSanSuaChua;
 
 export interface HoTroHo {
   onDinh?: { dienTichNNDangSuDung: string; diChuyen: DiChuyen; chonNhom?: { ma: string; lyDo: string } };
@@ -136,6 +153,22 @@ export interface HoTroHo {
   tamCu?: { soThang: number; tdcBangDat: boolean };
   moMa?: { xay: number; khongXay: number };
   taiDinhCu?: TaiDinhCuHo;
+  /** Các trường hợp hỗ trợ khác theo Điều 6 QĐ 14/2026 (thẻ "Hỗ trợ khác"). */
+  khac?: HoTroKhacHo;
+}
+
+/** Hỗ trợ khác (Điều 6 QĐ 14/2026) — các khoản chưa có ở thẻ Hỗ trợ, Kiểm đếm, Tái định cư. */
+export interface HoTroKhacHo {
+  /** k1: đối tượng chính sách trong hộ phải di chuyển chỗ ở — cán bộ chọn mức; nhiều đối tượng chỉ hưởng mức cao nhất. */
+  doiTuongCs?: { id: string; ten: string; muc: string; xacNhan: string }[];
+  /** k2: hộ nghèo — giấy tờ xác nhận. */
+  hoNgheo?: { xacNhan: string };
+  /** VM-17 (linh động, cán bộ chọn): hộ vừa có k1 vừa có k2 → cộng cả hai hay chỉ lấy khoản cao hơn; bắt buộc lý do. */
+  vm17?: { cach: "CONG" | "CAO_HON"; lyDo: string };
+  /** k6: nhà ở phá dỡ, làm lại nơi khác — cán bộ tích áp dụng. */
+  xayLaiNha?: boolean;
+  /** k4 (công trình sinh hoạt ngoài cọc GPMB, mức do Chủ tịch UBND xã quyết định), k13, k14 và khoản khác: nhập tay, bắt buộc căn cứ. */
+  khoan: { id: string; loai: "K4" | "K13_14" | "KHAC"; noiDung: string; soTien: string; canCu: string }[];
 }
 
 /** Hình thức bố trí tái định cư (Điều 111 LĐĐ 2024; Điều 23, 24 NĐ 88/2024). */

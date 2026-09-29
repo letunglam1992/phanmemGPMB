@@ -657,5 +657,14 @@ async fn may_chu_dot_va_quy_tdc() {
     d2["quyTdc"]["lo"][1]["giao"]["hoId"] = json!("h1");
     let (ma, v) = goi_router(&r, "PUT", "/api/du-an/da1", Some(&t), json!({ "duLieu": d2, "phienBanTruoc": pb })).await;
     assert_eq!(ma, 200, "{v}");
+    // Đ5, Đ6 QĐ 14/2026: tài sản "sửa chữa phần còn lại", hỗ trợ khác — máy chủ nhận cấu trúc mới, kiểm ô số chuẩn máy
+    let mut h = ho_mau("h9", "H009");
+    h["taiSan"] = json!([{ "id": "sc", "thuaId": "t", "dot": 1, "loai": "SUA_CHUA", "ten": "Sửa chữa", "soTien": "25.000.000", "canCu": "DT 1", "xacNhan": "" }]);
+    let (ma, v) = goi_router(&r, "PUT", "/api/ho/h9", Some(&t), json!({ "duLieu": h, "phienBanTruoc": null })).await;
+    assert_eq!(ma, 400, "{v}");
+    h["taiSan"][0]["soTien"] = json!("25000000");
+    h["hoTro"]["khac"] = json!({ "doiTuongCs": [{ "id": "a", "ten": "A", "muc": "6000000", "xacNhan": "x" }], "khoan": [{ "id": "k", "loai": "K4", "noiDung": "", "soTien": "3000000", "canCu": "QĐ" }] });
+    let (ma, v) = goi_router(&r, "PUT", "/api/ho/h9", Some(&t), json!({ "duLieu": h, "phienBanTruoc": null })).await;
+    assert_eq!(ma, 200, "{v}");
     std::fs::remove_dir_all(&dir).ok();
 }

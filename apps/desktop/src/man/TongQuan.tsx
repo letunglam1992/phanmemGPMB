@@ -1,3 +1,4 @@
+import { ONgay } from "../thanh-phan/ONgay";
 import { useRef, useState } from "react";
 import { D } from "@gpmb/core";
 import { useUngDung } from "../ung-dung";
@@ -261,7 +262,7 @@ export function FormDuAn({ d, setD }: { d: DuAn; setD: (d: DuAn) => void }) {
         </O>
         <O nhan="Chủ đầu tư"><input value={d.chuDauTu} onChange={(e) => setD({ ...d, chuDauTu: e.target.value })} /></O>
         <O nhan="Căn cứ thu hồi (thông báo, kế hoạch)"><input value={d.canCuThuHoi} onChange={(e) => setD({ ...d, canCuThuHoi: e.target.value })} /></O>
-        <O nhan="Ngày thông báo thu hồi đất" goiY="Dùng xác định mốc hỗ trợ nhà, công trình (QĐ 14/2026)"><input type="date" value={d.ngayThongBao} onChange={(e) => setD({ ...d, ngayThongBao: e.target.value })} /></O>
+        <O nhan="Ngày thông báo thu hồi đất" goiY="Dùng xác định mốc hỗ trợ nhà, công trình (QĐ 14/2026)"><ONgay value={d.ngayThongBao} onChange={(e) => setD({ ...d, ngayThongBao: e.target.value })} /></O>
         <O nhan="Giá gạo tẻ trung bình (đ/kg)" goiY="Theo văn bản của Sở Tài chính (TL-26)">
           <OSo canhBao={(v) => (Number(v) < 1000 ? "Nhỏ hơn 1.000 đ/kg — kiểm tra cách ghi số" : null)} value={d.giaGao?.dongKg ?? ""} onChange={(v) => setD({ ...d, giaGao: v ? { dongKg: v, nguon: d.giaGao?.nguon ?? "" } : null })} />
         </O>

@@ -353,7 +353,7 @@ fn o_so(loai: &str, v: &Value) -> Vec<(String, Value)> {
         them(format!("thua[{i}].cayXen.dienTichTru"), &t["cayXen"]["dienTichTru"]);
     }
     for (i, ts) in v["taiSan"].as_array().into_iter().flatten().enumerate() {
-        for k in ["donGia", "heSo", "T", "T1", "matDoHa", "quangDuongKm"] {
+        for k in ["donGia", "heSo", "T", "T1", "matDoHa", "quangDuongKm", "soTien"] {
             them(format!("taiSan[{i}].{k}"), &ts[k]);
         }
     }
@@ -364,6 +364,13 @@ fn o_so(loai: &str, v: &Value) -> Vec<(String, Value)> {
     }
     for (i, k) in tdc["khoanKhac"].as_array().into_iter().flatten().enumerate() {
         them(format!("hoTro.taiDinhCu.khoanKhac[{i}].soTien"), &k["soTien"]);
+    }
+    let khac = &v["hoTro"]["khac"];
+    for (i, d) in khac["doiTuongCs"].as_array().into_iter().flatten().enumerate() {
+        them(format!("hoTro.khac.doiTuongCs[{i}].muc"), &d["muc"]);
+    }
+    for (i, k) in khac["khoan"].as_array().into_iter().flatten().enumerate() {
+        them(format!("hoTro.khac.khoan[{i}].soTien"), &k["soTien"]);
     }
     them("khauTru".into(), &v["khauTru"]);
     out
@@ -406,7 +413,7 @@ pub fn kiem_luoc_do(loai: &str, cu: Option<&Value>, v: &Value, kiem_so: bool) ->
                 }
             }
             for (i, t) in v["taiSan"].as_array().into_iter().flatten().enumerate() {
-                if !t.is_object() || !t["id"].is_string() || !matches!(t["loai"].as_str(), Some("NHA_CT" | "CAY" | "VAT_NUOI" | "KHAC")) {
+                if !t.is_object() || !t["id"].is_string() || !matches!(t["loai"].as_str(), Some("NHA_CT" | "CAY" | "VAT_NUOI" | "KHAC" | "SUA_CHUA")) {
                     return Err(format!("Tài sản thứ {} không đúng cấu trúc", i + 1));
                 }
             }

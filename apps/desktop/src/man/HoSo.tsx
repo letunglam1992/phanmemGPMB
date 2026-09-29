@@ -20,6 +20,7 @@ import { lyDoKhongDoiDot } from "../dot-thu-hoi";
 import { TabThongTin } from "./ho/ThongTin";
 import { TabNhanKhau } from "./ho/NhanKhau";
 import { TabHoTro } from "./ho/HoTro";
+import { TabHoTroKhac } from "./ho/HoTroKhac";
 import { TabTienDo } from "./ho/TienDo";
 import { TabVanBanHo } from "./ho/VanBanHo";
 const CAC_TAB = [
@@ -28,6 +29,7 @@ const CAC_TAB = [
   ["thua", "Thửa đất", "lop"],
   ["kiem-dem", "Kiểm đếm tài sản", "kiemDem"],
   ["ho-tro", "Hỗ trợ", "hoTro"],
+  ["ho-tro-khac", "Hỗ trợ khác", "hoTro"],
   ["tinh", "Tính toán, giải trình", "mayTinh"],
   ["tien-do", "Tiến độ", "dongHo"],
   ["chi-tra", "Chi trả", "theNganHang"],
@@ -174,6 +176,7 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
           {tab === "thua" && <TabThua h={h} duAn={duAn} doi={doi} />}
           {tab === "kiem-dem" && <TabKiemDem h={h} doi={doi} />}
           {tab === "ho-tro" && <TabHoTro h={h} doi={doi} duAn={duAn} kq={kq} />}
+          {tab === "ho-tro-khac" && <TabHoTroKhac h={h} doi={doi} duAn={duAn} kq={kq} />}
           </fieldset>
           {tab === "tinh" && <TabTinhToan h={h} duAn={duAn} kq={kq} />}
           {tab === "chi-tra" && <fieldset className="khung-quyen" disabled={!choSua}><TabChiTra h={h} duAn={duAn} doi={doi} /></fieldset>}

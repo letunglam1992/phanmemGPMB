@@ -204,3 +204,70 @@ export function hoTroTienSddTdc(cs: BoChinhSach, p: { tienSddPhaiNop: SoVao; moT
     canhBao: [k.ghiChu],
   });
 }
+
+const thieuCs = (ma: string, noiDung: string, cs: BoChinhSach): DongTinh =>
+  dong({ ma, noiDung, congThuc: "—", thanhTien: null, canCu: [{ vanBan: "Bộ chính sách", viTri: cs.ma }], trangThai: "THIEU_CAN_CU", canhBao: [`Bộ chính sách ${cs.ma} không có quy định khoản này`] });
+
+/**
+ * C14 – khoản 1 Điều 6 QĐ 14/2026: hộ có đối tượng chính sách phải di chuyển chỗ ở. Cán bộ chọn mức cho từng đối tượng
+ * theo xác nhận của phòng chuyên môn (phần mềm không có danh sách đối tượng – mức); hộ có nhiều đối tượng chỉ hưởng mức cao nhất.
+ */
+export function hoTroDoiTuongChinhSach(cs: BoChinhSach, p: { doiTuong: { ten: string; muc: SoVao; xacNhan: string }[] }): DongTinh {
+  const nd = "Hỗ trợ hộ gia đình có đối tượng chính sách phải di chuyển chỗ ở";
+  const k = cs.hoTroKhac?.doiTuongChinhSach;
+  if (!k) return thieuCs("C14", nd, cs);
+  if (!p.doiTuong.length) return dong({ ma: "C14", noiDung: nd, congThuc: "—", thanhTien: null, canCu: k.canCu, trangThai: "THIEU_CAN_CU", canhBao: ["Chưa khai đối tượng chính sách"] });
+  const canhBao: string[] = [];
+  const hopLe = p.doiTuong.filter((x) => k.mucs.some((m) => D(m).eq(D(x.muc || "0"))));
+  if (hopLe.length < p.doiTuong.length) canhBao.push(`Mức không thuộc các mức quy định (${k.mucs.map((m) => dinhDang(D(m))).join("; ")} đ) — chọn lại`);
+  if (!hopLe.length) return dong({ ma: "C14", noiDung: nd, congThuc: "—", thanhTien: null, canCu: k.canCu, trangThai: "THIEU_CAN_CU", canhBao });
+  const cao = hopLe.reduce((a, x) => (D(x.muc).gt(D(a.muc)) ? x : a));
+  const thieuXn = p.doiTuong.filter((x) => !x.xacNhan.trim());
+  if (thieuXn.length) canhBao.push(`Chưa ghi giấy xác nhận của phòng chuyên môn cho: ${thieuXn.map((x) => x.ten || "(chưa ghi tên)").join(", ")}`);
+  if (p.doiTuong.length > 1) canhBao.push("Hộ có nhiều đối tượng chính sách: chỉ hưởng một mức cao nhất (khoản 1 Điều 6 QĐ 14/2026)");
+  return dong({
+    ma: "C14",
+    noiDung: nd,
+    thamSo: Object.fromEntries(p.doiTuong.map((x, i) => [`Đối tượng ${i + 1}`, `${x.ten || "—"}: ${dinhDang(D(x.muc || "0"))} đ${x.xacNhan.trim() ? ` (${x.xacNhan.trim()})` : ""}`])),
+    congThuc: p.doiTuong.length > 1 ? "Mức cao nhất trong các đối tượng" : "Mức theo đối tượng (cán bộ chọn)",
+    thanhTien: D(cao.muc),
+    canCu: k.canCu,
+    trangThai: thieuXn.length || hopLe.length < p.doiTuong.length ? "CAN_XAC_NHAN" : "TAM_TINH",
+    canhBao,
+  });
+}
+
+/** C15 – khoản 2 Điều 6 QĐ 14/2026: hộ nghèo (điều kiện theo văn bản: dieuKien) — mức cố định/hộ, cần xác nhận hộ nghèo. */
+export function hoTroHoNgheo(cs: BoChinhSach, p: { xacNhan: string }): DongTinh {
+  const nd = "Hỗ trợ hộ nghèo";
+  const k = cs.hoTroKhac?.hoNgheo;
+  if (!k) return thieuCs("C15", nd, cs);
+  const coXn = !!p.xacNhan.trim();
+  return dong({
+    ma: "C15",
+    noiDung: nd,
+    thamSo: { "Mức hỗ trợ": `${dinhDang(D(k.soTien))} đ/hộ`, "Xác nhận hộ nghèo": p.xacNhan.trim() || "—" },
+    congThuc: "Mức cố định (đ/hộ)",
+    thanhTien: D(k.soTien),
+    canCu: k.canCu,
+    trangThai: coXn ? "TAM_TINH" : "CAN_XAC_NHAN",
+    canhBao: [`Điều kiện: ${k.dieuKien} — cán bộ xác nhận`, ...(coXn ? [] : ["Chưa ghi giấy tờ xác nhận hộ nghèo"])],
+  });
+}
+
+/** C16 – khoản 6 Điều 6 QĐ 14/2026: ổn định đời sống khi nhà ở phải phá dỡ, làm lại nơi khác: kg gạo × giá gạo × nhân khẩu × số tháng. */
+export function hoTroXayLaiNha(cs: BoChinhSach, p: { nhanKhau: number; giaGaoDongKg: SoVao; nguonGiaGao: string }): DongTinh {
+  const nd = "Hỗ trợ ổn định đời sống khi phá dỡ nhà ở, làm lại nhà nơi khác";
+  const k = cs.hoTroKhac?.xayLaiNha;
+  if (!k) return thieuCs("C16", nd, cs);
+  const tien = D(k.kgGaoNhanKhauThang).mul(D(p.giaGaoDongKg)).mul(p.nhanKhau).mul(k.soThang);
+  return dong({
+    ma: "C16",
+    noiDung: nd,
+    thamSo: { "Gạo": `${k.kgGaoNhanKhauThang} kg/khẩu/tháng`, "Giá gạo": `${dinhDang(D(p.giaGaoDongKg))} đ/kg (${p.nguonGiaGao})`, "Nhân khẩu": String(p.nhanKhau), "Số tháng": String(k.soThang) },
+    congThuc: "kg gạo × giá gạo × nhân khẩu × số tháng",
+    thanhTien: tien,
+    canCu: k.canCu,
+    canhBao: [`Điều kiện: ${k.dieuKien} — cán bộ xác nhận`],
+  });
+}

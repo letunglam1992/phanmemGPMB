@@ -1,3 +1,4 @@
+import { ONgay } from "../../thanh-phan/ONgay";
 import { useState } from "react";
 import { kiemTraDuyetBuoc } from "../../tai-khoan";
 import { hanCuaBuoc, tinhHanBuoc } from "../../han-buoc";
@@ -118,7 +119,7 @@ export function TabTienDo({ h, duAn, doi, luuNgay, soanMau, moDuAn }: Tab & { du
                 <b>Thời hạn:</b> {han.soNgay} {han.loai === "NLV" ? "ngày làm việc" : "ngày"} kể từ {han.moc.nhan.charAt(0).toLowerCase() + han.moc.nhan.slice(1)} ({han.canCu}).
                 {han.moc.loai === "NHAP" && (
                   <div className="mt-6">
-                    <label className="chu-nho">Ngày mốc: <input type="date" value={bh.mocHan ?? ""} onChange={(e) => datBuoc({ mocHan: e.target.value || undefined })} /></label>
+                    <label className="chu-nho">Ngày mốc: <ONgay value={bh.mocHan ?? ""} onChange={(e) => datBuoc({ mocHan: e.target.value || undefined })} /></label>
                   </div>
                 )}
                 <div className="mt-4">
@@ -138,7 +139,7 @@ export function TabTienDo({ h, duAn, doi, luuNgay, soanMau, moDuAn }: Tab & { du
                 {Object.entries(TEN_TRANG_THAI_BUOC).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
               </Chon>
             </O>
-            <O nhan="Ngày thực hiện / hoàn thành"><input type="date" value={bh.ngay ?? ""} onChange={(e) => datBuoc({ ngay: e.target.value })} /></O>
+            <O nhan="Ngày thực hiện / hoàn thành"><ONgay value={bh.ngay ?? ""} onChange={(e) => datBuoc({ ngay: e.target.value })} /></O>
             <O nhan="Nội dung thực hiện, ghi chú, số văn bản"><textarea rows={3} value={bh.ghiChu ?? ""} onChange={(e) => datBuoc({ ghiChu: e.target.value })} /></O>
             <O nhan="Khó khăn, vướng mắc ở bước này" goiY="vd. Không nhất trí đơn giá, đề nghị xem xét lại; chưa nhận tiền; tranh chấp ranh giới… Có nội dung → hộ ở trạng thái Vướng mắc, hiện trong cảnh báo và báo cáo.">
               <textarea rows={3} className={bh.vuongMac ? "o-vuong-mac" : ""} value={bh.vuongMac ?? ""} placeholder="Để trống nếu không có" onChange={(e) => datBuoc({ vuongMac: e.target.value || undefined, vuongMacNgay: e.target.value ? bh.vuongMacNgay ?? homNayIso() : undefined })} />

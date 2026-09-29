@@ -89,6 +89,8 @@ export function truongSoHo(h: Ho): TruongSo[] {
       them(ds, `${n} — mật độ (cây/ha)`, ts, "matDoHa");
     } else if (ts.loai === "VAT_NUOI") {
       them(ds, `${n} — quãng đường (km)`, ts, "quangDuongKm");
+    } else if (ts.loai === "SUA_CHUA") {
+      them(ds, `${n} — chi phí sửa chữa theo dự toán`, ts, "soTien");
     } else {
       them(ds, `${n} — hệ số`, ts, "heSo");
       them(ds, `${n} — đơn giá`, ts, "donGia");
@@ -102,6 +104,8 @@ export function truongSoHo(h: Ho): TruongSo[] {
     them(ds, "Tái định cư — tiền SDĐ phải nộp", tdc, "tienSddPhaiNop");
     for (const k of tdc.khoanKhac) them(ds, `Tái định cư — khoản "${k.noiDung || "?"}"`, k, "soTien");
   }
+  for (const d of h.hoTro.khac?.doiTuongCs ?? []) them(ds, `Hỗ trợ khác — mức đối tượng chính sách "${d.ten || "?"}"`, d, "muc");
+  for (const k of h.hoTro.khac?.khoan ?? []) them(ds, `Hỗ trợ khác — khoản "${k.noiDung || "?"}"`, k, "soTien");
   them(ds, "Khấu trừ", h, "khauTru");
   return ds;
 }
