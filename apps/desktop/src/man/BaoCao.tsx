@@ -15,6 +15,7 @@ import { PhanBoTrangThaiGon } from "./TongQuan";
 import { BieuDoKy } from "../thanh-phan/BieuDoKy";
 import { chotKy, kiemTraKy, kyTruoc, sapXepKy, soSanhKyTruoc, tongKy, type KyBaoCao } from "../ky-bao-cao";
 import { Chon } from "../thanh-phan/Chon";
+import { MA_MAU_GOC, TIEN_TO_MAU_KHAC, TRUONG_MAU_BAO_CAO, dsHoVuongMac } from "../bao-cao-dinh-ky";
 
 const KHOA_TT = "gpmb-bao-cao-thong-tin";
 const TT_MAC_DINH: ThongTinBaoCao = {
@@ -63,9 +64,38 @@ export function BaoCao() {
   const ss = useMemo(() => (truoc ? soSanhKyTruoc(bc, truoc) : null), [bc, truoc]);
   const [hopChot, setHopChot] = useState(false);
   const tenTep = `Bao-cao-tong-hop-GPMB-${denNgay}`;
+  // §11.4: hộ vướng mắc của các dự án trong báo cáo (theo bộ lọc)
+  const hoVm = useMemo(
+    () => dsHoVuongMac(bc.dong.map((x) => x.duAn), (d) => hoCua(d.id).map((h) => ({ h, k: tinhHo(chinhSach(d), d, h) })), denNgay),
+    [bc, hoCua, chinhSach, denNgay],
+  );
+  const { kho, ghiNhatKy } = useUngDung();
+  /** Tạo Word theo mẫu đang chọn (mẫu đơn vị nếu đã thay/thêm) — dùng cho hộp thoại và nút một lần bấm. */
+  async function taoWord(tt: ThongTinBaoCao, maMau: string) {
+    const mau = (await kho.docMau(maMau))?.bytes ?? (maMau === MA_MAU_GOC ? await (await fetch("/mau-van-ban/bao-cao-tong-hop.docx")).arrayBuffer() : null);
+    if (!mau) return bao("Không còn mẫu đã chọn — chọn mẫu khác", "loi");
+    try {
+      if (!(await taiXuong(dienMau(mau, duLieuBaoCaoWord(bc, tt, ss, hoVm)), `${tenTep}.docx`, "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))) return false;
+    } catch (e) {
+      bao(`Mẫu báo cáo lỗi: ${(e as Error).message}${(e as { chiTiet?: string[] }).chiTiet?.length ? ` — ${(e as { chiTiet: string[] }).chiTiet.join("; ")}` : ""}`, "loi");
+      return false;
+    }
+    bao("Đã tạo báo cáo Word (dự thảo) — kiểm tra trước khi trình ký");
+    return true;
+  }
+  const motNut = async () => {
+    let daCo = false;
+    try {
+      daCo = !!localStorage.getItem(KHOA_TT);
+    } catch {
+      /* không có localStorage */
+    }
+    if (!daCo) return setHop(true); // lần đầu: nhập thông tin cơ quan, người ký
+    await taoWord(docTt(donViSuDung(dsDonVi)), docMauChon());
+  };
 
   async function xuatExcel() {
-    const wb = await taoWorkbookBaoCao(bc, docTt(donViSuDung(dsDonVi)).coQuan, kyBaoCao);
+    const wb = await taoWorkbookBaoCao(bc, docTt(donViSuDung(dsDonVi)).coQuan, kyBaoCao, hoVm);
     if (await taiXuong(new Uint8Array(await wb.xlsx.writeBuffer()), `${tenTep}.xlsx`, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) bao("Đã xuất Excel báo cáo tổng hợp");
   }
 
@@ -90,6 +120,7 @@ export function BaoCao() {
         </div>
         <div className="phai" style={{ display: "flex", gap: 8 }}>
           <button className="nut" disabled={!bc.dong.length} onClick={() => void xuatExcel()}>Xuất Excel</button>
+          <button className="nut" disabled={!bc.dong.length} title="Tạo ngay báo cáo Word theo mẫu đang chọn và thông tin cơ quan, người ký đã nhập lần trước (số liệu đến ngày đang chọn)" onClick={() => void motNut()}>Báo cáo định kỳ (một nút)</button>
           <button className="nut nut-chinh" disabled={!bc.dong.length} onClick={() => setHop(true)}>Soạn báo cáo Word…</button>
         </div>
       </div>
@@ -174,6 +205,18 @@ export function BaoCao() {
               )))}
             </ul>
           )}
+          {hoVm.length > 0 && (
+            <table className="bang" style={{ marginTop: 10 }}>
+              <thead><tr><th>Hộ vướng mắc</th><th>Dự án</th><th>Bước đang thực hiện</th><th className="so">Số ngày tồn đọng</th><th>Vướng mắc</th></tr></thead>
+              <tbody>
+                {hoVm.map((x) => (
+                  <tr key={x.hoId} className="co-the-chon" onClick={() => di({ ten: "ho", duAnId: x.duAnId, hoId: x.hoId, tab: "tien-do" })}>
+                    <td className="chu-nho"><b>{x.ma}</b> {x.ten}</td><td className="chu-nho">{x.du_an}</td><td className="chu-nho">{x.buoc}</td><td className="so">{x.so_ngay}</td><td className="chu-nho">{x.noi_dung}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
 
@@ -191,29 +234,108 @@ export function BaoCao() {
           }}
         />
       )}
-      {hop && <HopWord dong={() => setHop(false)} xuat={async (tt) => {
+      {hop && <HopWord dong={() => setHop(false)} duLieuThu={(tt) => duLieuBaoCaoWord(bc, tt, ss, hoVm)} ghiNhatKy={ghiNhatKy} xuat={async (tt, maMau) => {
         try {
           localStorage.setItem(KHOA_TT, JSON.stringify({ ...tt, so: "", ngayKy: "" }));
         } catch { /* lưu tạm không được thì bỏ qua */ }
-        const mau = await (await fetch("/mau-van-ban/bao-cao-tong-hop.docx")).arrayBuffer();
-        if (!(await taiXuong(dienMau(mau, duLieuBaoCaoWord(bc, tt, ss)), `${tenTep}.docx`, "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))) return;
-        bao("Đã tạo báo cáo Word (dự thảo) — kiểm tra trước khi trình ký");
-        setHop(false);
+        if (await taoWord(tt, maMau)) setHop(false);
       }} />}
     </div>
   );
 }
 
-function HopWord({ dong, xuat }: { dong: () => void; xuat: (t: ThongTinBaoCao) => Promise<void> }) {
+const KHOA_MAU_CHON = "gpmb-bao-cao-mau";
+function docMauChon(): string {
+  try {
+    return localStorage.getItem(KHOA_MAU_CHON) || MA_MAU_GOC;
+  } catch {
+    return MA_MAU_GOC;
+  }
+}
+
+/** §11.4: chọn mẫu báo cáo; tải mẫu về sửa; thay mẫu gốc; thêm, xóa mẫu khác (quyền THAY_MAU). */
+function ChonMauBaoCao({ maMau, setMaMau, duLieuThu, ghiNhatKy }: { maMau: string; setMaMau: (m: string) => void; duLieuThu: () => Record<string, unknown>; ghiNhatKy: (h: string, c?: string) => Promise<void> }) {
+  const { kho, quyen, bao } = useUngDung();
+  const [ds, setDs] = useState<{ ma: string; ten: string }[]>([]);
+  const [coThayGoc, setCoThayGoc] = useState(false);
+  const [xemTruong, setXemTruong] = useState(false);
+  const tai = async () => {
+    const ma = await kho.dsMauTuy();
+    setCoThayGoc(ma.includes(MA_MAU_GOC));
+    const khac = await Promise.all(ma.filter((m) => m.startsWith(TIEN_TO_MAU_KHAC)).map(async (m) => ({ ma: m, ten: ((await kho.docMau(m))?.tenTep ?? m).replace(/\.docx$/i, "") })));
+    setDs(khac);
+    if (maMau !== MA_MAU_GOC && !khac.some((x) => x.ma === maMau)) setMaMau(MA_MAU_GOC);
+  };
+  useEffect(() => void tai(), []); // eslint-disable-line react-hooks/exhaustive-deps
+  const kiemMau = (bytes: Uint8Array) => {
+    try {
+      dienMau(bytes, duLieuThu());
+      return null;
+    } catch (e) {
+      return `${(e as Error).message}${(e as { chiTiet?: string[] }).chiTiet?.length ? `: ${(e as { chiTiet: string[] }).chiTiet.join("; ")}` : ""}`;
+    }
+  };
+  const napTep = (f: File, ma: string, ten: string) =>
+    void f.arrayBuffer().then(async (b) => {
+      const bytes = new Uint8Array(b);
+      const loi = kiemMau(bytes);
+      if (loi) return bao(`Mẫu không dùng được — ${loi}`, "loi");
+      await kho.luuMau(ma, bytes, `${ten}.docx`);
+      await ghiNhatKy("Cập nhật mẫu báo cáo định kỳ", `${ten} (${f.name})`);
+      setMaMau(ma);
+      await tai();
+      bao(`Đã lưu mẫu "${ten}"`);
+    });
+  const taiMauVe = async () => {
+    const b = (await kho.docMau(maMau))?.bytes ?? (maMau === MA_MAU_GOC ? new Uint8Array(await (await fetch("/mau-van-ban/bao-cao-tong-hop.docx")).arrayBuffer()) : null);
+    if (b) await taiXuong(b, `Mau-bao-cao-${maMau === MA_MAU_GOC ? "tong-hop" : ds.find((x) => x.ma === maMau)?.ten ?? maMau}.docx`, "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+  };
+  const sua = quyen("THAY_MAU");
+  return (
+    <div className="the" style={{ marginBottom: 10, padding: 10 }}>
+      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+        <b>Mẫu báo cáo</b>
+        <Chon value={maMau} onChange={(e) => setMaMau(e.target.value)} aria-label="Mẫu báo cáo">
+          <option value={MA_MAU_GOC}>Mẫu báo cáo tổng hợp{coThayGoc ? " (đơn vị đã thay)" : " (mẫu của phần mềm)"}</option>
+          {ds.map((x) => <option key={x.ma} value={x.ma}>{x.ten}</option>)}
+        </Chon>
+        <button className="nut nut-nho" onClick={() => void taiMauVe()}>Tải mẫu về sửa</button>
+        {sua && <label className="nut nut-nho">Thay mẫu này…<input type="file" accept=".docx" style={{ display: "none" }} onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) napTep(f, maMau, maMau === MA_MAU_GOC ? "Mẫu báo cáo tổng hợp (đơn vị)" : ds.find((x) => x.ma === maMau)?.ten ?? "Mẫu báo cáo"); }} /></label>}
+        {sua && <label className="nut nut-nho">Thêm mẫu khác…<input type="file" accept=".docx" style={{ display: "none" }} onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; const ten = f && prompt("Tên mẫu (vd. Báo cáo tháng gửi UBND tỉnh):", f.name.replace(/\.docx$/i, ""))?.trim(); if (f && ten) napTep(f, `${TIEN_TO_MAU_KHAC}${Date.now().toString(36)}`, ten); }} /></label>}
+        {sua && maMau === MA_MAU_GOC && coThayGoc && <button className="nut nut-nho" onClick={async () => { await kho.xoaMau(MA_MAU_GOC); await ghiNhatKy("Khôi phục mẫu báo cáo gốc"); await tai(); }}>Khôi phục mẫu của phần mềm</button>}
+        {sua && maMau !== MA_MAU_GOC && <button className="nut nut-nho nut-nguy" onClick={async () => { if (!confirm("Xóa mẫu này?")) return; await kho.xoaMau(maMau); await ghiNhatKy("Xóa mẫu báo cáo", ds.find((x) => x.ma === maMau)?.ten); setMaMau(MA_MAU_GOC); await tai(); }}>Xóa mẫu</button>}
+        <button className="nut nut-chu nut-nho" onClick={() => setXemTruong(!xemTruong)}>{xemTruong ? "Ẩn" : "Các trường dữ liệu"}</button>
+      </div>
+      {xemTruong && (
+        <table className="bang" style={{ marginTop: 8 }}>
+          <tbody>{TRUONG_MAU_BAO_CAO.map(([t, m]) => <tr key={t}><td className="chu-nho" style={{ fontFamily: "monospace" }}>{t}</td><td className="chu-nho">{m}</td></tr>)}</tbody>
+        </table>
+      )}
+      <div className="mo chu-nho" style={{ marginTop: 6 }}>Sửa mẫu trong Word, giữ nguyên các trường {"{…}"}; mẫu tải lên được điền thử bằng số liệu hiện tại trước khi lưu (sai cú pháp thì báo, không lưu).</div>
+    </div>
+  );
+}
+
+function HopWord({ dong, xuat, duLieuThu, ghiNhatKy }: { dong: () => void; xuat: (t: ThongTinBaoCao, maMau: string) => Promise<void>; duLieuThu: (t: ThongTinBaoCao) => Record<string, unknown>; ghiNhatKy: (h: string, c?: string) => Promise<void> }) {
   const { dsDonVi } = useUngDung();
   const [t, setT] = useState<ThongTinBaoCao>(() => docTt(donViSuDung(dsDonVi)));
+  const [maMau, setMaMau0] = useState(docMauChon);
+  const setMaMau = (m: string) => {
+    setMaMau0(m);
+    try {
+      localStorage.setItem(KHOA_MAU_CHON, m);
+    } catch {
+      /* bỏ qua */
+    }
+  };
   const o = (k: keyof ThongTinBaoCao, nhan: string, dong = 1, goiY?: string) => (
     <O nhan={nhan} goiY={goiY} style={dong > 1 ? { gridColumn: "1/-1" } : undefined}>
       {dong > 1 ? <textarea rows={dong} value={t[k]} onChange={(e) => setT({ ...t, [k]: e.target.value })} /> : <input value={t[k]} onChange={(e) => setT({ ...t, [k]: e.target.value })} />}
     </O>
   );
   return (
-    <HopThoai tieuDe="Soạn báo cáo tổng hợp (Word)" dong={dong} rong={820} chan={<><button className="nut" onClick={dong}>Hủy</button><button className="nut nut-chinh" onClick={() => void xuat(t)}>Tạo tệp Word</button></>}>
+    <HopThoai tieuDe="Soạn báo cáo tổng hợp (Word)" dong={dong} rong={860} chan={<><button className="nut" onClick={dong}>Hủy</button><button className="nut nut-chinh" onClick={() => void xuat(t, maMau)}>Tạo tệp Word</button></>}>
+      <ChonMauBaoCao maMau={maMau} setMaMau={setMaMau} duLieuThu={() => duLieuThu(t)} ghiNhatKy={ghiNhatKy} />
       <div className="mo chu-nho" style={{ marginBottom: 10 }}>Phần số liệu (kết quả chung, bảng từng dự án, vướng mắc) phần mềm tự điền theo bộ lọc hiện tại. Các ô dưới đây cán bộ nhập; thông tin cơ quan, người ký được nhớ cho lần sau trên máy này.</div>
       <div className="luoi luoi-2">
         {o("coQuanCapTren", "Cơ quan chủ quản")}

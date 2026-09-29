@@ -2,6 +2,7 @@
 import { dinhDang } from "@gpmb/core";
 import { TEN_TINH_TRANG, type BaoCao } from "./bao-cao";
 import type { SoSanhKy } from "./ky-bao-cao";
+import type { HoVuongMac } from "./bao-cao-dinh-ky";
 
 export interface ThongTinBaoCao {
   coQuanCapTren: string;
@@ -26,7 +27,7 @@ const tien = (v: { toFixed: (n: number) => string }) => dinhDang(v.toFixed(0), 0
 const phanTram = (a: number, b: number) => (b ? `${dinhDang((a / b) * 100, 1).replace(/,0$/, "")}%` : "—");
 const ngayVN = (iso: string) => iso.split("-").reverse().join("/");
 
-export function duLieuBaoCaoWord(bc: BaoCao, t: ThongTinBaoCao, ss?: SoSanhKy | null): Record<string, unknown> {
+export function duLieuBaoCaoWord(bc: BaoCao, t: ThongTinBaoCao, ss?: SoSanhKy | null, hoVm: HoVuongMac[] = []): Record<string, unknown> {
   const s = bc.tong;
   const [y, m, d] = t.ngayKy ? t.ngayKy.split("-") : ["", "", ""];
   const tongQuat = [
@@ -70,6 +71,8 @@ export function duLieuBaoCaoWord(bc: BaoCao, t: ThongTinBaoCao, ss?: SoSanhKy | 
     da_chi: tien(s.daChi),
     ho_hoan_thanh: `${s.theoTrangThai.HOAN_THANH}/${s.soHo}`,
     vuong_mac: bc.dong.flatMap((x) => x.vuongMac.map((c) => ({ du_an: x.duAn.ten, noi_dung: c.noiDung.replace(/[.;]$/, "") + "." }))),
+    co_ho_vuong_mac: hoVm.length > 0,
+    ho_vuong_mac: hoVm.map((x) => ({ du_an: x.du_an, ma: x.ma, ten: x.ten, buoc: x.buoc, so_ngay: String(x.so_ngay), noi_dung: x.noi_dung })),
     co_kho_khan_khac: !!t.khoKhanKhac.trim(),
     kho_khan_khac: t.khoKhanKhac,
     nhiem_vu: t.nhiemVu,

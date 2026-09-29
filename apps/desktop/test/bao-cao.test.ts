@@ -148,3 +148,30 @@ describe("Chốt số liệu kỳ báo cáo, so sánh kỳ trước", () => {
     expect([2, 3, 4].map((r) => db.getRow(r).getCell(1).value)).toEqual(["Tháng 9/2026", "Tháng 10/2026", "Hiện tại (chưa chốt)"]);
   });
 });
+
+describe("Báo cáo định kỳ (§11.4)", () => {
+  it("hộ vướng mắc: bước đang thực hiện, số ngày tồn đọng từ ngày ghi vướng mắc; mẫu gốc có danh sách hộ vướng mắc", async () => {
+    const { dsHoVuongMac } = await import("../src/bao-cao-dinh-ky");
+    const { taoDuAnMau } = await import("../src/du-lieu-mau");
+    const { tinhHo } = await import("../src/tinh-ho");
+    const { duLieuBaoCaoWord } = await import("../src/bao-cao-van-ban");
+    const { lapBaoCao } = await import("../src/bao-cao");
+    const { dienMau } = await import("../src/van-ban/dien-mau");
+    const cs1 = (await import("../../../policy/goi/sonla-2026-03-31.json")).default as unknown as import("@gpmb/core").BoChinhSach;
+    const { duAn, ho } = taoDuAnMau();
+    const hs = [{ ...ho[0]!, vuongMac: { noiDung: "Chưa nhận tiền", ngay: "2026-09-01" } }, ho[1]!];
+    const f = () => hs.map((h) => ({ h, k: tinhHo(cs1, duAn, h) }));
+    const vm = dsHoVuongMac([duAn], f, "2026-09-28");
+    expect(vm).toHaveLength(1);
+    expect(vm[0]).toMatchObject({ ma: hs[0]!.ma, so_ngay: 27, buoc: "5. Lập phương án" });
+    expect(vm[0]!.noi_dung).toContain("Chưa nhận tiền");
+    const bc = lapBaoCao([duAn], f, { denNgay: "2026-09-28" });
+    const { readFileSync: doc } = await import("node:fs");
+    const mau = doc(new URL("../public/mau-van-ban/bao-cao-tong-hop.docx", import.meta.url));
+    const out = dienMau(mau, duLieuBaoCaoWord(bc, { coQuanCapTren: "", coQuan: "", kyHieu: "", diaDanh: "", kinhGui: "", so: "", ngayKy: "2026-09-28", moDau: "", khoKhanKhac: "", nhiemVu: "", kienNghi: "", ketThuc: "", noiNhan: "", quyenHan: "", nguoiKy: "" }, null, vm));
+    const PizZip = (await import("pizzip")).default;
+    const xml = new PizZip(out).file("word/document.xml")!.asText().replace(/<[^>]+>/g, "");
+    expect(xml).toContain("tồn đọng 27 ngày");
+    expect(xml).toContain("Chưa nhận tiền");
+  });
+});

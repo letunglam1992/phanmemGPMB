@@ -393,7 +393,7 @@ export async function xuatExcelHo(duAn: DuAn, h: Ho, k: KetQuaHo) {
 }
 
 /** Báo cáo tổng hợp nhiều dự án: trang "Tổng hợp" (nhóm theo xã, cộng xã, tổng cộng) và "Vướng mắc". */
-export async function taoWorkbookBaoCao(bc: BaoCao, coQuan: string, dsKy: KyBaoCao[] = []): Promise<ExcelJS.Workbook> {
+export async function taoWorkbookBaoCao(bc: BaoCao, coQuan: string, dsKy: KyBaoCao[] = [], hoVm: import("./bao-cao-dinh-ky").HoVuongMac[] = []): Promise<ExcelJS.Workbook> {
   const { default: Excel } = await import("exceljs");
   const wb = new Excel.Workbook();
   wb.creator = "GPMB Sơn La";
@@ -502,6 +502,18 @@ export async function taoWorkbookBaoCao(bc: BaoCao, coQuan: string, dsKy: KyBaoC
     }
     const s = bc.tong;
     dong(["Hiện tại (chưa chốt)", ngay, "", s.soDuAn, s.soHo, s.theoTrangThai.HOAN_THANH, s.soHo ? s.theoTrangThai.HOAN_THANH / s.soHo : 0, s.soHoDaDuyet, so(s.daDuyet), so(s.daChi), s.daDuyet.gt(0) ? s.daChi.div(s.daDuyet).toNumber() : 0, s.theoTrangThai.VUONG_MAC, ""], true);
+  }
+  // §11.4: danh sách hộ vướng mắc — bước đang thực hiện, số ngày tồn đọng
+  if (hoVm.length) {
+    const wv = wb.addWorksheet("Hộ vướng mắc", { pageSetup: { orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
+    wv.columns = [5, 36, 10, 26, 30, 12, 60].map((width) => ({ width }));
+    const d = wv.addRow(["TT", "Dự án", "Mã hồ sơ", "Họ tên / tổ chức", "Bước đang thực hiện", "Số ngày tồn đọng", "Vướng mắc"]);
+    d.font = { name: FONT, bold: true };
+    hoVm.forEach((x, n) => {
+      const r = wv.addRow([n + 1, x.du_an, x.ma, x.ten, x.buoc, x.so_ngay, x.noi_dung]);
+      r.font = { name: FONT };
+      r.alignment = { vertical: "top", wrapText: true };
+    });
   }
   return wb;
 }
