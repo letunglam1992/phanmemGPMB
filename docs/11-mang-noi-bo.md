@@ -37,7 +37,10 @@
 - **Khóa lạc quan:** mỗi dự án, hồ sơ có số phiên bản. Hai người cùng sửa, người lưu sau nhận thông báo "Dữ liệu đã được … sửa lúc …", phần mềm tải lại bản mới nhất, **bản nháp trên màn hình được giữ** để nhập lại — không ghi đè im lặng.
 - **Cập nhật (P1-2, 0.6.0):** máy trạm hỏi máy chủ danh sách thay đổi mỗi 4 giây; có thay đổi của người khác thì **chỉ đọc lại các bản ghi vừa đổi** (`POST /api/doc`) và báo tên người cập nhật; thay đổi cài đặt hoặc khôi phục toàn bộ thì tải lại hết. Lưu của chính mình: cập nhật bằng bản ghi máy chủ trả về, không tải lại.
 - **Phương án là bản ghi riêng (P1-6, 0.6.0):** mỗi bản phương án là một bản ghi `pa` (`{ id, duAnId, pa }`) có phiên bản riêng — sửa thông tin dự án không xung đột với người đang chốt/ghi nhận phê duyệt phương án. CSDL cũ tự tách khi mở (PRAGMA `user_version` 2). Máy trạm bản cũ gửi dự án kèm phương án nhúng bị từ chối, báo cần cập nhật phần mềm.
-- **Phiên bản CSDL (P2-6):** `PRAGMA user_version` — 1: bảng lịch sử; 2: tách phương án. Mỗi bước chạy một lần, trong một giao dịch.
+- **Tiến độ, chi trả là bản ghi con (P2-7, 0.7.0):** hồ sơ gồm bản ghi chính (`ho`), tiến độ (`td`), chi trả (`ct`) cùng mã, mỗi phần một phiên bản — sửa song song các phần của cùng một hộ không xung đột. Quy tắc gửi/duyệt bước kiểm trên `td`. Máy trạm cũ gửi hồ sơ kèm tiến độ nhúng bị từ chối, báo cần cập nhật.
+- **Tệp đính kèm (P2-2, 0.7.0):** bảng `tep` loại `dinhKem` (thông tin: hồ sơ, dự án, bước), tối đa 20 MB (413 nếu vượt), `GET /api/dinh-kem?duAn=` liệt kê; xóa hẳn hộ/dự án xóa tệp kèm.
+- **Gói chính sách (P2-1, 0.7.0):** lưu ở cài đặt `goiChinhSach`; chỉ quyền `NAP_CHINH_SACH` (Quản trị) được ghi.
+- **Phiên bản CSDL (P2-6):** `PRAGMA user_version` — 1: bảng lịch sử; 2: tách phương án; 3: tách tiến độ, chi trả. Mỗi bước chạy một lần, trong một giao dịch.
 
 ## 5. Sao lưu
 

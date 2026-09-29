@@ -202,6 +202,8 @@ Mô hình dữ liệu là **tài liệu (document)**: mỗi `DuAn` và mỗi `Ho
 > **Cập nhật 28/9/2026 (phiên bản 0.5.0) — Giai đoạn 2:** P1-3 (bước "Không áp dụng", hoàn thành = bàn giao mặt bằng), P1-4 (bàn giao mặt bằng, thưởng bàn giao trước hạn do cán bộ khai báo mốc), P1-7 (giao diện laptop 1366×768), P2-5 (pháp lý nguồn gốc đất có cấu trúc) và §11.1 "Soát phương án" đã triển khai — chi tiết, kiểm thử, hạn chế ở docs/09.
 >
 > **Cập nhật 28/9/2026 (phiên bản 0.6.0) — Giai đoạn 3:** P1-1, P1-2, P1-5 (khôi phục chỉ Quản trị, số năm giữ lịch sử chỉnh được), P1-6, P1-8, P2-3, P2-6 và máy đơn SQLite (làm ngay theo quyết định người dùng) đã triển khai — chi tiết, số đo, kiểm thử, hạn chế ở docs/09, docs/11.
+>
+> **Cập nhật 29/9/2026 (phiên bản 0.7.0) — Giai đoạn 4:** P2-7, §11.2 (thời gian bước không có thời hạn luật định do đơn vị nhập), §11.3 (ngưỡng lệch do đơn vị tự đặt), §11.4 (mẫu báo cáo hiện có, người dùng sửa, thêm mẫu khác), §11.5, P2-2 (đính kèm có trong sao lưu), P2-1 (chưa ký số) đã triển khai — chi tiết ở docs/09, docs/11.
 
 | Mã | Vấn đề → Nguyên nhân | Giải pháp | Lợi ích | Độ khó | Rủi ro |
 |---|---|---|---|---|---|

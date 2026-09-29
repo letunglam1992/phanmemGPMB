@@ -5,6 +5,8 @@
 - Bộ cài `GPMB Son La_x.y.z_x64-setup.exe` (cài theo người dùng, không cần quyền quản trị máy; kèm WebView2 nếu máy chưa có). Chưa có chữ ký số → Windows SmartScreen có thể cảnh báo: chọn "More info" → "Run anyway" (hoặc nhờ bộ phận CNTT cho phép).
 - **Nâng cấp:** tạo bản sao lưu thủ công trước; cài bản mới đè lên bản cũ (không cần gỡ). Mạng nội bộ: nâng cấp máy chủ trước, sau đó các máy trạm.
 - Thư mục dữ liệu: `%LOCALAPPDATA%\vn.sonla.gpmb\` — máy đơn (từ 0.6.0) trong `may-don\gpmb-may-don.sqlite`; máy chủ trong `may-chu\`; dữ liệu máy đơn bản ≤ 0.5 trong WebView2 (IndexedDB — tự chuyển sang SQLite lần đầu mở 0.6.0, bản cũ giữ nguyên). **Gỡ cài đặt có thể xóa dữ liệu máy đơn** — sao lưu trước khi gỡ.
+- Gói chính sách (0.7.0): Cài đặt chung → Gói chính sách — chỉ Quản trị nạp; **gói chưa có chữ ký số**, đối chiếu mã SHA-256 hiển thị với đơn vị phát hành trước khi nạp. Không gỡ được gói đã nạp.
+- Tệp đính kèm (0.7.0): ≤ 20 MB mỗi tệp, nằm trong CSDL và trong tệp sao lưu `.gpmb` (bản sao lưu lớn hơn khi nhiều tệp).
 - Lịch sử bản ghi (0.6.0): nằm trong CSDL (`may-don` hoặc `may-chu`), **không có trong tệp `.gpmb`**; sao chép thư mục CSDL khi đã tắt phần mềm nếu cần giữ. Thời hạn giữ: Cài đặt chung → Lịch sử bản ghi (Quản trị).
 
 ## 2. Tài khoản
