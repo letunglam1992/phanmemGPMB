@@ -23,10 +23,11 @@ describe("Phụ lục II QĐ 106/2025 — các khoản còn hiệu lực", () =>
     expect(nhomDiaBan({ P: ["Phường *"], A: ["Phường Đặc Biệt"] }, "Phường Đặc Biệt", "K")).toBe("A");
     expect(nhomDiaBan({ P: ["Phường *"] }, "Xã Phường", "K")).toBe("K");
     // Điều 14: "Đối với các phường" 5 lần giá đất NN
-    const d = chuyenDoiNghe(cs, { xa: "Phường Quyết Tâm", loaiDat: "LUC", dienTichThuHoiM2: "100", hanMucM2: "1000", canCuHanMuc: "x", giaDatNNNghinDong: "50" });
+    const d = chuyenDoiNghe(cs, { xa: "Phường Mới (thử)", loaiDat: "LUC", dienTichThuHoiM2: "100", hanMucM2: "1000", canCuHanMuc: "x", giaDatNNNghinDong: "50" });
     expect(d.thanhTien!.toString()).toBe("25000000");
-    // Điều 10 k1: Phường Quyết Tâm thuộc nhóm 100 triệu
-    expect(hoTroTuLoChoO(cs, { xa: "Phường Quyết Tâm" }).thanhTien!.toString()).toBe("100000000");
+    // Điều 10 k1: 8 phường trong danh mục NQ 152 thuộc nhóm 100 triệu; "Quyết Tâm" không áp dụng (người dùng quyết định, QD-30)
+    expect(hoTroTuLoChoO(cs, { xa: "Phường Tô Hiệu" }).thanhTien!.toString()).toBe("100000000");
+    expect(cs.taiDinhCu!.tuLoChoO.phanNhom.PHUONG).toHaveLength(8);
   });
   it("Điều 3 k2: 01 lần giá đất bảng giá × DT; tổ chức nhân tỷ lệ thời hạn còn lại", () => {
     const d = chiPhiDauTuTheoGiaDat(cs, { loaiDat: "CLN", dienTichM2: "200", giaNghinDong: "60", nguonGia: "Bảng 02" });
