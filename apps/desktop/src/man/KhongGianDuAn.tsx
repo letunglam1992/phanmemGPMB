@@ -45,8 +45,8 @@ const THE = [
   { ma: "ho", ten: "Hộ, cá nhân, tổ chức", bt: "nguoi" },
   { ma: "tai-dinh-cu", ten: "Tái định cư", bt: "nha" },
   { ma: "ban-do", ten: "Bản đồ", bt: "thua" },
-  { ma: "van-ban", ten: "Văn bản", bt: "vanBan" },
 ] as const;
+// Văn bản soạn trong hồ sơ hộ (thẻ "Văn bản" sau "Tính toán, giải trình"); tab "van-ban" ở đây chỉ còn cho dự án chưa có hộ.
 
 export function KhongGianDuAn({ duAnId, tab = "tong-quan", ma, hoId }: { duAnId: string; tab?: string; ma?: string; hoId?: string }) {
   const { dsDuAn, hoCua, di, chinhSach, xoaDuAn, quyen } = useUngDung();

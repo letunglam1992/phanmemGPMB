@@ -23,6 +23,7 @@ import { TabHoTro } from "./ho/HoTro";
 import { TabHoTroKhac } from "./ho/HoTroKhac";
 import { TabTienDo } from "./ho/TienDo";
 import { TabVanBanHo } from "./ho/VanBanHo";
+import { VanBan } from "./VanBan";
 const CAC_TAB = [
   ["thong-tin", "Thông tin", "thongTin"],
   ["nhan-khau", "Nhân khẩu", "nguoi"],
@@ -31,16 +32,16 @@ const CAC_TAB = [
   ["ho-tro", "Hỗ trợ", "hoTro"],
   ["ho-tro-khac", "Hỗ trợ khác", "hoTro"],
   ["tinh", "Tính toán, giải trình", "mayTinh"],
+  ["van-ban", "Văn bản", "vanBan"],
   ["tien-do", "Tiến độ", "dongHo"],
   ["chi-tra", "Chi trả", "theNganHang"],
-  ["van-ban", "Văn bản", "vanBan"],
   ["dinh-kem", "Đính kèm", "saoChep"],
   ["nhat-ky", "Nhật ký", "nhatKy"],
 ] as const;
 
 const CO_COT_BEN: string[] = ["thong-tin", "nhan-khau", "ho-tro", "nhat-ky"];
 
-export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; tabDau?: string }) {
+export function HoSo({ duAnId, hoId, tabDau, maVbDau }: { duAnId: string; hoId: string; tabDau?: string; maVbDau?: string }) {
   const { dsDuAn, hoCua, di, luuHo, chinhSach, xoaHo, quyen, bao } = useUngDung();
   const choSua = quyen("SUA_HO_SO");
   const duAn = dsDuAn.find((d) => d.id === duAnId);
@@ -49,6 +50,12 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
   const nhap = layBanNhap(hoId);
   const [h, setH] = useState<Ho | undefined>(nhap?.h ?? goc);
   const [tab, setTab] = useState<string>(tabDau ?? "thong-tin");
+  // Mẫu văn bản đang soạn ở thẻ "Văn bản" (mở từ Tiến độ, Thông tin hồ sơ hoặc danh sách tạo nhanh)
+  const [maVb, setMaVb] = useState<string | undefined>(maVbDau);
+  const soanVb = (ma?: string) => {
+    if (ma) setMaVb(ma);
+    setTab("van-ban");
+  };
   const [daSua, setDaSua] = useState(!!nhap);
   const [daKhoiPhuc, setDaKhoiPhuc] = useState(!!nhap);
   const boQuaLanDau = useRef(!!nhap);
@@ -144,7 +151,7 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
       </div>
 
       <div className="the the-tab">
-        <TabCuon chon={tab}>
+        <TabCuon className="tab tab-bt tab-gon" chon={tab}>
           {CAC_TAB.map(([ma, ten, bt]) => (
             <button key={ma} role="tab" aria-selected={tab === ma} className={tab === ma ? "chon" : ""} onClick={() => setTab(ma)}>
               <BieuTuong ten={bt} co={18} />
@@ -159,7 +166,7 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
       <div className={`ho-khung ${CO_COT_BEN.includes(tab) ? "" : "ho-khung-rong"}`}>
         {CO_COT_BEN.includes(tab) && (
           <aside className="ho-ben">
-            <TheThongTinHo h={h} hieuLuc={hieuLuc} tt={tt} moTab={setTab} soanVanBan={() => di({ ten: "van-ban", duAnId, hoId: h.id })} />
+            <TheThongTinHo h={h} hieuLuc={hieuLuc} tt={tt} moTab={setTab} soanVanBan={() => soanVb()} />
           </aside>
         )}
         <div className="ho-noi-dung">
@@ -182,12 +189,20 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
           {tab === "chi-tra" && <fieldset className="khung-quyen" disabled={!choSua}><TabChiTra h={h} duAn={duAn} doi={doi} /></fieldset>}
           {tab === "tien-do" && (
             <>
-              <TabTienDo h={h} duAn={duAn} doi={doi} moDuAn={() => di({ ten: "du-an", duAnId, tab: "buoc-chung" })} soanMau={(ma) => di({ ten: "van-ban", duAnId, ma, hoId: h.id })} luuNgay={async (moi, nk) => { setH(moi); await luuHo(moi, nk); xoaBanNhap(hoId); setDaSua(false); }} />
+              <TabTienDo h={h} duAn={duAn} doi={doi} moDuAn={() => di({ ten: "du-an", duAnId, tab: "buoc-chung" })} soanMau={(ma) => soanVb(ma)} luuNgay={async (moi, nk) => { setH(moi); await luuHo(moi, nk); xoaBanNhap(hoId); setDaSua(false); }} />
               <TheBanGiao h={h} duAn={duAn} kq={kq} luuNgay={async (moi, nk) => { setH(moi); await luuHo(moi, nk); xoaBanNhap(hoId); setDaSua(false); }} moThongTinDuAn={() => di({ ten: "du-an", duAnId, tab: "thong-tin" })} />
             </>
           )}
           {tab === "dinh-kem" && <DinhKemHo h={h} duAn={duAn} />}
-          {tab === "van-ban" && <TabVanBanHo h={h} duAn={duAn} kq={kq} hieuLuc={hieuLuc} soan={(ma) => di({ ten: "van-ban", duAnId, ma, hoId: h.id })} />}
+          {tab === "van-ban" && kq && (
+            <>
+              <VanBan key={`${h.id}-${maVb ?? ""}`} duAnId={duAnId} maDau={maVb} nhung={{ ho: h, kq, daSua }} />
+              <details className="mt-10">
+                <summary className="chu-nho" style={{ fontWeight: 600, cursor: "pointer" }}>Tạo nhanh các mẫu của hộ theo bước (không cần nhập số, ngày)</summary>
+                <TabVanBanHo h={h} duAn={duAn} kq={kq} hieuLuc={hieuLuc} soan={(ma) => { setMaVb(ma); window.scrollTo({ top: 0, behavior: "smooth" }); }} />
+              </details>
+            </>
+          )}
           {tab === "nhat-ky" && (
             <div className="the">
               <div className="the-dau"><h2>Nhật ký hồ sơ</h2><span className="mo chu-nho">Mọi thay đổi đã lưu, kèm người thực hiện</span></div>

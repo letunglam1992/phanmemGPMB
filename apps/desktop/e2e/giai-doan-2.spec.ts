@@ -69,14 +69,17 @@ test("§11.1: soát phương án liệt kê vấn đề kèm căn cứ", async (
 
 test.describe("P1-7: laptop 1366×768", () => {
   test.use({ viewport: { width: 1366, height: 768 } });
-  test("thanh tiêu đề một hàng ≤ 64 px; nội dung hồ sơ bắt đầu trong nửa trên màn hình; tab có mũi tên; thanh bên thu gọn", async ({ page: p }) => {
+  test("thanh tiêu đề một hàng ≤ 64 px; nội dung hồ sơ bắt đầu trong nửa trên màn hình; 12 thẻ hồ sơ vừa một hàng (0.8.6); thanh bên thu gọn", async ({ page: p }) => {
     await vao(p);
     await moHo(p);
     expect((await p.locator("header.thanh-tren").boundingBox())!.height).toBeLessThanOrEqual(64);
     expect((await p.locator(".the-buoc-tron").boundingBox())!.height).toBeLessThanOrEqual(56);
     expect((await p.locator(".ho-khung").boundingBox())!.y).toBeLessThan(768 / 2);
-    await p.getByRole("button", { name: "Các tab bên phải" }).click();
-    await expect(p.getByRole("button", { name: "Các tab bên trái" })).toBeVisible();
+    // 0.8.6: thẻ hồ sơ hộ co chữ để vừa một hàng — không cần mũi tên cuộn, thẻ cuối nằm trong khung
+    await expect(p.locator(".the-tab .tab-mui-ten")).toHaveCount(0);
+    const khung = (await p.locator(".the-tab").boundingBox())!;
+    const cuoi = (await p.locator("[role=tablist] button", { hasText: "Nhật ký" }).boundingBox())!;
+    expect(cuoi.x + cuoi.width).toBeLessThanOrEqual(khung.x + khung.width + 1);
     await p.locator("[role=tablist] button", { hasText: "Nhật ký" }).click();
     await expect(p.locator("[role=tablist] button[aria-selected=true]")).toHaveText(/Nhật ký/);
     await p.getByRole("button", { name: "Thu gọn thanh bên" }).click();

@@ -64,7 +64,7 @@ export function TabVanBanHo({ h, duAn, kq, hieuLuc, soan }: { h: Ho; duAn: DuAn;
           </tbody>
         </table>
       </div>
-      <div className="the-than mo chu-nho">Văn bản cấp dự án (tờ trình, quyết định phê duyệt phương án, niêm yết…) và theo đợt: mở Hồ sơ dự án → thẻ Văn bản.</div>
+      <div className="the-than mo chu-nho">Văn bản cấp dự án (tờ trình, quyết định phê duyệt phương án, niêm yết…) và theo đợt: chọn trong danh sách mẫu phía trên.</div>
     </div>
   );
 }

@@ -246,7 +246,11 @@ export function UngDung() {
         {man.ten === "thung-rac" && <ThungRac />}
         {man.ten === "ra-soat-so" && <RaSoatSo />}
         {man.ten === "bao-cao" && <BaoCao />}
-        {man.ten === "van-ban" && <KhongGianDuAn duAnId={man.duAnId} tab="van-ban" ma={man.ma} hoId={man.hoId} />}
+        {man.ten === "van-ban" && (() => {
+          // Văn bản soạn trong hồ sơ hộ (thẻ "Văn bản" sau "Tính toán, giải trình"); dự án chưa có hộ → màn soạn cấp dự án.
+          const hoVb = man.hoId ?? hoCua(man.duAnId)[0]?.id;
+          return hoVb ? <HoSo key={`${hoVb}-${man.ma ?? ""}`} duAnId={man.duAnId} hoId={hoVb} tabDau="van-ban" maVbDau={man.ma} /> : <KhongGianDuAn duAnId={man.duAnId} tab="van-ban" ma={man.ma} />;
+        })()}
         </RaoLoi>
       </main>
       <footer className="chan">

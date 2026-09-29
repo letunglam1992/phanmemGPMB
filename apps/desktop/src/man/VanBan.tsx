@@ -1,7 +1,7 @@
 import { ONgay } from "../thanh-phan/ONgay";
 import { useEffect, useMemo, useState } from "react";
 import { useUngDung } from "../ung-dung";
-import { tinhHo } from "../tinh-ho";
+import { tinhHo, type KetQuaHo } from "../tinh-ho";
 import { CAC_BUOC, type Ho } from "../mo-hinh";
 import { DANH_MUC_MAU, mauTheoMa, tepMau, type MauVanBan, type TruongNhap } from "../van-ban/danh-muc";
 import { ghepDuLieu, ngayChu, thongTinChungMacDinh } from "../van-ban/du-lieu";
@@ -58,7 +58,11 @@ async function napMauGoc(ma: string): Promise<Uint8Array> {
 const DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 const tenAnToan = (s: string) => tenTep(s, 70);
 
-export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: string; hoIdDau?: string }) {
+/**
+ * `nhung`: soạn ngay trong hồ sơ hộ (thẻ "Văn bản" sau "Tính toán, giải trình") — hộ đang mở được chọn sẵn và dùng số liệu
+ * tính toán hiện tại để tự điền; hồ sơ đang sửa chưa lưu thì chặn tạo văn bản (tránh ghi số liệu chưa lưu vào văn bản).
+ */
+export function VanBan({ duAnId, maDau, hoIdDau, nhung }: { duAnId: string; maDau?: string; hoIdDau?: string; nhung?: { ho: Ho; kq: KetQuaHo; daSua: boolean } }) {
   const { dsDuAn, hoCua, chinhSach, luuDuAn: luuDuAnGoc, luuHo: luuHoGoc, kho, di, quyen, nguoiDung, dsDonVi } = useUngDung();
   // Tài khoản chỉ xem vẫn tạo được bản dự thảo nhưng không ghi số, ngày, nhật ký vào hồ sơ.
   const coGhi = quyen("SOAN_VAN_BAN");
@@ -67,7 +71,8 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
   const duAn = dsDuAn.find((d) => d.id === duAnId);
   const [ma, setMa] = useState(maDau ?? "01");
   const [tim, setTim] = useState("");
-  const [chonHo, setChonHo] = useState<Set<string>>(new Set(hoIdDau ? [hoIdDau] : []));
+  const hoDau = hoIdDau ?? nhung?.ho.id;
+  const [chonHo, setChonHo] = useState<Set<string>>(new Set(hoDau ? [hoDau] : []));
   const [locHo, setLocHo] = useState("");
   const [rieng, setRieng] = useState<Record<string, string>>({});
   const [so, setSo] = useState("");
@@ -79,11 +84,14 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
   const [dangTao, setDangTao] = useState(false);
   const [xemTruong, setXemTruong] = useState<string[] | null>(null);
   // P3-1: soạn văn bản cho một đợt thu hồi ("" = cả dự án)
-  const [dotVb, setDotVb] = useState(() => (hoIdDau && duAn ? (hoCua(duAnId).find((h) => h.id === hoIdDau)?.dotId ?? "") : ""));
+  const [dotVb, setDotVb] = useState(() => (hoDau && duAn ? (hoCua(duAnId).find((h) => h.id === hoDau)?.dotId ?? "") : ""));
 
   const mau: MauVanBan = mauTheoMa(ma);
   const hos = hoCua(duAnId);
-  const ds = useMemo(() => (duAn ? hos.map((h) => ({ h, k: tinhHo(chinhSach(duAn), duAn, h) })) : []), [hos, duAn, chinhSach]);
+  const ds = useMemo(
+    () => (duAn ? hos.map((h) => (nhung && h.id === nhung.ho.id ? { h: nhung.ho, k: nhung.kq } : { h, k: tinhHo(chinhSach(duAn), duAn, h) })) : []),
+    [hos, duAn, chinhSach, nhung],
+  );
 
   useEffect(() => {
     // Thứ tự ưu tiên: mặc định < Thiết lập đơn vị < thông tin đã lưu riêng cho dự án
@@ -196,17 +204,35 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
   };
 
   const nhom = [...new Set(TRUONG_CHUNG.map((t) => t.nhom))];
+  // Giá trị chưa có (vd. chưa chọn hộ) → để trống, không hiện "undefined m²"
+  const dv = (v: unknown, donVi: string) => (v === undefined || v === null || v === "" ? undefined : `${String(v)} ${donVi}`);
   const xem: [string, unknown][] = [
     ["ten_du_an", duLieuXem.ten_du_an],
-    ...(mau.phamVi === "HO" ? ([["ho_ten", duLieuXem.ho_ten], ["dia_chi", duLieuXem.dia_chi], ["dt_thu_hoi", `${duLieuXem.dt_thu_hoi} m²`], ["thua_mo_ta", duLieuXem.thua_mo_ta], ["tong_tien", `${duLieuXem.tong_tien} đ`], ["tong_tien_chu", duLieuXem.tong_tien_chu]] as [string, unknown][]) : ([["tong_dt_thu_hoi", `${duLieuXem.tong_dt_thu_hoi} m²`], ["so_doi_tuong", duLieuXem.so_doi_tuong], ["tong_gia_tri", `${duLieuXem.tong_gia_tri} đ`], ["tong_gia_tri_chu", duLieuXem.tong_gia_tri_chu]] as [string, unknown][])),
-    ...(mau.phamVi === "DOT" ? ([["so_doi_tuong_mo_ta", duLieuXem.so_doi_tuong_mo_ta], ["dt_duoc_bt", `${duLieuXem.dt_duoc_bt} m²`], ["dt_khong_bt", `${duLieuXem.dt_khong_bt} m²`], ["ds_thua_thu_hoi", `${(duLieuXem.ds_thua_thu_hoi as unknown[]).length} dòng`], ["tong_dt_co_gcn", `${duLieuXem.tong_dt_co_gcn} m²`]] as [string, unknown][]) : []),
+    ...(mau.phamVi === "HO" ? ([["ho_ten", duLieuXem.ho_ten], ["dia_chi", duLieuXem.dia_chi], ["dt_thu_hoi", dv(duLieuXem.dt_thu_hoi, "m²")], ["thua_mo_ta", duLieuXem.thua_mo_ta], ["tong_tien", dv(duLieuXem.tong_tien, "đ")], ["tong_tien_chu", duLieuXem.tong_tien_chu]] as [string, unknown][]) : ([["tong_dt_thu_hoi", dv(duLieuXem.tong_dt_thu_hoi, "m²")], ["so_doi_tuong", duLieuXem.so_doi_tuong], ["tong_gia_tri", dv(duLieuXem.tong_gia_tri, "đ")], ["tong_gia_tri_chu", duLieuXem.tong_gia_tri_chu]] as [string, unknown][])),
+    ...(mau.phamVi === "DOT" ? ([["so_doi_tuong_mo_ta", duLieuXem.so_doi_tuong_mo_ta], ["dt_duoc_bt", dv(duLieuXem.dt_duoc_bt, "m²")], ["dt_khong_bt", dv(duLieuXem.dt_khong_bt, "m²")], ["ds_thua_thu_hoi", dv((duLieuXem.ds_thua_thu_hoi as unknown[] | undefined)?.length, "dòng")], ["tong_dt_co_gcn", dv(duLieuXem.tong_dt_co_gcn, "m²")]] as [string, unknown][]) : []),
     ["tb_thu_hoi_so", duLieuXem.tb_thu_hoi_so],
     ["tb_thu_hoi_ngay", duLieuXem.tb_thu_hoi_ngay],
-    ["can_cu", `${(duLieuXem.can_cu as string[]).length} căn cứ`],
+    ["can_cu", dv((duLieuXem.can_cu as string[] | undefined)?.length, "căn cứ")],
   ];
+  const chanSua = !!nhung?.daSua;
 
   return (
-    <div className="trang" style={{ maxWidth: 1600 }}>
+    <div className={nhung ? "vb-nhung" : "trang"} style={nhung ? undefined : { maxWidth: 1600 }}>
+      {nhung ? (
+        <div className="the vb-nhung-dau">
+          <div>
+            <b>Văn bản của hộ {nhung.ho.ma} · {nhung.ho.ten}</b>
+            <div className="mo chu-nho">22 mẫu Sổ tay (QĐ 1966/QĐ-UBND) và mẫu riêng của xã · tự điền thông tin hộ, thửa, tài sản, số tiền theo kết quả Tính toán, giải trình · văn bản trước đã cấp số được tự điền vào văn bản sau</div>
+          </div>
+          {coDot(duAn) && (
+            <Chon value={dotVb} aria-label="Soạn cho đợt" onChange={(e) => { setDotVb(e.target.value); if (mau.phamVi === "DOT") setChonHo(new Set(ds.filter(({ h }) => !e.target.value || h.dotId === e.target.value).map(({ h }) => h.id))); }}>
+              <option value="">Cả dự án</option>
+              {dsDot(duAn).map((d) => <option key={d.id} value={d.id}>{tenDot(d)}</option>)}
+            </Chon>
+          )}
+        </div>
+      ) : (
+      <>
       <div className="duong-dan">
         <button onClick={() => di({ ten: "tong-quan" })}>Tổng quan</button> / <button onClick={() => di({ ten: "du-an", duAnId })}>{duAn.ten}</button> / Văn bản
       </div>
@@ -228,8 +254,11 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
           )}
         </div>
       </div>
+      </>
+      )}
+      {chanSua && <div className="thong-bao thong-bao-vang mb-10">Hồ sơ có thay đổi <b>chưa lưu</b> — bấm “Lưu hồ sơ” trước khi tạo văn bản để văn bản dùng đúng số liệu đã lưu.</div>}
 
-      <div className="luoi" style={{ gridTemplateColumns: "300px minmax(0,1fr) 320px", alignItems: "start" }}>
+      <div className="luoi vb-luoi" style={{ gridTemplateColumns: nhung ? "260px minmax(0,1fr) 300px" : "300px minmax(0,1fr) 320px", alignItems: "start" }}>
         <div className="the" style={{ position: "sticky", top: 10 }}>
           <div className="the-dau"><input placeholder="Tìm mẫu…" value={tim} onChange={(e) => setTim(e.target.value)} style={{ width: "100%" }} /></div>
           <div className="bang-cuon" style={{ maxHeight: "calc(100vh - 250px)" }}>
@@ -303,7 +332,7 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
                 </div>
               )}
               <div className="nhom-nut">
-                <button className="nut nut-chinh" disabled={dangTao || (mau.phamVi !== "DU_AN" && chonHo.size === 0)} onClick={tao}>
+                <button className="nut nut-chinh" disabled={dangTao || chanSua || (mau.phamVi !== "DU_AN" && chonHo.size === 0)} title={chanSua ? "Lưu hồ sơ trước khi tạo văn bản" : undefined} onClick={tao}>
                   {dangTao ? "Đang tạo…" : mau.phamVi === "HO" ? `Tạo văn bản cho ${chonHo.size} hộ` : mau.phamVi === "DOT" ? `Tạo văn bản cho đợt (${chonHo.size} hộ)` : "Tạo văn bản (.docx)"}
                 </button>
                 <button className="nut" onClick={() => setMoChung(!moChung)}>{moChung ? "Ẩn" : "Sửa"} thông tin chung của dự án</button>

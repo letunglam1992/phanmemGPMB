@@ -508,6 +508,28 @@ table.bang { width: 100%; border-collapse: collapse; font-size: 13px; }
 .tab-bt { border-bottom: 0; margin: 0; flex-wrap: nowrap; overflow-x: auto; gap: 4px; }
 .tab-bt button { display: inline-flex; align-items: center; gap: 9px; padding: 16px 16px 14px; border-radius: 0; border-bottom-width: 3px; white-space: nowrap; font-size: 14px; }
 .tab-bt button.chon svg { color: var(--chinh); }
+/* Soạn văn bản nhúng trong hồ sơ hộ */
+.vb-nhung { container-type: inline-size; }
+.vb-nhung-dau { display: flex; gap: 12px; align-items: center; justify-content: space-between; padding: 12px 16px; margin-bottom: 12px; }
+@container (max-width: 1180px) {
+  .vb-luoi { grid-template-columns: 240px minmax(0, 1fr) !important; }
+  .vb-luoi > :nth-child(3) { grid-column: 1 / -1; position: static !important; }
+}
+/* Thanh thẻ hồ sơ hộ: 12 thẻ vừa một hàng — co chữ, khoảng đệm theo bề rộng khung (container query), ẩn biểu tượng khi hẹp */
+.the-tab { container-type: inline-size; }
+.tab-bt.tab-gon { gap: 0; justify-content: space-between; }
+.tab-bt.tab-gon button { flex: 1 1 auto; justify-content: center; gap: 6px; padding: 13px 6px 11px; font-size: 13px; }
+.tab-bt.tab-gon button svg { width: 16px; height: 16px; flex: none; }
+.tab-bt.tab-gon button .dem { margin-left: 2px; padding: 0 5px; }
+@container (max-width: 1320px) {
+  .tab-bt.tab-gon button { font-size: 12.5px; padding: 12px 4px 10px; gap: 4px; }
+}
+@container (max-width: 1180px) {
+  .tab-bt.tab-gon button svg { display: none; }
+}
+@container (max-width: 960px) {
+  .tab-bt.tab-gon button { font-size: 12px; padding: 11px 3px 9px; }
+}
 
 .ho-khung { display: grid; grid-template-columns: 370px minmax(0, 1fr); gap: 16px; align-items: start; }
 .ho-ben { position: sticky; top: 12px; }

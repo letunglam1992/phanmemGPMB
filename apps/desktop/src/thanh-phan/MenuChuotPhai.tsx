@@ -153,9 +153,9 @@ export function MenuChuotPhai({ laToi, doiGiaoDien }: { laToi: boolean; doiGiaoD
           { nhan: "Thửa đất", lam: mo("thua") },
           { nhan: "Kiểm đếm tài sản", lam: mo("kiem-dem") },
           { nhan: "Tính toán, giải trình", lam: mo("tinh") },
+          { nhan: "Văn bản của hộ", lam: mo("van-ban") },
           { nhan: "Tiến độ", lam: mo("tien-do") },
           { nhan: "Chi trả", lam: mo("chi-tra") },
-          { nhan: "Văn bản của hộ", lam: mo("van-ban") },
           { nhan: "Sao chép mã – họ tên", tat: !h, lam: () => saoChep(`${h!.ma} – ${h!.ten}`) },
         ],
       });
@@ -168,7 +168,7 @@ export function MenuChuotPhai({ laToi, doiGiaoDien }: { laToi: boolean; doiGiaoD
           { nhan: "Mở dự án", lam: () => di({ ten: "du-an", duAnId }) },
           { nhan: "Hộ, cá nhân, tổ chức", lam: () => di({ ten: "du-an", duAnId, tab: "ho" }) },
           { nhan: "Bản đồ", lam: () => di({ ten: "du-an", duAnId, tab: "ban-do" }) },
-          { nhan: "Văn bản", lam: () => di({ ten: "du-an", duAnId, tab: "van-ban" }) },
+          { nhan: "Văn bản (trong hồ sơ hộ)", lam: () => di({ ten: "van-ban", duAnId }) },
           { nhan: "Sao chép tên dự án", tat: !d, lam: () => saoChep(d!.ten) },
         ],
       });
