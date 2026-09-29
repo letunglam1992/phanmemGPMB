@@ -133,6 +133,13 @@ export function MenuChuotPhai({ laToi, doiGiaoDien }: { laToi: boolean; doiGiaoD
       });
     }
 
+    // §11.5: ô có lịch sử thay đổi (hồ sơ) — xem ai sửa, từ … thành …
+    const oLs = dich.closest<HTMLElement>("[data-lich-su]");
+    if (oLs?.dataset.lichSu) {
+      const khoa = oLs.dataset.lichSu, ten = oLs.dataset.lichSuTen ?? oLs.querySelector("label")?.textContent ?? "";
+      nhom.push({ ten: "Lịch sử", muc: [{ nhan: "Lịch sử thay đổi của ô này", lam: () => void window.dispatchEvent(new CustomEvent("gpmb-lich-su-o", { detail: { khoa, ten } })) }] });
+    }
+
     const phanHo = dich.closest<HTMLElement>("[data-ho-id]");
     const phanDa = dich.closest<HTMLElement>("[data-du-an-id]");
     if (phanHo?.dataset.hoId && phanHo.dataset.duAnId) {

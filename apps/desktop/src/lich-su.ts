@@ -9,6 +9,8 @@ export interface KhacBiet {
   truong: string;
   tu: string;
   thanh: string;
+  /** Khóa ổn định của ô (vd. "thua:<id>.dienTichThuHoi", "ten") — lọc lịch sử theo ô (§11.5). */
+  khoa: string;
 }
 
 const NHAN: Record<string, string> = {
@@ -40,15 +42,15 @@ function hien(v: unknown, khoa?: string): string {
 const tenPhanTu = (mang: string, x: Record<string, unknown>): string =>
   mang === "thua" ? `Thửa ${x.soThua ?? "?"} tờ ${x.soTo ?? "?"}` : mang === "taiSan" ? `Tài sản "${x.ten ?? "?"}"` : mang === "nhanKhau" ? `Nhân khẩu ${x.hoTen ?? "?"}` : `${nhan(mang)} ${String(x.id ?? "")}`;
 
-function so(duong: string, a: unknown, b: unknown, out: KhacBiet[], khoa?: string) {
+function so(duong: string, a: unknown, b: unknown, out: KhacBiet[], khoa: string | undefined, ma: string) {
   if (out.length >= 300 || JSON.stringify(a) === JSON.stringify(b)) return;
   const laDt = (x: unknown) => typeof x === "object" && x !== null && !Array.isArray(x);
   if (laDt(a) && laDt(b)) {
     const oa = a as Record<string, unknown>, ob = b as Record<string, unknown>;
-    for (const k of new Set([...Object.keys(oa), ...Object.keys(ob)])) so(duong ? `${duong} › ${nhan(k)}` : nhan(k), oa[k], ob[k], out, k);
+    for (const k of new Set([...Object.keys(oa), ...Object.keys(ob)])) so(duong ? `${duong} › ${nhan(k)}` : nhan(k), oa[k], ob[k], out, k, ma ? `${ma}.${k}` : k);
     return;
   }
-  out.push({ truong: duong, tu: hien(a, khoa), thanh: hien(b, khoa) });
+  out.push({ truong: duong, tu: hien(a, khoa), thanh: hien(b, khoa), khoa: ma });
 }
 
 /** Các thay đổi từ bản `truoc` sang bản `sau` (không tính nhật ký hồ sơ). */
@@ -61,18 +63,21 @@ export function khacBiet(truoc: Ho, sau: Ho): KhacBiet[] {
       const da = (a[k] as Record<string, unknown>[] | undefined) ?? [], db = (b[k] as Record<string, unknown>[] | undefined) ?? [];
       for (const x of da) {
         const y = db.find((z) => z.id === x.id);
-        if (!y) out.push({ truong: tenPhanTu(k, x), tu: "có", thanh: "(đã bỏ)" });
-        else so(tenPhanTu(k, y), x, y, out);
+        if (!y) out.push({ truong: tenPhanTu(k, x), tu: "có", thanh: "(đã bỏ)", khoa: `${k}:${String(x.id)}` });
+        else so(tenPhanTu(k, y), x, y, out, undefined, `${k}:${String(y.id)}`);
       }
-      for (const y of db) if (!da.some((x) => x.id === y.id)) out.push({ truong: tenPhanTu(k, y), tu: "(chưa có)", thanh: "thêm mới" });
+      for (const y of db) if (!da.some((x) => x.id === y.id)) out.push({ truong: tenPhanTu(k, y), tu: "(chưa có)", thanh: "thêm mới", khoa: `${k}:${String(y.id)}` });
       continue;
     }
     if (k === "tienDo") {
       const ta = (a[k] as Record<string, unknown>) ?? {}, tb = (b[k] as Record<string, unknown>) ?? {};
-      for (const ma of new Set([...Object.keys(ta), ...Object.keys(tb)])) so(`Bước ${ma}`, ta[ma], tb[ma], out);
+      for (const ma of new Set([...Object.keys(ta), ...Object.keys(tb)])) so(`Bước ${ma}`, ta[ma], tb[ma], out, undefined, `tienDo.${ma}`);
       continue;
     }
-    so(nhan(k), a[k], b[k], out, k);
+    so(nhan(k), a[k], b[k], out, k, k);
   }
   return out;
 }
+
+/** Thay đổi thuộc ô `khoa` (chính ô đó hoặc ô con của nó, vd. "thua:<id>" gồm mọi trường của thửa). */
+export const thuocO = (k: KhacBiet, khoa: string) => k.khoa === khoa || k.khoa.startsWith(`${khoa}.`) || (khoa.includes(".") && khoa.startsWith(`${k.khoa}.`) && /^(thua|taiSan|nhanKhau):[^.]+$/.test(k.khoa));

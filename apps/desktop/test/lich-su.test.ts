@@ -9,9 +9,10 @@ describe("Lịch sử thay đổi hồ sơ (P1-5)", () => {
     const a = ho[0]!;
     const b = { ...a, ten: "Tên mới", thua: [{ ...a.thua[0]!, dienTichThuHoi: "100.5" }], tienDo: { ...a.tienDo, "5": { trangThai: "XONG" as const } }, nhatKy: [...a.nhatKy, { luc: "x", nguoi: "y", noiDung: "z" }] };
     const k = khacBiet(a, b);
-    expect(k).toContainEqual({ truong: "Họ tên / tên tổ chức", tu: "Hộ mẫu 01", thanh: "Tên mới" });
-    expect(k).toContainEqual({ truong: "Thửa 85 tờ 5 › DT thu hồi", tu: "9.222,1", thanh: "100,5" });
-    expect(k).toContainEqual({ truong: `Thửa ${a.thua[1]!.soThua} tờ ${a.thua[1]!.soTo}`, tu: "có", thanh: "(đã bỏ)" });
+    expect(k).toContainEqual({ truong: "Họ tên / tên tổ chức", tu: "Hộ mẫu 01", thanh: "Tên mới", khoa: "ten" });
+    expect(k).toContainEqual({ truong: "Thửa 85 tờ 5 › DT thu hồi", tu: "9.222,1", thanh: "100,5", khoa: `thua:${a.thua[0]!.id}.dienTichThuHoi` });
+    expect(k).toContainEqual({ truong: `Thửa ${a.thua[1]!.soThua} tờ ${a.thua[1]!.soTo}`, tu: "có", thanh: "(đã bỏ)", khoa: `thua:${a.thua[1]!.id}` });
+    expect(k.find((x) => x.truong.startsWith("Bước 5"))!.khoa).toBe("tienDo.5.trangThai");
     expect(k.find((x) => x.truong.startsWith("Bước 5"))?.thanh).toBe("Hoàn thành");
     expect(k.some((x) => x.truong.includes("nhatKy") || x.truong.includes("Nhật ký"))).toBe(false);
     expect(khacBiet(a, a)).toEqual([]);

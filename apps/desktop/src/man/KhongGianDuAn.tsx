@@ -24,6 +24,7 @@ import { RaoLoi } from "../thanh-phan/RaoLoi";
 import { NHOM_PHAP_LY, THU_TU_PHAP_LY, thongKePhapLy, type NhomPhapLy } from "../nguon-goc";
 import { hienSo } from "../so";
 import { CauHinhThuongBanGiao } from "../thanh-phan/CauHinhThuong";
+import { TheDoiChieuDt } from "../thanh-phan/DoiChieuDt";
 import { MAU_MA_MAC_DINH, loiMauMa, maHoTiepTheo, mauMaCua, nhomMaTrung, taoMa } from "../ma-ho";
 
 /**
@@ -155,6 +156,7 @@ function TheTongQuan({ duAn, kq, moHo, capNhatTd, keHoach }: { duAn: DuAn; kq: K
               </tbody>
             </table>
           </div>
+          <TheDoiChieuDt duAn={duAn} hos={kq.map((x) => x.h)} />
           <div className="the">
             <div className="the-dau"><h3>Bản đồ dự án</h3><span className="mo chu-nho">bấm để mở</span></div>
             <div className="the-than" style={{ padding: 8 }}><BanDoNho duAn={duAn} ttThua={ttThua} /></div>

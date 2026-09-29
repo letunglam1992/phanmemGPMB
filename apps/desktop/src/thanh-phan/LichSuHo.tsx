@@ -2,7 +2,8 @@ import { Fragment, useEffect, useState } from "react";
 import { useUngDung } from "../ung-dung";
 import type { BanLichSu } from "../kho";
 import type { Ho } from "../mo-hinh";
-import { khacBiet } from "../lich-su";
+import { khacBiet, thuocO } from "../lich-su";
+import { HopThoai } from "./chung";
 
 const TEN_PHAN: Record<string, string> = { td: "Tiến độ · ", ct: "Chi trả · " };
 
@@ -10,7 +11,7 @@ const TEN_PHAN: Record<string, string> = { td: "Tiến độ · ", ct: "Chi tr�
  * Cặp (bản cũ, bản sau) để so sánh. Máy chủ lưu tiến độ ("td"), chi trả ("ct") là bản ghi con riêng (P2-7): so trong phần
  * tương ứng; bản ghi chính so phần còn lại (bỏ tiến độ, chi trả nếu bản cũ không chứa chúng).
  */
-function cap(x: BanLichSu, sauLs: BanLichSu | undefined, h: Ho): [Ho, Ho] {
+export function cap(x: BanLichSu, sauLs: BanLichSu | undefined, h: Ho): [Ho, Ho] {
   const sau = (sauLs?.duLieu ?? null) as Record<string, unknown> | null;
   const cu = x.duLieu as Record<string, unknown>;
   if (x.loai === "td") return [{ tienDo: cu.tienDo } as unknown as Ho, { tienDo: sau ? sau.tienDo : h.tienDo } as unknown as Ho];
@@ -83,5 +84,40 @@ export function LichSuHo({ h }: { h: Ho }) {
         </table>
       )}
     </div>
+  );
+}
+
+/** §11.5: lịch sử thay đổi của một ô (chuột phải trên ô → "Lịch sử thay đổi của ô này"). */
+export function HopLichSuO({ h, khoa, ten, dong }: { h: Ho; khoa: string; ten: string; dong: () => void }) {
+  const { kho } = useUngDung();
+  const [ds, setDs] = useState<{ luc: string; ai: string; tu: string; thanh: string; truong: string; lyDo: string }[] | null>(null);
+  useEffect(() => {
+    let huy = false;
+    void kho.lichSu("ho", h.id).then((r) => {
+      const out: NonNullable<typeof ds> = [];
+      r.ds.forEach((x, i) => {
+        for (const k of khacBiet(...cap(x, r.ds.slice(0, i).reverse().find((y) => y.loai === x.loai), h)))
+          if (thuocO(k, khoa)) out.push({ luc: x.luuLuc, ai: x.luuBoi || "—", tu: k.tu, thanh: k.thanh, truong: k.truong, lyDo: x.lyDo || "Sửa" });
+      });
+      if (!huy) setDs(out);
+    }, () => !huy && setDs([]));
+    return () => {
+      huy = true;
+    };
+  }, [kho, h, khoa]);
+  return (
+    <HopThoai tieuDe={`Lịch sử ô: ${ten || khoa}`} dong={dong} rong={760}>
+      <p className="mo chu-nho" style={{ marginTop: 0 }}>Mỗi dòng: lần lưu làm ô này đổi giá trị — thời điểm, người lưu, từ … thành …. Chỉ gồm các lần lưu từ khi có lịch sử (0.6.0).</p>
+      <table className="bang">
+        <thead><tr><th>Thời điểm</th><th>Người lưu</th><th>Trường</th><th>Từ</th><th>Thành</th></tr></thead>
+        <tbody>
+          {(ds ?? []).map((x, i) => (
+            <tr key={i}><td className="chu-nho">{gio(x.luc)}</td><td className="chu-nho">{x.ai}{x.lyDo !== "Sửa" && <div className="mo">{x.lyDo}</div>}</td><td className="chu-nho">{x.truong}</td><td>{x.tu}</td><td><b>{x.thanh}</b></td></tr>
+          ))}
+          {ds !== null && !ds.length && <tr><td colSpan={5} className="trong">Ô này chưa thay đổi (hoặc thay đổi trước khi có lịch sử).</td></tr>}
+          {ds === null && <tr><td colSpan={5} className="trong">Đang tải…</td></tr>}
+        </tbody>
+      </table>
+    </HopThoai>
   );
 }

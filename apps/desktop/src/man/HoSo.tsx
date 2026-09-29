@@ -1,6 +1,6 @@
 import { useRef, Fragment, useEffect, useMemo, useState } from "react";
 import { TabCuon } from "../thanh-phan/TabCuon";
-import { LichSuHo } from "../thanh-phan/LichSuHo";
+import { HopLichSuO, LichSuHo } from "../thanh-phan/LichSuHo";
 import { kiemTraDuyetBuoc } from "../tai-khoan";
 import { hanCuaBuoc, tinhHanBuoc } from "../han-buoc";
 import { TT_GPMB, homNayIso, trangThaiHo, type TrangThaiGpmb } from "../trang-thai";
@@ -64,6 +64,13 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
     xoaBanNhap(hoId);
   }, [goc]); // eslint-disable-line react-hooks/exhaustive-deps
   const kq = useMemo(() => (duAn && h ? tinhHo(chinhSach(duAn), duAn, h) : null), [duAn, h, chinhSach]);
+  // §11.5: chuột phải trên ô → lịch sử thay đổi của ô (MenuChuotPhai phát sự kiện)
+  const [lsO, setLsO] = useState<{ khoa: string; ten: string } | null>(null);
+  useEffect(() => {
+    const f = (e: Event) => setLsO((e as CustomEvent<{ khoa: string; ten: string }>).detail);
+    window.addEventListener("gpmb-lich-su-o", f);
+    return () => window.removeEventListener("gpmb-lich-su-o", f);
+  }, []);
   if (!duAn || !h || !kq) return <div className="trang trong">Không tìm thấy hồ sơ.</div>;
 
   const doi = (moi: Ho) => {
@@ -193,6 +200,7 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
             </div>
           )}
           {tab === "nhat-ky" && !daSua && goc && <LichSuHo h={goc} />}
+          {lsO && goc && <HopLichSuO h={goc} khoa={lsO.khoa} ten={lsO.ten} dong={() => setLsO(null)} />}
           </RaoLoi>
           {kq.tong.soDongThieuCanCu + kq.tong.soDongCanXacNhan > 0 && tab !== "tinh" && (
             <div className="thong-bao thong-bao-vang" style={{ marginTop: 14 }}>
@@ -323,7 +331,7 @@ function TabThongTin({ h, doi }: Tab) {
     <div className="luoi">
     <div className="the the-than">
       <div className="luoi luoi-3">
-        <O nhan="Mã hồ sơ" goiY={trung ? <span className="chu-do">Trùng mã với hồ sơ “{trung.ten}” — đổi mã khác</span> : !h.ma.trim() ? <span className="chu-do">Chưa có mã</span> : undefined}>
+        <O nhan="Mã hồ sơ" lichSu="ma" goiY={trung ? <span className="chu-do">Trùng mã với hồ sơ “{trung.ten}” — đổi mã khác</span> : !h.ma.trim() ? <span className="chu-do">Chưa có mã</span> : undefined}>
           <input className={trung || !h.ma.trim() ? "loi-nhap" : ""} value={h.ma} onChange={s("ma")} />
         </O>
         <O nhan="Đối tượng">
@@ -331,11 +339,11 @@ function TabThongTin({ h, doi }: Tab) {
             {Object.entries(TEN_DOI_TUONG).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </Chon>
         </O>
-        <O nhan={h.loai === "TO_CHUC" ? "Tên tổ chức" : "Họ tên chủ hộ / cá nhân"}><input value={h.ten} onChange={s("ten")} /></O>
-        <O nhan={h.loai === "TO_CHUC" ? "Mã số thuế / QĐ thành lập" : "Số định danh cá nhân"} goiY="Thông tin cá nhân chỉ lưu trên máy này"><input value={h.soDinhDanh} onChange={s("soDinhDanh")} /></O>
-        <O nhan="Điện thoại"><input value={h.dienThoai} onChange={s("dienThoai")} /></O>
-        <O nhan="Địa chỉ thường trú / trụ sở"><input value={h.diaChi} onChange={s("diaChi")} /></O>
-        <O nhan="Vướng mắc cần ưu tiên xử lý" style={{ gridColumn: "1/-1" }} goiY="Khiếu nại, chưa nhận tiền, tranh chấp, chưa bàn giao… Hồ sơ có vướng mắc được tô đỏ trên bản đồ và đưa vào cảnh báo.">
+        <O nhan={h.loai === "TO_CHUC" ? "Tên tổ chức" : "Họ tên chủ hộ / cá nhân"} lichSu="ten"><input value={h.ten} onChange={s("ten")} /></O>
+        <O nhan={h.loai === "TO_CHUC" ? "Mã số thuế / QĐ thành lập" : "Số định danh cá nhân"} lichSu="soDinhDanh" goiY="Thông tin cá nhân chỉ lưu trên máy này"><input value={h.soDinhDanh} onChange={s("soDinhDanh")} /></O>
+        <O nhan="Điện thoại" lichSu="dienThoai"><input value={h.dienThoai} onChange={s("dienThoai")} /></O>
+        <O nhan="Địa chỉ thường trú / trụ sở" lichSu="diaChi"><input value={h.diaChi} onChange={s("diaChi")} /></O>
+        <O nhan="Vướng mắc cần ưu tiên xử lý" lichSu="vuongMac" style={{ gridColumn: "1/-1" }} goiY="Khiếu nại, chưa nhận tiền, tranh chấp, chưa bàn giao… Hồ sơ có vướng mắc được tô đỏ trên bản đồ và đưa vào cảnh báo.">
           <div className="nhom-nut">
             <input style={{ flex: 1 }} value={h.vuongMac?.noiDung ?? ""} placeholder="Để trống nếu không có" onChange={(e) => doi({ ...h, vuongMac: e.target.value ? { noiDung: e.target.value, ngay: h.vuongMac?.ngay ?? new Date().toISOString().slice(0, 10) } : null })} />
             {h.vuongMac && <button className="nut" onClick={() => doi({ ...h, vuongMac: null })}>Đã giải quyết</button>}

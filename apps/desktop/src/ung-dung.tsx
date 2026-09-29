@@ -14,6 +14,7 @@ import { LICH_TRONG, type LichLamViec } from "./lich-lam-viec";
 import { KHOA_TY_LE_CHAM, type GiaiDoanTyLe } from "./chi-tra";
 import { KHOA_KY_BAO_CAO, type KyBaoCao } from "./ky-bao-cao";
 import { KHOA_DON_VI, type DonVi } from "./don-vi";
+import { KHOA_NGUONG_LECH, loiNguong, type NguongLechDt } from "./doi-chieu-dt";
 import { KHOA_LICH } from "./sao-luu";
 import { coQuyen, dungMatKhau, taoTaiKhoan, tenHienThi, type NguoiDung, type Quyen, type VaiTro } from "./tai-khoan";
 
@@ -112,6 +113,9 @@ interface NguCanh {
   /** Số năm giữ lịch sử bản ghi (0 = không thời hạn) — quản trị đặt. */
   giuLichSu: number;
   luuGiuLichSu: (soNam: number) => Promise<void>;
+  /** §11.3: ngưỡng lệch diện tích do đơn vị đặt (null = chưa đặt). */
+  nguongLechDt: NguongLechDt | null;
+  luuNguongLechDt: (n: NguongLechDt | null) => Promise<void>;
 }
 
 const Ctx = createContext<NguCanh | null>(null);
@@ -171,6 +175,7 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
   const [tuDong, setTuDong] = useState<CaiDatTuDong>(MAC_DINH_TU_DONG);
   const [kyBaoCao, setKyBaoCao] = useState<KyBaoCao[]>([]);
   const [giuLichSu, setGiuLichSu] = useState(0);
+  const [nguongLechDt, setNguongLechDt] = useState<NguongLechDt | null>(null);
   const dangTuDong = useRef(false);
   const [sai, setSai] = useState<{ lan: number; den: number }>({ lan: 0, den: 0 });
   const nguoiDung = tenHienThi(taiKhoan);
@@ -220,6 +225,7 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
     setAnhNen((await kho.docCaiDat<string>("anhNen")) ?? null);
     setKhoaKhoiPhuc((await kho.docCaiDat<KhoaKhoiPhuc>(KHOA_KHOI_PHUC)) ?? null);
     setGiuLichSu((await kho.docCaiDat<{ soNam: number }>("giuLichSu"))?.soNam ?? 0);
+    setNguongLechDt((await kho.docCaiDat<NguongLechDt>(KHOA_NGUONG_LECH)) ?? null);
     const da = await kho.dsDuAn();
     const hos = (await Promise.all(da.map((d) => kho.dsHo(d.id)))).flat();
     setDsDuAn(da.sort((a, b) => b.taoLuc.localeCompare(a.taoLuc)));
@@ -629,6 +635,16 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
       await ghi(() => kho.luuCaiDat("giuLichSu", { soNam }));
       setGiuLichSu(soNam);
       if (!laKhoMang(kho)) await ghiNhatKy("Đặt thời hạn giữ lịch sử bản ghi", `${soNam} năm`);
+    },
+    nguongLechDt,
+    luuNguongLechDt: async (n) => {
+      if (chan("CAI_DAT")) return;
+      const loi = n && loiNguong(n);
+      if (loi) return bao(loi, "loi");
+      const v = n && (n.m2.trim() || n.phanTram.trim()) ? { ...n, nguoi: nguoiDung, luc: new Date().toISOString() } : null;
+      await ghi(() => kho.luuCaiDat(KHOA_NGUONG_LECH, v));
+      setNguongLechDt(v);
+      await ghiNhatKy("Đặt ngưỡng lệch diện tích", v ? `${v.m2 || "—"} m²; ${v.phanTram || "—"} %; căn cứ: ${v.canCu}` : "bỏ ngưỡng (liệt kê mọi chênh lệch)");
     },
     xoaKyBaoCao: async (id, lyDo) => {
       if (chan("CAI_DAT")) return;

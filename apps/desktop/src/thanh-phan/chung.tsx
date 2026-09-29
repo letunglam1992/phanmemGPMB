@@ -31,9 +31,9 @@ export function HopThoai(p: { tieuDe: ReactNode; dong: () => void; children: Rea
   );
 }
 
-export function O(p: { nhan: string; children: ReactNode; goiY?: ReactNode; style?: React.CSSProperties }) {
+export function O(p: { nhan: string; children: ReactNode; goiY?: ReactNode; style?: React.CSSProperties; lichSu?: string }) {
   return (
-    <div className="o-nhap" style={p.style}>
+    <div className="o-nhap" style={p.style} data-lich-su={p.lichSu} data-lich-su-ten={p.lichSu ? p.nhan : undefined} title={p.lichSu ? "Chuột phải: lịch sử thay đổi của ô" : undefined}>
       <label>{p.nhan}</label>
       {p.children}
       {p.goiY && <span className="goi-y">{p.goiY}</span>}

@@ -45,16 +45,16 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
               return (
                 <Fragment key={t.id}>
                   <tr>
-                    <td><input value={t.soTo} onChange={(e) => sua(t.id, { soTo: e.target.value })} /></td>
-                    <td><input value={t.soThua} onChange={(e) => sua(t.id, { soThua: e.target.value })} /></td>
-                    <td>
+                    <td data-lich-su={`thua:${t.id}.soTo`} data-lich-su-ten={`Tờ bản đồ (thửa ${t.soThua})`}><input value={t.soTo} onChange={(e) => sua(t.id, { soTo: e.target.value })} /></td>
+                    <td data-lich-su={`thua:${t.id}.soThua`} data-lich-su-ten={`Số thửa (tờ ${t.soTo})`}><input value={t.soThua} onChange={(e) => sua(t.id, { soThua: e.target.value })} /></td>
+                    <td data-lich-su={`thua:${t.id}.loaiDat`} data-lich-su-ten={`Loại đất thửa ${t.soThua} tờ ${t.soTo}`}>
                       <Chon value={t.loaiDat} onChange={(e) => sua(t.id, { loaiDat: e.target.value, gia: null })}>
                         {!LOAI_DAT.includes(t.loaiDat) && <option>{t.loaiDat}</option>}
                         {LOAI_DAT.map((l) => <option key={l}>{l}</option>)}
                       </Chon>
                     </td>
-                    <td><OSo className="o-so" value={t.dienTich} onChange={(v) => sua(t.id, { dienTich: v })} /></td>
-                    <td>
+                    <td data-lich-su={`thua:${t.id}.dienTich`} data-lich-su-ten={`DT thửa ${t.soThua} tờ ${t.soTo}`}><OSo className="o-so" value={t.dienTich} onChange={(v) => sua(t.id, { dienTich: v })} /></td>
+                    <td data-lich-su={`thua:${t.id}.dienTichThuHoi`} data-lich-su-ten={`DT thu hồi thửa ${t.soThua} tờ ${t.soTo}`}>
                       <OSo className={`o-so ${loiDt ? "loi-nhap" : ""}`} value={t.dienTichThuHoi} onChange={(v) => sua(t.id, { dienTichThuHoi: v })} />
                       {t.dienTichBanDo !== undefined && <div className={`chu-nho ${lechBanDo ? "" : "mo"}`} style={lechBanDo ? { color: "var(--vang)" } : undefined}>Bản đồ: {t.dienTichBanDo.toFixed(2)}</div>}
                     </td>

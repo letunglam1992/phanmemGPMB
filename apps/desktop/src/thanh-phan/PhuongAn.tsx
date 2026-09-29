@@ -34,7 +34,7 @@ const TEN_LOAI: Record<LoaiThayDoi, [string, string]> = { THEM: ["Thêm", "nhan-
 
 /** Thẻ "Phương án – phiên bản" trên màn Dự án. */
 export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo }[] }) {
-  const { chinhSach, luuDuAn, luuHo, nguoiDung, quyen, ghiNhatKy, tyLeCham } = useUngDung();
+  const { chinhSach, luuDuAn, luuHo, nguoiDung, quyen, ghiNhatKy, tyLeCham, nguongLechDt } = useUngDung();
   const ds = useMemo(() => [...(duAn.phuongAn ?? [])].sort((a, b) => b.so - a.so), [duAn.phuongAn]);
   const [hop, setHop] = useState<null | { loai: "chot" } | { loai: "soat" } | { loai: "duyet" | "huy" | "xem"; p: PhienBanPA } | { loai: "so-sanh"; a?: string; b?: string }>(null);
   const [toanVen, setToanVen] = useState<Record<string, boolean>>({});
@@ -119,7 +119,7 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
       )}
       {hop?.loai === "soat" && (
         <HopThoai tieuDe="Soát phương án" dong={() => setHop(null)} rong={1000}>
-          <KetQuaSoatPA ds={soatPhuongAn(duAn, kq)} duAnId={duAn.id} />
+          <KetQuaSoatPA ds={soatPhuongAn(duAn, kq, nguongLechDt)} duAnId={duAn.id} />
           <details style={{ marginTop: 10 }}>
             <summary className="mo">Các quy tắc đã soát ({QUY_TAC_SOAT.length})</summary>
             <table className="bang"><tbody>{QUY_TAC_SOAT.map((q) => <tr key={q.ma}><td>{q.ten}</td><td className="chu-nho">{q.canCu}</td></tr>)}</tbody></table>
@@ -152,7 +152,7 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
 }
 
 function HopChot({ duAn, kq, dong: dongHop }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo }[]; dong: () => void }) {
-  const { chinhSach, luuDuAn, nguoiDung, ghiNhatKy } = useUngDung();
+  const { chinhSach, luuDuAn, nguoiDung, ghiNhatKy, nguongLechDt } = useUngDung();
   const chua = useMemo(() => new Map(hoChuaDuDieuKien(kq).map((x) => [x.h.id, x.lyDo])), [kq]);
   const daDuyet = useMemo(() => hoDaPheDuyet(duAn.phuongAn ?? []), [duAn.phuongAn]);
   const [chon, setChon] = useState<Set<string>>(() => new Set(kq.filter(({ h }) => !chua.has(h.id)).map(({ h }) => h.id)));
@@ -163,7 +163,7 @@ function HopChot({ duAn, kq, dong: dongHop }: { duAn: DuAn; kq: { h: Ho; k: KetQ
   const dsChon = kq.filter(({ h }) => chon.has(h.id));
   const canLyDo = dsChon.some(({ h }) => daDuyet.has(h.id));
   const tong = dsChon.reduce((s, x) => s.plus(x.k.tong.tongLamTron), D(0));
-  const soat = useMemo(() => soatPhuongAn(duAn, dsChon).filter((x) => x.muc !== "THONG_TIN" && x.quyTac !== "KHOAN_CHUA_DU"), [duAn, dsChon]);
+  const soat = useMemo(() => soatPhuongAn(duAn, dsChon, nguongLechDt).filter((x) => x.muc !== "THONG_TIN" && x.quyTac !== "KHOAN_CHUA_DU"), [duAn, dsChon, nguongLechDt]);
   const [xemSoat, setXemSoat] = useState(false);
 
   const chot = async () => {

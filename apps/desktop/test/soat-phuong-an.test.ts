@@ -44,4 +44,13 @@ describe("Soát phương án (§11.1)", () => {
     expect(co(r, "THUA_TRUNG")[0]!.muc).toBe("CANH_BAO");
     expect(co(r, "PHAP_LY", "H02")).toHaveLength(1); // thửa 13 chưa phân loại
   });
+  it("§11.3: lệch diện tích vượt ngưỡng đơn vị đặt → cần kiểm tra, ghi căn cứ ngưỡng; chưa đặt ngưỡng thì không đưa vào soát", () => {
+    const h: Ho = { ...ho[0]!, thua: [{ ...ho[0]!.thua[0]!, dienTichBanDo: 9230 }] };
+    const ds = [{ h, k: tinhHo(cs, duAn, h) }];
+    expect(soatPhuongAn(duAn, ds).filter((x) => x.quyTac === "DT_LECH")).toHaveLength(0);
+    const r = soatPhuongAn(duAn, ds, { m2: "1", phanTram: "", canCu: "Quy chế số 01/QC" }).filter((x) => x.quyTac === "DT_LECH");
+    expect(r).toHaveLength(1);
+    expect(r[0]!.canCu).toContain("Quy chế số 01/QC");
+    expect(r[0]!.noiDung).toContain("lệch 7,9 m²");
+  });
 });

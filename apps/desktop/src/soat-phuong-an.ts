@@ -10,6 +10,7 @@ import { laDatNN, laDatO } from "./tinh-ho";
 import { tienDoHieuLuc, type DuAn, type Ho } from "./mo-hinh";
 import { nhomMaTrung } from "./ma-ho";
 import { hienSo, laSoMay } from "./so";
+import { TEN_CAP, doiChieuDienTich, type NguongLechDt } from "./doi-chieu-dt";
 
 export type MucSoat = "LOI" | "CANH_BAO" | "THONG_TIN";
 export const TEN_MUC_SOAT: Record<MucSoat, string> = { LOI: "Lỗi", CANH_BAO: "Cần kiểm tra", THONG_TIN: "Lưu ý" };
@@ -37,6 +38,7 @@ export const QUY_TAC_SOAT: { ma: string; ten: string; canCu: string }[] = [
   { ma: "NN_ON_DINH", ten: "Có đất NN bị thu hồi mà chưa khai DT đất NN đang sử dụng (chưa xét hỗ trợ ổn định đời sống)", canCu: "khoản 1 Điều 19 NĐ 88/2024; Điều 12 Phụ lục II QĐ 106/2025" },
   { ma: "TAM_CU_NK", ten: "Có hỗ trợ tạm cư mà hồ sơ chưa có nhân khẩu", canCu: "khoản 3, khoản 4 Điều 3 QĐ 14/2026" },
   { ma: "PHAP_LY", ten: "Thửa thu hồi chưa phân loại pháp lý nguồn gốc", canCu: "Điều 95 Luật Đất đai 2024 (cán bộ xác định điều kiện)" },
+  { ma: "DT_LECH", ten: "Diện tích lệch giữa bản đồ, hồ sơ, phương án, GCN vượt ngưỡng đơn vị đặt (§11.3)", canCu: "Ngưỡng do đơn vị đặt (Cài đặt chung → Ngưỡng lệch diện tích)" },
   { ma: "NIEM_YET", ten: "Chưa ghi hoàn thành niêm yết công khai phương án", canCu: "điểm a khoản 3 Điều 87 Luật Đất đai 2024" },
 ];
 const canCu = (ma: string) => QUY_TAC_SOAT.find((q) => q.ma === ma)!.canCu;
@@ -44,7 +46,7 @@ const canCu = (ma: string) => QUY_TAC_SOAT.find((q) => q.ma === ma)!.canCu;
 const so = (v: string | undefined) => (v && laSoMay(v) ? D(v) : null);
 const khoaThua = (soTo: string, soThua: string) => `${soTo.trim().replace(/^0+(?=\d)/, "")}/${soThua.trim().replace(/^0+(?=\d)/, "")}`;
 
-export function soatPhuongAn(duAn: DuAn, kq: { h: Ho; k: KetQuaHo }[]): KetQuaSoat[] {
+export function soatPhuongAn(duAn: DuAn, kq: { h: Ho; k: KetQuaHo }[], nguong?: NguongLechDt | null): KetQuaSoat[] {
   const out: KetQuaSoat[] = [];
   const bao = (quyTac: string, muc: MucSoat, h: Ho | null, noiDung: string) =>
     out.push({ quyTac, muc, hoId: h?.id, doiTuong: h ? `${h.ma} – ${h.ten}` : "Dự án", noiDung, canCu: canCu(quyTac) });
@@ -102,6 +104,13 @@ export function soatPhuongAn(duAn: DuAn, kq: { h: Ho; k: KetQuaHo }[]): KetQuaSo
     const td = tienDoHieuLuc(duAn, h);
     if (td["6"]?.trangThai !== "XONG") bao("NIEM_YET", "THONG_TIN", h, "Bước 6 \"Niêm yết công khai\" chưa ghi hoàn thành — phương án dự thảo phải được niêm yết, lấy ý kiến trước khi hoàn chỉnh trình thẩm định");
   }
+
+  // §11.3: lệch diện tích — chỉ xét khi đơn vị đã đặt ngưỡng (chưa đặt thì xem ở thẻ Đối chiếu diện tích)
+  if (nguong && (nguong.m2.trim() || nguong.phanTram.trim()))
+    for (const x of doiChieuDienTich(duAn, kq.map((y) => y.h), nguong).filter((y) => y.vuot)) {
+      const h = kq.find((y) => y.h.id === x.hoId)!.h;
+      out.push({ quyTac: "DT_LECH", muc: "CANH_BAO", hoId: h.id, doiTuong: `${h.ma} – ${h.ten}`, noiDung: `${x.thua}: ${TEN_CAP[x.cap][0]} ${hienSo(x.a)} m² ↔ ${TEN_CAP[x.cap][1]} ${hienSo(x.b)} m² (lệch ${hienSo(x.chenh)} m²${x.tyLe ? `, ${hienSo(x.tyLe)}%` : ""})`, canCu: `Ngưỡng do đơn vị đặt: ${nguong.canCu}` });
+    }
 
   const thuTu: Record<MucSoat, number> = { LOI: 0, CANH_BAO: 1, THONG_TIN: 2 };
   return out.sort((a, b) => thuTu[a.muc] - thuTu[b.muc]);

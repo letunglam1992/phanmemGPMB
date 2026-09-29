@@ -2,7 +2,9 @@ import { useEffect, useState, type ReactNode } from "react";
 import { TheMangNoiBo } from "./KetNoi";
 import { coVoWindows, moThuMucSaoLuu, thuMucSaoLuu, type CaiDatTuDong } from "../tu-dong-sao-luu";
 import { useUngDung } from "../ung-dung";
-import { HopThoai } from "./chung";
+import { HopThoai, O } from "./chung";
+import { OSo } from "./OSo";
+import { loiNguong, type NguongLechDt } from "../doi-chieu-dt";
 import type { GiaiDoanTyLe } from "../chi-tra";
 import { LE_DUONG_LICH_CO_DINH, type LichLamViec, type NgayDacBiet } from "../lich-lam-viec";
 import { Chon } from "./Chon";
@@ -17,7 +19,7 @@ const vn = (iso: string) => iso.split("-").reverse().join("/");
 /** Cài đặt chung: lịch ngày nghỉ (VM-25); các thẻ khác truyền qua `them`. */
 export function HopCaiDat({ them }: { them?: { ma: string; ten: string; noiDung: ReactNode }[] }) {
   const { moCaiDat } = useUngDung();
-  const cacThe = [{ ma: "lich", ten: "Lịch ngày nghỉ", noiDung: <TheLich /> }, { ma: "tu-dong", ten: "Tự động sao lưu", noiDung: <TheTuDong /> }, { ma: "cham-tra", ten: "Tiền chậm trả", noiDung: <TheTyLeCham /> }, { ma: "mang", ten: "Mạng nội bộ", noiDung: <TheMangNoiBo /> }, { ma: "luu-tep", ten: "Lưu tệp xuất", noiDung: <TheLuuTep /> }, { ma: "lich-su", ten: "Lịch sử bản ghi", noiDung: <TheLichSu /> }, { ma: "giao-dien", ten: "Giao diện", noiDung: <TheGiaoDien /> }, ...(them ?? [])];
+  const cacThe = [{ ma: "lich", ten: "Lịch ngày nghỉ", noiDung: <TheLich /> }, { ma: "tu-dong", ten: "Tự động sao lưu", noiDung: <TheTuDong /> }, { ma: "cham-tra", ten: "Tiền chậm trả", noiDung: <TheTyLeCham /> }, { ma: "mang", ten: "Mạng nội bộ", noiDung: <TheMangNoiBo /> }, { ma: "luu-tep", ten: "Lưu tệp xuất", noiDung: <TheLuuTep /> }, { ma: "lich-su", ten: "Lịch sử bản ghi", noiDung: <TheLichSu /> }, { ma: "nguong-dt", ten: "Ngưỡng lệch diện tích", noiDung: <TheNguongDt /> }, { ma: "giao-dien", ten: "Giao diện", noiDung: <TheGiaoDien /> }, ...(them ?? [])];
   const [the, setThe] = useState(cacThe[0]!.ma);
   return (
     <HopThoai tieuDe="Cài đặt chung" dong={() => moCaiDat(false)} rong={920}>
@@ -26,6 +28,30 @@ export function HopCaiDat({ them }: { them?: { ma: string; ten: string; noiDung:
       </div>
       {cacThe.find((t) => t.ma === the)?.noiDung}
     </HopThoai>
+  );
+}
+
+/** §11.3: ngưỡng lệch diện tích (bản đồ – hồ sơ – phương án – GCN) do đơn vị tự đặt kèm căn cứ. */
+function TheNguongDt() {
+  const { nguongLechDt, luuNguongLechDt, quyen } = useUngDung();
+  const [n, setN] = useState<NguongLechDt>(nguongLechDt ?? { m2: "", phanTram: "", canCu: "" });
+  const choSua = quyen("CAI_DAT");
+  const loi = loiNguong(n);
+  return (
+    <div>
+      <p className="mo" style={{ marginTop: 0 }}>
+        Dùng khi đối chiếu diện tích ba nguồn (Tổng quan dự án → Đối chiếu diện tích) và khi Soát phương án. <b>Ngưỡng do đơn vị tự đặt</b> theo quy định, quy chế
+        áp dụng — phần mềm không đặt sẵn. Chênh lệch vượt một trong hai ngưỡng thì cảnh báo; để trống cả hai thì liệt kê mọi chênh lệch.
+      </p>
+      <div className="luoi luoi-3">
+        <O nhan="Chênh lệch tối đa (m²)"><OSo className="o-so" value={n.m2} disabled={!choSua} onChange={(v) => setN({ ...n, m2: v })} /></O>
+        <O nhan="Chênh lệch tối đa (%)"><OSo className="o-so" value={n.phanTram} disabled={!choSua} onChange={(v) => setN({ ...n, phanTram: v })} /></O>
+        <O nhan="Căn cứ đặt ngưỡng (bắt buộc)"><input value={n.canCu} disabled={!choSua} placeholder="Văn bản, quy chế của đơn vị" onChange={(e) => setN({ ...n, canCu: e.target.value })} /></O>
+      </div>
+      {loi && <div className="thong-bao thong-bao-vang" style={{ marginTop: 8 }}>{loi}</div>}
+      {nguongLechDt?.luc && <p className="mo chu-nho">Đặt bởi {nguongLechDt.nguoi} lúc {new Date(nguongLechDt.luc).toLocaleString("vi-VN")}</p>}
+      {choSua && <button className="nut nut-chinh" style={{ marginTop: 8 }} disabled={!!loi} onClick={() => void luuNguongLechDt(n)}>Lưu ngưỡng</button>}
+    </div>
   );
 }
 

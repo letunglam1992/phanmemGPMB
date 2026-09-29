@@ -128,12 +128,12 @@ function TheThua(p: {
                   <td>
                     {x.loai === "KHAC" ? <input value={x.donVi} onChange={(e) => sua(x.id, { donVi: e.target.value })} /> : x.loai === "VAT_NUOI" ? (VAT_NUOI_DV[x.loaiVatNuoi]) : x.donVi}
                   </td>
-                  <td>
+                  <td data-lich-su={`taiSan:${x.id}.${x.loai === "CAY" ? "soLuong" : "khoiLuong"}`} data-lich-su-ten={`${x.loai === "CAY" ? "Số lượng" : "Khối lượng"} "${x.ten}"`}>
                     <input className={`o-so ${klVao && kl.loi ? "loi-nhap" : ""}`} value={klVao} title={kl.loi ?? ""} onChange={(e) => sua(x.id, x.loai === "CAY" ? { soLuong: e.target.value } : { khoiLuong: e.target.value })} />
                     {klVao.startsWith("=") && kl.giaTri && <div className="chu-nho mo" style={{ textAlign: "right" }}>= {kl.giaTri.toString().replace(".", ",")}</div>}
                     {klVao && kl.loi && <div className="chu-nho" style={{ color: "var(--do)" }}>{kl.loi}</div>}
                   </td>
-                  <td className="so">
+                  <td className="so" data-lich-su={`taiSan:${x.id}.donGia`} data-lich-su-ten={`Đơn giá "${x.ten}"`}>
                     {x.loai === "KHAC" || x.loai === "NHA_CT" ? <OSo className="o-so" value={x.donGia} onChange={(v) => sua(x.id, { donGia: v })} /> : x.loai === "CAY" ? Number(x.donGia).toLocaleString("vi-VN") : <span className="mo">theo PL V</span>}
                   </td>
                   <td><ThamSo x={x} sua={sua} /></td>
