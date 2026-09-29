@@ -16,7 +16,7 @@ import { KHOA_KY_BAO_CAO } from "./ky-bao-cao";
 import { KHOA_DON_VI } from "./don-vi";
 
 /** Các khóa cài đặt lưu trong kho (đồng bộ với nơi dùng docCaiDat/luuCaiDat). */
-export const KHOA_CAI_DAT = [KHOA_LICH, KHOA_TY_LE_CHAM, KHOA_TU_DONG, KHOA_KY_BAO_CAO, KHOA_DON_VI, "anhNen", KHOA_KHOI_PHUC, "giuLichSu", "nguongLechDt"];
+export const KHOA_CAI_DAT = [KHOA_LICH, KHOA_TY_LE_CHAM, KHOA_TU_DONG, KHOA_KY_BAO_CAO, KHOA_DON_VI, "anhNen", KHOA_KHOI_PHUC, "giuLichSu", "nguongLechDt", "goiChinhSach"];
 
 export interface DuLieuMayDon {
   duAn: DuAn[];

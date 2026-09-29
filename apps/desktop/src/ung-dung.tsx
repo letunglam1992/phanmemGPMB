@@ -15,6 +15,7 @@ import { KHOA_TY_LE_CHAM, type GiaiDoanTyLe } from "./chi-tra";
 import { KHOA_KY_BAO_CAO, type KyBaoCao } from "./ky-bao-cao";
 import { KHOA_DON_VI, type DonVi } from "./don-vi";
 import { KHOA_NGUONG_LECH, loiNguong, type NguongLechDt } from "./doi-chieu-dt";
+import { KHOA_GOI, coBoChinhSach, dangKyGoi, type GoiDaNap } from "./goi-chinh-sach";
 import { KHOA_LICH } from "./sao-luu";
 import { coQuyen, dungMatKhau, taoTaiKhoan, tenHienThi, type NguoiDung, type Quyen, type VaiTro } from "./tai-khoan";
 
@@ -116,6 +117,11 @@ interface NguCanh {
   /** §11.3: ngưỡng lệch diện tích do đơn vị đặt (null = chưa đặt). */
   nguongLechDt: NguongLechDt | null;
   luuNguongLechDt: (n: NguongLechDt | null) => Promise<void>;
+  /** P2-1: gói chính sách đã nạp (ngoài bộ có sẵn). */
+  goiDaNap: GoiDaNap[];
+  napGoi: (g: Omit<GoiDaNap, "napLuc" | "napBoi">) => Promise<boolean>;
+  /** Chuyển dự án sang bộ chính sách khác (bản phương án đã chốt/duyệt giữ bộ cũ). */
+  chuyenBoChinhSach: (duAnId: string, khoa: string, tomTat: string) => Promise<boolean>;
 }
 
 const Ctx = createContext<NguCanh | null>(null);
@@ -176,6 +182,7 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
   const [kyBaoCao, setKyBaoCao] = useState<KyBaoCao[]>([]);
   const [giuLichSu, setGiuLichSu] = useState(0);
   const [nguongLechDt, setNguongLechDt] = useState<NguongLechDt | null>(null);
+  const [goiDaNap, setGoiDaNap] = useState<GoiDaNap[]>([]);
   const dangTuDong = useRef(false);
   const [sai, setSai] = useState<{ lan: number; den: number }>({ lan: 0, den: 0 });
   const nguoiDung = tenHienThi(taiKhoan);
@@ -226,6 +233,9 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
     setKhoaKhoiPhuc((await kho.docCaiDat<KhoaKhoiPhuc>(KHOA_KHOI_PHUC)) ?? null);
     setGiuLichSu((await kho.docCaiDat<{ soNam: number }>("giuLichSu"))?.soNam ?? 0);
     setNguongLechDt((await kho.docCaiDat<NguongLechDt>(KHOA_NGUONG_LECH)) ?? null);
+    const goi = (await kho.docCaiDat<GoiDaNap[]>(KHOA_GOI)) ?? [];
+    dangKyGoi(goi); // trước khi nạp dự án: tính toán dùng đúng bộ chính sách của dự án
+    setGoiDaNap(goi);
     const da = await kho.dsDuAn();
     const hos = (await Promise.all(da.map((d) => kho.dsHo(d.id)))).flat();
     setDsDuAn(da.sort((a, b) => b.taoLuc.localeCompare(a.taoLuc)));
@@ -635,6 +645,35 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
       await ghi(() => kho.luuCaiDat("giuLichSu", { soNam }));
       setGiuLichSu(soNam);
       if (!laKhoMang(kho)) await ghiNhatKy("Đặt thời hạn giữ lịch sử bản ghi", `${soNam} năm`);
+    },
+    goiDaNap,
+    napGoi: async (g) => {
+      if (chan("NAP_CHINH_SACH")) return false;
+      const cu = (await kho.docCaiDat<GoiDaNap[]>(KHOA_GOI)) ?? [];
+      if (cu.some((x) => x.khoa === g.khoa) || coBoChinhSach(g.khoa)) return bao(`Đã có bộ chính sách khóa "${g.khoa}"`, "loi"), false;
+      const moi = { ...g, napLuc: new Date().toISOString(), napBoi: nguoiDung };
+      const ds = [...cu, moi];
+      try {
+        await ghi(() => kho.luuCaiDat(KHOA_GOI, ds));
+      } catch {
+        return false;
+      }
+      dangKyGoi(ds);
+      setGoiDaNap(ds);
+      await ghiNhatKy("Nạp gói chính sách", `${g.khoa} — ${g.ten} (mã ${g.ma}, hiệu lực từ ${g.hieuLucTu}); tệp ${g.tenTep}; SHA-256 ${g.sha256}`);
+      return true;
+    },
+    chuyenBoChinhSach: async (duAnId, khoa, tomTat) => {
+      if (chan("CAI_DAT")) return false;
+      const d = dsDuAn.find((x) => x.id === duAnId);
+      if (!d || !coBoChinhSach(khoa)) return false;
+      try {
+        capNhat({ duAn: [await ghi(() => kho.luuDuAn({ ...d, boChinhSach: khoa }))] });
+      } catch {
+        return false;
+      }
+      await ghiNhatKy("Chuyển bộ chính sách của dự án", `${d.ten}: ${d.boChinhSach} → ${khoa}. ${tomTat}`);
+      return true;
     },
     nguongLechDt,
     luuNguongLechDt: async (n) => {

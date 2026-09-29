@@ -1202,6 +1202,10 @@ async fn luu_cai_dat(State(st): State<St>, h: HeaderMap, Path(khoa): Path<String
     can(&st, &u, "CAI_DAT")?;
     let v = tach(&b)?;
     let c = st.db.lock().unwrap();
+    if khoa == "goiChinhSach" {
+        // P2-1: nạp gói chính sách chỉ quản trị (quyết định cách tính của mọi dự án dùng gói)
+        can(&st, &u, "NAP_CHINH_SACH")?;
+    }
     if khoa == "giuLichSu" {
         // thời hạn giữ lịch sử quyết định dữ liệu bị xóa vĩnh viễn: chỉ quản trị
         can(&st, &u, "KHOI_PHUC_BAN_GHI")?;

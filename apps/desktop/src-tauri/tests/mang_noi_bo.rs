@@ -599,6 +599,12 @@ async fn may_chu_dinh_kem() {
     assert_eq!(m.goi("POST", "/api/lo", Some(&qt), json!({ "xoaHo": ["h2"] })).await.0, 200);
     let (_, ds) = m.goi("GET", "/api/dinh-kem?duAn=da1", Some(&xem), Value::Null).await;
     assert_eq!(ds.as_array().unwrap().len(), 1);
+    // P2-1: nạp gói chính sách chỉ quản trị (lãnh đạo có CAI_DAT nhưng không có NAP_CHINH_SACH)
+    assert_eq!(m.goi("PUT", "/api/nguoi-dung/ld", Some(&qt), tai_khoan("ld", "LANH_DAO", "Matkhau2026")).await.0, 200);
+    let ld = m.dang_nhap("ld", "Matkhau2026").await;
+    assert_eq!(m.goi("PUT", "/api/cai-dat/goiChinhSach", Some(&ld), json!([])).await.0, 403);
+    assert_eq!(m.goi("PUT", "/api/cai-dat/goiChinhSach", Some(&qt), json!([])).await.0, 200);
+    assert_eq!(m.goi("PUT", "/api/cai-dat/lichLamViec", Some(&ld), json!({})).await.0, 200);
     d.handle.shutdown();
     let _ = std::fs::remove_dir_all(&dir);
 }

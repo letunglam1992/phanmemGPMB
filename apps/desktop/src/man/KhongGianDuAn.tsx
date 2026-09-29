@@ -24,6 +24,7 @@ import { RaoLoi } from "../thanh-phan/RaoLoi";
 import { NHOM_PHAP_LY, THU_TU_PHAP_LY, thongKePhapLy, type NhomPhapLy } from "../nguon-goc";
 import { hienSo } from "../so";
 import { CauHinhThuongBanGiao } from "../thanh-phan/CauHinhThuong";
+import { TheBoChinhSachDuAn } from "../thanh-phan/GoiChinhSach";
 import { TheDoiChieuDt } from "../thanh-phan/DoiChieuDt";
 import { TheDuBao } from "../thanh-phan/DuBao";
 import { MAU_MA_MAC_DINH, loiMauMa, maHoTiepTheo, mauMaCua, nhomMaTrung, taoMa } from "../ma-ho";
@@ -222,6 +223,7 @@ function TheThongTin({ duAn, tiep }: { duAn: DuAn; tiep: () => void }) {
           <div className="the-than"><FormDuAn d={d} setD={setD} /></div>
         </div>
         <CauHinhThuongBanGiao d={d} setD={setD} />
+        <TheBoChinhSachDuAn duAn={duAn} />
         <div className="the" style={{ gridColumn: "1" }}>
           <div className="the-dau"><h3>Mẫu mã hồ sơ</h3><span className="mo chu-nho">do đơn vị đặt</span></div>
           <div className="the-than">

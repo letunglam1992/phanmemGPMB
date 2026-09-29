@@ -43,7 +43,7 @@ export interface BanSaoLuu {
   mau: { ma: string; tenTep: string; luc: string; bytes: Uint8Array }[];
   dinhKem: { meta: DinhKem; bytes: Uint8Array }[];
   /** Cài đặt dùng chung (có từ bản ghi lịch làm việc; tệp cũ không có). */
-  caiDat?: { lichLamViec?: unknown; tyLeChamTra?: unknown; kyBaoCao?: unknown; donVi?: unknown; anhNen?: unknown };
+  caiDat?: { lichLamViec?: unknown; tyLeChamTra?: unknown; kyBaoCao?: unknown; donVi?: unknown; anhNen?: unknown; goiChinhSach?: unknown };
 }
 
 export class LoiSaoLuu extends Error {}
@@ -57,7 +57,7 @@ export async function taoBanSaoLuu(kho: Kho, ungDung = "0.1"): Promise<{ bytes: 
   const duAn = await kho.dsDuAn();
   const ho = (await Promise.all(duAn.map((d) => kho.dsHo(d.id)))).flat();
   const zip = new PizZip();
-  const caiDat = { lichLamViec: await kho.docCaiDat(KHOA_LICH), tyLeChamTra: await kho.docCaiDat("tyLeChamTra"), kyBaoCao: await kho.docCaiDat("kyBaoCao"), donVi: await kho.docCaiDat("donVi"), anhNen: await kho.docCaiDat("anhNen") };
+  const caiDat = { lichLamViec: await kho.docCaiDat(KHOA_LICH), tyLeChamTra: await kho.docCaiDat("tyLeChamTra"), kyBaoCao: await kho.docCaiDat("kyBaoCao"), donVi: await kho.docCaiDat("donVi"), anhNen: await kho.docCaiDat("anhNen"), goiChinhSach: await kho.docCaiDat("goiChinhSach") };
   const duLieu = JSON.stringify({ duAn, ho, caiDat });
   zip.file("du-lieu.json", duLieu);
   let soBanDo = 0;
@@ -204,6 +204,12 @@ export async function khoiPhuc(kho: Kho, ban: BanSaoLuu, cheDo: "THAY_THE" | "GO
   if (ban.caiDat?.kyBaoCao) await kho.luuCaiDat("kyBaoCao", ban.caiDat.kyBaoCao);
   if (ban.caiDat?.donVi) await kho.luuCaiDat("donVi", ban.caiDat.donVi);
   if (ban.caiDat?.anhNen) await kho.luuCaiDat("anhNen", ban.caiDat.anhNen);
+  // gói chính sách (P2-1): gộp theo khóa — dự án trong bản sao lưu cần bộ chính sách của nó
+  if (Array.isArray(ban.caiDat?.goiChinhSach) && ban.caiDat.goiChinhSach.length) {
+    const cu = ((await kho.docCaiDat<{ khoa: string }[]>("goiChinhSach")) ?? []);
+    const them = (ban.caiDat.goiChinhSach as { khoa: string }[]).filter((g) => !cu.some((x) => x.khoa === g.khoa));
+    if (them.length) await kho.luuCaiDat("goiChinhSach", [...cu, ...them]);
+  }
 }
 
 const KHOA_LAN_CUOI = "gpmb-sao-luu-lan-cuoi";

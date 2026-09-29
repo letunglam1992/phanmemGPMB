@@ -5,6 +5,7 @@ import { useUngDung } from "../ung-dung";
 import { HopThoai, O } from "./chung";
 import { OSo } from "./OSo";
 import { loiNguong, type NguongLechDt } from "../doi-chieu-dt";
+import { TheGoiChinhSach } from "./GoiChinhSach";
 import type { GiaiDoanTyLe } from "../chi-tra";
 import { LE_DUONG_LICH_CO_DINH, type LichLamViec, type NgayDacBiet } from "../lich-lam-viec";
 import { Chon } from "./Chon";
@@ -19,7 +20,7 @@ const vn = (iso: string) => iso.split("-").reverse().join("/");
 /** Cài đặt chung: lịch ngày nghỉ (VM-25); các thẻ khác truyền qua `them`. */
 export function HopCaiDat({ them }: { them?: { ma: string; ten: string; noiDung: ReactNode }[] }) {
   const { moCaiDat } = useUngDung();
-  const cacThe = [{ ma: "lich", ten: "Lịch ngày nghỉ", noiDung: <TheLich /> }, { ma: "tu-dong", ten: "Tự động sao lưu", noiDung: <TheTuDong /> }, { ma: "cham-tra", ten: "Tiền chậm trả", noiDung: <TheTyLeCham /> }, { ma: "mang", ten: "Mạng nội bộ", noiDung: <TheMangNoiBo /> }, { ma: "luu-tep", ten: "Lưu tệp xuất", noiDung: <TheLuuTep /> }, { ma: "lich-su", ten: "Lịch sử bản ghi", noiDung: <TheLichSu /> }, { ma: "nguong-dt", ten: "Ngưỡng lệch diện tích", noiDung: <TheNguongDt /> }, { ma: "giao-dien", ten: "Giao diện", noiDung: <TheGiaoDien /> }, ...(them ?? [])];
+  const cacThe = [{ ma: "lich", ten: "Lịch ngày nghỉ", noiDung: <TheLich /> }, { ma: "tu-dong", ten: "Tự động sao lưu", noiDung: <TheTuDong /> }, { ma: "cham-tra", ten: "Tiền chậm trả", noiDung: <TheTyLeCham /> }, { ma: "mang", ten: "Mạng nội bộ", noiDung: <TheMangNoiBo /> }, { ma: "luu-tep", ten: "Lưu tệp xuất", noiDung: <TheLuuTep /> }, { ma: "lich-su", ten: "Lịch sử bản ghi", noiDung: <TheLichSu /> }, { ma: "nguong-dt", ten: "Ngưỡng lệch diện tích", noiDung: <TheNguongDt /> }, { ma: "goi-cs", ten: "Gói chính sách", noiDung: <TheGoiChinhSach /> }, { ma: "giao-dien", ten: "Giao diện", noiDung: <TheGiaoDien /> }, ...(them ?? [])];
   const [the, setThe] = useState(cacThe[0]!.ma);
   return (
     <HopThoai tieuDe="Cài đặt chung" dong={() => moCaiDat(false)} rong={920}>

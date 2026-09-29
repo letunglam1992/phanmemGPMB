@@ -16,7 +16,8 @@
     "CAI_DAT",
     "XOA_HAN",
     "XUAT_KHONG_MA_HOA",
-    "KHOI_PHUC_BAN_GHI"
+    "KHOI_PHUC_BAN_GHI",
+    "NAP_CHINH_SACH"
   ],
   "LANH_DAO": [
     "SUA_HO_SO",
