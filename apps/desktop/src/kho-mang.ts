@@ -3,7 +3,7 @@
  * bằng HTTPS ghim vân tay chứng chỉ. Máy chủ kiểm tra lại quyền và quy tắc nghiệp vụ; kho này chỉ
  * chuyển tiếp, giữ phiên bản bản ghi để phát hiện xung đột khi hai người cùng sửa.
  */
-import type { BanLichSu, Kho, KetQuaGhi } from "./kho";
+import type { BanLichSu, DinhKem, Kho, KetQuaGhi } from "./kho";
 import type { PhienBanPA } from "./phuong-an";
 import type { DuAn, Ho } from "./mo-hinh";
 import type { NguoiDung } from "./tai-khoan";
@@ -339,6 +339,7 @@ export function taoKhoMang(ketNoi: KetNoi, gui: GuiYeuCau = guiQuaVo(ketNoi)): K
       const tep = [
         ...(lo.banDo ?? []).map((x) => ({ loai: "banDo", id: x.duAnId, meta: "{}", noiDung: x.bytes ? b64(x.bytes) : null })),
         ...(lo.mau ?? []).map((m) => ({ loai: "mau", id: m.ma, meta: JSON.stringify({ tenTep: m.tenTep ?? `${m.ma}.docx`, luc: m.luc ?? new Date().toISOString() }), noiDung: m.bytes ? b64(m.bytes) : null })),
+        ...(lo.dinhKem ?? []).map((f) => ({ loai: "dinhKem", id: f.meta.id, meta: JSON.stringify(f.meta), noiDung: f.bytes ? b64(f.bytes) : null })),
       ];
       const kq = await guiLo({ xoaTatCa: !!lo.xoaTatCa, ghiDe: !!lo.ghiDe, xoaDuAn: lo.xoaDuAn ?? [], xoaHo: lo.xoaHo ?? [], tep }, ghi, lo.duAn ?? [], lo.ho ?? []);
       for (const id of lo.xoaHo ?? []) for (const l of ["ho", "td", "ct"]) (phienBan.delete(`${l}:${id}`), daDoc.delete(`${l}:${id}`));
@@ -367,6 +368,11 @@ export function taoKhoMang(ketNoi: KetNoi, gui: GuiYeuCau = guiQuaVo(ketNoi)): K
       await goi("DELETE", `/api/tep/mau/${ma(m)}`);
     },
     dsMauTuy: () => dsTep("mau"),
+    dsDinhKem: (duAnId) => json<DinhKem[]>("GET", `/api/dinh-kem?duAn=${ma(duAnId)}`),
+    async docDinhKem(id) {
+      const r = await goi("GET", `/api/tep/dinhKem/${ma(id)}`, { cho404: true });
+      return r.ma === 404 ? null : r.than;
+    },
     dsBanDo: () => dsTep("banDo"),
     async xoaTatCa() {
       await goi("POST", "/api/xoa-tat-ca");

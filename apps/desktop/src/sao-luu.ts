@@ -4,6 +4,7 @@
  *   du-lieu.json    – dự án, hồ sơ hộ
  *   ban-do/<id>.dgn – bản đồ DGN đã nạp theo dự án
  *   mau/<ma>.docx   – mẫu văn bản cán bộ tự chỉnh (+ mau/danh-sach.json)
+ *   dinh-kem/<id>.bin – tệp đính kèm hồ sơ (P2-2, + dinh-kem/danh-sach.json; tệp cũ không có)
  * Tệp chỉ tạo và đọc trên máy; không gửi đi đâu.
  *
  * Phiên bản 2 (P0-5, mã hóa): tệp .gpmb ngoài chỉ gồm
@@ -12,7 +13,7 @@
  * Tệp phiên bản 1 (không mã hóa) vẫn đọc được để không mất bản cũ.
  */
 import PizZip from "pizzip";
-import type { Kho } from "./kho";
+import type { DinhKem, Kho } from "./kho";
 import type { DuAn, Ho } from "./mo-hinh";
 import { LoiMaHoa, giaiMa, maHoa, moTaCachMo, type CachMaHoa, type GoiMaHoa } from "./ma-hoa";
 
@@ -29,6 +30,8 @@ export interface ThongTinSaoLuu {
   soHo: number;
   soBanDo: number;
   soMau: number;
+  /** Số tệp đính kèm (có từ 0.7.0) */
+  soDinhKem?: number;
   bamDuLieu: string;
 }
 
@@ -38,6 +41,7 @@ export interface BanSaoLuu {
   ho: Ho[];
   banDo: Map<string, Uint8Array>;
   mau: { ma: string; tenTep: string; luc: string; bytes: Uint8Array }[];
+  dinhKem: { meta: DinhKem; bytes: Uint8Array }[];
   /** Cài đặt dùng chung (có từ bản ghi lịch làm việc; tệp cũ không có). */
   caiDat?: { lichLamViec?: unknown; tyLeChamTra?: unknown; kyBaoCao?: unknown; donVi?: unknown; anhNen?: unknown };
 }
@@ -73,6 +77,16 @@ export async function taoBanSaoLuu(kho: Kho, ungDung = "0.1"): Promise<{ bytes: 
     }
   }
   zip.file("mau/danh-sach.json", JSON.stringify(dsMau));
+  const dsDk: DinhKem[] = [];
+  for (const d of duAn)
+    for (const m of await kho.dsDinhKem(d.id)) {
+      const b = await kho.docDinhKem(m.id);
+      if (b) {
+        zip.file(`dinh-kem/${m.id}.bin`, b);
+        dsDk.push(m);
+      }
+    }
+  zip.file("dinh-kem/danh-sach.json", JSON.stringify(dsDk));
   const thongTin: ThongTinSaoLuu = {
     dinhDang: DINH_DANG,
     phienBan: PHIEN_BAN_SAO_LUU,
@@ -82,6 +96,7 @@ export async function taoBanSaoLuu(kho: Kho, ungDung = "0.1"): Promise<{ bytes: 
     soHo: ho.length,
     soBanDo,
     soMau: dsMau.length,
+    soDinhKem: dsDk.length,
     bamDuLieu: await sha256(duLieu),
   };
   zip.file("thong-tin.json", JSON.stringify(thongTin, null, 2));
@@ -163,7 +178,13 @@ export async function docBanSaoLuu(bytes: Uint8Array | ArrayBuffer, cach: { matK
   const dsMau = JSON.parse(zip.file("mau/danh-sach.json")?.asText() ?? "[]") as { ma: string; tenTep: string; luc: string }[];
   const mau = dsMau.map((m) => ({ ...m, bytes: zip.file(`mau/${m.ma}.docx`)!.asUint8Array() }));
   if (banDo.size !== thongTin.soBanDo || mau.length !== thongTin.soMau) throw new LoiSaoLuu("Số bản đồ/mẫu văn bản không khớp thông tin sao lưu.");
-  return { thongTin, duAn, ho, banDo, mau, caiDat };
+  const dsDk = JSON.parse(zip.file("dinh-kem/danh-sach.json")?.asText() ?? "[]") as DinhKem[];
+  const dinhKem = dsDk.flatMap((meta) => {
+    const f = zip.file(`dinh-kem/${meta.id}.bin`);
+    return f ? [{ meta, bytes: f.asUint8Array() }] : [];
+  });
+  if (thongTin.soDinhKem !== undefined && dinhKem.length !== thongTin.soDinhKem) throw new LoiSaoLuu("Số tệp đính kèm không khớp thông tin sao lưu.");
+  return { thongTin, duAn, ho, banDo, mau, caiDat, dinhKem };
 }
 
 /** Khôi phục: THAY_THE xóa dữ liệu hiện có rồi nạp; GOP ghi đè bản ghi cùng mã, giữ bản ghi khác. */
@@ -176,6 +197,7 @@ export async function khoiPhuc(kho: Kho, ban: BanSaoLuu, cheDo: "THAY_THE" | "GO
     ho: ban.ho,
     banDo: [...ban.banDo].map(([duAnId, bytes]) => ({ duAnId, bytes })),
     mau: ban.mau.map((m) => ({ ma: m.ma, bytes: m.bytes, tenTep: m.tenTep, luc: m.luc })),
+    dinhKem: (ban.dinhKem ?? []).map((f) => ({ meta: f.meta, bytes: f.bytes })),
   });
   if (ban.caiDat?.lichLamViec) await kho.luuCaiDat(KHOA_LICH, ban.caiDat.lichLamViec);
   if (ban.caiDat?.tyLeChamTra) await kho.luuCaiDat("tyLeChamTra", ban.caiDat.tyLeChamTra);

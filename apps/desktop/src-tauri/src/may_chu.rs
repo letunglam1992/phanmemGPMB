@@ -1012,7 +1012,7 @@ async fn ghi_lo(State(st): State<St>, h: HeaderMap, b: Bytes) -> Kq<Json<Value>>
         kiem_tra_xoa_han(&tx, &st, &u, "duAn", id)?;
         luu_lich_su_du_an(&tx, id, "Xóa hẳn", &u.ten)?;
         tx.execute("DELETE FROM ban_ghi WHERE (loai = 'duAn' AND id = ?1) OR (loai IN ('ho', 'pa', 'td', 'ct') AND du_an_id = ?1)", [id]).map_err(loi_db)?;
-        tx.execute("DELETE FROM tep WHERE loai = 'banDo' AND id = ?1", [id]).map_err(loi_db)?;
+        tx.execute("DELETE FROM tep WHERE (loai = 'banDo' AND id = ?1) OR (loai = 'dinhKem' AND json_extract(meta, '$.duAnId') = ?1)", [id]).map_err(loi_db)?;
         MayChu::ghi_thay_doi(&tx, "duAn", id, id, &u.ten).map_err(loi_db)?;
     }
     for id in xoa_ho.iter().filter_map(|x| x.as_str()) {
@@ -1022,6 +1022,7 @@ async fn ghi_lo(State(st): State<St>, h: HeaderMap, b: Bytes) -> Kq<Json<Value>>
             luu_lich_su(&tx, l, id, "Xóa hẳn", &u.ten)?;
         }
         tx.execute("DELETE FROM ban_ghi WHERE loai IN ('ho', 'td', 'ct') AND id = ?1", [id]).map_err(loi_db)?;
+        tx.execute("DELETE FROM tep WHERE loai = 'dinhKem' AND json_extract(meta, '$.hoId') = ?1", [id]).map_err(loi_db)?;
         MayChu::ghi_thay_doi(&tx, "ho", id, &du_an.unwrap_or_default(), &u.ten).map_err(loi_db)?;
     }
     let mut phien_ban = Vec::with_capacity(ghi.len());
@@ -1045,6 +1046,7 @@ async fn ghi_lo(State(st): State<St>, h: HeaderMap, b: Bytes) -> Kq<Json<Value>>
             Some(b64) => {
                 let noi_dung = base64::engine::general_purpose::STANDARD.decode(b64).map_err(|e| loi(StatusCode::BAD_REQUEST, format!("Tệp {loai}/{id} không đúng dạng: {e}")))?;
                 let meta = t["meta"].as_str().unwrap_or("{}");
+                kiem_tep(loai, meta, noi_dung.len())?;
                 tx.execute("INSERT OR REPLACE INTO tep(loai, id, meta, noi_dung) VALUES (?1, ?2, ?3, ?4)", params![loai, id, meta, noi_dung]).map_err(loi_db)?;
             }
         }
@@ -1069,7 +1071,7 @@ async fn xoa_du_an(State(st): State<St>, h: HeaderMap, Path(id): Path<String>) -
     let tx = c.transaction().map_err(loi_db)?;
     luu_lich_su_du_an(&tx, &id, "Xóa hẳn", &u.ten)?;
     tx.execute("DELETE FROM ban_ghi WHERE (loai = 'duAn' AND id = ?1) OR (loai IN ('ho', 'pa', 'td', 'ct') AND du_an_id = ?1)", [&id]).map_err(loi_db)?;
-    tx.execute("DELETE FROM tep WHERE loai = 'banDo' AND id = ?1", [&id]).map_err(loi_db)?;
+    tx.execute("DELETE FROM tep WHERE (loai = 'banDo' AND id = ?1) OR (loai = 'dinhKem' AND json_extract(meta, '$.duAnId') = ?1)", [&id]).map_err(loi_db)?;
     MayChu::ghi_thay_doi(&tx, "duAn", &id, &id, &u.ten).map_err(loi_db)?;
     tx.commit().map_err(loi_db)?;
     Ok(Json(json!({})))
@@ -1084,14 +1086,47 @@ async fn xoa_ho(State(st): State<St>, h: HeaderMap, Path(id): Path<String>) -> K
         luu_lich_su(&c, l, &id, "Xóa hẳn", &u.ten)?;
     }
     c.execute("DELETE FROM ban_ghi WHERE loai IN ('ho', 'td', 'ct') AND id = ?1", [&id]).map_err(loi_db)?;
+    c.execute("DELETE FROM tep WHERE loai = 'dinhKem' AND json_extract(meta, '$.hoId') = ?1", [&id]).map_err(loi_db)?;
     MayChu::ghi_thay_doi(&c, "ho", &id, &du_an.unwrap_or_default(), &u.ten).map_err(loi_db)?;
     Ok(Json(json!({})))
+}
+
+/// Tệp đính kèm hồ sơ (P2-2): tối đa 20 MB mỗi tệp; thông tin kèm theo phải có hồ sơ, dự án. Trả mã dự án.
+pub const TOI_DA_DINH_KEM: usize = 20 * 1024 * 1024;
+fn kiem_tep(loai: &str, meta: &str, co: usize) -> Kq<String> {
+    if loai != "dinhKem" {
+        return Ok(String::new());
+    }
+    if co > TOI_DA_DINH_KEM {
+        return Err(loi(StatusCode::PAYLOAD_TOO_LARGE, "Tệp đính kèm tối đa 20 MB"));
+    }
+    let m: Value = serde_json::from_str(meta).map_err(|_| loi(StatusCode::BAD_REQUEST, "Thông tin tệp đính kèm không đúng dạng"))?;
+    match (m["hoId"].as_str(), m["duAnId"].as_str()) {
+        (Some(h), Some(d)) if !h.is_empty() && !d.is_empty() => Ok(d.to_string()),
+        _ => Err(loi(StatusCode::BAD_REQUEST, "Tệp đính kèm thiếu hồ sơ, dự án")),
+    }
+}
+
+#[derive(serde::Deserialize)]
+struct LocDinhKem {
+    #[serde(rename = "duAn")]
+    du_an: String,
+}
+
+/// Danh sách tệp đính kèm (chỉ thông tin, không nội dung) của một dự án.
+async fn ds_dinh_kem(State(st): State<St>, h: HeaderMap, Query(l): Query<LocDinhKem>) -> Kq<Json<Value>> {
+    xac_thuc(&st, &h)?;
+    let c = st.db.lock().unwrap();
+    let mut q = c.prepare("SELECT meta FROM tep WHERE loai = 'dinhKem' AND json_extract(meta, '$.duAnId') = ?1").map_err(loi_db)?;
+    let ds: Vec<Value> = q.query_map([&l.du_an], |r| r.get::<_, String>(0)).map_err(loi_db)?.filter_map(|x| x.ok().and_then(|s| serde_json::from_str(&s).ok())).collect();
+    Ok(Json(Value::Array(ds)))
 }
 
 fn loai_tep(loai: &str) -> Kq<&'static str> {
     match loai {
         "banDo" => Ok("SUA_HO_SO"),
         "mau" => Ok("THAY_MAU"),
+        "dinhKem" => Ok("SUA_HO_SO"),
         _ => Err(loi(StatusCode::NOT_FOUND, "Không có loại tệp này")),
     }
 }
@@ -1120,9 +1155,10 @@ async fn luu_tep(State(st): State<St>, h: HeaderMap, Path((loai, id)): Path<(Str
     let u = xac_thuc(&st, &h)?;
     can(&st, &u, loai_tep(&loai)?)?;
     let meta = h.get("x-meta").and_then(|v| v.to_str().ok()).map(giai_ma_url).unwrap_or_else(|| "{}".into());
+    let du_an = kiem_tep(&loai, &meta, b.len())?;
     let c = st.db.lock().unwrap();
     c.execute("INSERT OR REPLACE INTO tep(loai, id, meta, noi_dung) VALUES (?1, ?2, ?3, ?4)", params![loai, id, meta, b.to_vec()]).map_err(loi_db)?;
-    MayChu::ghi_thay_doi(&c, &loai, &id, if loai == "banDo" { &id } else { "" }, &u.ten).map_err(loi_db)?;
+    MayChu::ghi_thay_doi(&c, &loai, &id, if loai == "banDo" { &id } else { &du_an }, &u.ten).map_err(loi_db)?;
     Ok(Json(json!({})))
 }
 
@@ -1428,6 +1464,7 @@ pub fn dinh_tuyen(st: St) -> Router {
         .route("/api/doc", post(doc_nhieu))
         .route("/api/pa", get(api_ds_pa))
         .route("/api/ban-ghi", get(ds_ban_ghi_con))
+        .route("/api/dinh-kem", get(ds_dinh_kem))
         .route("/api/lich-su", get(lich_su))
         .route("/api/lich-su/da-xoa", get(lich_su_da_xoa))
         .route("/api/lich-su/khoi-phuc", post(khoi_phuc_ban_ghi))

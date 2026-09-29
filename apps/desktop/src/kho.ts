@@ -24,7 +24,25 @@ export interface LoGhi {
   mau?: { ma: string; bytes: Uint8Array | null; tenTep?: string; luc?: string }[];
   /** Lý do ghi vào lịch sử cho bản cũ bị thay (mặc định "Sửa"). */
   lyDoLichSu?: string;
+  /** Tệp đính kèm hồ sơ (P2-2); bytes null = xóa. */
+  dinhKem?: { meta: DinhKem; bytes: Uint8Array | null }[];
 }
+
+/** Thông tin tệp đính kèm hồ sơ (P2-2) — biên bản ký, QĐ bản quét, GCN… theo hộ và bước. */
+export interface DinhKem {
+  id: string;
+  hoId: string;
+  duAnId: string;
+  /** Mã bước (1–16) hoặc "" = chung của hồ sơ */
+  buoc: string;
+  ten: string;
+  loai: string;
+  kichThuoc: number;
+  luc: string;
+  nguoi: string;
+  ghiChu?: string;
+}
+export const TOI_DA_DINH_KEM = 20 * 1024 * 1024;
 
 /** Bản ghi đã lưu (máy chủ có thể ghi thêm người gửi/duyệt, dấu xóa…) — giao diện cập nhật trạng thái bằng bản này (P1-2). */
 export interface KetQuaGhi {
@@ -64,6 +82,9 @@ export interface Kho {
   khoiPhucBanLichSu(stt: number, lyDo: string, nguoi: string): Promise<Ho>;
   /** Người đang đăng nhập — ghi vào lịch sử ở kho cục bộ (máy chủ lấy theo phiên). */
   datNguoi(ten: string): void;
+  /** Tệp đính kèm của dự án (chỉ thông tin). */
+  dsDinhKem(duAnId: string): Promise<DinhKem[]>;
+  docDinhKem(id: string): Promise<Uint8Array | null>;
   xoaHo(id: string): Promise<void>;
   luuBanDo(duAnId: string, bytes: Uint8Array): Promise<void>;
   docBanDo(duAnId: string): Promise<Uint8Array | null>;
@@ -88,7 +109,7 @@ export interface Kho {
 }
 
 const TEN_CSDL = "gpmb-sonla";
-const PHIEN_BAN = 5;
+const PHIEN_BAN = 6;
 
 function mo(): Promise<IDBDatabase> {
   return new Promise((ok, loi) => {
@@ -106,6 +127,7 @@ function mo(): Promise<IDBDatabase> {
         db.createObjectStore("nhatKyHT", { keyPath: "stt" });
       }
       if (e.oldVersion < 4) db.createObjectStore("caiDat");
+      if (e.oldVersion < 6) db.createObjectStore("dinhKem", { keyPath: "meta.id" }).createIndex("duAnId", "meta.duAnId");
       if (e.oldVersion < 5) {
         const ls = db.createObjectStore("lichSu", { keyPath: "stt", autoIncrement: true });
         ls.createIndex("banGhi", ["loai", "id"]);
@@ -167,7 +189,7 @@ export function taoKhoIndexedDb(): Kho {
     },
     async ghiLo(lo) {
       // Một giao dịch IndexedDB trên mọi kho liên quan; lỗi bất kỳ → abort, không ghi gì
-      const t = (await db).transaction(["duAn", "ho", "banDo", "mauVanBan", "lichSu"], "readwrite");
+      const t = (await db).transaction(["duAn", "ho", "banDo", "mauVanBan", "lichSu", "dinhKem"], "readwrite");
       const xong = new Promise<void>((ok, loi) => {
         t.oncomplete = () => ok();
         t.onerror = () => loi(t.error ?? new Error("Lỗi ghi dữ liệu"));
@@ -183,17 +205,20 @@ export function taoKhoIndexedDb(): Kho {
         if (lo.xoaTatCa) {
           for (const d of (await yc(s("duAn").getAll())) as DuAn[]) ghiLs("duAn", d, "Khôi phục kiểu thay thế toàn bộ");
           for (const h of (await yc(s("ho").getAll())) as Ho[]) ghiLs("ho", h, "Khôi phục kiểu thay thế toàn bộ");
-          for (const n of ["duAn", "ho", "banDo", "mauVanBan"]) s(n).clear();
+          for (const n of ["duAn", "ho", "banDo", "mauVanBan", "dinhKem"]) s(n).clear();
         }
         for (const id of lo.xoaDuAn ?? []) {
           ghiLs("duAn", (await yc(s("duAn").get(id))) as DuAn | undefined, "Xóa hẳn");
           s("duAn").delete(id);
           for (const h of (await yc(s("ho").index("duAnId").getAll(id))) as Ho[]) (ghiLs("ho", h, "Xóa hẳn"), s("ho").delete(h.id));
           s("banDo").delete(id);
+          for (const k of await yc(s("dinhKem").index("duAnId").getAllKeys(id))) s("dinhKem").delete(k);
         }
         for (const id of lo.xoaHo ?? []) {
-          ghiLs("ho", (await yc(s("ho").get(id))) as Ho | undefined, "Xóa hẳn");
+          const cu = (await yc(s("ho").get(id))) as Ho | undefined;
+          ghiLs("ho", cu, "Xóa hẳn");
           s("ho").delete(id);
+          if (cu) for (const x of (await yc(s("dinhKem").index("duAnId").getAll(cu.duAnId))) as { meta: DinhKem }[]) if (x.meta.hoId === id) s("dinhKem").delete(x.meta.id);
         }
         const lyDo = lo.lyDoLichSu ?? (lo.ghiDe ? "Ghi đè khi khôi phục dữ liệu" : "Sửa");
         for (const d of lo.duAn ?? []) {
@@ -210,6 +235,10 @@ export function taoKhoIndexedDb(): Kho {
         }
         for (const b of lo.banDo ?? []) b.bytes ? s("banDo").put(b.bytes, b.duAnId) : s("banDo").delete(b.duAnId);
         for (const m of lo.mau ?? []) m.bytes ? s("mauVanBan").put({ bytes: m.bytes, tenTep: m.tenTep ?? `${m.ma}.docx`, luc: m.luc ?? new Date().toISOString() }, m.ma) : s("mauVanBan").delete(m.ma);
+        for (const f of lo.dinhKem ?? []) {
+          if (f.bytes && f.bytes.length > TOI_DA_DINH_KEM) throw new Error("Tệp đính kèm tối đa 20 MB");
+          f.bytes ? s("dinhKem").put({ meta: f.meta, bytes: f.bytes }) : s("dinhKem").delete(f.meta.id);
+        }
       } catch (e) {
         try {
           t.abort();
@@ -229,6 +258,12 @@ export function taoKhoIndexedDb(): Kho {
     },
     async xoaHo(id) {
       await this.ghiLo({ xoaHo: [id] });
+    },
+    async dsDinhKem(duAnId) {
+      return ((await yc((await store("dinhKem")).index("duAnId").getAll(duAnId))) as { meta: DinhKem }[]).map((x) => x.meta);
+    },
+    async docDinhKem(id) {
+      return ((await yc((await store("dinhKem")).get(id))) as { bytes: Uint8Array } | undefined)?.bytes ?? null;
     },
     async lichSu(loai, id) {
       const ds = (await yc((await store("lichSu")).index("banGhi").getAll([loai, id]))) as BanLichSu[];
@@ -324,6 +359,7 @@ export function taoKhoBoNho(tuyChon: { thuLoi?: (buoc: number) => void } = {}): 
   const nguoi = new Map<string, NguoiDung>();
   const nk: DongNhatKy[] = [];
   const caiDat = new Map<string, unknown>();
+  const dinhKem = new Map<string, { meta: DinhKem; bytes: Uint8Array }>();
   let lichSu: BanLichSu[] = [];
   let sttLs = 0;
   let ai = "";
@@ -345,7 +381,7 @@ export function taoKhoBoNho(tuyChon: { thuLoi?: (buoc: number) => void } = {}): 
     },
     async ghiLo(lo) {
       // Sao lưu trạng thái, áp dụng; lỗi → trả lại nguyên trạng
-      const truoc = [new Map(duAn), new Map(ho), new Map(banDo), new Map(mau)] as const;
+      const truoc = [new Map(duAn), new Map(ho), new Map(banDo), new Map(mau), new Map(dinhKem)] as const;
       const lsTruoc = [...lichSu];
       const lyDo = lo.lyDoLichSu ?? (lo.ghiDe ? "Ghi đè khi khôi phục dữ liệu" : "Sửa");
       let buoc = 0;
@@ -359,6 +395,7 @@ export function taoKhoBoNho(tuyChon: { thuLoi?: (buoc: number) => void } = {}): 
           ho.clear();
           banDo.clear();
           mau.clear();
+          dinhKem.clear();
         }
         for (const id of lo.xoaDuAn ?? []) {
           b();
@@ -384,8 +421,16 @@ export function taoKhoBoNho(tuyChon: { thuLoi?: (buoc: number) => void } = {}): 
         }
         for (const x of lo.banDo ?? []) (b(), x.bytes ? banDo.set(x.duAnId, x.bytes) : banDo.delete(x.duAnId));
         for (const m of lo.mau ?? []) (b(), m.bytes ? mau.set(m.ma, { bytes: m.bytes, tenTep: m.tenTep ?? `${m.ma}.docx`, luc: m.luc ?? new Date().toISOString() }) : mau.delete(m.ma));
+        for (const f of lo.dinhKem ?? []) {
+          b();
+          if (f.bytes && f.bytes.length > TOI_DA_DINH_KEM) throw new Error("Tệp đính kèm tối đa 20 MB");
+          if (f.bytes) dinhKem.set(f.meta.id, { meta: structuredClone(f.meta), bytes: f.bytes });
+          else dinhKem.delete(f.meta.id);
+        }
+        for (const id of lo.xoaHo ?? []) for (const [k, v] of dinhKem) if (v.meta.hoId === id) dinhKem.delete(k);
+        for (const id of lo.xoaDuAn ?? []) for (const [k, v] of dinhKem) if (v.meta.duAnId === id) dinhKem.delete(k);
       } catch (e) {
-        for (const [dich, goc] of [[duAn, truoc[0]], [ho, truoc[1]], [banDo, truoc[2]], [mau, truoc[3]]] as [Map<string, unknown>, Map<string, unknown>][]) {
+        for (const [dich, goc] of [[duAn, truoc[0]], [ho, truoc[1]], [banDo, truoc[2]], [mau, truoc[3]], [dinhKem, truoc[4]]] as [Map<string, unknown>, Map<string, unknown>][]) {
           dich.clear();
           for (const [k, v] of goc) dich.set(k, v);
         }
@@ -402,6 +447,12 @@ export function taoKhoBoNho(tuyChon: { thuLoi?: (buoc: number) => void } = {}): 
     },
     async xoaHo(id) {
       await this.ghiLo({ xoaHo: [id] });
+    },
+    async dsDinhKem(duAnId) {
+      return [...dinhKem.values()].filter((x) => x.meta.duAnId === duAnId).map((x) => structuredClone(x.meta));
+    },
+    async docDinhKem(id) {
+      return dinhKem.get(id)?.bytes ?? null;
     },
     async lichSu(loai, id) {
       const soNamGiu = (caiDat.get("giuLichSu") as { soNam?: number } | undefined)?.soNam ?? 0;

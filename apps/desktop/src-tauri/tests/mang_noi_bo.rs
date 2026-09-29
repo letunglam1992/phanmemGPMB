@@ -562,3 +562,43 @@ async fn may_don_trong_tien_trinh() {
     d.handle.shutdown();
     std::fs::remove_dir_all(&dir).ok();
 }
+
+/// P2-2: tệp đính kèm hồ sơ trên máy chủ — cần hồ sơ, dự án; tối đa 20 MB; liệt kê theo dự án; xóa hẳn hộ xóa tệp của hộ.
+#[tokio::test(flavor = "multi_thread")]
+async fn may_chu_dinh_kem() {
+    use base64::Engine;
+    let dir = std::env::temp_dir().join(format!("gpmb-may-chu-dk-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let cong = cong_trong();
+    let d = may_chu::khoi_dong(dir.clone(), cong).await.unwrap();
+    let m = May { dia_chi: format!("127.0.0.1:{cong}"), van_tay: d.van_tay.clone() };
+    let qt = m.goi("POST", "/api/khoi-tao", None, tai_khoan("quantri", "QUAN_TRI", "Gpmb2026qt")).await.1["token"].as_str().unwrap().to_string();
+    assert_eq!(m.goi("PUT", "/api/nguoi-dung/xem1", Some(&qt), tai_khoan("xem1", "XEM", "Matkhau2026")).await.0, 200);
+    let xem = m.dang_nhap("xem1", "Matkhau2026").await;
+    let tep = |id: &str, ho: &str, n: usize| {
+        let meta = json!({ "id": id, "hoId": ho, "duAnId": "da1", "buoc": "4", "ten": format!("{id}.pdf"), "loai": "application/pdf", "kichThuoc": n, "luc": "x", "nguoi": "qt" }).to_string();
+        json!({ "loai": "dinhKem", "id": id, "meta": meta, "noiDung": base64::engine::general_purpose::STANDARD.encode(vec![7u8; n]) })
+    };
+    assert_eq!(m.goi("POST", "/api/lo", Some(&qt), json!({ "ghi": [{ "loai": "duAn", "duLieu": { "id": "da1", "ten": "D" } }, { "loai": "ho", "duLieu": ho_mau("h1", "H1") }, { "loai": "ho", "duLieu": ho_mau("h2", "H2") }] })).await.0, 200);
+    let (ma, v) = m.goi("POST", "/api/lo", Some(&qt), json!({ "tep": [tep("a", "h1", 10), tep("b", "h2", 10)] })).await;
+    assert_eq!(ma, 200, "{v}");
+    // chỉ xem: không đính kèm được; thiếu hồ sơ → 400; quá 20 MB → 413
+    assert_eq!(m.goi("POST", "/api/lo", Some(&xem), json!({ "tep": [tep("c", "h1", 1)] })).await.0, 403);
+    let mut sai = tep("c", "", 1);
+    sai["meta"] = json!(json!({ "id": "c", "duAnId": "da1" }).to_string());
+    assert_eq!(m.goi("POST", "/api/lo", Some(&qt), json!({ "tep": [sai] })).await.0, 400);
+    assert_eq!(m.goi("POST", "/api/lo", Some(&qt), json!({ "tep": [tep("lon", "h1", may_chu::TOI_DA_DINH_KEM + 1)] })).await.0, 413);
+    let (_, ds) = m.goi("GET", "/api/dinh-kem?duAn=da1", Some(&xem), Value::Null).await;
+    let mut ids: Vec<String> = ds.as_array().unwrap().iter().map(|x| x["id"].as_str().unwrap().to_string()).collect();
+    ids.sort();
+    assert_eq!(ids, vec!["a", "b"]);
+    // xóa hẳn hộ h2 (đã trong thùng rác đủ hạn) → tệp của h2 bị xóa, tệp h1 còn
+    let mut h2 = ho_mau("h2", "H2");
+    h2["daXoa"] = json!({ "luc": "2000-01-01T00:00:00.000Z", "nguoi": "qt", "lyDo": "thử" });
+    assert_eq!(m.goi("POST", "/api/lo", Some(&qt), json!({ "ghiDe": true, "ghi": [{ "loai": "ho", "duLieu": h2 }] })).await.0, 200);
+    assert_eq!(m.goi("POST", "/api/lo", Some(&qt), json!({ "xoaHo": ["h2"] })).await.0, 200);
+    let (_, ds) = m.goi("GET", "/api/dinh-kem?duAn=da1", Some(&xem), Value::Null).await;
+    assert_eq!(ds.as_array().unwrap().len(), 1);
+    d.handle.shutdown();
+    let _ = std::fs::remove_dir_all(&dir);
+}

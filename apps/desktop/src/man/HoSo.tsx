@@ -1,6 +1,7 @@
 import { useRef, Fragment, useEffect, useMemo, useState } from "react";
 import { TabCuon } from "../thanh-phan/TabCuon";
 import { HopLichSuO, LichSuHo } from "../thanh-phan/LichSuHo";
+import { DinhKemHo } from "../thanh-phan/DinhKemHo";
 import { kiemTraDuyetBuoc } from "../tai-khoan";
 import { hanCuaBuoc, tinhHanBuoc } from "../han-buoc";
 import { TT_GPMB, homNayIso, trangThaiHo, type TrangThaiGpmb } from "../trang-thai";
@@ -36,6 +37,7 @@ const CAC_TAB = [
   ["tien-do", "Tiến độ", "dongHo"],
   ["chi-tra", "Chi trả", "theNganHang"],
   ["van-ban", "Văn bản", "vanBan"],
+  ["dinh-kem", "Đính kèm", "saoChep"],
   ["nhat-ky", "Nhật ký", "nhatKy"],
 ] as const;
 
@@ -88,7 +90,7 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
     setDaKhoiPhuc(false);
   };
   /** Thẻ kế tiếp theo trình tự nhập liệu (bỏ Nhật ký) — "Lưu và tiếp" lưu rồi chuyển sang. */
-  const THU_TU = CAC_TAB.map(([ma]) => ma).filter((ma) => ma !== "nhat-ky");
+  const THU_TU = CAC_TAB.map(([ma]) => ma).filter((ma) => ma !== "nhat-ky" && ma !== "dinh-kem");
   const ke = CAC_TAB.find(([ma]) => ma === THU_TU[THU_TU.indexOf(tab as (typeof THU_TU)[number]) + 1]);
   const luuTiep = async () => {
     if (daSua) await luu();
@@ -184,6 +186,7 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
               <TheBanGiao h={h} duAn={duAn} kq={kq} luuNgay={async (moi, nk) => { setH(moi); await luuHo(moi, nk); xoaBanNhap(hoId); setDaSua(false); }} moThongTinDuAn={() => di({ ten: "du-an", duAnId, tab: "thong-tin" })} />
             </>
           )}
+          {tab === "dinh-kem" && <DinhKemHo h={h} duAn={duAn} />}
           {tab === "van-ban" && <TabVanBanHo h={h} duAn={duAn} kq={kq} hieuLuc={hieuLuc} soan={(ma) => di({ ten: "van-ban", duAnId, ma, hoId: h.id })} />}
           {tab === "nhat-ky" && (
             <div className="the">

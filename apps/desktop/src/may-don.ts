@@ -21,7 +21,7 @@ export const KHOA_CAI_DAT = [KHOA_LICH, KHOA_TY_LE_CHAM, KHOA_TU_DONG, KHOA_KY_B
 export interface DuLieuMayDon {
   duAn: DuAn[];
   ho: Ho[];
-  tep: { loai: "banDo" | "mau"; id: string; meta: string; noiDung: string }[];
+  tep: { loai: "banDo" | "mau" | "dinhKem"; id: string; meta: string; noiDung: string }[];
   caiDat: { khoa: string; giaTri: unknown }[];
   nguoiDung: NguoiDung[];
   nhatKy: DongNhatKy[];
@@ -47,6 +47,11 @@ export async function docToanBo(kho: Kho, khoaCaiDat = KHOA_CAI_DAT): Promise<Du
     const m = await kho.docMau(ma);
     if (m) tep.push({ loai: "mau", id: ma, meta: JSON.stringify({ tenTep: m.tenTep, luc: m.luc }), noiDung: b64(m.bytes) });
   }
+  for (const d of duAn)
+    for (const m of await kho.dsDinhKem(d.id)) {
+      const b = await kho.docDinhKem(m.id);
+      if (b) tep.push({ loai: "dinhKem", id: m.id, meta: JSON.stringify(m), noiDung: b64(b) });
+    }
   const caiDat: DuLieuMayDon["caiDat"] = [];
   for (const k of khoaCaiDat) {
     const v = await kho.docCaiDat<unknown>(k);
@@ -58,7 +63,12 @@ export async function docToanBo(kho: Kho, khoaCaiDat = KHOA_CAI_DAT): Promise<Du
 /** Dựng kho bộ nhớ từ dữ liệu xuất (để dùng lại các chức năng sao lưu / đưa lên máy chủ). */
 export async function khoTuDuLieu(d: DuLieuMayDon): Promise<Kho> {
   const k = taoKhoBoNho();
-  await k.ghiLo({ duAn: d.duAn, ho: d.ho, banDo: d.tep.filter((t) => t.loai === "banDo").map((t) => ({ duAnId: t.id, bytes: tuB64(t.noiDung) })) });
+  await k.ghiLo({
+    duAn: d.duAn,
+    ho: d.ho,
+    banDo: d.tep.filter((t) => t.loai === "banDo").map((t) => ({ duAnId: t.id, bytes: tuB64(t.noiDung) })),
+    dinhKem: d.tep.filter((t) => t.loai === "dinhKem").map((t) => ({ meta: JSON.parse(t.meta) as import("./kho").DinhKem, bytes: tuB64(t.noiDung) })),
+  });
   for (const t of d.tep.filter((x) => x.loai === "mau")) {
     const m = JSON.parse(t.meta || "{}") as { tenTep?: string };
     await k.luuMau(t.id, tuB64(t.noiDung), m.tenTep ?? `${t.id}.docx`);
