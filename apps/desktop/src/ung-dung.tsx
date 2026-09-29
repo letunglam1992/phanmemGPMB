@@ -63,6 +63,8 @@ interface NguCanh {
   luuHo: (h: Ho, nhatKy?: string) => Promise<void>;
   /** Lưu nhiều hồ sơ (cập nhật hàng loạt), tải lại một lần; trả về số hồ sơ lưu được và lỗi từng hồ sơ. */
   luuNhieuHo: (ds: { h: Ho; nhatKy: string }[]) => Promise<{ daLuu: number; loi: string[] }>;
+  /** Ghi dự án và các hồ sơ hộ trong một giao dịch (P3-3 giao lô TĐC, bốc thăm); false nếu bị chặn/lỗi (đã báo). */
+  ghiDuAnVaHo: (d: DuAn, ds: { h: Ho; nhatKy: string }[], nhatKyDuAn?: [string, string]) => Promise<boolean>;
   /** Xóa mềm (vào thùng rác) — chặn khi có phương án đã chốt/duyệt, chi trả. Trả false nếu bị chặn/lỗi. */
   xoaHo: (id: string, lyDo: string) => Promise<boolean>;
   xoaDuAn: (id: string, lyDo: string) => Promise<boolean>;
@@ -454,6 +456,19 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
         await taiLai();
         return { daLuu: 0, loi: [`Chưa cập nhật hộ nào (cả lô bị hủy): ${(e as Error).message}. Dữ liệu đã được tải lại — thực hiện lại thao tác.`] };
       }
+    },
+    ghiDuAnVaHo: async (d, ds, nk) => {
+      if (chan("SUA_HO_SO")) return false;
+      const luc = new Date().toISOString();
+      try {
+        const r = await ghi(() => kho.ghiLo({ duAn: [d], ho: ds.map(({ h, nhatKy }) => ({ ...h, nhatKy: [...h.nhatKy, { luc, nguoi: nguoiDung, noiDung: nhatKy }] })) }));
+        capNhat({ duAn: r.duAn, ho: r.ho });
+      } catch (e) {
+        if (!(e instanceof DaBaoLoi)) bao(`Không lưu được: ${(e as Error).message}`, "loi");
+        return false;
+      }
+      if (nk) await ghiNhatKy(nk[0], nk[1]);
+      return true;
     },
     xoaHo: async (id, lyDo) => {
       if (chan("SUA_HO_SO")) return false;

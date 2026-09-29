@@ -729,16 +729,21 @@ function TheTaiDinhCu({ h, doi, duAn, kq }: Tab & { duAn: DuAn; kq: KetQuaHo }) 
       {t && (
         <div className="the-than luoi" style={{ gap: 12 }}>
           {!cs.taiDinhCu && <div className="thong-bao thong-bao-vang" style={{ marginBottom: 0 }}>Bộ chính sách {cs.ma} chưa có quy định hỗ trợ tái định cư — chỉ nhập được khoản khác kèm căn cứ.</div>}
+          {t.loId && (
+            <div className="thong-bao thong-bao-xanh chu-nho" style={{ marginBottom: 0 }}>
+              Lô, căn được giao từ quỹ tái định cư của dự án {(() => { const l = duAn.quyTdc?.lo.find((x) => x.id === t.loId); return l ? <b>{l.khu} – lô {l.soLo}{l.giao ? ` (${l.giao.canCu})` : ""}</b> : <b className="chu-do">(lô không còn trong quỹ)</b>; })()}. Khu, lô, diện tích, giá lấy theo quỹ — đổi lô hoặc thu hồi giao ở thẻ “Tái định cư” của dự án.
+            </div>
+          )}
           <div className="luoi luoi-3">
             <O nhan="Hình thức bố trí tái định cư" style={{ gridColumn: "span 2" }}>
               <Chon value={t.hinhThuc} onChange={(e) => dat({ hinhThuc: e.target.value as HinhThucTdc })}>
                 {Object.entries(TEN_HINH_THUC_TDC).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
               </Chon>
             </O>
-            <O nhan="Khu, điểm tái định cư"><input value={t.khuTdc ?? ""} placeholder="vd. Khu TĐC bản Mé" onChange={(e) => dat({ khuTdc: e.target.value || undefined })} /></O>
+            <O nhan="Khu, điểm tái định cư"><input readOnly={!!t.loId} value={t.khuTdc ?? ""} placeholder="vd. Khu TĐC bản Mé" onChange={(e) => dat({ khuTdc: e.target.value || undefined })} /></O>
             {giaoDat && (
               <>
-                <O nhan={t.hinhThuc === "NHA_O" ? "Căn hộ / vị trí" : "Lô số / vị trí"}><input value={t.viTriLo ?? ""} onChange={(e) => dat({ viTriLo: e.target.value || undefined })} /></O>
+                <O nhan={t.hinhThuc === "NHA_O" ? "Căn hộ / vị trí" : "Lô số / vị trí"}><input readOnly={!!t.loId} value={t.viTriLo ?? ""} onChange={(e) => dat({ viTriLo: e.target.value || undefined })} /></O>
                 <O nhan={t.hinhThuc === "NHA_O" ? "DT căn hộ được giao (m²)" : "DT lô đất ở được giao (m²)"}><OSo className="o-so" value={t.dienTichGiao ?? ""} onChange={(v) => dat({ dienTichGiao: v || undefined })} /></O>
                 <O nhan={t.hinhThuc === "NHA_O" ? "Giá bán nhà ở TĐC (đ/m²)" : "Giá đất ở tại khu TĐC (đ/m²)"} goiY={t.hinhThuc === "NHA_O" ? "Do UBND có thẩm quyền quyết định (k3 Đ111 LĐĐ)" : "Theo bảng giá đất tại thời điểm phê duyệt phương án (k3 Đ111 LĐĐ)"}>
                   <OSo className="o-so" value={t.donGia ?? ""} onChange={(v) => dat({ donGia: v || undefined })} />

@@ -608,3 +608,47 @@ async fn may_chu_dinh_kem() {
     d.handle.shutdown();
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+/// GĐ5: bước chung của đợt thu hồi theo quy tắc gửi – duyệt (P3-1); quỹ tái định cư: lô trùng, giá thiếu căn cứ (P3-3).
+#[tokio::test(flavor = "multi_thread")]
+async fn may_chu_dot_va_quy_tdc() {
+    let dir = std::env::temp_dir().join(format!("gpmb-gd5-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let r = may_chu::mo_may_don(dir.clone()).unwrap();
+    let du_an = json!({ "id": "da1", "ten": "Dự án", "dotThuHoi": [{ "id": "d1", "so": 1, "ten": "Đợt 1" }] });
+    let du_lieu = json!({ "nguoiDung": [tai_khoan("quantri", "QUAN_TRI", "Gpmb2026qt"), tai_khoan("canbo", "CAN_BO", "Gpmb2026cb")], "nhatKy": [], "caiDat": [], "duAn": [du_an.clone()], "ho": [], "tep": [] });
+    assert_eq!(goi_router(&r, "POST", "/api/noi-bo/chuyen-du-lieu", None, du_lieu).await.0, 200);
+    let (_, v) = goi_router(&r, "POST", "/api/dang-nhap", None, json!({ "ten": "canbo", "matKhau": "Gpmb2026cb" })).await;
+    let t = v["token"].as_str().unwrap().to_string();
+    // cán bộ không có quyền xác nhận: không đặt "Hoàn thành" cho bước chung của đợt
+    let mut d = du_an.clone();
+    d["dotThuHoi"][0]["tienDoChung"] = json!({ "3": { "trangThai": "XONG" } });
+    let (ma, v) = goi_router(&r, "PUT", "/api/du-an/da1", Some(&t), json!({ "duLieu": d, "phienBanTruoc": 1 })).await;
+    assert_eq!(ma, 403, "{v}");
+    // gửi duyệt được; máy chủ tự ghi người gửi
+    d["dotThuHoi"][0]["tienDoChung"] = json!({ "3": { "trangThai": "CHO_DUYET" } });
+    let (ma, v) = goi_router(&r, "PUT", "/api/du-an/da1", Some(&t), json!({ "duLieu": d, "phienBanTruoc": 1 })).await;
+    assert_eq!(ma, 200, "{v}");
+    assert_eq!(v["duLieu"]["dotThuHoi"][0]["tienDoChung"]["3"]["guiBoi"], "canbo");
+    let pb = v["phienBan"].as_i64().unwrap();
+    // quỹ TĐC: giá phải có căn cứ; khu + lô không trùng; thông tin giao phải có hộ
+    let lo = |so: &str, gia: Option<&str>, can_cu: Option<&str>| json!({ "id": format!("l{so}"), "khu": "Khu A", "soLo": so, "loai": "DAT_O", "dienTich": "150", "gia": gia, "canCuGia": can_cu });
+    let mut d2 = v["duLieu"].clone();
+    d2["quyTdc"] = json!({ "lo": [lo("1", Some("2500000"), None)] });
+    let (ma, v) = goi_router(&r, "PUT", "/api/du-an/da1", Some(&t), json!({ "duLieu": d2, "phienBanTruoc": pb })).await;
+    assert_eq!(ma, 400);
+    assert!(v["loi"].as_str().unwrap_or(&v.to_string()).contains("căn cứ"), "{v}");
+    let mut trung = lo("1", None, None);
+    trung["id"] = json!("lx");
+    trung["soLo"] = json!(" 1 ");
+    d2["quyTdc"] = json!({ "lo": [lo("1", Some("2500000"), Some("NQ 152/2025")), trung] });
+    assert_eq!(goi_router(&r, "PUT", "/api/du-an/da1", Some(&t), json!({ "duLieu": d2, "phienBanTruoc": pb })).await.0, 400);
+    let mut giao = lo("2", None, None);
+    giao["giao"] = json!({ "ngay": "2026-10-01" });
+    d2["quyTdc"] = json!({ "lo": [lo("1", Some("2500000"), Some("NQ 152/2025")), giao] });
+    assert_eq!(goi_router(&r, "PUT", "/api/du-an/da1", Some(&t), json!({ "duLieu": d2, "phienBanTruoc": pb })).await.0, 400);
+    d2["quyTdc"]["lo"][1]["giao"]["hoId"] = json!("h1");
+    let (ma, v) = goi_router(&r, "PUT", "/api/du-an/da1", Some(&t), json!({ "duLieu": d2, "phienBanTruoc": pb })).await;
+    assert_eq!(ma, 200, "{v}");
+    std::fs::remove_dir_all(&dir).ok();
+}

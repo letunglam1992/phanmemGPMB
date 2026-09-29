@@ -10,6 +10,7 @@ import { laDatNN, laDatO } from "./tinh-ho";
 import { tienDoHieuLuc, type DuAn, type Ho } from "./mo-hinh";
 import { nhomMaTrung } from "./ma-ho";
 import { hienSo, laSoMay } from "./so";
+import { soatQuyTdc } from "./quy-tdc";
 import { TEN_CAP, doiChieuDienTich, type NguongLechDt } from "./doi-chieu-dt";
 
 export type MucSoat = "LOI" | "CANH_BAO" | "THONG_TIN";
@@ -39,6 +40,7 @@ export const QUY_TAC_SOAT: { ma: string; ten: string; canCu: string }[] = [
   { ma: "TAM_CU_NK", ten: "Có hỗ trợ tạm cư mà hồ sơ chưa có nhân khẩu", canCu: "khoản 3, khoản 4 Điều 3 QĐ 14/2026" },
   { ma: "PHAP_LY", ten: "Thửa thu hồi chưa phân loại pháp lý nguồn gốc", canCu: "Điều 95 Luật Đất đai 2024 (cán bộ xác định điều kiện)" },
   { ma: "DT_LECH", ten: "Diện tích lệch giữa bản đồ, hồ sơ, phương án, GCN vượt ngưỡng đơn vị đặt (§11.3)", canCu: "Ngưỡng do đơn vị đặt (Cài đặt chung → Ngưỡng lệch diện tích)" },
+  { ma: "TDC_LO", ten: "Tái định cư: hai hộ cùng một lô, hồ sơ khác lô đã giao trong quỹ, một hộ nhận nhiều lô (P3-3)", canCu: "Điều 111 Luật Đất đai 2024; quỹ tái định cư của dự án" },
   { ma: "NIEM_YET", ten: "Chưa ghi hoàn thành niêm yết công khai phương án", canCu: "điểm a khoản 3 Điều 87 Luật Đất đai 2024" },
 ];
 const canCu = (ma: string) => QUY_TAC_SOAT.find((q) => q.ma === ma)!.canCu;
@@ -111,6 +113,14 @@ export function soatPhuongAn(duAn: DuAn, kq: { h: Ho; k: KetQuaHo }[], nguong?: 
       const h = kq.find((y) => y.h.id === x.hoId)!.h;
       out.push({ quyTac: "DT_LECH", muc: "CANH_BAO", hoId: h.id, doiTuong: `${h.ma} – ${h.ten}`, noiDung: `${x.thua}: ${TEN_CAP[x.cap][0]} ${hienSo(x.a)} m² ↔ ${TEN_CAP[x.cap][1]} ${hienSo(x.b)} m² (lệch ${hienSo(x.chenh)} m²${x.tyLe ? `, ${hienSo(x.tyLe)}%` : ""})`, canCu: `Ngưỡng do đơn vị đặt: ${nguong.canCu}` });
     }
+
+  // P3-3: đối chiếu hồ sơ với quỹ tái định cư (chỉ hộ đang soát)
+  const idSoat = new Set(kq.map((x) => x.h.id));
+  for (const c of soatQuyTdc(duAn, kq.map((x) => x.h))) {
+    if (c.muc === "THONG_TIN" || (c.hoId && !idSoat.has(c.hoId))) continue;
+    const h = c.hoId ? kq.find((x) => x.h.id === c.hoId)?.h : undefined;
+    out.push({ quyTac: "TDC_LO", muc: c.muc, hoId: h?.id, doiTuong: h ? `${h.ma} – ${h.ten}` : "Dự án", noiDung: c.noiDung, canCu: c.canCu ?? canCu("TDC_LO") });
+  }
 
   const thuTu: Record<MucSoat, number> = { LOI: 0, CANH_BAO: 1, THONG_TIN: 2 };
   return out.sort((a, b) => thuTu[a.muc] - thuTu[b.muc]);

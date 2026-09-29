@@ -517,3 +517,69 @@ export async function taoWorkbookBaoCao(bc: BaoCao, coQuan: string, dsKy: KyBaoC
   }
   return wb;
 }
+
+/**
+ * P3-3: quỹ tái định cư — trang "Quỹ TĐC" (mọi lô, trạng thái, hộ được giao), "Hộ chờ bố trí" (hộ có TĐC giao đất ở /
+ * nhà ở chưa có lô — dùng lập danh sách bốc thăm), "Lô trống", "Kết quả bốc thăm" (theo biên bản đã ghi nhận).
+ */
+export async function taoWorkbookQuyTdc(duAn: DuAn, hos: Ho[]): Promise<ExcelJS.Workbook> {
+  const { default: Excel } = await import("exceljs");
+  const { quyCua, tenLo, trangThaiLo, TEN_TT_LO, TEN_LOAI_LO, TEN_HINH_THUC_GIAO, canBoTriLo } = await import("./quy-tdc");
+  const q = quyCua(duAn);
+  const tenHo = (id: string) => {
+    const h = hos.find((x) => x.id === id);
+    return h ? `${h.ma} – ${h.ten}` : "(hồ sơ không còn)";
+  };
+  const soN = (v?: string) => (v && /^-?\d+(\.\d+)?$/.test(v.trim()) ? Number(v) : null);
+  const wb = new Excel.Workbook();
+  wb.creator = "GPMB Sơn La";
+  const trang = (ten: string, tieuDe: string, cot: { t: string; w: number; tien?: boolean }[], dong: (string | number | null)[][]) => {
+    const ws = wb.addWorksheet(ten, { pageSetup: { orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
+    ws.mergeCells(1, 1, 1, cot.length);
+    ws.getCell(1, 1).value = tieuDe;
+    ws.getCell(1, 1).font = { name: FONT, bold: true, size: 13 };
+    ws.getCell(1, 1).alignment = { horizontal: "center" };
+    ws.getRow(3).values = cot.map((c) => c.t);
+    ws.getRow(3).font = { name: FONT, bold: true };
+    cot.forEach((c, i) => (ws.getColumn(i + 1).width = c.w));
+    dong.forEach((d, i) => (ws.getRow(4 + i).values = d));
+    for (let r = 3; r < 4 + dong.length; r++)
+      for (let c = 1; c <= cot.length; c++) {
+        const o = ws.getCell(r, c);
+        o.border = VIEN;
+        o.font = { name: FONT, bold: r === 3 };
+        o.alignment = { vertical: "middle", wrapText: true, horizontal: r === 3 ? "center" : undefined };
+        if (cot[c - 1]!.tien && r > 3) o.numFmt = DINH_DANG_TIEN;
+      }
+    return ws;
+  };
+  const lo = [...q.lo].sort((a, b) => `${a.khu}|${a.soLo}`.localeCompare(`${b.khu}|${b.soLo}`, "vi", { numeric: true }));
+  trang("Quỹ TĐC", `QUỸ ĐẤT Ở, NHÀ Ở TÁI ĐỊNH CƯ – ${duAn.ten.toUpperCase()}`, [
+    { t: "STT", w: 6 }, { t: "Khu, điểm TĐC", w: 26 }, { t: "Lô / căn", w: 10 }, { t: "Loại", w: 12 }, { t: "DT (m²)", w: 10, tien: true }, { t: "Giá (đ/m²)", w: 14, tien: true }, { t: "Căn cứ giá", w: 34 }, { t: "Trạng thái", w: 12 }, { t: "Hộ được giao", w: 30 }, { t: "Hình thức, căn cứ giao", w: 36 },
+  ], lo.map((l, i) => [i + 1, l.khu, l.soLo, TEN_LOAI_LO[l.loai], soN(l.dienTich), soN(l.gia), l.canCuGia ?? "", TEN_TT_LO[trangThaiLo(l)] + (l.giuLai ? `: ${l.giuLai}` : ""), l.giao ? tenHo(l.giao.hoId) : "", l.giao ? `${TEN_HINH_THUC_GIAO[l.giao.hinhThuc]} ngày ${l.giao.ngay.split("-").reverse().join("/")} – ${l.giao.canCu}` : ""]));
+  const daGiao = new Set(q.lo.filter((l) => l.giao).map((l) => l.giao!.hoId));
+  const cho = hos.filter((h) => canBoTriLo(h) && !daGiao.has(h.id)).sort((a, b) => a.ma.localeCompare(b.ma, "vi", { numeric: true }));
+  trang("Hộ chờ bố trí", `DANH SÁCH HỘ ĐƯỢC BỐ TRÍ TÁI ĐỊNH CƯ CHƯA GIAO LÔ – ${duAn.ten.toUpperCase()}`, [
+    { t: "STT", w: 6 }, { t: "Mã hồ sơ", w: 12 }, { t: "Họ tên", w: 30 }, { t: "Địa chỉ", w: 34 }, { t: "Hình thức", w: 20 }, { t: "Ghi chú", w: 30 },
+  ], cho.map((h, i) => [i + 1, h.ma, h.ten, h.diaChi, h.hoTro.taiDinhCu!.hinhThuc === "NHA_O" ? "Giao nhà ở" : "Giao đất ở", ""]));
+  const trong = lo.filter((l) => trangThaiLo(l) === "TRONG");
+  trang("Lô trống", `DANH SÁCH LÔ, CĂN CÒN TRỐNG – ${duAn.ten.toUpperCase()}`, [
+    { t: "STT", w: 6 }, { t: "Khu, điểm TĐC", w: 26 }, { t: "Lô / căn", w: 10 }, { t: "Loại", w: 12 }, { t: "DT (m²)", w: 10, tien: true }, { t: "Giá (đ/m²)", w: 14, tien: true }, { t: "Căn cứ giá", w: 40 },
+  ], trong.map((l, i) => [i + 1, l.khu, l.soLo, TEN_LOAI_LO[l.loai], soN(l.dienTich), soN(l.gia), l.canCuGia ?? ""]));
+  if (q.bocTham || q.ketQuaBocTham?.length) {
+    const dong: (string | number | null)[][] = [];
+    for (const b of q.ketQuaBocTham ?? [])
+      for (const x of b.ketQua) {
+        const l = q.lo.find((y) => y.id === x.loId);
+        dong.push([b.bienBan, b.ngay.split("-").reverse().join("/"), x.stt, tenHo(x.hoId), l ? tenLo(l) : "(lô không còn)"]);
+      }
+    trang("Kết quả bốc thăm", `KẾT QUẢ BỐC THĂM LÔ TÁI ĐỊNH CƯ – ${duAn.ten.toUpperCase()}`, [
+      { t: "Biên bản", w: 28 }, { t: "Ngày", w: 12 }, { t: "Thứ tự bốc", w: 10 }, { t: "Hộ", w: 32 }, { t: "Lô / căn", w: 32 },
+    ], dong);
+  }
+  return wb;
+}
+
+export async function xuatExcelQuyTdc(duAn: DuAn, hos: Ho[]) {
+  await taiVe(await taoWorkbookQuyTdc(duAn, hos), `Quy-TDC_${tenAnToan(duAn.ten)}.xlsx`);
+}
