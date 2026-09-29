@@ -62,14 +62,15 @@ const tenAnToan = (s: string) => tenTep(s, 70);
  * `nhung`: soạn ngay trong hồ sơ hộ (thẻ "Văn bản" sau "Tính toán, giải trình") — hộ đang mở được chọn sẵn và dùng số liệu
  * tính toán hiện tại để tự điền; hồ sơ đang sửa chưa lưu thì chặn tạo văn bản (tránh ghi số liệu chưa lưu vào văn bản).
  */
-export function VanBan({ duAnId, maDau, hoIdDau, nhung }: { duAnId: string; maDau?: string; hoIdDau?: string; nhung?: { ho: Ho; kq: KetQuaHo; daSua: boolean } }) {
+export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: string; maDau?: string; hoIdDau?: string; nhung?: { ho: Ho; kq: KetQuaHo; daSua: boolean }; chiDuAn?: boolean }) {
   const { dsDuAn, hoCua, chinhSach, luuDuAn: luuDuAnGoc, luuHo: luuHoGoc, kho, di, quyen, nguoiDung, dsDonVi } = useUngDung();
   // Tài khoản chỉ xem vẫn tạo được bản dự thảo nhưng không ghi số, ngày, nhật ký vào hồ sơ.
   const coGhi = quyen("SOAN_VAN_BAN");
   const luuDuAn: typeof luuDuAnGoc = coGhi ? luuDuAnGoc : async () => undefined;
   const luuHo: typeof luuHoGoc = coGhi ? luuHoGoc : async () => undefined;
   const duAn = dsDuAn.find((d) => d.id === duAnId);
-  const [ma, setMa] = useState(maDau ?? "01");
+  // chiDuAn: lối vào riêng từ Hồ sơ dự án — chỉ các mẫu cấp dự án, theo đợt (văn bản từng hộ soạn trong hồ sơ hộ)
+  const [ma, setMa] = useState(maDau ?? (chiDuAn ? (DANH_MUC_MAU.find((m) => m.phamVi !== "HO")?.ma ?? "01") : "01"));
   const [tim, setTim] = useState("");
   const hoDau = hoIdDau ?? nhung?.ho.id;
   const [chonHo, setChonHo] = useState<Set<string>>(new Set(hoDau ? [hoDau] : []));
@@ -119,7 +120,7 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung }: { duAnId: string; maDa
       : { ...duAn, vanBan: { ...(duAn.vanBan ?? {}), ...chung, ...them } };
   const choHo = (h: Ho) => { const d = dotCuaHo(duAn, h); return { duAn: duAnTheoDot(duAn, d), chung: chungTheoDot(chung, d) }; };
 
-  const dsMau = DANH_MUC_MAU.filter((m) => !tim || `${m.ma} ${m.ten}`.toLowerCase().includes(tim.toLowerCase()));
+  const dsMau = DANH_MUC_MAU.filter((m) => (!chiDuAn || m.phamVi !== "HO") && (!tim || `${m.ma} ${m.ten}`.toLowerCase().includes(tim.toLowerCase())));
   const theoBuoc = [
     ...CAC_BUOC.map((b) => ({ tieuDe: `Bước ${b.ma}. ${b.ten}`, ds: dsMau.filter((m) => m.buoc === b.ma && m.nguon !== "RIENG") })),
     { tieuDe: "Mẫu riêng của xã", ds: dsMau.filter((m) => m.nguon === "RIENG") },
@@ -239,8 +240,8 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung }: { duAnId: string; maDa
       <div className="dong-tieu-de">
         <div>
           <div className="nhan-trang">Văn bản</div>
-          <h1>Soạn văn bản theo mẫu</h1>
-          <div className="mo-ta">22 mẫu của Sổ tay ban hành kèm Quyết định số 1966/QĐ-UBND ngày 05/8/2025 · tự điền từ hồ sơ · xuất .docx để chỉnh tiếp trong Word</div>
+          <h1>{chiDuAn ? "Văn bản cấp dự án, theo đợt" : "Soạn văn bản theo mẫu"}</h1>
+          <div className="mo-ta">{chiDuAn ? "Tờ trình, niêm yết, lấy ý kiến, thẩm định, quyết định phê duyệt phương án… (mẫu Sổ tay QĐ 1966/QĐ-UBND và mẫu riêng) · văn bản của từng hộ: mở hồ sơ hộ → thẻ Văn bản" : "22 mẫu của Sổ tay ban hành kèm Quyết định số 1966/QĐ-UBND ngày 05/8/2025 · tự điền từ hồ sơ · xuất .docx để chỉnh tiếp trong Word"}</div>
         </div>
         <div className="phai">
           <Chon value={duAnId} onChange={(e) => di({ ten: "van-ban", duAnId: e.target.value })}>

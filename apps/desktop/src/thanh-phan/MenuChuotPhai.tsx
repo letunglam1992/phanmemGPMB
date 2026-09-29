@@ -168,7 +168,7 @@ export function MenuChuotPhai({ laToi, doiGiaoDien }: { laToi: boolean; doiGiaoD
           { nhan: "Mở dự án", lam: () => di({ ten: "du-an", duAnId }) },
           { nhan: "Hộ, cá nhân, tổ chức", lam: () => di({ ten: "du-an", duAnId, tab: "ho" }) },
           { nhan: "Bản đồ", lam: () => di({ ten: "du-an", duAnId, tab: "ban-do" }) },
-          { nhan: "Văn bản (trong hồ sơ hộ)", lam: () => di({ ten: "van-ban", duAnId }) },
+          { nhan: "Văn bản dự án, đợt", lam: () => di({ ten: "van-ban", duAnId }) },
           { nhan: "Sao chép tên dự án", tat: !d, lam: () => saoChep(d!.ten) },
         ],
       });

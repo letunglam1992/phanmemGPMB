@@ -46,7 +46,8 @@ const THE = [
   { ma: "tai-dinh-cu", ten: "Tái định cư", bt: "nha" },
   { ma: "ban-do", ten: "Bản đồ", bt: "thua" },
 ] as const;
-// Văn bản soạn trong hồ sơ hộ (thẻ "Văn bản" sau "Tính toán, giải trình"); tab "van-ban" ở đây chỉ còn cho dự án chưa có hộ.
+// Văn bản từng hộ soạn trong hồ sơ hộ (thẻ "Văn bản" sau "Tính toán, giải trình"); văn bản cấp dự án, theo đợt mở bằng nút
+// "Văn bản dự án, đợt" ở đầu trang (tab "van-ban", chỉ các mẫu cấp dự án, đợt).
 
 export function KhongGianDuAn({ duAnId, tab = "tong-quan", ma, hoId }: { duAnId: string; tab?: string; ma?: string; hoId?: string }) {
   const { dsDuAn, hoCua, di, chinhSach, xoaDuAn, quyen } = useUngDung();
@@ -79,6 +80,7 @@ export function KhongGianDuAn({ duAnId, tab = "tong-quan", ma, hoId }: { duAnId:
           <div className="mo chu-nho">{duAn.xa || "Chưa chọn xã"} · Chủ đầu tư: {duAn.chuDauTu || "—"} · {duAn.canCuThuHoi || "Chưa ghi căn cứ thu hồi"} · TB: {ngayVN(duAn.ngayThongBao) || "—"} · {hos.length} hồ sơ</div>
         </div>
         <div className="phai">
+          <button className={`nut ${tab === "van-ban" ? "nut-chinh" : ""}`} title="Tờ trình, niêm yết, lấy ý kiến, thẩm định, quyết định phê duyệt phương án… — văn bản của từng hộ soạn trong hồ sơ hộ (thẻ Văn bản)" onClick={() => moThe("van-ban")}><BieuTuong ten="vanBan" co={16} /> Văn bản dự án, đợt</button>
           <button className="nut" disabled={dangXuat || kq.length === 0} onClick={async () => { setDangXuat(true); try { await xuatExcelDuAn(duAn, kq); } finally { setDangXuat(false); } }}>{dangXuat ? "Đang xuất…" : "Xuất Excel"}</button>
           <div className="menu-nguoi">
             <button className="nut" aria-expanded={menuThem} onClick={() => setMenuThem(!menuThem)}><BieuTuong ten="baCham" co={16} /> Thêm</button>
@@ -125,7 +127,7 @@ export function KhongGianDuAn({ duAnId, tab = "tong-quan", ma, hoId }: { duAnId:
       {tab === "ho" && <TheHo duAn={duAn} kq={kq} />}
       {tab === "tai-dinh-cu" && <TheQuyTdc duAn={duAn} hos={hoCua(duAnId, true)} />}
       {tab === "ban-do" && <div className="kg-nhung"><BanDo duAnId={duAnId} /></div>}
-      {tab === "van-ban" && <div className="kg-nhung"><VanBan key={`${duAnId}-${ma}-${hoId}`} duAnId={duAnId} maDau={ma} hoIdDau={hoId} /></div>}
+      {tab === "van-ban" && <div className="kg-nhung"><VanBan key={`${duAnId}-${ma}-${hoId}`} duAnId={duAnId} maDau={ma} hoIdDau={hoId} chiDuAn={!hoId} /></div>}
       </RaoLoi>
 
       {keHoach && <HopKeHoach duAn={duAn} dong={() => setKeHoach(false)} />}

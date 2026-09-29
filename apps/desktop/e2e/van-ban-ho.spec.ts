@@ -48,3 +48,13 @@ test("thẻ Văn bản sau Tính toán; hộ chọn sẵn, tự điền; thẻ v
   await p.locator(".tab-gon button", { hasText: "Văn bản" }).click();
   await expect(p.getByText(/Hồ sơ có thay đổi/)).toBeVisible();
 });
+
+test("lối vào riêng: Hồ sơ dự án → Văn bản dự án, đợt (chỉ mẫu cấp dự án, đợt)", async ({ page: p }) => {
+  await vao(p);
+  await p.keyboard.press("Alt+3");
+  await p.getByRole("button", { name: "Văn bản dự án, đợt" }).click();
+  await expect(p.locator("h1")).toHaveText("Văn bản cấp dự án, theo đợt");
+  await expect(p.locator(".muc-mau", { hasText: "Biên bản niêm yết công khai" }).first()).toBeVisible();
+  await expect(p.locator(".muc-mau", { hasText: "Từng hộ" })).toHaveCount(0);
+  await expect(p.getByRole("button", { name: /Tạo văn bản/ })).toBeVisible();
+});
