@@ -26,6 +26,7 @@ import { TheBanGiao } from "../thanh-phan/TheBanGiao";
 import { chuanMa, hoTrungMa } from "../ma-ho";
 import { ghiBanNhap, layBanNhap, xoaBanNhap } from "../ban-nhap";
 import { OSo } from "../thanh-phan/OSo";
+import { coDot, dsDot, lyDoKhongDoiDot, tenDot, timDot } from "../dot-thu-hoi";
 
 const CAC_TAB = [
   ["thong-tin", "Thông tin", "thongTin"],
@@ -84,6 +85,8 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
     // Chặn khi đổi sang mã đã dùng; mã trùng có sẵn từ dữ liệu cũ chỉ cảnh báo ở thẻ Thông tin
     const trung = chuanMa(h.ma) !== chuanMa(goc?.ma ?? "") ? hoTrungMa(hoCua(duAnId, true), h.ma, h.id) : null;
     if (trung || !h.ma.trim()) return bao(trung ? `Mã hồ sơ ${h.ma} đã dùng cho “${trung.ten}” — đổi mã ở thẻ Thông tin` : "Chưa có mã hồ sơ", "loi");
+    const chanDot = goc && duAn ? lyDoKhongDoiDot(duAn, goc, h.dotId) : null;
+    if (chanDot) return bao(`Không đổi đợt thu hồi: ${chanDot}`, "loi");
     await luuHo({ ...h, ma: h.ma.trim() }, ghiChu);
     xoaBanNhap(h.id);
     setDaSua(false);
@@ -172,7 +175,7 @@ export function HoSo({ duAnId, hoId, tabDau }: { duAnId: string; hoId: string; t
           <RaoLoi ten={`thẻ ${CAC_TAB.find(([m]) => m === tab)?.[1] ?? tab}`} khoa={tab}>
           {/* tài khoản không có quyền sửa: khóa các ô nhập của các thẻ nhập liệu */}
           <fieldset className="khung-quyen" disabled={!choSua}>
-          {tab === "thong-tin" && <TabThongTin h={h} doi={doi} />}
+          {tab === "thong-tin" && <TabThongTin h={h} doi={doi} duAn={duAn} goc={goc} />}
           {tab === "nhan-khau" && <TabNhanKhau h={h} doi={doi} />}
           {tab === "thua" && <TabThua h={h} duAn={duAn} doi={doi} />}
           {tab === "kiem-dem" && <TabKiemDem h={h} doi={doi} />}
@@ -325,9 +328,10 @@ const VB_DA_BAN_HANH = [
   ["tb_gui_tien", "TB gửi tiền vào tài khoản (Mẫu 18)"],
 ] as const;
 
-function TabThongTin({ h, doi }: Tab) {
+function TabThongTin({ h, doi, duAn, goc }: Tab & { duAn: DuAn; goc?: Ho }) {
   const { hoCua } = useUngDung();
   const trung = hoTrungMa(hoCua(h.duAnId, true), h.ma, h.id);
+  const chanDot = goc ? lyDoKhongDoiDot(duAn, goc, h.dotId) : null;
   const s = (k: keyof Ho) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => doi({ ...h, [k]: e.target.value });
   const vb = h.vanBan ?? {};
   return (
@@ -345,6 +349,15 @@ function TabThongTin({ h, doi }: Tab) {
         <O nhan={h.loai === "TO_CHUC" ? "Tên tổ chức" : "Họ tên chủ hộ / cá nhân"} lichSu="ten"><input value={h.ten} onChange={s("ten")} /></O>
         <O nhan={h.loai === "TO_CHUC" ? "Mã số thuế / QĐ thành lập" : "Số định danh cá nhân"} lichSu="soDinhDanh" goiY="Thông tin cá nhân chỉ lưu trên máy này"><input value={h.soDinhDanh} onChange={s("soDinhDanh")} /></O>
         <O nhan="Điện thoại" lichSu="dienThoai"><input value={h.dienThoai} onChange={s("dienThoai")} /></O>
+        {(coDot(duAn) || h.dotId) && (
+          <O nhan="Đợt thu hồi" lichSu="dotId" goiY={chanDot ? <span className="chu-do">Không đổi đợt được: {chanDot}</span> : "Phương án chốt, phê duyệt theo đợt"}>
+            <Chon className={chanDot ? "loi-nhap" : ""} value={h.dotId ?? ""} aria-label="Đợt thu hồi" onChange={(e) => doi({ ...h, dotId: e.target.value || undefined })}>
+              <option value="">Chưa xếp đợt</option>
+              {dsDot(duAn).map((d) => <option key={d.id} value={d.id}>{tenDot(d)}</option>)}
+              {h.dotId && !timDot(duAn, h.dotId) && <option value={h.dotId}>(đợt đã xóa)</option>}
+            </Chon>
+          </O>
+        )}
         <O nhan="Địa chỉ thường trú / trụ sở" lichSu="diaChi"><input value={h.diaChi} onChange={s("diaChi")} /></O>
         <O nhan="Vướng mắc cần ưu tiên xử lý" lichSu="vuongMac" style={{ gridColumn: "1/-1" }} goiY="Khiếu nại, chưa nhận tiền, tranh chấp, chưa bàn giao… Hồ sơ có vướng mắc được tô đỏ trên bản đồ và đưa vào cảnh báo.">
           <div className="nhom-nut">

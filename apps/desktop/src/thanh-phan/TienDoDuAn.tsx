@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
 import { useUngDung } from "../ung-dung";
-import { daQuaBuoc, BUOC_CHUNG, CAC_BUOC, TEN_TRANG_THAI_BUOC, laBuocChung, tienDoHieuLuc, type BuocHo, type DuAn, type Ho, type TrangThaiBuoc } from "../mo-hinh";
+import { daQuaBuoc, BUOC_CHUNG, CAC_BUOC, TEN_TRANG_THAI_BUOC, laBuocChung, tienDoHieuLuc, type BuocHo, type DuAn, type Ho, type TrangThaiBuoc, type DotThuHoi } from "../mo-hinh";
 import { kiemTraDuyetBuoc } from "../tai-khoan";
 import { homNayIso } from "../trang-thai";
 import { HopThoai, O, ngayVN } from "./chung";
 import { Chon } from "./Chon";
+import { coDot, dsDot, tenDot, timDot } from "../dot-thu-hoi";
 
 export const LOP_TRANG_THAI_BUOC: Record<TrangThaiBuoc, string> = { XONG: "nhan-xanh", DANG: "nhan-duong", CHO_DUYET: "nhan-tim", CHUA: "nhan-xam", KHONG_AP_DUNG: "nhan-xam" };
 const BUOC_RIENG = CAC_BUOC.filter((b) => !laBuocChung(b.ma));
@@ -27,10 +28,32 @@ export function HopTienDoDuAn({ duAn, hos, dong, tabDau = "chung" }: { duAn: DuA
   );
 }
 
-/** Bước chung 1–4 của dự án; `tiep` (không gian dự án) = nút "Lưu và tiếp" sang nhập hộ. */
+/**
+ * Bước chung 1–4 của dự án; `tiep` (không gian dự án) = nút "Lưu và tiếp" sang nhập hộ.
+ * P3-1: dự án có đợt — chọn "Cả dự án" hoặc một đợt; bước chung của đợt ghi đè bước chung của dự án cho hộ thuộc đợt.
+ */
 export function BuocChung({ duAn, hos, tiep }: { duAn: DuAn; hos: Ho[]; tiep?: { nhan: string; di: () => void } }) {
+  const [dotId, setDotId] = useState("");
+  if (!coDot(duAn)) return <BuocChungCua duAn={duAn} hos={hos} tiep={tiep} />;
+  const dot = timDot(duAn, dotId);
+  return (
+    <div className="luoi" style={{ gap: 10 }}>
+      <div className="nhom-nut">
+        <span className="chu-nho" style={{ fontWeight: 600 }}>Áp dụng cho</span>
+        <Chon value={dotId} onChange={(e) => setDotId(e.target.value)} aria-label="Bước chung áp dụng cho" style={{ minWidth: 220 }}>
+          <option value="">Cả dự án (mọi đợt)</option>
+          {dsDot(duAn).map((d) => <option key={d.id} value={d.id}>{tenDot(d)}</option>)}
+        </Chon>
+        {dot && <span className="mo chu-nho">Bước để trống ở đợt lấy theo bước chung của dự án</span>}
+      </div>
+      <BuocChungCua key={dotId} duAn={duAn} dot={dot} hos={dot ? hos.filter((h) => h.dotId === dot.id) : hos} tiep={tiep} />
+    </div>
+  );
+}
+
+function BuocChungCua({ duAn, dot, hos, tiep }: { duAn: DuAn; dot?: DotThuHoi; hos: Ho[]; tiep?: { nhan: string; di: () => void } }) {
   const { luuDuAn, ghiNhatKy, taiKhoan, quyen, bao } = useUngDung();
-  const goc = duAn.tienDoChung ?? {};
+  const goc = (dot ? dot.tienDoChung : duAn.tienDoChung) ?? {};
   const [nhap, setNhap] = useState<Record<string, BuocHo>>(() => Object.fromEntries(BUOC_CHUNG.map((ma) => [ma, goc[ma] ?? { trangThai: "CHUA" }])));
   const [dang, setDang] = useState(false);
   const daDoi = BUOC_CHUNG.some((ma) => JSON.stringify(nhap[ma]) !== JSON.stringify(goc[ma] ?? { trangThai: "CHUA" }));
@@ -39,8 +62,9 @@ export function BuocChung({ duAn, hos, tiep }: { duAn: DuAn; hos: Ho[]; tiep?: {
     setDang(true);
     try {
       const giu = Object.fromEntries(Object.entries(moi).filter(([ma, b]) => goc[ma] || b.trangThai !== "CHUA" || b.ngay || b.ghiChu));
-      await luuDuAn({ ...duAn, tienDoChung: giu });
-      await ghiNhatKy(nk, `${duAn.ten} — áp dụng cho ${hos.length} hộ`);
+      if (dot) await luuDuAn({ ...duAn, dotThuHoi: duAn.dotThuHoi!.map((x) => (x.id === dot.id ? { ...x, tienDoChung: Object.keys(giu).length ? giu : undefined } : x)) });
+      else await luuDuAn({ ...duAn, tienDoChung: giu });
+      await ghiNhatKy(nk, `${duAn.ten}${dot ? ` – ${tenDot(dot)}` : ""} — áp dụng cho ${hos.length} hộ`);
       setNhap(moi);
       bao("Đã lưu tiến độ bước chung");
     } finally {
@@ -87,7 +111,8 @@ export function BuocChung({ duAn, hos, tiep }: { duAn: DuAn; hos: Ho[]; tiep?: {
                   {x.ten}
                   <div className="can-cu">{x.canCu}{x.mau ? ` · Mẫu ${x.mau}` : ""}</div>
                   {rieng.length > 0 && <div className="chu-nho" style={{ color: "var(--vang)" }}>{rieng.length} hộ theo dõi riêng: {rieng.slice(0, 4).map((h) => h.ma).join(", ")}{rieng.length > 4 ? "…" : ""}</div>}
-                  {cu !== null && hos.length > 0 && <div className="chu-nho mo">Chưa cập nhật chung — đang lấy theo từng hộ ({cu}/{hos.length} hộ đã xong)</div>}
+                  {dot && !goc[ma] && <div className="chu-nho mo">Đợt chưa cập nhật — đang theo dự án: {TEN_TRANG_THAI_BUOC[duAn.tienDoChung?.[ma]?.trangThai ?? "CHUA"]}</div>}
+                  {!dot && cu !== null && hos.length > 0 && <div className="chu-nho mo">Chưa cập nhật chung — đang lấy theo từng hộ ({cu}/{hos.length} hộ đã xong)</div>}
                   {(b.guiBoi || b.duyetBoi) && <div className="chu-nho mo">{b.guiBoi && <>Gửi: {b.guiBoi}. </>}{b.duyetBoi && <>Xác nhận: {b.duyetBoi}.</>}</div>}
                 </td>
                 <td>

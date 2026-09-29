@@ -25,6 +25,7 @@ import {
   type PhienBanPA,
 } from "../phuong-an";
 import { Chon } from "./Chon";
+import { coDot, dsDot, tenDot, timDot } from "../dot-thu-hoi";
 import { QUY_TAC_SOAT, TEN_MUC_SOAT, demSoat, soatPhuongAn, type KetQuaSoat } from "../soat-phuong-an";
 
 const dong = (x: string | null | undefined) => (x == null ? "—" : dinhDang(D(x), 0));
@@ -87,7 +88,7 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
           <table className="bang">
             <thead>
               <tr>
-                <th>Bản</th><th>Tên</th><th>Trạng thái</th><th className="so">Số hộ</th><th className="so">Tổng giá trị (đ)</th><th>Chốt lúc</th><th>Quyết định phê duyệt</th><th>Toàn vẹn</th><th />
+                <th>Bản</th><th>Tên</th>{coDot(duAn) && <th>Đợt</th>}<th>Trạng thái</th><th className="so">Số hộ</th><th className="so">Tổng giá trị (đ)</th><th>Chốt lúc</th><th>Quyết định phê duyệt</th><th>Toàn vẹn</th><th />
               </tr>
             </thead>
             <tbody>
@@ -95,6 +96,7 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
                 <tr key={p.id}>
                   <td>{p.so}</td>
                   <td>{p.ten}{p.lyDo && <div className="mo chu-nho">Lý do: {p.lyDo}</div>}{p.huy && <div className="mo chu-nho">Hủy: {p.huy.lyDo}</div>}</td>
+                  {coDot(duAn) && <td className="chu-nho">{p.dotId ? tenDot(timDot(duAn, p.dotId)) === "Chưa xếp đợt" ? p.dotTen ?? "—" : tenDot(timDot(duAn, p.dotId)) : "Cả dự án"}</td>}
                   <td><span className={`nhan ${NHAN_TT[p.trangThai]}`}>{TEN_TT_PA[p.trangThai]}</span></td>
                   <td className="so">{p.ho.length}</td>
                   <td className="so">{dong(p.tong)}</td>
@@ -134,8 +136,12 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
           dong={() => setHop(null)}
           luu={async (qd, ghiVanBan) => {
             const d = pheDuyet(hop.p, qd, nguoiDung);
-            const vanBan = ghiVanBan ? { ...(duAn.vanBan ?? {}), qd_phe_duyet_so: d.pheDuyet!.so, qd_phe_duyet_ngay: ngayChu(d.pheDuyet!.ngay) } : duAn.vanBan;
-            await luuDuAn({ ...duAn, vanBan, phuongAn: (duAn.phuongAn ?? []).map((x) => (x.id === d.id ? d : x)) }, "PHE_DUYET_PA");
+            const vbQd = { qd_phe_duyet_so: d.pheDuyet!.so, qd_phe_duyet_ngay: ngayChu(d.pheDuyet!.ngay) };
+            // P3-1: phương án của đợt → số, ngày QĐ ghi vào văn bản của đợt (văn bản cấp dự án giữ nguyên)
+            const dotGhi = ghiVanBan && d.dotId ? timDot(duAn, d.dotId) : undefined;
+            const vanBan = ghiVanBan && !dotGhi ? { ...(duAn.vanBan ?? {}), ...vbQd } : duAn.vanBan;
+            const dotThuHoi = dotGhi ? duAn.dotThuHoi!.map((x) => (x.id === dotGhi.id ? { ...x, vanBan: { ...(x.vanBan ?? {}), ...vbQd } } : x)) : duAn.dotThuHoi;
+            await luuDuAn({ ...duAn, vanBan, dotThuHoi, phuongAn: (duAn.phuongAn ?? []).map((x) => (x.id === d.id ? d : x)) }, "PHE_DUYET_PA");
             await ghiNhatKy("Ghi nhận phê duyệt phương án", `${duAn.ten} – bản ${d.so}: ${d.pheDuyet!.so} ngày ${ngayVN(d.pheDuyet!.ngay)}; ${d.ho.length} hộ, ${dong(d.tong)} đ`);
             for (const x of d.ho) {
               const h = kq.find((y) => y.h.id === x.hoId)?.h;
@@ -151,12 +157,24 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
   );
 }
 
-function HopChot({ duAn, kq, dong: dongHop }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo }[]; dong: () => void }) {
+function HopChot({ duAn, kq: kqDuAn, dong: dongHop }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo }[]; dong: () => void }) {
   const { chinhSach, luuDuAn, nguoiDung, ghiNhatKy, nguongLechDt } = useUngDung();
-  const chua = useMemo(() => new Map(hoChuaDuDieuKien(kq).map((x) => [x.h.id, x.lyDo])), [kq]);
+  // P3-1: dự án có đợt → phương án chốt theo đợt, chỉ gồm hộ thuộc đợt
+  const coDotTH = coDot(duAn);
+  const [dotId, setDotId] = useState(() => dsDot(duAn)[0]?.id ?? "");
+  const kq = useMemo(() => (coDotTH ? kqDuAn.filter(({ h }) => h.dotId === dotId) : kqDuAn), [kqDuAn, coDotTH, dotId]);
+  const soBan = (duAn.phuongAn ?? []).reduce((m, p) => Math.max(m, p.so), 0) + 1;
+  const chua = useMemo(() => new Map(hoChuaDuDieuKien(kqDuAn).map((x) => [x.h.id, x.lyDo])), [kqDuAn]);
   const daDuyet = useMemo(() => hoDaPheDuyet(duAn.phuongAn ?? []), [duAn.phuongAn]);
   const [chon, setChon] = useState<Set<string>>(() => new Set(kq.filter(({ h }) => !chua.has(h.id)).map(({ h }) => h.id)));
-  const [ten, setTen] = useState(`Phương án bồi thường, hỗ trợ, TĐC – bản ${(duAn.phuongAn ?? []).reduce((m, p) => Math.max(m, p.so), 0) + 1}`);
+  const tenMacDinh = (id: string) => `Phương án bồi thường, hỗ trợ, TĐC${coDotTH ? ` – ${tenDot(timDot(duAn, id))}` : ""} – bản ${soBan}`;
+  const [ten, setTen] = useState(() => tenMacDinh(dotId));
+  const doiDot = (id: string) => {
+    setDotId(id);
+    const moi = kqDuAn.filter(({ h }) => h.dotId === id);
+    setChon(new Set(moi.filter(({ h }) => !chua.has(h.id)).map(({ h }) => h.id)));
+    if (ten === tenMacDinh(dotId)) setTen(tenMacDinh(id));
+  };
   const [lyDo, setLyDo] = useState("");
   const [loi, setLoi] = useState("");
   const [dang, setDang] = useState(false);
@@ -170,9 +188,9 @@ function HopChot({ duAn, kq, dong: dongHop }: { duAn: DuAn; kq: { h: Ho; k: KetQ
     setDang(true);
     setLoi("");
     try {
-      const p = await chotPhuongAn(chinhSach(duAn), duAn, dsChon.map((x) => x.h), { ten, lyDo, nguoi: nguoiDung });
+      const p = await chotPhuongAn(chinhSach(duAn), duAn, dsChon.map((x) => x.h), { ten, lyDo, nguoi: nguoiDung, dotId: coDotTH ? dotId : undefined });
       await luuDuAn({ ...duAn, phuongAn: [...(duAn.phuongAn ?? []), p] }, "CHOT_PA");
-      await ghiNhatKy("Chốt phương án", `${duAn.ten} – bản ${p.so} "${p.ten}": ${p.ho.length} hộ, ${dong(p.tong)} đ${p.lyDo ? `; lý do: ${p.lyDo}` : ""}`);
+      await ghiNhatKy("Chốt phương án", `${duAn.ten} – bản ${p.so} "${p.ten}"${p.dotTen ? ` (${p.dotTen})` : ""}: ${p.ho.length} hộ, ${dong(p.tong)} đ${p.lyDo ? `; lý do: ${p.lyDo}` : ""}`);
       dongHop();
     } catch (e) {
       setLoi((e as Error).message);
@@ -204,6 +222,16 @@ function HopChot({ duAn, kq, dong: dongHop }: { duAn: DuAn; kq: { h: Ho; k: KetQ
           {xemSoat && <div style={{ marginTop: 8 }}><KetQuaSoatPA ds={soat} duAnId={duAn.id} /></div>}
         </div>
       )}
+      {coDotTH && (
+        <div className="luoi luoi-2" style={{ marginTop: 8 }}>
+          <O nhan="Đợt thu hồi" goiY="Phương án chốt, phê duyệt theo từng đợt — chỉ hộ thuộc đợt">
+            <Chon value={dotId} onChange={(e) => doiDot(e.target.value)} aria-label="Đợt của phương án">
+              {dsDot(duAn).map((d) => <option key={d.id} value={d.id}>{tenDot(d)} ({kqDuAn.filter((x) => x.h.dotId === d.id).length} hộ)</option>)}
+            </Chon>
+          </O>
+          {kqDuAn.some((x) => !x.h.dotId || !timDot(duAn, x.h.dotId)) && <div className="thong-bao thong-bao-vang chu-nho" style={{ alignSelf: "end", marginBottom: 0 }}>{kqDuAn.filter((x) => !x.h.dotId || !timDot(duAn, x.h.dotId)).length} hộ chưa xếp đợt — không đưa vào phương án nào cho đến khi xếp đợt.</div>}
+        </div>
+      )}
       <div className="luoi luoi-2">
         <O nhan="Tên phiên bản"><input value={ten} onChange={(e) => setTen(e.target.value)} /></O>
         <O nhan={canLyDo ? "Lý do điều chỉnh, bổ sung (bắt buộc)" : "Ghi chú / lý do (nếu có)"} goiY={canLyDo ? "Có hộ đã nằm trong phương án đã phê duyệt" : undefined}>
@@ -213,7 +241,7 @@ function HopChot({ duAn, kq, dong: dongHop }: { duAn: DuAn; kq: { h: Ho; k: KetQ
       <table className="bang" style={{ marginTop: 10 }}>
         <thead>
           <tr>
-            <th><input type="checkbox" aria-label="Chọn tất cả hộ đủ điều kiện" checked={dsChon.length > 0 && dsChon.length === kq.length - chua.size} onChange={(e) => setChon(new Set(e.target.checked ? kq.filter(({ h }) => !chua.has(h.id)).map(({ h }) => h.id) : []))} /></th>
+            <th><input type="checkbox" aria-label="Chọn tất cả hộ đủ điều kiện" checked={dsChon.length > 0 && dsChon.length === kq.filter(({ h }) => !chua.has(h.id)).length} onChange={(e) => setChon(new Set(e.target.checked ? kq.filter(({ h }) => !chua.has(h.id)).map(({ h }) => h.id) : []))} /></th>
             <th>Mã</th><th>Họ tên / tổ chức</th><th className="so">Tổng tạm tính (đ)</th><th>Tình trạng</th>
           </tr>
         </thead>
@@ -238,7 +266,7 @@ function HopChot({ duAn, kq, dong: dongHop }: { duAn: DuAn; kq: { h: Ho; k: KetQ
 }
 
 function HopPheDuyet({ duAn, p, dong: dongHop, luu }: { duAn: DuAn; p: PhienBanPA; dong: () => void; luu: (qd: { so: string; ngay: string; coQuan: string }, ghiVanBan: boolean) => Promise<void> }) {
-  const [so, setSo] = useState(duAn.vanBan?.qd_phe_duyet_so ?? "");
+  const [so, setSo] = useState((p.dotId ? timDot(duAn, p.dotId)?.vanBan?.qd_phe_duyet_so : duAn.vanBan?.qd_phe_duyet_so) ?? "");
   const [ngay, setNgay] = useState("");
   const [coQuan, setCoQuan] = useState(`UBND ${duAn.xa.replace(/^(Xã|Phường) /, (m) => m.toLowerCase())}`);
   const [ghi, setGhi] = useState(true);

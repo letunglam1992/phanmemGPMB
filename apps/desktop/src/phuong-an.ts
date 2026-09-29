@@ -14,6 +14,7 @@ import type { BoChinhSach } from "@gpmb/core";
 import { tinhHo, TEN_COT, type CotTongHop, type KetQuaHo } from "./tinh-ho";
 import { taoId, type DuAn, type Ho } from "./mo-hinh";
 import { soD } from "./so";
+import { loiChotTheoDot, tenDot, timDot } from "./dot-thu-hoi";
 
 export type TrangThaiPA = "DA_CHOT" | "DA_PHE_DUYET" | "DA_HUY";
 export const TEN_TT_PA: Record<TrangThaiPA, string> = { DA_CHOT: "Đã chốt, chờ phê duyệt", DA_PHE_DUYET: "Đã phê duyệt", DA_HUY: "Đã hủy" };
@@ -60,6 +61,10 @@ export interface PhienBanPA {
   bam: string;
   pheDuyet?: { so: string; ngay: string; coQuan: string; luc: string; nguoi: string };
   huy?: { luc: string; nguoi: string; lyDo: string };
+  /** P3-1: bản phương án của đợt thu hồi (dự án có đợt: chốt, phê duyệt theo đợt). Trống = cả dự án (dự án không chia đợt). */
+  dotId?: string;
+  /** Tên đợt tại thời điểm chốt (in trên bảng xuất). */
+  dotTen?: string;
 }
 
 export class LoiPhuongAn extends Error {}
@@ -72,7 +77,9 @@ export async function sha256(x: string): Promise<string> {
 }
 
 /** Nội dung được băm: mọi thứ quyết định số tiền (không gồm trạng thái, phê duyệt). */
-const noiDungBam = (p: Pick<PhienBanPA, "boChinhSach" | "thamSoDuAn" | "ho" | "tong">) => JSON.stringify([p.boChinhSach, p.thamSoDuAn, p.ho, p.tong]);
+/** Nội dung được băm; bản của đợt (P3-1) băm thêm mã đợt — bản cũ không có đợt giữ nguyên mã băm. */
+const noiDungBam = (p: Pick<PhienBanPA, "boChinhSach" | "thamSoDuAn" | "ho" | "tong" | "dotId">) =>
+  JSON.stringify(p.dotId ? [p.boChinhSach, p.thamSoDuAn, p.ho, p.tong, p.dotId] : [p.boChinhSach, p.thamSoDuAn, p.ho, p.tong]);
 
 export function chupHo(h: Ho, k: KetQuaHo): HoChot {
   return {
@@ -116,10 +123,13 @@ export async function chotPhuongAn(
   cs: BoChinhSach,
   duAn: DuAn,
   hos: Ho[],
-  o: { ten: string; lyDo: string; nguoi: string; luc?: string },
+  o: { ten: string; lyDo: string; nguoi: string; luc?: string; dotId?: string },
 ): Promise<PhienBanPA> {
   if (!hos.length) throw new LoiPhuongAn("Chưa chọn hộ nào để chốt.");
   if (!o.ten.trim()) throw new LoiPhuongAn("Chưa đặt tên phiên bản phương án.");
+  const loiDot = loiChotTheoDot(duAn, hos, o.dotId);
+  if (loiDot.length) throw new LoiPhuongAn(loiDot.join("; "));
+  const dot = timDot(duAn, o.dotId);
   const ds = hos.map((h) => ({ h, k: tinhHo(cs, duAn, h) }));
   const chua = hoChuaDuDieuKien(ds);
   if (chua.length) throw new LoiPhuongAn(`Không chốt được: ${chua.map((x) => `${x.h.ma} (${x.lyDo})`).join("; ")}. Bỏ các hộ này khỏi bản chốt hoặc xử lý các khoản trước.`);
@@ -133,6 +143,7 @@ export async function chotPhuongAn(
     thamSoDuAn: structuredClone({ xa: duAn.xa, giaGao: duAn.giaGao, hanMucNN: duAn.hanMucNN, heSoGiaDat: duAn.heSoGiaDat }),
     ho,
     tong: s(ds.reduce((a, x) => a.plus(x.k.tong.tongLamTron), D(0))),
+    ...(dot ? { dotId: dot.id } : {}),
   };
   return {
     id: taoId(),
@@ -143,6 +154,7 @@ export async function chotPhuongAn(
     nguoi: o.nguoi,
     lyDo: o.lyDo.trim(),
     ...base,
+    ...(dot ? { dotTen: tenDot(dot) } : {}),
     bam: await sha256(noiDungBam(base)),
   };
 }
@@ -243,7 +255,7 @@ export function hoLechSauPheDuyet(dsPA: PhienBanPA[], hienTai: { h: Ho; k: KetQu
 /** Dòng trạng thái in trên bảng xuất của một bản phương án. */
 export function moTaBan(p: PhienBanPA): string {
   const ngay = (iso: string) => iso.split("-").reverse().join("/");
-  const chot = `chốt ngày ${ngay(p.luc.slice(0, 10))}`;
+  const chot = `${p.dotTen ? `${p.dotTen}, ` : ""}chốt ngày ${ngay(p.luc.slice(0, 10))}`;
   if (p.trangThai === "DA_PHE_DUYET" && p.pheDuyet) return `Phương án bản ${p.so} – ĐÃ PHÊ DUYỆT theo Quyết định số ${p.pheDuyet.so} ngày ${ngay(p.pheDuyet.ngay)}${p.pheDuyet.coQuan ? ` của ${p.pheDuyet.coQuan}` : ""} (${chot})`;
   if (p.trangThai === "DA_HUY") return `Phương án bản ${p.so} – ĐÃ HỦY (${chot}) – không dùng để chi trả`;
   return `Phương án bản ${p.so} – ĐÃ CHỐT, CHỜ PHÊ DUYỆT (${chot})`;

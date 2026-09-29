@@ -11,6 +11,7 @@ import { taiXuong } from "../tai-xuong";
 import { tenTep } from "../ten-tep";
 import { giaTriNhapThem } from "../van-ban/tao-nhanh";
 import { Chon } from "../thanh-phan/Chon";
+import { chungTheoDot, coDot, dotCuaHo, dsDot, duAnTheoDot, khopDot, tenDot, timDot } from "../dot-thu-hoi";
 
 /** Thông tin chung của dự án dùng khi soạn văn bản (lưu vào DuAn.vanBan). */
 export const TRUONG_CHUNG: (TruongNhap & { nhom: string })[] = [
@@ -76,6 +77,8 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
   const [thongBao, setThongBao] = useState<{ loai: "xanh" | "do" | "vang"; noiDung: string } | null>(null);
   const [dangTao, setDangTao] = useState(false);
   const [xemTruong, setXemTruong] = useState<string[] | null>(null);
+  // P3-1: soạn văn bản cho một đợt thu hồi ("" = cả dự án)
+  const [dotVb, setDotVb] = useState(() => (hoIdDau && duAn ? (hoCua(duAnId).find((h) => h.id === hoIdDau)?.dotId ?? "") : ""));
 
   const mau: MauVanBan = mauTheoMa(ma);
   const hos = hoCua(duAnId);
@@ -87,7 +90,7 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
   }, [duAn?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (duAn) setRieng(giaTriNhapThem(mau, duAn, ds));
-    if (mau.phamVi === "DOT" && chonHo.size === 0) setChonHo(new Set(hoCua(duAnId).map((h) => h.id)));
+    if (mau.phamVi === "DOT" && chonHo.size === 0) setChonHo(new Set(hoCua(duAnId).filter((h) => !dotVb || h.dotId === dotVb).map((h) => h.id)));
     setSo("");
     setThongBao(null);
   }, [ma]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -96,6 +99,16 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
   }, [kho]);
 
   if (!duAn) return <div className="trang trong">Chọn dự án trước.</div>;
+  const dotChon = timDot(duAn, dotVb);
+  const duAnVb = duAnTheoDot(duAn, dotChon);
+  const chungVb = chungTheoDot(chung, dotChon);
+  const dsDot_ = dotChon ? ds.filter(({ h }) => khopDot(h, dotChon.id)) : ds;
+  /** Ghi số, ngày văn bản cấp dự án/đợt: vào đợt khi đang soạn cho đợt, không thì vào dự án. */
+  const vanBanGhi = (them: Record<string, string>) =>
+    dotChon
+      ? { ...duAn, vanBan: { ...(duAn.vanBan ?? {}), ...chung }, dotThuHoi: duAn.dotThuHoi!.map((x) => (x.id === dotChon.id ? { ...x, vanBan: { ...(x.vanBan ?? {}), ...them } } : x)) }
+      : { ...duAn, vanBan: { ...(duAn.vanBan ?? {}), ...chung, ...them } };
+  const choHo = (h: Ho) => { const d = dotCuaHo(duAn, h); return { duAn: duAnTheoDot(duAn, d), chung: chungTheoDot(chung, d) }; };
 
   const dsMau = DANH_MUC_MAU.filter((m) => !tim || `${m.ma} ${m.ten}`.toLowerCase().includes(tim.toLowerCase()));
   const theoBuoc = [
@@ -104,7 +117,9 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
   ].filter((x) => x.ds.length);
   const dsHoChon = ds.filter(({ h }) => chonHo.has(h.id));
   const hoXemTruoc = mau.phamVi === "HO" ? dsHoChon[0] : undefined;
-  const duLieuXem = ghepDuLieu({ mau, duAn, ds: mau.phamVi === "DOT" ? dsHoChon : ds, ho: hoXemTruoc, chung, rieng, so, ngayKy });
+  const duLieuXem = hoXemTruoc
+    ? ghepDuLieu({ mau, ...choHo(hoXemTruoc.h), ds, ho: hoXemTruoc, rieng, so, ngayKy })
+    : ghepDuLieu({ mau, duAn: duAnVb, ds: mau.phamVi === "DOT" ? dsHoChon : dsDot_, chung: chungVb, rieng, so, ngayKy });
 
   const napMau = async () => (await kho.docMau(ma))?.bytes ?? (await napMauGoc(ma));
 
@@ -119,11 +134,11 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
       const kyHieu = (mau.ghiLai?.kyHieu ?? "").replace("{ky_hieu_phong}", chung.ky_hieu_phong || "");
       if (mau.phamVi === "DOT") {
         if (!dsHoChon.length) throw new Error("Chọn các hộ, tổ chức trong đợt.");
-        const out = dienMau(mauBytes, ghepDuLieu({ mau, duAn, ds: dsHoChon, chung, rieng, so, ngayKy }));
+        const out = dienMau(mauBytes, ghepDuLieu({ mau, duAn: duAnVb, ds: dsHoChon, chung: chungVb, rieng, so, ngayKy }));
         if (!(await taiXuong(out, `Mau-${ma}_${tenAnToan(mau.ten)}_${dsHoChon.length}-ho.docx`, DOCX))) return setThongBao({ loai: "vang", noiDung: "Đã hủy lưu tệp — chưa ghi số, ngày văn bản và nhật ký hồ sơ." });
-        const vbMoi: Record<string, string> = { ...(duAn.vanBan ?? {}), ...chung, ...luuRieng };
+        const vbMoi: Record<string, string> = { ...luuRieng };
         if (mau.ghiLai?.capDo === "DU_AN" && so.trim()) Object.assign(vbMoi, { [`${mau.ghiLai.khoa}_so`]: `${so.trim()}/${kyHieu}`, [`${mau.ghiLai.khoa}_ngay`]: ngayChu(ngayKy) });
-        await luuDuAn({ ...duAn, vanBan: vbMoi });
+        await luuDuAn(vanBanGhi(vbMoi));
         for (const x of dsHoChon) {
           const ghi: Partial<Ho> = { nhatKy: [...x.h.nhatKy, { luc: new Date().toISOString(), nguoi: nguoiDung, noiDung: `Có tên trong văn bản ${mau.ten}${so.trim() ? ` số ${so.trim()}/${kyHieu}` : ""}` }] };
           if (mau.ghiLai?.capDo === "HO" && so.trim()) ghi.vanBan = { ...(x.h.vanBan ?? {}), [`${mau.ghiLai.khoa}_so`]: `${so.trim()}/${kyHieu}`, [`${mau.ghiLai.khoa}_ngay`]: ngayChu(ngayKy) };
@@ -131,9 +146,9 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
         }
         setThongBao({ loai: "xanh", noiDung: `Đã tạo ${mau.ten} cho ${dsHoChon.length} hộ, tổ chức.` });
       } else if (mau.phamVi === "DU_AN") {
-        const out = dienMau(mauBytes, ghepDuLieu({ mau, duAn, ds, chung, rieng, so, ngayKy }));
-        if (!(await taiXuong(out, `Mau-${ma}_${tenAnToan(mau.ten)}_${tenAnToan(duAn.ten)}.docx`, DOCX))) return setThongBao({ loai: "vang", noiDung: "Đã hủy lưu tệp — chưa ghi số, ngày văn bản." });
-        if (mau.ghiLai && so.trim()) await luuDuAn({ ...duAn, vanBan: { ...(duAn.vanBan ?? {}), ...chung, [`${mau.ghiLai.khoa}_so`]: `${so.trim()}/${kyHieu}`, [`${mau.ghiLai.khoa}_ngay`]: ngayChu(ngayKy) } });
+        const out = dienMau(mauBytes, ghepDuLieu({ mau, duAn: duAnVb, ds: dsDot_, chung: chungVb, rieng, so, ngayKy }));
+        if (!(await taiXuong(out, `Mau-${ma}_${tenAnToan(mau.ten)}_${tenAnToan(duAn.ten)}${dotChon ? `_${tenAnToan(tenDot(dotChon))}` : ""}.docx`, DOCX))) return setThongBao({ loai: "vang", noiDung: "Đã hủy lưu tệp — chưa ghi số, ngày văn bản." });
+        if (mau.ghiLai && so.trim()) await luuDuAn(vanBanGhi({ [`${mau.ghiLai.khoa}_so`]: `${so.trim()}/${kyHieu}`, [`${mau.ghiLai.khoa}_ngay`]: ngayChu(ngayKy) }));
         setThongBao({ loai: "xanh", noiDung: `Đã tạo Mẫu ${ma} cho dự án.` });
       } else {
         if (!dsHoChon.length) throw new Error("Chọn ít nhất một hộ, tổ chức.");
@@ -141,7 +156,7 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
         const ghiHo: Ho[] = [];
         for (const [i, x] of dsHoChon.entries()) {
           const soHo = soSo !== null ? String(soSo + i) : so;
-          const noiDung = dienMau(mauBytes, ghepDuLieu({ mau, duAn, ds, ho: x, chung, rieng, so: soHo, ngayKy }));
+          const noiDung = dienMau(mauBytes, ghepDuLieu({ mau, ...choHo(x.h), ds, ho: x, rieng, so: soHo, ngayKy }));
           tep.push({ ten: `Mau-${ma}_${tenAnToan(x.h.ma + " " + x.h.ten)}.docx`, noiDung });
           const ghi: Partial<Ho> = { nhatKy: [...x.h.nhatKy, { luc: new Date().toISOString(), nguoi: nguoiDung, noiDung: `Tạo văn bản Mẫu ${ma} – ${mau.ten}${soHo.trim() ? ` số ${soHo}` : ""}` }] };
           if (mau.ghiLai && soHo.trim()) ghi.vanBan = { ...(x.h.vanBan ?? {}), [`${mau.ghiLai.khoa}_so`]: `${soHo.trim()}/${kyHieu}`, [`${mau.ghiLai.khoa}_ngay`]: ngayChu(ngayKy) };
@@ -204,6 +219,12 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
           <Chon value={duAnId} onChange={(e) => di({ ten: "van-ban", duAnId: e.target.value })}>
             {dsDuAn.map((d) => <option key={d.id} value={d.id}>{d.ten}</option>)}
           </Chon>
+          {coDot(duAn) && (
+            <Chon value={dotVb} aria-label="Soạn cho đợt" title="Văn bản của đợt dùng căn cứ, ngày thông báo, số văn bản của đợt; số văn bản cấp đợt ghi vào đợt" onChange={(e) => { setDotVb(e.target.value); if (mau.phamVi === "DOT") setChonHo(new Set(ds.filter(({ h }) => !e.target.value || h.dotId === e.target.value).map(({ h }) => h.id))); }}>
+              <option value="">Cả dự án</option>
+              {dsDot(duAn).map((d) => <option key={d.id} value={d.id}>{tenDot(d)}</option>)}
+            </Chon>
+          )}
         </div>
       </div>
 
@@ -243,13 +264,13 @@ export function VanBan({ duAnId, maDau, hoIdDau }: { duAnId: string; maDau?: str
               {(mau.phamVi === "HO" || mau.phamVi === "DOT") && (
                 <div>
                   <div className="nhom-nut" style={{ alignItems: "center", marginBottom: 6 }}>
-                    <b className="chu-nho">{mau.phamVi === "DOT" ? "Hộ, tổ chức trong đợt" : "Chọn hộ, tổ chức"} ({chonHo.size}/{ds.length})</b>
+                    <b className="chu-nho">{mau.phamVi === "DOT" ? "Hộ, tổ chức trong đợt" : "Chọn hộ, tổ chức"} ({chonHo.size}/{dsDot_.length}){dotChon ? ` · ${tenDot(dotChon)}` : ""}</b>
                     <input placeholder="Lọc…" value={locHo} onChange={(e) => setLocHo(e.target.value)} style={{ width: 200 }} />
-                    <button className="nut nut-nho" onClick={() => setChonHo(new Set(ds.filter(({ h }) => !locHo || `${h.ma} ${h.ten}`.toLowerCase().includes(locHo.toLowerCase())).map(({ h }) => h.id)))}>Chọn tất cả (theo lọc)</button>
+                    <button className="nut nut-nho" onClick={() => setChonHo(new Set(dsDot_.filter(({ h }) => !locHo || `${h.ma} ${h.ten}`.toLowerCase().includes(locHo.toLowerCase())).map(({ h }) => h.id)))}>Chọn tất cả (theo lọc)</button>
                     <button className="nut nut-nho" onClick={() => setChonHo(new Set())}>Bỏ chọn</button>
                   </div>
                   <div className="ds-chon-ho">
-                    {ds.filter(({ h }) => !locHo || `${h.ma} ${h.ten}`.toLowerCase().includes(locHo.toLowerCase())).map(({ h }) => (
+                    {dsDot_.filter(({ h }) => !locHo || `${h.ma} ${h.ten}`.toLowerCase().includes(locHo.toLowerCase())).map(({ h }) => (
                       <label key={h.id}>
                         <input type="checkbox" checked={chonHo.has(h.id)} onChange={(e) => { const s = new Set(chonHo); if (e.target.checked) s.add(h.id); else s.delete(h.id); setChonHo(s); }} />
                         {h.ma} · {h.ten}

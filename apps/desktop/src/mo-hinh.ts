@@ -166,6 +166,8 @@ export interface TaiDinhCuHo {
   /** Khoản hỗ trợ khác do UBND xã quyết định cho dự án (k13 Đ6 QĐ 14/2026) hoặc chính sách chưa có sẵn — cán bộ nhập, bắt buộc căn cứ. */
   khoanKhac: { id: string; noiDung: string; soTien: string; canCu: string }[];
   ghiChu?: string;
+  /** P3-3: lô/căn trong quỹ tái định cư của dự án đã giao cho hộ (quy-tdc.ts). */
+  loId?: string;
 }
 
 /**
@@ -245,6 +247,32 @@ export interface Ho {
   banGiao?: BanGiaoHo;
   /** Phiên bản cấu trúc dữ liệu (P0-2: 2 = số đã chuẩn hóa). */
   phienBanCauTruc?: number;
+  /** P3-1: đợt thu hồi của hộ (DuAn.dotThuHoi); trống = chưa xếp đợt. Mã hồ sơ vẫn đánh số chung cả dự án. */
+  dotId?: string;
+  /** P3-4: tài khoản cán bộ phụ trách hồ sơ (tên đăng nhập). */
+  phuTrach?: string;
+}
+
+/**
+ * P3-1: đợt thu hồi trong một dự án (thông báo thu hồi, bước chung, phương án theo đợt). Thông tin để trống thì
+ * lấy theo dự án. Phương án bồi thường, hỗ trợ, tái định cư chốt và phê duyệt theo từng đợt (quyết định của đơn vị).
+ */
+export interface DotThuHoi {
+  id: string;
+  /** Số thứ tự đợt (1, 2, …) — dùng sắp xếp, hiển thị "Đợt 2". */
+  so: number;
+  ten: string;
+  /** Căn cứ thu hồi của đợt (thông báo, kế hoạch) — thay DuAn.canCuThuHoi cho hộ thuộc đợt. */
+  canCuThuHoi?: string;
+  /** Ngày thông báo thu hồi đất của đợt — thay DuAn.ngayThongBao cho hộ thuộc đợt. */
+  ngayThongBao?: string;
+  /** Phạm vi đợt (lý trình, bản, tờ bản đồ…) — điền trường pham_vi_dot của văn bản. */
+  phamVi?: string;
+  /** Bước chung 1–4 riêng của đợt; bước chưa có ở đây lấy theo bước chung của dự án. */
+  tienDoChung?: Record<string, BuocHo>;
+  /** Số, ngày văn bản cấp đợt (thông báo thu hồi, QĐ phê duyệt phương án đợt…) — ghi đè DuAn.vanBan khi soạn văn bản của đợt. */
+  vanBan?: Record<string, string>;
+  ghiChu?: string;
 }
 
 export interface BanDoDuAn {
@@ -306,6 +334,10 @@ export interface DuAn {
   tienDoChung?: Record<string, BuocHo>;
   /** Các phiên bản phương án đã chốt/phê duyệt (src/phuong-an.ts). */
   phuongAn?: import("./phuong-an").PhienBanPA[];
+  /** P3-1: các đợt thu hồi (dot-thu-hoi.ts). Có đợt thì phương án chốt, phê duyệt theo đợt. */
+  dotThuHoi?: DotThuHoi[];
+  /** P3-3: quỹ đất, nhà tái định cư của dự án (quy-tdc.ts). */
+  quyTdc?: import("./quy-tdc").QuyTdc;
   taoLuc: string;
 }
 
@@ -350,13 +382,24 @@ function nho<T>(h: Ho, duAn: object, f: () => Ho): Ho {
   return v as Ho & T;
 }
 
-export function tienDoHieuLuc(duAn: Pick<DuAn, "tienDoChung"> | undefined | null, h: Ho): Record<string, BuocHo> {
-  if (!duAn?.tienDoChung) return h.tienDo;
+type NguonChung = Pick<DuAn, "tienDoChung" | "dotThuHoi">;
+/** Có bước chung (dự án hoặc đợt) để ghép vào tiến độ hộ. */
+const coChung = (duAn: NguonChung | undefined | null): duAn is NguonChung => !!(duAn?.tienDoChung || duAn?.dotThuHoi?.some((d) => d.tienDoChung));
+
+/** Bước chung áp dụng cho hộ: bước chung của đợt (P3-1) ghi đè từng bước lên bước chung của dự án. */
+export function buocChungCua(duAn: NguonChung, h: Pick<Ho, "dotId">): Record<string, BuocHo> | undefined {
+  const dot = h.dotId ? duAn.dotThuHoi?.find((d) => d.id === h.dotId) : undefined;
+  if (!dot?.tienDoChung) return duAn.tienDoChung;
+  return { ...(duAn.tienDoChung ?? {}), ...dot.tienDoChung };
+}
+
+export function tienDoHieuLuc(duAn: NguonChung | undefined | null, h: Ho): Record<string, BuocHo> {
+  if (!coChung(duAn)) return h.tienDo;
   return hoHieuLuc(duAn, h).tienDo;
 }
 
-function tinhTienDoHieuLuc(duAn: Pick<DuAn, "tienDoChung">, h: Ho): Record<string, BuocHo> {
-  const chung = duAn.tienDoChung;
+function tinhTienDoHieuLuc(duAn: NguonChung, h: Ho): Record<string, BuocHo> {
+  const chung = buocChungCua(duAn, h);
   if (!chung) return h.tienDo;
   const out = { ...h.tienDo };
   for (const ma of BUOC_CHUNG) {
@@ -368,8 +411,8 @@ function tinhTienDoHieuLuc(duAn: Pick<DuAn, "tienDoChung">, h: Ho): Record<strin
 }
 
 /** Hồ sơ với tiến độ có hiệu lực — dùng cho mọi chỗ ĐỌC tiến độ (thống kê, cảnh báo, thanh bước). */
-export const hoHieuLuc = (duAn: Pick<DuAn, "tienDoChung"> | undefined | null, h: Ho): Ho =>
-  duAn?.tienDoChung ? nho(h, duAn, () => ({ ...h, tienDo: tinhTienDoHieuLuc(duAn, h) })) : h;
+export const hoHieuLuc = (duAn: NguonChung | undefined | null, h: Ho): Ho =>
+  coChung(duAn) ? nho(h, duAn, () => ({ ...h, tienDo: tinhTienDoHieuLuc(duAn, h) })) : h;
 
 export const TEN_TRANG_THAI_BUOC: Record<TrangThaiBuoc, string> = {
   CHUA: "Chưa thực hiện",

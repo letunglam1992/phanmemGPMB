@@ -2,6 +2,7 @@
  * Tạo văn bản nhanh từ dữ liệu đã nhập (không qua form soạn): dùng thông tin chung đã lưu của dự án, Thiết lập
  * đơn vị, giá trị mặc định tự tính từ hồ sơ. Không ghi số, ngày văn bản — bản dự thảo để in/chỉnh trong Word.
  */
+import { duAnCuaHo } from "../dot-thu-hoi";
 import { D, dinhDang } from "@gpmb/core";
 import type { Kho } from "../kho";
 import type { DuAn, Ho } from "../mo-hinh";
@@ -68,5 +69,7 @@ export async function taoNhanh(p: { kho: Kho; ma: string; duAn: DuAn; ds: { h: H
   const mau = mauTheoMa(p.ma);
   const bytes = await napMau(p.kho, p.ma);
   const ds = mau.phamVi === "DOT" && p.ho ? [p.ho] : p.ds;
-  return dienMau(bytes, ghepDuLieu({ mau, duAn: p.duAn, ds, ho: mau.phamVi === "HO" ? p.ho : undefined, chung: thongTinChung(p.duAn, p.dsDonVi), rieng: giaTriNhapThem(mau, p.duAn, ds), so: "", ngayKy: "" }));
+  // P3-1: văn bản của hộ thuộc đợt dùng căn cứ, ngày thông báo, số văn bản của đợt
+  const duAn = p.ho ? duAnCuaHo(p.duAn, p.ho.h) : p.duAn;
+  return dienMau(bytes, ghepDuLieu({ mau, duAn, ds, ho: mau.phamVi === "HO" ? p.ho : undefined, chung: thongTinChung(duAn, p.dsDonVi), rieng: giaTriNhapThem(mau, duAn, ds), so: "", ngayKy: "" }));
 }

@@ -210,6 +210,9 @@ export function canhBaoDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: st
     const c = duAn.tienDoChung?.[ma];
     if (c?.trangThai === "CHO_DUYET")
       out.push({ muc: "THONG_TIN", duAnId: duAn.id, noiDung: `Bước chung ${ma}. ${CAC_BUOC.find((b) => b.ma === ma)?.ten ?? ""}: chờ duyệt (áp dụng cho mọi hộ của dự án)` });
+    for (const d of duAn.dotThuHoi ?? [])
+      if (d.tienDoChung?.[ma]?.trangThai === "CHO_DUYET")
+        out.push({ muc: "THONG_TIN", duAnId: duAn.id, noiDung: `${d.ten || `Đợt ${d.so}`} – bước chung ${ma}. ${CAC_BUOC.find((b) => b.ma === ma)?.ten ?? ""}: chờ duyệt (áp dụng cho hộ thuộc đợt)` });
   }
   for (const { h: h0, k } of ds) {
     const h = hoHieuLuc(duAn, h0);
@@ -225,8 +228,10 @@ export function canhBaoDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: st
     if (ct.trangThai === "CHUA_DUYET" && b9?.trangThai === "XONG" && b9.ngay && !xong(h, "12") && soNgay(b9.ngay, homNay) > 30)
       out.push({ muc: "CAO", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: quá 30 ngày kể từ phê duyệt phương án chưa chi trả (${soNgay(b9.ngay, homNay)} ngày)`, canCu: "khoản 3 Điều 94 Luật Đất đai 2024" });
     const b13 = h.tienDo["13"];
-    if (b13?.ngay && duAn.ngayThongBao) {
-      const kc = soNgay(duAn.ngayThongBao, b13.ngay);
+    // P3-1: hộ thuộc đợt → tính từ ngày thông báo thu hồi của đợt (trống thì theo dự án)
+    const ngayTb = (h.dotId && duAn.dotThuHoi?.find((d) => d.id === h.dotId)?.ngayThongBao) || duAn.ngayThongBao;
+    if (b13?.ngay && ngayTb) {
+      const kc = soNgay(ngayTb, b13.ngay);
       const coPnn = h.thua.some((t) => !/^(LUC|LUK|LUN|HNK|BHK|NHK|CLN|RSX|RPH|RDD|NTS|NKH|LNP)$/i.test(t.loaiDat));
       const toiThieu = coPnn ? 180 : 90;
       if (kc < toiThieu)

@@ -27,6 +27,8 @@ import { CauHinhThuongBanGiao } from "../thanh-phan/CauHinhThuong";
 import { TheBoChinhSachDuAn } from "../thanh-phan/GoiChinhSach";
 import { TheDoiChieuDt } from "../thanh-phan/DoiChieuDt";
 import { TheDuBao } from "../thanh-phan/DuBao";
+import { ChonDot, HopXepDot, TheDotThuHoi, TheTongHopDot, loiDsDot } from "../thanh-phan/DotThuHoi";
+import { coDot, khopDot } from "../dot-thu-hoi";
 import { MAU_MA_MAC_DINH, loiMauMa, maHoTiepTheo, mauMaCua, nhomMaTrung, taoMa } from "../ma-ho";
 
 /**
@@ -110,7 +112,7 @@ export function KhongGianDuAn({ duAnId, tab = "tong-quan", ma, hoId }: { duAnId:
       )}
 
       <RaoLoi ten={`thẻ ${THE.find((t) => t.ma === tab)?.ten ?? tab}`} khoa={`${duAnId}|${tab}`}>
-      {tab === "tong-quan" && <TheTongQuan duAn={duAn} kq={kq} moHo={(t) => { moThe("ho"); setTimeout(() => window.dispatchEvent(new CustomEvent("gpmb-loc-ho", { detail: t })), 0); }} capNhatTd={setCapNhatTd} keHoach={() => setKeHoach(true)} />}
+      {tab === "tong-quan" && <TheTongQuan duAn={duAn} kq={kq} moHo={(t) => { moThe("ho"); setTimeout(() => window.dispatchEvent(new CustomEvent("gpmb-loc-ho", { detail: t })), 0); }} moDot={(id) => { moThe("ho"); setTimeout(() => window.dispatchEvent(new CustomEvent("gpmb-loc-dot", { detail: id })), 0); }} capNhatTd={setCapNhatTd} keHoach={() => setKeHoach(true)} />}
       {tab === "thong-tin" && <TheThongTin key={duAn.id} duAn={duAn} tiep={() => moThe("buoc-chung")} />}
       {tab === "buoc-chung" && (
         <div className="the the-than">
@@ -132,7 +134,7 @@ export function KhongGianDuAn({ duAnId, tab = "tong-quan", ma, hoId }: { duAnId:
 
 type Kq = { h: import("../mo-hinh").Ho; k: import("../tinh-ho").KetQuaHo }[];
 
-function TheTongQuan({ duAn, kq, moHo, capNhatTd, keHoach }: { duAn: DuAn; kq: Kq; moHo: (t: TrangThaiGpmb) => void; capNhatTd: (t: "chung" | "hang-loat") => void; keHoach: () => void }) {
+function TheTongQuan({ duAn, kq, moHo, moDot, capNhatTd, keHoach }: { duAn: DuAn; kq: Kq; moHo: (t: TrangThaiGpmb) => void; moDot: (dotId: string) => void; capNhatTd: (t: "chung" | "hang-loat") => void; keHoach: () => void }) {
   const { di, quyen } = useUngDung();
   const homNay = homNayIso();
   const tk = thongKe(duAn, kq, homNay);
@@ -179,6 +181,7 @@ function TheTongQuan({ duAn, kq, moHo, capNhatTd, keHoach }: { duAn: DuAn; kq: K
           <div className="bang-cuon" style={{ maxHeight: 420, padding: "6px 10px" }}><DongMoc moc={moc} chon={quyen("SUA_HO_SO") ? (ma) => capNhatTd(["1", "2", "3", "4"].includes(ma) ? "chung" : "hang-loat") : undefined} /></div>
         </div>
       </div>
+      {coDot(duAn) && <TheTongHopDot duAn={duAn} kq={kq} moDot={moDot} />}
       <ThePhuongAn duAn={duAn} kq={kq} />
     </>
   );
@@ -194,7 +197,7 @@ function TheThongTin({ duAn, tiep }: { duAn: DuAn; tiep: () => void }) {
   const goc = { ...thongTinChungMacDinh(duAn), ...truongVanBanTuDonVi(dsDonVi), ...(duAn.vanBan ?? {}) };
   const daDoi = JSON.stringify(d) !== JSON.stringify(duAn) || JSON.stringify(chung) !== JSON.stringify(goc);
   const { luuDuoc: luuDuocDa } = kiemTraDuAn(d);
-  const luuDuoc = luuDuocDa && !loiMauMa(d.mauMaHo ?? "");
+  const luuDuoc = luuDuocDa && !loiMauMa(d.mauMaHo ?? "") && !loiDsDot(d);
   const choSua = quyen("SUA_HO_SO");
   const maTiep = maHoTiepTheo(hoCua(duAn.id, true).map((h) => h.ma), mauMaCua(d));
   const nhom = [...new Set(TRUONG_CHUNG.map((t) => t.nhom))];
@@ -224,6 +227,7 @@ function TheThongTin({ duAn, tiep }: { duAn: DuAn; tiep: () => void }) {
         </div>
         <CauHinhThuongBanGiao d={d} setD={setD} />
         <TheBoChinhSachDuAn duAn={duAn} />
+        <TheDotThuHoi d={d} setD={setD} hos={hoCua(duAn.id, true)} />
         <div className="the" style={{ gridColumn: "1" }}>
           <div className="the-dau"><h3>Mẫu mã hồ sơ</h3><span className="mo chu-nho">do đơn vị đặt</span></div>
           <div className="the-than">
@@ -259,7 +263,14 @@ function TheThongTin({ duAn, tiep }: { duAn: DuAn; tiep: () => void }) {
 }
 
 function TheHo({ duAn, kq }: { duAn: DuAn; kq: Kq }) {
-  const { di } = useUngDung();
+  const { di, quyen } = useUngDung();
+  const [locDot, setLocDot] = useState("");
+  const [xepDot, setXepDot] = useState(false);
+  useEffect(() => {
+    const nghe = (e: Event) => setLocDot((e as CustomEvent<string>).detail);
+    window.addEventListener("gpmb-loc-dot", nghe);
+    return () => window.removeEventListener("gpmb-loc-dot", nghe);
+  }, []);
   const maTrung = nhomMaTrung(kq.map((x) => x.h));
   const homNay = homNayIso();
   const [loc, setLoc] = useState("");
@@ -273,6 +284,7 @@ function TheHo({ duAn, kq }: { duAn: DuAn; kq: Kq }) {
   const ds = kq
     .map(({ h, k }) => ({ h, k, duAn, tt: trangThaiHo(duAn, h, k, homNay) }))
     .filter((x) => !locTt || x.tt === locTt)
+    .filter((x) => khopDot(x.h, locDot, duAn))
     .filter((x) => !locPl || x.h.thua.some((t) => Number(t.dienTichThuHoi) > 0 && (t.phapLy ?? "CHUA") === locPl))
     .filter((x) => khopTuKhoa({ h: x.h, duAnTen: "" }, loc));
   return (
@@ -291,6 +303,8 @@ function TheHo({ duAn, kq }: { duAn: DuAn; kq: Kq }) {
             <option value="">Mọi hiện trạng</option>
             {THU_TU_TRANG_THAI.map((t) => <option key={t} value={t}>{TT_GPMB[t].ten}</option>)}
           </Chon>
+          {coDot(duAn) && <ChonDot duAn={duAn} value={locDot} onChange={setLocDot} style={{ height: 38, borderRadius: 10 }} />}
+          {coDot(duAn) && quyen("SUA_HO_SO") && <button className="nut" onClick={() => setXepDot(true)}>Xếp đợt…</button>}
           <Chon value={locPl} onChange={(e) => setLocPl(e.target.value as NhomPhapLy | "CHUA" | "")} aria-label="Lọc pháp lý nguồn gốc" style={{ height: 38, borderRadius: 10 }}>
             <option value="">Mọi pháp lý nguồn gốc</option>
             {THU_TU_PHAP_LY.map((k) => <option key={k} value={k}>{NHOM_PHAP_LY[k].ngan}</option>)}
@@ -299,6 +313,7 @@ function TheHo({ duAn, kq }: { duAn: DuAn; kq: Kq }) {
         </div>
       </div>
       <BangHo ds={ds} homNay={homNay} mo={(x) => di({ ten: "ho", duAnId: duAn.id, hoId: x.h.id })} trong={kq.length ? "Không có hồ sơ khớp điều kiện lọc." : "Chưa có hồ sơ. Bấm “Thêm hộ, tổ chức”, nhập Excel (menu Thêm) hoặc tạo từ bản đồ."} />
+      {xepDot && <HopXepDot duAn={duAn} hos={kq.map((x) => x.h)} dong={() => setXepDot(false)} />}
     </div>
   );
 }

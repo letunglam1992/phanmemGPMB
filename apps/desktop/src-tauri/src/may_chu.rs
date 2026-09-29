@@ -667,6 +667,41 @@ pub fn kiem_tra_du_an(st: &MayChu, cu: Option<&Value>, moi: &mut Value, u: &Nguo
     if !(cu.is_none() && u.vai_tro == "QUAN_TRI") {
         let chung_cu = cu.map(|c| c["tienDoChung"].clone()).unwrap_or(json!({}));
         kiem_tra_buoc(st, &chung_cu, moi.get_mut("tienDoChung"), u)?;
+        // P3-1: bước chung riêng của từng đợt thu hồi — cùng quy tắc, so với bản cũ của đúng đợt (theo id)
+        let dot_cu: Vec<Value> = cu.and_then(|c| c["dotThuHoi"].as_array().cloned()).unwrap_or_default();
+        if let Some(ds) = moi.get_mut("dotThuHoi").and_then(|x| x.as_array_mut()) {
+            for d in ds.iter_mut() {
+                let id = d["id"].as_str().unwrap_or("").to_string();
+                let cu_d = dot_cu.iter().find(|x| x["id"].as_str() == Some(&id)).map(|x| x["tienDoChung"].clone()).unwrap_or(json!({}));
+                kiem_tra_buoc(st, &cu_d, d.get_mut("tienDoChung"), u)?;
+            }
+        }
+    }
+    kiem_tra_quy_tdc(moi)?;
+    Ok(())
+}
+
+/// P3-3: quỹ tái định cư của dự án — mỗi lô/căn (khu + số lô) là duy nhất và chỉ giao cho một hộ (cấu trúc `giao` một hộ);
+/// lô có giá phải ghi căn cứ giá (giá do đơn vị nhập). Một hộ nhận nhiều lô không bị chặn ở đây (có trường hợp luật định,
+/// Điều 111 Luật Đất đai 2024) — phần mềm cảnh báo để cán bộ kiểm tra.
+pub fn kiem_tra_quy_tdc(moi: &Value) -> Kq<()> {
+    let Some(lo) = moi["quyTdc"]["lo"].as_array() else { return Ok(()) };
+    let mut ma = std::collections::HashSet::<String>::new();
+    for l in lo {
+        let ten = format!("{} – lô {}", l["khu"].as_str().unwrap_or(""), l["soLo"].as_str().unwrap_or(""));
+        if !l["id"].is_string() {
+            return Err(loi(StatusCode::BAD_REQUEST, "Lô tái định cư thiếu mã"));
+        }
+        let khoa = format!("{}|{}", l["khu"].as_str().unwrap_or("").trim().to_lowercase(), l["soLo"].as_str().unwrap_or("").trim().to_lowercase());
+        if !ma.insert(khoa) {
+            return Err(loi(StatusCode::BAD_REQUEST, format!("Trùng lô tái định cư: {ten}")));
+        }
+        if l["gia"].as_str().is_some_and(|g| !g.trim().is_empty()) && l["canCuGia"].as_str().is_none_or(|c| c.trim().is_empty()) {
+            return Err(loi(StatusCode::BAD_REQUEST, format!("{ten}: giá lô phải ghi căn cứ")));
+        }
+        if !l["giao"].is_null() && !l["giao"]["hoId"].is_string() {
+            return Err(loi(StatusCode::BAD_REQUEST, format!("{ten}: thông tin giao lô thiếu hộ")));
+        }
     }
     Ok(())
 }
