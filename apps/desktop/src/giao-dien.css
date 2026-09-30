@@ -296,7 +296,7 @@ table.bang { width: 100%; border-collapse: collapse; font-size: 13px; }
 .ban-do { position: relative; background: var(--ban-do-nen); border: 1px solid var(--vien); border-radius: var(--r-lg); overflow: hidden; }
 .ban-do canvas { width: 100%; height: 100%; display: block; cursor: grab; overscroll-behavior: contain; touch-action: none; }
 .ban-do canvas:active { cursor: grabbing; }
-.ban-do canvas[data-cong-cu="DO_DAI"], .ban-do canvas[data-cong-cu="DO_DT"], .ban-do canvas[data-cong-cu="TOA_DO"], .ban-do canvas[data-cong-cu="PHONG_KHUNG"] { cursor: crosshair; }
+.ban-do canvas[data-cong-cu="DO_DAI"], .ban-do canvas[data-cong-cu="DO_DT"], .ban-do canvas[data-cong-cu="TOA_DO"], .ban-do canvas[data-cong-cu="PHONG_KHUNG"], .ban-do canvas[data-cong-cu="QUET"] { cursor: crosshair; }
 .ban-do canvas[data-cong-cu="CHON"] { cursor: default; }
 .ban-do-toi { background: #0b0d0c; }
 /* Thanh công cụ bản đồ (kiểu MicroStation) */

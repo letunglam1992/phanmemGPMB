@@ -13,6 +13,10 @@ import { TomTatThuHoi, KiemTraBanDo, ChiTietThua } from "./ban-do/KiemTra";
 import { KhungVe } from "./ban-do/KhungVe";
 import { HopTaoHo } from "./ban-do/TaoHo";
 import { HopCapNhatDt, TheConLai, TheRanhNhap } from "./ban-do/RanhGpmb";
+import { TheVungChon, TimThua, TomTatHo } from "./ban-do/VungChon";
+import { xuatPdfBanDo, type KhoGiay } from "./ban-do/xuat-pdf";
+import { taiXuong } from "../tai-xuong";
+import { tenTep } from "../ten-tep";
 import { kiemTraVung } from "@gpmb/gis";
 import { taoId } from "../mo-hinh";
 import { tenDayDu } from "../van-ban/loai-dat";
@@ -45,6 +49,10 @@ export function BanDo({ duAnId }: { duAnId: string }) {
   const [cheDoChonThua, setCheDoChonThua] = useState(false);
   const [veRanh, setVeRanh] = useState(0);
   const [capNhatDt, setCapNhatDt] = useState(false);
+  const [quet, setQuet] = useState<Set<string>>(new Set());
+  const [khoGiay, setKhoGiay] = useState<KhoGiay>("A3");
+  const [dangPdf, setDangPdf] = useState(false);
+  const [phongToi, setPhongToi] = useState<{ vong: import("@gpmb/gis").Diem[][]; n: number } | null>(null);
   const inputTep = useRef<HTMLInputElement>(null);
   const khoaNap = duAn?.banDo ? `${duAnId}|${duAn.banDo.ngayNhap}` : "";
 
@@ -53,6 +61,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
     setChon(null);
     setCheDoChonThua(false);
     setLoi(null);
+    setQuet(new Set());
   }, [khoaNap]);
 
   useEffect(() => {
@@ -78,7 +87,8 @@ export function BanDo({ duAnId }: { duAnId: string }) {
   const maVungChon = duAn?.banDo?.vungChonDs ?? (duAn?.banDo?.vungChon ? [duAn.banDo.vungChon] : []);
   const vungDs = dl ? dl.kq.vungGpmb.filter((v) => maVungChon.includes(v.ma)) : [];
   const thuaChon = useMemo(() => new Set(duAn?.banDo?.thuaChon ?? []), [duAn?.banDo?.thuaChon]);
-  const ranhNhap = duAn?.banDo?.ranhNhap ?? [];
+  const ranhNhap = useMemo(() => duAn?.banDo?.ranhNhap ?? [], [duAn?.banDo?.ranhNhap]);
+  const ranhVe = useMemo(() => ranhNhap.map((r) => r.vong), [ranhNhap]);
   const thuHoi = useMemo(() => {
     const ranh = [...vungDs.map((v) => v.vong), ...ranhNhap.map((r) => r.vong)];
     if (!dl || (!ranh.length && !thuaChon.size)) return new Map<string, DienTichThuHoi>();
@@ -224,6 +234,22 @@ export function BanDo({ duAnId }: { duAnId: string }) {
               Xóa bản đồ
             </button>
           )}
+          {dl && (
+            <span className="nhom-nut" style={{ gap: 4 }}>
+              <Chon value={khoGiay} onChange={(e) => setKhoGiay(e.target.value as KhoGiay)} aria-label="Khổ giấy PDF"><option value="A3">A3 ngang</option><option value="A4">A4 ngang</option></Chon>
+              <button className="nut" disabled={dangPdf} title="Bản đồ tiến độ GPMB tô màu theo hiện trạng hồ sơ, có khung, chú giải, tỷ lệ — dùng báo cáo, họp (không phải trích lục thửa)" onClick={async () => {
+                setDangPdf(true);
+                try {
+                  const pdf = await xuatPdfBanDo({ dl, tieuDe: "BẢN ĐỒ TIẾN ĐỘ BỒI THƯỜNG, GIẢI PHÓNG MẶT BẰNG", phuDe: `Dự án: ${duAn.ten} — ${duAn.xa}`, ttThua, thuHoi, khoaThua, ranh: [...vungDs.map((v) => v.vong), ...ranhVe], ngay: new Date().toLocaleDateString("vi-VN") }, khoGiay);
+                  if (await taiXuong(pdf, `Ban-do-tien-do_${tenTep(duAn.ten, 60)}_${khoGiay}.pdf`, "application/pdf")) bao("Đã xuất PDF bản đồ tiến độ");
+                } catch (e) {
+                  bao((e as Error).message, "loi");
+                } finally {
+                  setDangPdf(false);
+                }
+              }}>{dangPdf ? "Đang xuất…" : "Xuất PDF tiến độ"}</button>
+            </span>
+          )}
           {dl && <button className="nut nut-chinh" onClick={() => (coPhamVi ? setTaoHo(true) : setThieuPhamVi(true))}>Tạo hồ sơ từ thửa thu hồi</button>}
         </div>
       </div>
@@ -244,8 +270,10 @@ export function BanDo({ duAnId }: { duAnId: string }) {
       )}
       {dl && (
         <div className="ban-do-khung">
-          <KhungVe key={khoaNap} dl={dl} vungChon={maVungChon} thuHoi={thuHoi} khoaThua={khoaThua} chon={chon} setChon={setChon} daLienKet={daLienKet} ttThua={ttThua} bamThua={cheDoChonThua && quyen("SUA_HO_SO") ? batTatThua : undefined} thuaChon={thuaChon} khoaLuu={duAnId} ranhThem={ranhNhap.map((r) => r.vong)} luuVung={quyen("SUA_HO_SO") ? luuRanhVe : undefined} batVeVung={veRanh} />
+          <KhungVe key={khoaNap} dl={dl} vungChon={maVungChon} thuHoi={thuHoi} khoaThua={khoaThua} chon={chon} setChon={setChon} daLienKet={daLienKet} ttThua={ttThua} bamThua={cheDoChonThua && quyen("SUA_HO_SO") ? batTatThua : undefined} thuaChon={thuaChon} khoaLuu={duAnId} ranhThem={ranhVe} luuVung={quyen("SUA_HO_SO") ? luuRanhVe : undefined} batVeVung={veRanh} quet={(ds, them) => setQuet(new Set([...(them ? quet : []), ...ds.map(khoaThua)]))} thuaQuet={quet} phongToi={phongToi} />
           <div className="ben-phai">
+            <div className="nhom-nut"><TimThua dl={dl} daLienKet={daLienKet} chon={(t) => { setChon(t); setPhongToi({ vong: t.vong, n: Date.now() }); }} /></div>
+            {quet.size > 0 && <TheVungChon duAn={duAn} dl={dl} chon={quet} boChon={() => setQuet(new Set())} thuHoi={thuHoi} khoaThua={khoaThua} daLienKet={daLienKet} ttThua={ttThua} />}
             <KiemTraBanDo dl={dl} coPhamVi={coPhamVi} soVung={dl.kq.vungGpmb.length} moCauHinh={() => setMoCauHinh(true)} ttThua={ttThua} />
             <div className="the co-dinh">
               <div className="the-dau"><h3>Phạm vi thu hồi</h3><span className="mo chu-nho">{vungDs.length} vùng · {ranhNhap.length} ranh nhập · {thuaChon.size} thửa chọn tay</span></div>
@@ -327,7 +355,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
                 </table>
               </div>
             </div>
-            {chon && <ChiTietThua t={chon} th={thuHoi.get(khoaThua(chon))} ho={daLienKet.get(chon.ma)} tt={ttThua.get(chon.ma)} moHo={(h) => di({ ten: "ho", duAnId, hoId: h.id, tab: "thua" })} />}
+            {chon && <ChiTietThua t={chon} th={thuHoi.get(khoaThua(chon))} ho={daLienKet.get(chon.ma)} tt={ttThua.get(chon.ma)} moHo={(h) => di({ ten: "ho", duAnId, hoId: h.id, tab: "thua" })} tomTat={daLienKet.get(chon.ma) ? <TomTatHo duAn={duAn} h={daLienKet.get(chon.ma)!} tt={ttThua.get(chon.ma)} moHo={() => di({ ten: "ho", duAnId, hoId: daLienKet.get(chon.ma)!.id })} /> : undefined} />}
           </div>
         </div>
       )}

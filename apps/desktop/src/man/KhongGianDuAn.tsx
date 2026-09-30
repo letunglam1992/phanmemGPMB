@@ -304,13 +304,21 @@ function TheHo({ duAn, kq }: { duAn: DuAn; kq: Kq }) {
     window.addEventListener("gpmb-loc-ho", nghe);
     return () => window.removeEventListener("gpmb-loc-ho", nghe);
   }, []);
+  // Danh sách hộ chọn trên bản đồ (quét khung) — lọc tạm theo mã hồ sơ, bỏ lọc bằng nút ✕
+  const [locIds, setLocIds] = useState<Set<string> | null>(null);
+  useEffect(() => {
+    const nghe = (e: Event) => setLocIds(new Set((e as CustomEvent<string[]>).detail));
+    window.addEventListener("gpmb-loc-ho-ids", nghe);
+    return () => window.removeEventListener("gpmb-loc-ho-ids", nghe);
+  }, []);
   const ds = kq
     .map(({ h, k }) => ({ h, k, duAn, tt: trangThaiHo(duAn, h, k, homNay) }))
     .filter((x) => !locTt || x.tt === locTt)
     .filter((x) => khopDot(x.h, locDot, duAn))
     .filter((x) => !locPc || (locPc === "__chua__" ? !x.h.phuTrach : x.h.phuTrach === locPc))
     .filter((x) => !locPl || x.h.thua.some((t) => Number(t.dienTichThuHoi) > 0 && (t.phapLy ?? "CHUA") === locPl))
-    .filter((x) => khopTuKhoa({ h: x.h, duAnTen: "" }, loc));
+    .filter((x) => khopTuKhoa({ h: x.h, duAnTen: "" }, loc))
+    .filter((x) => !locIds || locIds.has(x.h.id));
   const thuTu = ds.map((x) => x.h.id).join("|");
   useEffect(() => ghiNhoDsHo(duAn.id, { loc, locTt, locDot, locPc, locPl, thuTu: thuTu ? thuTu.split("|") : [] }), [duAn.id, loc, locTt, locDot, locPc, locPl, thuTu]);
   // Khôi phục vị trí cuộn, đưa hộ vừa làm vào tầm nhìn; nhớ vị trí cuộn khi cuộn
@@ -346,6 +354,7 @@ function TheHo({ duAn, kq }: { duAn: DuAn; kq: Kq }) {
       <div className="the-dau" style={{ flexWrap: "wrap" }}>
         <h2>Danh sách hộ gia đình, cá nhân, tổ chức</h2>
         <span className="mo">{ds.length}/{kq.length}</span>
+        {locIds && <span className="nhan nhan-xanh" aria-label="Lọc theo vùng chọn trên bản đồ">{locIds.size} hộ chọn trên bản đồ <button className="nut nut-chu nut-nho" aria-label="Bỏ lọc vùng chọn" onClick={() => setLocIds(null)}>✕</button></span>}
         <div className="phai">
           <label className="o-tim" style={{ minWidth: 300 }}><BieuTuong ten="traCuu" co={16} /><input placeholder="Tìm theo tên, mã, địa chỉ, tờ/thửa (vd. 5/85)…" value={loc} onChange={(e) => setLoc(e.target.value)} aria-label="Tìm hộ trong dự án" /></label>
           <Chon value={locTt} onChange={(e) => setLocTt(e.target.value as TrangThaiGpmb | "")} aria-label="Lọc hiện trạng" className="chon-cao">

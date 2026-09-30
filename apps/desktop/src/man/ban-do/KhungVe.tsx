@@ -11,11 +11,12 @@ import { TEN_LOAI, batDiem, chieuDai, chuanBiVe, dienTich, hinhTuVong, khoangCac
  * kéo để di chuyển, phóng theo khung; bật/tắt từng lớp (level) của tệp DGN; công cụ thông tin phần tử, đo khoảng cách,
  * đo diện tích, lấy tọa độ; bắt điểm vào đỉnh; nền đen/sáng. Lớp phủ GPMB (thửa, ranh, tô màu) vẽ trên nền bản vẽ.
  */
-type CongCu = "CHON" | "KEO" | "PHONG_KHUNG" | "DO_DAI" | "DO_DT" | "TOA_DO";
+type CongCu = "CHON" | "KEO" | "PHONG_KHUNG" | "QUET" | "DO_DAI" | "DO_DT" | "TOA_DO";
 const CONG_CU: { ma: CongCu; ten: string; ky: string; goiY: string }[] = [
   { ma: "CHON", ten: "Chọn, thông tin", ky: "⌖", goiY: "Bấm vào thửa / phần tử để xem thông tin (kéo để di chuyển)" },
   { ma: "KEO", ten: "Di chuyển", ky: "✋", goiY: "Kéo để di chuyển bản đồ" },
   { ma: "PHONG_KHUNG", ten: "Phóng theo khung", ky: "⬚", goiY: "Kéo một khung chữ nhật để phóng tới vùng đó" },
+  { ma: "QUET", ten: "Chọn nhiều thửa (quét khung)", ky: "▦", goiY: "Kéo khung để chọn các thửa có tâm nằm trong khung; giữ Shift để chọn thêm" },
   { ma: "DO_DAI", ten: "Đo khoảng cách", ky: "📏", goiY: "Bấm các điểm; bấm đúp hoặc chuột phải để kết thúc; Esc để xóa" },
   { ma: "DO_DT", ten: "Đo diện tích", ky: "▱", goiY: "Bấm các đỉnh vùng; bấm đúp hoặc chuột phải để khép vùng; Esc để xóa" },
   { ma: "TOA_DO", ten: "Tọa độ điểm", ky: "⌗", goiY: "Bấm để lấy tọa độ VN-2000 của điểm (bắt đỉnh nếu bật)" },
@@ -57,6 +58,12 @@ export function KhungVe(p: {
   luuVung?: (vong: Diem[]) => void;
   /** Bật công cụ vẽ vùng từ bên ngoài (nút "Vẽ ranh trên bản đồ"). */
   batVeVung?: number;
+  /** Quét khung chọn nhiều thửa (hạng mục 3 docs/08 §9): trả về thửa có tâm nhãn trong khung; them = giữ Shift. */
+  quet?: (ds: ThuaBanDo[], them: boolean) => void;
+  /** Khóa (khoaThua) các thửa đang chọn bằng quét khung — tô nổi. */
+  thuaQuet?: Set<string>;
+  /** Phóng tới thửa (tìm thửa/chủ): đổi `n` để phóng lại. */
+  phongToi?: { vong: Diem[][]; n: number } | null;
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const khoa = `gpmb-ban-do-${p.khoaLuu ?? "chung"}`;
@@ -246,6 +253,18 @@ export function KhungVe(p: {
         }
         ctx.setLineDash([]);
       }
+      if (p.thuaQuet?.size) {
+        ctx.fillStyle = "rgba(47,127,214,0.22)";
+        ctx.strokeStyle = "#2f7fd6";
+        ctx.lineWidth = 1.6;
+        for (const t of p.dl.kq.thua) {
+          if (!p.thuaQuet.has(p.khoaThua(t))) continue;
+          ctx.beginPath();
+          for (const vg of t.vong) { duong(vg); ctx.closePath(); }
+          ctx.fill("evenodd");
+          ctx.stroke();
+        }
+      }
       if (p.chon) {
         ctx.beginPath();
         for (const vg of p.chon.vong) {
@@ -369,7 +388,7 @@ export function KhungVe(p: {
     const ro = new ResizeObserver(veLai);
     ro.observe(cv);
     return () => ro.disconnect();
-  }, [nhin, hinhHien, chuHien, p.dl, p.thuHoi, p.vungChon.join("|"), p.thuaChon, p.chon, p.ttThua, p.khoaThua, pham, lop, cheDo, nenToi, mauTheoLop, diemDo, troDo, xongDo, khung, batHien, thongTin, cong]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [nhin, hinhHien, chuHien, p.dl, p.thuHoi, p.vungChon.join("|"), p.thuaChon, p.chon, p.ttThua, p.khoaThua, pham, lop, cheDo, nenToi, mauTheoLop, diemDo, troDo, xongDo, khung, batHien, thongTin, cong, p.thuaQuet, p.ranhThem]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const doiToaDo = (e: { clientX: number; clientY: number }): Diem => {
     const cv = ref.current!;
@@ -392,6 +411,15 @@ export function KhungVe(p: {
     setBatHien(null);
     if (c !== "CHON" && c !== "TOA_DO") setThongTin(null);
   };
+  // Tìm thửa/chủ: phóng tới thửa (nới 3 lần kích thước thửa, tối thiểu 60 m)
+  useEffect(() => {
+    const v = p.phongToi?.vong[0];
+    if (!v?.length) return;
+    const xs = v.map((d) => d.x), ys = v.map((d) => d.y);
+    const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+    const r = Math.max(30, (Math.max(...xs) - Math.min(...xs)) * 1.5, (Math.max(...ys) - Math.min(...ys)) * 1.5);
+    vuaKhung({ minX: cx - r, maxX: cx + r, minY: cy - r, maxY: cy + r });
+  }, [p.phongToi?.n]); // eslint-disable-line react-hooks/exhaustive-deps
   // Nút "Vẽ ranh trên bản đồ" ở ngoài: chuyển sang công cụ vẽ vùng
   useEffect(() => {
     if (p.batVeVung) doiCong("DO_DT");
@@ -413,7 +441,7 @@ export function KhungVe(p: {
           if (!nhin) return;
           const giua = e.button === 1;
           if (e.button === 2) return;
-          if (cong === "PHONG_KHUNG" && !giua) {
+          if ((cong === "PHONG_KHUNG" || cong === "QUET") && !giua) {
             const d = doiToaDo(e);
             setKhung({ a: d, b: d });
             return;
@@ -443,8 +471,14 @@ export function KhungVe(p: {
           if (khung) {
             const { a, b } = khung;
             setKhung(null);
-            if (Math.abs(a.x - b.x) * nhin.tyLe > 8 && Math.abs(a.y - b.y) * nhin.tyLe > 8)
-              vuaKhung({ minX: Math.min(a.x, b.x), maxX: Math.max(a.x, b.x), minY: Math.min(a.y, b.y), maxY: Math.max(a.y, b.y) });
+            const r = { minX: Math.min(a.x, b.x), maxX: Math.max(a.x, b.x), minY: Math.min(a.y, b.y), maxY: Math.max(a.y, b.y) };
+            if (cong === "QUET") {
+              if (!p.quet) return;
+              const ds = p.dl.kq.thua.filter((t) => t.tamNhan.x >= r.minX && t.tamNhan.x <= r.maxX && t.tamNhan.y >= r.minY && t.tamNhan.y <= r.maxY);
+              p.quet(ds, e.shiftKey);
+              return;
+            }
+            if (Math.abs(a.x - b.x) * nhin.tyLe > 8 && Math.abs(a.y - b.y) * nhin.tyLe > 8) vuaKhung(r);
             return;
           }
           const k = keo.current;

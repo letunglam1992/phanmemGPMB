@@ -88,7 +88,7 @@ export function KiemTraBanDo({ dl, coPhamVi, soVung, moCauHinh, ttThua }: { dl: 
   );
 }
 
-export function ChiTietThua({ t, th, ho, tt, moHo }: { t: ThuaBanDo; th?: DienTichThuHoi; ho?: Ho; tt?: TrangThaiGpmb; moHo: (h: Ho) => void }) {
+export function ChiTietThua({ t, th, ho, tt, moHo, tomTat }: { t: ThuaBanDo; th?: DienTichThuHoi; ho?: Ho; tt?: TrangThaiGpmb; moHo: (h: Ho) => void; tomTat?: React.ReactNode }) {
   return (
     <div className="the">
       <div className="the-dau"><h3>Tờ {t.soTo ?? "?"}, thửa {t.soThua ?? "?"}</h3></div>
@@ -104,6 +104,7 @@ export function ChiTietThua({ t, th, ho, tt, moHo }: { t: ThuaBanDo; th?: DienTi
         )}
         <div className="mo">Nhãn trong thửa: {t.nhan.map((n) => `[${n.lop}] ${n.chu}`).join(" · ")}</div>
         {ho && <div>Đã gắn hồ sơ: <button className="nut nut-chu nut-nho" onClick={() => moHo(ho)}>{ho.ma} · {ho.ten}</button></div>}
+        {tomTat}
       </div>
     </div>
   );

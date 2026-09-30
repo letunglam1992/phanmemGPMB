@@ -131,7 +131,7 @@ Lưu theo dự án: `banDo.vungChonDs`, `banDo.thuaChon`.
 
 ## 9. Lộ trình bản đồ phục vụ GPMB (đề xuất 30/9/2026, người dùng chọn thứ tự làm)
 
-Tình trạng: hạng mục **1** (ranh GPMB nhập ngoài: tọa độ mốc, DGN khác, vẽ; cắt thửa; cập nhật DT vào hồ sơ) và **2** (cảnh báo phần còn lại — cơ chế xong, ngưỡng chờ nguyên văn Điều 13–16 PL I QĐ 106/2025) làm ở 0.9.5; chi tiết docs/09.
+Tình trạng: hạng mục **1** (ranh GPMB nhập ngoài: tọa độ mốc, DGN khác, vẽ; cắt thửa; cập nhật DT vào hồ sơ) và **2** (cảnh báo phần còn lại — cơ chế xong, ngưỡng chờ nguyên văn Điều 13–16 PL I QĐ 106/2025) làm ở 0.9.5; hạng mục **3** (quét khung chọn nhiều thửa, thao tác hàng loạt), **4** (tìm thửa/chủ, tóm tắt hồ sơ), **5** (xuất PDF bản đồ tiến độ) làm ở 0.9.6; chi tiết docs/09. Hạng mục 6–10 chưa làm.
 
 | # | Tính năng | Lợi ích |
 |---|---|---|
