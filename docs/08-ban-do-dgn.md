@@ -89,9 +89,20 @@ Với cấu hình gợi ý (nút lớp 19 + lớp chủ 54 để đối chiếu)
 
 **Gợi ý cấu hình** (`goiYCauHinh`): chỉ dựa trên cấu trúc thấy trong tệp — nút chữ ≥ 5 nút trên cùng lớp, các dòng cùng vị trí có kiểu giá trị ổn định (số lặp lại ít = số tờ; số khác nhau nhiều = số thửa; mã chữ in hoa 2–4 ký tự = loại đất; họ tên nhiều từ, khác nhau nhiều nhất = chủ); lớp chủ đứng riêng chỉ được thêm khi ≥ 50% tên trùng tên trong nút. Cấu hình đang là gợi ý thì màn Bản đồ hiện dải cảnh báo "chưa được chốt"; cán bộ chốt → lưu theo dự án.
 
-**Hạn chế (chưa đọc, có cảnh báo khi gặp):** cung tròn (kiểu 16) và phần tử 3D ở V8; ô dùng chung (shared cell) và tham chiếu ngoài (reference); các mô hình khác ngoài mô hình mặc định; bảng tên lớp (tên lớp trong MicroStation) chưa giải mã — phần mềm hiển thị mã số lớp. Đã kiểm với 1 tệp gCadas V8i và (0.8.8) 3 tệp bản đồ trích đo khu đất MicroStation V8i 8.11 do người dùng cung cấp (đọc tại chỗ, không lưu vào kho); tệp V8 từ phần mềm khác (Famis, VietMap XM…) cần thử thêm.
+**Hạn chế (chưa đọc, có cảnh báo khi gặp):** phần tử 3D ở V8; tham chiếu ngoài (reference); các mô hình khác ngoài mô hình mặc định; bảng tên lớp (tên lớp trong MicroStation) chưa giải mã — phần mềm hiển thị mã số lớp. Đã kiểm với 1 tệp gCadas V8i và (0.8.8) 3 tệp bản đồ trích đo khu đất MicroStation V8i 8.11 do người dùng cung cấp (đọc tại chỗ, không lưu vào kho); tệp V8 từ phần mềm khác (Famis, VietMap XM…) cần thử thêm.
 
-**Chữ 8 bit không có dấu (0.8.8):** tệp trích đo V8i thông thường lưu chữ kiểu 17 **không** có dấu FF FE: uint16 @110 = số byte, @112 = chiều cao (đơn vị lưu × 100 — chỉ dùng hiển thị), gốc @152, 2 byte 0 tại @168, chữ (TCVN3) tại @170. Trước 0.8.8 bộ đọc chỉ nhận chữ có dấu nên bỏ sót toàn bộ nhãn của các tệp này (loại đất, số thửa, diện tích, tên chủ, địa danh). Phần tử kiểu 17 chứa "Pattern Control Element" là phần tử điều khiển mẫu tô → bỏ qua. Ba tệp mẫu không lưu tên lớp (các luồng `Dgn^Nm/$n` là định nghĩa ô dùng chung) — lớp đánh số theo Phụ lục 21. Kiểu 33 (kích thước), 35 (ô dùng chung) chưa đọc.
+**Chữ 8 bit không có dấu (0.8.8):** tệp trích đo V8i thông thường lưu chữ kiểu 17 **không** có dấu FF FE: uint16 @110 = số byte, @112 = chiều cao (đơn vị lưu × 100 — chỉ dùng hiển thị), gốc @152, 2 byte 0 tại @168, chữ (TCVN3) tại @170. Trước 0.8.8 bộ đọc chỉ nhận chữ có dấu nên bỏ sót toàn bộ nhãn của các tệp này (loại đất, số thửa, diện tích, tên chủ, địa danh). Phần tử kiểu 17 chứa "Pattern Control Element" là phần tử điều khiển mẫu tô → bỏ qua. Ba tệp mẫu không lưu tên lớp (các luồng `Dgn^Nm/$n` là định nghĩa ô dùng chung) — lớp đánh số theo Phụ lục 21. Kiểu 33 (kích thước), 35 (ô dùng chung): đọc từ 0.9.0 (dưới đây).
+
+**Cung tròn, ô dùng chung, kích thước (0.9.0, QD-32)** — xác định trên 3 tệp V8i người dùng cung cấp (đọc tại chỗ, không lưu vào kho), kiểm thử tự động bằng tệp tổng hợp (`test/viet-dgn-v8.ts`):
+
+| Kiểu | Cấu trúc | Cách dựng |
+|---|---|---|
+| 16 cung tròn 2D | @104 góc đầu, @112 góc quét (radian), @120/@128 bán trục chính/phụ, @136 góc xoay, @144 tâm | Xấp xỉ đường gấp khúc; góc quét ≤ 1/360000 độ (đơn vị góc V7, gặp ở ký hiệu vòng tròn chuyển từ V7) vẽ đủ vòng |
+| 34 định nghĩa ô dùng chung | Kho phi mô hình `Dgn^Nm/$n`; thành phần theo sau mang cờ 0x40; tên ô ở liên kết thuộc tính mã 0x56D2 (uint32 độ dài @+8, chữ @+12); gốc @232 | Đọc theo tên (tệp mẫu: 954 / 230 / 274 định nghĩa) |
+| 35 bản sao ô dùng chung | Ma trận xoay, tỷ lệ 3×3 theo hàng @160; gốc @232; tên ô ở liên kết 0x56D2 | Tọa độ = gốc + ma trận × (tọa độ cục bộ − gốc định nghĩa); ô lồng nhau (tối đa 4 cấp); lớp theo bản sao. Phạm vi lưu trong bản sao trùng khít phạm vi thành phần định nghĩa (dùng để đối chiếu). Tệp mẫu: dựng 73/73 và 993/993 bản sao |
+| 33 kích thước | Điểm định vị: bản ghi 48 byte từ @304 đến vùng thuộc tính; @192 chiều cao chữ (đơn vị lưu) | Đoạn nối các điểm định vị + nhãn chiều dài đo được (m, 2 chữ số, dấu phẩy) theo hướng đoạn. MicroStation tự dựng đường kích thước, mũi tên khi hiển thị (không lưu) — vị trí đường kích thước lệch khỏi điểm định vị chưa đọc |
+
+Phần tử dựng thêm (thành phần ô dùng chung, kích thước) chỉ để **xem**: `phanTuGoc()` loại chúng khỏi bước dựng thửa và gợi ý cấu hình lớp — số thửa, nhãn thửa của 3 tệp mẫu giống hệt trước khi đọc các kiểu này (9 / 107 / 87 thửa). Bảng thông tin phần tử ghi "Ô dùng chung TÊN" hoặc "Kích thước".
 
 ## 8. Yêu cầu bản đồ, phạm vi thu hồi và nhãn hiện trạng (28/9/2026)
 

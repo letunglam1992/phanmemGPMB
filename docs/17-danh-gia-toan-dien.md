@@ -47,7 +47,7 @@ Mô hình dữ liệu là **tài liệu (document)**: mỗi `DuAn` và mỗi `Ho
 | 5 | Thời hạn theo ngày làm việc, lịch nghỉ | **B** | Đúng NLV/ngày, có cảnh báo thiếu lịch; chỉ một số bước có hạn (đúng — bước không có hạn không tính). |
 | 6 | Nhập liệu hồ sơ (thông tin, nhân khẩu, thửa, kiểm đếm) | **D** | **Ô số không kiểm tra định dạng**: "9222,1" làm **trắng toàn bộ màn hình**; "20.000" được hiểu im lặng là 20 (xem §4.1, P0-1, P0-2). |
 | 7 | Nhập Excel + ánh xạ cột | **B** | Kiểm tra toàn tệp, không nhập dở khi còn lỗi, xử lý số mơ hồ tốt. Hạn chế: ghi từng hồ sơ không trong giao dịch (lỗi giữa chừng → nhập dở). |
-| 8 | Xuất Excel, văn bản (22 mẫu + 5 mẫu xã) | **B** | Đủ mẫu, dữ liệu dùng chung một lần. Chưa chép định dạng từng ô của biểu mẫu gốc (đã ghi trong docs/09). |
+| 8 | Xuất Excel, văn bản (22 mẫu + 5 mẫu xã) | **B** | Đủ mẫu, dữ liệu dùng chung một lần. Chưa chép định dạng từng ô của biểu mẫu gốc (đã ghi trong docs/09). **0.9.0:** đơn vị nạp biểu mẫu Excel riêng có trường {{…}} — phần mềm điền, giữ định dạng của mẫu (QD-32). |
 | 9 | Bản đồ DGN (V7/V8), kiểm tra bản đồ, phạm vi thu hồi | **B** | Bộ đọc tự viết đã kiểm trên 2 tệp thật; chưa đọc cung tròn V8, ô dùng chung, tham chiếu ngoài. |
 | 10 | Chi trả, tiền chậm trả | **C** | Logic đúng (Đ94 LĐĐ), nhưng **sổ chi trả nằm trong hồ sơ hộ**: xóa hộ là mất chứng từ chi (xem P0-4). |
 | 11 | Hỗ trợ tái định cư (C08, C10, C11) | **B** | Có căn cứ, khoản khác bắt buộc căn cứ. Chưa có phương án bố trí TĐC cấp dự án (quỹ lô, bốc thăm, giao lô). |

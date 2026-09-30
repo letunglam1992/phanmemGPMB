@@ -6,8 +6,10 @@ import type { DuAn, Ho } from "../../mo-hinh";
 import type { DongKetQua, KetQuaHo } from "../../tinh-ho";
 import { GiaiTrinh, NhanDong, lopDong, tien } from "../../thanh-phan/chung";
 import { xuatExcelHo } from "../../xuat-excel";
+import { useMauExcel } from "../../thanh-phan/MauExcel";
 
 export function TabTinhToan({ h, duAn, kq }: { h: Ho; duAn: DuAn; kq: KetQuaHo }) {
+  const docMauExcel = useMauExcel();
   const [chon, setChon] = useState<DongKetQua | null>(kq.tatCa.find((x) => x.dong.trangThai !== "TAM_TINH") ?? kq.tatCa[0] ?? null);
   const chonHienTai = chon && kq.tatCa.find((x) => x.dong.noiDung === chon.dong.noiDung && x.taiSanId === chon.taiSanId && x.thuaId === chon.thuaId);
   const cong = (ds: DongKetQua[]) => ds.reduce((s, x) => (x.dong.trangThai === "TAM_TINH" && x.dong.thanhTien ? s.plus(x.dong.thanhTien) : s), D(0) as Decimal);
@@ -59,7 +61,7 @@ export function TabTinhToan({ h, duAn, kq }: { h: Ho; duAn: DuAn; kq: KetQuaHo }
           <span className="nhom-nut chu-nho">
             <span className="nhan nhan-xanh">Tạm tính</span><span className="nhan nhan-vang">Cần xác nhận</span><span className="nhan nhan-do">Thiếu căn cứ</span><span className="nhan nhan-tim">Có lựa chọn</span>
           </span>
-          <div className="phai"><button className="nut nut-nho" onClick={() => xuatExcelHo(duAn, h, kq)}>Xuất Excel phương án chi tiết</button></div>
+          <div className="phai"><button className="nut nut-nho" onClick={async () => xuatExcelHo(duAn, h, kq, await docMauExcel())}>Xuất Excel phương án chi tiết</button></div>
         </div>
         <div className="bang-cuon">
           <table className="bang">

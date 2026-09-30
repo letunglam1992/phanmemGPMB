@@ -9,6 +9,7 @@ import { BangHo } from "../thanh-phan/BangHo";
 import { khopTuKhoa } from "../tim-kiem";
 import { THU_TU_TRANG_THAI, TT_GPMB, homNayIso, mocTienDo, thongKe, trangThaiHo, type TrangThaiGpmb } from "../trang-thai";
 import { xuatExcelDuAn } from "../xuat-excel";
+import { HopMauExcel, useMauExcel } from "../thanh-phan/MauExcel";
 import { BanDoNho } from "../thanh-phan/BanDoNho";
 import { ThePhuongAn } from "../thanh-phan/PhuongAn";
 import { HopNhapExcel } from "../thanh-phan/HopNhapExcel";
@@ -58,6 +59,8 @@ export function KhongGianDuAn({ duAnId, tab = "tong-quan", ma, hoId }: { duAnId:
   const [nhapExcel, setNhapExcel] = useState(false);
   const [keHoach, setKeHoach] = useState(false);
   const [capNhatTd, setCapNhatTd] = useState<null | "chung" | "hang-loat">(null);
+  const [hopMauExcel, setHopMauExcel] = useState(false);
+  const docMauExcel = useMauExcel();
   const hos = hoCua(duAnId);
   const kq = useMemo(() => (duAn ? hos.map((h) => ({ h, k: tinhHo(chinhSach(duAn), duAn, h) })) : []), [hos, duAn, chinhSach]);
   if (!duAn) return <div className="trang trong">Không tìm thấy dự án. <button className="nut nut-nho" onClick={() => di({ ten: "du-an" })}>Về danh sách dự án</button></div>;
@@ -67,6 +70,7 @@ export function KhongGianDuAn({ duAnId, tab = "tong-quan", ma, hoId }: { duAnId:
 
   return (
     <div className="trang kg-trang">
+      {hopMauExcel && <HopMauExcel duAn={duAn} ds={kq} dong={() => setHopMauExcel(false)} />}
       <div className="duong-dan"><button onClick={() => di({ ten: "tong-quan" })}>Tổng quan</button> / <button onClick={() => di({ ten: "du-an" })}>Dự án</button> / Hồ sơ</div>
       <div className="the kg-dau">
         <span className="da-bt lon"><BieuTuong ten={BT_LOAI_DU_AN[duAn.loaiDuAn ?? "KHAC"]} co={26} /></span>
@@ -81,7 +85,7 @@ export function KhongGianDuAn({ duAnId, tab = "tong-quan", ma, hoId }: { duAnId:
         </div>
         <div className="phai">
           <button className={`nut ${tab === "van-ban" ? "nut-chinh" : ""}`} title="Tờ trình, niêm yết, lấy ý kiến, thẩm định, quyết định phê duyệt phương án… — văn bản của từng hộ soạn trong hồ sơ hộ (thẻ Văn bản)" onClick={() => moThe("van-ban")}><BieuTuong ten="vanBan" co={16} /> Văn bản dự án, đợt</button>
-          <button className="nut" disabled={dangXuat || kq.length === 0} onClick={async () => { setDangXuat(true); try { await xuatExcelDuAn(duAn, kq); } finally { setDangXuat(false); } }}>{dangXuat ? "Đang xuất…" : "Xuất Excel"}</button>
+          <button className="nut" disabled={dangXuat || kq.length === 0} onClick={async () => { setDangXuat(true); try { await xuatExcelDuAn(duAn, kq, undefined, await docMauExcel()); } finally { setDangXuat(false); } }}>{dangXuat ? "Đang xuất…" : "Xuất Excel"}</button>
           <div className="menu-nguoi">
             <button className="nut" aria-expanded={menuThem} onClick={() => setMenuThem(!menuThem)}><BieuTuong ten="baCham" co={16} /> Thêm</button>
             {menuThem && (
@@ -89,6 +93,7 @@ export function KhongGianDuAn({ duAnId, tab = "tong-quan", ma, hoId }: { duAnId:
                 {quyen("SUA_HO_SO") && <button role="menuitem" onClick={() => { setNhapExcel(true); setMenuThem(false); }}>Nhập hồ sơ từ Excel…</button>}
                 {quyen("SUA_HO_SO") && <button role="menuitem" onClick={() => { setCapNhatTd("chung"); setMenuThem(false); }}>Cập nhật tiến độ</button>}
                 <button role="menuitem" onClick={() => { setKeHoach(true); setMenuThem(false); }}>Lập kế hoạch từng bước</button>
+                <button role="menuitem" onClick={() => { setHopMauExcel(true); setMenuThem(false); }}>Biểu mẫu Excel…</button>
                 <button role="menuitem" onClick={() => { di({ ten: "ds-ho", duAnId }); setMenuThem(false); }}>Danh sách hồ sơ (lọc nâng cao)</button>
                 {quyen("XOA_DU_AN") && <><div className="menu-vach" /><button role="menuitem" style={{ color: "var(--do-to)" }} onClick={async () => { setMenuThem(false); const lyDo = prompt(`Đưa dự án "${duAn.ten}" (kèm hồ sơ) vào thùng rác?\nKhôi phục được trong thùng rác; xóa hẳn chỉ Quản trị, sau 30 ngày.\n\nLý do xóa (bắt buộc):`)?.trim(); if (lyDo && (await xoaDuAn(duAn.id, lyDo))) di({ ten: "du-an" }); }}>Xóa dự án</button></>}
               </div>

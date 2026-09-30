@@ -6,6 +6,7 @@ import type { KetQuaHo } from "../tinh-ho";
 import type { DuAn, Ho } from "../mo-hinh";
 import { HopThoai, O, ngayVN } from "./chung";
 import { xuatExcelChiTra, xuatExcelDuAn, xuatPhieuDoiChieu } from "../xuat-excel";
+import { useMauExcel } from "./MauExcel";
 import { homNayIso } from "../trang-thai";
 import { ngayChu } from "../van-ban/du-lieu";
 import {
@@ -53,6 +54,7 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
 
   const capNhat = async (p: PhienBanPA) => luuDuAn({ ...duAn, phuongAn: (duAn.phuongAn ?? []).map((x) => (x.id === p.id ? p : x)) }, "HUY_PA");
 
+  const docMauExcel = useMauExcel();
   const xuat = async (p: PhienBanPA) => {
     setLoi("");
     const r = tinhLaiBan(chinhSach(duAnTheoBan(duAn, p)), duAn, p);
@@ -60,7 +62,7 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
       setLoi(`Không xuất bản ${p.so}: tính lại từ dữ liệu đã đóng băng khác số đã chốt (${r.lech.map((x) => `${x.ma}: ${dong(x.daChot)} → ${dong(x.tinhLai)}`).join("; ")}). Cách tính trong phần mềm hoặc bộ chính sách đã thay đổi sau khi chốt — cần kiểm tra trước khi dùng.`);
       return;
     }
-    await xuatExcelDuAn({ ...duAnTheoBan(duAn, p), ten: `${duAn.ten} - PA ${p.so}` }, r.ds, moTaBan(p));
+    await xuatExcelDuAn({ ...duAnTheoBan(duAn, p), ten: `${duAn.ten} - PA ${p.so}` }, r.ds, moTaBan(p), await docMauExcel());
   };
 
   return (
