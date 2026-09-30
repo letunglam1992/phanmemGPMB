@@ -272,14 +272,23 @@ export function datPhamViO(banSao: Uint8Array, thap: [number, number], cao: [num
 }
 
 /** Kích thước (kiểu 33): chiều cao chữ @192 (đơn vị lưu), điểm định vị là bản ghi 48 byte từ @304. */
-export function ptKichThuoc(diem: [number, number][], o: TuyChonPt & { caoM?: number }): Uint8Array {
-  const cuoi = 304 + 48 * diem.length;
+export function ptKichThuoc(diem: [number, number][], o: TuyChonPt & { caoM?: number; khoiDuoi?: boolean }): Uint8Array {
+  // khoiDuoi: khối 40 byte sau các điểm (bắt đầu 14 0C, không có dấu FF FF) như tệp TD_73
+  const cuoi = 304 + 48 * diem.length + (o.khoiDuoi ? 40 : 0);
   const { b, dv } = khung(33, cuoi + 8, cuoi, o);
   dv.setFloat64(192, (o.caoM ?? 1.5) * UOR, true);
   diem.forEach(([x, y], i) => {
     dv.setFloat64(304 + 48 * i, raw(x, GOC_X), true);
     dv.setFloat64(312 + 48 * i, raw(y, GOC_Y), true);
+    b[304 + 48 * i + 40] = 0xff;
+    b[304 + 48 * i + 41] = 0xff;
+    b[304 + 48 * i + 42] = 0x10;
   });
+  if (o.khoiDuoi) {
+    const q = 304 + 48 * diem.length;
+    b.set([0x14, 0x0c], q);
+    dv.setFloat64(q + 8, 1, true);
+  }
   return b;
 }
 

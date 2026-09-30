@@ -332,7 +332,9 @@ export function docDgnV8(u8: Uint8Array): KetQuaDocDgn {
         // Kích thước: điểm định vị (bản ghi 48 byte) từ @304 đến vùng thuộc tính
         const cuoi = Math.min(2 * dv.getUint32(p + 8, true), dai);
         const diem: Diem[] = [];
-        for (let q = 304; q + 24 <= cuoi; q += 48) diem.push(doi(dv.getFloat64(p + q, true), dv.getFloat64(p + q + 8, true)));
+        // Bản ghi điểm định vị 48 byte (x, y, z, …, dấu FF FF tại byte 40). Sau các điểm có thể có khối khác (tệp TD_73:
+        // khối 40 byte bắt đầu "14 0C") — không phải điểm; đọc nhầm thành điểm (≈ 0) sinh đường dọc kéo dài (lỗi 0.9.0).
+        for (let q = 304; q + 48 <= cuoi && z[p + q + 40] === 0xff && z[p + q + 41] === 0xff; q += 48) diem.push(doi(dv.getFloat64(p + q, true), dv.getFloat64(p + q + 8, true)));
         // Kích thước nhiều điểm có thể lưu điểm sau dạng độ lệch (chưa kiểm chứng) → chỉ nhận khi mọi điểm gần điểm đầu
         const hopLe = diem.length >= 2 && diem.every((d) => Number.isFinite(d.x) && Number.isFinite(d.y) && Math.hypot(d.x - diem[0]!.x, d.y - diem[0]!.y) <= KT_TOI_DA);
         if (diem.length >= 2 && !hopLe) ktLech++;

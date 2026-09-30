@@ -216,6 +216,14 @@ describe("DGN V8 — cung tròn, ô dùng chung, kích thước (0.9.0)", () => 
     expect(b.canhBao.join(" ")).toMatch(/1 kích thước có điểm định vị cách điểm đầu hơn 500 m/);
   });
 
+  test("kích thước có khối đuôi sau các điểm (tệp TD_73): không đọc khối đuôi thành điểm — lỗi đường dọc kéo dài 0.9.0", async () => {
+    const b = docDgn(vietDgnV8([[ptKichThuoc([[X0, Y0], [X0 + 3, Y0 + 4]], { lop: 13, khoiDuoi: true })]]));
+    const d = b.phanTu.find((p) => p.loai === "DUONG" && p.kichThuoc !== undefined) as { diem: { x: number; y: number }[]; kichThuoc: number };
+    expect(d.diem).toHaveLength(2);
+    expect(d.kichThuoc).toBeCloseTo(5, 9);
+    expect(b.canhBao.join(" ")).not.toMatch(/cách điểm đầu hơn/);
+  });
+
   test("kích thước: đoạn nối điểm định vị và nhãn chiều dài (m) theo hướng đoạn", () => {
     const b = docDgn(vietDgnV8([[ptKichThuoc([[X0, Y0], [X0 + 3, Y0 + 4]], { lop: 9, caoM: 1.5 })]]));
     const d = b.phanTu.find((p) => p.loai === "DUONG")!;
