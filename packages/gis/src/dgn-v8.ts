@@ -258,16 +258,18 @@ export function docDgnV8(u8: Uint8Array): KetQuaDocDgn {
   let stt = 0;
   let nut: number | null = null;
   let lechKhai = 0;
-  let soO = 0, oThieu = 0, soKichThuoc = 0;
+  let soO = 0, oThieu = 0, soKichThuoc = 0, oLech = 0, ktLech = 0;
+  /** Khoảng cách xa nhất (m) cho phép giữa điểm định vị của kích thước và điểm đầu — vượt → cấu trúc chưa kiểm chứng, bỏ. */
+  const KT_TOI_DA = 500;
   const tenThieu = new Set<string>();
 
   /** Dựng thành phần của ô dùng chung theo phép biến đổi của bản sao (đệ quy khi định nghĩa chứa ô khác). */
-  const dungO = (ten: string, bienCha: Bien, tyLeCha: number, xoayCha: number, m: number[], ox: number, oy: number, lop: number, sau: number, ra: PhanTu[]) => {
+  const dungO = (ten: string, bienCha: Bien, tyLeCha: number, xoayCha: number, m: number[], ox: number, oy: number, lop: number, sau: number, ra: PhanTu[]): Bien | null => {
     const dn = dinhNghia.get(ten);
     if (!dn) {
       oThieu++;
       tenThieu.add(ten);
-      return;
+      return null;
     }
     const [a, b, d, e] = m as [number, number, number, number];
     const bien: Bien = (x, y) => bienCha(ox + a * (x - dn.gocX) + b * (y - dn.gocY), oy + d * (x - dn.gocX) + e * (y - dn.gocY));
@@ -286,6 +288,7 @@ export function docDgnV8(u8: Uint8Array): KetQuaDocDgn {
       const kq = gom(pt);
       if (kq && kq.loai !== "KHAC") ra.push(kq);
     }
+    return bien;
   };
 
   for (const { khai, z, dv } of khoiCua(tep, `${MO_HINH}/Dgn^G/$`)) {
@@ -303,8 +306,25 @@ export function docDgnV8(u8: Uint8Array): KetQuaDocDgn {
         const ten = tenO(z, dv, p, dai);
         const f = (q: number) => dv.getFloat64(p + q, true);
         soO++;
-        if (ten) dungO(ten, doi, 1, 0, [f(160), f(168), f(184), f(192)], f(232), f(240), lop, 0, phanTu);
-        else oThieu++;
+        if (ten) {
+          // Kiểm hợp lệ: mọi điểm thành phần phải nằm trong phạm vi của bản sao (phạm vi cục bộ @112…@152 × tỷ lệ) quanh
+          // gốc; lệch xa (cấu trúc bản sao khác mẫu đã kiểm chứng) → bỏ cả ô, không vẽ đường kéo dài.
+          const ra: PhanTu[] = [];
+          const bien = dungO(ten, doi, 1, 0, [f(160), f(168), f(184), f(192)], f(232), f(240), lop, 0, ra);
+          if (bien) {
+            // tâm phạm vi cục bộ đã biến đổi; bán kính = nửa đường chéo phạm vi × tỷ lệ, nới 50% + 2 m
+            const tam = bien((f(112) + f(136)) / 2, (f(120) + f(144)) / 2);
+            const cheo = Math.hypot(f(136) - f(112), f(144) - f(120)) * heSo * Math.hypot(f(160), f(184));
+            const banKinh = (Number.isFinite(cheo) && cheo > 0 && cheo < 10000 ? cheo / 2 : 300) * 1.5 + 2;
+            const trong = (d: Diem) => Number.isFinite(d.x) && Number.isFinite(d.y) && Math.hypot(d.x - tam.x, d.y - tam.y) <= banKinh;
+            let bo = 0;
+            for (const e of ra) {
+              if (e.loai === "CHU" ? trong(e.goc) : "diem" in e ? e.diem.every(trong) : true) phanTu.push(e);
+              else bo++;
+            }
+            if (bo) oLech++;
+          }
+        } else oThieu++;
         nut = null;
         continue;
       }
@@ -313,7 +333,10 @@ export function docDgnV8(u8: Uint8Array): KetQuaDocDgn {
         const cuoi = Math.min(2 * dv.getUint32(p + 8, true), dai);
         const diem: Diem[] = [];
         for (let q = 304; q + 24 <= cuoi; q += 48) diem.push(doi(dv.getFloat64(p + q, true), dv.getFloat64(p + q + 8, true)));
-        if (diem.length >= 2) {
+        // Kích thước nhiều điểm có thể lưu điểm sau dạng độ lệch (chưa kiểm chứng) → chỉ nhận khi mọi điểm gần điểm đầu
+        const hopLe = diem.length >= 2 && diem.every((d) => Number.isFinite(d.x) && Number.isFinite(d.y) && Math.hypot(d.x - diem[0]!.x, d.y - diem[0]!.y) <= KT_TOI_DA);
+        if (diem.length >= 2 && !hopLe) ktLech++;
+        if (hopLe) {
           soKichThuoc++;
           let dai2 = 0;
           for (let i = 1; i < diem.length; i++) dai2 += Math.hypot(diem[i]!.x - diem[i - 1]!.x, diem[i]!.y - diem[i - 1]!.y);
@@ -343,6 +366,8 @@ export function docDgnV8(u8: Uint8Array): KetQuaDocDgn {
   if (lechKhai) canhBao.push(`Số phần tử đọc được lệch ${lechKhai} so với số khai báo trong tệp — kiểm tra lại bản đồ.`);
   if (dem3d.n) canhBao.push(`${dem3d.n} phần tử 3D chưa được hỗ trợ (bản đồ địa chính thường là 2D) — đã bỏ qua.`);
   if (soO) canhBao.push(`Đã dựng ${soO - oThieu}/${soO} ô dùng chung (ký hiệu) từ ${dinhNghia.size} định nghĩa trong tệp${tenThieu.size ? `; thiếu định nghĩa: ${[...tenThieu].slice(0, 5).join(", ")}` : ""}.`);
+  if (oLech) canhBao.push(`${oLech} ô dùng chung có thành phần nằm ngoài phạm vi của ô (cấu trúc chưa kiểm chứng) — bỏ các thành phần đó để tránh vẽ sai (đường kéo dài).`);
+  if (ktLech) canhBao.push(`${ktLech} kích thước có điểm định vị cách điểm đầu hơn ${KT_TOI_DA} m (cấu trúc chưa kiểm chứng) — không vẽ.`);
   if (soKichThuoc) canhBao.push(`${soKichThuoc} kích thước: vẽ đoạn nối các điểm định vị kèm chiều dài đo được (m); vị trí đường kích thước, mũi tên theo kiểu kích thước của MicroStation không được dựng lại.`);
   canhBao.push("Tệp DGN V8 (MicroStation V8/V8i): đọc mô hình mặc định; tham chiếu ngoài (reference) không được đọc.");
 

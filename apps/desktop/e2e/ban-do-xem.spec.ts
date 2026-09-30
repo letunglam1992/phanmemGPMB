@@ -71,4 +71,11 @@ test("lăn chuột phóng bản đồ, không cuộn trang; bảng lớp giữ t
   await expect(p.locator(".bd-ket-qua")).toContainText("Tổng chiều dài");
   await p.keyboard.press("Escape");
   await expect(p.locator(".bd-ket-qua")).toHaveCount(0);
+
+  // thanh công cụ thu gọn về góc trái, bấm để kéo ra (nhớ trạng thái)
+  await p.getByRole("button", { name: "Thu gọn thanh công cụ" }).click();
+  await expect(p.getByRole("button", { name: "Phóng to" })).toHaveCount(0);
+  await expect(p.getByRole("button", { name: "Mở thanh công cụ" })).toContainText("📏"); // hiện công cụ đang dùng
+  await p.getByRole("button", { name: "Mở thanh công cụ" }).click();
+  await expect(p.getByRole("button", { name: "Phóng to" })).toBeVisible();
 });

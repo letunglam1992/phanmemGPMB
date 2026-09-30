@@ -1097,3 +1097,9 @@ kbd.phim { display: inline-block; min-width: 20px; padding: 1px 6px; border: 1px
 /* Chuyển hộ trong hồ sơ */
 .chuyen-ho { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .thanh-xong-ho { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; margin-top: 14px; padding: 12px 14px; border: 1px solid var(--vien); border-radius: var(--r-lg, 10px); background: var(--be-mat); }
+
+/* Thanh công cụ bản đồ thu gọn về góc trái: chỉ còn nút mở (☰ + công cụ đang dùng), bấm để kéo ra */
+.bd-thanh.thu-gon { right: auto; }
+.bd-thanh .bd-mo-thanh { font-weight: 600; }
+.bd-thanh:not(.thu-gon) { animation: bd-keo-ra 160ms var(--ease-out, ease-out); transform-origin: left center; }
+@keyframes bd-keo-ra { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }

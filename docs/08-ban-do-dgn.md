@@ -102,6 +102,8 @@ Với cấu hình gợi ý (nút lớp 19 + lớp chủ 54 để đối chiếu)
 | 35 bản sao ô dùng chung | Ma trận xoay, tỷ lệ 3×3 theo hàng @160; gốc @232; tên ô ở liên kết 0x56D2 | Tọa độ = gốc + ma trận × (tọa độ cục bộ − gốc định nghĩa); ô lồng nhau (tối đa 4 cấp); lớp theo bản sao. Phạm vi lưu trong bản sao trùng khít phạm vi thành phần định nghĩa (dùng để đối chiếu). Tệp mẫu: dựng 73/73 và 993/993 bản sao |
 | 33 kích thước | Điểm định vị: bản ghi 48 byte từ @304 đến vùng thuộc tính; @192 chiều cao chữ (đơn vị lưu) | Đoạn nối các điểm định vị + nhãn chiều dài đo được (m, 2 chữ số, dấu phẩy) theo hướng đoạn. MicroStation tự dựng đường kích thước, mũi tên khi hiển thị (không lưu) — vị trí đường kích thước lệch khỏi điểm định vị chưa đọc |
 
+**Kiểm hợp lệ (0.9.2):** thành phần ô dùng chung ngoài phạm vi của bản sao (phạm vi cục bộ @112…@152 đã biến đổi, nới 50% + 2 m) và kích thước có điểm định vị cách điểm đầu > 500 m bị bỏ, có cảnh báo — tránh vẽ đường kéo dài khi gặp cấu trúc chưa kiểm chứng (vd. điểm lưu dạng độ lệch). Tệp DC01 cho thấy định nghĩa ô có thể dùng tọa độ cục bộ không quanh gốc (vd. 44.424.835; 235.619.404) — vì vậy so với tâm phạm vi đã biến đổi, không so với gốc bản sao.
+
 Phần tử dựng thêm (thành phần ô dùng chung, kích thước) chỉ để **xem**: `phanTuGoc()` loại chúng khỏi bước dựng thửa và gợi ý cấu hình lớp — số thửa, nhãn thửa của 3 tệp mẫu giống hệt trước khi đọc các kiểu này (9 / 107 / 87 thửa). Bảng thông tin phần tử ghi "Ô dùng chung TÊN" hoặc "Kích thước".
 
 ## 8. Yêu cầu bản đồ, phạm vi thu hồi và nhãn hiện trạng (28/9/2026)

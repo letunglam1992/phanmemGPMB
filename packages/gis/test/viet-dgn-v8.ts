@@ -261,6 +261,16 @@ export function ptBanSaoO(ten: string, m: [number, number, number, number], goc:
   return b;
 }
 
+/** Ghi phạm vi cục bộ (đơn vị chính, gốc định nghĩa) vào bản sao ô dùng chung: @112 thấp, @136 cao. */
+export function datPhamViO(banSao: Uint8Array, thap: [number, number], cao: [number, number]): Uint8Array {
+  const dv = new DataView(banSao.buffer, banSao.byteOffset, banSao.byteLength);
+  dv.setFloat64(112, thap[0] * UOR, true);
+  dv.setFloat64(120, thap[1] * UOR, true);
+  dv.setFloat64(136, cao[0] * UOR, true);
+  dv.setFloat64(144, cao[1] * UOR, true);
+  return banSao;
+}
+
 /** Kích thước (kiểu 33): chiều cao chữ @192 (đơn vị lưu), điểm định vị là bản ghi 48 byte từ @304. */
 export function ptKichThuoc(diem: [number, number][], o: TuyChonPt & { caoM?: number }): Uint8Array {
   const cuoi = 304 + 48 * diem.length;

@@ -64,6 +64,8 @@ export function KhungVe(p: {
   // Bảng "Lớp bản đồ" (kiểu Level Manager): các mục mở/đóng độc lập; nhớ theo máy
   const [bangLop, setBangLop] = useState<Set<string>>(() => new Set(docLuu<string[]>(`${khoa}-muc`, ["GPMB", "CHU_GIAI"])));
   const [anBang, setAnBang] = useState<boolean>(() => docLuu(`${khoa}-an-bang`, false));
+  // Thanh công cụ thu gọn về góc trái (nhớ theo máy như bảng lớp)
+  const [anThanh, setAnThanh] = useState<boolean>(() => docLuu(`${khoa}-an-thanh`, false));
   const batMuc = (m: string) => {
     const s = new Set(bangLop);
     if (s.has(m)) s.delete(m);
@@ -72,6 +74,7 @@ export function KhungVe(p: {
     ghiLuu(`${khoa}-muc`, [...s]);
   };
   useEffect(() => ghiLuu(`${khoa}-an-bang`, anBang), [khoa, anBang]);
+  useEffect(() => ghiLuu(`${khoa}-an-thanh`, anThanh), [khoa, anThanh]);
   const [timLop, setTimLop] = useState("");
   const [nhin, setNhin] = useState<{ cx: number; cy: number; tyLe: number } | null>(null);
   const [toaDo, setToaDo] = useState<string>("");
@@ -465,7 +468,14 @@ export function KhungVe(p: {
         }}
       />
 
-      <div className="bd-thanh" role="toolbar" aria-label="Công cụ bản đồ">
+      <div className={`bd-thanh${anThanh ? " thu-gon" : ""}`} role="toolbar" aria-label="Công cụ bản đồ">
+        {anThanh ? (
+          <button className="nut nut-nho bd-mo-thanh" aria-label="Mở thanh công cụ" aria-expanded={false} title={`Mở thanh công cụ — đang dùng: ${CONG_CU.find((c) => c.ma === cong)?.ten ?? ""}`} onClick={() => setAnThanh(false)}>
+            <span aria-hidden>☰</span> <span aria-hidden>{CONG_CU.find((c) => c.ma === cong)?.ky}</span> ▸
+          </button>
+        ) : (
+        <>
+        <button className="nut nut-nho bd-mo-thanh" aria-label="Thu gọn thanh công cụ" aria-expanded title="Thu gọn thanh công cụ về góc trái" onClick={() => setAnThanh(true)}>◂</button>
         {CONG_CU.map((c) => (
           <button key={c.ma} className={`nut nut-nho${cong === c.ma ? " chon" : ""}`} aria-pressed={cong === c.ma} title={`${c.ten} — ${c.goiY}`} aria-label={c.ten} onClick={() => doiCong(c.ma)}>
             <span aria-hidden>{c.ky}</span><span className="bd-chu">{c.ten}</span>
@@ -479,6 +489,8 @@ export function KhungVe(p: {
         <span className="bd-vach" />
         <label className="chu-nho" title="Bắt vào đỉnh gần nhất khi đo, lấy tọa độ"><input type="checkbox" checked={bat} onChange={(e) => setBat(e.target.checked)} /> Bắt điểm</label>
         <label className="chu-nho"><input type="checkbox" checked={nenToi} onChange={(e) => setNenToi(e.target.checked)} /> Nền đen</label>
+        </>
+        )}
       </div>
 
       <div className={`bd-bang${anBang ? " thu-gon" : ""}`} aria-label="Lớp bản đồ">

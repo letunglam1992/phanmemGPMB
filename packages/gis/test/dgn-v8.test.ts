@@ -18,7 +18,7 @@ import {
   CAU_HINH_MAC_DINH,
   type PhanTuChu,
 } from "../src/index.js";
-import { ptBanSaoO, ptChu, ptChuKhongDau, ptCung, ptDinhNghiaO, ptDuong, ptKichThuoc, ptKieu, ptNutChu, ptPhuc, vietCfb, vietDgnV8 } from "./viet-dgn-v8.js";
+import { datPhamViO, ptBanSaoO, ptChu, ptChuKhongDau, ptCung, ptDinhNghiaO, ptDuong, ptKichThuoc, ptKieu, ptNutChu, ptPhuc, vietCfb, vietDgnV8 } from "./viet-dgn-v8.js";
 
 describe("Tệp ghép CFB", () => {
   test("đọc lại luồng nhỏ (mini stream) và luồng lớn (FAT), kho lồng nhau", () => {
@@ -192,6 +192,28 @@ describe("DGN V8 — cung tròn, ô dùng chung, kích thước (0.9.0)", () => 
     expect(vung[1]!.lop).toBe(63);
     expect(b.canhBao.join(" ")).toMatch(/Đã dựng 2\/3 ô dùng chung .*thiếu định nghĩa: KHONGCO/);
     expect(dungThua(b, { ...CAU_HINH_MAC_DINH, ranhThua: [62, 63] }).thua).toHaveLength(0);
+  });
+
+  test("chống vẽ sai (đường kéo dài): thành phần ô ngoài phạm vi ô, kích thước có điểm lệch xa → không vẽ, có cảnh báo", async () => {
+    const nm = [[
+      ptDinhNghiaO("MOC"),
+      ptDuong(6, [[0, 0], [1, 0], [1, 1], [0, 0]], { lop: 1, thanhPhan: true, cucBo: true }),
+      // điểm cục bộ (0,5; −2.000.000) — kiểu lưu độ lệch chưa kiểm chứng → đường dọc kéo dài nếu vẽ
+      ptDuong(3, [[0.5, 0.5], [0.5, -2000000]], { lop: 1, thanhPhan: true, cucBo: true }),
+    ]];
+    const b = docDgn(vietDgnV8([[
+      datPhamViO(ptBanSaoO("MOC", [1, 0, 0, 1], [X0 + 10, Y0 + 10], { lop: 62 }), [0, 0], [1, 1]),
+      ptKichThuoc([[X0, Y0], [X0 + 3, Y0 + 4], [X0 + 3, Y0 - 900000]], { lop: 9 }),
+      ptKichThuoc([[X0, Y0], [X0 + 6, Y0 + 8]], { lop: 9 }),
+    ]], nm));
+    const o = b.phanTu.filter((p) => p.oDungChung === "MOC");
+    expect(o).toHaveLength(1);
+    expect(o[0]!.loai).toBe("VUNG");
+    expect(b.phanTu.filter((p) => p.kichThuoc !== undefined && p.loai !== "CHU").map((p) => p.kichThuoc)).toEqual([10]);
+    const ys = b.phanTu.flatMap((p) => ("diem" in p ? p.diem.map((d) => d.y) : []));
+    expect(Math.min(...ys)).toBeGreaterThan(Y0 - 1);
+    expect(b.canhBao.join(" ")).toMatch(/1 ô dùng chung có thành phần nằm ngoài phạm vi/);
+    expect(b.canhBao.join(" ")).toMatch(/1 kích thước có điểm định vị cách điểm đầu hơn 500 m/);
   });
 
   test("kích thước: đoạn nối điểm định vị và nhãn chiều dài (m) theo hướng đoạn", () => {
