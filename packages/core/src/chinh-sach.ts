@@ -108,6 +108,14 @@ export interface BoChinhSach {
     giaoDoThi: { TRUNG_TAM: string; CON_LAI: string; canCu: CanCu[] };
     khaiHoang: { hangNamNts: string; lauNam: { xa: string; phuong: string }; rung: { xa: string; phuong: string }; canCu: CanCu[] };
   };
+  /**
+   * Diện tích tối thiểu được tách thửa (Điều 13–16 Phụ lục I QĐ 106/2025) — dùng cảnh báo phần đất còn lại sau thu hồi
+   * (docs/08 §9.2). Chỉ nhập khi có nguyên văn; không có → phần mềm báo "Thiếu căn cứ" hoặc dùng ngưỡng cán bộ nhập cho dự án.
+   */
+  tachThuaToiThieu?: {
+    ghiChu: string;
+    muc: { ma: string; moTa: string; loaiDat: string[]; khuVuc?: "XA" | "PHUONG"; dienTich: string; canCu: CanCu[] }[];
+  };
   chuyenDoiNghe: {
     canCu: CanCu[];
     heSoMacDinh: string;

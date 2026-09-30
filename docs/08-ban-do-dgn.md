@@ -131,6 +131,8 @@ Lưu theo dự án: `banDo.vungChonDs`, `banDo.thuaChon`.
 
 ## 9. Lộ trình bản đồ phục vụ GPMB (đề xuất 30/9/2026, người dùng chọn thứ tự làm)
 
+Tình trạng: hạng mục **1** (ranh GPMB nhập ngoài: tọa độ mốc, DGN khác, vẽ; cắt thửa; cập nhật DT vào hồ sơ) và **2** (cảnh báo phần còn lại — cơ chế xong, ngưỡng chờ nguyên văn Điều 13–16 PL I QĐ 106/2025) làm ở 0.9.5; chi tiết docs/09.
+
 | # | Tính năng | Lợi ích |
 |---|---|---|
 | 1 | Ranh GPMB → tự tính DT thu hồi từng thửa: nạp tọa độ mốc (Excel), lấy từ tệp DGN khác, hoặc vẽ trên bản đồ; tự cắt thửa, điền DT thu hồi và DT còn lại vào hồ sơ | Bỏ nhập tay, tránh lệch diện tích |

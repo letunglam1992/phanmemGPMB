@@ -447,6 +447,23 @@ export interface BanDoDuAn {
   thuaChon?: string[];
   /** Cấu hình lớp cán bộ đã chốt cho tệp này; chưa có thì dùng gợi ý tự động (goiYCauHinh). */
   cauHinh?: CauHinhLop;
+  /**
+   * Ranh GPMB nhập ngoài tệp bản đồ (docs/08 §9.1): bảng tọa độ mốc, vùng của tệp DGN khác, hoặc vẽ trên bản đồ. Hợp với
+   * các vùng đã chọn để tính diện tích thu hồi từng thửa. Tọa độ VN-2000 cùng hệ bản đồ (x = Đông, y = Bắc).
+   */
+  ranhNhap?: RanhNhap[];
+}
+
+export interface RanhNhap {
+  id: string;
+  ten: string;
+  nguon: "EXCEL" | "DGN" | "VE";
+  /** Tên tệp nguồn (bảng mốc, tệp DGN) — để truy vết. */
+  tep?: string;
+  vong: import("@gpmb/gis").Diem[][];
+  dienTich: number;
+  ngay: string;
+  nguoi?: string;
 }
 
 export type LoaiDuAn = "GIAO_THONG" | "CONG_NGHIEP" | "TAI_DINH_CU" | "DO_THI" | "THUY_LOI" | "KHAC";
@@ -489,6 +506,11 @@ export interface DuAn {
   daXoa?: import("./rang-buoc").DauXoa;
   /** Thông tin dùng chung khi soạn văn bản (cơ quan, người ký, căn cứ, thành phần…) và số, ngày văn bản cấp dự án. */
   vanBan?: Record<string, string>;
+  /**
+   * Diện tích tối thiểu tách thửa do cán bộ nhập cho dự án (khi bộ chính sách chưa có nguyên văn Điều 13–16 PL I QĐ 106/2025),
+   * bắt buộc căn cứ — dùng cảnh báo phần đất còn lại sau thu hồi. `loaiDat`: ký hiệu, cách nhau dấu phẩy.
+   */
+  tachThuaToiThieu?: { id: string; loaiDat: string; dienTich: string; canCu: string }[];
   /** Kế hoạch hoàn thành từng bước (ngày ISO) do cán bộ nhập để theo dõi, cảnh báo chậm tiến độ. */
   keHoach?: Record<string, string>;
   /** §11.2: thời gian dự kiến của các bước không có thời hạn luật định — đơn vị nhập để dự báo tiến độ. */

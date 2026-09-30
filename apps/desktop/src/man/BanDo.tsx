@@ -12,6 +12,9 @@ import { HopCauHinhLop } from "./ban-do/CauHinhLop";
 import { TomTatThuHoi, KiemTraBanDo, ChiTietThua } from "./ban-do/KiemTra";
 import { KhungVe } from "./ban-do/KhungVe";
 import { HopTaoHo } from "./ban-do/TaoHo";
+import { HopCapNhatDt, TheConLai, TheRanhNhap } from "./ban-do/RanhGpmb";
+import { kiemTraVung } from "@gpmb/gis";
+import { taoId } from "../mo-hinh";
 import { tenDayDu } from "../van-ban/loai-dat";
 /** Nạp bản đồ đã lưu của dự án (dùng lại bộ nhớ đệm) — cho bản đồ nhỏ ở màn Dự án. */
 export async function napBanDoDuAn(kho: { docBanDo(id: string): Promise<Uint8Array | null> }, duAn: DuAn): Promise<DuLieuBanDo | null> {
@@ -27,7 +30,7 @@ export async function napBanDoDuAn(kho: { docBanDo(id: string): Promise<Uint8Arr
 export type { DuLieuBanDo };
 
 export function BanDo({ duAnId }: { duAnId: string }) {
-  const { dsDuAn, kho, luuDuAn, hoCua, di, chinhSach, quyen, bao } = useUngDung();
+  const { dsDuAn, kho, luuDuAn, hoCua, di, chinhSach, quyen, bao, nguoiDung } = useUngDung();
   const duAn = dsDuAn.find((d) => d.id === duAnId);
   // Bản đồ đang hiển thị luôn lấy theo lần nạp hiện tại của dự án (không giữ bản của tệp trước / dự án trước)
   const [, setPhien] = useState(0);
@@ -40,6 +43,8 @@ export function BanDo({ duAnId }: { duAnId: string }) {
   const [taoHo, setTaoHo] = useState(false);
   const [moCauHinh, setMoCauHinh] = useState(false);
   const [cheDoChonThua, setCheDoChonThua] = useState(false);
+  const [veRanh, setVeRanh] = useState(0);
+  const [capNhatDt, setCapNhatDt] = useState(false);
   const inputTep = useRef<HTMLInputElement>(null);
   const khoaNap = duAn?.banDo ? `${duAnId}|${duAn.banDo.ngayNhap}` : "";
 
@@ -73,9 +78,11 @@ export function BanDo({ duAnId }: { duAnId: string }) {
   const maVungChon = duAn?.banDo?.vungChonDs ?? (duAn?.banDo?.vungChon ? [duAn.banDo.vungChon] : []);
   const vungDs = dl ? dl.kq.vungGpmb.filter((v) => maVungChon.includes(v.ma)) : [];
   const thuaChon = useMemo(() => new Set(duAn?.banDo?.thuaChon ?? []), [duAn?.banDo?.thuaChon]);
+  const ranhNhap = duAn?.banDo?.ranhNhap ?? [];
   const thuHoi = useMemo(() => {
-    if (!dl || (!vungDs.length && !thuaChon.size)) return new Map<string, DienTichThuHoi>();
-    const r = vungDs.length ? tinhDienTichThuHoi(dl.kq.thua, vungDs.map((v) => v.vong)) : null;
+    const ranh = [...vungDs.map((v) => v.vong), ...ranhNhap.map((r) => r.vong)];
+    if (!dl || (!ranh.length && !thuaChon.size)) return new Map<string, DienTichThuHoi>();
+    const r = ranh.length ? tinhDienTichThuHoi(dl.kq.thua, ranh) : null;
     return new Map(
       dl.kq.thua.map((t, i) => {
         const g = r?.[i];
@@ -84,8 +91,15 @@ export function BanDo({ duAnId }: { duAnId: string }) {
         return [t.ma + "#" + i, kq];
       }),
     );
-  }, [dl, maVungChon.join("|"), thuaChon]); // eslint-disable-line react-hooks/exhaustive-deps
-  const coPhamVi = vungDs.length > 0 || thuaChon.size > 0;
+  }, [dl, maVungChon.join("|"), thuaChon, ranhNhap]); // eslint-disable-line react-hooks/exhaustive-deps
+  const coPhamVi = vungDs.length > 0 || thuaChon.size > 0 || ranhNhap.length > 0;
+  const luuRanhVe = (diem: import("@gpmb/gis").Diem[]) => {
+    const k = kiemTraVung(diem);
+    if (!k.hopLe || !duAn?.banDo) return bao(k.loi ?? "Vùng không hợp lệ", "loi");
+    const ten = `Ranh vẽ ${ranhNhap.filter((r) => r.nguon === "VE").length + 1}`;
+    void luuDuAn({ ...duAn, banDo: { ...duAn.banDo, ranhNhap: [...ranhNhap, { id: taoId(), ten, nguon: "VE", vong: [k.vong], dienTich: k.dienTich, ngay: new Date().toISOString(), nguoi: nguoiDung }] } });
+    bao(`Đã thêm ${ten} (${k.dienTich.toLocaleString("vi-VN", { maximumFractionDigits: 1 })} m²)`);
+  };
   const khoaThua = (t: ThuaBanDo) => t.ma + "#" + dl!.kq.thua.indexOf(t);
   const [thieuPhamVi, setThieuPhamVi] = useState(false);
   const luuBanDoDa = (p: Partial<NonNullable<DuAn["banDo"]>>) => duAn?.banDo && luuDuAn({ ...duAn, banDo: { ...duAn.banDo, ...p } });
@@ -124,7 +138,8 @@ export function BanDo({ duAnId }: { duAnId: string }) {
       await kho.luuBanDo(duAnId, bytes);
       boNho.set(duAnId, { ngayNhap, d });
       // Bản đồ mới: bỏ phạm vi thu hồi, thửa chọn và cấu hình lớp đã chốt của tệp cũ
-      await luuDuAn({ ...duAn, banDo: { tenTep: f.name, ngayNhap, vungChon: null, vungChonDs: [], thuaChon: [] } });
+      // Ranh GPMB nhập ngoài (tọa độ tuyệt đối VN-2000) giữ lại
+      await luuDuAn({ ...duAn, banDo: { tenTep: f.name, ngayNhap, vungChon: null, vungChonDs: [], thuaChon: [], ranhNhap: duAn.banDo?.ranhNhap ?? [] } });
       bao(`Đã nạp bản đồ ${f.name}: ${d.kq.thua.length} thửa`);
     } catch (e) {
       setLoi((e as Error).message);
@@ -229,11 +244,11 @@ export function BanDo({ duAnId }: { duAnId: string }) {
       )}
       {dl && (
         <div className="ban-do-khung">
-          <KhungVe key={khoaNap} dl={dl} vungChon={maVungChon} thuHoi={thuHoi} khoaThua={khoaThua} chon={chon} setChon={setChon} daLienKet={daLienKet} ttThua={ttThua} bamThua={cheDoChonThua && quyen("SUA_HO_SO") ? batTatThua : undefined} thuaChon={thuaChon} khoaLuu={duAnId} />
+          <KhungVe key={khoaNap} dl={dl} vungChon={maVungChon} thuHoi={thuHoi} khoaThua={khoaThua} chon={chon} setChon={setChon} daLienKet={daLienKet} ttThua={ttThua} bamThua={cheDoChonThua && quyen("SUA_HO_SO") ? batTatThua : undefined} thuaChon={thuaChon} khoaLuu={duAnId} ranhThem={ranhNhap.map((r) => r.vong)} luuVung={quyen("SUA_HO_SO") ? luuRanhVe : undefined} batVeVung={veRanh} />
           <div className="ben-phai">
             <KiemTraBanDo dl={dl} coPhamVi={coPhamVi} soVung={dl.kq.vungGpmb.length} moCauHinh={() => setMoCauHinh(true)} ttThua={ttThua} />
             <div className="the co-dinh">
-              <div className="the-dau"><h3>Phạm vi thu hồi</h3><span className="mo chu-nho">{vungDs.length} vùng · {thuaChon.size} thửa chọn tay</span></div>
+              <div className="the-dau"><h3>Phạm vi thu hồi</h3><span className="mo chu-nho">{vungDs.length} vùng · {ranhNhap.length} ranh nhập · {thuaChon.size} thửa chọn tay</span></div>
               <div className="the-than" style={{ display: "grid", gap: 6 }}>
                 <div className="mo chu-nho">Cách 1 — chọn các vùng ranh GPMB / vùng thửa thu hồi (lớp {dl.cauHinh.ranhGpmb.join(", ")}): phần mềm tính phần giao, phân biệt thu hồi toàn bộ / một phần. Phần mềm không tự chọn — cán bộ chọn theo hồ sơ được duyệt.</div>
                 {dl.kq.vungGpmb.length > 0 && (
@@ -262,7 +277,9 @@ export function BanDo({ duAnId }: { duAnId: string }) {
                   {thuaChon.size > 0 && <button className="nut nut-nho" disabled={!quyen("SUA_HO_SO")} onClick={() => doiThuaChon([])}>Bỏ {thuaChon.size} thửa chọn tay</button>}
                 </div>
                 {cheDoChonThua && <div className="thong-bao thong-bao-xanh chu-nho mb-0">Bấm vào thửa trên bản đồ (hoặc ô ở bảng thửa) để thêm / bỏ khỏi phạm vi thu hồi.</div>}
+                <TheRanhNhap duAn={duAn} dl={dl} veRanh={false} batVe={() => setVeRanh((x) => x + 1)} moCapNhat={() => setCapNhatDt(true)} soDaLienKet={daLienKet.size} />
                 {coPhamVi && <TomTatThuHoi thuHoi={thuHoi} />}
+                {coPhamVi && <TheConLai duAn={duAn} dl={dl} thuHoi={thuHoi} khoaThua={khoaThua} hos={hos} chonThua={setChon} />}
                 {coPhamVi && (() => {
                   const trong = dl.kq.thua.filter((t) => (thuHoi.get(khoaThua(t))?.phamVi ?? "NGOAI") !== "NGOAI");
                   const dem = Object.fromEntries(THU_TU_TRANG_THAI.map((t) => [t, 0])) as Record<TrangThaiGpmb, number>;
@@ -326,6 +343,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
           <p className="mo chu-nho">Diện tích thu hồi của thửa chọn trực tiếp mặc định bằng cả thửa; thửa thu hồi một phần sửa trong hồ sơ theo trích đo được duyệt.</p>
         </HopThoai>
       )}
+      {capNhatDt && dl && <HopCapNhatDt duAn={duAn} dl={dl} thuHoi={thuHoi} khoaThua={khoaThua} hos={hos} dong={() => setCapNhatDt(false)} />}
       {taoHo && dl && coPhamVi && (
         <HopTaoHo duAn={duAn} dl={dl} thuHoi={thuHoi} khoaThua={khoaThua} daLienKet={daLienKet} dong={() => setTaoHo(false)} />
       )}

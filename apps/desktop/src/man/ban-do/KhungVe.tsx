@@ -51,6 +51,12 @@ export function KhungVe(p: {
   ttThua: Map<string, TrangThaiGpmb>;
   /** Khóa lưu tùy chọn hiển thị (lớp tắt, nền) theo dự án, trên máy này. */
   khoaLuu?: string;
+  /** Ranh GPMB nhập ngoài (bảng mốc, DGN khác, vẽ) — vẽ như ranh đã chọn. */
+  ranhThem?: Diem[][][];
+  /** Có: khi vẽ vùng (công cụ đo diện tích) hiện nút "Dùng làm ranh GPMB". */
+  luuVung?: (vong: Diem[]) => void;
+  /** Bật công cụ vẽ vùng từ bên ngoài (nút "Vẽ ranh trên bản đồ"). */
+  batVeVung?: number;
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const khoa = `gpmb-ban-do-${p.khoaLuu ?? "chung"}`;
@@ -221,6 +227,13 @@ export function KhungVe(p: {
         ctx.stroke();
         ctx.setLineDash([]);
       }
+      for (const vg of lop.ranh ? (p.ranhThem ?? []) : []) {
+        ctx.beginPath();
+        for (const r of vg) { duong(r); ctx.closePath(); }
+        ctx.lineWidth = 2.4;
+        ctx.strokeStyle = "#e0493a";
+        ctx.stroke();
+      }
       if (p.thuaChon.size) {
         ctx.setLineDash([5, 3]);
         ctx.lineWidth = 1.8;
@@ -379,6 +392,10 @@ export function KhungVe(p: {
     setBatHien(null);
     if (c !== "CHON" && c !== "TOA_DO") setThongTin(null);
   };
+  // Nút "Vẽ ranh trên bản đồ" ở ngoài: chuyển sang công cụ vẽ vùng
+  useEffect(() => {
+    if (p.batVeVung) doiCong("DO_DT");
+  }, [p.batVeVung]);
 
   const ketQuaDo = diemDo.length > 1 ? { dai: chieuDai(cong === "DO_DT" && xongDo ? [...diemDo, diemDo[0]!] : diemDo), dt: cong === "DO_DT" ? dienTich(diemDo) : 0 } : null;
   const dsLopLoc = ve.lop.filter((l) => !timLop || `${l.lop} ${l.ten ?? ""}`.toLowerCase().includes(timLop.toLowerCase()));
@@ -576,6 +593,7 @@ export function KhungVe(p: {
               {cong === "DO_DAI" && diemDo.length > 1 && <div className="mo">Đoạn cuối: {so(khoangCach(diemDo[diemDo.length - 2]!, diemDo[diemDo.length - 1]!))} m</div>}
               {cong === "DO_DT" && diemDo.length > 2 && <div>Diện tích: <b>{so(ketQuaDo.dt)} m²</b> ({so(ketQuaDo.dt / 10000, 4)} ha)</div>}
               <div className="mo">{xongDo ? "Đã kết thúc — bấm để đo lại, Esc để xóa" : "Bấm đúp / chuột phải để kết thúc"}</div>
+              {p.luuVung && cong === "DO_DT" && xongDo && diemDo.length > 2 && <button className="nut nut-nho nut-chinh" onClick={() => { p.luuVung!(diemDo); doiCong("CHON"); }}>Dùng làm ranh GPMB</button>}
             </>
           )}
           {!ketQuaDo && thongTin?.diem && (
