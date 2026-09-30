@@ -18,7 +18,7 @@ import {
   CAU_HINH_MAC_DINH,
   type PhanTuChu,
 } from "../src/index.js";
-import { ptChu, ptChuKhongDau, ptDuong, ptKieu, ptNutChu, ptPhuc, vietCfb, vietDgnV8 } from "./viet-dgn-v8.js";
+import { ptBanSaoO, ptChu, ptChuKhongDau, ptCung, ptDinhNghiaO, ptDuong, ptKichThuoc, ptKieu, ptNutChu, ptPhuc, vietCfb, vietDgnV8 } from "./viet-dgn-v8.js";
 
 describe("Tệp ghép CFB", () => {
   test("đọc lại luồng nhỏ (mini stream) và luồng lớn (FAT), kho lồng nhau", () => {
@@ -73,7 +73,7 @@ function banDoThu(o: { chuMauThuan?: boolean } = {}) {
   // chữ 8 bit (ASCII) + phần tử điều khiển
   nhan.push(ptChu("Suoi", X0 + 15, Y0 + 25, { lop: 39 }));
   nhan.push(ptKieu(17, 176, { lop: 64 })); // kiểu 17 không có dấu chữ: phần tử điều khiển
-  const khac = [ptDuong(3, [d(0, 0), d(1, 1)], { lop: 11 }, 3), ptKieu(16, 200, { lop: 11 })];
+  const khac = [ptDuong(3, [d(0, 0), d(1, 1)], { lop: 11 }, 3), ptCung([X0 + 50, Y0 + 50], 2, 0, Math.PI / 2, { lop: 11 })];
   return vietDgnV8([ranh, [...nhan, ...khac]]);
 }
 
@@ -89,7 +89,6 @@ describe("DGN V8", () => {
     expect(chu.map(giaiMaNhan)).toContain("Suoi");
     expect(chu.filter((c) => c.nut !== undefined)).toHaveLength(30);
     expect(ban.canhBao.join(" ")).toMatch(/1 phần tử 3D/);
-    expect(ban.canhBao.join(" ")).toMatch(/1 cung tròn/);
     expect(ban.canhBao.join(" ")).not.toMatch(/lệch/);
   });
 
@@ -152,6 +151,59 @@ describe("DGN V8", () => {
     expect(chu[0]!.chieuCao).toBeCloseTo(3.33, 6);
     expect(chu[0]!.lop).toBe(62);
     expect(b.phanTu.filter((e) => e.loai === "KHAC" && e.kieu === 17)).toHaveLength(2);
+  });
+});
+
+describe("DGN V8 — cung tròn, ô dùng chung, kích thước (0.9.0)", () => {
+  const gan = (d: { x: number; y: number }, x: number, y: number) => {
+    expect(d.x).toBeCloseTo(x, 6);
+    expect(d.y).toBeCloseTo(y, 6);
+  };
+  test("cung tròn: góc đầu, góc quét; góc quét ≈ 0 (1/360000 độ) vẽ đủ vòng", () => {
+    const b = docDgn(vietDgnV8([[ptCung([X0 + 10, Y0 + 10], 5, 0, Math.PI / 2, { lop: 3 }), ptCung([X0, Y0], 1, 0, 4.8481368e-8, { lop: 3 })]]));
+    const [c1, c2] = b.phanTu.filter((p) => p.loai === "CUNG") as { diem: { x: number; y: number }[] }[];
+    gan(c1!.diem[0]!, X0 + 15, Y0 + 10);
+    gan(c1!.diem.at(-1)!, X0 + 10, Y0 + 15);
+    gan(c2!.diem[0]!, X0 + 1, Y0);
+    gan(c2!.diem.at(-1)!, X0 + 1, Y0);
+    expect(c2!.diem.length).toBeGreaterThan(30);
+  });
+
+  test("ô dùng chung: dựng thành phần theo ma trận xoay, gốc bản sao; ô lồng nhau; không dùng để dựng thửa", () => {
+    const nm = [[
+      ptDinhNghiaO("TAMGIAC"),
+      ptDuong(6, [[0, 0], [2, 0], [1, 2], [0, 0]], { lop: 1, thanhPhan: true, cucBo: true }),
+      ptDinhNghiaO("LONG"),
+      ptBanSaoO("TAMGIAC", [2, 0, 0, 2], [10, 0], { lop: 1, thanhPhan: true, cucBo: true }),
+    ]];
+    const b = docDgn(vietDgnV8([[
+      ptBanSaoO("TAMGIAC", [0, -1, 1, 0], [X0 + 100, Y0 + 200], { lop: 62 }),
+      ptBanSaoO("LONG", [1, 0, 0, 1], [X0, Y0], { lop: 63 }),
+      ptBanSaoO("KHONGCO", [1, 0, 0, 1], [X0, Y0], { lop: 63 }),
+    ]], nm));
+    const vung = b.phanTu.filter((p) => p.loai === "VUNG") as { lop: number; oDungChung?: string; laThanhPhan: boolean; diem: { x: number; y: number }[] }[];
+    expect(vung).toHaveLength(2);
+    // xoay 90°: (2,0) → (0,2); (1,2) → (−2,1); lớp theo bản sao
+    gan(vung[0]!.diem[1]!, X0 + 100, Y0 + 202);
+    gan(vung[0]!.diem[2]!, X0 + 98, Y0 + 201);
+    expect(vung[0]).toMatchObject({ lop: 62, oDungChung: "TAMGIAC", laThanhPhan: true });
+    // lồng: gốc cục bộ (10, 0) và tỷ lệ 2 trong định nghĩa LONG
+    gan(vung[1]!.diem[2]!, X0 + 12, Y0 + 4);
+    expect(vung[1]!.lop).toBe(63);
+    expect(b.canhBao.join(" ")).toMatch(/Đã dựng 2\/3 ô dùng chung .*thiếu định nghĩa: KHONGCO/);
+    expect(dungThua(b, { ...CAU_HINH_MAC_DINH, ranhThua: [62, 63] }).thua).toHaveLength(0);
+  });
+
+  test("kích thước: đoạn nối điểm định vị và nhãn chiều dài (m) theo hướng đoạn", () => {
+    const b = docDgn(vietDgnV8([[ptKichThuoc([[X0, Y0], [X0 + 3, Y0 + 4]], { lop: 9, caoM: 1.5 })]]));
+    const d = b.phanTu.find((p) => p.loai === "DUONG")!;
+    const c = b.phanTu.find((p): p is PhanTuChu => p.loai === "CHU")!;
+    expect(d.kichThuoc).toBeCloseTo(5, 9);
+    expect(giaiMaNhan(c)).toBe("5,00");
+    gan(c.goc, X0 + 1.5, Y0 + 2);
+    expect(c.gocXoay).toBeCloseTo((Math.atan2(4, 3) * 180) / Math.PI, 6);
+    expect(c.chieuCao).toBeCloseTo(1.5, 6);
+    expect(b.canhBao.join(" ")).toMatch(/1 kích thước/);
   });
 });
 

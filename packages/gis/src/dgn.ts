@@ -39,6 +39,10 @@ interface PhanTuCoSo {
   kieuNet: number;
   /** Thuộc phần tử phức (thành phần của chuỗi/vùng phức). */
   laThanhPhan: boolean;
+  /** Tên ô dùng chung (shared cell, DGN V8 kiểu 35) mà phần tử này được dựng từ định nghĩa. */
+  oDungChung?: string;
+  /** Phần tử dựng từ kích thước (DGN V8 kiểu 33): chiều dài đo giữa hai điểm định vị, đơn vị chính. */
+  kichThuoc?: number;
 }
 
 export interface PhanTuHinh extends PhanTuCoSo {
@@ -73,6 +77,12 @@ export interface PhanTuKhac extends PhanTuCoSo {
 }
 
 export type PhanTu = PhanTuHinh | PhanTuPhuc | PhanTuChu | PhanTuKhac;
+
+/**
+ * Phần tử gốc của bản vẽ, bỏ phần tử dựng thêm chỉ để hiển thị (thành phần ô dùng chung, kích thước — DGN V8):
+ * dùng cho nhận dạng thửa, gợi ý cấu hình lớp để kết quả không đổi so với trước khi đọc các kiểu này.
+ */
+export const phanTuGoc = (ban: { phanTu: PhanTu[] }): PhanTu[] => ban.phanTu.filter((pt) => pt.oDungChung === undefined && pt.kichThuoc === undefined);
 
 export interface ThongTinTcb {
   soChieu: 2 | 3;
@@ -141,7 +151,7 @@ const LOAI: Record<number, LoaiPhanTu> = {
 /** Số điểm dùng để xấp xỉ elip/cung khi vẽ và tính toán. */
 const SO_DOAN_CUNG = 36;
 
-function xapXiCung(
+export function xapXiCung(
   tam: Diem,
   a: number,
   b: number,

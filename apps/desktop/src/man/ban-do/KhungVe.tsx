@@ -575,7 +575,7 @@ export function KhungVe(p: {
           )}
           {!ketQuaDo && thongTin?.hinh && (
             <>
-              <b>{TEN_LOAI[thongTin.hinh.loai] ?? thongTin.hinh.loai}</b>
+              <b>{TEN_LOAI[thongTin.hinh.loai] ?? thongTin.hinh.loai}</b>{thongTin.hinh.nguon && <span className="mo"> · {thongTin.hinh.nguon}</span>}
               <div>Lớp {thongTin.hinh.lop}{ve.lop.find((l) => l.lop === thongTin.hinh!.lop)?.ten ? ` — ${ve.lop.find((l) => l.lop === thongTin.hinh!.lop)!.ten}` : ""}</div>
               <div>Chiều dài: <b>{so(thongTin.hinh.duong.reduce((s, d) => s + chieuDai(d), 0))} m</b> · {thongTin.hinh.duong.reduce((s, d) => s + d.length, 0)} đỉnh</div>
               {thongTin.hinh.kin && <div>Diện tích: <b>{so(dienTich(thongTin.hinh.duong.flat()))} m²</b></div>}
@@ -584,7 +584,7 @@ export function KhungVe(p: {
           )}
           {!ketQuaDo && thongTin?.chu && (
             <>
-              <b>Chữ</b>
+              <b>Chữ</b>{thongTin.chu.nguon && <span className="mo"> · {thongTin.chu.nguon}</span>}
               <div>“{thongTin.chu.chu}”</div>
               <div>Lớp {thongTin.chu.lop}{ve.lop.find((l) => l.lop === thongTin.chu!.lop)?.ten ? ` — ${ve.lop.find((l) => l.lop === thongTin.chu!.lop)!.ten}` : ""}</div>
             </>

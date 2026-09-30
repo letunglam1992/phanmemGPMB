@@ -3,6 +3,7 @@
  * Gợi ý chỉ dựa trên cấu trúc dữ liệu thấy được trong tệp; cán bộ xem lại trước khi dùng.
  */
 import type { KetQuaDocDgn, PhanTuChu } from "./dgn.js";
+import { phanTuGoc } from "./dgn.js";
 import { CAU_HINH_MAC_DINH, diemTrongThua, dungThua, giaiMaNhan, loaiHienTrangBanDo, type CauHinhLop, type CauHinhNut, type TruongNut } from "./thua.js";
 
 export interface ThongKeLop {
@@ -25,7 +26,7 @@ export function thongKeLop(ban: KetQuaDocDgn): ThongKeLop[] {
     if (!x) m.set(lop, (x = { lop, soDuong: 0, soVung: 0, soChu: 0, soNut: 0, mau: [], daCo: new Set(), nut: new Set() }));
     return x;
   };
-  for (const pt of ban.phanTu) {
+  for (const pt of phanTuGoc(ban)) {
     if (pt.loai === "DUONG" || pt.loai === "DUONG_GAP" || pt.loai === "CHUOI_PHUC" || pt.loai === "CUNG") lay(pt.lop).soDuong++;
     else if (pt.loai === "VUNG" || pt.loai === "VUNG_PHUC" || pt.loai === "ELIP") lay(pt.lop).soVung++;
     else if (pt.loai === "CHU") {
@@ -51,7 +52,7 @@ const RE_NHIEU_TU = /^\p{L}+(\s+\p{L}+)+$/u;
 /** Nút chữ theo lớp của dòng đầu: lop -> danh sách nút, mỗi nút là các dòng theo thứ tự trong tệp. */
 function nutTheoLop(ban: KetQuaDocDgn): Map<number, string[][]> {
   const nut = new Map<number, { lop: number; dong: string[] }>();
-  for (const pt of ban.phanTu) {
+  for (const pt of phanTuGoc(ban)) {
     if (pt.loai !== "CHU" || (pt as PhanTuChu).nut === undefined) continue;
     const k = (pt as PhanTuChu).nut!;
     const x = nut.get(k) ?? { lop: pt.lop, dong: [] };
@@ -144,7 +145,7 @@ export function goiYCauHinh(ban: KetQuaDocDgn, goc: CauHinhLop = CAU_HINH_MAC_DI
 /** Lớp chữ ghi hiện trạng GPMB: ≥ 5 dòng chữ, ≥ 60% dạng "Đã GPMB", "Chưa GPMB", "NQH". */
 function lopNhanHienTrang(ban: KetQuaDocDgn): { lop: number; mau: string } | null {
   const theoLop = new Map<number, string[]>();
-  for (const pt of ban.phanTu) if (pt.loai === "CHU") theoLop.set(pt.lop, [...(theoLop.get(pt.lop) ?? []), giaiMaNhan(pt)]);
+  for (const pt of phanTuGoc(ban)) if (pt.loai === "CHU") theoLop.set(pt.lop, [...(theoLop.get(pt.lop) ?? []), giaiMaNhan(pt)]);
   let tot: { lop: number; mau: string; n: number } | null = null;
   for (const [lop, ds] of theoLop) {
     const khop = ds.filter((x) => loaiHienTrangBanDo(x));
@@ -189,7 +190,7 @@ function lopChuDoiChieu(ban: KetQuaDocDgn, nut: CauHinhNut & { soNut: number }):
   const tenNut = new Set<string>();
   for (const ds of nutTheoLop(ban).get(nut.lop[0]!) ?? []) if (ds[iChu]) tenNut.add(chuanTen(ds[iChu]!));
   const theoLop = new Map<number, string[]>();
-  for (const pt of ban.phanTu)
+  for (const pt of phanTuGoc(ban))
     if (pt.loai === "CHU" && pt.nut === undefined && !nut.lop.includes(pt.lop)) theoLop.set(pt.lop, [...(theoLop.get(pt.lop) ?? []), giaiMaNhan(pt)]);
   let tot: { lop: number; tyLeKhop: number } | null = null;
   for (const [lop, ds] of theoLop) {

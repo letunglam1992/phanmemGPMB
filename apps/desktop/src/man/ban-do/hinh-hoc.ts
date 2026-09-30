@@ -14,6 +14,8 @@ export interface HinhVe {
   /** Vùng khép kín (VUNG, VUNG_PHUC, ELIP hoặc đường có điểm đầu trùng điểm cuối). */
   kin: boolean;
   hop: { minX: number; minY: number; maxX: number; maxY: number };
+  /** Phần tử dựng thêm từ tệp V8: "Ô dùng chung TÊN" hoặc "Kích thước". */
+  nguon?: string;
 }
 export interface ChuVe {
   stt: number;
@@ -23,6 +25,7 @@ export interface ChuVe {
   chu: string;
   cao: number;
   xoay: number;
+  nguon?: string;
 }
 export interface LopDgn {
   lop: number;
@@ -46,11 +49,12 @@ export function chuanBiVe(ban: KetQuaDocDgn): { hinh: HinhVe[]; chu: ChuVe[]; lo
     if (!x) dem.set(lop, (x = { lop, ten: tenLopPl21(lop), soHinh: 0, soChu: 0 }));
     return x;
   };
+  const nguonCua = (e: PhanTu) => (e.oDungChung !== undefined ? `Ô dùng chung ${e.oDungChung}` : e.kichThuoc !== undefined ? "Kích thước" : undefined);
   for (const e of ban.phanTu) {
     if (e.loai === "CHU") {
       const s = giaiMaNhan(e);
       if (!s) continue;
-      chu.push({ stt: e.stt, lop: e.lop, x: e.goc.x, y: e.goc.y, chu: s, cao: e.chieuCao, xoay: e.gocXoay });
+      chu.push({ stt: e.stt, lop: e.lop, x: e.goc.x, y: e.goc.y, chu: s, cao: e.chieuCao, xoay: e.gocXoay, nguon: nguonCua(e) });
       lay(e.lop).soChu++;
       continue;
     }
@@ -76,7 +80,7 @@ export function chuanBiVe(ban: KetQuaDocDgn): { hinh: HinhVe[]; chu: ChuVe[]; lo
       }
     const phang = duong.flat();
     const kin = e.loai === "VUNG" || e.loai === "VUNG_PHUC" || e.loai === "ELIP" || (phang.length > 3 && trung(phang[0]!, phang[phang.length - 1]!));
-    hinh.push({ stt: e.stt, lop: e.lop, loai: e.loai, mau: e.mau, duong, kin, hop });
+    hinh.push({ stt: e.stt, lop: e.lop, loai: e.loai, mau: e.mau, duong, kin, hop, nguon: nguonCua(e) });
     lay(e.lop).soHinh++;
   }
   return { hinh, chu, lop: [...dem.values()].sort((a, b) => a.lop - b.lop) };

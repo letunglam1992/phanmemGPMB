@@ -136,6 +136,8 @@ const raw = (v: number, goc: number) => v * UOR + goc;
 export interface TuyChonPt {
   lop: number;
   thanhPhan?: boolean;
+  /** Tọa độ cục bộ của định nghĩa ô dùng chung (không cộng gốc toàn cục). */
+  cucBo?: boolean;
 }
 
 /** Khung phần tử: `dai` byte (chẵn), vùng hình học kết thúc ở `cuoiHinh`; luôn dư ≥ 4 byte 0 ở cuối. */
@@ -158,8 +160,8 @@ export function ptDuong(kieu: 3 | 4 | 6, diem: [number, number][], o: TuyChonPt,
   const { b, dv } = khung(kieu, cuoi + 8, cuoi, o);
   if (kieu !== 3) dv.setUint32(104, diem.length, true);
   diem.forEach(([x, y], i) => {
-    dv.setFloat64(dau + i * buoc, raw(x, GOC_X), true);
-    dv.setFloat64(dau + i * buoc + 8, raw(y, GOC_Y), true);
+    dv.setFloat64(dau + i * buoc, raw(x, o.cucBo ? 0 : GOC_X), true);
+    dv.setFloat64(dau + i * buoc + 8, raw(y, o.cucBo ? 0 : GOC_Y), true);
   });
   return b;
 }
@@ -217,6 +219,60 @@ export function ptChuKhongDau(chu: string, x: number, y: number, o: TuyChonPt & 
   return b;
 }
 
+/** Cung tròn 2D (kiểu 16): @104 góc đầu, @112 góc quét (radian), @120/@128 bán trục, @136 góc xoay, @144 tâm. */
+export function ptCung(tam: [number, number], banKinh: number, batDau: number, quet: number, o: TuyChonPt): Uint8Array {
+  const { b, dv } = khung(16, 168, 160, o);
+  dv.setFloat64(104, batDau, true);
+  dv.setFloat64(112, quet, true);
+  dv.setFloat64(120, banKinh * UOR, true);
+  dv.setFloat64(128, banKinh * UOR, true);
+  dv.setFloat64(144, raw(tam[0], o.cucBo ? 0 : GOC_X), true);
+  dv.setFloat64(152, raw(tam[1], o.cucBo ? 0 : GOC_Y), true);
+  return b;
+}
+
+/** Liên kết tên ô dùng chung (mã 0x56D2) tại vùng thuộc tính. */
+function lienKetTen(b: Uint8Array, dv: DataView, tai: number, ten: string) {
+  b.set([0x0b, 0x10, 0xd2, 0x56], tai);
+  dv.setUint32(tai + 4, 1, true);
+  dv.setUint32(tai + 8, ten.length, true);
+  b.set([...ten].map((c) => c.charCodeAt(0)), tai + 12);
+}
+
+/** Định nghĩa ô dùng chung (kiểu 34, kho phi mô hình): ma trận đơn vị, gốc 0; tên ở vùng thuộc tính @256. */
+export function ptDinhNghiaO(ten: string): Uint8Array {
+  const { b, dv } = khung(34, 288, 256, { lop: 0 });
+  for (const q of [160, 192, 224]) dv.setFloat64(q, 1, true);
+  lienKetTen(b, dv, 256, ten);
+  return b;
+}
+
+/** Bản sao ô dùng chung (kiểu 35): ma trận [a b; d e] theo hàng @160, gốc @232 (tọa độ bản đồ, hoặc cục bộ khi lồng). */
+export function ptBanSaoO(ten: string, m: [number, number, number, number], goc: [number, number], o: TuyChonPt): Uint8Array {
+  const { b, dv } = khung(35, 288, 256, o);
+  dv.setFloat64(160, m[0], true);
+  dv.setFloat64(168, m[1], true);
+  dv.setFloat64(184, m[2], true);
+  dv.setFloat64(192, m[3], true);
+  dv.setFloat64(224, 1, true);
+  dv.setFloat64(232, raw(goc[0], o.cucBo ? 0 : GOC_X), true);
+  dv.setFloat64(240, raw(goc[1], o.cucBo ? 0 : GOC_Y), true);
+  lienKetTen(b, dv, 256, ten);
+  return b;
+}
+
+/** Kích thước (kiểu 33): chiều cao chữ @192 (đơn vị lưu), điểm định vị là bản ghi 48 byte từ @304. */
+export function ptKichThuoc(diem: [number, number][], o: TuyChonPt & { caoM?: number }): Uint8Array {
+  const cuoi = 304 + 48 * diem.length;
+  const { b, dv } = khung(33, cuoi + 8, cuoi, o);
+  dv.setFloat64(192, (o.caoM ?? 1.5) * UOR, true);
+  diem.forEach(([x, y], i) => {
+    dv.setFloat64(304 + 48 * i, raw(x, GOC_X), true);
+    dv.setFloat64(312 + 48 * i, raw(y, GOC_Y), true);
+  });
+  return b;
+}
+
 /** Khối "Dgn^G/$n": 16 byte đầu (uint32 số phần tử) + zlib(4 byte đầu khối + phần tử), bỏ 4 byte cuối như tệp thật. */
 export function khoiPhanTu(ds: Uint8Array[]): Uint8Array {
   const tong = 4 + ds.reduce((s, x) => s + x.length, 0);
@@ -246,8 +302,9 @@ export function dauMoHinh(): Uint8Array {
   return zlibSync(b);
 }
 
-export function vietDgnV8(khoi: Uint8Array[][]): Uint8Array {
+export function vietDgnV8(khoi: Uint8Array[][], phiMoHinh: Uint8Array[][] = []): Uint8Array {
   const luong: Record<string, Uint8Array> = { "Dgn-Md/#000000/Dgn~Mh": dauMoHinh() };
   khoi.forEach((ds, i) => (luong[`Dgn-Md/#000000/Dgn^G/$${i}`] = khoiPhanTu(ds)));
+  phiMoHinh.forEach((ds, i) => (luong[`Dgn^Nm/$${i}`] = khoiPhanTu(ds)));
   return vietCfb(luong);
 }

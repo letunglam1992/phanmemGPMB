@@ -17,6 +17,7 @@ import type Geometry from "jsts/org/locationtech/jts/geom/Geometry.js";
 import PolygonCls from "jsts/org/locationtech/jts/geom/Polygon.js";
 type Polygon = PolygonCls;
 import type { Diem, KetQuaDocDgn, PhanTu, PhanTuChu } from "./dgn.js";
+import { phanTuGoc } from "./dgn.js";
 import { giaiMaTcvn3 } from "./tcvn3.js";
 
 export interface CauHinhLop {
@@ -214,7 +215,7 @@ export function dungThua(ban: KetQuaDocDgn, ch: CauHinhLop = CAU_HINH_MAC_DINH):
   const dongTrongNut = new Map<number, number>(); // stt nút -> số dòng đã gặp
   const neo = new Map<number, Diem>(); // stt nút -> vị trí dòng đầu
   const nhanHt: NhanDoc[] = []; // chữ hiện trạng GPMB trên bản đồ
-  for (const pt of ban.phanTu) {
+  for (const pt of phanTuGoc(ban)) {
     if (thuoc(ch.ranhThua, pt.lop) && laHinhTuyen(pt)) {
       const g = thanhDuong(pt.diem);
       if (g) duongRanh.push(g);
@@ -334,7 +335,7 @@ export function dungThua(ban: KetQuaDocDgn, ch: CauHinhLop = CAU_HINH_MAC_DINH):
   const vungGpmb: VungUngVien[] = [];
   const duongGpmb: Geometry[] = [];
   const sttGpmb: number[] = [];
-  for (const pt of ban.phanTu) {
+  for (const pt of phanTuGoc(ban)) {
     if (!thuoc(ch.ranhGpmb, pt.lop) || !laHinhTuyen(pt)) continue;
     sttGpmb.push(pt.stt);
     const khepKin = pt.loai === "VUNG" || pt.loai === "VUNG_PHUC" || pt.loai === "ELIP";
