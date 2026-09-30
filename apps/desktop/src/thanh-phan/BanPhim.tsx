@@ -219,6 +219,10 @@ export function BangPhimTat({ diMuc }: { diMuc: MucPhim[] }) {
       ["Ctrl + S", "Lưu (hồ sơ, hộp thoại đang mở)"],
       ["Ctrl + Enter", "Lưu và sang thẻ tiếp theo (hồ sơ)"],
     ]],
+    ["Hồ sơ hộ (nhập nhiều hộ)", [
+      ["Alt + ↑", "Về danh sách hộ (giữ bộ lọc, vị trí cuộn; tô sáng hộ vừa làm)"],
+      ["Alt + →", "Sang hộ tiếp theo theo danh sách đang lọc (chưa lưu thì hỏi lưu)"],
+    ]],
     ["Thẻ (tab)", [
       ["← →", "Sang thẻ trước / sau (khi đang chọn một thẻ)"],
       ["Home / End", "Thẻ đầu / cuối"],

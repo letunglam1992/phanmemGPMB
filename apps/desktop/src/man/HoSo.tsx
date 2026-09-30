@@ -24,6 +24,8 @@ import { TabHoTroKhac } from "./ho/HoTroKhac";
 import { TabTienDo } from "./ho/TienDo";
 import { TabVanBanHo } from "./ho/VanBanHo";
 import { VanBan } from "./VanBan";
+import { ghiNhoDsHo, hoKeBen } from "../nho-ds-ho";
+import { HopThoai } from "../thanh-phan/chung";
 const CAC_TAB = [
   ["thong-tin", "Thông tin", "thongTin"],
   ["nhan-khau", "Nhân khẩu", "nguoi"],
@@ -70,6 +72,14 @@ export function HoSo({ duAnId, hoId, tabDau, maVbDau }: { duAnId: string; hoId: 
     xoaBanNhap(hoId);
   }, [goc]); // eslint-disable-line react-hooks/exhaustive-deps
   const kq = useMemo(() => (duAn && h ? tinhHo(chinhSach(duAn), duAn, h) : null), [duAn, h, chinhSach]);
+  // Chuyển hộ (luồng nhập nhiều hộ): Alt + ↑ về danh sách, Alt + → hộ tiếp theo; chưa lưu thì hỏi trước
+  const [hoiLuu, setHoiLuu] = useState<{ nhan: string; di: () => void } | null>(null);
+  const phim = useRef<(e: KeyboardEvent) => void>(() => undefined);
+  useEffect(() => {
+    const f = (e: KeyboardEvent) => phim.current(e);
+    window.addEventListener("keydown", f);
+    return () => window.removeEventListener("keydown", f);
+  }, []);
   // §11.5: chuột phải trên ô → lịch sử thay đổi của ô (MenuChuotPhai phát sự kiện)
   const [lsO, setLsO] = useState<{ khoa: string; ten: string } | null>(null);
   useEffect(() => {
@@ -87,22 +97,47 @@ export function HoSo({ duAnId, hoId, tabDau, maVbDau }: { duAnId: string; hoId: 
   const luu = async (ghiChu = "Cập nhật hồ sơ") => {
     // Chặn khi đổi sang mã đã dùng; mã trùng có sẵn từ dữ liệu cũ chỉ cảnh báo ở thẻ Thông tin
     const trung = chuanMa(h.ma) !== chuanMa(goc?.ma ?? "") ? hoTrungMa(hoCua(duAnId, true), h.ma, h.id) : null;
-    if (trung || !h.ma.trim()) return bao(trung ? `Mã hồ sơ ${h.ma} đã dùng cho “${trung.ten}” — đổi mã ở thẻ Thông tin` : "Chưa có mã hồ sơ", "loi");
+    if (trung || !h.ma.trim()) return bao(trung ? `Mã hồ sơ ${h.ma} đã dùng cho “${trung.ten}” — đổi mã ở thẻ Thông tin` : "Chưa có mã hồ sơ", "loi"), false;
     const chanDot = goc && duAn ? lyDoKhongDoiDot(duAn, goc, h.dotId) : null;
-    if (chanDot) return bao(`Không đổi đợt thu hồi: ${chanDot}`, "loi");
-    await luuHo({ ...h, ma: h.ma.trim() }, ghiChu);
+    if (chanDot) return bao(`Không đổi đợt thu hồi: ${chanDot}`, "loi"), false;
+    try {
+      await luuHo({ ...h, ma: h.ma.trim() }, ghiChu);
+    } catch {
+      return false; // lỗi ghi đã được báo
+    }
     xoaBanNhap(h.id);
     setDaSua(false);
     setDaKhoiPhuc(false);
+    return true;
   };
   /** Thẻ kế tiếp theo trình tự nhập liệu (bỏ Nhật ký) — "Lưu và tiếp" lưu rồi chuyển sang. */
   const THU_TU = CAC_TAB.map(([ma]) => ma).filter((ma) => ma !== "nhat-ky" && ma !== "dinh-kem");
   const ke = CAC_TAB.find(([ma]) => ma === THU_TU[THU_TU.indexOf(tab as (typeof THU_TU)[number]) + 1]);
   const luuTiep = async () => {
-    if (daSua) await luu();
+    if (daSua && !(await luu())) return;
     if (ke) {
       setTab(ke[0]);
       document.querySelector(".the-tab")?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  };
+  const ke2 = hoKeBen(duAnId, hoId, hoCua(duAnId).map((x) => x.id));
+  const tenHo = (id?: string) => (id ? hoCua(duAnId).find((x) => x.id === id) : undefined);
+  /** Rời hồ sơ: chưa lưu → hỏi lưu (Lưu rồi chuyển / Chuyển, giữ bản nháp / Ở lại). */
+  const chuyen = (nhan: string, diToi: () => void) => {
+    ghiNhoDsHo(duAnId, { vuaLam: hoId });
+    if (daSua && choSua) setHoiLuu({ nhan, di: diToi });
+    else diToi();
+  };
+  const veDanhSach = () => chuyen("về danh sách hộ", () => di({ ten: "du-an", duAnId, tab: "ho" }));
+  const sangHo = (id?: string) => id && chuyen(`sang hồ sơ ${tenHo(id)?.ma ?? ""} ${tenHo(id)?.ten ?? ""}`.trim(), () => di({ ten: "ho", duAnId, hoId: id, tab: "thong-tin" }));
+  phim.current = (e) => {
+    if (!e.altKey || e.ctrlKey || e.metaKey || hoiLuu) return;
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      veDanhSach();
+    } else if (e.key === "ArrowRight" && ke2.sau) {
+      e.preventDefault();
+      sangHo(ke2.sau);
     }
   };
   const hieuLuc = hoHieuLuc(duAn, h);
@@ -128,6 +163,12 @@ export function HoSo({ duAnId, hoId, tabDau, maVbDau }: { duAnId: string; hoId: 
           <div className="mo-ta">
             {h.vuongMac && <span className="nhan nhan-do" style={{ marginRight: 6 }}>! Vướng mắc: {h.vuongMac.noiDung}</span>}
             {TEN_DOI_TUONG[h.loai]} · {h.diaChi || "Chưa có địa chỉ"} · {h.thua.length} thửa · {h.nhanKhau.length} nhân khẩu
+          </div>
+          <div className="chuyen-ho mt-6" data-chuyen-ho>
+            <button className="nut nut-nho" onClick={veDanhSach} title="Về danh sách hộ, giữ bộ lọc và vị trí (Alt + ↑)"><BieuTuong ten="danhSach" co={14} /> Danh sách hộ</button>
+            <button className="nut nut-nho" disabled={!ke2.truoc} onClick={() => sangHo(ke2.truoc)} title={ke2.truoc ? `Hộ trước: ${tenHo(ke2.truoc)?.ma} ${tenHo(ke2.truoc)?.ten}` : "Đang ở hộ đầu danh sách"}>← Hộ trước</button>
+            <span className="mo chu-nho">{ke2.viTri}/{ke2.tong}{ke2.theoLoc ? " (theo danh sách đang lọc)" : ""}</span>
+            <button className="nut nut-nho" disabled={!ke2.sau} onClick={() => sangHo(ke2.sau)} title={ke2.sau ? `Hộ tiếp theo: ${tenHo(ke2.sau)?.ma} ${tenHo(ke2.sau)?.ten} (Alt + →)` : "Đang ở hộ cuối danh sách"}>Hộ tiếp theo →</button>
           </div>
         </div>
         <div className="phai">
@@ -220,6 +261,14 @@ export function HoSo({ duAnId, hoId, tabDau, maVbDau }: { duAnId: string; hoId: 
           {tab === "nhat-ky" && !daSua && goc && <LichSuHo h={goc} />}
           {lsO && goc && <HopLichSuO h={goc} khoa={lsO.khoa} ten={lsO.ten} dong={() => setLsO(null)} />}
           </RaoLoi>
+          {CAC_TAB.findIndex(([m]) => m === tab) >= CAC_TAB.findIndex(([m]) => m === "van-ban") && (
+            <div className="thanh-xong-ho" data-xong-ho>
+              <span className="mo chu-nho" style={{ marginRight: "auto" }}>Nhập xong hộ này? Về danh sách (giữ bộ lọc, vị trí; tô sáng hộ vừa làm) hoặc sang hộ tiếp theo.</span>
+              <button className="nut" disabled={!ke2.truoc} onClick={() => sangHo(ke2.truoc)}>← Hộ trước</button>
+              <button className="nut" disabled={!ke2.sau} onClick={() => sangHo(ke2.sau)} title="Alt + →">Hộ tiếp theo →</button>
+              <button className="nut nut-chinh" onClick={veDanhSach} title="Alt + ↑">Xong hộ này → Danh sách hộ</button>
+            </div>
+          )}
           {kq.tong.soDongThieuCanCu + kq.tong.soDongCanXacNhan > 0 && tab !== "tinh" && (
             <div className="thong-bao thong-bao-vang mt-14">
               Còn {kq.tong.soDongThieuCanCu + kq.tong.soDongCanXacNhan} khoản chưa đủ căn cứ hoặc cần xác nhận — hồ sơ chưa thể chốt.{" "}
@@ -233,12 +282,22 @@ export function HoSo({ duAnId, hoId, tabDau, maVbDau }: { duAnId: string; hoId: 
                 if (lyDo && (await xoaHo(h.id, lyDo))) di({ ten: "du-an", duAnId, tab: "ho" });
               }}>
                 <BieuTuong ten="thungRac" co={19} />
-                <span><b>Xóa hồ sơ</b><small>Xóa vĩnh viễn hồ sơ và toàn bộ dữ liệu liên quan.</small></span>
+                <span><b>Xóa hồ sơ</b><small>Đưa hồ sơ vào thùng rác — khôi phục được trong 30 ngày (Quản trị → Thùng rác).</small></span>
               </button>
             </div>
           )}
         </div>
       </div>
+      {hoiLuu && (
+        <HopThoai tieuDe="Hồ sơ chưa lưu" dong={() => setHoiLuu(null)} rong={560}>
+          <p>Hồ sơ <b>{h.ma} · {h.ten}</b> có thay đổi <b>chưa lưu</b>. Lưu trước khi {hoiLuu.nhan}?</p>
+          <div className="nhom-nut mt-10" style={{ justifyContent: "flex-end" }} data-hoi-luu>
+            <button className="nut" onClick={() => setHoiLuu(null)}>Ở lại</button>
+            <button className="nut" title="Thay đổi chưa lưu được giữ làm bản nháp; mở lại hồ sơ này trong phiên sẽ khôi phục" onClick={() => { const x = hoiLuu; setHoiLuu(null); x.di(); }}>Chuyển, giữ bản nháp</button>
+            <button className="nut nut-chinh" autoFocus onClick={async () => { const x = hoiLuu; if (await luu()) { setHoiLuu(null); x.di(); } }}>Lưu rồi chuyển</button>
+          </div>
+        </HopThoai>
+      )}
     </div>
   );
 }

@@ -72,6 +72,11 @@ interface NguCanh {
   ghiDuAnVaHo: (d: DuAn, ds: { h: Ho; nhatKy: string }[], nhatKyDuAn?: [string, string]) => Promise<boolean>;
   /** Xóa mềm (vào thùng rác) — chặn khi có phương án đã chốt/duyệt, chi trả. Trả false nếu bị chặn/lỗi. */
   xoaHo: (id: string, lyDo: string) => Promise<boolean>;
+  /**
+   * Xóa mềm nhiều hồ sơ (vào thùng rác) trong một lô: hộ có phương án đã chốt/duyệt hoặc đã chi trả bị chặn, kèm lý do.
+   * null = không ghi được (lỗi đã báo).
+   */
+  xoaNhieuHo: (ids: string[], lyDo: string) => Promise<{ daXoa: Ho[]; biChan: { h: Ho; lyDo: string[] }[] } | null>;
   xoaDuAn: (id: string, lyDo: string) => Promise<boolean>;
   khoiPhucHo: (id: string) => Promise<void>;
   khoiPhucDuAn: (id: string) => Promise<void>;
@@ -500,6 +505,27 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
       }
       await ghiNhatKy("Xóa hồ sơ (vào thùng rác)", `${h.ma} · ${h.ten} — ${lyDo.trim()}`);
       return true;
+    },
+    xoaNhieuHo: async (ids, lyDo) => {
+      if (chan("SUA_HO_SO")) return null;
+      if (!lyDo.trim()) return bao("Xóa hồ sơ cần ghi lý do", "loi"), null;
+      const ds = ids.map((id) => dsHo.find((x) => x.id === id)).filter((h): h is Ho => !!h && !h.daXoa);
+      const biChan = ds.map((h) => ({ h, lyDo: lyDoKhongXoaHo(dsDuAn.find((d) => d.id === h.duAnId), h) })).filter((x) => x.lyDo.length);
+      const chanId = new Set(biChan.map((x) => x.h.id));
+      const xoa = ds.filter((h) => !chanId.has(h.id));
+      if (!xoa.length) return { daXoa: [], biChan };
+      const luc = new Date().toISOString();
+      const nk = { luc, nguoi: nguoiDung, noiDung: `Đưa vào thùng rác (xóa nhiều hồ sơ): ${lyDo.trim()}` };
+      try {
+        // một lô nguyên tử (P0-6): lỗi giữa chừng → không hộ nào bị xóa
+        const r = await ghi(() => kho.ghiLo({ ho: xoa.map((h) => ({ ...h, daXoa: dauXoa(lyDo), nhatKy: [...h.nhatKy, nk] })) }));
+        capNhat({ ho: r.ho });
+      } catch (e) {
+        if (!(e instanceof DaBaoLoi)) bao(`Không xóa được: ${(e as Error).message}`, "loi");
+        return null;
+      }
+      await ghiNhatKy(`Xóa ${xoa.length} hồ sơ (vào thùng rác)`, `${xoa.map((h) => `${h.ma} · ${h.ten}`).join("; ")} — ${lyDo.trim()}${biChan.length ? ` · bị chặn ${biChan.length}: ${biChan.map((x) => `${x.h.ma} (${x.lyDo.join("; ")})`).join("; ")}` : ""}`);
+      return { daXoa: xoa, biChan };
     },
     khoiPhucHo: async (id) => {
       if (chan("SUA_HO_SO")) return;

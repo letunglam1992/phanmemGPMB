@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { TabCuon } from "../thanh-phan/TabCuon";
 import { useUngDung } from "../ung-dung";
 import { tinhHo } from "../tinh-ho";
@@ -6,6 +6,10 @@ import { BUOC_CHUNG, TEN_TRANG_THAI_DU_AN, type DuAn } from "../mo-hinh";
 import { O, ngayVN } from "../thanh-phan/chung";
 import { BieuTuong, DaiChang, DongMoc, PhanBoTrangThai, VongTienDo } from "../thanh-phan/BieuDo";
 import { BangHo } from "../thanh-phan/BangHo";
+import { ghiNhoDsHo, khungNoiDung, layNhoDsHo } from "../nho-ds-ho";
+import { HopThoai } from "../thanh-phan/chung";
+import type { Ho } from "../mo-hinh";
+import { lyDoKhongXoaHo } from "../rang-buoc";
 import { khopTuKhoa } from "../tim-kiem";
 import { THU_TU_TRANG_THAI, TT_GPMB, homNayIso, mocTienDo, thongKe, trangThaiHo, type TrangThaiGpmb } from "../trang-thai";
 import { xuatExcelDuAn } from "../xuat-excel";
@@ -275,10 +279,12 @@ function TheThongTin({ duAn, tiep }: { duAn: DuAn; tiep: () => void }) {
 
 function TheHo({ duAn, kq }: { duAn: DuAn; kq: Kq }) {
   const { di, quyen } = useUngDung();
-  const [locDot, setLocDot] = useState("");
+  // Bộ lọc, vị trí cuộn, hộ vừa làm được nhớ theo dự án (quay lại từ hồ sơ hộ giữ nguyên)
+  const nho = useMemo(() => layNhoDsHo(duAn.id), [duAn.id]);
+  const [locDot, setLocDot] = useState(nho.locDot);
   const [xepDot, setXepDot] = useState(false);
   const [phanCong, setPhanCong] = useState(false);
-  const [locPc, setLocPc] = useState("");
+  const [locPc, setLocPc] = useState(nho.locPc);
   const { dsCanBo } = useUngDung();
   useEffect(() => {
     const nghe = (e: Event) => setLocDot((e as CustomEvent<string>).detail);
@@ -287,9 +293,12 @@ function TheHo({ duAn, kq }: { duAn: DuAn; kq: Kq }) {
   }, []);
   const maTrung = nhomMaTrung(kq.map((x) => x.h));
   const homNay = homNayIso();
-  const [loc, setLoc] = useState("");
-  const [locTt, setLocTt] = useState<TrangThaiGpmb | "">("");
-  const [locPl, setLocPl] = useState<NhomPhapLy | "CHUA" | "">("");
+  const [loc, setLoc] = useState(nho.loc);
+  const [locTt, setLocTt] = useState<TrangThaiGpmb | "">(nho.locTt as TrangThaiGpmb | "");
+  const [locPl, setLocPl] = useState<NhomPhapLy | "CHUA" | "">(nho.locPl as NhomPhapLy | "CHUA" | "");
+  const [toSang] = useState(nho.vuaLam);
+  const [chon, setChon] = useState<Set<string>>(new Set());
+  const [hopXoa, setHopXoa] = useState(false);
   useEffect(() => {
     const nghe = (e: Event) => setLocTt((e as CustomEvent<TrangThaiGpmb>).detail);
     window.addEventListener("gpmb-loc-ho", nghe);
@@ -302,6 +311,31 @@ function TheHo({ duAn, kq }: { duAn: DuAn; kq: Kq }) {
     .filter((x) => !locPc || (locPc === "__chua__" ? !x.h.phuTrach : x.h.phuTrach === locPc))
     .filter((x) => !locPl || x.h.thua.some((t) => Number(t.dienTichThuHoi) > 0 && (t.phapLy ?? "CHUA") === locPl))
     .filter((x) => khopTuKhoa({ h: x.h, duAnTen: "" }, loc));
+  const thuTu = ds.map((x) => x.h.id).join("|");
+  useEffect(() => ghiNhoDsHo(duAn.id, { loc, locTt, locDot, locPc, locPl, thuTu: thuTu ? thuTu.split("|") : [] }), [duAn.id, loc, locTt, locDot, locPc, locPl, thuTu]);
+  // Khôi phục vị trí cuộn, đưa hộ vừa làm vào tầm nhìn; nhớ vị trí cuộn khi cuộn
+  useLayoutEffect(() => {
+    const k = khungNoiDung();
+    if (!k) return;
+    if (nho.cuon) k.scrollTop = nho.cuon;
+    if (nho.vuaLam) {
+      const dong = document.querySelector<HTMLElement>(`tr[data-ho-id="${nho.vuaLam}"]`);
+      const r = dong?.getBoundingClientRect(), rk = k.getBoundingClientRect();
+      if (dong && r && (r.top < rk.top || r.bottom > rk.bottom)) dong.scrollIntoView({ block: "center" });
+      ghiNhoDsHo(duAn.id, { vuaLam: undefined });
+    }
+    const f = () => ghiNhoDsHo(duAn.id, { cuon: k.scrollTop });
+    k.addEventListener("scroll", f, { passive: true });
+    return () => k.removeEventListener("scroll", f);
+  }, [duAn.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  const doiChon = (ids: string[], co: boolean) =>
+    setChon((c) => {
+      const m = new Set(c);
+      for (const id of ids) if (co) m.add(id); else m.delete(id);
+      return m;
+    });
+  // chỉ giữ lựa chọn của hộ còn trong dự án
+  const dsChon = kq.filter((x) => chon.has(x.h.id)).map((x) => x.h);
   return (
     <div className="the">
       {maTrung.length > 0 && (
@@ -333,9 +367,66 @@ function TheHo({ duAn, kq }: { duAn: DuAn; kq: Kq }) {
           </Chon>
         </div>
       </div>
-      <BangHo ds={ds} homNay={homNay} mo={(x) => di({ ten: "ho", duAnId: duAn.id, hoId: x.h.id })} trong={kq.length ? "Không có hồ sơ khớp điều kiện lọc." : "Chưa có hồ sơ. Bấm “Thêm hộ, tổ chức”, nhập Excel (menu Thêm) hoặc tạo từ bản đồ."} />
+      {dsChon.length > 0 && (
+        <div className="thanh-chon" role="toolbar" aria-label="Thao tác với hồ sơ đã chọn">
+          <b>Đã chọn {dsChon.length} hồ sơ</b>
+          {dsChon.length > ds.filter((x) => chon.has(x.h.id)).length && <span className="mo chu-nho">(có {dsChon.length - ds.filter((x) => chon.has(x.h.id)).length} hồ sơ nằm ngoài bộ lọc hiện tại)</span>}
+          <div className="phai" style={{ display: "flex", gap: 8 }}>
+            <button className="nut nut-nho nut-nguy" onClick={() => setHopXoa(true)}>Xóa {dsChon.length} hồ sơ</button>
+            <button className="nut nut-nho" onClick={() => setChon(new Set())}>Bỏ chọn</button>
+          </div>
+        </div>
+      )}
+      <BangHo ds={ds} homNay={homNay} chon={quyen("SUA_HO_SO") ? chon : undefined} doiChon={quyen("SUA_HO_SO") ? doiChon : undefined} toSang={toSang} mo={(x) => di({ ten: "ho", duAnId: duAn.id, hoId: x.h.id })} trong={kq.length ? "Không có hồ sơ khớp điều kiện lọc." : "Chưa có hồ sơ. Bấm “Thêm hộ, tổ chức”, nhập Excel (menu Thêm) hoặc tạo từ bản đồ."} />
+      {hopXoa && <HopXoaNhieuHo duAn={duAn} hos={dsChon} dong={() => setHopXoa(false)} xong={(ids) => setChon((c) => new Set([...c].filter((id) => !ids.includes(id))))} />}
       {phanCong && <HopPhanCong hos={kq.map((x) => x.h)} dong={() => setPhanCong(false)} />}
       {xepDot && <HopXepDot duAn={duAn} hos={kq.map((x) => x.h)} dong={() => setXepDot(false)} />}
     </div>
+  );
+}
+
+/** Xóa nhiều hồ sơ (vào thùng rác 30 ngày): liệt kê trước hộ bị chặn kèm lý do; bắt buộc lý do xóa; một lô, ghi nhật ký. */
+function HopXoaNhieuHo({ duAn, hos, dong, xong }: { duAn: DuAn; hos: Ho[]; dong: () => void; xong: (ids: string[]) => void }) {
+  const { xoaNhieuHo, bao } = useUngDung();
+  const [lyDo, setLyDo] = useState("");
+  const [dangXoa, setDangXoa] = useState(false);
+  const chan = hos.map((h) => ({ h, ly: lyDoKhongXoaHo(duAn, h) })).filter((x) => x.ly.length);
+  const duoc = hos.filter((h) => !chan.some((x) => x.h.id === h.id));
+  return (
+    <HopThoai tieuDe={`Xóa ${hos.length} hồ sơ đã chọn`} dong={dong} rong={760}>
+      <div data-hop-xoa-nhieu>
+        <p>
+          <b>{duoc.length}</b> hồ sơ sẽ được đưa vào <b>thùng rác</b> (khôi phục được trong 30 ngày — Quản trị → Thùng rác).
+          {chan.length > 0 && <> <b className="chu-do">{chan.length}</b> hồ sơ <b>không xóa được</b> (giữ nguyên):</>}
+        </p>
+        {chan.length > 0 && (
+          <table className="bang mt-6" data-bi-chan>
+            <thead><tr><th>Mã</th><th>Họ và tên</th><th>Lý do không xóa được</th></tr></thead>
+            <tbody>{chan.map((x) => <tr key={x.h.id}><td>{x.h.ma}</td><td>{x.h.ten}</td><td className="chu-nho">{x.ly.join("; ")}</td></tr>)}</tbody>
+          </table>
+        )}
+        {chan.length > 0 && <div className="mo chu-nho mt-4">Hủy bản phương án (có lý do) hoặc hủy đợt chi trước khi xóa các hồ sơ này.</div>}
+        {duoc.length > 0 && (
+          <label className="o-nhap mt-8" style={{ display: "block" }}>
+            <span>Lý do xóa (bắt buộc, ghi vào nhật ký từng hồ sơ và nhật ký hệ thống)</span>
+            <input aria-label="Lý do xóa nhiều hồ sơ" value={lyDo} onChange={(e) => setLyDo(e.target.value)} autoFocus />
+          </label>
+        )}
+        <div className="nhom-nut mt-10" style={{ justifyContent: "flex-end" }}>
+          <button className="nut" onClick={dong}>{duoc.length ? "Hủy" : "Đóng"}</button>
+          {duoc.length > 0 && (
+            <button className="nut nut-nguy" disabled={!lyDo.trim() || dangXoa} onClick={async () => {
+              setDangXoa(true);
+              const r = await xoaNhieuHo(duoc.map((h) => h.id), lyDo);
+              setDangXoa(false);
+              if (!r) return;
+              xong(r.daXoa.map((h) => h.id));
+              bao(`Đã đưa ${r.daXoa.length} hồ sơ vào thùng rác${r.biChan.length ? `; ${r.biChan.length} hồ sơ bị chặn, giữ nguyên` : ""}`);
+              dong();
+            }}>{dangXoa ? "Đang xóa…" : `Xóa ${duoc.length} hồ sơ vào thùng rác`}</button>
+          )}
+        </div>
+      </div>
+    </HopThoai>
   );
 }
