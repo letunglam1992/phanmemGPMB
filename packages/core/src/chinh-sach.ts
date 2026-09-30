@@ -99,6 +99,15 @@ export interface BoChinhSach {
     onDinhSxkd: { tyLeThuNhap: string; tyLeTamThoi: string; nguongDoanhThu: string; mucDuoiNguong: string; mucTrenNguong: string; canCuK2: CanCu[]; canCuK3: CanCu[]; canCuK4: CanCu[] };
     nhaSoHuuNhaNuoc: { thangToiDa: number; den2Khau: string; den4Khau: string; congThemMoiKhau: string; tyLeTuLo: string; canCu: CanCu[] };
   };
+  /** Hạn mức Phụ lục I QĐ 106/2025 (Điều 3–7) — xem han-muc.ts. Không có → cán bộ nhập hạn mức kèm căn cứ. */
+  hanMucPl1?: {
+    ghiChu: string;
+    congNhanTruoc1980: { xa: Record<"TRUNG_TAM" | "DUONG_XA" | "CON_LAI", string>; phuong: Record<"TRUNG_TAM" | "CON_LAI", string>; canCu: CanCu[] };
+    congNhanTruoc1993: { xa: Record<"TRUNG_TAM" | "DUONG_XA" | "CON_LAI", string>; phuong: Record<"TRUNG_TAM" | "CON_LAI", string>; canCu: CanCu[] };
+    giaoNongThon: { TRUNG_TAM: string; DUONG_XA: string; CON_LAI: string; canCu: CanCu[] };
+    giaoDoThi: { TRUNG_TAM: string; CON_LAI: string; canCu: CanCu[] };
+    khaiHoang: { hangNamNts: string; lauNam: { xa: string; phuong: string }; rung: { xa: string; phuong: string }; canCu: CanCu[] };
+  };
   chuyenDoiNghe: {
     canCu: CanCu[];
     heSoMacDinh: string;

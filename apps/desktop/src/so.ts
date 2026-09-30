@@ -76,6 +76,7 @@ export function truongSoHo(h: Ho): TruongSo[] {
     them(ds, `${n} — DT trên GCN`, t.gcn, "dienTich");
     them(ds, `${n} — DT thu hồi có GCN`, t.gcn, "dtThuHoiCoGcn");
     them(ds, `${n} — DT trừ (trồng xen)`, t.cayXen, "dienTichTru");
+    them(ds, `${n} — tỷ lệ cây không có mật độ (VM-35, %)`, t.cayXen, "tyLeKhongMatDo");
     them(ds, `${n} — giá đất hiện trạng (k8, k10)`, t.chenhLech, "giaHienTrang");
     them(ds, `${n} — hạn mức công nhận (k8, k10)`, t.chenhLech, "hanMuc");
     them(ds, `${n} — chi phí đầu tư vào đất còn lại (dự toán)`, t.chiPhiDauTu, "soTien");

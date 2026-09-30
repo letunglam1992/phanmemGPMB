@@ -107,8 +107,11 @@ export interface Thua {
     /**
      * VM-35: dòng cây không có mật độ quy định (cây hàng năm, hoa màu tính m², loài chưa có mật độ)
      * trên thửa có cây tính theo quỹ mật độ. Chưa chọn → "Cần xác nhận". Chọn thì bắt buộc lý do.
+     * TU_NHAP: người dùng tự điền tỷ lệ (%) — người dùng quyết định 30/9/2026 (QD-32).
      */
-    khongMatDo?: "TINH_100" | "TINH_30";
+    khongMatDo?: "TINH_100" | "TINH_30" | "TU_NHAP";
+    /** Tỷ lệ % người dùng tự điền khi khongMatDo = TU_NHAP (0–100). */
+    tyLeKhongMatDo?: string;
     lyDoKhongMatDo?: string;
   };
   /**
@@ -131,6 +134,8 @@ export interface KhongGiayTo {
   /** Hạn mức riêng của thửa (m²) thay hạn mức dự án, kèm căn cứ. */
   hanMuc?: string;
   canCuHanMuc?: string;
+  /** Vị trí thửa để tra hạn mức đất ở theo Điều 3–6 Phụ lục I QĐ 106/2025 (cán bộ chọn). */
+  viTriHanMuc?: import("@gpmb/core").ViTriHanMuc;
   /** Tiền SDĐ phải nộp như khi cấp GCN đối với phần đất ở vượt hạn mức (đoạn 2 điểm a k1, k2 Điều 8), đ. */
   tienSdd?: string;
   canCuTienSdd?: string;

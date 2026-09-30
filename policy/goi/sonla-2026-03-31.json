@@ -7,7 +7,7 @@
   "vanBan": [
     "Luật Đất đai 2024",
     "NĐ 88/2024/NĐ-CP",
-    "QĐ 106/2025/QĐ-UBND (PL II, V, VIII)",
+    "QĐ 106/2025/QĐ-UBND (PL I, II, V, VIII)",
     "QĐ 14/2026/QĐ-UBND",
     "QĐ 32/2025/QĐ-UBND",
     "NQ 152/2025/NQ-HĐND"
@@ -877,6 +877,81 @@
         {
           "vanBan": "NĐ 88/2024/NĐ-CP",
           "viTri": "khoản 2 Điều 24"
+        }
+      ]
+    }
+  },
+  "hanMucPl1": {
+    "ghiChu": "Phụ lục I QĐ 106/2025/QĐ-UBND ngày 06/10/2025 (nguyên văn: policy/nguon/qd106-2025-phu-luc-1.md). Vị trí: TRUNG_TAM – tại xã: trung tâm xã theo quy hoạch được duyệt hoặc tiếp giáp quốc lộ, đường tỉnh; tại phường: giáp quốc lộ, đường tỉnh, đường giao thông hiện trạng hoặc theo quy hoạch rộng từ 13 m trở lên. DUONG_XA – tại xã: chỉ tiếp giáp đường xã. CON_LAI – các vị trí còn lại.",
+    "congNhanTruoc1980": {
+      "xa": {
+        "TRUNG_TAM": "400",
+        "DUONG_XA": "400",
+        "CON_LAI": "450"
+      },
+      "phuong": {
+        "TRUNG_TAM": "180",
+        "CON_LAI": "220"
+      },
+      "canCu": [
+        {
+          "vanBan": "QĐ 106/2025/QĐ-UBND",
+          "viTri": "Điều 3 Phụ lục I"
+        }
+      ]
+    },
+    "congNhanTruoc1993": {
+      "xa": {
+        "TRUNG_TAM": "350",
+        "DUONG_XA": "350",
+        "CON_LAI": "400"
+      },
+      "phuong": {
+        "TRUNG_TAM": "120",
+        "CON_LAI": "150"
+      },
+      "canCu": [
+        {
+          "vanBan": "QĐ 106/2025/QĐ-UBND",
+          "viTri": "Điều 4 Phụ lục I"
+        }
+      ]
+    },
+    "giaoNongThon": {
+      "TRUNG_TAM": "150",
+      "DUONG_XA": "180",
+      "CON_LAI": "180",
+      "canCu": [
+        {
+          "vanBan": "QĐ 106/2025/QĐ-UBND",
+          "viTri": "Điều 5 Phụ lục I"
+        }
+      ]
+    },
+    "giaoDoThi": {
+      "TRUNG_TAM": "100",
+      "CON_LAI": "120",
+      "canCu": [
+        {
+          "vanBan": "QĐ 106/2025/QĐ-UBND",
+          "viTri": "Điều 6 Phụ lục I"
+        }
+      ]
+    },
+    "khaiHoang": {
+      "hangNamNts": "20000",
+      "lauNam": {
+        "xa": "300000",
+        "phuong": "200000"
+      },
+      "rung": {
+        "xa": "300000",
+        "phuong": "200000"
+      },
+      "canCu": [
+        {
+          "vanBan": "QĐ 106/2025/QĐ-UBND",
+          "viTri": "khoản 1 Điều 7 Phụ lục I"
         }
       ]
     }

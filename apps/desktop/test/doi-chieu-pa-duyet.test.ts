@@ -34,12 +34,12 @@ const THUA_2: L[] = [
   ["Xoan 4 năm-khép tán", 8, 47000, 1600], ["Lát 4 năm-khép tán", 3, 76000, 1600],
 ];
 
-function dung(p: { chonKhongMatDo?: "TINH_100" | "TINH_30"; matDoDao?: number; b13?: boolean; hoSo?: string; onDinh?: Ho["hoTro"]["onDinh"] }) {
+function dung(p: { chonKhongMatDo?: "TINH_100" | "TINH_30" | "TU_NHAP"; tyLe?: string; matDoDao?: number; b13?: boolean; hoSo?: string; onDinh?: Ho["hoTro"]["onDinh"] }) {
   const { duAn } = taoDuAnMau();
   const a = taoId(), b = taoId();
   const gia = { giaNghinDong: "54", nguon: "NQ 152/2025 Bảng 02, STT 45, Xã Chiềng Mung, CLN" };
   const nlt = p.b13 ? { truongHop: "9.1.a" as const, hoSo: p.hoSo ?? "Hợp đồng giao khoán; QĐ thu hồi đất của UBND tỉnh" } : undefined;
-  const cayXen = { dienTichTru: "0", lyDoTru: "", cachXep: "DUNG_KHI_VUOT" as const, khongMatDo: p.chonKhongMatDo, lyDoKhongMatDo: p.chonKhongMatDo ? "Theo phương án đã duyệt" : "" };
+  const cayXen = { dienTichTru: "0", lyDoTru: "", cachXep: "DUNG_KHI_VUOT" as const, khongMatDo: p.chonKhongMatDo, lyDoKhongMatDo: p.chonKhongMatDo ? "Theo phương án đã duyệt" : "", tyLeKhongMatDo: p.tyLe };
   const mk = (thuaId: string, l: L[]): TaiSan[] =>
     l.map(([ten, sl, dg, md, dv]) => {
       const matDo = ten.startsWith("Đào") && p.matDoDao ? p.matDoDao : md;
@@ -81,6 +81,17 @@ describe("Đối chiếu phương án đã phê duyệt (ẩn danh)", () => {
   it("chọn 100% (có lý do) → cao hơn phương án đã duyệt 24.791.200 đ ở thửa 1 (chuối, đu đủ, cỏ, dứa, rau ngót)", () => {
     const kq = dung({ chonKhongMatDo: "TINH_100", matDoDao: 800 });
     expect(kq.theoCot.BT_CAY.minus(1413166700).toString()).toBe("24791200");
+  });
+
+  it("VM-35 tự điền tỷ lệ (QD-32): 30% khớp lựa chọn 30%; 50% nằm giữa; chưa nhập tỷ lệ → cần xác nhận", () => {
+    expect(dung({ chonKhongMatDo: "TU_NHAP", tyLe: "30", matDoDao: 800 }).theoCot.BT_CAY.toString()).toBe("1413166700");
+    const k50 = dung({ chonKhongMatDo: "TU_NHAP", tyLe: "50", matDoDao: 800 });
+    expect(k50.tatCa.every((d) => d.dong.trangThai === "TAM_TINH")).toBe(true);
+    expect(k50.theoCot.BT_CAY.gt(1413166700) && k50.theoCot.BT_CAY.lt(1413166700 + 24791200)).toBe(true);
+    expect(k50.tatCa.some((d) => d.dong.luaChon.some((l) => l.ma === "VM-35" && l.giaTri.includes("50%")))).toBe(true);
+    const thieu = dung({ chonKhongMatDo: "TU_NHAP", matDoDao: 800 });
+    expect(thieu.tatCa.some((d) => d.dong.trangThai === "CAN_XAC_NHAN")).toBe(true);
+    expect(dung({ chonKhongMatDo: "TU_NHAP", tyLe: "120", matDoDao: 800 }).tatCa.some((d) => d.dong.trangThai === "CAN_XAC_NHAN")).toBe(true);
   });
 });
 

@@ -34,6 +34,8 @@ import {
   hoTroOnDinhSxkd,
   TEN_NHOM_HANH_LANG,
   phanBoDatO,
+  hanMucDatOPl1,
+  hanMucKhaiHoangPl1,
   phanBoDatNN,
   TEN_TRUONG_HOP_NN,
   tongHo,
@@ -44,7 +46,7 @@ import {
 } from "@gpmb/core";
 import type Decimal from "decimal.js";
 import { thuTinh } from "./bieu-thuc";
-import type { DuAn, Ho, TaiDinhCuHo, TaiSan, Thua } from "./mo-hinh";
+import type { DuAn, Ho, KhongGiayTo, TaiDinhCuHo, TaiSan, Thua } from "./mo-hinh";
 import { laSoMay, truongLoi, truongSoDuAn, truongSoHo } from "./so";
 import { duAnCuaHo } from "./dot-thu-hoi";
 import { tenDayDu } from "./van-ban/loai-dat";
@@ -290,26 +292,29 @@ function dongCayThua(cs: BoChinhSach, t: Thua, cay: Extract<TaiSan, { loai: "CAY
       out.push({ dong: d0, bieu: [{ dvt: c.donVi, kl, heSo: D(1), donGia: D(c.donGia) }], cot: "BT_CAY", thuaId: t.id, taiSanId: c.id });
       continue;
     }
-    const heSo = chon === "TINH_30" ? D(cs.cayTrong.tyLePhanVuot) : D(1);
-    const daChon = !!chon && !!lyDo;
+    const tyLeTu = chon === "TU_NHAP" && laSoMay(t.cayXen?.tyLeKhongMatDo ?? "") && D(t.cayXen!.tyLeKhongMatDo!).gte(0) && D(t.cayXen!.tyLeKhongMatDo!).lte(100) ? D(t.cayXen!.tyLeKhongMatDo!) : null;
+    const heSo = chon === "TINH_30" ? D(cs.cayTrong.tyLePhanVuot) : chon === "TU_NHAP" ? (tyLeTu ? tyLeTu.div(100) : D(1)) : D(1);
+    const daChon = !!chon && !!lyDo && (chon !== "TU_NHAP" || !!tyLeTu);
     const d: DongTinh = {
       ...d0,
       thanhTien: d0.thanhTien ? d0.thanhTien.mul(heSo) : d0.thanhTien,
-      congThuc: chon === "TINH_30" ? `${d0.congThuc} × ${heSo.mul(100).toString()}%` : d0.congThuc,
+      congThuc: chon === "TINH_30" || (chon === "TU_NHAP" && tyLeTu) ? `${d0.congThuc} × ${heSo.mul(100).toString()}%` : d0.congThuc,
       trangThai: daChon ? d0.trangThai : "CAN_XAC_NHAN",
-      luaChon: daChon ? [...d0.luaChon, { ma: "VM-35", giaTri: chon === "TINH_30" ? "Tính 30% như số cây còn lại (k4 Đ5 PL VIII)" : "Tính 100% đơn giá", lyDo }] : d0.luaChon,
+      luaChon: daChon ? [...d0.luaChon, { ma: "VM-35", giaTri: chon === "TINH_30" ? "Tính 30% như số cây còn lại (k4 Đ5 PL VIII)" : chon === "TU_NHAP" ? `Tỷ lệ người dùng tự điền: ${heSo.mul(100).toString()}%` : "Tính 100% đơn giá", lyDo }] : d0.luaChon,
       canhBao: [
         ...d0.canhBao,
         ...(daChon
           ? []
           : [
-              chon
+              chon === "TU_NHAP" && !tyLeTu
+                ? "Chọn tự điền tỷ lệ nhưng chưa nhập tỷ lệ hợp lệ (0–100%) cho cây không có mật độ trên thửa trồng xen (VM-35)"
+                : chon
                 ? "Đã chọn cách tính cây không có mật độ trên thửa trồng xen nhưng chưa ghi lý do (VM-35)"
-                : "Thửa có cây trồng xen tính theo quỹ mật độ; dòng này không có mật độ quy định — chọn tính 100% hay 30% ở thẻ Thửa đất (VM-35)",
+                : "Thửa có cây trồng xen tính theo quỹ mật độ; dòng này không có mật độ quy định — chọn tính 100%, 30% hoặc tự điền tỷ lệ ở thẻ Thửa đất (VM-35)",
             ]),
       ],
     };
-    out.push({ dong: d, bieu: [{ ...(chon === "TINH_30" ? { ghiChu: "Trồng xen, không có mật độ quy định" } : {}), dvt: c.donVi, kl, heSo, donGia: D(c.donGia) }], cot: "BT_CAY", thuaId: t.id, taiSanId: c.id });
+    out.push({ dong: d, bieu: [{ ...(chon === "TINH_30" || (chon === "TU_NHAP" && tyLeTu) ? { ghiChu: "Trồng xen, không có mật độ quy định" } : {}), dvt: c.donVi, kl, heSo, donGia: D(c.donGia) }], cot: "BT_CAY", thuaId: t.id, taiSanId: c.id });
   }
   if (theoMatDo.length) {
     const tuy = t.cayXen;
@@ -1020,6 +1025,40 @@ export const TEN_KHONG_GIAY_TO = {
 } as const;
 
 /**
+ * Hạn mức đất ở của thửa cho Điều 8, 9, 10 NĐ 88. Thứ tự: hạn mức riêng của thửa (kèm căn cứ) → tra Phụ lục I QĐ 106/2025
+ * theo vị trí thửa đã chọn, xã/phường của dự án, thời điểm sử dụng (Điều 3, 4: công nhận; Điều 5, 6: giao) → hạn mức nhập ở
+ * Thông tin dự án. Dùng chung cho tính toán và phần xem nhanh ở thẻ Thửa đất.
+ */
+export function hanMucDatOThua(cs: BoChinhSach, duAn: DuAn, k: KhongGiayTo): { hmCn: string; hmGiao: string; canCuCn: string; canCuGiao: string } {
+  if (k.hanMuc?.trim()) {
+    const c = k.canCuHanMuc?.trim() || "chưa ghi căn cứ";
+    return { hmCn: k.hanMuc.trim(), hmGiao: k.hanMuc.trim(), canCuCn: c, canCuGiao: c };
+  }
+  const duAnCc = duAn.hanMucDatO?.canCu || "chưa ghi căn cứ";
+  const cn = k.viTriHanMuc ? hanMucDatOPl1(cs, { loai: "CONG_NHAN", ngaySuDung: k.ngaySuDung, xa: duAn.xa, viTri: k.viTriHanMuc }) : null;
+  const giao = k.viTriHanMuc ? hanMucDatOPl1(cs, { loai: "GIAO", ngaySuDung: k.ngaySuDung, xa: duAn.xa, viTri: k.viTriHanMuc }) : null;
+  return {
+    hmCn: cn?.m2 ?? duAn.hanMucDatO?.congNhan ?? "",
+    hmGiao: giao?.m2 ?? duAn.hanMucDatO?.giao ?? "",
+    canCuCn: cn?.moTa ?? duAnCc,
+    canCuGiao: giao?.moTa ?? duAnCc,
+  };
+}
+
+/**
+ * Hạn mức đất nông nghiệp của thửa cho Điều 12 NĐ 88. Đất tự khai hoang (đoạn 2 khoản 2): hạn mức riêng → Điều 7 Phụ lục I
+ * QĐ 106/2025 theo loại đất, xã/phường; các trường hợp khác: hạn mức riêng → hạn mức giao đất NN của dự án.
+ */
+export function hanMucDatNNThua(cs: BoChinhSach, duAn: DuAn, t: Thua, k: KhongGiayTo): { m2: string; canCu: string; luuY?: string } {
+  if (k.hanMuc?.trim()) return { m2: k.hanMuc.trim(), canCu: k.canCuHanMuc?.trim() || "chưa ghi căn cứ" };
+  if (k.truongHopNN === "K2_KHAI_HOANG") {
+    const r = hanMucKhaiHoangPl1(cs, { loaiDat: t.loaiDat, xa: duAn.xa });
+    return r ? { m2: r.m2, canCu: r.moTa, luuY: r.luuY } : { m2: "", canCu: "" };
+  }
+  return { m2: duAn.hanMucNN?.m2 || "", canCu: duAn.hanMucNN?.canCu || "" };
+}
+
+/**
  * B03, B04 (Điều 8, 9, 10 NĐ 88) và B05 (Điều 12): thay dòng bồi thường về đất của thửa bằng các dòng theo phân bổ DT.
  * Giá đất nhân hệ số điều chỉnh của dự án (giá đất tính tiền bồi thường, QD-02).
  */
@@ -1043,15 +1082,14 @@ function dongKhongGiayTo(cs: BoChinhSach, duAn: DuAn, t: Thua): { nhom: "A.I" | 
   if (k.dieu === "D12") {
     const nd = `Bồi thường về đất nông nghiệp – ${ten}`;
     if (!k.truongHopNN) return (push("A.I", thieu("B05", nd, "Chưa chọn trường hợp (khoản 1, 2, 3, 5 Điều 12 NĐ 88)", vb)), out);
-    const hmStr = k.hanMuc?.trim() || (k.truongHopNN === "K2_KHAI_HOANG" ? "" : duAn.hanMucNN?.m2 || "");
-    const canCuHm = k.hanMuc?.trim() ? k.canCuHanMuc?.trim() || "chưa ghi căn cứ" : duAn.hanMucNN?.canCu || "";
+    const { m2: hmStr, canCu: canCuHm, luuY: luuYHm } = hanMucDatNNThua(cs, duAn, t, k);
     if (k.truongHopNN !== "K5A" && (!hmStr || !laSoMay(hmStr)))
-      return (push("A.I", thieu("B05", nd, k.truongHopNN === "K2_KHAI_HOANG" ? "Chưa nhập hạn mức giao đất nông nghiệp do UBND tỉnh quy định (đất tự khai hoang — đoạn 2 khoản 2 Điều 12)" : "Chưa có hạn mức giao đất nông nghiệp (Điều 176 LĐĐ) — nhập ở thửa hoặc Thông tin dự án", vb)), out);
+      return (push("A.I", thieu("B05", nd, k.truongHopNN === "K2_KHAI_HOANG" ? "Loại đất của thửa không có trong Điều 7 Phụ lục I QĐ 106/2025 (hạn mức giao đất NN đối với đất tự khai hoang) — nhập hạn mức riêng kèm căn cứ (đoạn 2 khoản 2 Điều 12)" : "Chưa có hạn mức giao đất nông nghiệp (Điều 176 LĐĐ) — nhập ở thửa hoặc Thông tin dự án", vb)), out);
     const r = phanBoDatNN({ truongHop: k.truongHopNN, dtThuHoi: t.dienTichThuHoi, hanMuc: hmStr || "0", truoc2004TrucTiepSx: k.truoc2004TrucTiepSx });
     const gia = t.gia ? { gia: D(t.gia.giaNghinDong).mul(1000), nguon: t.gia.nguon } : null;
     dongDt("B05", nd, r.boiThuong, gia, r.canCu, {
       thamSo: undefined,
-      canhBao: [...r.canhBao, `Điều kiện: ${TEN_TRUONG_HOP_NN[k.truongHopNN]} — cán bộ xác nhận`],
+      canhBao: [...r.canhBao, `Điều kiện: ${TEN_TRUONG_HOP_NN[k.truongHopNN]} — cán bộ xác nhận`, ...(luuYHm ? [luuYHm] : [])],
     });
     const d = out[out.length - 1]?.kq.dong;
     if (d && d.thanhTien) d.thamSo = { "Trường hợp": TEN_TRUONG_HOP_NN[k.truongHopNN], "DT thu hồi": `${dinhDang(lamTronDienTich(t.dienTichThuHoi), 2)} m²`, ...(k.truongHopNN !== "K5A" ? { "Hạn mức": `${hmStr} m² (${canCuHm})` } : {}), "DT được bồi thường": `${dinhDang(r.boiThuong, 2)} m²`, ...d.thamSo, "Giá đất": `${dinhDang(gia!.gia)} đ/m² (${gia!.nguon})${moTaHs}` };
@@ -1066,12 +1104,11 @@ function dongKhongGiayTo(cs: BoChinhSach, duAn: DuAn, t: Thua): { nhom: "A.I" | 
   }
 
   // Điều 8, 9, 10
-  const hmCn = k.hanMuc?.trim() || duAn.hanMucDatO?.congNhan || "";
-  const hmGiao = k.hanMuc?.trim() || duAn.hanMucDatO?.giao || "";
+  const { hmCn, hmGiao, canCuCn, canCuGiao } = hanMucDatOThua(cs, duAn, k);
   const r = phanBoDatO({ dieu: k.dieu, ngaySuDung: k.ngaySuDung, dtThuHoi: t.dienTichThuHoi, dtThua: t.dienTich || t.dienTichThuHoi, dtXayDung: laSoMay(k.dtXayDung ?? "") ? k.dtXayDung : 0, dtSxkd: laSoMay(k.dtSxkd ?? "") ? k.dtSxkd : 0, hanMucCongNhan: laSoMay(hmCn) ? hmCn : null, hanMucGiao: laSoMay(hmGiao) ? hmGiao : null, d140: k.d140, giayToNopTien: k.giayToNopTien, lanChiem: k.lanChiem });
   const nd0 = `Bồi thường về đất – ${ten}`;
   if (r.loi) return (push("A.I", thieu("B03", nd0, r.loi, `${vb} ${r.khoan || TEN_KHONG_GIAY_TO[k.dieu]}`)), out);
-  const canCuHm = k.hanMuc?.trim() ? k.canCuHanMuc?.trim() || "chưa ghi căn cứ" : duAn.hanMucDatO?.canCu || "chưa ghi căn cứ";
+  const canCuHm = r.hanMuc === "GIAO" ? canCuGiao : canCuCn;
   const thamSoChung: Record<string, string> = {
     "Trường hợp": `${r.khoan} — ${r.moTa}`,
     "Thời điểm sử dụng ổn định": k.ngaySuDung.split("-").reverse().join("/"),

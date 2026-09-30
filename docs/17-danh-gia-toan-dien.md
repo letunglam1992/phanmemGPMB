@@ -205,7 +205,7 @@ Mô hình dữ liệu là **tài liệu (document)**: mỗi `DuAn` và mỗi `Ho
 >
 > **Cập nhật 29/9/2026 (phiên bản 0.7.0) — Giai đoạn 4:** P2-7, §11.2 (thời gian bước không có thời hạn luật định do đơn vị nhập), §11.3 (ngưỡng lệch do đơn vị tự đặt), §11.4 (mẫu báo cáo hiện có, người dùng sửa, thêm mẫu khác), §11.5, P2-2 (đính kèm có trong sao lưu), P2-1 (chưa ký số) đã triển khai — chi tiết ở docs/09, docs/11.
 
-> **Cập nhật 29/9/2026 (phiên bản 0.8.0) — Giai đoạn 5 (phần nghiệp vụ):** P3-1 (phương án theo đợt, mã hồ sơ chung), P3-3 (giá lô do đơn vị nhập kèm căn cứ, ghi nhận bốc thăm khi chọn), P3-2 (so khớp số định danh giữa dự án — người dùng nhất trí), P3-4 và P2-4 đã triển khai (QD-27) — chi tiết ở docs/09, docs/11. Phần "sản phẩm thương mại" của GĐ5 (ký số bộ cài và gói chính sách, cơ chế bản quyền/kích hoạt, hợp đồng hỗ trợ) **chưa làm**: cần chứng thư số và quyết định của đơn vị.
+> **Cập nhật 29/9/2026 (phiên bản 0.8.0) — Giai đoạn 5 (phần nghiệp vụ):** P3-1 (phương án theo đợt, mã hồ sơ chung), P3-3 (giá lô do đơn vị nhập kèm căn cứ, ghi nhận bốc thăm khi chọn), P3-2 (so khớp số định danh giữa dự án — người dùng nhất trí), P3-4 và P2-4 đã triển khai (QD-27) — chi tiết ở docs/09, docs/11. Phần "sản phẩm thương mại" của GĐ5 (cơ chế bản quyền/kích hoạt, hợp đồng hỗ trợ) **chưa làm**: cần quyết định của đơn vị. **Ký số bộ cài: bỏ** (người dùng quyết định 30/9/2026, QD-32).
 
 | Mã | Vấn đề → Nguyên nhân | Giải pháp | Lợi ích | Độ khó | Rủi ro |
 |---|---|---|---|---|---|
@@ -273,7 +273,7 @@ Mô hình dữ liệu là **tài liệu (document)**: mỗi `DuAn` và mỗi `Ho
 | Nhật ký | Nhật ký hệ thống giữ chuỗi băm; thêm nhật ký thay đổi theo trường ở máy chủ |
 | Sao lưu | Mã hóa; máy chủ sao lưu SQLite theo lịch (VACUUM INTO) giữ N bản; khuyến nghị thư mục trên ổ khác |
 | Báo cáo | Tính tổng hợp theo dự án có bộ đệm; chốt kỳ giữ nguyên |
-| Triển khai | Giữ NSIS + CI; thêm ký số bộ cài (tránh cảnh báo SmartScreen), kiểm thử giao diện trong CI |
+| Triển khai | Giữ NSIS + CI, kiểm thử giao diện trong CI (ký số bộ cài: **bỏ** theo QD-32) |
 | Chỉ bổ sung khi mở rộng cấp tỉnh (nhiều xã) | Máy chủ trung tâm PostgreSQL + API web, đồng bộ từ máy chủ xã; **chưa cần** ở quy mô hiện tại |
 
 ---
@@ -286,7 +286,7 @@ Mô hình dữ liệu là **tài liệu (document)**: mỗi `DuAn` và mỗi `Ho
 | 2. Tối ưu nghiệp vụ và UX | P1-3, P1-4, P1-7, P2-5, "Soát phương án" (§11.1) | P1 | trang-thai, mo-hinh, HoSo, UngDung | GĐ1 (ô số) | Tiến độ đúng thực tế, có bàn giao mặt bằng, dùng tốt trên laptop |
 | 3. Hiệu suất và kiến trúc | P1-1, P1-2, P1-5, P1-6, P1-8, P2-3, P2-6, SQLite máy đơn | P1–P2 | ung-dung, kho, kho-mang, may_chu | GĐ1 | Chạy mượt 20.000+ hộ; truy vết thay đổi; khôi phục từng hộ |
 | 4. Tự động hóa, nâng cao | §11.2–11.5, P2-1, P2-2, P2-7 | P2 | phuong-an, bao-cao, core | GĐ3 (lịch sử, bản ghi con) | Giảm vòng thẩm định, cảnh báo sớm, cập nhật chính sách không cần phát hành lại |
-| 5. Sản phẩm thương mại | P3-1…P3-4, ký số bộ cài, tài liệu vận hành, hợp đồng hỗ trợ, cơ chế bản quyền/kích hoạt theo đơn vị | P3 | toàn hệ thống | GĐ1–4 | Triển khai được nhiều xã, nhiều tỉnh |
+| 5. Sản phẩm thương mại | P3-1…P3-4, ~~ký số bộ cài~~ (bỏ, QD-32), tài liệu vận hành, hợp đồng hỗ trợ, cơ chế bản quyền/kích hoạt theo đơn vị | P3 | toàn hệ thống | GĐ1–4 | Triển khai được nhiều xã, nhiều tỉnh |
 
 ---
 

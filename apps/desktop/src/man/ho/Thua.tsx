@@ -3,8 +3,8 @@ import { taoId, type DuAn, type Ho, type Thua } from "../../mo-hinh";
 import { ChonGiaDat } from "../../thanh-phan/ChonGiaDat";
 import { tien } from "../../thanh-phan/chung";
 import { PhanLop } from "./PhanLop";
-import { TEN_CHENH_LECH, laDatNN } from "../../tinh-ho";
-import { TEN_NHOM_HANH_LANG, TEN_TRUONG_HOP_NN, dinhDang, phanBoDatNN, phanBoDatO, type NhomDatHanhLang, type TruongHopDatNN } from "@gpmb/core";
+import { TEN_CHENH_LECH, hanMucDatNNThua, hanMucDatOThua, laDatNN } from "../../tinh-ho";
+import { TEN_NHOM_HANH_LANG, TEN_TRUONG_HOP_NN, TEN_VI_TRI_HAN_MUC, dinhDang, laPhuong, type ViTriHanMuc, phanBoDatNN, phanBoDatO, type NhomDatHanhLang, type TruongHopDatNN } from "@gpmb/core";
 import { TEN_KHONG_GIAY_TO } from "../../tinh-ho";
 import { tenDayDu } from "../../van-ban/loai-dat";
 import { ONgay } from "../../thanh-phan/ONgay";
@@ -16,6 +16,9 @@ import { OSo } from "../../thanh-phan/OSo";
 import { NHOM_PHAP_LY, THU_TU_PHAP_LY, goiYPhapLy, type NhomPhapLy } from "../../nguon-goc";
 
 export const LOAI_DAT = ["LUC", "LUK", "LUN", "HNK", "BHK", "NHK", "CLN", "RSX", "RPH", "NTS", "ONT", "ODT", "TMD", "SKC", "SKK", "SKN", "DGT", "NTD", "CSD", "KHAC"];
+
+/** Giá trị mặc định của cây trồng xen; sửa một ô thì giữ nguyên các lựa chọn khác (VM-34, VM-35). */
+const XEN0 = { dienTichTru: "", lyDoTru: "", cachXep: "DUNG_KHI_VUOT" as const };
 
 export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => void }) {
   const [chonGia, setChonGia] = useState<string | null>(null);
@@ -232,25 +235,27 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
                           </div>
                         )}
                         <div className="luoi" style={{ gridTemplateColumns: "200px 1fr 260px", alignItems: "end" }}>
-                          <div className="o-nhap"><label>DT công trình trừ khỏi quỹ mật độ (m²)</label><OSo className="o-so" value={t.cayXen?.dienTichTru ?? ""} onChange={(v) => sua(t.id, { cayXen: { dienTichTru: v, lyDoTru: t.cayXen?.lyDoTru ?? "", cachXep: t.cayXen?.cachXep ?? "DUNG_KHI_VUOT" } })} /></div>
-                          <div className="o-nhap"><label>Lý do trừ (bắt buộc khi &gt; 0 — VM-34)</label><input value={t.cayXen?.lyDoTru ?? ""} onChange={(e) => sua(t.id, { cayXen: { dienTichTru: t.cayXen?.dienTichTru ?? "", lyDoTru: e.target.value, cachXep: t.cayXen?.cachXep ?? "DUNG_KHI_VUOT" } })} /></div>
+                          <div className="o-nhap"><label>DT công trình trừ khỏi quỹ mật độ (m²)</label><OSo className="o-so" value={t.cayXen?.dienTichTru ?? ""} onChange={(v) => sua(t.id, { cayXen: { ...XEN0, ...t.cayXen, dienTichTru: v } })} /></div>
+                          <div className="o-nhap"><label>Lý do trừ (bắt buộc khi &gt; 0 — VM-34)</label><input value={t.cayXen?.lyDoTru ?? ""} onChange={(e) => sua(t.id, { cayXen: { ...XEN0, ...t.cayXen, lyDoTru: e.target.value } })} /></div>
                           <div className="o-nhap"><label>Cách xếp khi vượt quỹ</label>
-                            <Chon value={t.cayXen?.cachXep ?? "DUNG_KHI_VUOT"} onChange={(e) => sua(t.id, { cayXen: { dienTichTru: t.cayXen?.dienTichTru ?? "", lyDoTru: t.cayXen?.lyDoTru ?? "", cachXep: e.target.value as "DUNG_KHI_VUOT" | "LAP_DAY" } })}>
+                            <Chon value={t.cayXen?.cachXep ?? "DUNG_KHI_VUOT"} onChange={(e) => sua(t.id, { cayXen: { ...XEN0, ...t.cayXen, cachXep: e.target.value as "DUNG_KHI_VUOT" | "LAP_DAY" } })}>
                               <option value="DUNG_KHI_VUOT">Dừng khi vượt (theo biểu mẫu)</option>
                               <option value="LAP_DAY">Lấp đầy phần quỹ còn dư</option>
                             </Chon>
                           </div>
                         </div>
                         <div className="mo chu-nho mt-6">Thứ tự tính cây = thứ tự dòng ở thẻ Kiểm đếm (chủ sở hữu lựa chọn, k4 Đ5 PL VIII QĐ 106/2025).</div>
-                        <div className="luoi" style={{ gridTemplateColumns: "260px 1fr", alignItems: "end", marginTop: 10 }}>
+                        <div className="luoi" style={{ gridTemplateColumns: t.cayXen?.khongMatDo === "TU_NHAP" ? "260px 160px 1fr" : "260px 1fr", alignItems: "end", marginTop: 10 }}>
                           <div className="o-nhap"><label>Cây không có mật độ trên thửa trồng xen (VM-35)</label>
-                            <Chon value={t.cayXen?.khongMatDo ?? ""} onChange={(e) => sua(t.id, { cayXen: { dienTichTru: t.cayXen?.dienTichTru ?? "", lyDoTru: t.cayXen?.lyDoTru ?? "", cachXep: t.cayXen?.cachXep ?? "DUNG_KHI_VUOT", lyDoKhongMatDo: t.cayXen?.lyDoKhongMatDo ?? "", khongMatDo: (e.target.value || undefined) as "TINH_100" | "TINH_30" | undefined } })}>
+                            <Chon value={t.cayXen?.khongMatDo ?? ""} onChange={(e) => sua(t.id, { cayXen: { ...XEN0, ...t.cayXen, khongMatDo: (e.target.value || undefined) as "TINH_100" | "TINH_30" | "TU_NHAP" | undefined } })}>
                               <option value="">Chưa chọn (cần xác nhận)</option>
                               <option value="TINH_100">Tính 100% đơn giá</option>
                               <option value="TINH_30">Tính 30% như số cây còn lại</option>
+                              <option value="TU_NHAP">Tự điền tỷ lệ (%)</option>
                             </Chon>
                           </div>
-                          <div className="o-nhap"><label>Lý do, căn cứ lựa chọn (bắt buộc)</label><input value={t.cayXen?.lyDoKhongMatDo ?? ""} onChange={(e) => sua(t.id, { cayXen: { dienTichTru: t.cayXen?.dienTichTru ?? "", lyDoTru: t.cayXen?.lyDoTru ?? "", cachXep: t.cayXen?.cachXep ?? "DUNG_KHI_VUOT", khongMatDo: t.cayXen?.khongMatDo, lyDoKhongMatDo: e.target.value } })} /></div>
+                          {t.cayXen?.khongMatDo === "TU_NHAP" && <div className="o-nhap"><label>Tỷ lệ tính (%, 0–100)</label><OSo className="o-so" aria-label="Tỷ lệ cây không có mật độ" value={t.cayXen?.tyLeKhongMatDo ?? ""} onChange={(v) => sua(t.id, { cayXen: { ...XEN0, ...t.cayXen, tyLeKhongMatDo: v } })} /></div>}
+                          <div className="o-nhap"><label>Lý do, căn cứ lựa chọn (bắt buộc)</label><input value={t.cayXen?.lyDoKhongMatDo ?? ""} onChange={(e) => sua(t.id, { cayXen: { ...XEN0, ...t.cayXen, lyDoKhongMatDo: e.target.value } })} /></div>
                         </div>
                         <div className="mo chu-nho mt-4">Áp dụng cho cây hàng năm, hoa màu tính theo m² và loài chưa có mật độ (vd. đào, táo: nhập mật độ ở thẻ Kiểm đếm thì được xếp vào quỹ).</div>
                       </td>
@@ -298,14 +303,18 @@ function KhongGiayToThua({ t, h, duAn, sua, moChonGia }: { t: Thua; h: Ho; duAn:
   const [loaiKd, setLoaiKd] = useState("SKC");
   const [loaiCl, setLoaiCl] = useState(k?.giaConLai?.loaiDat || "CLN");
   const dat = (p: Partial<KhongGiayTo>) => sua({ ...k!, ...p });
+  const { chinhSach } = useUngDung();
+  const cs = chinhSach(duAn);
   const laNN = laDatNN(t.loaiDat);
+  const hmO = k && k.dieu !== "D12" ? hanMucDatOThua(cs, duAn, k) : null;
+  const hmNN = k?.dieu === "D12" ? hanMucDatNNThua(cs, duAn, t, k) : null;
   const so = (v?: string) => (v && !isNaN(Number(v)) ? v : "0");
   let tomTat = "";
   if (k && k.dieu !== "D12") {
-    const r = phanBoDatO({ dieu: k.dieu, ngaySuDung: k.ngaySuDung, dtThuHoi: so(t.dienTichThuHoi), dtThua: so(t.dienTich || t.dienTichThuHoi), dtXayDung: so(k.dtXayDung), dtSxkd: so(k.dtSxkd), hanMucCongNhan: k.hanMuc || duAn.hanMucDatO?.congNhan || null, hanMucGiao: k.hanMuc || duAn.hanMucDatO?.giao || null, d140: k.d140, giayToNopTien: k.giayToNopTien, lanChiem: k.lanChiem });
+    const r = phanBoDatO({ dieu: k.dieu, ngaySuDung: k.ngaySuDung, dtThuHoi: so(t.dienTichThuHoi), dtThua: so(t.dienTich || t.dienTichThuHoi), dtXayDung: so(k.dtXayDung), dtSxkd: so(k.dtSxkd), hanMucCongNhan: hmO!.hmCn || null, hanMucGiao: hmO!.hmGiao || null, d140: k.d140, giayToNopTien: k.giayToNopTien, lanChiem: k.lanChiem });
     tomTat = r.loi ? `⚠ ${r.loi}` : `${r.khoan}: đất ở ${dinhDang(r.datO, 2)} m²${r.sxkd.gt(0) ? `; SXKD ${dinhDang(r.sxkd, 2)} m²` : ""}${r.conLai.gt(0) ? `; còn lại ${dinhDang(r.conLai, 2)} m² (${r.conLaiLoai === "NN" ? "theo đất NN" : r.conLaiLoai === "HIEN_TRANG" ? "theo hiện trạng" : r.conLaiLoai === "KHONG_BT" ? "không bồi thường" : "Điều 9 không quy định — chọn cách xử lý"})` : ""}${r.datOVuot.gt(0) ? `; phần đất ở vượt hạn mức ${dinhDang(r.datOVuot, 2)} m² trừ tiền SDĐ` : ""}`;
   } else if (k?.dieu === "D12" && k.truongHopNN) {
-    const hm = k.hanMuc || (k.truongHopNN === "K2_KHAI_HOANG" ? "" : duAn.hanMucNN?.m2 || "");
+    const hm = hmNN!.m2;
     if (hm || k.truongHopNN === "K5A") {
       const r = phanBoDatNN({ truongHop: k.truongHopNN, dtThuHoi: so(t.dienTichThuHoi), hanMuc: hm || "0", truoc2004TrucTiepSx: k.truoc2004TrucTiepSx });
       tomTat = `${r.khoan}: bồi thường ${dinhDang(r.boiThuong, 2)} m²${r.vuot.gt(0) ? `; vượt hạn mức ${dinhDang(r.vuot, 2)} m² — hỗ trợ khác (k7)` : ""}`;
@@ -336,9 +345,24 @@ function KhongGiayToThua({ t, h, duAn, sua, moChonGia }: { t: Thua; h: Ho; duAn:
           <div className="luoi mt-6" style={{ gridTemplateColumns: "repeat(4, minmax(140px, 1fr))", alignItems: "end" }}>
             <div className="o-nhap"><label>DT đã xây nhà ở, công trình đời sống (m²)</label><OSo className="o-so" aria-label="DT đã xây dựng nhà ở" value={k.dtXayDung ?? ""} onChange={(v) => dat({ dtXayDung: v })} /></div>
             {k.dieu !== "D9" && <div className="o-nhap"><label>DT sử dụng SXKD phi NN, TMDV (m²)</label><OSo className="o-so" aria-label="DT sản xuất kinh doanh" value={k.dtSxkd ?? ""} onChange={(v) => dat({ dtSxkd: v })} /></div>}
-            <div className="o-nhap"><label>Hạn mức riêng của thửa (m²)</label><OSo className="o-so" value={k.hanMuc ?? ""} placeholder={duAn.hanMucDatO ? `Trống = dự án (${duAn.hanMucDatO.congNhan || "—"} / ${duAn.hanMucDatO.giao || "—"})` : "Nhập ở Thông tin dự án"} onChange={(v) => dat({ hanMuc: v || undefined })} /></div>
+            <div className="o-nhap"><label>Hạn mức riêng của thửa (m²)</label><OSo className="o-so" value={k.hanMuc ?? ""} placeholder={k.viTriHanMuc && cs.hanMucPl1 ? "Trống = theo Phụ lục I" : duAn.hanMucDatO ? `Trống = dự án (${duAn.hanMucDatO.congNhan || "—"} / ${duAn.hanMucDatO.giao || "—"})` : "Chọn vị trí thửa"} onChange={(v) => dat({ hanMuc: v || undefined })} /></div>
             <div className="o-nhap"><label>Căn cứ hạn mức riêng</label><input value={k.canCuHanMuc ?? ""} disabled={!k.hanMuc} onChange={(e) => dat({ canCuHanMuc: e.target.value })} /></div>
           </div>
+          {cs.hanMucPl1 && (
+            <div className="luoi mt-6" style={{ gridTemplateColumns: "minmax(280px, 1.2fr) 2fr", alignItems: "end" }}>
+              <div className="o-nhap"><label>Vị trí thửa — tra hạn mức Phụ lục I QĐ 106/2025 ({laPhuong(duAn.xa) ? "tại phường" : "tại xã"})</label>
+                <Chon aria-label="Vị trí thửa tra hạn mức" value={k.viTriHanMuc ?? ""} onChange={(e) => dat({ viTriHanMuc: (e.target.value || undefined) as ViTriHanMuc | undefined })}>
+                  <option value="">Chưa chọn (dùng hạn mức dự án)</option>
+                  {Object.entries(TEN_VI_TRI_HAN_MUC[laPhuong(duAn.xa) ? "PHUONG" : "XA"]).map(([m, ten]) => <option key={m} value={m}>{ten}</option>)}
+                </Chon>
+              </div>
+              <div className="chu-nho" data-han-muc-dat-o>
+                {k.hanMuc ? <>Đang dùng hạn mức riêng của thửa: <b>{k.hanMuc} m²</b> ({k.canCuHanMuc || "chưa ghi căn cứ"}).</> : (
+                  <>Hạn mức công nhận: <b>{hmO!.hmCn ? `${hmO!.hmCn} m²` : "—"}</b> ({hmO!.hmCn ? hmO!.canCuCn : k.ngaySuDung >= "1993-10-15" ? "không áp dụng từ 15/10/1993" : "chưa có"}) · Hạn mức giao: <b>{hmO!.hmGiao ? `${hmO!.hmGiao} m²` : "—"}</b> ({hmO!.hmGiao ? hmO!.canCuGiao : "chưa có"})</>
+                )}
+              </div>
+            </div>
+          )}
           <div className="luoi mt-6" style={{ gridTemplateColumns: "1fr 1fr", alignItems: "end" }}>
             {k.dieu !== "D9" && (
               <div className="o-nhap"><label>Giá đất SXKD / TMDV (điểm c)</label>
@@ -385,11 +409,12 @@ function KhongGiayToThua({ t, h, duAn, sua, moChonGia }: { t: Thua; h: Ho; duAn:
       {k?.dieu === "D12" && (
         <>
           <div className="luoi mt-6" style={{ gridTemplateColumns: "repeat(4, minmax(140px, 1fr))", alignItems: "end" }}>
-            <div className="o-nhap"><label>Hạn mức riêng (m²)</label><OSo className="o-so" aria-label="Hạn mức đất NN riêng" value={k.hanMuc ?? ""} placeholder={k.truongHopNN === "K2_KHAI_HOANG" ? "Bắt buộc (UBND tỉnh quy định)" : duAn.hanMucNN ? `Trống = ${duAn.hanMucNN.m2} (dự án)` : "Bắt buộc"} onChange={(v) => dat({ hanMuc: v || undefined })} /></div>
+            <div className="o-nhap"><label>Hạn mức riêng (m²)</label><OSo className="o-so" aria-label="Hạn mức đất NN riêng" value={k.hanMuc ?? ""} placeholder={!k.hanMuc && hmNN?.m2 ? `Trống = ${hmNN.m2}${k.truongHopNN === "K2_KHAI_HOANG" ? " (Điều 7 PL I)" : " (dự án)"}` : "Bắt buộc"} onChange={(v) => dat({ hanMuc: v || undefined })} /></div>
             <div className="o-nhap"><label>Căn cứ hạn mức riêng</label><input value={k.canCuHanMuc ?? ""} disabled={!k.hanMuc} onChange={(e) => dat({ canCuHanMuc: e.target.value })} /></div>
             <div className="o-nhap"><label>Hỗ trợ khác phần vượt — số tiền (đ)</label><OSo className="o-so" value={k.hoTroK7?.soTien ?? ""} onChange={(v) => dat({ hoTroK7: { soTien: v, canCu: k.hoTroK7?.canCu ?? "" } })} /></div>
             <div className="o-nhap"><label>Văn bản quyết định hỗ trợ (k7)</label><input value={k.hoTroK7?.canCu ?? ""} onChange={(e) => dat({ hoTroK7: { soTien: k.hoTroK7?.soTien ?? "", canCu: e.target.value } })} /></div>
           </div>
+          {k.truongHopNN === "K2_KHAI_HOANG" && !k.hanMuc && <div className="chu-nho mt-4" data-han-muc-khai-hoang>{hmNN?.m2 ? <>Hạn mức giao đất NN (đất tự khai hoang): <b>{dinhDang(soD(hmNN.m2), 0)} m²</b> — {hmNN.canCu}{hmNN.luuY ? `. ${hmNN.luuY}` : ""}</> : <span className="chu-do">{tenDayDu(t.loaiDat)} không có trong Điều 7 Phụ lục I QĐ 106/2025 — nhập hạn mức riêng kèm căn cứ.</span>}</div>}
           <label className="chu-nho mt-6" style={{ display: "block" }}><input type="checkbox" checked={!!k.truoc2004TrucTiepSx} onChange={(e) => dat({ truoc2004TrucTiepSx: e.target.checked || undefined })} /> Sử dụng ổn định trước 01/7/2004, trực tiếp sản xuất NN nhưng không đủ điều kiện cấp GCN (khoản 4 Điều 12)</label>
           {!laNN && <div className="chu-do chu-nho mt-4">Điều 12 áp dụng cho đất thuộc nhóm đất nông nghiệp — loại đất của thửa đang là {tenDayDu(t.loaiDat)}.</div>}
         </>

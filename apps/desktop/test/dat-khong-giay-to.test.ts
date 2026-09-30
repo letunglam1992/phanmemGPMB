@@ -67,7 +67,32 @@ describe("Điều 12 — đất nông nghiệp", () => {
     expect(tien(nnHo({ dieu: "D12", ngaySuDung: "", truongHopNN: "K2" }), "B05.K7")!.trangThai).toBe("THIEU_CAN_CU");
     expect(tien(nnHo({ dieu: "D12", ngaySuDung: "", truongHopNN: "K2", hoTroK7: { soTien: "30000000", canCu: "QĐ UBND tỉnh (thử)" } }), "B05.K7")!.thanhTien!.toString()).toBe("30000000");
     expect(tien(nnHo({ dieu: "D12", ngaySuDung: "", truongHopNN: "K1", truoc2004TrucTiepSx: true }), "B05")!.thanhTien!.toString()).toBe("250000000");
-    expect(tien(nnHo({ dieu: "D12", ngaySuDung: "", truongHopNN: "K2_KHAI_HOANG" }), "B05")!.trangThai).toBe("THIEU_CAN_CU");
+  });
+  it("đất tự khai hoang: hạn mức theo Điều 7 Phụ lục I QĐ 106/2025; loại đất không có trong Điều 7 → Thiếu căn cứ", () => {
+    const b05 = tien(nnHo({ dieu: "D12", ngaySuDung: "", truongHopNN: "K2_KHAI_HOANG" }), "B05")!;
+    expect(b05.thanhTien!.toString()).toBe("250000000");
+    expect(b05.thamSo["Hạn mức"]).toContain("khoản 1 Điều 7 Phụ lục I QĐ 106/2025/QĐ-UBND, điểm b (tại xã)");
+    const rdd = thua({ dieu: "D12", ngaySuDung: "", truongHopNN: "K2_KHAI_HOANG" }, { loaiDat: "RDD", dienTich: "5000", dienTichThuHoi: "5000", gia: { giaNghinDong: "50", nguon: "Bảng 01 (thử)" } });
+    expect(tien(rdd, "B05")!.trangThai).toBe("THIEU_CAN_CU");
+    expect(tien(thua({ dieu: "D12", ngaySuDung: "", truongHopNN: "K2_KHAI_HOANG" }, { loaiDat: "RSX", dienTich: "5000", dienTichThuHoi: "5000", gia: { giaNghinDong: "50", nguon: "x" } }), "B05")!.canhBao.join(" ")).toContain("rừng trồng");
+  });
+});
+
+describe("Hạn mức đất ở theo Phụ lục I QĐ 106/2025 (vị trí thửa)", () => {
+  it("xã: Điều 3 (trước 1980), Điều 4 (1980–1993) công nhận; Điều 5 giao — ưu tiên hơn hạn mức dự án", () => {
+    expect(duAn.xa.startsWith("Xã")).toBe(true);
+    const b03 = tien(thua({ dieu: "D8", ngaySuDung: "1975-01-01", viTriHanMuc: "CON_LAI", giaConLai: nn }), "B03")!;
+    expect(b03.thanhTien!.toString()).toBe("450000000");
+    expect(b03.thamSo["Hạn mức công nhận đất ở"]).toContain("Điều 3 Phụ lục I QĐ 106/2025/QĐ-UBND, điểm b khoản 1 (tại xã)");
+    expect(tien(thua({ dieu: "D8", ngaySuDung: "1990-01-01", viTriHanMuc: "TRUNG_TAM", giaConLai: nn }), "B03")!.thanhTien!.toString()).toBe("350000000");
+    expect(tien(thua({ dieu: "D9", ngaySuDung: "2000-01-01", viTriHanMuc: "TRUNG_TAM" }), "B04")!.thanhTien!.toString()).toBe("150000000");
+    expect(tien(thua({ dieu: "D8", ngaySuDung: "2000-01-01", viTriHanMuc: "DUONG_XA", giaConLai: nn }), "B03")!.thamSo["Hạn mức giao đất ở"]).toContain("180,00 m² (Điều 5 Phụ lục I");
+  });
+  it("phường: Điều 4, Điều 6; hạn mức riêng của thửa vẫn được ưu tiên", () => {
+    const p = { ...duAn, xa: "Phường Tô Hiệu" };
+    expect(tien(thua({ dieu: "D8", ngaySuDung: "1990-01-01", viTriHanMuc: "CON_LAI", giaConLai: nn }), "B03", p)!.thanhTien!.toString()).toBe("150000000");
+    expect(tien(thua({ dieu: "D8", ngaySuDung: "2000-01-01", viTriHanMuc: "TRUNG_TAM", giaConLai: nn }), "B03", p)!.thanhTien!.toString()).toBe("100000000");
+    expect(tien(thua({ dieu: "D8", ngaySuDung: "2000-01-01", viTriHanMuc: "TRUNG_TAM", hanMuc: "90", canCuHanMuc: "x", giaConLai: nn }), "B03", p)!.thanhTien!.toString()).toBe("90000000");
   });
 });
 
