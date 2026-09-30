@@ -10,6 +10,7 @@ import { docSoTien } from "./doc-so";
 import type { MauVanBan } from "./danh-muc";
 import { tenDayDu, tenLoaiDat } from "./loai-dat";
 import { soD } from "../so";
+import { duLieuKeHoach, duLieuNhieuHo, duLieuPhuongAnHo } from "./thuc-te";
 
 export const CHAM = "…………";
 
@@ -35,6 +36,8 @@ export function thongTinChungMacDinh(duAn: DuAn): Record<string, string> {
     co_quan_dang_tai: `Văn phòng HĐND và UBND ${duAn.xa.replace(/^(Xã|Phường) /, (m) => m.toLowerCase())}`,
     can_cu_du_an: duAn.canCuThuHoi ? `Căn cứ ${duAn.canCuThuHoi};` : "",
     can_cu_chung: CAN_CU_MAC_DINH.join("\n"),
+    // NQ 254/2025/QH15: phần mềm chưa có nguyên văn nghị quyết → mặc định không in, cán bộ tự chọn nếu dự án áp dụng
+    can_cu_bo: CAN_CU_MAC_DINH.filter((c) => c.includes("254/2025/QH15")).join("\n"),
     ly_do_thu_hoi: "",
     dia_diem_du_an: duAn.xa,
     ban_khu_dan_cu: "",
@@ -268,12 +271,15 @@ export function ghepDuLieu(p: {
   ngayKy: string;
 }): Record<string, unknown> {
   const du = duLieuDuAn(p.duAn, p.ds);
-  const tu = { ...du, ...(p.ho ? duLieuHo(p.ho.h, p.ho.k) : {}) };
   const vbDuAn = p.duAn.vanBan ?? {};
+  // Số, ngày văn bản của hộ (QĐ phê duyệt phương án từng hộ, QĐ thu hồi…) cụ thể hơn số cấp dự án → ghi đè số cấp dự án
+  const tu = { ...du, ...Object.fromEntries(Object.entries(vbDuAn)), ...(p.ho ? duLieuHo(p.ho.h, p.ho.k) : {}) };
   const [y, m, d] = p.ngayKy ? p.ngayKy.split("-") : ["", "", ""];
   const chung: Record<string, unknown> = { ...p.chung };
   // Căn cứ: căn cứ chung + căn cứ riêng của dự án, mỗi dòng một căn cứ
-  chung.can_cu = [...(p.chung.can_cu_chung ?? "").split("\n"), ...(p.chung.can_cu_du_an ?? "").split("\n")].map((s) => s.trim()).filter(Boolean);
+  // Căn cứ bỏ chọn (người dùng tự chọn căn cứ theo dự án — lưu ở can_cu_bo, mỗi dòng một căn cứ) không in vào văn bản
+  const bo = new Set((p.chung.can_cu_bo ?? "").split("\n").map((s) => s.trim()).filter(Boolean));
+  chung.can_cu = [...(p.chung.can_cu_chung ?? "").split("\n"), ...(p.chung.can_cu_du_an ?? "").split("\n")].map((s) => s.trim()).filter((s) => s && !bo.has(s));
   chung.TEN_DON_VI_BT = (p.chung.ten_don_vi_bt ?? "").toUpperCase();
   chung.CO_QUAN_CAP_TREN_BT = (p.chung.co_quan_cap_tren_bt ?? "").toUpperCase();
   chung.TEN_PHONG = (p.chung.ten_phong ?? "").toUpperCase();
@@ -300,7 +306,7 @@ export function ghepDuLieu(p: {
   if (!(p.chung.chuc_danh_de_nghi ?? "").trim()) chung.chuc_danh_de_nghi = `Trưởng ${lower1(p.chung.ten_phong || "phòng chuyên môn")}`;
   if (p.mau.ma === "16") {
     const laThuHoi = p.rieng.loai_qd_giao === "QD_THU_HOI";
-    const ref = laThuHoi ? (p.ho?.h.vanBan ?? {}) : vbDuAn;
+    const ref = laThuHoi || p.ho?.h.vanBan?.qd_phe_duyet_so ? (p.ho?.h.vanBan ?? {}) : vbDuAn;
     const khoa = laThuHoi ? "qd_thu_hoi" : "qd_phe_duyet";
     rieng.ten_quyet_dinh_giao = laThuHoi ? "Quyết định thu hồi đất" : "Quyết định phê duyệt phương án bồi thường, hỗ trợ, tái định cư";
     rieng.qd_giao_so = ref[`${khoa}_so`] ?? "";
@@ -309,7 +315,7 @@ export function ghepDuLieu(p: {
   }
   const kq: Record<string, unknown> = {
     ...tu,
-    ...Object.fromEntries(Object.entries(vbDuAn)),
+    ...(p.mau.nguon === "THUC_TE" ? duLieuThucTe(p) : {}),
     tb_thu_hoi_ngay: (p.ho?.h.vanBan?.tb_thu_hoi_ngay ?? vbDuAn.tb_thu_hoi_ngay) || (du.tb_thu_hoi_ngay_du_an as string),
     ...chung,
     ...Object.fromEntries(Object.entries(rieng).filter(([, v]) => v !== "" && v !== undefined)),
@@ -336,4 +342,14 @@ export function ghepDuLieu(p: {
   if (!kq.ky_hieu) kq.ky_hieu = "";
   if (!kq.ngay_hieu_luc) kq.ngay_hieu_luc = "ký";
   return kq;
+}
+
+/** Trường riêng của mẫu dựng theo văn bản thực tế (T1–T7, docs/19). */
+function duLieuThucTe(p: { mau: MauVanBan; duAn: DuAn; ds: { h: Ho; k: KetQuaHo }[]; ho?: { h: Ho; k: KetQuaHo }; chung: Record<string, string> }): Record<string, unknown> {
+  const khuDat = (p.chung.ban_khu_dan_cu || p.chung.dia_diem_du_an || p.duAn.xa).trim();
+  return {
+    ...duLieuKeHoach(p.duAn),
+    ...duLieuNhieuHo(p.duAn, p.ds, khuDat, lower1(p.duAn.xa)),
+    ...(p.ho ? duLieuPhuongAnHo(p.ho.h, p.ho.k) : {}),
+  };
 }

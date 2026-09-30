@@ -36,6 +36,8 @@ export function TabThongTin({ h, doi, duAn, goc }: Tab & { duAn: DuAn; goc?: Ho 
         </O>
         <O nhan={h.loai === "TO_CHUC" ? "Tên tổ chức" : "Họ tên chủ hộ / cá nhân"} lichSu="ten"><input value={h.ten} onChange={s("ten")} /></O>
         <O nhan={h.loai === "TO_CHUC" ? "Mã số thuế / QĐ thành lập" : "Số định danh cá nhân"} lichSu="soDinhDanh" goiY="Thông tin cá nhân chỉ lưu trên máy này"><input value={h.soDinhDanh} onChange={s("soDinhDanh")} /></O>
+        {h.loai !== "TO_CHUC" && <O nhan="Ngày cấp" lichSu="ngayCapDinhDanh"><input value={h.ngayCapDinhDanh ?? ""} placeholder="dd/mm/yyyy" onChange={(e) => doi({ ...h, ngayCapDinhDanh: e.target.value })} /></O>}
+        {h.loai !== "TO_CHUC" && <O nhan="Nơi cấp" lichSu="noiCapDinhDanh"><input value={h.noiCapDinhDanh ?? ""} onChange={(e) => doi({ ...h, noiCapDinhDanh: e.target.value })} /></O>}
         <O nhan="Điện thoại" lichSu="dienThoai"><input value={h.dienThoai} onChange={s("dienThoai")} /></O>
         <O nhan="Cán bộ phụ trách" lichSu="phuTrach" goiY="Hồ sơ hiện trong “Việc của tôi” của cán bộ được phân công">
           <Chon value={h.phuTrach ?? ""} aria-label="Cán bộ phụ trách" onChange={(e) => doi({ ...h, phuTrach: e.target.value || undefined })}>

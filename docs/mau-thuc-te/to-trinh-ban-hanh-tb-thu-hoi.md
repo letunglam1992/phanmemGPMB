@@ -102,22 +102,8 @@ Nơi nhận:
 
 - Thành viên Hội đồng BT,HT,TĐC dự án;
 
-- Lưu: VT, Tổ GPMB, Ngọc Anh (06b). | Q.TRƯỞNG PHÒNG
+- Lưu: VT, Tổ GPMB, [người soạn] (06b). | Q.TRƯỞNG PHÒNG
 
-Nguyễn Văn Phúc |  |
+[người ký] |  |
 
-PAGE   \* MERGEFORMAT
-
-Default Paragraph Font
-
-Body Text Indent 3 Char
-
-Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀
-
-Ѐ܀Ѐ܀ЀԀЀԀЀԀЀԀЀ܀Ѐ܀Ѐ܀Ѐ܀Ѐ܀Ѐ܀Ѐ܀Ѐ܀Ѐ܀Ѐ܀Ѐ܀Ѐ܀Ѐ܀Ѐ܀Ѐ܀Ѐ܀Ѐ܀ЀԀ܀Ѐ܀Ȁ܀Ȁ܀Ȁ܀Ȁ܀Ȁ܀Ȁ
-
-Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀̀
-
-DocumentSummaryInformation
-
-×ÀÐÊÅ1GÕUEÞÒDÄÅÉÐÍÏØÙQ==
+(… phần còn lại là dữ liệu định dạng của tệp Word, đã bỏ)

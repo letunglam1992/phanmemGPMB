@@ -152,6 +152,15 @@ function TheThua(p: {
                       <input value={x.ten} onChange={(e) => sua(x.id, { ten: e.target.value })} />
                     )}
                     {"maDonGia" in x && <div className="can-cu">{x.maDonGia}</div>}
+                    <label className="chu-nho mo" title="Tài sản đã kiểm đếm nhưng không được bồi thường, hỗ trợ — vẫn ghi vào bảng tính (Biểu số 02) với thành tiền 0, kèm lý do và căn cứ">
+                      <input type="checkbox" checked={!!x.khongBtHt} onChange={(e) => sua(x.id, { khongBtHt: e.target.checked ? { lyDo: "", canCu: "" } : undefined })} /> Không BT, HT
+                    </label>
+                    {x.khongBtHt && (
+                      <div style={{ display: "grid", gap: 4 }}>
+                        <input placeholder="Lý do không bồi thường, hỗ trợ *" aria-label="Lý do không bồi thường, hỗ trợ" className={x.khongBtHt.lyDo.trim() ? "" : "loi-nhap"} value={x.khongBtHt.lyDo} onChange={(e) => sua(x.id, { khongBtHt: { ...x.khongBtHt!, lyDo: e.target.value } })} />
+                        <input placeholder="Căn cứ (Điều, khoản văn bản) *" aria-label="Căn cứ không bồi thường, hỗ trợ" title="vd. văn bản thực tế ghi: khoản 2 Điều 105 Luật Đất đai 2024; tiết b điểm 3.3 khoản 3 Điều 6 QĐ 14/2026 — cán bộ tự xác định căn cứ" className={x.khongBtHt.canCu.trim() ? "" : "loi-nhap"} value={x.khongBtHt.canCu} onChange={(e) => sua(x.id, { khongBtHt: { ...x.khongBtHt!, canCu: e.target.value } })} />
+                      </div>
+                    )}
                   </td>
                   <td>
                     {x.loai === "KHAC" ? <input value={x.donVi} onChange={(e) => sua(x.id, { donVi: e.target.value })} /> : x.loai === "VAT_NUOI" ? (VAT_NUOI_DV[x.loaiVatNuoi]) : x.loai === "SUA_CHUA" ? "đồng" : x.donVi}

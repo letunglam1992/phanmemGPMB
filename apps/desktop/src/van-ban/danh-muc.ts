@@ -20,8 +20,11 @@ export interface MauVanBan {
   buoc: string;
   /** DU_AN: một văn bản cho cả dự án; HO: mỗi hộ/tổ chức một văn bản; DOT: một văn bản cho nhóm hộ được chọn (một đợt). */
   phamVi: "DU_AN" | "HO" | "DOT";
-  /** SO_TAY: mẫu của Sổ tay QĐ 1966; RIENG: mẫu riêng của xã (giữ định dạng văn bản đang dùng). */
-  nguon?: "SO_TAY" | "RIENG";
+  /**
+   * SO_TAY: mẫu của Sổ tay QĐ 1966; RIENG: mẫu riêng của xã (giữ định dạng văn bản đang dùng); THUC_TE: dựng theo bố cục bộ
+   * văn bản dự án thực tế của UBND phường (docs/19) — không chứa tên, số văn bản của dự án gốc.
+   */
+  nguon?: "SO_TAY" | "RIENG" | "THUC_TE";
   /** Tệp mẫu trong public/mau-van-ban (mặc định mau-{ma}.docx). */
   tep?: string;
   moTa?: string;
@@ -164,6 +167,88 @@ DANH_MUC_MAU.push(
       HIEU_LUC,
       { truong: "co_quan_thi_hanh", nhan: "Các cơ quan chịu trách nhiệm thi hành (Điều 4)", nhieuDong: true, macDinh: "Chánh Văn phòng Hội đồng nhân dân và Ủy ban nhân dân; Trưởng Phòng Kinh tế; Trưởng Phòng Văn hóa - Xã hội; Thủ trưởng đơn vị thực hiện nhiệm vụ bồi thường, giải phóng mặt bằng; Hội đồng bồi thường, hỗ trợ, tái định cư dự án; các cơ quan, đơn vị liên quan" },
       { truong: "noi_nhan", nhan: "Nơi nhận (mỗi dòng một nơi)", nhieuDong: true, macDinh: "Chủ tịch UBND tỉnh (để b/c)\nCác Phó Chủ tịch UBND tỉnh (để b/c)\nSở Nông nghiệp và Môi trường (để b/c)\nThường trực Đảng ủy xã\nThường trực HĐND xã\nChủ tịch, PCT UBND xã\nNhư Điều 4\nTrang thông tin điện tử\nLưu: VT" },
+    ],
+  },
+);
+
+const TIEN_DO_30N = "Trong thời hạn 30 ngày kể từ ngày quyết định phê duyệt phương án bồi thường, hỗ trợ có hiệu lực thi hành, đơn vị thực hiện nhiệm vụ bồi thường phải chi trả tiền bồi thường, hỗ trợ cho người có đất thu hồi, chủ sở hữu tài sản.";
+const PA_HO = (): TruongNhap[] => [
+  { truong: "pa_ha_tang", nhan: "7. Phương án di chuyển công trình hạ tầng", macDinh: "Không" },
+  { truong: "chi_phi_khac", nhan: "8.2. Chi phí khác", macDinh: "Không" },
+  { truong: "tien_do_thuc_hien", nhan: "9. Tiến độ thực hiện phương án", nhieuDong: true, macDinh: TIEN_DO_30N },
+  { truong: "y_kien_kien_nghi", nhan: "10. Ý kiến, kiến nghị của hộ và kết quả giải quyết", nhieuDong: true, macDinh: "Không." },
+  { truong: "noi_dung_khac", nhan: "11. Nội dung khác", nhieuDong: true, macDinh: "Không." },
+];
+
+/**
+ * Mẫu dựng theo bố cục bộ văn bản dự án thực tế (UBND phường, 2026 — docs/19 §3, §4): mục 3–7 của phương án 01 hộ tự điền
+ * từ hồ sơ hộ (tái định cư, chuyển đổi nghề, mồ mả); mục 8 lấy theo bảng tính. Căn cứ riêng của dự án (chủ trương đầu tư,
+ * điều chỉnh quy hoạch, thông báo kết luận…) nhập ở "Căn cứ riêng của dự án".
+ */
+DANH_MUC_MAU.push(
+  {
+    ma: "T1", ten: "Kế hoạch thu hồi đất, điều tra, khảo sát, đo đạc, kiểm đếm", buoc: "1", phamVi: "DU_AN", coQuan: "UBND", nguon: "THUC_TE", tep: "tt-ke-hoach.docx",
+    moTa: "Mốc thời gian từng việc lấy từ lịch dự kiến của dự án (Dự án → Lập kế hoạch). Kèm bảng tiến độ dự kiến.",
+    ghiLai: { khoa: "ke_hoach", capDo: "DU_AN", kyHieu: "KH-UBND" },
+    nhapThem: [
+      { truong: "tien_do_du_an", nhan: "Tiến độ thực hiện dự án", goiY: "vd. 2026-2027" },
+      { truong: "thoi_han_tb", nhan: "Thời hạn gửi thông báo thu hồi đất trước khi ban hành QĐ thu hồi đất", goiY: "Khoản 2 Điều 85 Luật Đất đai 2024: chậm nhất 90 ngày (đất nông nghiệp), 180 ngày (đất phi nông nghiệp). Văn bản thực tế năm 2026 ghi 60/120 ngày theo văn bản mới (NQ 254/2025/QH15 — phần mềm chưa có nguyên văn): cán bộ ghi theo căn cứ áp dụng." },
+      { truong: "kh_xac_minh", nhan: "Xác minh nguồn gốc, loại đất; xét tái định cư — dự kiến hoàn thành trước ngày" },
+      NOI_NHAN("Thường trực Đảng ủy (b/c)\nThường trực HĐND (b/c)\nChủ tịch, các PCT UBND\nBan điều hành tổ dân phố/bản\nCác phòng, đơn vị chuyên môn\nLưu: VT"),
+    ],
+  },
+  {
+    ma: "T2", ten: "Tờ trình đề nghị ban hành Thông báo thu hồi đất", buoc: "3", phamVi: "DOT", coQuan: "PHONG", nguon: "THUC_TE", tep: "tt-to-trinh-tb.docx",
+    moTa: "Phòng chuyên môn trình Chủ tịch UBND cấp xã ban hành Thông báo thu hồi đất (mẫu T3). Dẫn Kế hoạch (mẫu T1) đã ghi số.",
+    ghiLai: { khoa: "tt_tb_thu_hoi", capDo: "DU_AN", kyHieu: "TTr-{ky_hieu_phong}" },
+    nhapThem: [
+      { truong: "dt_khac_mo_ta", nhan: "Diện tích khác trong phạm vi dự án (ngoài đất của các hộ)", nhieuDong: true, goiY: "vd. Diện tích UBND tỉnh đã thu hồi, giao cho UBND phường quản lý …m² và đất giao thông …m². Để trống nếu không có" },
+      { truong: "tg_dieu_tra_tu", nhan: "Điều tra, khảo sát, kiểm đếm bắt đầu từ ngày" },
+      NOI_NHAN("Như trên\nLưu: VT"),
+    ],
+  },
+  {
+    ma: "T3", ten: "Thông báo thu hồi đất (kèm danh sách người có đất thu hồi)", buoc: "3", phamVi: "DOT", coQuan: "UBND", nguon: "THUC_TE", tep: "tt-thong-bao.docx",
+    moTa: "Một thông báo cho các hộ được chọn, kèm biểu danh sách (mỗi thửa một dòng). Số, ngày thông báo ghi vào từng hộ.",
+    ghiLai: { khoa: "tb_thu_hoi", capDo: "HO", kyHieu: "TB-UBND" },
+    nhapThem: [
+      { truong: "dt_khac_mo_ta", nhan: "Diện tích khác trong phạm vi dự án (ngoài đất của các hộ)", nhieuDong: true, goiY: "Để trống nếu không có" },
+      { truong: "tg_dieu_tra_tu", nhan: "Điều tra, khảo sát, kiểm đếm bắt đầu từ ngày" },
+      { truong: "ke_hoach_tdc", nhan: "Dự kiến kế hoạch di chuyển, bố trí tái định cư", nhieuDong: true, macDinh: "Bố trí tái định cư (nếu có): thực hiện theo quy định của pháp luật." },
+      { truong: "noi_niem_yet", nhan: "Nơi niêm yết thông báo", goiY: "vd. trụ sở UBND phường và nhà văn hóa tổ dân phố …" },
+      NOI_NHAN("Thường trực Đảng ủy\nThường trực HĐND\nChủ tịch, các PCT UBND\nHội đồng BT, HT, TĐC dự án\nCác phòng, đơn vị có liên quan\nTổ chức, hộ gia đình, cá nhân có đất thu hồi\nLưu: VT"),
+    ],
+  },
+  {
+    ma: "T4", ten: "Tờ trình đề nghị phê duyệt phương án BT, HT, TĐC (01 hộ)", buoc: "8", phamVi: "HO", coQuan: "PHONG", nguon: "THUC_TE", tep: "tt-to-trinh-pa-ho.docx",
+    moTa: "11 mục theo văn bản thực tế; mục 8 (kinh phí) lấy theo bảng tính của hộ, tổng làm tròn và bằng chữ; hỗ trợ khác khoản 13 Điều 6 QĐ 14/2026 ghi nội dung, lý do, mức. Kèm Biểu số 01, 02 xuất từ Excel.",
+    ghiLai: { khoa: "tt_pa_ho", capDo: "HO", kyHieu: "TTr-{ky_hieu_phong}" },
+    nhapThem: [...PA_HO(), NOI_NHAN("Như trên\nLưu: VT")],
+  },
+  {
+    ma: "T5", ten: "Quyết định phê duyệt phương án BT, HT, TĐC (01 hộ)", buoc: "9", phamVi: "HO", coQuan: "UBND", nguon: "THUC_TE", tep: "tt-qd-pa-ho.docx",
+    moTa: "Điều 1 = 11 mục như Tờ trình (mẫu T4, số liệu giống hệt); dẫn số Tờ trình của hộ. Số, ngày QĐ ghi vào hộ — mẫu T6, T7 tự lấy làm căn cứ.",
+    ghiLai: { khoa: "qd_phe_duyet", capDo: "HO", kyHieu: "QĐ-UBND" },
+    nhapThem: [...PA_HO(), HIEU_LUC, NOI_NHAN("Thường trực Đảng ủy\nThường trực HĐND\nVăn phòng Đăng ký đất đai tỉnh\nỦy ban MTTQ Việt Nam\nThành viên Hội đồng BT, HT, TĐC\nBan điều hành tổ dân phố/bản\nNhư Điều 3\nLưu: VT")],
+  },
+  {
+    ma: "T6", ten: "Tờ trình đề nghị ban hành Quyết định thu hồi đất (nhiều hộ)", buoc: "13", phamVi: "DOT", coQuan: "PHONG", nguon: "THUC_TE", tep: "tt-to-trinh-thu-hoi.docx",
+    moTa: "Trích yếu nêu tổng diện tích, số hộ; căn cứ tự liệt kê QĐ phê duyệt phương án từng hộ (số, ngày, tên hộ) và thông báo gửi tiền (nếu có). Kèm biểu tổng hợp diện tích.",
+    ghiLai: { khoa: "tt_thu_hoi", capDo: "DU_AN", kyHieu: "TTr-{ky_hieu_phong}" },
+    nhapThem: [
+      { truong: "tt_don_vi_so", nhan: "Tờ trình của đơn vị bồi thường (Ban QLDA) số" }, { truong: "tt_don_vi_ngay", nhan: "ngày" },
+      { truong: "don_vi_nhan_dat", nhan: "Đơn vị được giao quản lý diện tích đất thu hồi", goiY: "vd. Ban Quản lý dự án đầu tư xây dựng …" },
+      NOI_NHAN("Như trên\nLưu: VT"),
+    ],
+  },
+  {
+    ma: "T7", ten: "Quyết định thu hồi đất (nhiều hộ)", buoc: "13", phamVi: "DOT", coQuan: "UBND", nguon: "THUC_TE", tep: "tt-qd-thu-hoi.docx",
+    moTa: "Điều 1–3 như Tờ trình (mẫu T6); dẫn số Tờ trình T6. Số, ngày QĐ thu hồi ghi vào từng hộ. Kèm biểu tổng hợp diện tích.",
+    ghiLai: { khoa: "qd_thu_hoi", capDo: "HO", kyHieu: "QĐ-UBND" },
+    nhapThem: [
+      { truong: "don_vi_nhan_dat", nhan: "Đơn vị được giao quản lý diện tích đất thu hồi" },
+      HIEU_LUC,
+      NOI_NHAN("Thường trực Đảng ủy\nThường trực HĐND\nVăn phòng Đăng ký đất đai tỉnh\nNhư Điều 3\nLưu: VT"),
     ],
   },
 );

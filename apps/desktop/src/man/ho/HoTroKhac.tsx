@@ -244,7 +244,7 @@ export function TabHoTroKhac({ h, doi, duAn, kq }: Tab & { duAn: DuAn; kq: KetQu
             <tbody>
               {k.khoan.map((x) => (
                 <tr key={x.id}>
-                  <td><input value={x.noiDung} onChange={(e) => suaKhoan(x.id, { noiDung: e.target.value })} /><div className="can-cu">{TEN_KHOAN_KHAC[x.loai].goiY}</div></td>
+                  <td><input value={x.noiDung} onChange={(e) => suaKhoan(x.id, { noiDung: e.target.value })} /><input placeholder="Lý do hỗ trợ (in trong Tờ trình, QĐ phê duyệt phương án)" aria-label="Lý do hỗ trợ" style={{ marginTop: 4 }} value={x.lyDo ?? ""} onChange={(e) => suaKhoan(x.id, { lyDo: e.target.value })} /><div className="can-cu">{TEN_KHOAN_KHAC[x.loai].goiY}</div></td>
                   <td><OSo className="o-so" value={x.soTien} onChange={(v) => suaKhoan(x.id, { soTien: v })} /></td>
                   <td><input className={x.canCu.trim() ? "" : "loi-nhap"} value={x.canCu} placeholder="vd. QĐ 45/QĐ-UBND ngày 10/9/2026 của UBND xã" onChange={(e) => suaKhoan(x.id, { canCu: e.target.value })} /></td>
                   <td><button className="nut nut-chu nut-nguy nut-nho" aria-label="Xóa khoản" onClick={() => dat({ khoan: k.khoan.filter((y) => y.id !== x.id) })}><BieuTuong ten="thungRac" co={15} /></button></td>

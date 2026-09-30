@@ -161,6 +161,11 @@ interface TaiSanCoSo {
   dot: number;
   ten: string;
   ghiChu?: string;
+  /**
+   * Tài sản đã kiểm đếm nhưng không được bồi thường, hỗ trợ (vd. tạo lập vi phạm trật tự xây dựng, tạo lập sau thông báo
+   * thu hồi đất): vẫn ghi vào bảng tính (Biểu số 02) với thành tiền 0, lý do và căn cứ do cán bộ ghi. Phần mềm không tự xác định.
+   */
+  khongBtHt?: { lyDo: string; canCu: string };
 }
 
 /** Nhà, công trình tính theo QĐ 32/2025: bồi thường thiệt hại thực tế (QD-10) hoặc khối lượng × hệ số × đơn giá. */
@@ -288,7 +293,7 @@ export interface HoTroKhacHo {
    * k4 (công trình sinh hoạt ngoài cọc GPMB, mức do Chủ tịch UBND xã quyết định), k13, k14 và khoản khác: nhập tay, bắt buộc
    * căn cứ. D13_K4: trợ cấp ngừng việc cho người lao động (k4 Điều 13 PL II QĐ 106 — theo pháp luật lao động, ≤ 6 tháng).
    */
-  khoan: { id: string; loai: "K4" | "K13_14" | "KHAC" | "D13_K4"; noiDung: string; soTien: string; canCu: string }[];
+  khoan: { id: string; loai: "K4" | "K13_14" | "KHAC" | "D13_K4"; noiDung: string; soTien: string; canCu: string; /** Lý do hỗ trợ (Tờ trình/QĐ phê duyệt: nội dung — lý do — mức). */ lyDo?: string }[];
 }
 
 /** Hình thức bố trí tái định cư (Điều 111 LĐĐ 2024; Điều 23, 24 NĐ 88/2024). */
@@ -380,6 +385,9 @@ export interface Ho {
   ten: string;
   diaChi: string;
   soDinhDanh: string;
+  /** Ngày cấp, nơi cấp giấy tờ định danh (dòng CCCD của Biểu số 02). */
+  ngayCapDinhDanh?: string;
+  noiCapDinhDanh?: string;
   dienThoai: string;
   nhanKhau: NhanKhau[];
   thua: Thua[];

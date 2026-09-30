@@ -6,7 +6,8 @@ import type { BoChinhSach } from "@gpmb/core";
 import { tinhHo } from "../src/tinh-ho";
 import { taoDuAnMau } from "../src/du-lieu-mau";
 import { DANH_MUC_MAU, tepMau } from "../src/van-ban/danh-muc";
-import { ghepDuLieu, thongTinChungMacDinh } from "../src/van-ban/du-lieu";
+import { CAN_CU_MAC_DINH, ghepDuLieu, thongTinChungMacDinh } from "../src/van-ban/du-lieu";
+import { kiemTraThongNhat } from "../src/van-ban/thuc-te";
 import { dienMau, truongTrongMau } from "../src/van-ban/dien-mau";
 
 const cs = cs0 as unknown as BoChinhSach;
@@ -17,7 +18,8 @@ const vanBan = (u8: Uint8Array) => new PizZip(u8).file("word/document.xml")!.asT
 
 describe("22 mẫu văn bản QĐ 1966/QĐ-UBND", () => {
   it("đủ 22 mẫu Sổ tay + 5 mẫu riêng, mỗi mẫu có tệp và trường hợp lệ", () => {
-    expect(DANH_MUC_MAU.filter((m) => m.nguon !== "RIENG").map((m) => m.ma)).toEqual(Array.from({ length: 22 }, (_, i) => String(i + 1).padStart(2, "0")));
+    expect(DANH_MUC_MAU.filter((m) => !m.nguon).map((m) => m.ma)).toEqual(Array.from({ length: 22 }, (_, i) => String(i + 1).padStart(2, "0")));
+    expect(DANH_MUC_MAU.filter((m) => m.nguon === "THUC_TE").map((m) => m.ma)).toEqual(["T1", "T2", "T3", "T4", "T5", "T6", "T7"]);
     expect(DANH_MUC_MAU.filter((m) => m.nguon === "RIENG").map((m) => m.ma)).toEqual(["R1", "R2", "R3", "R4", "R5"]);
     for (const m of DANH_MUC_MAU) expect(truongTrongMau(docMau(m.ma)).length).toBeGreaterThan(3);
   });
@@ -141,5 +143,97 @@ describe("Tự điền từ hồ sơ", () => {
     expect(md.pa_mo_ma).toBe("Di dời 3 mộ (2 mộ xây, 1 mộ đất).");
     const m14 = DANH_MUC_MAU.find((m) => m.ma === "14")!;
     expect(giaTriNhapThem(m14, { ...duAn, vanBan: { pa_tai_dinh_cu: "Không", pa_mo_ma: "Tự ghi" } }, ds2)).toMatchObject({ pa_tai_dinh_cu: md.pa_tai_dinh_cu, pa_mo_ma: "Tự ghi" });
+  });
+});
+
+describe("Mẫu theo văn bản thực tế (T1–T7, docs/19)", () => {
+  const chung = { ...thongTinChungMacDinh(duAn), ten_don_vi_bt: "Ban Quản lý dự án mẫu", ly_do_thu_hoi: "Xây dựng khu công nghiệp", ban_khu_dan_cu: "Tổ dân phố mẫu" };
+  const tao = (ma: string, dsX = ds, hoX?: (typeof ds)[number], them: Record<string, string> = {}, duAnX = duAn) => {
+    const m = DANH_MUC_MAU.find((x) => x.ma === ma)!;
+    const rieng = { ...Object.fromEntries(m.nhapThem.map((t) => [t.truong, t.macDinh ?? ""])), ...them };
+    const du = ghepDuLieu({ mau: m, duAn: duAnX, ds: dsX, ho: m.phamVi === "HO" ? (hoX ?? dsX[0]) : undefined, chung, rieng, so: "25", ngayKy: "2026-09-27" });
+    return { du, t: vanBan(dienMau(docMau(ma), du)) };
+  };
+
+  it("T4/T5 phương án 01 hộ: 11 mục, tổng làm tròn khớp bằng chữ, hỗ trợ khác k13 có nội dung, lý do, mức, tổng", () => {
+    const h0 = { ...ho[0]!, hoTro: { ...ho[0]!.hoTro, khac: { khoan: [{ id: "k1", loai: "K13_14" as const, noiDung: "Hỗ trợ di chuyển đường điện sinh hoạt", lyDo: "Hộ phải kéo lại đường điện", soTien: "3000000", canCu: "QĐ 45/QĐ-UBND ngày 10/9/2026 của UBND xã" }] } } };
+    const x = { h: h0, k: tinhHo(cs, duAn, h0) };
+    for (const ma of ["T4", "T5"]) {
+      const { du, t } = tao(ma, [x], x);
+      for (let i = 1; i <= 11; i++) expect(t).toMatch(new RegExp(`\\n${i}\\. `));
+      expect(t).toContain("1. Tổng số hộ gia đình, cá nhân có đất thu hồi: Một (01) hộ. Hộ Hộ mẫu 01 (vợ: Thành viên A)");
+      expect(t).toContain(`8.1. Tổng kinh phí bồi thường, hỗ trợ (đã làm tròn): ${du.tong_tien} đồng`);
+      expect(t).toContain(`(Bằng chữ: ${du.tong_tien_chu})`);
+      expect(t).toContain("Hỗ trợ khác theo khoản 13 Điều 6 Quyết định số 14/2026/QĐ-UBND: tổng giá trị 3.000.000 đồng, gồm:");
+      expect(t).toContain("+ Nội dung: Hỗ trợ di chuyển đường điện sinh hoạt; lý do: Hộ phải kéo lại đường điện; mức hỗ trợ: 3.000.000 đồng");
+      expect(kiemTraThongNhat(ma, duAn, du)).toEqual([]);
+    }
+    expect(tao("T5", [x], x).t).toContain("Số: 25/QĐ-UBND");
+    // hộ không có khoản 13: in "Không."
+    expect(tao("T4").t).toContain("khoản 13 Điều 6 Quyết định số 14/2026/QĐ-UBND: Không.");
+  });
+
+  it("T6/T7 thu hồi nhiều hộ: căn cứ tự lấy QĐ phê duyệt PA từng hộ; diện tích trích yếu khớp tổng biểu; kèm theo dùng đúng số", () => {
+    const ds2 = ds.map((x, i) => ({ ...x, h: { ...x.h, vanBan: { ...(x.h.vanBan ?? {}), ...(i === 0 ? { qd_phe_duyet_so: "101/QĐ-UBND", qd_phe_duyet_ngay: "01/09/2026" } : {}) } } }));
+    const { du, t } = tao("T7", ds2);
+    expect(t).toContain("Về việc thu hồi 10.415,80 m² đất của 02 hộ gia đình, cá nhân");
+    expect(t).toContain("Căn cứ Quyết định số 101/QĐ-UBND ngày 01/09/2026 của Chủ tịch Ủy ban nhân dân xã Chiềng Mung về việc phê duyệt phương án bồi thường, hỗ trợ, tái định cư đối với hộ Hộ mẫu 01;");
+    expect(t).toContain("Căn cứ Quyết định số …/QĐ-UBND ngày … của Chủ tịch Ủy ban nhân dân xã Chiềng Mung");
+    expect(t).toContain("(Kèm theo Quyết định số 25/QĐ-UBND ngày 27/09/2026 của Chủ tịch Ủy ban nhân dân xã Chiềng Mung)");
+    expect(t).toMatch(/TỔNG CỘNG\s*10\.415,80/);
+    expect(kiemTraThongNhat("T7", duAn, du)).toEqual(["1 hộ chưa có số, ngày QĐ phê duyệt phương án (ghi khi tạo mẫu T5 có số, hoặc nhập ở hồ sơ hộ) — căn cứ in \"…\"."]);
+    expect(tao("T6", ds2).t).toContain("(Kèm theo Tờ trình số 25/TTr-KT ngày 27/09/2026 của Phòng Kinh tế)");
+  });
+
+  it("T3 Thông báo kèm danh sách: mỗi thửa một dòng, vợ/chồng dòng 2, ký hiệu loại đất", () => {
+    const { t } = tao("T3");
+    expect(t).toContain("(Kèm theo Thông báo số 25/TB-UBND ngày 27/09/2026 của Ủy ban nhân dân xã Chiềng Mung)");
+    expect(t).toMatch(/1\s*Hộ mẫu 01\s*vợ: Thành viên A\s*Tổ dân phố mẫu\s*9\.222,10\s*5\s*85\s*CLN/);
+    expect(t).toMatch(/Tổ dân phố mẫu\s*600,00\s*5\s*12\s*HNK\s*Thu hồi một phần/);
+  });
+
+  it("T1 Kế hoạch: mốc lấy từ lịch dự kiến của dự án", () => {
+    const d2 = { ...duAn, keHoach: { "1": "2026-03-20", "3": "2026-03-25", "9": "2026-07-23", "13": "2026-08-02" } };
+    const { du, t } = tao("T1", ds, undefined, {}, d2);
+    expect(t).toContain("khu đất: dự kiến hoàn thành trước ngày 20/03/2026.");
+    expect(t).toContain("phê duyệt phương án trước ngày 23/07/2026.");
+    expect(t).toMatch(/9\s*Phê duyệt phương án\s*23\/07\/2026/);
+    expect(kiemTraThongNhat("T1", d2, du)).toEqual([]);
+    expect(kiemTraThongNhat("T1", duAn, tao("T1").du)[0]).toMatch(/chưa lập kế hoạch/);
+  });
+
+  it("kiểm tra thống nhất: tên cơ quan cũ, bằng chữ lệch, thiếu số văn bản, tổng biểu lệch", () => {
+    const m = DANH_MUC_MAU.find((x) => x.ma === "T3")!;
+    const du = ghepDuLieu({ mau: m, duAn: { ...duAn, xa: "Thành phố Sơn La" }, ds, chung: { ...chung, can_cu_du_an: "Căn cứ Quyết định số 1/QĐ-UBND của UBND thành phố Sơn La về giao nhiệm vụ;" }, rieng: {}, so: "", ngayKy: "" });
+    const cb = kiemTraThongNhat("T3", { ...duAn, xa: "Thành phố Sơn La" }, { ...du, tong_gia_tri_chu: "Một đồng", bang_thua_tong: "1,00" });
+    expect(cb.some((c) => c.includes("không bắt đầu bằng \"Xã\""))).toBe(true);
+    expect(cb.some((c) => c.includes("UBND thành phố Sơn La"))).toBe(true);
+    expect(cb.some((c) => c.includes("Chưa nhập số văn bản"))).toBe(true);
+    expect(cb.some((c) => c.includes("không khớp bằng chữ"))).toBe(true);
+    expect(cb.some((c) => c.includes("khác diện tích ghi trong văn bản"))).toBe(true);
+  });
+
+  it("căn cứ bỏ chọn không in; NQ 254/2025/QH15 mặc định không in (chưa có nguyên văn)", () => {
+    const m = DANH_MUC_MAU.find((x) => x.ma === "14")!;
+    const c0 = thongTinChungMacDinh(duAn);
+    const du = ghepDuLieu({ mau: m, duAn, ds, chung: c0, rieng: {}, so: "", ngayKy: "" });
+    expect((du.can_cu as string[]).some((c) => c.includes("254/2025/QH15"))).toBe(false);
+    const du2 = ghepDuLieu({ mau: m, duAn, ds, chung: { ...c0, can_cu_bo: CAN_CU_MAC_DINH[3]! }, rieng: {}, so: "", ngayKy: "" });
+    expect((du2.can_cu as string[]).some((c) => c.includes("254/2025/QH15"))).toBe(true);
+    expect((du2.can_cu as string[]).some((c) => c.includes("88/2024/NĐ-CP"))).toBe(false);
+  });
+
+  it("tài sản không bồi thường, hỗ trợ: dòng thành tiền 0 kèm lý do, căn cứ; thiếu lý do → cần xác nhận", () => {
+    const ts0 = ho[0]!.taiSan[0]!;
+    const h0 = { ...ho[0]!, taiSan: [{ ...ts0, khongBtHt: { lyDo: "Xây dựng sau thông báo thu hồi đất", canCu: "Điều 105 Luật Đất đai 2024" } }, ...ho[0]!.taiSan.slice(1)] };
+    const k0 = tinhHo(cs, duAn, ho[0]!), k1 = tinhHo(cs, duAn, h0);
+    const d = k1.tatCa.find((x) => x.taiSanId === ts0.id)!;
+    expect(d.dong.noiDung).toBe(`Không bồi thường, hỗ trợ – ${ts0.ten}`);
+    expect(d.dong.thanhTien!.toNumber()).toBe(0);
+    expect(d.dong.trangThai).toBe("TAM_TINH");
+    expect(d.dong.thamSo["Lý do"]).toBe("Xây dựng sau thông báo thu hồi đất");
+    expect(k1.tong.tongChuaLamTron.lt(k0.tong.tongChuaLamTron)).toBe(true);
+    const h1 = { ...h0, taiSan: [{ ...ts0, khongBtHt: { lyDo: "", canCu: "" } }] };
+    expect(tinhHo(cs, duAn, h1).tatCa.find((x) => x.taiSanId === ts0.id)!.dong.trangThai).toBe("CAN_XAC_NHAN");
   });
 });

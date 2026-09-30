@@ -121,7 +121,7 @@ export function kyVanBan({ noiNhan = true, quyenHan = "{quyen_han}", nguoiKy = "
       ]
     : [];
   const ky = [
-    new Paragraph({ alignment: AlignmentType.CENTER, children: runs(quyenHan, { size: 28, bold: true }) }),
+    ...quyenHan.split("\n").map((d) => new Paragraph({ alignment: AlignmentType.CENTER, children: runs(d, { size: 28, bold: true }) })),
     ...(ghiChu ? [new Paragraph({ alignment: AlignmentType.CENTER, children: runs(ghiChu, { size: 26, italics: true }) })] : []),
     new Paragraph({ children: [] }),
     new Paragraph({ children: [] }),

@@ -454,6 +454,25 @@ function tinhHoGoc(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
     if (t.chenhLech && D(t.dienTichThuHoi || "0").gt(0)) for (const x of dongChenhLech(cs, duAn, ho, t)) n(x.nhom).dong.push(x.kq);
     const tsThua = ho.taiSan.filter((x) => x.thuaId === t.id);
     for (const ts of tsThua) {
+      if (ts.khongBtHt) {
+        // Tài sản không được bồi thường, hỗ trợ: giữ dòng trong bảng tính (thành tiền 0) kèm lý do, căn cứ do cán bộ ghi
+        const lyDo = ts.khongBtHt.lyDo.trim(), cc = ts.khongBtHt.canCu.trim();
+        const kl = ts.loai === "CAY" ? ts.soLuong : ts.loai === "SUA_CHUA" ? "" : "khoiLuong" in ts ? ts.khoiLuong : "";
+        const dvt = ts.loai === "CAY" || ts.loai === "NHA_CT" || ts.loai === "KHAC" ? ts.donVi : "";
+        const d = dong({
+          ma: "A00",
+          noiDung: `Không bồi thường, hỗ trợ – ${ts.ten}`,
+          thamSo: { ...(kl ? { "Khối lượng / số lượng": `${kl.replace(/^=/, "")} ${dvt}`.trim() } : {}), "Lý do": lyDo || "(chưa ghi)" },
+          congThuc: "Không bồi thường, hỗ trợ",
+          thanhTien: D(0),
+          canCu: [{ vanBan: cc || "Chưa ghi căn cứ", viTri: "" }],
+          trangThai: lyDo && cc ? "TAM_TINH" : "CAN_XAC_NHAN",
+          canhBao: lyDo && cc ? [] : ["Tài sản không bồi thường, hỗ trợ: ghi lý do và căn cứ (vd. tạo lập vi phạm, tạo lập sau thông báo thu hồi đất)"],
+        });
+        if (ts.loai === "CAY") n("B.III").dong.push({ dong: d, cot: "HT_CAY", thuaId: t.id, taiSanId: ts.id });
+        else n("B.II").dong.push({ dong: d, cot: "HT_TAI_SAN", thuaId: t.id, taiSanId: ts.id });
+        continue;
+      }
       if (ts.loai === "NHA_CT") {
         const d = dongNhaCongTrinh(cs, ts, duAnCuaHo(duAn, ho).ngayThongBao);
         const kl = thuTinh(ts.khoiLuong).giaTri;
@@ -493,7 +512,7 @@ function tinhHoGoc(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
         n("B.V").dong.push({ dong: d, cot: "HT_KHAC", thuaId: t.id, taiSanId: ts.id });
       }
     }
-    const cay = tsThua.filter((x): x is Extract<TaiSan, { loai: "CAY" }> => x.loai === "CAY");
+    const cay = tsThua.filter((x): x is Extract<TaiSan, { loai: "CAY" }> => x.loai === "CAY" && !x.khongBtHt);
     if (cay.length) {
       let ds = dongCayThua(cs, t, cay);
       // VM-11 (QD-31): đơn giá đồng/ha/năm (Biểu 03 mục VIII PL VIII) nhân diện tích — khối lượng = số năm còn lại × DT (ha).
@@ -808,7 +827,7 @@ function dongHoTroKhac(cs: BoChinhSach, duAn: DuAn, ho: Ho, k: NonNullable<Ho["h
         dong({
           ma,
           noiDung: nd,
-          thamSo: { "Số tiền": `${dinhDang(D(x.soTien))} đ` },
+          thamSo: { "Số tiền": `${dinhDang(D(x.soTien))} đ`, ...(x.lyDo?.trim() ? { "Lý do": x.lyDo.trim() } : {}) },
           congThuc: "Theo văn bản (cán bộ nhập)",
           thanhTien: D(x.soTien),
           canCu: [...loai.canCu, { vanBan: x.canCu.trim(), viTri: "" }],

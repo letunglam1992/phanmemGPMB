@@ -69,6 +69,24 @@ R4, R5 dựng từ 02 tệp người dùng gửi ngày 28/9/2026 bằng `tools/m
 - **Người ký theo cơ quan ban hành:** mẫu của phòng dùng "TRƯỞNG PHÒNG" + người ký của phòng; mẫu của đơn vị bồi thường dùng "GIÁM ĐỐC"; mẫu của UBND dùng người ký UBND — sửa trong "Thông tin chung → Ký".
 - Mẫu Sổ tay và mẫu riêng dùng chung dữ liệu; cán bộ chọn mẫu phù hợp thực tế của xã.
 
+## 3b. Mẫu theo văn bản dự án thực tế (T1–T7, 0.9.4)
+
+Dựng bằng `tools/mau-van-ban/mau-thuc-te.mjs` theo **bố cục** bộ văn bản UBND phường năm 2026 (docs/19 §3, nguyên văn cấp dự án đã ẩn danh ở `docs/mau-thuc-te/`); không chứa tên người, số văn bản, địa danh của dự án gốc. Biểu kèm theo đặt ở trang khổ ngang sau khối chữ ký.
+
+| Mã | Mẫu | Cơ quan | Phạm vi | Tự điền chính | Ghi lại |
+|---|---|---|---|---|---|
+| T1 | Kế hoạch thu hồi đất, điều tra, khảo sát, đo đạc, kiểm đếm | UBND | Dự án | Mốc từng việc `kh_b1…kh_b16` từ `DuAn.keHoach`; bảng tiến độ `ds_moc` | `ke_hoach` (dự án) |
+| T2 | Tờ trình đề nghị ban hành Thông báo thu hồi đất | Phòng | Đợt | Tổng DT các hộ, số hộ, biểu danh sách | `tt_tb_thu_hoi` (dự án) |
+| T3 | Thông báo thu hồi đất (kèm danh sách người có đất) | UBND | Đợt | Như T2; dẫn Kế hoạch T1, Tờ trình T2 | `tb_thu_hoi` (từng hộ) |
+| T4 | Tờ trình đề nghị phê duyệt phương án 01 hộ | Phòng | Hộ | 11 mục (`pa_*`, `tong_tien_chu`, `pa_k13[]`) | `tt_pa_ho` (hộ) |
+| T5 | QĐ phê duyệt phương án 01 hộ | UBND | Hộ | Điều 1 = 11 mục như T4; dẫn Tờ trình T4 của hộ | `qd_phe_duyet` (hộ) |
+| T6 | Tờ trình đề nghị ban hành QĐ thu hồi đất (nhiều hộ) | Phòng | Đợt | `ds_qd_pa[]` (số, ngày, tên hộ), `ds_tb_gui_tien[]`, biểu tổng hợp DT | `tt_thu_hoi` (dự án) |
+| T7 | QĐ thu hồi đất (nhiều hộ) | UBND | Đợt | Như T6; dẫn Tờ trình T6 | `qd_thu_hoi` (từng hộ) |
+
+- **Căn cứ** NQ 254/2025/QH15, NĐ 49/2026/NĐ-CP, NĐ 151/2025/NĐ-CP, QĐ 426/QĐ-UBND, QĐ 48/QĐ-UBND: chưa có nguyên văn → không đưa vào danh mục mặc định (NQ 254 có sẵn dòng trích từ phần căn cứ QĐ 14/2026 nhưng **mặc định bỏ chọn**). Cán bộ chọn/bỏ từng căn cứ hoặc nhập căn cứ riêng của dự án.
+- **Thời hạn gửi thông báo** trong Kế hoạch (T1) là trường nhập: khoản 2 Điều 85 LĐĐ 2024 ghi 90/180 ngày; văn bản thực tế 2026 ghi 60/120 ngày theo văn bản mới — phần mềm chưa có nguyên văn nên không tự điền.
+- **Kiểm tra thống nhất** (`kiemTraThongNhat`): tên cơ quan, số trong "(Kèm theo …)", bằng số khớp bằng chữ, diện tích trích yếu khớp tổng biểu, số QĐ phê duyệt PA từng hộ.
+
 ## 4. Cán bộ tự chỉnh mẫu
 
 1. Màn **Văn bản** → chọn mẫu → **Tải mẫu** (tệp có các trường `{…}`).

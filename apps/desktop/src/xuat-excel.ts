@@ -7,6 +7,7 @@
  */
 import type ExcelJS from "exceljs";
 import { tenDayDu } from "./van-ban/loai-dat";
+import { nguoiCungTen } from "./van-ban/thuc-te";
 import { D } from "@gpmb/core";
 import type Decimal from "decimal.js";
 import type { DuAn, Ho } from "./mo-hinh";
@@ -40,7 +41,7 @@ function dongKe(r: ExcelJS.Row, tu: number, den: number) {
 export function dongChiTiet(h: Ho, kq: KetQuaHo): DongMau[] {
   const out: DongMau[] = [];
   const cong = (ds: KetQuaHo["tatCa"]) => ds.reduce((s, x) => (x.dong.trangThai === "TAM_TINH" && x.dong.thanhTien ? s.plus(x.dong.thanhTien) : s), D(0));
-  const trong = { dvt: "", khoi_luong: null, he_so: null, don_gia: null, can_cu: "", trang_thai: "", dien_giai: "" };
+  const trong = { dvt: "", khoi_luong: null, he_so: null, muc_thoi_diem: "", don_gia: null, can_cu: "", trang_thai: "", dien_giai: "" };
   const phan = (chu: string, tenPhan: string, dsNhom: KetQuaHo["nhom"]) => {
     if (!dsNhom.length) return;
     out.push({ ...trong, _cap: "phan", stt: chu, noi_dung: tenPhan, thanh_tien: so(cong(dsNhom.flatMap((n) => n.dong))) });
@@ -62,6 +63,8 @@ export function dongChiTiet(h: Ho, kq: KetQuaHo): DongMau[] {
             dvt: b?.dvt ?? "",
             khoi_luong: b ? b.kl.toNumber() : null,
             he_so: b?.heSo ? b.heSo.toDecimalPlaces(4).toNumber() : null,
+            // Mức hỗ trợ theo thời điểm tạo lập (k3 Điều 6 QĐ 14/2026) — Biểu số 02
+            muc_thoi_diem: k === 0 ? (x.dong.thamSo["Mức áp dụng"] ?? "") : "",
             don_gia: b ? so(b.donGia) : null,
             thanh_tien: x.dong.trangThai === "TAM_TINH" ? so(thanhTien) : null,
             can_cu: k === 0 ? canCu : "",
@@ -418,11 +421,48 @@ export const TRUONG_MAU_EXCEL: [string, string][] = [
   ["{{#thua_du_an}} … {{stt}} {{ten}} {{dia_chi}} {{to}} {{thua}} {{loai_dat}} {{ma_loai_dat}} {{dt_thua}} {{dt_thu_hoi}} {{nguon_goc}}", "Dòng lặp mỗi thửa của dự án một dòng (bảng tổng hợp đất); loai_dat là tên đầy đủ, ma_loai_dat là ký hiệu"],
   ["Tên trang chứa {{…}}, vd. {{stt}}. {{ten}}", "Trang mẫu của từng hộ — nhân thành một trang cho mỗi hộ. Trong trang: {{stt}} {{ten}} {{ma}} {{dia_chi}} {{so_dinh_danh}} {{so_nhan_khau}} {{dt_thu_hoi}} {{tong_boi_thuong}} {{tong_ho_tro}} {{tong_chua_lam_tron}} {{tong_lam_tron}} {{mo_ta_lam_tron}} {{khau_tru}} {{con_lai}} {{trang_thai_ban}} {{luu_y}} {{lua_chon}}"],
   ["{{#thua}} … {{stt}} {{to}} {{thua}} {{loai_dat}} {{ma_loai_dat}} {{dt_thua}} {{dt_thu_hoi}} {{nguon_goc}}", "Trong trang hộ: dòng lặp các thửa của hộ"],
-  ["{{#dong}} {{#dong.phan}} {{#dong.nhom}} … {{stt}} {{noi_dung}} {{dvt}} {{khoi_luong}} {{he_so}} {{don_gia}} {{thanh_tien}} {{can_cu}} {{trang_thai}} {{dien_giai}}", "Trong trang hộ: dòng chi tiết bồi thường, hỗ trợ; dòng {{#dong.phan}} (A, B) và {{#dong.nhom}} (I, II…) — nếu có — là định dạng riêng của dòng tiêu đề phần, nhóm"],
+  ["{{#dong}} {{#dong.phan}} {{#dong.nhom}} … {{stt}} {{noi_dung}} {{dvt}} {{khoi_luong}} {{he_so}} {{muc_thoi_diem}} {{don_gia}} {{thanh_tien}} {{can_cu}} {{trang_thai}} {{dien_giai}}", "Trong trang hộ: dòng chi tiết bồi thường, hỗ trợ; dòng {{#dong.phan}} (A, B) và {{#dong.nhom}} (I, II…) — nếu có — là định dạng riêng của dòng tiêu đề phần, nhóm; muc_thoi_diem: mức hỗ trợ theo thời điểm tạo lập (k3 Điều 6 QĐ 14/2026)"],
+  ["{{kem_theo_tb}} {{kem_theo_pa}} {{kem_theo_thu_hoi}} {{dia_chi_khu_dat}}", "Chung: dòng “(Kèm theo …)” của biểu kèm Thông báo / Tờ trình, QĐ phê duyệt phương án / Tờ trình, QĐ thu hồi đất — số, ngày lấy từ văn bản đã tạo có số (hộ hoặc dự án)"],
+  ["{{ten_cung_ten}} {{dt_khong_bt}} {{bt_dat}} {{bt_tai_san}} {{bt_cay}} {{ht_dat}} {{ht_cdn}} {{ht_tai_san}} {{ht_cay}} {{ht_khac}}", "Trong dòng #ho, #thua_du_an: tên kèm vợ/chồng cùng đứng tên (xuống dòng), DT không đủ điều kiện bồi thường, các khoản theo cột; trang hộ có thêm {{cung_ten_ngoac}} {{ngay_cap_cccd}} {{noi_cap_cccd}}"],
+  ["{{@loai_dat}} {{cot}} {{dt@}} {{@loai_dat*}}", "Cột động: ô có {{@loai_dat}} → cột nhân theo từng ký hiệu loại đất của dự án; {{cot}} = ký hiệu, {{dt@}} = diện tích loại đất đó; {{@loai_dat*}} = tiêu đề nhóm gộp qua các cột"],
+  ["='{{trang}}'!{{o_tong_lam_tron}}", "Trong dòng #ho: công thức tham chiếu sang trang chi tiết của hộ — {{trang}} tên trang, {{o_x}} địa chỉ ô chứa trường {{x}} ở trang hộ"],
 ];
+
+/**
+ * Dòng "(Kèm theo …)" của biểu: lấy số, ngày văn bản đã ghi khi tạo văn bản có số (hộ hoặc dự án) — cùng một nguồn với văn
+ * bản nên số trên biểu khớp số văn bản; chưa có thì để dấu chấm cho văn thư ghi.
+ */
+export function kemTheoBieu(duAn: DuAn, hos: Ho[]): { tb: string; pa: string; thuHoi: string } {
+  const xa = duAn.xa.charAt(0).toLowerCase() + duAn.xa.slice(1);
+  const vbDa = duAn.vanBan ?? {};
+  const chung = (khoa: string) => {
+    const so = [...new Set(hos.map((h) => h.vanBan?.[`${khoa}_so`]?.trim() ?? ""))];
+    if (so.length === 1 && so[0]) return { so: so[0], ngay: hos[0]!.vanBan?.[`${khoa}_ngay`] || "…" };
+    return vbDa[`${khoa}_so`]?.trim() ? { so: vbDa[`${khoa}_so`]!.trim(), ngay: vbDa[`${khoa}_ngay`] || "…" } : null;
+  };
+  const cau = (loai: string, x: { so: string; ngay: string } | null, cq: string) => (x ? `${loai} số ${x.so} ngày ${x.ngay} của ${cq}` : `${loai} số ………… ngày ………… của ${cq}`);
+  const ubnd = `Ủy ban nhân dân ${xa}`, ct = `Chủ tịch Ủy ban nhân dân ${xa}`, phong = vbDa.ten_phong || "phòng chuyên môn";
+  const qdPa = chung("qd_phe_duyet"), ttPa = chung("tt_pa_ho") ?? chung("tt_phe_duyet_pa");
+  const qdTh = chung("qd_thu_hoi"), ttTh = chung("tt_thu_hoi");
+  return {
+    tb: `(Kèm theo ${cau("Thông báo", chung("tb_thu_hoi"), ubnd)})`,
+    pa: `(Kèm theo ${qdPa ? cau("Quyết định", qdPa, ct) : cau("Tờ trình", ttPa, phong)})`,
+    thuHoi: `(Kèm theo ${qdTh ? cau("Quyết định", qdTh, ct) : cau("Tờ trình", ttTh, phong)})`,
+  };
+}
 
 /** Dữ liệu điền biểu mẫu Excel của đơn vị. Số tiền làm tròn đồng; diện tích giữ 2 chữ số thập phân như hồ sơ. */
 export function duLieuMauExcel(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], ban?: string): DuLieuMauExcel {
+  const maLoai = [...new Set(ds.flatMap(({ h }) => h.thua.filter((t) => dtSo(t.dienTichThuHoi) > 0).map((t) => t.loaiDat.trim().toUpperCase())))].sort();
+  const khuDat = (duAn.vanBan?.ban_khu_dan_cu || duAn.vanBan?.dia_diem_du_an || duAn.xa).trim();
+  const kt = kemTheoBieu(duAn, ds.map((x) => x.h));
+  const dtLoai = (h: Ho, chiThua?: string) =>
+    Object.fromEntries(maLoai.map((m) => [`dt_${m}`, h.thua.filter((t) => (!chiThua || t.id === chiThua) && t.loaiDat.trim().toUpperCase() === m).reduce((a, t) => a.plus(D(dtSo(t.dienTichThuHoi))), D(0)).toDecimalPlaces(2).toNumber() || null]));
+  const dtKhongBt = (h: Ho) => h.thua.filter((t) => t.khongBoiThuong).reduce((a, t) => a.plus(D(dtSo(t.dienTichThuHoi))), D(0)).toDecimalPlaces(2).toNumber() || null;
+  const cot8 = (k: KetQuaHo) => ({
+    bt_dat: so(k.theoCot.BT_DAT), bt_tai_san: so(k.theoCot.BT_TAI_SAN), bt_cay: so(k.theoCot.BT_CAY),
+    ht_dat: so(k.theoCot.HT_DAT), ht_tai_san: so(k.theoCot.HT_TAI_SAN), ht_cay: so(k.theoCot.HT_CAY), ht_cdn: so(k.theoCot.HT_CDN), ht_khac: so(k.theoCot.HT_KHAC),
+  });
   const tong = (f: (k: KetQuaHo) => Decimal) => so(ds.reduce((s, { k }) => s.plus(f(k)), D(0)));
   const dtHo = (h: Ho) => h.thua.reduce((s, t) => s.plus(D(dtSo(t.dienTichThuHoi))), D(0)).toDecimalPlaces(2).toNumber();
   const chung: DuLieuMauExcel["chung"] = {
@@ -440,9 +480,22 @@ export function duLieuMauExcel(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], ban?: s
     tong_khau_tru: tong((k) => k.khauTru),
     tong_con_lai: tong((k) => k.conLai),
     ...Object.fromEntries(COT.map((c) => [`tong_${c.toLowerCase()}`, tong((k) => k.theoCot[c])])),
+    dia_chi_khu_dat: khuDat,
+    kem_theo_tb: kt.tb,
+    kem_theo_pa: kt.pa,
+    kem_theo_thu_hoi: kt.thuHoi,
   };
-  const thuaDong = (h: Ho) =>
-    h.thua.map((t, i): DongMau => ({ stt: i + 1, ten: h.ten, dia_chi: h.diaChi, to: t.soTo, thua: t.soThua, loai_dat: tenDayDu(t.loaiDat), ma_loai_dat: t.loaiDat, dt_thua: dtSo(t.dienTich) || null, dt_thu_hoi: dtSo(t.dienTichThuHoi) || null, nguon_goc: t.nguonGoc || "" }));
+  const thuaDong = (h: Ho) => {
+    const cungTen = nguoiCungTen(h);
+    return h.thua.map((t, i): DongMau => ({
+      stt: i + 1, ten: h.ten, dia_chi: h.diaChi, to: t.soTo, thua: t.soThua, loai_dat: tenDayDu(t.loaiDat), ma_loai_dat: t.loaiDat, dt_thua: dtSo(t.dienTich) || null, dt_thu_hoi: dtSo(t.dienTichThuHoi) || null, nguon_goc: t.nguonGoc || "",
+      // Biểu kèm Thông báo / biểu tổng hợp diện tích (docs/19 §4.1, §4.4): vợ/chồng cùng đứng tên (xuống dòng), cột theo ký hiệu loại đất
+      ten_cung_ten: cungTen ? `${h.ten}\n${cungTen}` : h.ten,
+      dia_chi_khu_dat: khuDat,
+      ghi_chu: dtSo(t.dienTichThuHoi) > 0 && dtSo(t.dienTichThuHoi) < dtSo(t.dienTich) ? "Thu hồi một phần" : "",
+      ...dtLoai(h, t.id),
+    }));
+  };
   let sttThua = 0;
   return {
     chung,
@@ -460,9 +513,15 @@ export function duLieuMauExcel(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], ban?: s
         khau_tru: so(k.khauTru),
         con_lai: so(k.conLai),
         ghi_chu: k.tong.duocChot ? "" : `${k.tong.soDongCanXacNhan + k.tong.soDongThieuCanCu} khoản chưa đủ căn cứ`,
+        ten_cung_ten: nguoiCungTen(h) ? `${h.ten}\n${nguoiCungTen(h)}` : h.ten,
+        dia_chi_khu_dat: khuDat,
+        dt_khong_bt: dtKhongBt(h),
+        ...dtLoai(h),
+        ...cot8(k),
       })),
       thua_du_an: ds.flatMap(({ h }) => thuaDong(h).map((d) => ({ ...d, stt: ++sttThua }))),
     },
+    cot: { loai_dat: maLoai },
     ho: ds.map(({ h, k }, i) => {
       const chuaDu = k.tatCa.filter((x) => x.dong.trangThai !== "TAM_TINH");
       const luaChon = [...new Set(k.tatCa.flatMap((x) => x.dong.luaChon.map((l) => `${x.dong.noiDung}: ${l.ma} – ${l.giaTri} (${l.lyDo})`)))];
@@ -483,6 +542,10 @@ export function duLieuMauExcel(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], ban?: s
           khau_tru: so(k.khauTru),
           con_lai: so(k.conLai),
           trang_thai_ban: ban ?? (k.tong.duocChot ? "" : "DỰ THẢO – CHƯA CHỐT"),
+          cung_ten_ngoac: nguoiCungTen(h) ? ` (${nguoiCungTen(h)})` : "",
+          ngay_cap_cccd: h.ngayCapDinhDanh ?? "",
+          noi_cap_cccd: h.noiCapDinhDanh ?? "",
+          ...cot8(k),
           luu_y: chuaDu.length ? `Còn ${chuaDu.length} khoản chưa đủ căn cứ/cần xác nhận, không cộng vào tổng: ${chuaDu.map((x) => x.dong.noiDung).join("; ")}` : "",
           lua_chon: luaChon.join("\n"),
         },
@@ -550,72 +613,174 @@ export async function taoMauExcelMacDinh(): Promise<Uint8Array> {
   wg.getRow(5).getCell(3).numFmt = "#,##0.00";
   for (let c = 4; c < n; c++) wg.getRow(5).getCell(c).numFmt = DINH_DANG_TIEN;
 
-  // Trang từng hộ
-  const ws = wb.addWorksheet("{{stt}}. {{ten}}", { pageSetup: { paperSize: 9, orientation: "portrait", fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
-  ws.columns = [{ width: 6 }, { width: 44 }, { width: 8 }, { width: 12 }, { width: 10 }, { width: 13 }, { width: 16 }, { width: 30 }, { width: 13 }, { width: 44 }];
+  const tieuDeGop = (w: ExcelJS.Worksheet, r: number, den: number, text: string, o: { dam?: boolean; nghieng?: boolean; co?: number } = {}) => {
+    w.mergeCells(r, 1, r, den);
+    const c = w.getCell(r, 1);
+    c.value = text;
+    c.font = { name: FONT, bold: o.dam, italic: o.nghieng, size: o.co ?? 12 };
+    c.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+  };
+  const dauBang = (row: ExcelJS.Row, den: number) => {
+    kieuO(row, den, true);
+    row.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+  };
+  const soCot = (row: ExcelJS.Row, den: number) => {
+    row.values = Array.from({ length: den }, (_, i) => `(${i + 1})`);
+    kieuO(row, den);
+    row.font = { name: FONT, italic: true, size: 10 };
+    row.alignment = { horizontal: "center" };
+  };
+  const F = (f: string) => ({ formula: f }) as ExcelJS.CellFormulaValue;
+
+  // Biểu danh sách người có đất thu hồi kèm Thông báo (docs/19 §4.1): mỗi thửa một dòng
+  const wt = wb.addWorksheet("DS KÈM THÔNG BÁO", { pageSetup: { paperSize: 9, orientation: "landscape", fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
+  wt.columns = [{ width: 6 }, { width: 30 }, { width: 28 }, { width: 13 }, { width: 9 }, { width: 9 }, { width: 12 }, { width: 18 }];
+  tieuDeGop(wt, 1, 8, "DANH SÁCH NGƯỜI CÓ ĐẤT THU HỒI, CHỦ SỞ HỮU TÀI SẢN GẮN LIỀN VỚI ĐẤT", { dam: true, co: 13 });
+  tieuDeGop(wt, 2, 8, "Dự án: {{ten_du_an}}", { dam: true });
+  tieuDeGop(wt, 3, 8, "{{kem_theo_tb}}", { nghieng: true });
+  wt.getRow(5).values = ["STT", "Tên chủ sử dụng đất", "Địa chỉ khu đất", "Diện tích (m²)", "Tờ bản đồ", "Số thửa", "Loại đất theo hiện trạng", "Ghi chú"];
+  dauBang(wt.getRow(5), 8);
+  wt.getRow(5).height = 32;
+  soCot(wt.getRow(6), 8);
+  wt.getRow(7).values = ["{{#thua_du_an}}{{stt}}", "{{ten_cung_ten}}", "{{dia_chi_khu_dat}}", "{{dt_thu_hoi}}", "{{to}}", "{{thua}}", "{{ma_loai_dat}}", "{{ghi_chu}}"];
+  kieuO(wt.getRow(7), 8);
+  wt.getRow(7).alignment = { vertical: "middle", wrapText: true };
+  wt.getCell("D7").numFmt = "#,##0.00";
+  wt.getRow(8).values = ["", "Tổng cộng", "", F("SUM(D7:D7)"), "", "", "", ""];
+  kieuO(wt.getRow(8), 8, true);
+  wt.getCell("D8").numFmt = "#,##0.00";
+
+  // Biểu tổng hợp số 01 — kinh phí BT, HT (docs/19 §4.2): cột loại đất động, số liệu tham chiếu công thức sang trang chi tiết hộ
+  const w1 = wb.addWorksheet("BIỂU 01", { pageSetup: { paperSize: 9, orientation: "landscape", fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
+  const N1 = 15;
+  w1.columns = [{ width: 5 }, { width: 26 }, { width: 22 }, { width: 11 }, { width: 10 }, { width: 11 }, { width: 15 }, ...Array.from({ length: 9 }, () => ({ width: 14 }))];
+  tieuDeGop(w1, 1, N1, "BIỂU TỔNG HỢP SỐ 01", { dam: true });
+  tieuDeGop(w1, 2, N1, "TỔNG HỢP KINH PHÍ BỒI THƯỜNG, HỖ TRỢ KHI NHÀ NƯỚC THU HỒI ĐẤT", { dam: true, co: 13 });
+  tieuDeGop(w1, 3, N1, "Dự án: {{ten_du_an}}", { dam: true });
+  tieuDeGop(w1, 4, N1, "{{kem_theo_pa}}", { nghieng: true });
+  const h1 = w1.getRow(6), h2 = w1.getRow(7);
+  h1.values = ["TT", "Họ và tên", "Địa chỉ thửa đất thu hồi", "Tổng DT thu hồi (m²)", "{{@loai_dat*}}Loại đất thu hồi (m²)", "Đất không đủ ĐK bồi thường (m²)", "Tổng các khoản bồi thường, hỗ trợ (đồng)", "Trong đó bồi thường (đồng)", "", "", "Trong đó hỗ trợ (đồng)", "", "", "", "", ""];
+  h2.values = ["", "", "", "", "{{@loai_dat}}{{cot}}", "", "", "Về đất", "Tài sản, vật kiến trúc", "Cây cối, hoa màu", "Về đất", "Chuyển đổi nghề, tìm kiếm việc làm", "Tài sản, vật kiến trúc", "Cây cối, hoa màu", "Hỗ trợ khác", ""];
+  dauBang(h1, N1);
+  dauBang(h2, N1);
+  h2.height = 45;
+  for (const c of ["A", "B", "C", "D", "F", "G"]) w1.mergeCells(`${c}6:${c}7`);
+  w1.mergeCells("H6:J6");
+  w1.mergeCells("K6:O6");
+  const tc = (o: string) => `='{{trang}}'!{{o_${o}}}`;
+  w1.getRow(8).values = ["{{#ho}}{{stt}}", "{{ten_cung_ten}}", "{{dia_chi_khu_dat}}", "{{dt_thu_hoi}}", "{{@loai_dat}}{{dt@}}", "{{dt_khong_bt}}", tc("tong_lam_tron"), tc("bt_dat"), tc("bt_tai_san"), tc("bt_cay"), tc("ht_dat"), tc("ht_cdn"), tc("ht_tai_san"), tc("ht_cay"), tc("ht_khac")];
+  kieuO(w1.getRow(8), N1);
+  w1.getRow(8).alignment = { vertical: "middle", wrapText: true };
+  for (const c of [4, 5, 6]) w1.getRow(8).getCell(c).numFmt = "#,##0.00";
+  for (let c = 7; c <= N1; c++) w1.getRow(8).getCell(c).numFmt = DINH_DANG_TIEN;
+  const r9 = w1.getRow(9);
+  r9.values = ["", "Tổng cộng (làm tròn)", "", F("SUM(D8:D8)"), "{{@loai_dat}}", F("SUM(F8:F8)"), ...Array.from({ length: 9 }, (_, i) => F(i === 0 ? "ROUND(SUM(G8:G8),-3)" : `SUM(${colName(7 + i)}8:${colName(7 + i)}8)`))];
+  w1.getCell("E9").value = F("SUM(E8:E8)");
+  kieuO(r9, N1, true);
+  for (const c of [4, 5, 6]) r9.getCell(c).numFmt = "#,##0.00";
+  for (let c = 7; c <= N1; c++) r9.getCell(c).numFmt = DINH_DANG_TIEN;
+  w1.getCell(11, 2).value = "NGƯỜI LẬP BIỂU";
+  w1.getCell(11, 12).value = "THỦ TRƯỞNG ĐƠN VỊ";
+  w1.getRow(11).font = { name: FONT, bold: true };
+
+  // Biểu tổng hợp diện tích thu hồi kèm Tờ trình / QĐ thu hồi đất nhiều hộ (docs/19 §4.4): mỗi ký hiệu loại đất một cột
+  const wdt = wb.addWorksheet("TH DIỆN TÍCH THU HỒI", { pageSetup: { paperSize: 9, orientation: "landscape", fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
+  wdt.columns = [{ width: 6 }, { width: 30 }, { width: 26 }, { width: 9 }, { width: 9 }, { width: 13 }, { width: 11 }, { width: 18 }];
+  tieuDeGop(wdt, 1, 8, "BẢNG TỔNG HỢP DIỆN TÍCH THU HỒI ĐẤT", { dam: true, co: 13 });
+  tieuDeGop(wdt, 2, 8, "Dự án: {{ten_du_an}}", { dam: true });
+  tieuDeGop(wdt, 3, 8, "{{kem_theo_thu_hoi}}", { nghieng: true });
+  wdt.getRow(5).values = ["STT", "Họ và tên", "Địa chỉ thửa đất thu hồi", "Số thửa", "Tờ bản đồ", "Diện tích (m²)", "{{@loai_dat*}}Loại đất thu hồi (m²)", "Ghi chú"];
+  wdt.getRow(6).values = ["", "", "", "", "", "", "{{@loai_dat}}{{cot}}", ""];
+  dauBang(wdt.getRow(5), 8);
+  dauBang(wdt.getRow(6), 8);
+  for (const c of ["A", "B", "C", "D", "E", "F", "H"]) wdt.mergeCells(`${c}5:${c}6`);
+  wdt.getRow(7).values = ["{{#thua_du_an}}{{stt}}", "{{ten_cung_ten}}", "{{dia_chi_khu_dat}}", "{{thua}}", "{{to}}", F("SUM(G7:G7)"), "{{@loai_dat}}{{dt@}}", "{{ghi_chu}}"];
+  kieuO(wdt.getRow(7), 8);
+  wdt.getRow(7).alignment = { vertical: "middle", wrapText: true };
+  wdt.getCell("F7").numFmt = "#,##0.00";
+  wdt.getCell("G7").numFmt = "#,##0.00";
+  wdt.getRow(8).values = ["", "TỔNG CỘNG", "", "", "", F("SUM(F7:F7)"), F("SUM(G7:G7)"), ""];
+  kieuO(wdt.getRow(8), 8, true);
+  wdt.getCell("F8").numFmt = "#,##0.00";
+  wdt.getCell("G8").numFmt = "#,##0.00";
+
+  // Biểu tổng hợp số 02 — bảng tính chi tiết từng hộ (docs/19 §4.3); mỗi hộ một trang
+  const ws = wb.addWorksheet("{{stt}}. {{ten}}", { pageSetup: { paperSize: 9, orientation: "landscape", fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
+  const N = 11;
+  ws.columns = [{ width: 6 }, { width: 44 }, { width: 8 }, { width: 12 }, { width: 13 }, { width: 10 }, { width: 18 }, { width: 16 }, { width: 30 }, { width: 13 }, { width: 40 }];
   ws.getCell("A1").value = "UBND {{xa_hoa}}";
   ws.getCell("A1").font = { name: FONT, bold: true };
-  ws.getCell("H1").value = "{{trang_thai_ban}}";
-  ws.getCell("H1").font = { name: FONT, bold: true, color: { argb: "FFC00000" } };
-  const giua = (r: number, text: string, dam = true, co = 12) => {
-    ws.mergeCells(r, 1, r, 10);
-    ws.getCell(r, 1).value = text;
-    ws.getCell(r, 1).font = { name: FONT, bold: dam, size: co };
-    ws.getCell(r, 1).alignment = { horizontal: "center", wrapText: true };
-  };
-  giua(3, "PHƯƠNG ÁN CHI TIẾT BỒI THƯỜNG, HỖ TRỢ, TÁI ĐỊNH CƯ", true, 13);
+  ws.getCell("I1").value = "{{trang_thai_ban}}";
+  ws.getCell("I1").font = { name: FONT, bold: true, color: { argb: "FFC00000" } };
+  const giua = (r: number, text: string, dam = true, co = 12) => tieuDeGop(ws, r, N, text, { dam, co });
+  giua(2, "BIỂU TỔNG HỢP SỐ 02", true);
+  giua(3, "BẢNG TÍNH CHI TIẾT GIÁ TRỊ BỒI THƯỜNG, HỖ TRỢ TRÌNH THẨM ĐỊNH, PHÊ DUYỆT", true, 13);
   giua(4, "Dự án: {{ten_du_an}}", false);
+  ws.mergeCells(5, 1, 5, N);
+  ws.getCell("A5").value = F("'BIỂU 01'!A4");
+  ws.getCell("A5").font = { name: FONT, italic: true };
+  ws.getCell("A5").alignment = { horizontal: "center" };
   const dong = (r: number, nhan: string, gt: string) => {
     ws.getCell(r, 1).value = nhan;
     ws.getCell(r, 1).font = { name: FONT, bold: true };
-    ws.mergeCells(r, 2, r, 10);
+    ws.mergeCells(r, 2, r, N);
     ws.getCell(r, 2).value = gt;
     ws.getCell(r, 2).font = { name: FONT };
+    ws.getCell(r, 2).alignment = { wrapText: true, vertical: "top" };
   };
-  dong(6, "1.", "Họ và tên: {{ten}}   ·   Mã hồ sơ: {{ma}}");
-  dong(7, "", "Địa chỉ: {{dia_chi}}   ·   Số định danh: {{so_dinh_danh}}   ·   Nhân khẩu: {{so_nhan_khau}}");
-  dong(8, "2.", "Thửa đất bị thu hồi:");
-  ws.getRow(9).values = ["TT", "Tờ / thửa", "Loại đất", "DT thửa (m²)", "", "DT thu hồi (m²)", "", "Nguồn gốc sử dụng"];
-  kieuO(ws.getRow(9), 8, true);
-  ws.getRow(10).values = ["{{#thua}}{{stt}}", "Tờ {{to}}, thửa {{thua}}", "{{loai_dat}}", "{{dt_thua}}", "", "{{dt_thu_hoi}}", "", "{{nguon_goc}}"];
-  kieuO(ws.getRow(10), 8);
-  ws.getCell("D10").numFmt = "#,##0.00";
-  ws.getCell("F10").numFmt = "#,##0.00";
-  dong(12, "3.", "Giá trị bồi thường, hỗ trợ:");
-  const dau = ws.getRow(13);
-  dau.values = ["STT", "Danh mục", "ĐVT", "Khối lượng", "Hệ số / mức hỗ trợ", "Đơn giá (đồng)", "Thành tiền (đồng)", "Căn cứ pháp lý", "Trạng thái", "Diễn giải tính"];
-  kieuO(dau, 10, true);
+  dong(7, "1.", "Họ và tên chủ hộ: {{ten}}{{cung_ten_ngoac}}   ·   Mã hồ sơ: {{ma}}");
+  dong(8, "", "CCCD số: {{so_dinh_danh}}; ngày cấp: {{ngay_cap_cccd}}; nơi cấp: {{noi_cap_cccd}}");
+  dong(9, "", "Địa chỉ: {{dia_chi}}   ·   Nhân khẩu: {{so_nhan_khau}}");
+  dong(10, "", "Căn cứ Biên bản kiểm kê hiện trạng đất đai, tài sản gắn liền với đất ngày ……… và kết quả công khai phương án bồi thường, hỗ trợ ………");
+  dong(11, "2.", "Thửa đất bị thu hồi:");
+  ws.getRow(12).values = ["TT", "Tờ / thửa", "Loại đất", "DT thửa (m²)", "DT thu hồi (m²)", "", "", "Nguồn gốc sử dụng"];
+  kieuO(ws.getRow(12), 8, true);
+  ws.getRow(13).values = ["{{#thua}}{{stt}}", "* Thửa đất số {{thua}} – TBĐ {{to}}", "{{loai_dat}}", "{{dt_thua}}", "{{dt_thu_hoi}}", "", "", "{{nguon_goc}}"];
+  kieuO(ws.getRow(13), 8);
+  ws.getCell("D13").numFmt = "#,##0.00";
+  ws.getCell("E13").numFmt = "#,##0.00";
+  dong(15, "3.", "Giá trị bồi thường, hỗ trợ:");
+  const dau = ws.getRow(16);
+  dau.values = ["Số TT", "Hạng mục bồi thường, hỗ trợ", "ĐVT", "Khối lượng", "Đơn giá (đồng)", "Hệ số nội suy / điều chỉnh", "Mức hỗ trợ theo thời điểm tạo lập, xử lý vi phạm", "Thành tiền (đồng)", "Căn cứ pháp lý", "Trạng thái", "Diễn giải tính"];
+  kieuO(dau, N, true);
   dau.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
-  dau.height = 32;
-  const lap = ["{{stt}}", "{{noi_dung}}", "{{dvt}}", "{{khoi_luong}}", "{{he_so}}", "{{don_gia}}", "{{thanh_tien}}", "{{can_cu}}", "{{trang_thai}}", "{{dien_giai}}"];
+  dau.height = 45;
+  const lap = ["{{stt}}", "{{noi_dung}}", "{{dvt}}", "{{khoi_luong}}", "{{don_gia}}", "{{he_so}}", "{{muc_thoi_diem}}", "{{thanh_tien}}", "{{can_cu}}", "{{trang_thai}}", "{{dien_giai}}"];
   ([["phan", true, false], ["nhom", true, true], [null, false, false]] as const).forEach(([cap, dam, nghieng], i) => {
-    const row = ws.getRow(14 + i);
+    const row = ws.getRow(17 + i);
     row.values = [`{{#dong${cap ? "." + cap : ""}}}${lap[0]}`, ...lap.slice(1)];
-    kieuO(row, 10, dam);
+    kieuO(row, N, dam);
     row.font = { name: FONT, bold: dam, italic: nghieng };
-    row.getCell(7).numFmt = DINH_DANG_TIEN;
+    row.getCell(8).numFmt = DINH_DANG_TIEN;
     if (!cap) {
       row.alignment = { vertical: "top", wrapText: true };
       row.getCell(4).numFmt = "#,##0.##";
-      row.getCell(6).numFmt = DINH_DANG_TIEN;
-      row.getCell(10).font = { name: FONT, size: 9, color: { argb: "FF555555" } };
+      row.getCell(5).numFmt = DINH_DANG_TIEN;
+      row.getCell(11).font = { name: FONT, size: 9, color: { argb: "FF555555" } };
     }
   });
   const tongD = (r: number, nhan: string, truongTien: string) => {
     const row = ws.getRow(r);
-    row.values = ["", nhan, "", "", "", "", truongTien];
-    kieuO(row, 10, true);
-    row.getCell(7).numFmt = DINH_DANG_TIEN;
+    row.values = ["", nhan, "", "", "", "", "", truongTien];
+    kieuO(row, N, true);
+    row.getCell(8).numFmt = DINH_DANG_TIEN;
   };
-  tongD(17, "TỔNG CỘNG (A + B)", "{{tong_chua_lam_tron}}");
-  tongD(18, "Tổng sau làm tròn — {{mo_ta_lam_tron}}", "{{tong_lam_tron}}");
-  tongD(19, "Khấu trừ nghĩa vụ tài chính", "{{khau_tru}}");
-  tongD(20, "Số tiền thực nhận", "{{con_lai}}");
-  dong(22, "Lưu ý:", "{{luu_y}}");
-  dong(23, "Lựa chọn:", "{{lua_chon}}");
-  ws.getCell(25, 2).value = "NGƯỜI LẬP";
-  ws.getCell(25, 8).value = "ĐẠI DIỆN HỘ / TỔ CHỨC";
-  ws.getRow(25).font = { name: FONT, bold: true };
+  tongD(20, "TỔNG CỘNG (A + B)", "{{tong_chua_lam_tron}}");
+  tongD(21, "Tổng sau làm tròn — {{mo_ta_lam_tron}}", "{{tong_lam_tron}}");
+  tongD(22, "Khấu trừ nghĩa vụ tài chính", "{{khau_tru}}");
+  tongD(23, "Số tiền thực nhận", "{{con_lai}}");
+  dong(25, "4.", "Tổng hợp theo khoản (Biểu số 01 tham chiếu công thức sang các ô dưới đây):");
+  ([["Bồi thường về đất", "bt_dat"], ["Bồi thường tài sản, vật kiến trúc", "bt_tai_san"], ["Bồi thường cây cối, hoa màu", "bt_cay"], ["Hỗ trợ về đất", "ht_dat"], ["Hỗ trợ chuyển đổi nghề, tìm kiếm việc làm", "ht_cdn"], ["Hỗ trợ tài sản, vật kiến trúc", "ht_tai_san"], ["Hỗ trợ cây cối, hoa màu", "ht_cay"], ["Hỗ trợ khác", "ht_khac"]] as const).forEach(([ten, tr], i) => {
+    const row = ws.getRow(26 + i);
+    row.values = ["", ten, "", "", "", "", "", `{{${tr}}}`];
+    kieuO(row, 8);
+    row.getCell(8).numFmt = DINH_DANG_TIEN;
+  });
+  dong(35, "Lưu ý:", "{{luu_y}}");
+  dong(36, "Lựa chọn:", "{{lua_chon}}");
+  ws.getCell(38, 2).value = "NGƯỜI LẬP";
+  ws.getCell(38, 9).value = "ĐẠI DIỆN HỘ / TỔ CHỨC";
+  ws.getRow(38).font = { name: FONT, bold: true };
   return new Uint8Array((await wb.xlsx.writeBuffer()) as ArrayBuffer);
 }
 

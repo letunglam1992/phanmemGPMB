@@ -226,32 +226,12 @@ Trên đây là nội dung Kế hoạch thu hồi đất, điều tra, khảo s�
 
 - Các phòng, đơn vị chuyên môn thuộc UBND phường;
 
-- Lưu: VT, KTHT&ĐT, Ngọc Anh  (10b).
+- Lưu: VT, KTHT&ĐT, [người soạn]  (10b).
 
      	 | CHỦ TỊCH
 
-Cầm Việt Quân
+[người ký]
 
  |  |
 
-!Default Paragraph Font, Char Char
-
-- Char Char Char Char Char Char Char Char Char
-
-Body Text Indent 3 Char
-
-ÒЀ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀܀Ȁ܀Ȁ܀Ȁ܀Ȁ
-
-ÒЀ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ̀Ѐ܀ȀЀ܀Ȁ܀Ȁ܀Ȁ܀؀
-
-Times New Roman Italic
-
-EUBND THỊ XÃ SƠN LA                 CỘNG HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM
-
-CTY  TNHH TIENTHANH
-
-Administrator
-
-DocumentSummaryInformation
-
-NWEÙUÙÕÓLUÚÇEURÖßT4ÃÓQ==
+(… phần còn lại là dữ liệu định dạng của tệp Word, đã bỏ)

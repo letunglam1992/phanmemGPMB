@@ -6,6 +6,10 @@
  *    (giữ định dạng, chiều cao, ô gộp trong dòng). Dòng {{#bang.phan}} / {{#bang.nhom}} (nếu có, đặt liền dòng lặp) là định
  *    dạng riêng cho dòng tiêu đề phần (A, B) và nhóm (I, II…) của bảng chi tiết.
  *  - Trang có tên chứa {{…}} (vd. "{{stt}}. {{ten}}") là trang mẫu của từng hộ: nhân thành một trang cho mỗi hộ.
+ *  - Cột động (0.9.4): ô có {{@ds}} ở đầu → cột được nhân theo danh sách "ds" (vd. ký hiệu loại đất của dự án); trong cột,
+ *    {{cot}} là giá trị của cột (vd. "LUC"), {{ten@}} đổi thành {{ten_LUC}}; {{@ds*}} là ô tiêu đề nhóm gộp qua mọi cột nhân.
+ *  - Ô chữ bắt đầu bằng "=" có trường {{…}} → sau khi điền thành công thức (vd. ='{{trang}}'!{{o_tong_lam_tron}} tham chiếu
+ *    sang trang chi tiết của hộ: {{trang}} là tên trang hộ, {{o_x}} là địa chỉ ô chứa trường {{x}} của trang đó).
  * Công thức nằm dưới dòng lặp được dời theo số dòng chèn thêm; vùng SUM kết thúc tại dòng lặp được mở rộng.
  * Tệp tạo trên máy, không gửi đi đâu.
  */
@@ -20,6 +24,8 @@ export interface DuLieuMauExcel {
   bang: Record<string, DongMau[]>;
   /** Mỗi hộ: trường riêng (cộng thêm trường chung) và các bảng riêng (thửa, dòng chi tiết). */
   ho: { chung: Record<string, GiaTri>; bang: Record<string, DongMau[]> }[];
+  /** Danh sách cho cột động {{@ten}} (vd. loai_dat: ["CLN", "LUC"]). */
+  cot?: Record<string, string[]>;
 }
 
 const RE_TRUONG = /\{\{\s*([\w.]+)\s*\}\}/g;
@@ -46,17 +52,22 @@ function thayChu(s: string, tim: (t: string) => GiaTri | undefined, thieu: Set<s
   });
 }
 
+/** Ô mẫu dạng "=…{{…}}…": sau khi thay trường thì ghi thành công thức. */
+function thanhCongThuc(mau: string, v: ExcelJS.CellValue): ExcelJS.CellValue {
+  return typeof v === "string" && mau.trimStart().startsWith("=") && mau.includes("{{") && v.trimStart().startsWith("=") ? ({ formula: v.trimStart().slice(1) } as ExcelJS.CellFormulaValue) : v;
+}
+
 /** Đổi số dòng của mọi tham chiếu ô (A1, $A$1) trong công thức; bỏ qua chữ trong ngoặc kép và tên hàm (LOG10(…)). */
 function doiThamChieu(f: string, doi: (r: number) => number, vung?: (a: number, b: number) => [number, number]): string {
   return f
     .split(/("[^"]*")/)
     .map((phan, i) => {
       if (i % 2) return phan; // chuỗi trong ngoặc kép
-      const quaVung = phan.replace(/(\$?[A-Z]{1,3}\$?)(\d+):(\$?[A-Z]{1,3}\$?)(\d+)/g, (_, c1: string, r1: string, c2: string, r2: string) => {
+      const quaVung = phan.replace(/(?<![!A-Za-z_\d$])(\$?[A-Z]{1,3}\$?)(\d+):(\$?[A-Z]{1,3}\$?)(\d+)/g, (_, c1: string, r1: string, c2: string, r2: string) => {
         const [a, b] = vung ? vung(Number(r1), Number(r2)) : [doi(Number(r1)), doi(Number(r2))];
         return `${c1}${a}\u0000:${c2}${b}\u0000`;
       });
-      return quaVung.replace(/(^|[^A-Za-z_\d$])(\$?[A-Z]{1,3}\$?)(\d+)(?![\d(\u0000])/g, (_, truoc: string, c: string, r: string) => `${truoc}${c}${doi(Number(r))}`).replace(/\u0000/g, "");
+      return quaVung.replace(/(^|[^A-Za-z_\d$!])(\$?[A-Z]{1,3}\$?)(\d+)(?![\d(\u0000])/g, (_, truoc: string, c: string, r: string) => `${truoc}${c}${doi(Number(r))}`).replace(/\u0000/g, "");
     })
     .join("");
 }
@@ -82,7 +93,7 @@ interface DongMauO {
   gop: [number, number][];
 }
 
-function dienTrang(ws: ExcelJS.Worksheet, chung: Record<string, GiaTri>, bang: Record<string, DongMau[]>, thieu: Set<string>) {
+function dienTrang(ws: ExcelJS.Worksheet, chung: Record<string, GiaTri>, bang: Record<string, DongMau[]>, thieu: Set<string>, diaChi?: Record<string, string>) {
   // Ô gộp: gỡ hết trước khi chèn dòng rồi gộp lại theo số dòng mới (ExcelJS dời ô gộp không đúng khi có nhiều vùng lặp)
   const gopCu = [...((ws.model as { merges?: string[] }).merges ?? [])];
   const gopVung = gopCu
@@ -149,7 +160,7 @@ function dienTrang(ws: ExcelJS.Worksheet, chung: Record<string, GiaTri>, bang: R
         const f = (o.giaTri as { formula?: string } | null)?.formula;
         if (s !== null) {
           s = s.replace(RE_LAP, "");
-          c.value = thayChu(s, tim, thieu);
+          c.value = thanhCongThuc(s, thayChu(s, tim, thieu));
         } else if (typeof f === "string")
           // công thức trong dòng lặp: tham chiếu chính dòng mẫu → dòng đang điền; dòng dưới vùng mẫu → dời theo số dòng chênh
           c.value = { formula: doiThamChieu(f, (r) => (r === m.so ? dau + i : r > cuoi ? r + lech : r)) } as ExcelJS.CellFormulaValue;
@@ -170,9 +181,128 @@ function dienTrang(ws: ExcelJS.Worksheet, chung: Record<string, GiaTri>, bang: R
   ws.eachRow({ includeEmpty: false }, (row) =>
     row.eachCell({ includeEmpty: false }, (c) => {
       const s = chuO(c.value);
-      if (s !== null && s.includes("{{")) c.value = thayChu(s, (t) => chung[t], thieu);
+      if (s === null || !s.includes("{{")) return;
+      const mot = /^\s*\{\{\s*([\w.]+)\s*\}\}\s*$/.exec(s);
+      if (mot && diaChi) diaChi[mot[1]!] = c.address;
+      c.value = thanhCongThuc(s, thayChu(s, (t) => chung[t], thieu));
     }),
   );
+}
+
+const RE_COT = /^\s*\{\{\s*@(\w+)(\*?)\s*\}\}/;
+const soCot = (ten: string) => ten.replace(/\$/g, "").split("").reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0);
+const tenCot = (n: number) => {
+  let s = "";
+  for (; n > 0; n = Math.floor((n - 1) / 26)) s = String.fromCharCode(65 + ((n - 1) % 26)) + s;
+  return s;
+};
+
+/**
+ * Dời cột trong công thức khi cột động c được nhân thành n cột: cột sau c dời n − 1; vùng nhiều cột chứa c (hoặc vùng một
+ * cột c đặt NGOÀI cột động, vd. tổng các cột loại đất) mở rộng; trong bản sao thứ i của cột động, tham chiếu cột c → c + i.
+ * Tham chiếu sang trang khác (Trang!A1) giữ nguyên.
+ */
+export function doiCotCongThuc(f: string, c: number, n: number, banSao: number | null): string {
+  const moi = (k: number) => (k > c ? k + n - 1 : k === c && banSao !== null ? c + banSao : k);
+  return f
+    .split(/("[^"]*")/)
+    .map((phan, i) => {
+      if (i % 2) return phan;
+      const qv = phan.replace(/(?<![!A-Za-z_\d$])(\$?)([A-Z]{1,3})(\$?\d+):(\$?)([A-Z]{1,3})(\$?\d+)/g, (_, d1: string, a: string, r1: string, d2: string, b: string, r2: string) => {
+        const k1 = soCot(a), k2 = soCot(b);
+        let m1 = moi(k1), m2 = moi(k2);
+        if (banSao === null && k1 <= c && k2 >= c) {
+          m1 = k1 === c ? c : m1;
+          m2 = k2 + n - 1;
+          if (n === 0 && k1 === c && k2 === c) return "0";
+        }
+        return `${d1}${tenCot(m1)}\u0000${r1}:${d2}${tenCot(m2)}\u0000${r2}`;
+      });
+      return qv
+        .replace(/(^|[^A-Za-z_\d$!\u0000])(\$?)([A-Z]{1,3})(\$?\d+)(?![\d(\u0000])/g, (_, truoc: string, d: string, a: string, r: string) => `${truoc}${d}${tenCot(moi(soCot(a)))}${r}`)
+        .replace(/\u0000/g, "");
+    })
+    .join("");
+}
+
+/** Nhân các cột động {{@ds}} của trang theo dl.cot (trước khi nhân dòng lặp). */
+function moRongCot(ws: ExcelJS.Worksheet, cot: Record<string, string[]>, thieu: Set<string>) {
+  for (;;) {
+    let c = 0, ten = "";
+    ws.eachRow({ includeEmpty: false }, (row) =>
+      row.eachCell({ includeEmpty: false }, (o, k) => {
+        const m = c ? null : RE_COT.exec(chuO(o.value) ?? "");
+        if (m) (c = k), (ten = m[1]!);
+      }),
+    );
+    if (!c) return;
+    const ds = cot[ten];
+    if (!ds) thieu.add(`@${ten}`);
+    const n = ds?.length ?? 0;
+    const gopCu = [...((ws.model as { merges?: string[] }).merges ?? [])];
+    for (const g of gopCu) ws.unMergeCells(g);
+    const rong = ws.getColumn(c).width;
+    // chụp cột động (giá trị, kiểu) rồi chèn/bỏ cột
+    const mauCot: { r: number; v: ExcelJS.CellValue; kieu: Partial<ExcelJS.Style> }[] = [];
+    ws.eachRow({ includeEmpty: false }, (row, r) => {
+      const o = row.getCell(c);
+      mauCot.push({ r, v: o.value, kieu: JSON.parse(JSON.stringify(o.style ?? {})) as Partial<ExcelJS.Style> });
+    });
+    if (n === 0) ws.spliceColumns(c, 1);
+    else if (n > 1) ws.spliceColumns(c + 1, 0, ...Array.from({ length: n - 1 }, () => []));
+    // công thức ngoài cột động
+    ws.eachRow({ includeEmpty: false }, (row) =>
+      row.eachCell({ includeEmpty: false }, (o, k) => {
+        if (k >= c && k < c + n) return;
+        const f = (o.value as { formula?: string } | null)?.formula;
+        if (typeof f === "string") o.value = { formula: doiCotCongThuc(f, c, n, null) } as ExcelJS.CellFormulaValue;
+      }),
+    );
+    const nhomGop: number[] = [];
+    for (let i = 0; i < n; i++) {
+      if (rong) ws.getColumn(c + i).width = rong;
+      for (const m of mauCot) {
+        const o = ws.getRow(m.r).getCell(c + i);
+        o.style = JSON.parse(JSON.stringify(m.kieu)) as Partial<ExcelJS.Style>;
+        const s = chuO(m.v);
+        const f = (m.v as { formula?: string } | null)?.formula;
+        if (s !== null) {
+          const mm = RE_COT.exec(s);
+          if (mm?.[2] === "*") {
+            // tiêu đề nhóm: chỉ ghi ở cột đầu, gộp qua mọi cột nhân
+            o.value = i === 0 ? s.replace(RE_COT, "") : null;
+            if (i === 0 && n > 1) nhomGop.push(m.r);
+            continue;
+          }
+          o.value = s.replace(RE_COT, "").replace(/\{\{\s*cot\s*\}\}/g, ds![i]!).replace(/\{\{\s*(\w+)@\s*\}\}/g, (_, t: string) => `{{${t}_${ds![i]!}}}`);
+        } else if (typeof f === "string") o.value = { formula: doiCotCongThuc(f, c, n, i) } as ExcelJS.CellFormulaValue;
+        else o.value = m.v;
+      }
+    }
+    // gộp lại ô gộp theo cột mới
+    for (const g of gopCu) {
+      const x = /^([A-Z]+)(\d+):([A-Z]+)(\d+)$/.exec(g);
+      if (!x) continue;
+      const c1 = soCot(x[1]!), c2 = soCot(x[3]!), r1 = Number(x[2]), r2 = Number(x[4]);
+      const ds2: [number, number][] =
+        c1 === c && c2 === c ? Array.from({ length: n }, (_, i) => [c + i, c + i]) : [[c1 > c ? c1 + n - 1 : c1, c2 >= c ? c2 + n - 1 : c2]];
+      for (const [a, b] of ds2) {
+        if (b < a) continue;
+        try {
+          ws.mergeCells(r1, a, r2, b);
+        } catch {
+          /* chồng nhau — bỏ qua */
+        }
+      }
+    }
+    for (const r of nhomGop) {
+      try {
+        ws.mergeCells(r, c, r, c + n - 1);
+      } catch {
+        /* bỏ qua */
+      }
+    }
+  }
 }
 
 const TEN_CAM = /[\\/*?:[\]]/g;
@@ -188,14 +318,19 @@ export async function dienMauExcel(bytes: Uint8Array, dl: DuLieuMauExcel): Promi
   }
   const thieu = new Set<string>();
   const daDung = new Set(wb.worksheets.filter((w) => !w.name.includes("{{")).map((w) => w.name));
-  for (const src of [...wb.worksheets]) {
+  for (const w of wb.worksheets) moRongCot(w, dl.cot ?? {}, thieu);
+  // Trang từng hộ điền trước để biết tên trang, địa chỉ ô → trang tổng hợp tham chiếu công thức sang ({{trang}}, {{o_x}})
+  const thamChieu: Record<string, string>[] = dl.ho.map(() => ({}));
+  const thuTu = [...wb.worksheets].sort((a, b) => Number(b.name.includes("{{")) - Number(a.name.includes("{{")));
+  for (const src of thuTu) {
     if (!src.name.includes("{{")) {
-      dienTrang(src, dl.chung, dl.bang, thieu);
+      const bang = { ...dl.bang, ...(dl.bang.ho ? { ho: dl.bang.ho.map((d, i) => ({ ...d, ...thamChieu[i] })) } : {}) };
+      dienTrang(src, dl.chung, bang, thieu);
       continue;
     }
     // Trang mẫu từng hộ: nhân trang (giữ định dạng, gộp lại ô gộp), điền theo hộ
     const gop = [...((src.model as { merges?: string[] }).merges ?? [])];
-    for (const h of dl.ho) {
+    for (const [iHo, h] of dl.ho.entries()) {
       const chung = { ...dl.chung, ...h.chung };
       let ten = String(thayChu(src.name, (t) => chung[t], thieu)).replace(TEN_CAM, " ").slice(0, 28).trim() || "Hộ";
       for (let i = 2; daDung.has(ten); i++) ten = `${ten.slice(0, 25)} ${i}`;
@@ -209,7 +344,9 @@ export async function dienMauExcel(bytes: Uint8Array, dl: DuLieuMauExcel): Promi
           /* ô gộp trùng — bỏ qua */
         }
       }
-      dienTrang(ws, chung, { ...dl.bang, ...h.bang }, thieu);
+      const dc: Record<string, string> = {};
+      dienTrang(ws, chung, { ...dl.bang, ...h.bang }, thieu, dc);
+      if (!thamChieu[iHo]!.trang) Object.assign(thamChieu[iHo]!, { trang: ten.replace(/'/g, "''"), ...Object.fromEntries(Object.entries(dc).map(([k, v]) => [`o_${k}`, v])) });
     }
     wb.removeWorksheet(src.id);
   }

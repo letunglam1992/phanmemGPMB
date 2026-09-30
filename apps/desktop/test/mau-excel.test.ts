@@ -33,7 +33,7 @@ describe("Điền mẫu Excel", () => {
     const { wb, thieu } = await dienMauExcel(await taoMauExcelMacDinh(), duLieuMauExcel(duAn, ds, "Bản 1 – thử"));
     expect(thieu).toEqual([]);
     const d = await docLai(wb);
-    expect(d.worksheets.map((w) => w.name)).toEqual(["TH ĐẤT", "TH GIÁ TRỊ TRÌNH DUYỆT", "1. Hộ mẫu 01", "2. Hộ mẫu 02"]);
+    expect(d.worksheets.map((w) => w.name)).toEqual(["TH ĐẤT", "TH GIÁ TRỊ TRÌNH DUYỆT", "DS KÈM THÔNG BÁO", "BIỂU 01", "TH DIỆN TÍCH THU HỒI", "1. Hộ mẫu 01", "2. Hộ mẫu 02"]);
     const tg = d.getWorksheet("TH GIÁ TRỊ TRÌNH DUYỆT")!;
     expect(tg.getCell("A1").value).toBe(`BẢNG TỔNG HỢP GIÁ TRỊ BỒI THƯỜNG, HỖ TRỢ TRÌNH DUYỆT – ${duAn.ten}`);
     expect(tg.getCell("A2").value).toBe("Bản 1 – thử");
@@ -47,21 +47,70 @@ describe("Điền mẫu Excel", () => {
     const soThua = ho.reduce((s, h) => s + h.thua.length, 0);
     expect((td.getRow(4 + soThua).getCell(7).value as { formula: string }).formula).toBe(`SUM(G4:G${3 + soThua})`);
     expect(td.getRow(4).getCell(6).value).toBe("Đất trồng cây lâu năm (CLN)");
-    // Trang hộ: dòng chi tiết đủ, dòng tổng sau vùng lặp, ô gộp tiêu đề giữ nguyên
+    // Trang hộ (Biểu số 02): dòng chi tiết đủ, dòng tổng sau vùng lặp, ô gộp tiêu đề giữ nguyên
     const th = d.getWorksheet("1. Hộ mẫu 01")!;
     expect(th.getCell("A1").value).toBe(`UBND ${duAn.xa.toUpperCase()}`);
-    expect(th.model.merges).toContain("A3:J3");
+    expect(th.model.merges).toContain("A3:K3");
+    expect((th.getCell("A5").value as { formula: string }).formula).toBe("'BIỂU 01'!A4");
+    expect(th.getCell("B7").value).toBe("Họ và tên chủ hộ: Hộ mẫu 01 (vợ: Thành viên A)   ·   Mã hồ sơ: H01");
+    expect(th.getCell("B8").value).toMatch(/^CCCD số: /);
     const dong = dongChiTiet(ho[0]!, ds[0]!.k);
-    const dauDong = 13 + ho[0]!.thua.length; // thửa lặp đẩy xuống (1 dòng mẫu → n dòng)
+    const dauDong = 16 + ho[0]!.thua.length; // thửa lặp đẩy xuống (1 dòng mẫu → n dòng)
     expect(th.getRow(dauDong).getCell(2).value).toBe("GIÁ TRỊ BỒI THƯỜNG");
     expect(th.getRow(dauDong).getCell(2).font?.bold).toBe(true);
     expect(th.getRow(dauDong + 2).getCell(2).font?.bold).toBeFalsy();
     const cuoi = dauDong + dong.length;
     expect(th.getRow(cuoi).getCell(2).value).toBe("TỔNG CỘNG (A + B)");
-    expect(th.getRow(cuoi + 1).getCell(7).value).toBe(ds[0]!.k.tong.tongLamTron.toNumber());
+    expect(th.getRow(cuoi + 1).getCell(8).value).toBe(ds[0]!.k.tong.tongLamTron.toNumber());
     const soTien = dong.filter((x) => !x._cap && typeof x.thanh_tien === "number");
     expect(soTien.length).toBeGreaterThan(0);
-    expect(th.model.merges).toContain(`B${cuoi + 5}:J${cuoi + 5}`); // dòng "Lưu ý:" dời theo
+    expect(th.getRow(cuoi + 6).getCell(8).value).toBe(ds[0]!.k.theoCot.BT_DAT.toNumber()); // "Bồi thường về đất" trong khối tổng hợp theo khoản
+    expect(th.model.merges).toContain(`B${cuoi + 15}:K${cuoi + 15}`); // dòng "Lưu ý:" dời theo
+
+    // Biểu số 01: cột loại đất động (CLN, HNK, ONT), số liệu tham chiếu công thức sang trang hộ, dòng tổng làm tròn
+    const b1 = d.getWorksheet("BIỂU 01")!;
+    expect(b1.getRow(7).values).toEqual(expect.arrayContaining(["CLN", "HNK", "ONT"]));
+    expect(b1.getCell("E6").value).toBe("Loại đất thu hồi (m²)");
+    expect(b1.model.merges).toEqual(expect.arrayContaining(["E6:G6", "J6:L6", "M6:Q6", "A1:Q1", "H6:H7"]));
+    expect(b1.getCell("E8").value).toBe(9665.3);
+    expect(b1.getCell("F9").value).toBe(600);
+    expect((b1.getCell("I8").value as { formula: string }).formula).toBe(`'1. Hộ mẫu 01'!H${cuoi + 1}`);
+    expect((b1.getCell("J8").value as { formula: string }).formula).toBe(`'1. Hộ mẫu 01'!H${cuoi + 6}`);
+    expect((b1.getCell("I10").value as { formula: string }).formula).toBe("ROUND(SUM(I8:I9),-3)");
+    expect((b1.getCell("E10").value as { formula: string }).formula).toBe("SUM(E8:E9)");
+    expect(b1.getCell("A4").value).toBe("(Kèm theo Tờ trình số ………… ngày ………… của phòng chuyên môn)");
+    // Biểu tổng hợp diện tích: DT = tổng các cột loại đất
+    const bdt = d.getWorksheet("TH DIỆN TÍCH THU HỒI")!;
+    expect((bdt.getCell("F7").value as { formula: string }).formula).toBe("SUM(G7:I7)");
+    expect((bdt.getCell("I11").value as { formula: string }).formula).toBe("SUM(I7:I10)");
+    expect(bdt.getCell("H9").value).toBe(600);
+    // Biểu danh sách kèm Thông báo: vợ/chồng xuống dòng, ký hiệu loại đất
+    const bds = d.getWorksheet("DS KÈM THÔNG BÁO")!;
+    expect(bds.getCell("B7").value).toBe("Hộ mẫu 01\nvợ: Thành viên A");
+    expect(bds.getCell("G9").value).toBe("HNK");
+    expect(bds.getCell("H9").value).toBe("Thu hồi một phần");
+  });
+
+  it("dòng (Kèm theo …) lấy số, ngày văn bản đã ghi của hộ/dự án", async () => {
+    const { kemTheoBieu } = await import("../src/xuat-excel");
+    const { duAn, ho } = taoDuAnMau();
+    const h = ho.map((x) => ({ ...x, vanBan: { tb_thu_hoi_so: "94/TB-UBND", tb_thu_hoi_ngay: "20/03/2026", qd_phe_duyet_so: "31/QĐ-UBND", qd_phe_duyet_ngay: "01/09/2026" } }));
+    const kt = kemTheoBieu({ ...duAn, vanBan: { tt_thu_hoi_so: "12/TTr-KT", tt_thu_hoi_ngay: "02/09/2026", ten_phong: "Phòng Kinh tế" } }, h);
+    expect(kt.tb).toBe("(Kèm theo Thông báo số 94/TB-UBND ngày 20/03/2026 của Ủy ban nhân dân xã Chiềng Mung)");
+    expect(kt.pa).toBe("(Kèm theo Quyết định số 31/QĐ-UBND ngày 01/09/2026 của Chủ tịch Ủy ban nhân dân xã Chiềng Mung)");
+    expect(kt.thuHoi).toBe("(Kèm theo Tờ trình số 12/TTr-KT ngày 02/09/2026 của Phòng Kinh tế)");
+    // số QĐ phê duyệt khác nhau giữa các hộ → không lấy chung
+    expect(kemTheoBieu(duAn, [h[0]!, { ...h[1]!, vanBan: {} }]).pa).toMatch(/Tờ trình số …………/);
+  });
+
+  it("cột động: dời cột trong công thức, mở rộng vùng, bản sao tự tham chiếu; 0 cột", async () => {
+    const { doiCotCongThuc } = await import("../src/mau-excel");
+    expect(doiCotCongThuc("SUM(E8:E8)", 5, 3, null)).toBe("SUM(E8:G8)");
+    expect(doiCotCongThuc("SUM(E8:E8)", 5, 3, 2)).toBe("SUM(G8:G8)");
+    expect(doiCotCongThuc("ROUND(SUM(G8:G8),-3)+H1", 5, 3, null)).toBe("ROUND(SUM(I8:I8),-3)+J1");
+    expect(doiCotCongThuc("'BIỂU 01'!A4+D2", 1, 3, null)).toBe("'BIỂU 01'!A4+F2");
+    expect(doiCotCongThuc("SUM(D1:F1)", 5, 0, null)).toBe("SUM(D1:E1)");
+    expect(doiCotCongThuc("SUM(E8:E8)", 5, 0, null)).toBe("SUM(0)");
   });
 
   it("ô gộp trong dòng lặp nhân theo từng dòng; công thức trong dòng lặp trỏ đúng dòng; hai vùng lặp", async () => {

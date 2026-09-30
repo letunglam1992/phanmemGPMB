@@ -111,10 +111,10 @@ Các phòng, đơn vị có liên quan;
 
 Tổ chức, hộ gia đình, cá nhân có đất thu hồi;
 
-Lưu: VT, KTHT&ĐT, Ngọc Anh (25b) .
+Lưu: VT, KTHT&ĐT, [người soạn] (25b) .
 
 TM. ỦY BAN NHÂN DÂN
 
 CHỦ TỊCH
 
-Cầm Việt Quân
+[người ký]

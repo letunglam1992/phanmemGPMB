@@ -11,6 +11,8 @@ import { HopThoai, O } from "../thanh-phan/chung";
 import { taiXuong } from "../tai-xuong";
 import { tenTep } from "../ten-tep";
 import { giaTriNhapThem } from "../van-ban/tao-nhanh";
+import { kiemTraThongNhat } from "../van-ban/thuc-te";
+import { CAN_CU_MAC_DINH } from "../van-ban/du-lieu";
 import { Chon } from "../thanh-phan/Chon";
 import { chungTheoDot, coDot, dotCuaHo, dsDot, duAnTheoDot, khopDot, tenDot, timDot } from "../dot-thu-hoi";
 
@@ -122,7 +124,8 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
 
   const dsMau = DANH_MUC_MAU.filter((m) => (!chiDuAn || m.phamVi !== "HO") && (!tim || `${m.ma} ${m.ten}`.toLowerCase().includes(tim.toLowerCase())));
   const theoBuoc = [
-    ...CAC_BUOC.map((b) => ({ tieuDe: `Bước ${b.ma}. ${b.ten}`, ds: dsMau.filter((m) => m.buoc === b.ma && m.nguon !== "RIENG") })),
+    ...CAC_BUOC.map((b) => ({ tieuDe: `Bước ${b.ma}. ${b.ten}`, ds: dsMau.filter((m) => m.buoc === b.ma && !m.nguon) })),
+    { tieuDe: "Theo văn bản thực tế (UBND phường/xã, 2026)", ds: dsMau.filter((m) => m.nguon === "THUC_TE") },
     { tieuDe: "Mẫu riêng của xã", ds: dsMau.filter((m) => m.nguon === "RIENG") },
   ].filter((x) => x.ds.length);
   const dsHoChon = ds.filter(({ h }) => chonHo.has(h.id));
@@ -131,6 +134,14 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
     ? ghepDuLieu({ mau, ...choHo(hoXemTruoc.h), ds, ho: hoXemTruoc, rieng, so, ngayKy })
     : ghepDuLieu({ mau, duAn: duAnVb, ds: mau.phamVi === "DOT" ? dsHoChon : dsDot_, chung: chungVb, rieng, so, ngayKy });
 
+  // Kiểm tra thống nhất trước khi tạo (docs/19 §5.4): cơ quan ban hành, số trong "(Kèm theo …)", bằng chữ, diện tích
+  const canhBaoTN = (() => {
+    try {
+      return kiemTraThongNhat(ma, duAn, duLieuXem);
+    } catch {
+      return [];
+    }
+  })();
   const napMau = async () => (await kho.docMau(ma))?.bytes ?? (await napMauGoc(ma));
 
   const tao = async () => {
@@ -332,6 +343,12 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
                   ))}
                 </div>
               )}
+              {canhBaoTN.length > 0 && (
+                <div className="thong-bao thong-bao-vang" style={{ marginBottom: 0 }} aria-label="Kiểm tra thống nhất">
+                  <b>Kiểm tra thống nhất trước khi tạo</b> (không chặn — văn bản là dự thảo):
+                  <ul style={{ margin: "4px 0 0 18px" }}>{canhBaoTN.map((c) => <li key={c}>{c}</li>)}</ul>
+                </div>
+              )}
               <div className="nhom-nut">
                 <button className="nut nut-chinh" disabled={dangTao || chanSua || (mau.phamVi !== "DU_AN" && chonHo.size === 0)} title={chanSua ? "Lưu hồ sơ trước khi tạo văn bản" : undefined} onClick={tao}>
                   {dangTao ? "Đang tạo…" : mau.phamVi === "HO" ? `Tạo văn bản cho ${chonHo.size} hộ` : mau.phamVi === "DOT" ? `Tạo văn bản cho đợt (${chonHo.size} hộ)` : "Tạo văn bản (.docx)"}
@@ -349,6 +366,7 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
                   <div key={n}>
                     <div className="chu-nho" style={{ fontWeight: 600, marginBottom: 6, color: "var(--chu-phu)" }}>{n}</div>
                     <div className="luoi luoi-2">
+                      {n === "Căn cứ" && <ChonCanCu chung={chung} setChung={setChung} />}
                       {TRUONG_CHUNG.filter((t) => t.nhom === n).map((t) => (
                         <O key={t.truong} nhan={t.nhan} goiY={t.goiY} style={t.nhieuDong && n === "Căn cứ" ? { gridColumn: "1/-1" } : undefined}>
                           {t.nhieuDong ? <textarea rows={n === "Căn cứ" ? 6 : 2} value={chung[t.truong] ?? ""} onChange={(e) => setChung({ ...chung, [t.truong]: e.target.value })} /> : <input value={chung[t.truong] ?? ""} onChange={(e) => setChung({ ...chung, [t.truong]: e.target.value })} />}
@@ -388,6 +406,26 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
           <div className="nhom-nut">{xemTruong.map((t) => <code key={t} className="nhan nhan-xam">{`{${t}}`}</code>)}</div>
         </HopThoai>
       )}
+    </div>
+  );
+}
+
+/** Người dùng chọn/bỏ từng căn cứ theo dự án (căn cứ bỏ chọn lưu ở can_cu_bo, không in vào văn bản). */
+function ChonCanCu({ chung, setChung }: { chung: Record<string, string>; setChung: (c: Record<string, string>) => void }) {
+  const dong = (s?: string) => (s ?? "").split("\n").map((x) => x.trim()).filter(Boolean);
+  const ds = [...new Set([...dong(chung.can_cu_chung), ...dong(chung.can_cu_du_an)])];
+  const bo = new Set(dong(chung.can_cu_bo));
+  const chuaCo = CAN_CU_MAC_DINH.filter((c) => !ds.includes(c));
+  return (
+    <div style={{ gridColumn: "1/-1" }}>
+      <div className="chu-nho mo" style={{ marginBottom: 4 }}>Chọn căn cứ in vào văn bản của dự án (bỏ tích = không in). NQ 254/2025/QH15, NĐ 49/2026/NĐ-CP, NĐ 151/2025/NĐ-CP, QĐ 426/QĐ-UBND, QĐ 48/QĐ-UBND: phần mềm chưa có nguyên văn — mặc định không in; dự án áp dụng thì tích chọn hoặc nhập vào “Căn cứ riêng của dự án” đúng số, ngày, trích yếu.</div>
+      {ds.map((c) => (
+        <label key={c} className="chu-nho" style={{ display: "flex", gap: 6, alignItems: "flex-start", marginBottom: 2 }}>
+          <input type="checkbox" aria-label={`In căn cứ: ${c}`} checked={!bo.has(c)} onChange={(e) => { const b = new Set(bo); if (e.target.checked) b.delete(c); else b.add(c); setChung({ ...chung, can_cu_bo: [...b].join("\n") }); }} />
+          <span>{c}</span>
+        </label>
+      ))}
+      {chuaCo.length > 0 && <button className="nut nut-nho" onClick={() => setChung({ ...chung, can_cu_chung: [...dong(chung.can_cu_chung), ...chuaCo].join("\n") })}>Thêm lại căn cứ mặc định đã xóa ({chuaCo.length})</button>}
     </div>
   );
 }
