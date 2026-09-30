@@ -128,3 +128,18 @@ Lưu theo dự án: `banDo.vungChonDs`, `banDo.thuaChon`.
 **Tạo hồ sơ:** nút luôn bấm được; chưa có phạm vi → hộp thoại giải thích 2 cách. Nhóm thửa theo chủ sử dụng; thửa nghi vấn (cờ đọc bản đồ, chưa rõ chủ, thiếu số tờ/thửa) đánh dấu ⚠ — phải tích xác nhận đã kiểm tra mới tạo được; lý do ghi vào ghi chú thửa. DC5 (Playwright): 12 vùng + 32 thửa "Chưa GPMB/NQH" → 14 hồ sơ / 44 thửa.
 
 **Kiểm thử:** `packages/gis/test/thu-hoi.test.ts` (tệp tổng hợp: phân loại nhãn, gợi ý lớp 62 và lớp 40, bản đồ không có lớp hiện trạng, hợp nhiều vùng 300 m², bảng PL 21); `dgn-v8.test.ts` với `GPMB_DGN_V8` kiểm DC5 gợi ý lớp 40 và 62.
+
+## 9. Lộ trình bản đồ phục vụ GPMB (đề xuất 30/9/2026, người dùng chọn thứ tự làm)
+
+| # | Tính năng | Lợi ích |
+|---|---|---|
+| 1 | Ranh GPMB → tự tính DT thu hồi từng thửa: nạp tọa độ mốc (Excel), lấy từ tệp DGN khác, hoặc vẽ trên bản đồ; tự cắt thửa, điền DT thu hồi và DT còn lại vào hồ sơ | Bỏ nhập tay, tránh lệch diện tích |
+| 2 | Cảnh báo phần đất còn lại nhỏ hơn diện tích tối thiểu tách thửa (Điều 13–16 Phụ lục I QĐ 106/2025) | Phát hiện sớm thửa cần xem xét thu hồi phần còn lại — căn cứ thu hồi do cán bộ xác nhận, phần mềm không tự kết luận |
+| 3 | Chọn nhiều thửa trên bản đồ (quét khung): bảng tổng hợp số hộ, DT, tổng tiền, tiến độ; thao tác hàng loạt (tạo hồ sơ, xếp đợt, phân công, mở danh sách hộ đã lọc) | Làm việc theo khu vực, đoạn tuyến |
+| 4 | Tìm thửa/chủ trên bản đồ (tờ/thửa, tên) → phóng tới; bấm thửa hiện thẻ tóm tắt hộ và nút mở hồ sơ | Tra cứu nhanh khi họp, tiếp dân |
+| 5 | Xuất PDF bản đồ tiến độ GPMB (A3/A4, khung, chú giải, tỷ lệ, tô màu theo hiện trạng) — dùng `taiXuong` | Báo cáo, họp (không phải trích lục thửa) |
+| 6 | Lớp ghi chú hiện trường (điểm/đường: vướng mắc, mộ, công trình chưa kiểm đếm), gắn với hộ, lưu theo dự án | Theo dõi vướng mắc tại chỗ |
+| 7 | Chồng điểm đo hiện trạng (Excel tọa độ VN-2000), gắn vị trí tài sản kiểm đếm | Đối chiếu kiểm đếm với thực địa |
+| 8 | So sánh hai bản đồ (trích đo lần đầu và bổ sung): tô thửa thay đổi hình dạng/diện tích | Kiểm soát điều chỉnh phương án |
+| 9 | Ghép nhiều tờ/tệp trong một dự án, đọc tham chiếu ngoài | Dự án tuyến dài nhiều tờ |
+| 10 | Bắt điểm nâng cao (trung điểm, giao điểm, vuông góc), lưu kết quả đo | Đo kiểm nhanh hơn |
