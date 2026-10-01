@@ -1,4 +1,5 @@
 import { ONgay } from "../thanh-phan/ONgay";
+import { khopLocHo } from "../van-ban/loc-ho";
 import { useEffect, useMemo, useState } from "react";
 import { useUngDung } from "../ung-dung";
 import { tinhHo, type KetQuaHo } from "../tinh-ho";
@@ -129,6 +130,7 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
     { tieuDe: "Mẫu riêng của xã", ds: dsMau.filter((m) => m.nguon === "RIENG") },
   ].filter((x) => x.ds.length);
   const dsHoChon = ds.filter(({ h }) => chonHo.has(h.id));
+  const hoLoc = dsDot_.filter(({ h }) => khopLocHo(locHo, h));
   const hoXemTruoc = mau.phamVi === "HO" ? dsHoChon[0] : undefined;
   const duLieuXem = hoXemTruoc
     ? ghepDuLieu({ mau, ...choHo(hoXemTruoc.h), ds, ho: hoXemTruoc, rieng, so, ngayKy })
@@ -303,22 +305,24 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
             <div className="the-than luoi">
               {thongBao && <div className={`thong-bao thong-bao-${thongBao.loai}`} style={{ marginBottom: 0 }}>{thongBao.noiDung}</div>}
               {mau.moTa && <div className="mo chu-nho">{mau.moTa}</div>}
+              {mau.phamVi === "DU_AN" && hoDau && <div className="thong-bao thong-bao-xanh chu-nho" style={{ marginBottom: 0 }}>Mẫu <b>cấp dự án</b> — một văn bản chung cho cả dự án (không riêng hộ đang mở). Mẫu theo từng hộ ghi “Từng hộ” ở danh sách bên trái.</div>}
               {(mau.phamVi === "HO" || mau.phamVi === "DOT") && (
                 <div>
                   <div className="nhom-nut" style={{ alignItems: "center", marginBottom: 6 }}>
-                    <b className="chu-nho">{mau.phamVi === "DOT" ? "Hộ, tổ chức trong đợt" : "Chọn hộ, tổ chức"} ({chonHo.size}/{dsDot_.length}){dotChon ? ` · ${tenDot(dotChon)}` : ""}</b>
-                    <input placeholder="Lọc…" value={locHo} onChange={(e) => setLocHo(e.target.value)} style={{ width: 200 }} />
-                    <button className="nut nut-nho" onClick={() => setChonHo(new Set(dsDot_.filter(({ h }) => !locHo || `${h.ma} ${h.ten}`.toLowerCase().includes(locHo.toLowerCase())).map(({ h }) => h.id)))}>Chọn tất cả (theo lọc)</button>
-                    <button className="nut nut-nho" onClick={() => setChonHo(new Set())}>Bỏ chọn</button>
+                    <b className="chu-nho" aria-label="Số hộ đã chọn">{mau.phamVi === "DOT" ? "Hộ, tổ chức trong đợt" : "Chọn hộ, tổ chức"} — đã chọn {chonHo.size}/{dsDot_.length}{dotChon ? ` · ${tenDot(dotChon)}` : ""}</b>
+                    <input placeholder="Lọc mã, tên hộ… (Enter để chọn)" aria-label="Lọc hộ" title="Gõ mã hoặc tên hộ (không cần dấu, gạch); Enter: chọn thêm các hộ đang hiện" value={locHo} onChange={(e) => setLocHo(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); setChonHo(new Set([...chonHo, ...hoLoc.map(({ h }) => h.id)])); } }} style={{ width: 240 }} />
+                    <button className="nut nut-nho" disabled={!hoLoc.length} onClick={() => setChonHo(new Set([...chonHo, ...hoLoc.map(({ h }) => h.id)]))}>{locHo.trim() ? `Chọn thêm ${hoLoc.length} hộ đang lọc` : "Chọn tất cả"}</button>
+                    <button className="nut nut-nho" disabled={!chonHo.size} onClick={() => setChonHo(new Set())}>Bỏ chọn tất cả</button>
                   </div>
                   <div className="ds-chon-ho">
-                    {dsDot_.filter(({ h }) => !locHo || `${h.ma} ${h.ten}`.toLowerCase().includes(locHo.toLowerCase())).map(({ h }) => (
+                    {hoLoc.map(({ h }) => (
                       <label key={h.id}>
                         <input type="checkbox" checked={chonHo.has(h.id)} onChange={(e) => { const s = new Set(chonHo); if (e.target.checked) s.add(h.id); else s.delete(h.id); setChonHo(s); }} />
                         {h.ma} · {h.ten}
                       </label>
                     ))}
                     {ds.length === 0 && <span className="mo">Dự án chưa có hồ sơ.</span>}
+                    {ds.length > 0 && !hoLoc.length && <span className="mo">Không có hộ khớp “{locHo}”.</span>}
                   </div>
                 </div>
               )}
@@ -351,7 +355,7 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
               )}
               <div className="nhom-nut">
                 <button className="nut nut-chinh" disabled={dangTao || chanSua || (mau.phamVi !== "DU_AN" && chonHo.size === 0)} title={chanSua ? "Lưu hồ sơ trước khi tạo văn bản" : undefined} onClick={tao}>
-                  {dangTao ? "Đang tạo…" : mau.phamVi === "HO" ? `Tạo văn bản cho ${chonHo.size} hộ` : mau.phamVi === "DOT" ? `Tạo văn bản cho đợt (${chonHo.size} hộ)` : "Tạo văn bản (.docx)"}
+                  {dangTao ? "Đang tạo…" : mau.phamVi === "HO" ? `Tạo văn bản cho ${chonHo.size} hộ` : mau.phamVi === "DOT" ? `Tạo văn bản cho đợt (${chonHo.size} hộ)` : "Tạo văn bản cấp dự án (.docx)"}
                 </button>
                 <button className="nut" onClick={() => setMoChung(!moChung)}>{moChung ? "Ẩn" : "Sửa"} thông tin chung của dự án</button>
               </div>

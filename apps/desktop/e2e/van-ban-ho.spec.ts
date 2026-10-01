@@ -36,12 +36,12 @@ test("thẻ Văn bản sau Tính toán; hộ chọn sẵn, tự điền; thẻ v
   await expect(p.locator(".the-tab .tab-mui-ten")).toHaveCount(0);
   await p.locator(".tab-gon button", { hasText: "Văn bản" }).click();
   await expect(p.locator(".vb-nhung-dau")).toContainText("Văn bản của hộ H01");
-  await expect(p.getByText("Chọn hộ, tổ chức (1/")).toBeVisible();
+  await expect(p.getByText("Chọn hộ, tổ chức — đã chọn 1/")).toBeVisible();
   await expect(p.locator(".giai-trinh dd").filter({ hasText: /m²$/ }).first()).not.toContainText("undefined");
   await expect(p.getByRole("button", { name: /Tạo văn bản cho 1 hộ/ })).toBeEnabled();
   // mẫu cấp dự án cũng soạn được ngay trong hồ sơ hộ
   await p.locator(".muc-mau", { hasText: "Biên bản niêm yết công khai" }).first().click();
-  await expect(p.getByRole("button", { name: "Tạo văn bản (.docx)" })).toBeVisible();
+  await expect(p.getByRole("button", { name: "Tạo văn bản cấp dự án (.docx)" })).toBeVisible();
   // sửa hồ sơ chưa lưu → chặn tạo văn bản
   await p.locator(".tab-gon button", { hasText: "Thông tin" }).first().click();
   await p.locator(".o-nhap", { has: p.locator("label:text-is('Họ tên chủ hộ / cá nhân')") }).locator("input").first().fill("Hộ mẫu 01 (sửa)");
