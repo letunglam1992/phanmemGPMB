@@ -5,6 +5,7 @@ import type { BoChinhSach } from "@gpmb/core";
 import type { DienTichThuHoi, ThuaBanDo } from "@gpmb/gis";
 import { taoDuAnMau } from "../src/du-lieu-mau";
 import { apDtVaoHoSo, canhBaoConLai, dongCapNhatDt, nguongTachThua } from "../src/man/ban-do/ranh";
+import type { Thua } from "../src/mo-hinh";
 
 const cs = cs0 as unknown as BoChinhSach;
 const tb = (ma: string, dt: number): ThuaBanDo => ({ ma, soTo: "5", soThua: ma, loaiDatBanDo: "ONT", dienTichGhi: null, dienTichHinhHoc: dt, chuSuDung: null, vong: [], tamNhan: { x: 0, y: 0 }, nhan: [], co: [] });
@@ -29,21 +30,40 @@ describe("Cập nhật DT thu hồi từ ranh GPMB", () => {
     expect(moi[0]!.thua[1]).toBe(h0.thua[1]); // thửa không chọn giữ nguyên
   });
 
-  it("ngưỡng tách thửa: bộ chính sách chưa có nguyên văn → thiếu căn cứ; ngưỡng dự án phải có căn cứ", () => {
-    expect(cs.tachThuaToiThieu).toBeUndefined();
-    const hoSo = new Map();
-    const kq0 = canhBaoConLai(cs, duAn, dsTb, m, khoa, hoSo);
-    expect(kq0).toEqual([expect.objectContaining({ muc: "THIEU_CAN_CU", loaiDat: "ONT" })]);
-    const d1 = { ...duAn, tachThuaToiThieu: [{ id: "a", loaiDat: "ONT, ODT", dienTich: "5000", canCu: "" }] };
-    expect(nguongTachThua(cs, d1, "ONT")).toBeNull(); // thiếu căn cứ → không dùng
-    const d2 = { ...duAn, tachThuaToiThieu: [{ id: "a", loaiDat: "ONT, ODT", dienTich: "5000", canCu: "Điều … PL I QĐ 106/2025 (thử)" }] };
-    const kq = canhBaoConLai(cs, d2, dsTb, m, khoa, hoSo);
-    expect(kq).toHaveLength(1);
-    expect(kq[0]).toMatchObject({ muc: "NHO", nguong: { dienTich: 5000, nguon: "DU_AN" } });
-    expect(kq[0]!.conLai).toBeCloseTo(4222.06, 2);
-    // Bộ chính sách có mức (khi có nguyên văn) được ưu tiên
-    const cs2 = { ...cs, tachThuaToiThieu: { ghiChu: "", muc: [{ ma: "x", moTa: "", loaiDat: ["ONT"], khuVuc: "XA" as const, dienTich: "40", canCu: [{ vanBan: "QĐ 106/2025/QĐ-UBND", viTri: "Điều … PL I" }] }] } };
-    expect(nguongTachThua(cs2, d2, "ONT")).toMatchObject({ dienTich: 40, nguon: "BO_CHINH_SACH" });
-    expect(canhBaoConLai(cs2, d2, dsTb, m, khoa, hoSo)).toEqual([]);
+  it("ngưỡng tách thửa theo Điều 13, 15, 16 PL I QĐ 106/2025 (bộ chính sách): xã/phường, vị trí, cạnh rộng", () => {
+    expect(nguongTachThua(cs, duAn, "ONT").map((x) => x.dienTich).sort()).toEqual([50, 60]);
+    expect(nguongTachThua(cs, duAn, "ONT", "TRUNG_TAM")).toMatchObject([{ dienTich: 50, rong: 4, canCu: "điểm a khoản 2 Điều 13 Phụ lục I QĐ 106/2025/QĐ-UBND" }]);
+    expect(nguongTachThua(cs, duAn, "ONT", "DUONG_XA")).toMatchObject([{ dienTich: 60 }]);
+    expect(nguongTachThua(cs, { ...duAn, xa: "Phường Tô Hiệu" }, "ODT")).toMatchObject([{ dienTich: 35, rong: 3.5 }]);
+    expect(nguongTachThua(cs, duAn, "CLN")).toMatchObject([{ dienTich: 1000, rong: null }]);
+    expect(nguongTachThua(cs, { ...duAn, xa: "Phường Tô Hiệu" }, "LUC")[0]).toMatchObject({ dienTich: 200, luuY: expect.stringMatching(/đất trồng lúa/) });
+    expect(nguongTachThua(cs, duAn, "TMD")).toMatchObject([{ dienTich: 200, rong: 4 }]);
+    expect(nguongTachThua(cs, duAn, "DGT")).toEqual([]);
+  });
+
+  it("cảnh báo phần còn lại: dưới ngưỡng, cần vị trí, hẹp (không dựng được hình chữ nhật rộng 4 m), thiếu căn cứ", () => {
+    const vu = (x0: number, w: number, h = 10) => [[{ x: x0, y: 0 }, { x: x0 + w, y: 0 }, { x: x0 + w, y: h }, { x: x0, y: h }, { x: x0, y: 0 }]];
+    const thua = (ma: string, loai: string, w: number, h = 10): ThuaBanDo => ({ ...tb(ma, w * h), loaiDatBanDo: loai, vong: vu(0, w, h) });
+    // còn lại = phần x < c (rộng c m)
+    const ca: [ThuaBanDo, number][] = [[thua("a", "ONT", 20), 3], [thua("b", "ONT", 20), 5.5], [thua("c", "ONT", 30, 20), 3.5], [thua("d", "DGT", 20), 5]];
+    const dsT = ca.map(([t]) => t);
+    const m2 = new Map(ca.map(([t, c], i) => [`${t.ma}#${i}`, { ...th(t.ma, t.dienTichHinhHoc, t.dienTichHinhHoc - c * (t.ma === "c" ? 20 : 10), "MOT_PHAN" as const), vongThuHoi: [vu(c, (t.ma === "c" ? 30 : 20) - c, t.ma === "c" ? 20 : 10)] }]));
+    const kh = (t: ThuaBanDo) => `${t.ma}#${dsT.indexOf(t)}`;
+    const kq = canhBaoConLai(cs, duAn, dsT, m2, kh, new Map());
+    const theo = Object.fromEntries(kq.map((x) => [x.tb.ma, x]));
+    expect(theo.a).toMatchObject({ muc: "NHO", nguong: { dienTich: 50 } });
+    expect(theo.a!.conLai).toBeCloseTo(30, 6);
+    expect(theo.b).toMatchObject({ muc: "CAN_VI_TRI", nguong: { dienTich: 60 } });
+    expect(theo.c).toMatchObject({ muc: "HEP" });
+    expect(theo.c!.ghiChu.join(" ")).toMatch(/không dựng được hình chữ nhật có cạnh chiều rộng 4 m/i);
+    expect(theo.d).toMatchObject({ muc: "THIEU_CAN_CU" });
+    // Vị trí thửa trong hồ sơ (TRUNG_TAM → 50 m²): thửa b 55 m² không còn cảnh báo; ngưỡng dự án có căn cứ dùng cho DGT
+    const hoSo = new Map([["b", { id: "x", soTo: "5", soThua: "b", loaiDat: "ONT", dienTich: "200", dienTichThuHoi: "145", nguonGoc: "", gia: null, khongGiayTo: { dieu: "D8", ngaySuDung: "", viTriHanMuc: "TRUNG_TAM" } } as unknown as Thua]]);
+    const d2 = { ...duAn, tachThuaToiThieu: [{ id: "a", loaiDat: "DGT", dienTich: "100", canCu: "Căn cứ thử nghiệm" }] };
+    const kq2 = canhBaoConLai(cs, d2, dsT, m2, kh, hoSo);
+    expect(kq2.find((x) => x.tb.ma === "b")).toBeUndefined();
+    expect(kq2.find((x) => x.tb.ma === "d")).toMatchObject({ muc: "NHO", nguong: { nguon: "DU_AN", dienTich: 100 } });
+    // ngưỡng dự án thiếu căn cứ → không dùng
+    expect(nguongTachThua(cs, { ...duAn, tachThuaToiThieu: [{ id: "a", loaiDat: "DGT", dienTich: "100", canCu: "" }] }, "DGT")).toEqual([]);
   });
 });

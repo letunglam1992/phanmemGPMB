@@ -244,7 +244,7 @@ export function TheConLai(p: { duAn: DuAn; dl: DuLieuBanDo; thuHoi: Map<string, 
   const ds = canhBaoConLai(cs, p.duAn, p.dl.kq.thua, p.thuHoi, p.khoaThua, hoSo);
   const [moNguong, setMoNguong] = useState(false);
   const [nguong, setNguong] = useState(p.duAn.tachThuaToiThieu ?? []);
-  const nho = ds.filter((x) => x.muc === "NHO"), thieu = ds.filter((x) => x.muc === "THIEU_CAN_CU");
+  const nho = ds.filter((x) => x.muc !== "THIEU_CAN_CU"), thieu = ds.filter((x) => x.muc === "THIEU_CAN_CU");
   const coCs = !!cs.tachThuaToiThieu?.muc.length;
   return (
     <div style={{ marginTop: 8, borderTop: "1px solid var(--vien)", paddingTop: 8 }} aria-label="Phần đất còn lại">
@@ -253,9 +253,15 @@ export function TheConLai(p: { duAn: DuAn; dl: DuLieuBanDo; thuHoi: Map<string, 
         <button className="nut nut-chu nut-nho" onClick={() => setMoNguong(!moNguong)}>{moNguong ? "Ẩn" : "Ngưỡng"}</button>
       </div>
       {!coCs && <div className="chu-nho mo">Bộ chính sách {cs.ma} chưa có nguyên văn Điều 13–16 Phụ lục I QĐ 106/2025 — dùng ngưỡng cán bộ nhập cho dự án (bắt buộc căn cứ).</div>}
+      {coCs && <div className="chu-nho mo">Ngưỡng theo Điều 13–16 PL I QĐ 106/2025 (bộ chính sách {cs.ma}); loại đất không có trong các điều này dùng ngưỡng cán bộ nhập cho dự án.</div>}
       {nho.map((x) => (
         <div key={x.tb.ma} className="thong-bao thong-bao-vang chu-nho" style={{ margin: "4px 0" }}>
-          Thửa <button className="nut nut-chu nut-nho" onClick={() => p.chonThua(x.tb)}>{x.tb.soTo ?? "?"}-{x.tb.soThua ?? "?"}</button> ({tenDayDu(x.loaiDat)}): còn lại <b>{so(x.conLai)} m²</b> &lt; {so(x.nguong!.dienTich, 0)} m² ({x.nguong!.canCu}) — xem xét thu hồi phần còn lại theo quy định; cán bộ xác nhận căn cứ.
+          Thửa <button className="nut nut-chu nut-nho" onClick={() => p.chonThua(x.tb)}>{x.tb.soTo ?? "?"}-{x.tb.soThua ?? "?"}</button> ({tenDayDu(x.loaiDat)}): còn lại <b>{so(x.conLai)} m²</b>
+          {x.muc === "NHO" && <> &lt; {so(x.nguong!.dienTich, 0)} m² — {x.nguong!.moTa} ({x.nguong!.canCu})</>}
+          {x.muc === "CAN_VI_TRI" && <> — cần xác định vị trí thửa ({x.nguong!.canCu})</>}
+          {x.muc === "HEP" && <> — không bảo đảm kích thước tối thiểu ({x.nguong!.canCu})</>}
+          . Xem xét thu hồi phần còn lại theo quy định; cán bộ xác nhận căn cứ.
+          {x.ghiChu.length > 0 && <ul style={{ margin: "2px 0 0 16px" }}>{x.ghiChu.map((g) => <li key={g}>{g}</li>)}</ul>}
         </div>
       ))}
       {thieu.length > 0 && <div className="chu-nho" style={{ color: "var(--do)" }}>Thiếu căn cứ ngưỡng cho {thieu.length} thửa thu hồi một phần (loại đất: {[...new Set(thieu.map((x) => x.loaiDat || "chưa rõ"))].join(", ")}).</div>}

@@ -59,7 +59,7 @@ Cập nhật: đợt 2 (27/9/2026).
 | TL-09b | NQ 152/2025 – **bản PDF/Word gốc phần thân Quy định** | Quy tắc vị trí, tăng/giảm %, phân lớp chiều sâu | Cao |
 | TL-21 | Bản gốc (ưu tiên Excel) PL V, PL VIII QĐ 106; QĐ 32/2025 | Nhập bảng đơn giá chính xác | **Rất cao** |
 | TL-22 | QĐ 48/2025 – Phụ lục II (đơn giá cây lâu năm cũ) | Chuyển tiếp k3 Đ6 PL VIII | Cao |
-| TL-24 | QĐ 106/2025 – **Phụ lục I** (hạn mức công nhận đất ở, hạn mức giao đất, tách thửa) | NĐ 88 Đ8, Đ9, Đ12; Đ14 PL II; QĐ 14 Đ6 | Cao |
+| TL-24 | QĐ 106/2025 – **Phụ lục I** (hạn mức công nhận đất ở, hạn mức giao đất, tách thửa) | NĐ 88 Đ8, Đ9, Đ12; Đ14 PL II; QĐ 14 Đ6 | **Đã có toàn văn (01/10/2026)** — `policy/nguon/qd106-2025-phu-luc-1.md`; Điều 3–7 → `hanMucPl1`, Điều 12–16 → `tachThuaToiThieu` |
 | TL-25 | Danh mục xã/thôn/bản thuộc vùng KT-XH khó khăn, ĐBKK | NĐ 88 Đ8 k4, Đ19; Đ12 PL II | Cao |
 | TL-26 | Văn bản giá gạo tẻ trung bình (Sở Tài chính) | Ổn định đời sống | Cao |
 | TL-27 | Hướng dẫn **thời gian khấu hao (T)** nhà, công trình (Sở Tài chính) | NĐ 88 Đ14 k1 điểm b | Cao |

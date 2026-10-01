@@ -955,5 +955,208 @@
         }
       ]
     }
+  },
+  "tachThuaToiThieu": {
+    "ghiChu": "Điều 12–16 Phụ lục I QĐ 106/2025/QĐ-UBND ngày 06/10/2025 (nguyên văn: policy/nguon/qd106-2025-phu-luc-1.md). Diện tích, kích thước tối thiểu không tính phần thuộc quy hoạch hành lang bảo vệ an toàn công trình (khoản 1 Điều 12). Thửa có đất ở và đất nông nghiệp trong cùng thửa theo Điều 14 — phần mềm chưa tách. Dùng để cảnh báo phần đất còn lại sau thu hồi; không kết luận thu hồi.",
+    "muc": [
+      {
+        "ma": "D13_K1",
+        "moTa": "Đất ở tại phường",
+        "loaiDat": [
+          "ONT",
+          "ODT"
+        ],
+        "khuVuc": "PHUONG",
+        "dienTich": "35",
+        "rongToiThieu": "3.5",
+        "canCu": [
+          {
+            "vanBan": "QĐ 106/2025/QĐ-UBND",
+            "viTri": "khoản 1 Điều 13 Phụ lục I"
+          }
+        ]
+      },
+      {
+        "ma": "D13_K2A",
+        "moTa": "Đất ở tại xã — trung tâm xã theo quy hoạch được duyệt, tiếp giáp quốc lộ, đường tỉnh",
+        "loaiDat": [
+          "ONT",
+          "ODT"
+        ],
+        "khuVuc": "XA",
+        "viTri": [
+          "TRUNG_TAM"
+        ],
+        "dienTich": "50",
+        "rongToiThieu": "4",
+        "canCu": [
+          {
+            "vanBan": "QĐ 106/2025/QĐ-UBND",
+            "viTri": "điểm a khoản 2 Điều 13 Phụ lục I"
+          }
+        ]
+      },
+      {
+        "ma": "D13_K2B",
+        "moTa": "Đất ở tại xã — các khu vực còn lại",
+        "loaiDat": [
+          "ONT",
+          "ODT"
+        ],
+        "khuVuc": "XA",
+        "viTri": [
+          "DUONG_XA",
+          "CON_LAI"
+        ],
+        "dienTich": "60",
+        "rongToiThieu": "4",
+        "canCu": [
+          {
+            "vanBan": "QĐ 106/2025/QĐ-UBND",
+            "viTri": "điểm b khoản 2 Điều 13 Phụ lục I"
+          }
+        ]
+      },
+      {
+        "ma": "D15_HN_P",
+        "moTa": "Đất trồng cây hằng năm, nuôi trồng thủy sản, nông nghiệp khác tại phường",
+        "loaiDat": [
+          "LUC",
+          "LUK",
+          "LUN",
+          "BHK",
+          "NHK",
+          "HNK",
+          "NTS",
+          "NKH"
+        ],
+        "khuVuc": "PHUONG",
+        "dienTich": "200",
+        "luuY": "Đất trồng cây hằng năm gồm đất trồng lúa và đất trồng cây hằng năm khác (điểm a khoản 2 Điều 9 Luật Đất đai 2024) — phần mềm áp dụng cho LUC, LUK, LUN, BHK, NHK, HNK; cán bộ xác nhận.",
+        "canCu": [
+          {
+            "vanBan": "QĐ 106/2025/QĐ-UBND",
+            "viTri": "khoản 2 Điều 15 Phụ lục I"
+          }
+        ]
+      },
+      {
+        "ma": "D15_HN_X",
+        "moTa": "Đất trồng cây hằng năm, nuôi trồng thủy sản, nông nghiệp khác tại xã",
+        "loaiDat": [
+          "LUC",
+          "LUK",
+          "LUN",
+          "BHK",
+          "NHK",
+          "HNK",
+          "NTS",
+          "NKH"
+        ],
+        "khuVuc": "XA",
+        "dienTich": "500",
+        "luuY": "Đất trồng cây hằng năm gồm đất trồng lúa và đất trồng cây hằng năm khác (điểm a khoản 2 Điều 9 Luật Đất đai 2024) — phần mềm áp dụng cho LUC, LUK, LUN, BHK, NHK, HNK; cán bộ xác nhận.",
+        "canCu": [
+          {
+            "vanBan": "QĐ 106/2025/QĐ-UBND",
+            "viTri": "khoản 2 Điều 15 Phụ lục I"
+          }
+        ]
+      },
+      {
+        "ma": "D15_LN_P",
+        "moTa": "Đất trồng cây lâu năm tại phường",
+        "loaiDat": [
+          "CLN"
+        ],
+        "khuVuc": "PHUONG",
+        "dienTich": "500",
+        "canCu": [
+          {
+            "vanBan": "QĐ 106/2025/QĐ-UBND",
+            "viTri": "khoản 2 Điều 15 Phụ lục I"
+          }
+        ]
+      },
+      {
+        "ma": "D15_LN_X",
+        "moTa": "Đất trồng cây lâu năm tại xã",
+        "loaiDat": [
+          "CLN"
+        ],
+        "khuVuc": "XA",
+        "dienTich": "1000",
+        "canCu": [
+          {
+            "vanBan": "QĐ 106/2025/QĐ-UBND",
+            "viTri": "khoản 2 Điều 15 Phụ lục I"
+          }
+        ]
+      },
+      {
+        "ma": "D15_RT_P",
+        "moTa": "Đất rừng sản xuất là rừng trồng tại phường",
+        "loaiDat": [
+          "RSX"
+        ],
+        "khuVuc": "PHUONG",
+        "dienTich": "5000",
+        "luuY": "Chỉ áp dụng đất rừng sản xuất là rừng trồng — cán bộ xác nhận.",
+        "canCu": [
+          {
+            "vanBan": "QĐ 106/2025/QĐ-UBND",
+            "viTri": "khoản 2 Điều 15 Phụ lục I"
+          }
+        ]
+      },
+      {
+        "ma": "D15_RT_X",
+        "moTa": "Đất rừng sản xuất là rừng trồng tại xã",
+        "loaiDat": [
+          "RSX"
+        ],
+        "khuVuc": "XA",
+        "dienTich": "10000",
+        "luuY": "Chỉ áp dụng đất rừng sản xuất là rừng trồng — cán bộ xác nhận.",
+        "canCu": [
+          {
+            "vanBan": "QĐ 106/2025/QĐ-UBND",
+            "viTri": "khoản 2 Điều 15 Phụ lục I"
+          }
+        ]
+      },
+      {
+        "ma": "D16_TMD",
+        "moTa": "Đất thương mại, dịch vụ (hộ gia đình, cá nhân)",
+        "loaiDat": [
+          "TMD"
+        ],
+        "dienTich": "200",
+        "rongToiThieu": "4",
+        "luuY": "Áp dụng cho hộ gia đình, cá nhân không thuộc khoản 1 Điều 16 (dự án đã chấp thuận chủ trương đầu tư).",
+        "canCu": [
+          {
+            "vanBan": "QĐ 106/2025/QĐ-UBND",
+            "viTri": "điểm a khoản 2 Điều 16 Phụ lục I"
+          }
+        ]
+      },
+      {
+        "ma": "D16_SKC",
+        "moTa": "Đất cơ sở sản xuất phi nông nghiệp (hộ gia đình, cá nhân)",
+        "loaiDat": [
+          "SKC"
+        ],
+        "dienTich": "500",
+        "rongToiThieu": "4",
+        "luuY": "Áp dụng cho hộ gia đình, cá nhân không thuộc khoản 1 Điều 16 (dự án đã chấp thuận chủ trương đầu tư).",
+        "canCu": [
+          {
+            "vanBan": "QĐ 106/2025/QĐ-UBND",
+            "viTri": "điểm b khoản 2 Điều 16 Phụ lục I"
+          }
+        ]
+      }
+    ]
   }
 }

@@ -47,36 +47,30 @@ test("ranh từ tọa độ mốc → DT thu hồi từng thửa; tạo hồ sơ
   await p.locator('input[type=file][accept=".dgn,.DGN"]').first().setInputFiles({ name: "thu.dgn", mimeType: "application/octet-stream", buffer: banDo() });
   await expect(p.getByText("thu.dgn ·")).toBeVisible();
 
-  // Bảng mốc: X = Bắc, Y = Đông (quy ước VN-2000) — ranh từ x = 500010 đến 500050, y = 1350000 đến 1350020
-  const csv = "Tên mốc,X,Y\nM1,1350000,500010\nM2,1350000,500050\nM3,1350020,500050\nM4,1350020,500010\n";
+  // Bảng mốc: X = Bắc, Y = Đông (quy ước VN-2000) — ranh từ x = 500003 đến 500050, y = 1350000 đến 1350020
+  const csv = "Tên mốc,X,Y\nM1,1350000,500003\nM2,1350000,500050\nM3,1350020,500050\nM4,1350020,500003\n";
   await p.getByRole("button", { name: "Nạp tọa độ mốc…" }).click();
   await p.getByLabel("Tệp tọa độ mốc").setInputFiles({ name: "moc.csv", mimeType: "text/csv", buffer: Buffer.from(csv) });
   const hop = p.locator(".hop-thoai");
   await expect(hop.getByText("Cột X là tọa độ Bắc (quy ước VN-2000) — đã đổi trục.")).toBeVisible();
-  await expect(hop.getByText("800,0")).toBeVisible();
+  await expect(hop.getByText("940,0")).toBeVisible();
   await hop.getByRole("button", { name: "Thêm 1 ranh hợp lệ" }).click();
   const ds = p.getByLabel("Ranh GPMB đã nhập");
   await expect(ds).toContainText("Ranh 1");
   await expect(ds).toContainText("bảng tọa độ mốc (moc.csv)");
 
-  // DT thu hồi từng thửa: 1 và 3 một nửa (200 m²), 2 toàn bộ, 4 ngoài ranh
+  // DT thu hồi từng thửa: 1 còn lại dải rộng 3 m (thu hồi 340 m²), 2 toàn bộ, 3 một nửa, 4 ngoài ranh
   const bang = p.locator(".the.gian table");
-  await expect(bang.locator("tr", { hasText: "7-1" })).toContainText("200.0");
+  await expect(bang.locator("tr", { hasText: "7-1" })).toContainText("340.0");
   await expect(bang.locator("tr", { hasText: "7-2" })).toContainText("400.0");
   await expect(bang.locator("tr", { hasText: "7-3" })).toContainText("200.0");
   await expect(bang.locator("tr", { hasText: "7-4" })).toHaveCount(0); // lọc "Trong ranh"
 
-  // Phần còn lại: chưa có ngưỡng → thiếu căn cứ; nhập ngưỡng 300 m² kèm căn cứ → 2 thửa còn lại 200 m² dưới ngưỡng
+  // Phần còn lại (Điều 13 PL I QĐ 106/2025, đất ở tại xã): thửa 1 còn 60 m² nhưng chỉ rộng 3 m < 4 m → cảnh báo kích thước
   const cl = p.getByLabel("Phần đất còn lại");
-  await expect(cl).toContainText("Thiếu căn cứ ngưỡng cho 2 thửa");
-  await cl.getByRole("button", { name: "Ngưỡng" }).click();
-  await cl.getByRole("button", { name: "+ Ngưỡng" }).click();
-  await cl.getByLabel("Loại đất (ký hiệu)").fill("ONT");
-  await cl.getByLabel("Diện tích tối thiểu (m²)").fill("300");
-  await cl.getByLabel("Căn cứ ngưỡng tách thửa").fill("Căn cứ thử nghiệm (không phải số liệu thật)");
-  await cl.getByRole("button", { name: "Lưu ngưỡng của dự án" }).click();
-  await expect(cl.locator(".thong-bao-vang")).toHaveCount(2);
-  await expect(cl).toContainText("còn lại 200,0 m² < 300 m²");
+  await expect(cl.locator(".thong-bao-vang")).toHaveCount(1);
+  await expect(cl).toContainText("không bảo đảm kích thước tối thiểu (điểm b khoản 2 Điều 13 Phụ lục I QĐ 106/2025/QĐ-UBND)");
+  await expect(cl).toContainText("Không dựng được hình chữ nhật có cạnh chiều rộng 4 m");
 
   // Tạo hồ sơ cho 3 thửa trong ranh, rồi thu hẹp ranh (vẽ) → cập nhật DT vào hồ sơ
   await p.getByRole("button", { name: "Tạo hồ sơ từ thửa thu hồi" }).click();

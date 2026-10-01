@@ -114,7 +114,20 @@ export interface BoChinhSach {
    */
   tachThuaToiThieu?: {
     ghiChu: string;
-    muc: { ma: string; moTa: string; loaiDat: string[]; khuVuc?: "XA" | "PHUONG"; dienTich: string; canCu: CanCu[] }[];
+    muc: {
+      ma: string;
+      moTa: string;
+      loaiDat: string[];
+      khuVuc?: "XA" | "PHUONG";
+      /** Vị trí thửa áp dụng (như hạn mức PL I: TRUNG_TAM, DUONG_XA, CON_LAI); trống = mọi vị trí. */
+      viTri?: ("TRUNG_TAM" | "DUONG_XA" | "CON_LAI")[];
+      dienTich: string;
+      /** Cạnh chiều rộng tối thiểu của hình chữ nhật dựng được trong ranh giới thửa (m), nếu văn bản quy định. */
+      rongToiThieu?: string;
+      /** Lưu ý áp dụng (cách hiểu loại đất, phạm vi đối tượng) — hiện kèm cảnh báo để cán bộ xác nhận. */
+      luuY?: string;
+      canCu: CanCu[];
+    }[];
   };
   chuyenDoiNghe: {
     canCu: CanCu[];

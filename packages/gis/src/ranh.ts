@@ -5,6 +5,11 @@
 import GeometryFactory from "jsts/org/locationtech/jts/geom/GeometryFactory.js";
 import Coordinate from "jsts/org/locationtech/jts/geom/Coordinate.js";
 import IsValidOp from "jsts/org/locationtech/jts/operation/valid/IsValidOp.js";
+import OverlayOp from "jsts/org/locationtech/jts/operation/overlay/OverlayOp.js";
+import BufferOp from "jsts/org/locationtech/jts/operation/buffer/BufferOp.js";
+import PolygonCls from "jsts/org/locationtech/jts/geom/Polygon.js";
+import type Geometry from "jsts/org/locationtech/jts/geom/Geometry.js";
+import type Polygon from "jsts/org/locationtech/jts/geom/Polygon.js";
 import type { Diem, KetQuaDocDgn } from "./dgn.js";
 import { CAU_HINH_MAC_DINH, dungThua, type VungUngVien } from "./thua.js";
 
@@ -129,4 +134,39 @@ export function docToaDoMoc(bang: unknown[][]): KetQuaDocMoc {
 /** Vùng khép kín (vùng, vùng phức hoặc khép từ đường) trên một lớp của tệp DGN khác — làm ranh GPMB. */
 export function vungTuLop(ban: KetQuaDocDgn, lop: number, dienTichToiThieu = 1): VungUngVien[] {
   return dungThua(ban, { ...CAU_HINH_MAC_DINH, ranhThua: [], nhanThua: [], soThua: [], soTo: [], chuSuDung: [], nutThuocTinh: null, nhanHienTrang: [], ranhGpmb: [lop], dienTichToiThieu }).vungGpmb;
+}
+
+const daGiac = (vong: Diem[][]) => {
+  const ring = (v: Diem[]) => gf.createLinearRing(v.map((d) => new Coordinate(d.x, d.y)));
+  return gf.createPolygon(ring(vong[0]!), vong.slice(1).map(ring));
+};
+const vongCuaPg = (p: Polygon): Diem[][] => {
+  const doc = (r: { getCoordinates(): Coordinate[] }) => r.getCoordinates().map((c: Coordinate) => ({ x: c.x, y: c.y }));
+  const out = [doc(p.getExteriorRing())];
+  for (let i = 0; i < p.getNumInteriorRing(); i++) out.push(doc(p.getInteriorRingN(i)));
+  return out;
+};
+
+/**
+ * Phần còn lại của thửa sau thu hồi = thửa − phần giao với ranh (vongThuHoi của tinhDienTichThuHoi). Ranh cắt thửa thành
+ * nhiều mảnh thì mỗi mảnh là một phần còn lại riêng (sắp giảm dần theo diện tích); bỏ mảnh vụn < 0,05 m².
+ */
+export function phanConLai(vongThua: Diem[][], vongThuHoi: Diem[][][]): { vong: Diem[][]; dienTich: number }[] {
+  let g: Geometry = daGiac(vongThua);
+  for (const v of vongThuHoi) g = OverlayOp.difference(g, daGiac(v));
+  const out: { vong: Diem[][]; dienTich: number }[] = [];
+  for (let i = 0; i < g.getNumGeometries(); i++) {
+    const x = g.getGeometryN(i);
+    if (x instanceof PolygonCls && x.getArea() >= 0.05) out.push({ vong: vongCuaPg(x), dienTich: x.getArea() });
+  }
+  return out.sort((a, b) => b.dienTich - a.dienTich);
+}
+
+/**
+ * Điều kiện cần để "dựng được hình chữ nhật có cạnh chiều rộng tối thiểu w" trong ranh thửa (Điều 13, 16 PL I QĐ 106/2025):
+ * co vùng vào trong w/2 mà còn diện tích (đặt vừa hình tròn đường kính w). false → chắc chắn không dựng được; true → chưa đủ để
+ * kết luận (cán bộ kiểm tra trên bản đồ).
+ */
+export function coTheDungRong(vong: Diem[][], w: number): boolean {
+  return !BufferOp.bufferOp(daGiac(vong), -w / 2).isEmpty();
 }

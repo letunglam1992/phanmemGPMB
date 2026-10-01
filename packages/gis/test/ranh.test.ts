@@ -1,6 +1,6 @@
 /** Ranh GPMB nhập ngoài (docs/08 §9.1): bảng tọa độ mốc, kiểm tra vùng, vùng từ tệp DGN khác, cắt thửa. Dữ liệu tổng hợp. */
 import { describe, expect, test } from "vitest";
-import { docDgn, docToaDoMoc, dungThua, kiemTraVung, tinhDienTichThuHoi, vungTuLop } from "../src/index.js";
+import { coTheDungRong, docDgn, docToaDoMoc, dungThua, kiemTraVung, phanConLai, tinhDienTichThuHoi, vungTuLop } from "../src/index.js";
 import { ptDuong, vietDgnV8 } from "./viet-dgn-v8.js";
 
 const X0 = 500000, Y0 = 2350000;
@@ -63,5 +63,20 @@ describe("Ranh từ tệp DGN khác và cắt thửa", () => {
     expect(kq.map((x) => x.phamVi)).toEqual(["MOT_PHAN", "MOT_PHAN"]);
     expect(kq.map((x) => Math.round(x.dienTichThuHoi * 100) / 100)).toEqual([40, 40]);
     expect(kq.map((x) => Math.round((x.dienTichHinhHoc - x.dienTichThuHoi) * 100) / 100)).toEqual([60, 60]);
+  });
+});
+
+describe("Phần còn lại sau thu hồi (Điều 13, 16 PL I QĐ 106/2025)", () => {
+  const o = (x0: number, y0: number, w: number, h: number) => [[{ x: x0, y: y0 }, { x: x0 + w, y: y0 }, { x: x0 + w, y: y0 + h }, { x: x0, y: y0 + h }, { x: x0, y: y0 }]];
+  test("ranh cắt giữa thửa → hai mảnh còn lại; dải hẹp 3 m không dựng được hình chữ nhật rộng 4 m", () => {
+    const thua = o(0, 0, 20, 10); // 200 m²
+    const giao = [o(3, 0, 10, 10)]; // thu hồi 100 m² ở giữa → còn 30 m² (rộng 3 m) và 70 m² (rộng 7 m)
+    const ml = phanConLai(thua, giao);
+    expect(ml.map((m) => Math.round(m.dienTich))).toEqual([70, 30]);
+    expect(coTheDungRong(ml[0]!.vong, 4)).toBe(true);
+    expect(coTheDungRong(ml[1]!.vong, 4)).toBe(false);
+    expect(coTheDungRong(ml[1]!.vong, 3.5)).toBe(false);
+    expect(coTheDungRong(ml[1]!.vong, 2.9)).toBe(true);
+    expect(phanConLai(thua, [thua])).toEqual([]);
   });
 });
