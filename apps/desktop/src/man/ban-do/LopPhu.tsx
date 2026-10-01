@@ -7,7 +7,7 @@ import { Chon } from "../../thanh-phan/Chon";
 import { taiXuong } from "../../tai-xuong";
 import { tenTep } from "../../ten-tep";
 import { MAU_GHI_CHU } from "./KhungVe";
-import { type DuLieuBanDo, khoaTepGhep } from "./du-lieu";
+import { type DuLieuBanDo, dsSoTo, khoaTepGhep, thamChieuThieu } from "./du-lieu";
 import { docBang } from "./RanhGpmb";
 
 const so = (v: number, le = 2) => v.toLocaleString("vi-VN", { minimumFractionDigits: le, maximumFractionDigits: le });
@@ -237,49 +237,108 @@ export function HopSoSanh(p: { duAn: DuAn; dl: DuLieuBanDo; ketQua: (kq: { tep: 
 }
 
 /** Tệp DGN ghép thêm vào bản đồ của dự án (tờ khác, mảnh trích đo khác) — docs/08 §9.9. */
-export function HopTepGhep(p: { duAn: DuAn; dong: () => void }) {
+/**
+ * Tờ bản đồ của dự án (docs/08 §9.9): tệp chính + các tờ/mảnh trích đo nạp thêm; bật/tắt từng tờ để chọn tờ dựng chung,
+ * phóng tới tờ, dò tên tệp tham chiếu (reference) chưa nạp. Tham chiếu ngoài không dựng được (vị trí, tỷ lệ, xoay của
+ * tham chiếu không đọc) — nạp chính các tệp được tham chiếu làm tờ của dự án.
+ */
+export function HopTepGhep(p: { duAn: DuAn; dl: DuLieuBanDo | null; dong: () => void; phongToi: (r: { minX: number; minY: number; maxX: number; maxY: number }) => void }) {
   const { kho, luuDuAn, quyen, bao } = useUngDung();
-  const ds = p.duAn.banDo?.tepGhep ?? [];
+  const banDo = p.duAn.banDo;
+  const ds = banDo?.tepGhep ?? [];
   const [dang, setDang] = useState(false);
   const sua = quyen("SUA_HO_SO");
+  const thieu = banDo && p.dl ? thamChieuThieu(p.dl, banDo) : [];
+  const soTo = useMemo(() => (p.dl ? dsSoTo(p.dl) : []), [p.dl]);
+  const tt = (khoa: string) => p.dl?.tep?.find((t) => t.khoa === khoa);
+  const soBat = (banDo && !banDo.anTepChinh ? 1 : 0) + ds.filter((t) => !t.an).length;
   const them = async (fs: FileList) => {
-    if (!p.duAn.banDo) return;
+    if (!banDo) return;
     setDang(true);
     try {
       const moi = [...ds];
+      const trung: string[] = [];
       for (const f of [...fs]) {
+        if ([banDo.tenTep, ...moi.map((t) => t.tenTep)].some((x) => x.toLowerCase() === f.name.toLowerCase())) {
+          trung.push(f.name);
+          continue;
+        }
         const bytes = new Uint8Array(await f.arrayBuffer());
         docDgn(bytes); // kiểm tra đọc được trước khi lưu
         const id = taoId();
         await kho.luuBanDo(khoaTepGhep(p.duAn.id, id), bytes);
         moi.push({ id, tenTep: f.name, ngayNhap: new Date().toISOString() });
       }
-      await luuDuAn({ ...p.duAn, banDo: { ...p.duAn.banDo, tepGhep: moi } });
-      bao(`Đã ghép ${moi.length - ds.length} tệp — bản đồ dựng lại từ ${moi.length + 1} tệp`);
+      if (moi.length > ds.length) await luuDuAn({ ...p.duAn, banDo: { ...banDo, tepGhep: moi } });
+      bao(`${moi.length > ds.length ? `Đã thêm ${moi.length - ds.length} tờ — bản đồ dựng lại` : "Không thêm tờ nào"}${trung.length ? `; bỏ qua tệp trùng tên: ${trung.join(", ")}` : ""}`, moi.length > ds.length ? undefined : "loi");
     } catch (e) {
-      bao(`Không ghép được tệp: ${(e as Error).message}`, "loi");
+      bao(`Không thêm được tệp: ${(e as Error).message}`, "loi");
     } finally {
       setDang(false);
     }
   };
   const bo = async (id: string) => {
-    if (!p.duAn.banDo) return;
+    if (!banDo) return;
     await kho.xoaBanDo(khoaTepGhep(p.duAn.id, id));
-    await luuDuAn({ ...p.duAn, banDo: { ...p.duAn.banDo, tepGhep: ds.filter((x) => x.id !== id) } });
+    await luuDuAn({ ...p.duAn, banDo: { ...banDo, tepGhep: ds.filter((x) => x.id !== id) } });
+  };
+  const batTat = async (khoa: string, bat: boolean) => {
+    if (!banDo) return;
+    if (!bat && soBat <= 1) return bao("Cần bật ít nhất một tờ bản đồ", "loi");
+    await luuDuAn({ ...p.duAn, banDo: khoa === "" ? { ...banDo, anTepChinh: !bat } : { ...banDo, tepGhep: ds.map((t) => (t.id === khoa ? { ...t, an: !bat } : t)) } });
+  };
+  const tatCa = async (bat: boolean, chiKhoa?: string) =>
+    banDo && (await luuDuAn({ ...p.duAn, banDo: { ...banDo, anTepChinh: chiKhoa !== undefined ? chiKhoa !== "" : !bat, tepGhep: ds.map((t) => ({ ...t, an: chiKhoa !== undefined ? t.id !== chiKhoa : !bat })) } }));
+  const dong = (khoa: string, ten: string, ngay: string, an: boolean | undefined, laChinh: boolean) => {
+    const t = tt(khoa);
+    return (
+      <tr key={khoa || "chinh"} className={an ? "mo" : undefined}>
+        <td><input type="checkbox" checked={!an} disabled={!sua} aria-label={`Dùng tờ ${ten}`} onChange={(e) => void batTat(khoa, e.target.checked)} /></td>
+        <td><b>{ten}</b>{laChinh && <span className="mo chu-nho"> (tệp chính)</span>}{t?.thamChieu.length ? <div className="mo chu-nho">Nhắc tới: {t.thamChieu.join(", ")}</div> : null}</td>
+        <td>{ngayVn(ngay)}</td>
+        <td className="so">{an ? "tắt" : t ? t.soPhanTu.toLocaleString("vi-VN") : "—"}</td>
+        <td>
+          <span className="nhom-nut" style={{ gap: 4, flexWrap: "nowrap" }}>
+            {t?.pham && <button className="nut nut-chu nut-nho" aria-label={`Phóng tới tờ ${ten}`} onClick={() => { p.phongToi(t.pham!); p.dong(); }}>Phóng tới</button>}
+            {sua && soBat > 1 && !an && <button className="nut nut-chu nut-nho" title="Chỉ dùng tờ này, tắt các tờ khác" onClick={() => void tatCa(true, khoa)}>Chỉ tờ này</button>}
+            {!laChinh && <button className="nut nut-chu nut-nguy nut-nho" disabled={!sua} aria-label={`Bỏ tệp ${ten}`} onClick={() => void bo(khoa)}>Bỏ</button>}
+          </span>
+        </td>
+      </tr>
+    );
   };
   return (
-    <HopThoai tieuDe="Ghép nhiều tờ bản đồ, tệp DGN" dong={p.dong} rong={640} chan={<button className="nut" onClick={p.dong}>Đóng</button>}>
-      <p className="mt-0 chu-nho">Dự án tuyến dài nhiều tờ, hoặc mảnh trích đo đo riêng: ghép các tệp DGN (cùng hệ VN-2000) vào một bản đồ; thửa, ranh, nhãn của mọi tệp dựng chung theo cấu hình lớp đã chốt. Tham chiếu ngoài (reference) của tệp V8 không đọc được — nạp chính các tệp được tham chiếu ở đây.</p>
-      <table className="bang">
-        <thead><tr><th>Tệp</th><th>Ngày nạp</th><th /></tr></thead>
+    <HopThoai tieuDe="Tờ bản đồ của dự án" dong={p.dong} rong={760} chan={<button className="nut" onClick={p.dong}>Đóng</button>}>
+      <p className="mt-0 chu-nho">Một dự án có nhiều tờ bản đồ địa chính / mảnh trích đo (cùng hệ VN-2000): thêm từng tệp DGN làm một tờ, đánh dấu chọn các tờ cần dùng — thửa, ranh, nhãn của các tờ đang chọn dựng chung theo cấu hình lớp đã chốt. Tham chiếu ngoài (reference) trong tệp không dựng được; phần mềm dò tên tệp được tham chiếu để cán bộ nạp chính các tệp đó.</p>
+      {thieu.length > 0 && (
+        <div className="thong-bao thong-bao-vang" role="status" style={{ marginBottom: 8 }}>
+          <b>Tệp nhắc tới chưa nạp ({thieu.length}):</b> {thieu.map((x) => `${x.ten} (trong ${x.tu})`).join("; ")}. Có thể là tờ tham chiếu — nếu đúng, thêm các tệp này làm tờ bản đồ.
+        </div>
+      )}
+      <table className="bang" aria-label="Danh sách tờ bản đồ">
+        <thead><tr><th>Dùng</th><th>Tệp</th><th>Ngày nạp</th><th className="so">Phần tử</th><th /></tr></thead>
         <tbody>
-          <tr><td><b>{p.duAn.banDo?.tenTep}</b> <span className="mo chu-nho">(tệp chính)</span></td><td>{p.duAn.banDo ? ngayVn(p.duAn.banDo.ngayNhap) : ""}</td><td /></tr>
-          {ds.map((t) => (
-            <tr key={t.id}><td>{t.tenTep}</td><td>{ngayVn(t.ngayNhap)}</td><td><button className="nut nut-chu nut-nguy nut-nho" disabled={!sua} aria-label={`Bỏ tệp ${t.tenTep}`} onClick={() => void bo(t.id)}>Bỏ</button></td></tr>
-          ))}
+          {banDo && dong("", banDo.tenTep, banDo.ngayNhap, banDo.anTepChinh, true)}
+          {ds.map((t) => dong(t.id, t.tenTep, t.ngayNhap, t.an, false))}
         </tbody>
       </table>
-      <label className="nut nut-nho mt-8" aria-disabled={!sua || dang}>{dang ? "Đang nạp…" : "Ghép thêm tệp DGN…"}<input type="file" aria-label="Tệp DGN ghép thêm" accept=".dgn,.DGN" multiple className="an" disabled={!sua || dang} onChange={(e) => { if (e.target.files?.length) void them(e.target.files); e.target.value = ""; }} /></label>
+      <div className="nhom-nut mt-8">
+        <label className="nut nut-nho" aria-disabled={!sua || dang}>{dang ? "Đang nạp…" : "Thêm tờ bản đồ (DGN)…"}<input type="file" aria-label="Tệp DGN ghép thêm" accept=".dgn,.DGN" multiple className="an" disabled={!sua || dang} onChange={(e) => { if (e.target.files?.length) void them(e.target.files); e.target.value = ""; }} /></label>
+        {ds.length > 0 && sua && <button className="nut nut-nho" onClick={() => void tatCa(true)}>Dùng tất cả các tờ</button>}
+      </div>
+      {!p.dl && <p className="mo chu-nho" role="status">Đang dựng lại bản đồ từ các tờ đã chọn…</p>}
+      {soTo.length > 0 && (
+        <>
+          <h3 className="mt-8" style={{ fontSize: 14 }}>Số tờ đọc được trên các tờ đang dùng</h3>
+          <div className="nhom-nut" aria-label="Số tờ đọc được" style={{ gap: 6 }}>
+            {soTo.map((x) => (
+              <button key={x.soTo} className="nut nut-nho" title={`Phóng tới tờ số ${x.soTo}`} onClick={() => { p.phongToi(x.pham); p.dong(); }}>
+                {x.soTo === "?" ? "Chưa rõ số tờ" : `Tờ ${x.soTo}`} · {x.soThua} thửa
+              </button>
+            ))}
+          </div>
+        </>
+      )}
     </HopThoai>
   );
 }

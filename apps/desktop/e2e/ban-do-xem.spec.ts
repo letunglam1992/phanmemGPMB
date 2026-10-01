@@ -43,7 +43,7 @@ test("lăn chuột phóng bản đồ, không cuộn trang; bảng lớp giữ t
 
   // bảng Lớp bản đồ: giữ đủ tùy chọn cũ
   const bang = p.locator(".bd-bang");
-  for (const t of ["Ranh GPMB", "Thửa đất", "Tô màu", "Nhãn thửa", "Nền địa hình, hạ tầng", "Địa danh", "Ảnh vệ tinh (trực tuyến – tắt)"]) await expect(bang.getByText(t, { exact: true })).toBeVisible();
+  for (const t of ["Ranh GPMB", "Thửa đất", "Tô màu", "Nhãn thửa", "Nền địa hình, hạ tầng", "Địa danh", "Ảnh vệ tinh (trực tuyến)"]) await expect(bang.getByText(t, { exact: true })).toBeVisible();
   await expect(bang.getByText("Ranh GPMB đã chọn")).toBeVisible(); // chú giải trong cùng bảng
 
   // lăn chuột: tỷ lệ đổi, trang không cuộn

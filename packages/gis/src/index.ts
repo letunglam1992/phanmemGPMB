@@ -6,3 +6,5 @@ export * from "./dgn-v8.js";
 export * from "./goi-y-cau-hinh.js";
 export * from "./phan-lop.js";
 export * from "./ranh.js";
+export * from "./vn2000.js";
+export * from "./tham-chieu.js";

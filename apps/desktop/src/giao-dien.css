@@ -341,6 +341,11 @@ table.bang { width: 100%; border-collapse: collapse; font-size: 13px; }
 .cong-cu-ban-do { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; gap: 4px; }
 .cong-cu-ban-do .nut { padding: 5px 10px; box-shadow: var(--bong-1); }
 .toa-do { position: absolute; right: 10px; bottom: 10px; font-size: 11px; background: color-mix(in srgb, var(--be-mat) 90%, transparent); padding: 2px 6px; border-radius: 4px; color: var(--chu-phu); }
+.bd-ghi-nguon { position: absolute; right: 10px; bottom: 34px; max-width: 60%; font-size: 11px; background: color-mix(in srgb, var(--be-mat) 88%, transparent); padding: 2px 6px; border-radius: 4px; color: var(--chu-phu); }
+.bd-anh input:not([type]), .bd-anh select { width: 100%; }
+.bd-anh-luoi { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; margin: 4px 0; }
+.bd-anh-luoi label { display: grid; gap: 2px; }
+.bd-anh-luoi input { width: 100%; min-width: 0; }
 .ben-phai { display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow-y: auto; padding-right: 2px; }
 .ben-phai .the { min-height: 0; display: flex; flex-direction: column; }
 .ben-phai .the .bang-cuon { flex: 1; }

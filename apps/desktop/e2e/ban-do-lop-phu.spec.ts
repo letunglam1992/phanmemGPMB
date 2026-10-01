@@ -58,7 +58,7 @@ function banDo(soTo = "7", x0 = 500000, rong = [20, 20, 20, 20]) {
   return Buffer.from(v.xuat());
 }
 
-test("ghi chú hiện trường, điểm đo, bắt điểm và lưu kết quả đo, so sánh bản đồ, ghép tệp", async ({ page: p }) => {
+test("ghi chú hiện trường, điểm đo, bắt điểm và lưu kết quả đo, so sánh bản đồ, nhiều tờ bản đồ", async ({ page: p }) => {
   await vao(p);
   await p.keyboard.press("Alt+3");
   await p.locator("[role=tablist] button", { hasText: "Bản đồ" }).click();
@@ -118,14 +118,46 @@ test("ghi chú hiện trường, điểm đo, bắt điểm và lưu kết quả
   await p.locator(".hop-thoai").getByRole("button", { name: "Hiện trên bản đồ" }).click();
   await expect(p.getByLabel("Kết quả so sánh bản đồ")).toContainText("2 thửa thay đổi");
 
-  // Ghép thêm tờ 8 → bảng thửa có thêm 2 thửa của tờ 8
-  await p.getByRole("button", { name: /^Ghép tệp/ }).click();
-  await p.getByLabel("Tệp DGN ghép thêm").setInputFiles({ name: "to8.dgn", mimeType: "application/octet-stream", buffer: banDo("8", 500200, [20, 20]) });
-  await expect(p.locator(".hop-thoai")).toContainText("to8.dgn");
+  // Thêm tờ 8 (tệp tờ 8 nhắc tới tệp to9.dgn chưa nạp) → bảng thửa có thêm 2 thửa của tờ 8
+  await p.getByRole("button", { name: /^Tờ bản đồ/ }).click();
+  const to8 = Buffer.concat([banDo("8", 500200, [20, 20]), Buffer.from("\0\0REF C:\\DiaChinh\\to9.dgn\0\0")]);
+  await p.getByLabel("Tệp DGN ghép thêm").setInputFiles({ name: "to8.dgn", mimeType: "application/octet-stream", buffer: to8 });
+  const hopTo = p.locator(".hop-thoai");
+  await expect(hopTo.getByLabel("Danh sách tờ bản đồ")).toContainText("to8.dgn");
+  await expect(hopTo.getByLabel("Số tờ đọc được")).toContainText("Tờ 7 · 4 thửa");
+  await expect(hopTo.getByLabel("Số tờ đọc được")).toContainText("Tờ 8 · 2 thửa");
+  await expect(hopTo.getByRole("status")).toContainText("to9.dgn (trong to8.dgn)");
   await p.locator(".hop-thoai .chan-hop").getByRole("button", { name: "Đóng" }).click();
-  await expect(p.getByRole("button", { name: "Ghép tệp (2)…" })).toBeVisible();
+  await expect(p.getByRole("button", { name: "Tờ bản đồ (2/2)…" })).toBeVisible();
+  await expect(p.getByText(/Bản đồ nhắc tới tệp chưa nạp.*to9\.dgn/)).toBeVisible();
   await p.locator(".the.gian select").selectOption("TAT_CA");
   await expect(p.locator(".the.gian tbody tr")).toHaveCount(6);
   await expect(p.locator(".the.gian tbody tr", { hasText: "8-2" })).toBeVisible();
+  // Chọn tờ: tắt tờ 8 → còn 4 thửa; "Chỉ tờ này" ở tờ 8 → còn 2 thửa; dùng tất cả → 6
+  await p.getByRole("button", { name: /^Tờ bản đồ/ }).click();
+  await hopTo.getByLabel("Dùng tờ to8.dgn").click();
+  await expect(hopTo.getByLabel("Dùng tờ to8.dgn")).not.toBeChecked();
+  await expect(hopTo.getByLabel("Số tờ đọc được")).not.toContainText("Tờ 8");
+  await p.locator(".hop-thoai .chan-hop").getByRole("button", { name: "Đóng" }).click();
+  await expect(p.getByRole("button", { name: "Tờ bản đồ (1/2)…" })).toBeVisible();
+  await p.locator(".the.gian select").selectOption("TAT_CA");
+  await expect(p.locator(".the.gian tbody tr")).toHaveCount(4);
+  await p.getByRole("button", { name: /^Tờ bản đồ/ }).click();
+  await hopTo.getByLabel("Dùng tờ to8.dgn").click();
+  await expect(hopTo.getByLabel("Dùng tờ to8.dgn")).toBeChecked();
+  await hopTo.locator("tr", { hasText: "to8.dgn" }).getByRole("button", { name: "Chỉ tờ này" }).click();
+  await expect(hopTo.getByLabel("Dùng tờ thu.dgn")).not.toBeChecked();
+  await expect(hopTo.getByLabel("Số tờ đọc được")).toContainText("Tờ 8 · 2 thửa");
+  await expect(hopTo.getByLabel("Số tờ đọc được")).not.toContainText("Tờ 7");
+  // tắt nốt tờ cuối cùng → không cho
+  await hopTo.getByLabel("Dùng tờ to8.dgn").click();
+  await expect(p.getByText("Cần bật ít nhất một tờ bản đồ")).toBeVisible();
+  await expect(hopTo.getByLabel("Dùng tờ to8.dgn")).toBeChecked();
+  await hopTo.getByRole("button", { name: "Dùng tất cả các tờ" }).click();
+  await expect(hopTo.getByLabel("Số tờ đọc được")).toContainText("Tờ 7 · 4 thửa");
+  await hopTo.getByLabel("Số tờ đọc được").getByRole("button", { name: /Tờ 8/ }).click();
+  await expect(p.locator(".hop-thoai")).toHaveCount(0);
+  await p.locator(".the.gian select").selectOption("TAT_CA");
+  await expect(p.locator(".the.gian tbody tr")).toHaveCount(6);
   await p.screenshot({ path: "test-results/ban-do-lop-phu.png" });
 });

@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { diemTrongThua, type DienTichThuHoi, type Diem, type ThuaBanDo } from "@gpmb/gis";
+import { NGUON_ANH_NEN, diemTrongThua, docKinhTuyen, ghiKinhTuyen, mauUrlHopLe, oNenTrongKhung, urlO, type DienTichThuHoi, type Diem, type ThuaBanDo } from "@gpmb/gis";
 import { type Ho } from "../../mo-hinh";
 import { THU_TU_TRANG_THAI, TT_GPMB, type TrangThaiGpmb } from "../../trang-thai";
 import { Chon } from "../../thanh-phan/Chon";
@@ -42,6 +42,28 @@ const ghiLuu = (k: string, v: unknown) => {
   }
 };
 
+/** Ảnh nền trực tuyến (vệ tinh) — tùy chọn theo dự án, trên máy này; mặc định tắt. */
+export interface CaiDatAnhNen {
+  bat: boolean;
+  /** ESRI | OSM | TUY_CHINH */
+  nguon: string;
+  url: string;
+  /** Độ đậm ảnh 0,2–1 */
+  doMo: number;
+  /** Kinh tuyến trục của bản đồ (độ thập phân) — Sơn La 104°00′ (TT 973/2001/TT-TCĐC) */
+  kt: number;
+  mui: 3 | 6;
+  /** Dịch ảnh (m) theo Đông, Bắc để khớp bản đồ */
+  dx: number;
+  dy: number;
+}
+export const ANH_NEN_MAC_DINH: CaiDatAnhNen = { bat: false, nguon: "ESRI", url: "", doMo: 1, kt: 104, mui: 3, dx: 0, dy: 0 };
+const KHOA_DONG_Y_ANH = "gpmb-anh-nen-dong-y";
+/** Bộ đệm ô ảnh đã tải (dùng chung các khung vẽ), tối đa 600 ô. */
+const boDemO = new Map<string, HTMLImageElement>();
+const loiO = new Set<string>();
+export const nguonAnh = (c: CaiDatAnhNen) => (c.nguon === "TUY_CHINH" ? { ma: "TUY_CHINH", ten: "Tùy chỉnh", url: c.url.trim(), ghiNguon: `Ảnh: ${(() => { try { return new URL(c.url.trim().replace(/[{}]/g, "")).host; } catch { return "nguồn tùy chỉnh"; } })()}`, mucToiDa: 20 } : NGUON_ANH_NEN.find((n) => n.ma === c.nguon) ?? NGUON_ANH_NEN[0]!);
+
 export function KhungVe(p: {
   dl: DuLieuBanDo;
   vungChon: string[];
@@ -69,7 +91,7 @@ export function KhungVe(p: {
   /** Khóa (khoaThua) các thửa đang chọn bằng quét khung — tô nổi. */
   thuaQuet?: Set<string>;
   /** Phóng tới thửa (tìm thửa/chủ): đổi `n` để phóng lại. */
-  phongToi?: { vong: Diem[][]; n: number } | null;
+  phongToi?: { vong: Diem[][]; n: number; vua?: boolean } | null;
   /** Lớp phủ của dự án: ghi chú hiện trường, điểm đo hiện trạng, kết quả đo đã lưu, kết quả so sánh hai bản đồ. */
   lopPhu?: { ghiChu: GhiChuHienTruong[]; diemDo: DiemDoHienTrang[]; ketQuaDo: KetQuaDoLuu[]; soSanh: { vong: Diem[][]; mau: string; net?: number[] }[] };
   themGhiChu?: (loai: "DIEM" | "DUONG", diem: Diem[]) => void;
@@ -92,6 +114,25 @@ export function KhungVe(p: {
     ghiLuu("gpmb-ban-do-kieu-bat", [...s2]);
   };
   const [cong, setCong] = useState<CongCu>("CHON");
+  const [anhNen, setAnhNenS] = useState<CaiDatAnhNen>(() => ({ ...ANH_NEN_MAC_DINH, ...docLuu<Partial<CaiDatAnhNen>>(`${khoa}-anh-nen`, {}) }));
+  const setAnhNen = (c: Partial<CaiDatAnhNen>) => {
+    const moi = { ...anhNen, ...c };
+    setAnhNenS(moi);
+    ghiLuu(`${khoa}-anh-nen`, moi);
+  };
+  const [ktNhap, setKtNhap] = useState(() => ghiKinhTuyen(anhNen.kt));
+  const [taiO, setTaiO] = useState(0);
+  const [trangThaiAnh, setTrangThaiAnh] = useState<{ tong: number; loi: number; z: number } | null>(null);
+  const choVe = useRef(false);
+  const batAnhNen = (bat: boolean) => {
+    if (bat && !docLuu(KHOA_DONG_Y_ANH, false)) {
+      const host = (() => { try { return new URL(nguonAnh(anhNen).url.replace(/[{}]/g, "")).host; } catch { return "máy chủ ảnh"; } })();
+      if (!confirm(`Bật ảnh vệ tinh: phần mềm tải ô ảnh từ ${host} qua Internet.\n\nChỉ gửi số hiệu ô ảnh (mức phóng z, cột x, hàng y) của khung đang xem — từ đó máy chủ biết khu vực đang xem; KHÔNG gửi hồ sơ, tên chủ, số liệu thửa, tệp bản đồ.\n\nĐồng ý bật?`)) return;
+      ghiLuu(KHOA_DONG_Y_ANH, true);
+    }
+    loiO.clear(); // bật lại: thử tải lại các ô lỗi (mất mạng trước đó)
+    setAnhNen({ bat });
+  };
   // Bảng "Lớp bản đồ" (kiểu Level Manager): các mục mở/đóng độc lập; nhớ theo máy
   const [bangLop, setBangLop] = useState<Set<string>>(() => new Set(docLuu<string[]>(`${khoa}-muc`, ["GPMB", "CHU_GIAI"])));
   const [anBang, setAnBang] = useState<boolean>(() => docLuu(`${khoa}-an-bang`, false));
@@ -190,6 +231,46 @@ export function KhungVe(p: {
       const sy = (y: number) => H / 2 - (y - v.cy) * v.tyLe;
       // phạm vi đang nhìn (tọa độ bản đồ) để bỏ phần tử ngoài màn hình
       const nx0 = v.cx - W / 2 / v.tyLe, nx1 = v.cx + W / 2 / v.tyLe, ny0 = v.cy - H / 2 / v.tyLe, ny1 = v.cy + H / 2 / v.tyLe;
+      // 0. Ảnh vệ tinh (trực tuyến, khi bật): ô Web Mercator đặt theo VN-2000 bằng biến đổi affine từng ô
+      const coAnh = anhNen.bat && (anhNen.nguon !== "TUY_CHINH" || mauUrlHopLe(anhNen.url));
+      if (coAnh) {
+        const ng = nguonAnh(anhNen);
+        const ds = oNenTrongKhung({ minX: nx0 - anhNen.dx, maxX: nx1 - anhNen.dx, minY: ny0 - anhNen.dy, maxY: ny1 - anhNen.dy }, v.tyLe, { kinhTuyenTruc: anhNen.kt, mui: anhNen.mui }, ng.mucToiDa);
+        ctx.fillStyle = "#1d2321";
+        ctx.fillRect(0, 0, W, H);
+        let loi = 0;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0.2, Math.min(1, anhNen.doMo));
+        for (const o of ds) {
+          const url = urlO(ng.url, o);
+          if (loiO.has(url)) { loi++; continue; }
+          let img = boDemO.get(url);
+          if (!img) {
+            img = new Image();
+            img.decoding = "async";
+            const xong = (loi: boolean) => {
+              if (loi) { loiO.add(url); boDemO.delete(url); }
+              if (!choVe.current) {
+                choVe.current = true;
+                requestAnimationFrame(() => { choVe.current = false; setTaiO((x) => x + 1); });
+              }
+            };
+            img.onload = () => xong(false);
+            img.onerror = () => xong(true);
+            img.src = url;
+            boDemO.set(url, img);
+            if (boDemO.size > 600) boDemO.delete(boDemO.keys().next().value!);
+          }
+          if (!img.complete || !img.naturalWidth) continue;
+          const [tl, tr, bl] = o.goc.map((d) => ({ x: sx(d.x + anhNen.dx), y: sy(d.y + anhNen.dy) })) as [Diem, Diem, Diem];
+          ctx.setTransform(dpr * ((tr.x - tl.x) / 256), dpr * ((tr.y - tl.y) / 256), dpr * ((bl.x - tl.x) / 256), dpr * ((bl.y - tl.y) / 256), dpr * tl.x, dpr * tl.y);
+          ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, 0, 0, 256.6, 256.6);
+        }
+        ctx.restore();
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        const tt = { tong: ds.length, loi, z: ds[0]?.z ?? 0 };
+        if (trangThaiAnh?.tong !== tt.tong || trangThaiAnh.loi !== tt.loi || trangThaiAnh.z !== tt.z) queueMicrotask(() => setTrangThaiAnh(tt));
+      }
       const duong = (ds: Diem[]) => {
         ctx.moveTo(sx(ds[0]!.x), sy(ds[0]!.y));
         for (let i = 1; i < ds.length; i++) ctx.lineTo(sx(ds[i]!.x), sy(ds[i]!.y));
@@ -236,8 +317,8 @@ export function KhungVe(p: {
           ctx.fillStyle = to;
           ctx.fill("evenodd");
         }
-        ctx.lineWidth = 0.8;
-        ctx.strokeStyle = nenToi ? "#9fb0a9" : "#6f7d77";
+        ctx.lineWidth = coAnh ? 1.2 : 0.8;
+        ctx.strokeStyle = coAnh ? "#ffe066" : nenToi ? "#9fb0a9" : "#6f7d77";
         ctx.stroke();
       }
       // 3. Ranh GPMB
@@ -378,17 +459,20 @@ export function KhungVe(p: {
       if (lop.nhan && v.tyLe > 1.2) {
         ctx.font = `${Math.min(13, 7 + v.tyLe * 1.2)}px Segoe UI, sans-serif`;
         ctx.textAlign = "center";
-        ctx.fillStyle = chuMau;
+        ctx.fillStyle = coAnh ? "#ffffff" : chuMau;
+        if (coAnh) { ctx.shadowColor = "rgba(0,0,0,.9)"; ctx.shadowBlur = 3; }
         for (const t of p.dl.kq.thua) {
           const x = sx(t.tamNhan.x), y = sy(t.tamNhan.y);
           if (x < -50 || y < -20 || x > W + 50 || y > H + 20) continue;
           ctx.fillText(`${t.soThua ?? "?"}${t.loaiDatBanDo ? " " + t.loaiDatBanDo : ""}`, x, y);
           if (v.tyLe > 3 && t.dienTichGhi) {
-            ctx.fillStyle = nenToi ? "#aab8b2" : "#5d6b66";
+            ctx.fillStyle = coAnh ? "#e8efe9" : nenToi ? "#aab8b2" : "#5d6b66";
             ctx.fillText(String(t.dienTichGhi), x, y + 12);
-            ctx.fillStyle = chuMau;
+            ctx.fillStyle = coAnh ? "#ffffff" : chuMau;
           }
         }
+        ctx.shadowBlur = 0;
+        ctx.shadowColor = "transparent";
       }
       // 6. Đo đạc
       const dsDo = xongDo || !troDo ? diemDo : [...diemDo, troDo];
@@ -456,7 +540,7 @@ export function KhungVe(p: {
       const m = [0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000].find((m) => m * v.tyLe > 70) ?? 10000;
       // thước tỷ lệ: giữa cạnh dưới
       const dai = m * v.tyLe, x0 = W / 2 - dai / 2, y0 = H - 22;
-      ctx.fillStyle = chuMau;
+      ctx.fillStyle = coAnh ? "#ffffff" : chuMau;
       ctx.fillRect(x0, y0, dai, 3);
       ctx.fillRect(x0, y0 - 4, 1.5, 7);
       ctx.fillRect(x0 + dai - 1.5, y0 - 4, 1.5, 7);
@@ -468,7 +552,7 @@ export function KhungVe(p: {
     const ro = new ResizeObserver(veLai);
     ro.observe(cv);
     return () => ro.disconnect();
-  }, [nhin, hinhHien, chuHien, p.dl, p.thuHoi, p.vungChon.join("|"), p.thuaChon, p.chon, p.ttThua, p.khoaThua, pham, lop, cheDo, nenToi, mauTheoLop, diemDo, troDo, xongDo, khung, batHien, thongTin, cong, p.thuaQuet, p.ranhThem, p.lopPhu]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [nhin, hinhHien, chuHien, p.dl, p.thuHoi, p.vungChon.join("|"), p.thuaChon, p.chon, p.ttThua, p.khoaThua, pham, lop, cheDo, nenToi, mauTheoLop, diemDo, troDo, xongDo, khung, batHien, thongTin, cong, p.thuaQuet, p.ranhThem, p.lopPhu, anhNen, taiO]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const doiToaDo = (e: { clientX: number; clientY: number }): Diem => {
     const cv = ref.current!;
@@ -498,6 +582,7 @@ export function KhungVe(p: {
     const v = p.phongToi?.vong[0];
     if (!v?.length) return;
     const xs = v.map((d) => d.x), ys = v.map((d) => d.y);
+    if (p.phongToi?.vua) return vuaKhung({ minX: Math.min(...xs), maxX: Math.max(...xs), minY: Math.min(...ys), maxY: Math.max(...ys) });
     const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cy = (Math.min(...ys) + Math.max(...ys)) / 2;
     const r = Math.max(30, (Math.max(...xs) - Math.min(...xs)) * 1.5, (Math.max(...ys) - Math.min(...ys)) * 1.5);
     vuaKhung({ minX: cx - r, maxX: cx + r, minY: cy - r, maxY: cy + r });
@@ -660,11 +745,35 @@ export function KhungVe(p: {
             ] as const).map(([k, ten, goiY]) => (
               <label key={k} title={goiY}><input type="checkbox" checked={lop[k]} onChange={(e) => setLop({ ...lop, [k]: e.target.checked })} /> {ten}</label>
             ))}
-            <label className="mo" title="Cần kết nối Internet tới máy chủ bản đồ ngoài — tắt theo yêu cầu không gửi dữ liệu ra ngoài"><input type="checkbox" disabled /> Ảnh vệ tinh (trực tuyến – tắt)</label>
+            <label title="Ảnh vệ tinh trực tuyến dưới bản đồ — cần Internet; chỉ gửi số hiệu ô ảnh của khung đang xem"><input type="checkbox" aria-label="Ảnh vệ tinh" checked={anhNen.bat} onChange={(e) => batAnhNen(e.target.checked)} /> Ảnh vệ tinh (trực tuyến)</label>
             <Chon value={cheDo} onChange={(e) => setCheDo(e.target.value as typeof cheDo)}>
               <option value="HIEN_TRANG">Tô theo hiện trạng GPMB</option>
               <option value="PHAM_VI">Tô theo phạm vi thu hồi</option>
             </Chon>
+          </div>
+        )}
+        <button className="bd-muc" aria-expanded={bangLop.has("ANH")} aria-label="Cài đặt ảnh vệ tinh" onClick={() => batMuc("ANH")}>{bangLop.has("ANH") ? "▾" : "▸"} Ảnh vệ tinh{anhNen.bat ? " · bật" : ""}</button>
+        {bangLop.has("ANH") && (
+          <div className="bd-muc-than bd-anh">
+            <label><input type="checkbox" checked={anhNen.bat} onChange={(e) => batAnhNen(e.target.checked)} /> Hiện ảnh nền trực tuyến</label>
+            <Chon aria-label="Chọn nguồn ảnh nền" value={anhNen.nguon} onChange={(e) => setAnhNen({ nguon: e.target.value })}>
+              {NGUON_ANH_NEN.map((n) => <option key={n.ma} value={n.ma}>{n.ten}</option>)}
+              <option value="TUY_CHINH">Tùy chỉnh (URL XYZ)…</option>
+            </Chon>
+            {anhNen.nguon === "TUY_CHINH" && (
+              <>
+                <input aria-label="URL ô ảnh" placeholder="https://…/{z}/{x}/{y}" value={anhNen.url} onChange={(e) => setAnhNen({ url: e.target.value })} />
+                {!mauUrlHopLe(anhNen.url) && <span className="chu-nho" style={{ color: "#c0392b" }}>URL https có {"{z}"}, {"{x}"}, {"{y}"} — dùng nguồn ảnh cơ quan có quyền sử dụng</span>}
+              </>
+            )}
+            <label className="chu-nho">Độ đậm <input type="range" aria-label="Độ đậm ảnh" min={20} max={100} step={5} value={Math.round(anhNen.doMo * 100)} onChange={(e) => setAnhNen({ doMo: Number(e.target.value) / 100 })} /> {Math.round(anhNen.doMo * 100)}%</label>
+            <div className="bd-anh-luoi chu-nho">
+              <label>Kinh tuyến trục<input aria-label="Kinh tuyến trục" value={ktNhap} onChange={(e) => { setKtNhap(e.target.value); const v = docKinhTuyen(e.target.value); if (v !== null) setAnhNen({ kt: v }); }} onBlur={() => setKtNhap(ghiKinhTuyen(anhNen.kt))} /></label>
+              <label>Múi chiếu<Chon aria-label="Múi chiếu" value={String(anhNen.mui)} onChange={(e) => setAnhNen({ mui: Number(e.target.value) as 3 | 6 })}><option value="3">3° (k0 0,9999)</option><option value="6">6° (k0 0,9996)</option></Chon></label>
+              <label>Dịch Đông (m)<input aria-label="Dịch ảnh theo Đông" type="number" step={0.5} value={anhNen.dx} onChange={(e) => setAnhNen({ dx: Number(e.target.value) || 0 })} /></label>
+              <label>Dịch Bắc (m)<input aria-label="Dịch ảnh theo Bắc" type="number" step={0.5} value={anhNen.dy} onChange={(e) => setAnhNen({ dy: Number(e.target.value) || 0 })} /></label>
+            </div>
+            <div className="mo chu-nho">VN-2000 → WGS-84 theo 7 tham số QĐ 05/2007/QĐ-BTNMT; kinh tuyến trục Sơn La 104°00′ (TT 973/2001/TT-TCĐC). Ảnh nền sai lệch vài mét — chỉ tham khảo trực quan, không dùng đo đạc; lệch thì chỉnh “Dịch”. Chỉ gửi số hiệu ô ảnh (z/x/y) của khung đang xem.</div>
           </div>
         )}
         <button className="bd-muc" aria-expanded={bangLop.has("DGN")} aria-label="Lớp bản vẽ DGN" onClick={() => batMuc("DGN")}>{bangLop.has("DGN") ? "▾" : "▸"} Lớp bản vẽ DGN (Level) · {ve.lop.length - [...lopAn].filter((l) => ve.lop.some((x) => x.lop === l)).length}/{ve.lop.length}</button>
@@ -763,6 +872,13 @@ export function KhungVe(p: {
         <path d="M20 14l7 22-7-5-7 5z" fill="#23302b" />
         <text x={20} y={10} textAnchor="middle" fontSize={11} fontWeight={700} fill={nenToi ? "#e8efe9" : "#23302b"}>B</text>
       </svg>
+      {anhNen.bat && (
+        <div className="bd-ghi-nguon chu-nho" role="status" aria-label="Ghi nguồn ảnh nền">
+          {anhNen.nguon === "TUY_CHINH" && !mauUrlHopLe(anhNen.url) ? "Ảnh nền: URL chưa hợp lệ" : nguonAnh(anhNen).ghiNguon}
+          {trangThaiAnh ? ` · mức ${trangThaiAnh.z}` : ""}
+          {trangThaiAnh?.loi ? ` · không tải được ${trangThaiAnh.loi}/${trangThaiAnh.tong} ô (kiểm tra Internet)` : ""}
+        </div>
+      )}
       <div className="toa-do">{toaDo || "VN-2000"}{nhin ? ` · tỷ lệ màn hình ≈ 1:${Math.round(3780 / nhin.tyLe).toLocaleString("vi-VN")}` : ""}</div>
     </div>
   );

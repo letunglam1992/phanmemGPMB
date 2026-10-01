@@ -1,0 +1,44 @@
+/** Nhiều tờ bản đồ trong một dự án (docs/08 §9.9): chọn tờ dựng chung, số tờ đọc được, tên tệp tham chiếu chưa nạp. */
+import { describe, expect, it } from "vitest";
+import { VietDgn } from "../../../packages/gis/test/viet-dgn";
+import { dsSoTo, khoaNapBanDo, napTatCa, phanTichNhieu, tepDangBat, thamChieuThieu } from "../src/man/ban-do/du-lieu";
+import type { DuAn } from "../src/mo-hinh";
+
+function to(soTo: string, x0: number, n: number, them = "") {
+  const v = new VietDgn(100, 1, [0, 0]);
+  for (let i = 0; i < n; i++) {
+    const x = x0 + i * 20;
+    v.duongGap({ lop: 10 }, [[x, 2350000], [x + 20, 2350000], [x + 20, 2350020], [x, 2350020], [x, 2350000]], 6).chu({ lop: 4 }, [x + 5, 2350008], String(i + 1)).chu({ lop: 5 }, [x + 5, 2350004], soTo);
+  }
+  const b = v.xuat();
+  return them ? new Uint8Array([...b, ...new TextEncoder().encode(them)]) : b;
+}
+const banDo = (o: Partial<NonNullable<DuAn["banDo"]>> = {}): NonNullable<DuAn["banDo"]> => ({ tenTep: "to7.dgn", ngayNhap: "2026-10-01T00:00:00Z", vungChon: null, tepGhep: [{ id: "a", tenTep: "to8.dgn", ngayNhap: "2026-10-01T00:00:00Z" }], ...o });
+
+describe("Nhiều tờ bản đồ", () => {
+  it("khóa nạp đổi khi bật/tắt tờ; tắt hết thì vẫn dùng tệp chính", () => {
+    const b = banDo();
+    expect(khoaNapBanDo(b)).not.toBe(khoaNapBanDo({ ...b, anTepChinh: true }));
+    expect(khoaNapBanDo(b)).not.toBe(khoaNapBanDo({ ...b, tepGhep: [{ ...b.tepGhep![0]!, an: true }] }));
+    expect(tepDangBat({ ...b, anTepChinh: true })).toMatchObject({ chinh: false, ghep: [{ id: "a" }] });
+    expect(tepDangBat({ ...b, anTepChinh: true, tepGhep: [{ ...b.tepGhep![0]!, an: true }] })).toMatchObject({ chinh: true, ghep: [] });
+  });
+
+  it("chỉ dựng các tờ đang bật; số tờ, số thửa; tham chiếu chưa nạp", async () => {
+    const tep: Record<string, Uint8Array> = { d: to("7", 500000, 3, "\0C:\\DC\\to9.dgn\0to8.dgn\0"), "d#a": to("8", 500100, 2) };
+    const kho = { docBanDo: async (id: string) => tep[id] ?? null };
+    const duAn = { id: "d", banDo: banDo() } as unknown as DuAn;
+    const ca = (await napTatCa(kho, duAn))!;
+    expect(ca.kq.thua).toHaveLength(5);
+    expect(dsSoTo(ca).map((x) => [x.soTo, x.soThua])).toEqual([["7", 3], ["8", 2]]);
+    expect(ca.tep!.map((t) => [t.khoa, t.ten])).toEqual([["", "to7.dgn"], ["a", "to8.dgn"]]);
+    expect(ca.tep![0]!.thamChieu).toEqual(["to9.dgn", "to8.dgn"]);
+    expect(thamChieuThieu(ca, duAn.banDo!)).toEqual([{ tu: "to7.dgn", ten: "to9.dgn" }]);
+    const chi8 = (await napTatCa(kho, { ...duAn, banDo: banDo({ anTepChinh: true }) }))!;
+    expect(dsSoTo(chi8).map((x) => x.soTo)).toEqual(["8"]);
+    expect(chi8.tep!.map((t) => t.khoa)).toEqual(["a"]);
+    const ph = dsSoTo(chi8)[0]!.pham;
+    for (const [k, v] of Object.entries({ minX: 500100, minY: 2350000, maxX: 500140, maxY: 2350020 })) expect(ph[k as keyof typeof ph]).toBeCloseTo(v, 2);
+    expect(phanTichNhieu([{ ten: "x.dgn", bytes: tep.d! }]).tep![0]!.khoa).toBe("");
+  });
+});

@@ -53,13 +53,20 @@ GDAL (thư viện GIS nguồn mở phổ biến) chỉ đọc 28.041 phần tử
 - **Diện tích dùng lập phương án** vẫn lấy theo hồ sơ đo đạc, trích đo được duyệt (nhập/đối chiếu trong hồ sơ thửa); số liệu bản đồ để kiểm tra chéo, chênh lệch được cảnh báo.
 - Làm tròn 2 chữ số thập phân (QD-03) khi đưa vào hồ sơ.
 
-## 5. Nền bản đồ trực tuyến (nếu người dùng chọn bật)
+## 5. Nền bản đồ trực tuyến — ảnh vệ tinh (0.9.9, người dùng chọn bật)
 
 | Dữ liệu truyền đi | Mục đích | Chi phí |
 |---|---|---|
-| Tọa độ khung nhìn (ô bản đồ) gửi tới máy chủ bản đồ nền | Tải ảnh nền | OpenStreetMap: miễn phí, giới hạn sử dụng; dịch vụ thương mại: theo báo giá |
+| Số hiệu ô ảnh (mức phóng z, cột x, hàng y) của khung đang xem gửi tới máy chủ ảnh nền — từ đó máy chủ biết khu vực đang xem | Tải ảnh nền | Esri World Imagery, OpenStreetMap: miễn phí, có giới hạn sử dụng và yêu cầu ghi nguồn; dịch vụ khác (URL XYZ tùy chỉnh): theo điều kiện của nhà cung cấp |
 
-Không gửi thửa, tên chủ, hồ sơ. Mặc định **tắt**.
+Không gửi thửa, tên chủ, hồ sơ, tệp bản đồ. Mặc định **tắt**; lần bật đầu tiên trên máy hiện hộp xác nhận nêu rõ dữ liệu gửi đi.
+
+Đặt ảnh lên bản đồ VN-2000 (`packages/gis/src/vn2000.ts`):
+- Tọa độ phẳng → kinh, vĩ độ VN-2000: phép chiếu UTM ngang (Transverse Mercator) trên ellipsoid WGS-84, FE 500 000 m, k0 = 0,9999 (múi 3°) hoặc 0,9996 (múi 6°); kinh tuyến trục theo tỉnh — Sơn La 104°00′ (Thông tư 973/2001/TT-TCĐC), cán bộ đổi được.
+- VN-2000 → WGS-84: Helmert 7 tham số theo Quyết định 05/2007/QĐ-BTNMT (chuỗi PROJ `+towgs84=-191.90441,-39.30318,-111.45032,0.00928836,-0.01975479,0.00427372,0.252906278`).
+- Ô Web Mercator (256 px) vẽ bằng biến đổi affine từng ô theo 3 góc đã đổi sang VN-2000; mức phóng theo tỷ lệ màn hình, tối đa 120 ô một khung nhìn.
+- Đối chiếu: 4 điểm quanh Sơn La + 1 điểm múi 6° khớp PROJ (proj4js 2.x) trong 1·10⁻⁷ độ (~1 cm) — `packages/gis/test/vn2000.test.ts`.
+- Sai lệch thực tế do ảnh nền (nắn ảnh, độ phân giải) thường vài mét → có ô "Dịch Đông/Bắc (m)" để khớp; **ảnh chỉ để tham khảo trực quan, không dùng đo đạc, tính diện tích**.
 
 ## 6. Kiểm thử
 
@@ -143,5 +150,5 @@ Tình trạng: hạng mục **1** (ranh GPMB nhập ngoài: tọa độ mốc, D
 | 6 | Lớp ghi chú hiện trường (điểm/đường: vướng mắc, mộ, công trình chưa kiểm đếm), gắn với hộ, lưu theo dự án | Theo dõi vướng mắc tại chỗ |
 | 7 | Chồng điểm đo hiện trạng (Excel tọa độ VN-2000), gắn vị trí tài sản kiểm đếm | Đối chiếu kiểm đếm với thực địa |
 | 8 | So sánh hai bản đồ (trích đo lần đầu và bổ sung): tô thửa thay đổi hình dạng/diện tích | Kiểm soát điều chỉnh phương án |
-| 9 | Ghép nhiều tờ/tệp trong một dự án, đọc tham chiếu ngoài | Dự án tuyến dài nhiều tờ |
+| 9 | Ghép nhiều tờ/tệp trong một dự án, đọc tham chiếu ngoài — 0.9.9: hộp "Tờ bản đồ" chọn tờ dùng (bật/tắt từng tờ, "Chỉ tờ này"), phóng tới tờ/số tờ, dò tên tệp tham chiếu chưa nạp (tham chiếu ngoài vẫn không dựng — nạp chính các tệp đó làm tờ) | Dự án tuyến dài nhiều tờ |
 | 10 | Bắt điểm nâng cao (trung điểm, giao điểm, vuông góc), lưu kết quả đo | Đo kiểm nhanh hơn |

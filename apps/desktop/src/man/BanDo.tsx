@@ -7,7 +7,7 @@ import { tinhHo } from "../tinh-ho";
 import { THU_TU_TRANG_THAI, homNayIso, trangThaiHo, type TrangThaiGpmb } from "../trang-thai";
 import { PhanBoTrangThai } from "../thanh-phan/BieuDo";
 import { Chon } from "../thanh-phan/Chon";
-import { type DuLieuBanDo, boNho, layDem, TEN_CO, phanTich, dungLai, khoaNapBanDo, khoaTepGhep, napTatCa } from "./ban-do/du-lieu";
+import { type DuLieuBanDo, boNho, layDem, TEN_CO, phanTich, dungLai, khoaNapBanDo, khoaTepGhep, napTatCa, thamChieuThieu } from "./ban-do/du-lieu";
 import { HopCauHinhLop } from "./ban-do/CauHinhLop";
 import { TomTatThuHoi, KiemTraBanDo, ChiTietThua } from "./ban-do/KiemTra";
 import { KhungVe } from "./ban-do/KhungVe";
@@ -57,7 +57,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
   const [soSanh, setSoSanh] = useState<{ tep: string; ds: SoSanhThua[] } | null>(null);
   const [khoGiay, setKhoGiay] = useState<KhoGiay>("A3");
   const [dangPdf, setDangPdf] = useState(false);
-  const [phongToi, setPhongToi] = useState<{ vong: import("@gpmb/gis").Diem[][]; n: number } | null>(null);
+  const [phongToi, setPhongToi] = useState<{ vong: import("@gpmb/gis").Diem[][]; n: number; vua?: boolean } | null>(null);
   const inputTep = useRef<HTMLInputElement>(null);
   const khoaNap = duAn?.banDo ? `${duAnId}|${khoaNapBanDo(duAn.banDo)}` : "";
 
@@ -155,7 +155,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
     setCheDoChonThua(false);
     try {
       const bytes = new Uint8Array(await f.arrayBuffer());
-      const d = phanTich(bytes);
+      const d = phanTich(bytes, undefined, f.name);
       const ngayNhap = new Date().toISOString();
       await kho.luuBanDo(duAnId, bytes);
       boNho.set(duAnId, { ngayNhap: ngayNhap, d });
@@ -205,7 +205,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
   const apDungCauHinh = async (ch: CauHinhLop | null) => {
     if (!dl || !duAn.banDo) return;
     const goiY = ch ? null : goiYCauHinh(dl.ban, CAU_HINH_MAC_DINH);
-    const d = dungLai(dl.ban, ch ?? goiY!.cauHinh, !ch, goiY?.ghiChu ?? []);
+    const d = { ...dungLai(dl.ban, ch ?? goiY!.cauHinh, !ch, goiY?.ghiChu ?? []), tep: dl.tep };
     boNho.set(duAnId, { ngayNhap: khoaNapBanDo(duAn.banDo), d });
     veLai();
     setChon(null);
@@ -249,7 +249,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
               Xóa bản đồ
             </button>
           )}
-          {dl && <button className="nut" onClick={() => setHopPhu("GHEP")} title="Ghép nhiều tờ, mảnh trích đo vào một bản đồ">Ghép tệp{duAn.banDo?.tepGhep?.length ? ` (${duAn.banDo.tepGhep.length + 1})` : ""}…</button>}
+          {dl && <button className="nut" onClick={() => setHopPhu("GHEP")} title="Các tờ bản đồ, mảnh trích đo của dự án: thêm tờ, chọn tờ dùng, phóng tới tờ">Tờ bản đồ{duAn.banDo?.tepGhep?.length ? ` (${duAn.banDo.tepGhep.filter((t) => !t.an).length + (duAn.banDo.anTepChinh ? 0 : 1)}/${duAn.banDo.tepGhep.length + 1})` : ""}…</button>}
           {dl && <button className="nut" onClick={() => setHopPhu("SO_SANH")} title="So sánh với bản trích đo khác: thửa đổi diện tích, hình dạng, thửa mới/không còn">So sánh bản đồ…</button>}
           {dl && (
             <span className="nhom-nut" style={{ gap: 4 }}>
@@ -271,6 +271,12 @@ export function BanDo({ duAnId }: { duAnId: string }) {
         </div>
       </div>
       {loi && <div className="thong-bao thong-bao-do">{loi}</div>}
+      {dl && duAn.banDo && thamChieuThieu(dl, duAn.banDo).length > 0 && (
+        <div className="thong-bao thong-bao-vang" style={{ marginBottom: 12 }}>
+          Bản đồ nhắc tới tệp chưa nạp (có thể là tờ tham chiếu — phần mềm không dựng tham chiếu ngoài): {thamChieuThieu(dl, duAn.banDo).map((x) => x.ten).join(", ")}.{" "}
+          <button className="nut nut-chu nut-nho" onClick={() => setHopPhu("GHEP")}>Thêm tờ bản đồ…</button>
+        </div>
+      )}
       {dl && dl.laGoiY && dl.ghiChuGoiY.length > 0 && (
         <div className="thong-bao thong-bao-vang" style={{ marginBottom: 12 }}>
           <b>Cấu hình lớp đang dùng là gợi ý, chưa được chốt.</b> {dl.ghiChuGoiY.join(" ")}{" "}
@@ -400,7 +406,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
         </HopThoai>
       )}
       {ghiChuMoi && dl && <HopGhiChu dl={dl} loai={ghiChuMoi.loai} diem={ghiChuMoi.diem} daLienKet={daLienKet} hos={hos} dong={() => setGhiChuMoi(null)} luu={(g) => void luuBanDoDa({ ghiChu: [...lopPhu.ghiChu, { ...g, id: taoId(), ngay: new Date().toISOString(), nguoi: nguoiDung }] })} />}
-      {hopPhu === "GHEP" && <HopTepGhep duAn={duAn} dong={() => setHopPhu(null)} />}
+      {hopPhu === "GHEP" && duAn.banDo && <HopTepGhep duAn={duAn} dl={dl} dong={() => setHopPhu(null)} phongToi={(r) => setPhongToi({ vong: [[{ x: r.minX, y: r.minY }, { x: r.maxX, y: r.minY }, { x: r.maxX, y: r.maxY }, { x: r.minX, y: r.maxY }]], n: Date.now(), vua: true })} />}
       {hopPhu === "SO_SANH" && dl && <HopSoSanh duAn={duAn} dl={dl} ketQua={setSoSanh} dong={() => setHopPhu(null)} />}
       {capNhatDt && dl && <HopCapNhatDt duAn={duAn} dl={dl} thuHoi={thuHoi} khoaThua={khoaThua} hos={hos} dong={() => setCapNhatDt(false)} />}
       {taoHo && dl && coPhamVi && (

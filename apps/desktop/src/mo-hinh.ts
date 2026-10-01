@@ -459,7 +459,9 @@ export interface BanDoDuAn {
   /** Kết quả đo đã lưu (chiều dài, diện tích) — docs/08 §9.10. */
   ketQuaDo?: KetQuaDoLuu[];
   /** Tệp DGN ghép thêm (tờ khác, mảnh trích đo khác) — lưu ở kho bản đồ với khóa "{duAnId}#{id}" — docs/08 §9.9. */
-  tepGhep?: { id: string; tenTep: string; ngayNhap: string }[];
+  tepGhep?: { id: string; tenTep: string; ngayNhap: string; /** tờ đang tắt (không dựng) */ an?: boolean }[];
+  /** Tắt tệp chính (chỉ dựng các tờ ghép đang bật). */
+  anTepChinh?: boolean;
 }
 
 export type NhomGhiChu = "VUONG_MAC" | "MO" | "CONG_TRINH" | "KHAC";
