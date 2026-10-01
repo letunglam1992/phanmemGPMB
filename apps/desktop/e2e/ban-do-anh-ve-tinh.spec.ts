@@ -93,7 +93,11 @@ test("ảnh vệ tinh: mặc định tắt, hỏi đồng ý, vẽ ô ảnh dư�
   p.on("request", (r) => {
     if (!r.url().startsWith("http://localhost")) ngoai.push(r.url());
   });
-  await p.route("https://server.arcgisonline.com/**", (r) => r.fulfill({ status: 200, contentType: "image/png", body: png(256, 256, [20, 160, 60]) }));
+  // Máy chủ giả lập như Esri: có CORS; mức ≥ 18 trả ô xám "chưa có ảnh", mức thấp hơn trả ảnh xanh
+  await p.route("https://server.arcgisonline.com/**", (r) => {
+    const z = Number(/\/tile\/(\d+)\//.exec(r.request().url())?.[1] ?? 0);
+    return r.fulfill({ status: 200, contentType: "image/png", headers: { "Access-Control-Allow-Origin": "*" }, body: png(256, 256, z >= 18 ? [204, 204, 204] : [20, 160, 60]) });
+  });
   const hoi: string[] = [];
   p.on("dialog", (d) => {
     hoi.push(d.message());
@@ -122,18 +126,33 @@ test("ảnh vệ tinh: mặc định tắt, hỏi đồng ý, vẽ ô ảnh dư�
   await expect.poll(() => mauTai(p, 0.5, 0.15)).toEqual([20, 160, 60]);
   // vùng thửa vẫn có nét thửa vẽ trên ảnh (màu vàng) — tâm thửa 1 vẫn là ảnh
   await p.screenshot({ path: "test-results/ban-do-anh-ve-tinh.png" });
+  // phóng to tới mức 19: ô mức 18–19 xám "chưa có ảnh" → vẫn hiện ảnh mức 17 phóng to, không hiện ô xám
+  const bc = (await p.locator(".ban-do canvas").boundingBox())!;
+  await p.mouse.move(bc.x + bc.width / 2, bc.y + bc.height / 2);
+  for (let i = 0; i < 6; i++) await p.mouse.wheel(0, -400);
+  await expect(p.getByRole("status", { name: "Ghi nguồn ảnh nền" })).toContainText("mức 19 (ảnh mức 17 phóng to)");
+  // vài điểm mẫu (tránh trúng nét thửa): có điểm màu ảnh mức 17, không điểm nào xám của ô trống
+  const mau = async () => Promise.all([[0.3, 0.33], [0.62, 0.41], [0.45, 0.72], [0.8, 0.6]].map(([x, y]) => mauTai(p, x!, y!)));
+  await expect.poll(async () => (await mau()).some((m) => m.join() === "20,160,60")).toBe(true);
+  expect((await mau()).some((m) => m.join() === "204,204,204")).toBe(false);
+  expect(ngoai.some((u) => /\/tile\/19\//.test(u))).toBe(true);
+  await p.screenshot({ path: "test-results/ban-do-anh-ve-tinh-phong-to.png" });
+  await p.mouse.wheel(0, 2400);
 
   // ô ở kinh tuyến trục 104°: x của ô quanh 104° kinh Đông
-  const xO = (ds: string[]) => [...new Set(ds.map((u) => Number(/\/tile\/\d+\/\d+\/(\d+)$/.exec(u)![1])))];
-  const z = Number(/\/tile\/(\d+)\//.exec(ngoai[0]!)![1]);
-  const lon = (x: number) => (x / 2 ** z) * 360 - 180;
-  expect(xO(ngoai).every((x) => Math.abs(lon(x) - 104) < 0.05)).toBe(true);
+  // kinh độ góc trái ô theo z/x của chính URL (ô mức thấp rộng hơn → so theo nửa độ)
+  const lon = (u: string) => {
+    const [, z, , x] = /\/tile\/(\d+)\/(\d+)\/(\d+)$/.exec(u)!.map(Number) as number[];
+    return { lon: (x! / 2 ** z!) * 360 - 180, rong: 360 / 2 ** z! };
+  };
+  const gan = (u: string, kt: number) => { const l = lon(u); return kt >= l.lon - 0.05 && kt <= l.lon + l.rong + 0.05; };
+  expect(ngoai.every((u) => gan(u, 104))).toBe(true);
   // đổi kinh tuyến trục 105°45′ → ô quanh 105,75°
   await p.getByRole("button", { name: "Mở bảng lớp" }).click();
   await p.getByRole("button", { name: "Cài đặt ảnh vệ tinh" }).click();
   const truoc = ngoai.length;
   await p.getByLabel("Kinh tuyến trục").fill("105°45'");
-  await expect.poll(() => ngoai.slice(truoc).some((u) => Math.abs(lon(Number(/\/(\d+)$/.exec(u)![1])) - 105.75) < 0.05)).toBe(true);
+  await expect.poll(() => ngoai.slice(truoc).some((u) => gan(u, 105.75))).toBe(true);
   await expect(p.getByLabel("Kinh tuyến trục")).toHaveValue("105°45'");
   await p.getByLabel("Kinh tuyến trục").blur();
   await expect(p.getByLabel("Kinh tuyến trục")).toHaveValue("105°45′");

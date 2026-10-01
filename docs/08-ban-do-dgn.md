@@ -66,6 +66,7 @@ Không gửi thửa, tên chủ, hồ sơ, tệp bản đồ. Mặc định **t�
 - VN-2000 → WGS-84: Helmert 7 tham số theo Quyết định 05/2007/QĐ-BTNMT (chuỗi PROJ `+towgs84=-191.90441,-39.30318,-111.45032,0.00928836,-0.01975479,0.00427372,0.252906278`).
 - Ô Web Mercator (256 px) vẽ bằng biến đổi affine từng ô theo 3 góc đã đổi sang VN-2000; mức phóng theo tỷ lệ màn hình, tối đa 120 ô một khung nhìn.
 - Đối chiếu: 4 điểm quanh Sơn La + 1 điểm múi 6° khớp PROJ (proj4js 2.x) trong 1·10⁻⁷ độ (~1 cm) — `packages/gis/test/vn2000.test.ts`.
+- Máy chủ chưa có ảnh ở mức phóng lớn (Esri trả ô xám "Map data not yet available"): nhận ô xám trung tính, vẽ ảnh mức thấp hơn phóng to (tối đa 8 mức); có tùy chọn "Mức ảnh tối đa" (0.9.10).
 - Sai lệch thực tế do ảnh nền (nắn ảnh, độ phân giải) thường vài mét → có ô "Dịch Đông/Bắc (m)" để khớp; **ảnh chỉ để tham khảo trực quan, không dùng đo đạc, tính diện tích**.
 
 ## 6. Kiểm thử
