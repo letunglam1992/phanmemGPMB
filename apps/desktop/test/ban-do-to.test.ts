@@ -1,7 +1,7 @@
 /** Nhiều tờ bản đồ trong một dự án (docs/08 §9.9): chọn tờ dựng chung, số tờ đọc được, tên tệp tham chiếu chưa nạp. */
 import { describe, expect, it } from "vitest";
 import { VietDgn } from "../../../packages/gis/test/viet-dgn";
-import { dsSoTo, khoaNapBanDo, napTatCa, phanTichNhieu, tepDangBat, thamChieuThieu } from "../src/man/ban-do/du-lieu";
+import { dsSoTo, khoaNapBanDo, locThuaXoa, napTatCa, phanTichNhieu, tepDangBat, thamChieuThieu } from "../src/man/ban-do/du-lieu";
 import type { DuAn } from "../src/mo-hinh";
 
 function to(soTo: string, x0: number, n: number, them = "") {
@@ -40,5 +40,18 @@ describe("Nhiều tờ bản đồ", () => {
     const ph = dsSoTo(chi8)[0]!.pham;
     for (const [k, v] of Object.entries({ minX: 500100, minY: 2350000, maxX: 500140, maxY: 2350020 })) expect(ph[k as keyof typeof ph]).toBeCloseTo(v, 2);
     expect(phanTichNhieu([{ ten: "x.dgn", bytes: tep.d! }]).tep![0]!.khoa).toBe("");
+  });
+
+  it("thửa đã xóa: bỏ khi dựng lại từ tệp (theo mã + tâm nhãn), đổi khóa nạp; tâm lệch xa thì không bỏ", async () => {
+    const tep: Record<string, Uint8Array> = { d: to("7", 500000, 3) };
+    const kho = { docBanDo: async (id: string) => tep[id] ?? null };
+    const goc = (await napTatCa(kho, { id: "d", banDo: banDo({ tepGhep: [] }) } as unknown as DuAn))!;
+    const t2 = goc.kq.thua.find((t) => t.soThua === "2")!;
+    const x = { ma: t2.ma, tam: t2.tamNhan, soTo: "7", soThua: "2", dienTich: 400, ngay: "2026-10-01", nguoi: "a" };
+    const b = banDo({ tepGhep: [], thuaXoa: [x] });
+    expect(khoaNapBanDo(b)).not.toBe(khoaNapBanDo(banDo({ tepGhep: [] })));
+    const sau = (await napTatCa(kho, { id: "d", banDo: b } as unknown as DuAn))!;
+    expect(sau.kq.thua.map((t) => t.soThua)).toEqual(["1", "3"]);
+    expect(locThuaXoa(goc, [{ ...x, tam: { x: 0, y: 0 } }]).kq.thua).toHaveLength(3);
   });
 });

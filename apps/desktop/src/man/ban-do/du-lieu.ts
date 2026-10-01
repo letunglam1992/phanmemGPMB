@@ -1,5 +1,6 @@
 import { CAU_HINH_MAC_DINH, docDgn, dungThua, ghepBanDo, goiYCauHinh, timThamChieu, type CauHinhLop, type KetQuaDocDgn, type KetQuaDungThua } from "@gpmb/gis";
-import { type DuAn } from "../../mo-hinh";
+import { type DuAn, type ThuaXoa } from "../../mo-hinh";
+import type { ThuaBanDo } from "@gpmb/gis";
 
 export interface DuLieuBanDo {
   ban: KetQuaDocDgn;
@@ -45,7 +46,16 @@ function thongTinTep(khoa: string, ten: string, bytes: Uint8Array, ban: KetQuaDo
 export const boNho = new Map<string, { ngayNhap: string; d: DuLieuBanDo }>();
 
 /** Khóa lần nạp: tệp chính + các tệp ghép và trạng thái bật/tắt từng tờ (thêm/bỏ/bật/tắt thì dựng lại). */
-export const khoaNapBanDo = (b: NonNullable<DuAn["banDo"]>) => [b.ngayNhap + (b.anTepChinh ? "~" : ""), ...(b.tepGhep ?? []).map((t) => t.id + (t.an ? "~" : ""))].join("|");
+export const khoaNapBanDo = (b: NonNullable<DuAn["banDo"]>) => [b.ngayNhap + (b.anTepChinh ? "~" : ""), ...(b.tepGhep ?? []).map((t) => t.id + (t.an ? "~" : "")), ...(b.thuaXoa?.length ? [`x:${b.thuaXoa.map((t) => t.ma).join(",")}`] : [])].join("|");
+
+/** Thửa bản đồ trùng một thửa đã xóa: cùng mã (hoặc cùng số tờ, số thửa) và tâm nhãn lệch < 1 m. */
+export const laThuaXoa = (t: ThuaBanDo, x: ThuaXoa) => Math.hypot(t.tamNhan.x - x.tam.x, t.tamNhan.y - x.tam.y) < 1 && (t.ma === x.ma || (!!x.soTo && !!x.soThua && t.soTo === x.soTo && t.soThua === x.soThua));
+
+/** Bỏ các thửa cán bộ đã xóa khỏi bản đồ (dữ liệu dựng từ tệp không đổi). */
+export function locThuaXoa(d: DuLieuBanDo, ds: ThuaXoa[] | undefined): DuLieuBanDo {
+  if (!ds?.length) return d;
+  return { ...d, kq: { ...d.kq, thua: d.kq.thua.filter((t) => !ds.some((x) => laThuaXoa(t, x))) } };
+}
 
 /** Có ít nhất một tờ đang bật — tắt hết thì vẫn dựng tệp chính. */
 export const tepDangBat = (b: NonNullable<DuAn["banDo"]>) => ({ chinh: !b.anTepChinh || !(b.tepGhep ?? []).some((t) => !t.an), ghep: (b.tepGhep ?? []).filter((t) => !t.an) });
@@ -70,7 +80,7 @@ export async function napTatCa(kho: { docBanDo(id: string): Promise<Uint8Array |
     if (b) ds.push({ khoa: t.id, ten: t.tenTep, bytes: b });
   }
   if (!ds.length) ds.push({ khoa: "", ten: duAn.banDo.tenTep, bytes: chinh });
-  return phanTichNhieu(ds, duAn.banDo.cauHinh);
+  return locThuaXoa(phanTichNhieu(ds, duAn.banDo.cauHinh), duAn.banDo.thuaXoa);
 }
 
 /** Dựng thửa từ một hay nhiều tệp (tờ bản đồ) cùng hệ VN-2000. */

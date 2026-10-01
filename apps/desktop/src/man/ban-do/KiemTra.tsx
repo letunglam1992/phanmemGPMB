@@ -88,10 +88,10 @@ export function KiemTraBanDo({ dl, coPhamVi, soVung, moCauHinh, ttThua }: { dl: 
   );
 }
 
-export function ChiTietThua({ t, th, ho, tt, moHo, tomTat }: { t: ThuaBanDo; th?: DienTichThuHoi; ho?: Ho; tt?: TrangThaiGpmb; moHo: (h: Ho) => void; tomTat?: React.ReactNode }) {
+export function ChiTietThua({ t, th, ho, tt, moHo, tomTat, xoa }: { t: ThuaBanDo; th?: DienTichThuHoi; ho?: Ho; tt?: TrangThaiGpmb; moHo: (h: Ho) => void; tomTat?: React.ReactNode; xoa?: () => void }) {
   return (
     <div className="the">
-      <div className="the-dau"><h3>Tờ {t.soTo ?? "?"}, thửa {t.soThua ?? "?"}</h3></div>
+      <div className="the-dau"><h3>Tờ {t.soTo ?? "?"}, thửa {t.soThua ?? "?"}</h3>{xoa && <div className="phai"><button className="nut nut-chu nut-nguy nut-nho" title="Bỏ thửa khỏi bản đồ của phần mềm (thửa dựng sai, trùng…) — tệp DGN giữ nguyên, khôi phục được" onClick={xoa}>Xóa thửa khỏi bản đồ</button></div>}</div>
       <div className="the-than chu-nho" style={{ display: "grid", gap: 4 }}>
         <div>Chủ sử dụng: <b>{t.chuSuDung ?? "—"}</b> · Loại (bản đồ): <b>{t.loaiDatBanDo ? tenDayDu(t.loaiDatBanDo) : "—"}</b></div>
         <div>DT ghi: <b>{t.dienTichGhi ?? "—"}</b> m² · DT hình học: <b>{t.dienTichHinhHoc.toFixed(2)}</b> m²{th && th.phamVi !== "NGOAI" ? <> · Thu hồi: <b>{th.dienTichThuHoi.toFixed(2)}</b> m² ({th.phamVi === "TOAN_BO" ? "toàn bộ" : "một phần"})</> : null}</div>

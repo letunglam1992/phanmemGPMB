@@ -21,6 +21,8 @@ export function TheVungChon(p: {
   dl: DuLieuBanDo;
   chon: Set<string>;
   boChon: () => void;
+  /** Xóa các thửa đang chọn khỏi bản đồ */
+  xoa?: (ds: ThuaBanDo[]) => void;
   thuHoi: Map<string, DienTichThuHoi>;
   khoaThua: (t: ThuaBanDo) => string;
   daLienKet: Map<string, Ho>;
@@ -62,6 +64,7 @@ export function TheVungChon(p: {
         <div>Tổng tiền (tạm tính, {hos.length} hồ sơ): <b>{dinhDang(tongTien, 0)}</b> đ</div>
         {hos.length > 0 && <PhanBoTrangThai dem={dem} tong={ds.length - chuaHoSo.length} donVi="thửa" />}
         <div className="nhom-nut">
+          {p.xoa && <button className="nut nut-nho nut-nguy" title="Bỏ các thửa đang chọn khỏi bản đồ của phần mềm — tệp DGN giữ nguyên, khôi phục được" onClick={() => p.xoa!(ds)}>Xóa {ds.length} thửa khỏi bản đồ…</button>}
           {chuaHoSo.length > 0 && <button className="nut nut-nho" disabled={!sua} onClick={() => setHop("TAO")}>Tạo hồ sơ ({chuaHoSo.length} thửa)…</button>}
           {hos.length > 0 && coDot(p.duAn) && <button className="nut nut-nho" disabled={!sua} onClick={() => setHop("DOT")}>Xếp đợt…</button>}
           {hos.length > 0 && <button className="nut nut-nho" disabled={!sua} onClick={() => setHop("PC")}>Phân công…</button>}

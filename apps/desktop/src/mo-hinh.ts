@@ -462,6 +462,22 @@ export interface BanDoDuAn {
   tepGhep?: { id: string; tenTep: string; ngayNhap: string; /** tờ đang tắt (không dựng) */ an?: boolean }[];
   /** Tắt tệp chính (chỉ dựng các tờ ghép đang bật). */
   anTepChinh?: boolean;
+  /**
+   * Thửa cán bộ xóa khỏi bản đồ (thửa dựng sai, trùng, ngoài phạm vi…) — chỉ bỏ khỏi bản đồ của phần mềm, tệp DGN giữ nguyên;
+   * khôi phục được. Nhận lại thửa theo mã + tâm nhãn (lệch < 1 m).
+   */
+  thuaXoa?: ThuaXoa[];
+}
+
+export interface ThuaXoa {
+  ma: string;
+  tam: import("@gpmb/gis").Diem;
+  soTo: string | null;
+  soThua: string | null;
+  dienTich: number;
+  ngay: string;
+  nguoi: string;
+  lyDo?: string;
 }
 
 export type NhomGhiChu = "VUONG_MAC" | "MO" | "CONG_TRINH" | "KHAC";

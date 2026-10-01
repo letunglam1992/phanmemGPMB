@@ -7,7 +7,8 @@ import { tinhHo } from "../tinh-ho";
 import { THU_TU_TRANG_THAI, homNayIso, trangThaiHo, type TrangThaiGpmb } from "../trang-thai";
 import { PhanBoTrangThai } from "../thanh-phan/BieuDo";
 import { Chon } from "../thanh-phan/Chon";
-import { type DuLieuBanDo, boNho, layDem, TEN_CO, phanTich, dungLai, khoaNapBanDo, khoaTepGhep, napTatCa, thamChieuThieu } from "./ban-do/du-lieu";
+import { type DuLieuBanDo, boNho, layDem, TEN_CO, phanTich, dungLai, khoaNapBanDo, khoaTepGhep, napTatCa, thamChieuThieu, locThuaXoa } from "./ban-do/du-lieu";
+import { TheThuaXoa } from "./ban-do/ThuaXoa";
 import { HopCauHinhLop } from "./ban-do/CauHinhLop";
 import { TomTatThuHoi, KiemTraBanDo, ChiTietThua } from "./ban-do/KiemTra";
 import { KhungVe } from "./ban-do/KhungVe";
@@ -140,6 +141,35 @@ export function BanDo({ duAnId }: { duAnId: string }) {
   const [thieuPhamVi, setThieuPhamVi] = useState(false);
   const luuBanDoDa = (p: Partial<NonNullable<DuAn["banDo"]>>) => duAn?.banDo && luuDuAn({ ...duAn, banDo: { ...duAn.banDo, ...p } });
   const doiThuaChon = (ds: string[]) => void luuBanDoDa({ thuaChon: ds });
+  /** Xóa thửa khỏi bản đồ của phần mềm (tệp DGN giữ nguyên, khôi phục được); hồ sơ hộ đã gắn giữ nguyên. */
+  const xoaThua = async (ds: ThuaBanDo[]) => {
+    if (!dl || !duAn?.banDo || !ds.length) return;
+    if (!quyen("SUA_HO_SO")) return bao("Tài khoản không có quyền sửa bản đồ", "loi");
+    const gan = ds.filter((t) => daLienKet.has(t.ma));
+    const ten = ds.slice(0, 8).map((t) => `${t.soTo ?? "?"}/${t.soThua ?? "?"}`).join(", ") + (ds.length > 8 ? "…" : "");
+    const lyDo = prompt(
+      `Xóa ${ds.length} thửa khỏi bản đồ (tờ/thửa: ${ten})?\n\nChỉ bỏ khỏi bản đồ của phần mềm — tệp DGN giữ nguyên, khôi phục được ở thẻ "Thửa đã xóa khỏi bản đồ".` +
+        (gan.length ? `\n\nLƯU Ý: ${gan.length} thửa đang gắn hồ sơ hộ (${gan.map((t) => daLienKet.get(t.ma)!.ten).slice(0, 5).join(", ")}) — hồ sơ giữ nguyên, chỉ mất vị trí trên bản đồ.` : "") +
+        "\n\nLý do xóa (thửa dựng sai, trùng, ngoài phạm vi…):",
+      "",
+    );
+    if (lyDo === null) return;
+    const ngay = new Date().toISOString();
+    const moi = [...(duAn.banDo.thuaXoa ?? []), ...ds.map((t) => ({ ma: t.ma, tam: t.tamNhan, soTo: t.soTo, soThua: t.soThua, dienTich: Math.round(t.dienTichHinhHoc * 100) / 100, ngay, nguoi: nguoiDung, lyDo: lyDo.trim() || undefined }))];
+    const ma = new Set(ds.map((t) => t.ma));
+    const banDo = { ...duAn.banDo, thuaXoa: moi, thuaChon: (duAn.banDo.thuaChon ?? []).filter((m) => !ma.has(m)) };
+    boNho.set(duAnId, { ngayNhap: khoaNapBanDo(banDo), d: locThuaXoa(dl, moi) });
+    setChon(null);
+    setQuet(new Set());
+    await luuDuAn({ ...duAn, banDo });
+    bao(`Đã xóa ${ds.length} thửa khỏi bản đồ`);
+  };
+  const khoiPhucThua = async (giu: (x: import("../mo-hinh").ThuaXoa) => boolean) => {
+    if (!duAn?.banDo) return;
+    boNho.delete(duAnId); // dựng lại từ tệp để có lại thửa
+    await luuDuAn({ ...duAn, banDo: { ...duAn.banDo, thuaXoa: (duAn.banDo.thuaXoa ?? []).filter(giu) } });
+    bao("Đã khôi phục thửa lên bản đồ");
+  };
   const batTatThua = (t: ThuaBanDo) => { const s = new Set(thuaChon); if (s.has(t.ma)) s.delete(t.ma); else s.add(t.ma); doiThuaChon([...s]); };
 
   const hos = hoCua(duAnId);
@@ -219,7 +249,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
   const apDungCauHinh = async (ch: CauHinhLop | null) => {
     if (!dl || !duAn.banDo) return;
     const goiY = ch ? null : goiYCauHinh(dl.ban, CAU_HINH_MAC_DINH);
-    const d = { ...dungLai(dl.ban, ch ?? goiY!.cauHinh, !ch, goiY?.ghiChu ?? []), tep: dl.tep };
+    const d = locThuaXoa({ ...dungLai(dl.ban, ch ?? goiY!.cauHinh, !ch, goiY?.ghiChu ?? []), tep: dl.tep }, duAn.banDo.thuaXoa);
     boNho.set(duAnId, { ngayNhap: khoaNapBanDo(duAn.banDo), d });
     veLai();
     setChon(null);
@@ -312,7 +342,8 @@ export function BanDo({ duAnId }: { duAnId: string }) {
             luuDo={quyen("SUA_HO_SO") ? (loai, diem, giaTri) => void luuBanDoDa({ ketQuaDo: [...lopPhu.ketQuaDo, taoKetQuaDo(lopPhu.ketQuaDo, loai, diem, giaTri, nguoiDung)] }) : undefined} />
           <div className="ben-phai">
             <div className="nhom-nut"><TimThua dl={dl} daLienKet={daLienKet} chon={(t) => { setChon(t); setPhongToi({ vong: t.vong, n: Date.now() }); }} /></div>
-            {quet.size > 0 && <TheVungChon duAn={duAn} dl={dl} chon={quet} boChon={() => setQuet(new Set())} thuHoi={thuHoi} khoaThua={khoaThua} daLienKet={daLienKet} ttThua={ttThua} />}
+            {quet.size > 0 && <TheVungChon xoa={quyen("SUA_HO_SO") ? (ds) => void xoaThua(ds) : undefined} duAn={duAn} dl={dl} chon={quet} boChon={() => setQuet(new Set())} thuHoi={thuHoi} khoaThua={khoaThua} daLienKet={daLienKet} ttThua={ttThua} />}
+            {(duAn.banDo?.thuaXoa?.length ?? 0) > 0 && <TheThuaXoa ds={duAn.banDo!.thuaXoa!} sua={quyen("SUA_HO_SO")} khoiPhuc={(id) => void khoiPhucThua(id === null ? () => false : (x) => x.ma + x.ngay !== id)} />}
             <KiemTraBanDo dl={dl} coPhamVi={coPhamVi} soVung={dl.kq.vungGpmb.length} moCauHinh={() => setMoCauHinh(true)} ttThua={ttThua} />
             <div className="the co-dinh">
               <div className="the-dau"><h3>Phạm vi thu hồi</h3><span className="mo chu-nho">{vungDs.length} vùng · {ranhNhap.length} ranh nhập · {thuaChon.size} thửa chọn tay</span></div>
@@ -403,7 +434,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
                 </table>
               </div>
             </div>
-            {chon && <ChiTietThua t={chon} th={thuHoi.get(khoaThua(chon))} ho={daLienKet.get(chon.ma)} tt={ttThua.get(chon.ma)} moHo={(h) => di({ ten: "ho", duAnId, hoId: h.id, tab: "thua" })} tomTat={daLienKet.get(chon.ma) ? <TomTatHo duAn={duAn} h={daLienKet.get(chon.ma)!} tt={ttThua.get(chon.ma)} moHo={() => di({ ten: "ho", duAnId, hoId: daLienKet.get(chon.ma)!.id })} /> : undefined} />}
+            {chon && <ChiTietThua xoa={quyen("SUA_HO_SO") ? () => void xoaThua([chon]) : undefined} t={chon} th={thuHoi.get(khoaThua(chon))} ho={daLienKet.get(chon.ma)} tt={ttThua.get(chon.ma)} moHo={(h) => di({ ten: "ho", duAnId, hoId: h.id, tab: "thua" })} tomTat={daLienKet.get(chon.ma) ? <TomTatHo duAn={duAn} h={daLienKet.get(chon.ma)!} tt={ttThua.get(chon.ma)} moHo={() => di({ ten: "ho", duAnId, hoId: daLienKet.get(chon.ma)!.id })} /> : undefined} />}
           </div>
         </div>
       )}

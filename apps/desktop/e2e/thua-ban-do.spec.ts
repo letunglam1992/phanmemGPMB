@@ -74,3 +74,44 @@ test("thửa trong hồ sơ → xem trên bản đồ GPMB, gắn thửa, mở m
   await p.getByRole("button", { name: "Mở màn Bản đồ tại thửa này" }).click();
   await expect(p.getByRole("heading", { name: "Tờ 7, thửa 3" })).toBeVisible();
 });
+
+test("xóa thửa khỏi bản đồ (lý do, giữ khi mở lại), khôi phục", async ({ page: p }) => {
+  const hoi: string[] = [];
+  p.on("dialog", (d) => {
+    hoi.push(d.message());
+    void (d.type() === "prompt" ? d.accept("Thửa dựng trùng") : d.accept());
+  });
+  await vao(p);
+  await p.keyboard.press("Alt+3");
+  await p.locator("[role=tablist] button", { hasText: "Bản đồ" }).click();
+  await p.locator('input[type=file][accept=".dgn,.DGN"]').first().setInputFiles({ name: "thu.dgn", mimeType: "application/octet-stream", buffer: banDo() });
+  await expect(p.getByText("thu.dgn ·")).toBeVisible();
+  await p.getByRole("button", { name: "Thu gọn bảng lớp" }).click();
+  const cv = p.locator(".ban-do canvas");
+  await cv.evaluate((e) => e.scrollIntoView({ block: "start" }));
+  const b = (await cv.boundingBox())!;
+  const tyLe = Math.min(b.width / 80, b.height / 20) * 0.92;
+  await p.mouse.click(b.x + b.width / 2 - 10 * tyLe, b.y + b.height / 2); // tâm thửa 2
+  await expect(p.getByRole("heading", { name: "Tờ 7, thửa 2" })).toBeVisible();
+  await p.getByRole("button", { name: "Xóa thửa khỏi bản đồ" }).click();
+  expect(hoi[0]).toContain("tờ/thửa: 7/2");
+  expect(hoi[0]).toContain("tệp DGN giữ nguyên");
+  await expect(p.getByRole("heading", { name: "Tờ 7, thửa 2" })).toHaveCount(0);
+  await p.locator(".the.gian select").selectOption("TAT_CA");
+  await expect(p.locator(".the.gian tbody tr")).toHaveCount(3);
+  await expect(p.locator(".the.gian tbody tr", { hasText: "7-2" })).toHaveCount(0);
+  const the = p.getByLabel("Thửa đã xóa khỏi bản đồ");
+  await the.getByRole("button", { name: "Xem" }).click();
+  await expect(the).toContainText("Tờ 7, thửa 2");
+  await expect(the).toContainText("Lý do: Thửa dựng trùng");
+  // mở lại màn (dựng lại từ tệp) → thửa vẫn đã xóa
+  await p.locator("[role=tablist] button", { hasText: "Hộ, cá nhân" }).click();
+  await p.locator("[role=tablist] button", { hasText: "Bản đồ" }).click();
+  await p.locator(".the.gian select").selectOption("TAT_CA");
+  await expect(p.locator(".the.gian tbody tr")).toHaveCount(3);
+  await p.getByLabel("Thửa đã xóa khỏi bản đồ").getByRole("button", { name: "Xem" }).click();
+  await p.getByRole("button", { name: "Khôi phục thửa 2 tờ 7" }).click();
+  await expect(p.getByLabel("Thửa đã xóa khỏi bản đồ")).toHaveCount(0);
+  await p.locator(".the.gian select").selectOption("TAT_CA");
+  await expect(p.locator(".the.gian tbody tr")).toHaveCount(4);
+});
