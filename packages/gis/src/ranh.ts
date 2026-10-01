@@ -11,7 +11,7 @@ import PolygonCls from "jsts/org/locationtech/jts/geom/Polygon.js";
 import type Geometry from "jsts/org/locationtech/jts/geom/Geometry.js";
 import type Polygon from "jsts/org/locationtech/jts/geom/Polygon.js";
 import type { Diem, KetQuaDocDgn } from "./dgn.js";
-import { CAU_HINH_MAC_DINH, dungThua, type VungUngVien } from "./thua.js";
+import { CAU_HINH_MAC_DINH, diemTrongThua, dungThua, type ThuaBanDo, type VungUngVien } from "./thua.js";
 
 const gf = new GeometryFactory();
 
@@ -169,4 +169,115 @@ export function phanConLai(vongThua: Diem[][], vongThuHoi: Diem[][][]): { vong: 
  */
 export function coTheDungRong(vong: Diem[][], w: number): boolean {
   return !BufferOp.bufferOp(daGiac(vong), -w / 2).isEmpty();
+}
+
+/**
+ * Ghép nhiều tệp DGN (nhiều tờ bản đồ, mảnh trích đo của cùng dự án — docs/08 §9.9) thành một bản vẽ: nối phần tử, đánh lại
+ * số thứ tự (stt) và số nút chữ để không trùng giữa các tệp. Các tệp phải cùng hệ tọa độ VN-2000 (cùng kinh tuyến trục).
+ */
+export function ghepBanDo(ds: { ten: string; ban: KetQuaDocDgn }[]): KetQuaDocDgn {
+  if (!ds.length) throw new Error("Không có tệp nào để ghép");
+  const phanTu: KetQuaDocDgn["phanTu"] = [];
+  const canhBao: string[] = [];
+  let lech = 0;
+  for (const { ten, ban } of ds) {
+    let max = -1;
+    for (const pt of ban.phanTu) {
+      max = Math.max(max, pt.stt, pt.loai === "CHU" && pt.nut !== undefined ? pt.nut : -1);
+      const moi = { ...pt, stt: pt.stt + lech } as typeof pt;
+      if (moi.loai === "CHU" && moi.nut !== undefined) moi.nut += lech;
+      if (moi.loai === "CHUOI_PHUC" || moi.loai === "VUNG_PHUC") moi.thanhPhan = moi.thanhPhan.map((x) => ({ ...x, stt: x.stt + lech }));
+      phanTu.push(moi);
+    }
+    lech += max + 1;
+    for (const c of ban.canhBao) canhBao.push(ds.length > 1 ? `[${ten}] ${c}` : c);
+  }
+  return { ...ds[0]!.ban, phanTu, canhBao };
+}
+
+export interface SoSanhThua {
+  ma: string;
+  soTo: string | null;
+  soThua: string | null;
+  /** GIONG: không đổi; DOI_DT: diện tích hình học lệch; DOI_HINH: cùng diện tích nhưng lệch hình (phần khác biệt đáng kể);
+   * MOI: chỉ có ở bản mới; MAT: chỉ có ở bản cũ */
+  trangThai: "GIONG" | "DOI_DT" | "DOI_HINH" | "MOI" | "MAT";
+  dtCu: number | null;
+  dtMoi: number | null;
+  /** Diện tích phần khác biệt đối xứng (m²) */
+  khacBiet: number;
+  vongCu?: Diem[][];
+  vongMoi?: Diem[][];
+}
+
+/**
+ * So sánh hai bản đồ (vd. trích đo lần đầu và trích đo bổ sung — docs/08 §9.8): ghép thửa theo số tờ, số thửa; thửa không có
+ * số ghép theo vị trí tâm nhãn. Đổi diện tích khi lệch > dungSaiDt (m²) và > 0,1%; đổi hình khi phần khác biệt đối xứng > dungSaiHinh (m²).
+ */
+export function soSanhBanDo(cu: ThuaBanDo[], moi: ThuaBanDo[], dungSaiDt = 0.5, dungSaiHinh = 1): SoSanhThua[] {
+  const khoa = (t: ThuaBanDo) => (t.soTo && t.soThua ? `${t.soTo}-${t.soThua}` : null);
+  const theoKhoa = new Map<string, ThuaBanDo>();
+  for (const t of cu) if (khoa(t)) theoKhoa.set(khoa(t)!, t);
+  const daGhep = new Set<ThuaBanDo>();
+  const out: SoSanhThua[] = [];
+  for (const m of moi) {
+    let c = khoa(m) ? theoKhoa.get(khoa(m)!) : undefined;
+    if (!c) c = cu.find((x) => !daGhep.has(x) && !khoa(x) && diemTrongThua(m.tamNhan, x.vong));
+    if (!c || daGhep.has(c)) {
+      out.push({ ma: m.ma, soTo: m.soTo, soThua: m.soThua, trangThai: "MOI", dtCu: null, dtMoi: m.dienTichHinhHoc, khacBiet: m.dienTichHinhHoc, vongMoi: m.vong });
+      continue;
+    }
+    daGhep.add(c);
+    const kb = OverlayOp.symDifference(daGiac(c.vong), daGiac(m.vong)).getArea();
+    const lechDt = Math.abs(m.dienTichHinhHoc - c.dienTichHinhHoc);
+    const trangThai = lechDt > dungSaiDt && lechDt > c.dienTichHinhHoc * 0.001 ? "DOI_DT" : kb > dungSaiHinh ? "DOI_HINH" : "GIONG";
+    out.push({ ma: m.ma, soTo: m.soTo, soThua: m.soThua, trangThai, dtCu: c.dienTichHinhHoc, dtMoi: m.dienTichHinhHoc, khacBiet: kb, vongCu: c.vong, vongMoi: m.vong });
+  }
+  for (const c of cu) if (!daGhep.has(c)) out.push({ ma: c.ma, soTo: c.soTo, soThua: c.soThua, trangThai: "MAT", dtCu: c.dienTichHinhHoc, dtMoi: null, khacBiet: c.dienTichHinhHoc, vongCu: c.vong });
+  return out;
+}
+
+export interface DiemBang {
+  ten: string;
+  x: number;
+  y: number;
+  moTa: string;
+}
+
+/**
+ * Bảng điểm đo hiện trạng (docs/08 §9.7): cột Tên/Số hiệu điểm · X · Y · Mô tả/Ghi chú (tọa độ VN-2000, m). Đổi trục như
+ * `docToaDoMoc` (X là tọa độ Bắc theo quy ước trắc địa).
+ */
+export function docBangDiem(bang: unknown[][]): { diem: DiemBang[]; doiTruc: boolean; canhBao: string[] } {
+  let dau = -1, cX = -1, cY = -1, cTen = -1, cMoTa = -1;
+  for (let r = 0; r < Math.min(bang.length, 15) && dau < 0; r++) {
+    let x = -1, y = -1, ten = -1, mt = -1;
+    (bang[r] ?? []).forEach((o, c) => {
+      const t = typeof o === "string" ? khongDau(o) : "";
+      if (!t) return;
+      if (x < 0 && /^(toa do )?x( \(m\))?$|^x \(/.test(t)) x = c;
+      else if (y < 0 && /^(toa do )?y( \(m\))?$|^y \(/.test(t)) y = c;
+      else if (ten < 0 && /^(ten|so hieu|diem|stt|tt|ma)\b/.test(t)) ten = c;
+      else if (mt < 0 && /^(mo ta|ghi chu|noi dung|tai san|doi tuong)\b/.test(t)) mt = c;
+    });
+    if (x >= 0 && y >= 0) [dau, cX, cY, cTen, cMoTa] = [r, x, y, ten, mt];
+  }
+  const canhBao: string[] = [];
+  if (dau < 0) {
+    canhBao.push("Không có tiêu đề X, Y — cột 1 là tên điểm, cột 2, 3 là X, Y, cột 4 là mô tả");
+    [cTen, cX, cY, cMoTa] = [0, 1, 2, 3];
+  }
+  const ds: DiemBang[] = [];
+  for (let r = dau + 1; r < bang.length; r++) {
+    const h = bang[r] ?? [];
+    const x = soO(h[cX]), y = soO(h[cY]);
+    if (x === null || y === null) {
+      if (h.some((o) => o !== null && o !== undefined && String(o).trim() !== "")) canhBao.push(`Dòng ${r + 1}: bỏ qua (không đọc được tọa độ)`);
+      continue;
+    }
+    ds.push({ ten: cTen >= 0 ? String(h[cTen] ?? "").trim() || `Đ${ds.length + 1}` : `Đ${ds.length + 1}`, x, y, moTa: cMoTa >= 0 ? String(h[cMoTa] ?? "").trim() : "" });
+  }
+  const tb = (f: (d: DiemBang) => number) => ds.reduce((s, d) => s + f(d), 0) / Math.max(ds.length, 1);
+  const doiTruc = ds.length > 0 && tb((d) => d.x) > tb((d) => d.y);
+  return { diem: doiTruc ? ds.map((d) => ({ ...d, x: d.y, y: d.x })) : ds, doiTruc, canhBao };
 }

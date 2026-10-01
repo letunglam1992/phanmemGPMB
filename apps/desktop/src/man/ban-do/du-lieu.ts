@@ -1,4 +1,4 @@
-import { CAU_HINH_MAC_DINH, docDgn, dungThua, goiYCauHinh, type CauHinhLop, type KetQuaDocDgn, type KetQuaDungThua } from "@gpmb/gis";
+import { CAU_HINH_MAC_DINH, docDgn, dungThua, ghepBanDo, goiYCauHinh, type CauHinhLop, type KetQuaDocDgn, type KetQuaDungThua } from "@gpmb/gis";
 import { type DuAn } from "../../mo-hinh";
 
 export interface DuLieuBanDo {
@@ -18,9 +18,35 @@ export interface DuLieuBanDo {
  */
 export const boNho = new Map<string, { ngayNhap: string; d: DuLieuBanDo }>();
 
+/** Khóa lần nạp: tệp chính + các tệp ghép (thêm/bỏ tệp ghép thì dựng lại). */
+export const khoaNapBanDo = (b: NonNullable<DuAn["banDo"]>) => [b.ngayNhap, ...(b.tepGhep ?? []).map((t) => t.id)].join("|");
+
 export function layDem(duAn: DuAn): DuLieuBanDo | null {
   const c = boNho.get(duAn.id);
-  return c && duAn.banDo && c.ngayNhap === duAn.banDo.ngayNhap ? c.d : null;
+  return c && duAn.banDo && c.ngayNhap === khoaNapBanDo(duAn.banDo) ? c.d : null;
+}
+
+/** Khóa kho của tệp ghép: "{duAnId}#{id}". */
+export const khoaTepGhep = (duAnId: string, id: string) => `${duAnId}#${id}`;
+
+/** Đọc tệp chính và các tệp ghép (docs/08 §9.9) rồi dựng thửa trên bản vẽ đã ghép. */
+export async function napTatCa(kho: { docBanDo(id: string): Promise<Uint8Array | null> }, duAn: DuAn): Promise<DuLieuBanDo | null> {
+  if (!duAn.banDo) return null;
+  const chinh = await kho.docBanDo(duAn.id);
+  if (!chinh) return null;
+  const ds: { ten: string; bytes: Uint8Array }[] = [{ ten: duAn.banDo.tenTep, bytes: chinh }];
+  for (const t of duAn.banDo.tepGhep ?? []) {
+    const b = await kho.docBanDo(khoaTepGhep(duAn.id, t.id));
+    if (b) ds.push({ ten: t.tenTep, bytes: b });
+  }
+  return phanTichNhieu(ds, duAn.banDo.cauHinh);
+}
+
+export function phanTichNhieu(ds: { ten: string; bytes: Uint8Array }[], daChot?: CauHinhLop): DuLieuBanDo {
+  if (ds.length === 1) return phanTich(ds[0]!.bytes, daChot);
+  const ban = ghepBanDo(ds.map((x) => ({ ten: x.ten, ban: docDgn(x.bytes) })));
+  const goiY = daChot ? null : goiYCauHinh(ban, CAU_HINH_MAC_DINH);
+  return dungLai(ban, daChot ?? goiY!.cauHinh, !daChot, goiY?.ghiChu ?? []);
 }
 
 export const TEN_CO: Record<string, string> = {

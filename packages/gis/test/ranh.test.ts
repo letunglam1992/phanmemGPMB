@@ -1,6 +1,7 @@
 /** Ranh GPMB nhập ngoài (docs/08 §9.1): bảng tọa độ mốc, kiểm tra vùng, vùng từ tệp DGN khác, cắt thửa. Dữ liệu tổng hợp. */
 import { describe, expect, test } from "vitest";
-import { coTheDungRong, docDgn, docToaDoMoc, dungThua, kiemTraVung, phanConLai, tinhDienTichThuHoi, vungTuLop } from "../src/index.js";
+import { coTheDungRong, docBangDiem, docDgn, docToaDoMoc, dungThua, ghepBanDo, kiemTraVung, phanConLai, soSanhBanDo, tinhDienTichThuHoi, vungTuLop } from "../src/index.js";
+import { ptChu } from "./viet-dgn-v8.js";
 import { ptDuong, vietDgnV8 } from "./viet-dgn-v8.js";
 
 const X0 = 500000, Y0 = 2350000;
@@ -78,5 +79,42 @@ describe("Phần còn lại sau thu hồi (Điều 13, 16 PL I QĐ 106/2025)", (
     expect(coTheDungRong(ml[1]!.vong, 3.5)).toBe(false);
     expect(coTheDungRong(ml[1]!.vong, 2.9)).toBe(true);
     expect(phanConLai(thua, [thua])).toEqual([]);
+  });
+});
+
+describe("Ghép nhiều tệp, so sánh hai bản đồ, bảng điểm đo (docs/08 §9.7–9.9)", () => {
+  const ch = { ranhThua: [10], nhanThua: [], soThua: [4], soTo: [5], chuSuDung: [], ranhGpmb: [], dienTichToiThieu: 1, lechDienTichChoPhep: 0.05 };
+  /** Một tờ: các ô 10 × 10 m bắt đầu từ x0, có số tờ, số thửa */
+  const to = (soTo: string, x0: number, rong: number[]) => {
+    const hinh: Uint8Array[] = [], chu: Uint8Array[] = [];
+    let x = x0;
+    rong.forEach((w, i) => {
+      hinh.push(ptDuong(6, [d(x, 0), d(x + w, 0), d(x + w, 10), d(x, 10), d(x, 0)], { lop: 10 }));
+      chu.push(ptChu(String(i + 1), X0 + x + w / 2, Y0 + 6, { lop: 4, unicode: true }), ptChu(soTo, X0 + x + w / 2, Y0 + 3, { lop: 5, unicode: true }));
+      x += w;
+    });
+    return docDgn(vietDgnV8([hinh, chu]));
+  };
+  test("ghép hai tờ: đủ thửa của cả hai, stt không trùng", () => {
+    const a = to("7", 0, [10, 10]), b = to("8", 100, [10]);
+    const g = ghepBanDo([{ ten: "to7.dgn", ban: a }, { ten: "to8.dgn", ban: b }]);
+    expect(new Set(g.phanTu.map((p) => p.stt)).size).toBe(g.phanTu.length);
+    const thua = dungThua(g, ch).thua.map((t) => `${t.soTo}-${t.soThua}`).sort();
+    expect(thua).toEqual(["7-1", "7-2", "8-1"]);
+    expect(g.canhBao.every((c) => /^\[to[78]\.dgn\]/.test(c))).toBe(true);
+  });
+  test("so sánh: thửa đổi diện tích, thửa mới, thửa mất, thửa không đổi", () => {
+    const cu = dungThua(to("7", 0, [10, 10, 10]), ch).thua;
+    const moi = dungThua(to("7", 0, [10, 12, 8, 10]), ch).thua;
+    const kq = Object.fromEntries(soSanhBanDo(cu, moi).map((x) => [`${x.soTo}-${x.soThua}`, x.trangThai]));
+    expect(kq).toEqual({ "7-1": "GIONG", "7-2": "DOI_DT", "7-3": "DOI_DT", "7-4": "MOI" });
+    const mat = soSanhBanDo(moi, cu).find((x) => x.trangThai === "MAT");
+    expect(mat?.soThua).toBe("4");
+  });
+  test("bảng điểm đo: tiêu đề Tên điểm, X, Y, Mô tả; đổi trục", () => {
+    const kq = docBangDiem([["Tên điểm", "X (m)", "Y (m)", "Mô tả"], ["P1", "2.350.010,5", "500.020,25", "Góc nhà"], ["P2", 2350012, 500021, ""]]);
+    expect(kq.doiTruc).toBe(true);
+    expect(kq.diem[0]).toEqual({ ten: "P1", x: 500020.25, y: 2350010.5, moTa: "Góc nhà" });
+    expect(kq.diem).toHaveLength(2);
   });
 });

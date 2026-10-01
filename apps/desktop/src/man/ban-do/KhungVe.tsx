@@ -4,14 +4,15 @@ import { type Ho } from "../../mo-hinh";
 import { THU_TU_TRANG_THAI, TT_GPMB, type TrangThaiGpmb } from "../../trang-thai";
 import { Chon } from "../../thanh-phan/Chon";
 import { type DuLieuBanDo } from "./du-lieu";
-import { TEN_LOAI, batDiem, chieuDai, chuanBiVe, dienTich, hinhTuVong, khoangCach, mauLop, phamViToanBo, timPhanTu, type ChuVe, type HinhVe } from "./hinh-hoc";
+import { TEN_KIEU_BAT, TEN_LOAI, batDiemNangCao, chieuDai, chuanBiVe, dienTich, hinhTuVong, khoangCach, mauLop, phamViToanBo, timPhanTu, type ChuVe, type HinhVe, type KieuBat } from "./hinh-hoc";
+import { type DiemDoHienTrang, type GhiChuHienTruong, type KetQuaDoLuu, type NhomGhiChu } from "../../mo-hinh";
 
 /**
  * Trình xem bản đồ kiểu MicroStation (phục vụ GPMB, chỉ đọc): lăn chuột phóng to/thu nhỏ tại con trỏ (không cuộn trang),
  * kéo để di chuyển, phóng theo khung; bật/tắt từng lớp (level) của tệp DGN; công cụ thông tin phần tử, đo khoảng cách,
  * đo diện tích, lấy tọa độ; bắt điểm vào đỉnh; nền đen/sáng. Lớp phủ GPMB (thửa, ranh, tô màu) vẽ trên nền bản vẽ.
  */
-type CongCu = "CHON" | "KEO" | "PHONG_KHUNG" | "QUET" | "DO_DAI" | "DO_DT" | "TOA_DO";
+type CongCu = "CHON" | "KEO" | "PHONG_KHUNG" | "QUET" | "DO_DAI" | "DO_DT" | "TOA_DO" | "GHI_CHU";
 const CONG_CU: { ma: CongCu; ten: string; ky: string; goiY: string }[] = [
   { ma: "CHON", ten: "Chọn, thông tin", ky: "⌖", goiY: "Bấm vào thửa / phần tử để xem thông tin (kéo để di chuyển)" },
   { ma: "KEO", ten: "Di chuyển", ky: "✋", goiY: "Kéo để di chuyển bản đồ" },
@@ -20,7 +21,10 @@ const CONG_CU: { ma: CongCu; ten: string; ky: string; goiY: string }[] = [
   { ma: "DO_DAI", ten: "Đo khoảng cách", ky: "📏", goiY: "Bấm các điểm; bấm đúp hoặc chuột phải để kết thúc; Esc để xóa" },
   { ma: "DO_DT", ten: "Đo diện tích", ky: "▱", goiY: "Bấm các đỉnh vùng; bấm đúp hoặc chuột phải để khép vùng; Esc để xóa" },
   { ma: "TOA_DO", ten: "Tọa độ điểm", ky: "⌗", goiY: "Bấm để lấy tọa độ VN-2000 của điểm (bắt đỉnh nếu bật)" },
+  { ma: "GHI_CHU", ten: "Ghi chú hiện trường", ky: "📌", goiY: "Bấm vị trí để thêm ghi chú (vướng mắc, mộ, công trình chưa kiểm đếm…); ghi chú dạng đường: đo khoảng cách rồi bấm “Lưu làm ghi chú”" },
 ];
+/** Màu ghi chú hiện trường theo nhóm (vẽ trên bản đồ, chú giải). */
+export const MAU_GHI_CHU: Record<NhomGhiChu, string> = { VUONG_MAC: "#d0021b", MO: "#6a3fb5", CONG_TRINH: "#e07b00", KHAC: "#2f6bd0" };
 const so = (v: number, le = 2) => v.toLocaleString("vi-VN", { minimumFractionDigits: le, maximumFractionDigits: le });
 const docLuu = <T,>(k: string, mac: T): T => {
   try {
@@ -58,12 +62,18 @@ export function KhungVe(p: {
   luuVung?: (vong: Diem[]) => void;
   /** Bật công cụ vẽ vùng từ bên ngoài (nút "Vẽ ranh trên bản đồ"). */
   batVeVung?: number;
+  /** Bật công cụ ghi chú hiện trường từ bên ngoài (nút "+ Ghi chú"). */
+  batGhiChu?: number;
   /** Quét khung chọn nhiều thửa (hạng mục 3 docs/08 §9): trả về thửa có tâm nhãn trong khung; them = giữ Shift. */
   quet?: (ds: ThuaBanDo[], them: boolean) => void;
   /** Khóa (khoaThua) các thửa đang chọn bằng quét khung — tô nổi. */
   thuaQuet?: Set<string>;
   /** Phóng tới thửa (tìm thửa/chủ): đổi `n` để phóng lại. */
   phongToi?: { vong: Diem[][]; n: number } | null;
+  /** Lớp phủ của dự án: ghi chú hiện trường, điểm đo hiện trạng, kết quả đo đã lưu, kết quả so sánh hai bản đồ. */
+  lopPhu?: { ghiChu: GhiChuHienTruong[]; diemDo: DiemDoHienTrang[]; ketQuaDo: KetQuaDoLuu[]; soSanh: { vong: Diem[][]; mau: string; net?: number[] }[] };
+  themGhiChu?: (loai: "DIEM" | "DUONG", diem: Diem[]) => void;
+  luuDo?: (loai: "DAI" | "DT", diem: Diem[], giaTri: number) => void;
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const khoa = `gpmb-ban-do-${p.khoaLuu ?? "chung"}`;
@@ -72,7 +82,15 @@ export function KhungVe(p: {
   const [lopAn, setLopAn] = useState<Set<number>>(() => new Set(docLuu<number[]>(`${khoa}-lop-an`, [])));
   const [nenToi, setNenToi] = useState<boolean>(() => docLuu(`${khoa}-nen-toi`, false));
   const [mauTheoLop, setMauTheoLop] = useState<boolean>(() => docLuu(`${khoa}-mau-lop`, true));
-  const [bat, setBat] = useState(true);
+  const [kieuBat, setKieuBat] = useState<Set<KieuBat>>(() => new Set(docLuu<KieuBat[]>(`gpmb-ban-do-kieu-bat`, ["DINH"])));
+  const bat = kieuBat.size > 0;
+  const doiKieuBat = (k: KieuBat, co: boolean) => {
+    const s2 = new Set(kieuBat);
+    if (co) s2.add(k);
+    else s2.delete(k);
+    setKieuBat(s2);
+    ghiLuu("gpmb-ban-do-kieu-bat", [...s2]);
+  };
   const [cong, setCong] = useState<CongCu>("CHON");
   // Bảng "Lớp bản đồ" (kiểu Level Manager): các mục mở/đóng độc lập; nhớ theo máy
   const [bangLop, setBangLop] = useState<Set<string>>(() => new Set(docLuu<string[]>(`${khoa}-muc`, ["GPMB", "CHU_GIAI"])));
@@ -94,7 +112,7 @@ export function KhungVe(p: {
   const [diemDo, setDiemDo] = useState<Diem[]>([]);
   const [xongDo, setXongDo] = useState(false);
   const [troDo, setTroDo] = useState<Diem | null>(null);
-  const [batHien, setBatHien] = useState<Diem | null>(null);
+  const [batHien, setBatHien] = useState<(Diem & { kieu?: KieuBat }) | null>(null);
   const [khung, setKhung] = useState<{ a: Diem; b: Diem } | null>(null);
   const [thongTin, setThongTin] = useState<{ hinh?: HinhVe; chu?: ChuVe; diem?: Diem } | null>(null);
   const keo = useRef<{ x: number; y: number; cx: number; cy: number; di: boolean; giua: boolean } | null>(null);
@@ -253,6 +271,62 @@ export function KhungVe(p: {
         }
         ctx.setLineDash([]);
       }
+      // Lớp phủ: so sánh bản đồ, kết quả đo đã lưu, ghi chú hiện trường, điểm đo hiện trạng
+      if (p.lopPhu) {
+        for (const x of p.lopPhu.soSanh) {
+          ctx.beginPath();
+          for (const vg of x.vong) { duong(vg); ctx.closePath(); }
+          ctx.setLineDash(x.net ?? []);
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = x.mau;
+          ctx.stroke();
+        }
+        ctx.setLineDash([4, 3]);
+        for (const k of p.lopPhu.ketQuaDo) {
+          ctx.beginPath();
+          duong(k.diem);
+          if (k.loai === "DT") ctx.closePath();
+          ctx.lineWidth = 1.6;
+          ctx.strokeStyle = "#8e44ad";
+          ctx.stroke();
+        }
+        ctx.setLineDash([]);
+        ctx.font = "11px Segoe UI, sans-serif";
+        ctx.textAlign = "left";
+        for (const g of p.lopPhu.ghiChu) {
+          const mau = g.daXuLy ? "#7f8c8d" : MAU_GHI_CHU[g.nhom];
+          ctx.strokeStyle = mau;
+          ctx.fillStyle = mau;
+          if (g.loai === "DUONG") {
+            ctx.beginPath();
+            duong(g.diem);
+            ctx.lineWidth = 3;
+            ctx.stroke();
+          }
+          const d0 = g.diem[0]!;
+          const x = sx(d0.x), y = sy(d0.y);
+          ctx.beginPath();
+          ctx.arc(x, y - 9, 6, 0, Math.PI * 2);
+          ctx.moveTo(x - 4, y - 6);
+          ctx.lineTo(x, y);
+          ctx.lineTo(x + 4, y - 6);
+          ctx.fill();
+          if (v.tyLe > 1.5) ctx.fillText(g.noiDung.slice(0, 40), x + 8, y - 8);
+        }
+        ctx.strokeStyle = "#0b7a75";
+        ctx.fillStyle = "#0b7a75";
+        ctx.lineWidth = 1.5;
+        for (const d of p.lopPhu.diemDo) {
+          const x = sx(d.x), y = sy(d.y);
+          ctx.beginPath();
+          ctx.moveTo(x - 5, y);
+          ctx.lineTo(x + 5, y);
+          ctx.moveTo(x, y - 5);
+          ctx.lineTo(x, y + 5);
+          ctx.stroke();
+          if (v.tyLe > 2) ctx.fillText(d.ten, x + 6, y - 4);
+        }
+      }
       if (p.thuaQuet?.size) {
         ctx.fillStyle = "rgba(47,127,214,0.22)";
         ctx.strokeStyle = "#2f7fd6";
@@ -370,7 +444,13 @@ export function KhungVe(p: {
       if (batHien) {
         ctx.strokeStyle = "#f2b01e";
         ctx.lineWidth = 2;
-        ctx.strokeRect(sx(batHien.x) - 6, sy(batHien.y) - 6, 12, 12);
+        const bx = sx(batHien.x), by = sy(batHien.y);
+        ctx.beginPath();
+        if (batHien.kieu === "TRUNG_DIEM") (ctx.moveTo(bx, by - 7), ctx.lineTo(bx + 7, by + 6), ctx.lineTo(bx - 7, by + 6), ctx.closePath());
+        else if (batHien.kieu === "GIAO_DIEM") (ctx.moveTo(bx - 7, by - 7), ctx.lineTo(bx + 7, by + 7), ctx.moveTo(bx + 7, by - 7), ctx.lineTo(bx - 7, by + 7));
+        else if (batHien.kieu === "VUONG_GOC") (ctx.moveTo(bx - 7, by + 6), ctx.lineTo(bx + 7, by + 6), ctx.moveTo(bx, by + 6), ctx.lineTo(bx, by - 7));
+        else ctx.rect(bx - 6, by - 6, 12, 12);
+        ctx.stroke();
       }
       // thước tỷ lệ
       const m = [0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000].find((m) => m * v.tyLe > 70) ?? 10000;
@@ -388,7 +468,7 @@ export function KhungVe(p: {
     const ro = new ResizeObserver(veLai);
     ro.observe(cv);
     return () => ro.disconnect();
-  }, [nhin, hinhHien, chuHien, p.dl, p.thuHoi, p.vungChon.join("|"), p.thuaChon, p.chon, p.ttThua, p.khoaThua, pham, lop, cheDo, nenToi, mauTheoLop, diemDo, troDo, xongDo, khung, batHien, thongTin, cong, p.thuaQuet, p.ranhThem]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [nhin, hinhHien, chuHien, p.dl, p.thuHoi, p.vungChon.join("|"), p.thuaChon, p.chon, p.ttThua, p.khoaThua, pham, lop, cheDo, nenToi, mauTheoLop, diemDo, troDo, xongDo, khung, batHien, thongTin, cong, p.thuaQuet, p.ranhThem, p.lopPhu]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const doiToaDo = (e: { clientX: number; clientY: number }): Diem => {
     const cv = ref.current!;
@@ -396,11 +476,13 @@ export function KhungVe(p: {
     const v = nhin!;
     return { x: (e.clientX - r.left - r.width / 2) / v.tyLe + v.cx, y: (r.height / 2 - (e.clientY - r.top)) / v.tyLe + v.cy };
   };
-  const coBat = cong === "DO_DAI" || cong === "DO_DT" || cong === "TOA_DO";
-  const diemBat = (d: Diem): Diem => {
+  const coBat = cong === "DO_DAI" || cong === "DO_DT" || cong === "TOA_DO" || cong === "GHI_CHU";
+  const diemBat = (d: Diem): Diem & { kieu?: KieuBat } => {
     if (!bat || !coBat || !nhin) return d;
     const r = 10 / nhin.tyLe;
-    return batDiem(d, hinhHien, r) ?? (lop.thua ? batDiem(d, hinhThua, r) : null) ?? d;
+    const truoc = cong === "DO_DAI" || cong === "DO_DT" ? (diemDo.length && !xongDo ? diemDo[diemDo.length - 1] : null) : null;
+    const kq = batDiemNangCao(d, hinhHien, r, kieuBat, truoc) ?? (lop.thua ? batDiemNangCao(d, hinhThua, r, kieuBat, truoc) : null);
+    return kq ? { ...kq.d, kieu: kq.kieu } : d;
   };
   const doiCong = (c: CongCu) => {
     setCong(c);
@@ -424,6 +506,9 @@ export function KhungVe(p: {
   useEffect(() => {
     if (p.batVeVung) doiCong("DO_DT");
   }, [p.batVeVung]);
+  useEffect(() => {
+    if (p.batGhiChu) doiCong("GHI_CHU");
+  }, [p.batGhiChu]);
 
   const ketQuaDo = diemDo.length > 1 ? { dai: chieuDai(cong === "DO_DT" && xongDo ? [...diemDo, diemDo[0]!] : diemDo), dt: cong === "DO_DT" ? dienTich(diemDo) : 0 } : null;
   const dsLopLoc = ve.lop.filter((l) => !timLop || `${l.lop} ${l.ten ?? ""}`.toLowerCase().includes(timLop.toLowerCase()));
@@ -497,6 +582,10 @@ export function KhungVe(p: {
             setThongTin({ diem: diemBat(d) });
             return;
           }
+          if (cong === "GHI_CHU") {
+            p.themGhiChu?.("DIEM", [diemBat(d)]);
+            return;
+          }
           if (cong !== "CHON") return;
           const t = lop.thua ? p.dl.kq.thua.find((t) => diemTrongThua(d, t.vong)) : undefined;
           if (t && p.bamThua) p.bamThua(t);
@@ -538,7 +627,14 @@ export function KhungVe(p: {
         <button className="nut nut-nho" title="Vừa vùng thửa, ranh GPMB" aria-label="Vừa vùng thửa" onClick={() => setNhin(null)}>⤢<span className="bd-chu">Vùng thửa</span></button>
         <button className="nut nut-nho" title="Vừa toàn bộ bản vẽ" aria-label="Toàn bộ bản vẽ" disabled={!phamToanBo} onClick={() => phamToanBo && vuaKhung(phamToanBo)}>⛶<span className="bd-chu">Toàn bộ bản vẽ</span></button>
         <span className="bd-vach" />
-        <label className="chu-nho" title="Bắt vào đỉnh gần nhất khi đo, lấy tọa độ"><input type="checkbox" checked={bat} onChange={(e) => setBat(e.target.checked)} /> Bắt điểm</label>
+        <details className="bd-bat chu-nho" title="Bắt điểm khi đo, lấy tọa độ, ghi chú">
+          <summary aria-label="Kiểu bắt điểm">Bắt: {bat ? [...kieuBat].map((k) => TEN_KIEU_BAT[k]).join(", ") : "tắt"}</summary>
+          <div className="bd-bat-ds">
+            {(Object.keys(TEN_KIEU_BAT) as KieuBat[]).map((k) => (
+              <label key={k}><input type="checkbox" checked={kieuBat.has(k)} onChange={(e) => doiKieuBat(k, e.target.checked)} /> {TEN_KIEU_BAT[k]}{k === "VUONG_GOC" ? " (từ điểm đo trước)" : ""}</label>
+            ))}
+          </div>
+        </details>
         <label className="chu-nho"><input type="checkbox" checked={nenToi} onChange={(e) => setNenToi(e.target.checked)} /> Nền đen</label>
         </>
         )}
@@ -627,7 +723,13 @@ export function KhungVe(p: {
               {cong === "DO_DAI" && diemDo.length > 1 && <div className="mo">Đoạn cuối: {so(khoangCach(diemDo[diemDo.length - 2]!, diemDo[diemDo.length - 1]!))} m</div>}
               {cong === "DO_DT" && diemDo.length > 2 && <div>Diện tích: <b>{so(ketQuaDo.dt)} m²</b> ({so(ketQuaDo.dt / 10000, 4)} ha)</div>}
               <div className="mo">{xongDo ? "Đã kết thúc — bấm để đo lại, Esc để xóa" : "Bấm đúp / chuột phải để kết thúc"}</div>
-              {p.luuVung && cong === "DO_DT" && xongDo && diemDo.length > 2 && <button className="nut nut-nho nut-chinh" onClick={() => { p.luuVung!(diemDo); doiCong("CHON"); }}>Dùng làm ranh GPMB</button>}
+              {xongDo && (
+                <div className="nhom-nut" style={{ marginTop: 4 }}>
+                  {p.luuVung && cong === "DO_DT" && diemDo.length > 2 && <button className="nut nut-nho nut-chinh" onClick={() => { p.luuVung!(diemDo); doiCong("CHON"); }}>Dùng làm ranh GPMB</button>}
+                  {p.luuDo && <button className="nut nut-nho" onClick={() => { p.luuDo!(cong === "DO_DT" ? "DT" : "DAI", diemDo, cong === "DO_DT" ? dienTich(diemDo) : chieuDai(diemDo)); doiCong(cong); }}>Lưu kết quả đo</button>}
+                  {p.themGhiChu && cong === "DO_DAI" && <button className="nut nut-nho" onClick={() => { p.themGhiChu!("DUONG", diemDo); doiCong(cong); }}>Lưu làm ghi chú (đường)</button>}
+                </div>
+              )}
             </>
           )}
           {!ketQuaDo && thongTin?.diem && (

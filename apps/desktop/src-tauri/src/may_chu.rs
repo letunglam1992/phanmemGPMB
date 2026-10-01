@@ -1095,7 +1095,7 @@ async fn ghi_lo(State(st): State<St>, h: HeaderMap, b: Bytes) -> Kq<Json<Value>>
         kiem_tra_xoa_han(&tx, &st, &u, "duAn", id)?;
         luu_lich_su_du_an(&tx, id, "Xóa hẳn", &u.ten)?;
         tx.execute("DELETE FROM ban_ghi WHERE (loai = 'duAn' AND id = ?1) OR (loai IN ('ho', 'pa', 'td', 'ct') AND du_an_id = ?1)", [id]).map_err(loi_db)?;
-        tx.execute("DELETE FROM tep WHERE (loai = 'banDo' AND id = ?1) OR (loai = 'dinhKem' AND json_extract(meta, '$.duAnId') = ?1)", [id]).map_err(loi_db)?;
+        tx.execute("DELETE FROM tep WHERE (loai = 'banDo' AND (id = ?1 OR id LIKE ?1 || '#%')) OR (loai = 'dinhKem' AND json_extract(meta, '$.duAnId') = ?1)", [id]).map_err(loi_db)?;
         MayChu::ghi_thay_doi(&tx, "duAn", id, id, &u.ten).map_err(loi_db)?;
     }
     for id in xoa_ho.iter().filter_map(|x| x.as_str()) {
@@ -1154,7 +1154,7 @@ async fn xoa_du_an(State(st): State<St>, h: HeaderMap, Path(id): Path<String>) -
     let tx = c.transaction().map_err(loi_db)?;
     luu_lich_su_du_an(&tx, &id, "Xóa hẳn", &u.ten)?;
     tx.execute("DELETE FROM ban_ghi WHERE (loai = 'duAn' AND id = ?1) OR (loai IN ('ho', 'pa', 'td', 'ct') AND du_an_id = ?1)", [&id]).map_err(loi_db)?;
-    tx.execute("DELETE FROM tep WHERE (loai = 'banDo' AND id = ?1) OR (loai = 'dinhKem' AND json_extract(meta, '$.duAnId') = ?1)", [&id]).map_err(loi_db)?;
+    tx.execute("DELETE FROM tep WHERE (loai = 'banDo' AND (id = ?1 OR id LIKE ?1 || '#%')) OR (loai = 'dinhKem' AND json_extract(meta, '$.duAnId') = ?1)", [&id]).map_err(loi_db)?;
     MayChu::ghi_thay_doi(&tx, "duAn", &id, &id, &u.ten).map_err(loi_db)?;
     tx.commit().map_err(loi_db)?;
     Ok(Json(json!({})))

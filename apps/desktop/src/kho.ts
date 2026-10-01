@@ -217,6 +217,8 @@ export function taoKhoIndexedDb(): Kho {
           s("duAn").delete(id);
           for (const h of (await yc(s("ho").index("duAnId").getAll(id))) as Ho[]) (ghiLs("ho", h, "Xóa hẳn"), s("ho").delete(h.id));
           s("banDo").delete(id);
+          // tệp bản đồ ghép thêm của dự án: khóa "{id}#…"
+          for (const k of await yc(s("banDo").getAllKeys(IDBKeyRange.bound(`${id}#`, `${id}#\uffff`)))) s("banDo").delete(k);
           for (const k of await yc(s("dinhKem").index("duAnId").getAllKeys(id))) s("dinhKem").delete(k);
         }
         for (const id of lo.xoaHo ?? []) {

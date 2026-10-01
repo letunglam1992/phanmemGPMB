@@ -204,3 +204,51 @@ export function mauLop(lop: number, nenToi: boolean): string {
   const h = (lop * 47) % 360;
   return nenToi ? `hsl(${h} 70% 62%)` : `hsl(${h} 60% 34%)`;
 }
+
+export type KieuBat = "DINH" | "TRUNG_DIEM" | "GIAO_DIEM" | "VUONG_GOC";
+export const TEN_KIEU_BAT: Record<KieuBat, string> = { DINH: "Đỉnh", TRUNG_DIEM: "Trung điểm", GIAO_DIEM: "Giao điểm", VUONG_GOC: "Vuông góc" };
+
+/** Giao điểm hai đoạn thẳng (nếu có, kể cả đầu mút). */
+export function giaoDoan(a: Diem, b: Diem, c: Diem, d: Diem): Diem | null {
+  const r = { x: b.x - a.x, y: b.y - a.y }, s = { x: d.x - c.x, y: d.y - c.y };
+  const den = r.x * s.y - r.y * s.x;
+  if (Math.abs(den) < 1e-12) return null;
+  const t = ((c.x - a.x) * s.y - (c.y - a.y) * s.x) / den;
+  const u = ((c.x - a.x) * r.y - (c.y - a.y) * r.x) / den;
+  if (t < -1e-9 || t > 1 + 1e-9 || u < -1e-9 || u > 1 + 1e-9) return null;
+  return { x: a.x + t * r.x, y: a.y + t * r.y };
+}
+
+/** Chân đường vuông góc hạ từ p xuống đường thẳng ab (chỉ nhận khi nằm trong đoạn). */
+export function chanVuongGoc(p: Diem, a: Diem, b: Diem): Diem | null {
+  const dx = b.x - a.x, dy = b.y - a.y, l2 = dx * dx + dy * dy;
+  if (l2 === 0) return null;
+  const t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / l2;
+  return t < 0 || t > 1 ? null : { x: a.x + t * dx, y: a.y + t * dy };
+}
+
+/**
+ * Bắt điểm nâng cao (docs/08 §9.10): đỉnh, trung điểm cạnh, giao điểm hai cạnh, chân vuông góc hạ từ điểm đo trước xuống cạnh
+ * gần con trỏ. Lấy ứng viên gần con trỏ nhất trong bán kính r; đỉnh được ưu tiên khi trùng khoảng cách.
+ */
+export function batDiemNangCao(p: Diem, hinh: HinhVe[], r: number, kieu: Set<KieuBat>, diemTruoc?: Diem | null): { d: Diem; kieu: KieuBat } | null {
+  const doan: [Diem, Diem][] = [];
+  for (const h of hinh) {
+    if (p.x < h.hop.minX - r || p.x > h.hop.maxX + r || p.y < h.hop.minY - r || p.y > h.hop.maxY + r) continue;
+    for (const dg of h.duong) for (let i = 1; i < dg.length; i++) if (khoangCachDoan(p, dg[i - 1]!, dg[i]!) <= r) doan.push([dg[i - 1]!, dg[i]!]);
+    if (doan.length > 400) break;
+  }
+  let tot: { d: Diem; kieu: KieuBat } | null = null, dTot = r;
+  const thu = (d: Diem | null, k: KieuBat, uuTien = 0) => {
+    if (!d) return;
+    const kc = khoangCach(p, d) - uuTien;
+    if (kc < dTot) (dTot = kc), (tot = { d, kieu: k });
+  };
+  for (const [a, b] of doan) {
+    if (kieu.has("DINH")) (thu(a, "DINH", r * 0.15), thu(b, "DINH", r * 0.15));
+    if (kieu.has("TRUNG_DIEM")) thu({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, "TRUNG_DIEM", r * 0.05);
+    if (kieu.has("VUONG_GOC") && diemTruoc) thu(chanVuongGoc(diemTruoc, a, b), "VUONG_GOC");
+  }
+  if (kieu.has("GIAO_DIEM")) for (let i = 0; i < doan.length; i++) for (let j = i + 1; j < doan.length; j++) thu(giaoDoan(doan[i]![0], doan[i]![1], doan[j]![0], doan[j]![1]), "GIAO_DIEM", r * 0.1);
+  return tot;
+}

@@ -7,7 +7,7 @@ import { tinhHo } from "../tinh-ho";
 import { THU_TU_TRANG_THAI, homNayIso, trangThaiHo, type TrangThaiGpmb } from "../trang-thai";
 import { PhanBoTrangThai } from "../thanh-phan/BieuDo";
 import { Chon } from "../thanh-phan/Chon";
-import { type DuLieuBanDo, boNho, layDem, TEN_CO, phanTich, dungLai } from "./ban-do/du-lieu";
+import { type DuLieuBanDo, boNho, layDem, TEN_CO, phanTich, dungLai, khoaNapBanDo, khoaTepGhep, napTatCa } from "./ban-do/du-lieu";
 import { HopCauHinhLop } from "./ban-do/CauHinhLop";
 import { TomTatThuHoi, KiemTraBanDo, ChiTietThua } from "./ban-do/KiemTra";
 import { KhungVe } from "./ban-do/KhungVe";
@@ -15,6 +15,8 @@ import { HopTaoHo } from "./ban-do/TaoHo";
 import { HopCapNhatDt, TheConLai, TheRanhNhap } from "./ban-do/RanhGpmb";
 import { TheVungChon, TimThua, TomTatHo } from "./ban-do/VungChon";
 import { xuatPdfBanDo, type KhoGiay } from "./ban-do/xuat-pdf";
+import { HopGhiChu, HopSoSanh, HopTepGhep, MAU_SO_SANH, TheDiemDo, TheGhiChu, TheKetQuaDo, taoKetQuaDo } from "./ban-do/LopPhu";
+import type { SoSanhThua } from "@gpmb/gis";
 import { taiXuong } from "../tai-xuong";
 import { tenTep } from "../ten-tep";
 import { kiemTraVung } from "@gpmb/gis";
@@ -25,10 +27,9 @@ export async function napBanDoDuAn(kho: { docBanDo(id: string): Promise<Uint8Arr
   if (!duAn.banDo) return null;
   const co = layDem(duAn);
   if (co) return co;
-  const b = await kho.docBanDo(duAn.id);
-  if (!b) return null;
-  const d = phanTich(b, duAn.banDo.cauHinh);
-  boNho.set(duAn.id, { ngayNhap: duAn.banDo.ngayNhap, d });
+  const d = await napTatCa(kho, duAn);
+  if (!d) return null;
+  boNho.set(duAn.id, { ngayNhap: khoaNapBanDo(duAn.banDo), d });
   return d;
 }
 export type { DuLieuBanDo };
@@ -50,11 +51,15 @@ export function BanDo({ duAnId }: { duAnId: string }) {
   const [veRanh, setVeRanh] = useState(0);
   const [capNhatDt, setCapNhatDt] = useState(false);
   const [quet, setQuet] = useState<Set<string>>(new Set());
+  const [ghiChuMoi, setGhiChuMoi] = useState<{ loai: "DIEM" | "DUONG"; diem: import("@gpmb/gis").Diem[] } | null>(null);
+  const [batGhiChu, setBatGhiChu] = useState(0);
+  const [hopPhu, setHopPhu] = useState<"GHEP" | "SO_SANH" | null>(null);
+  const [soSanh, setSoSanh] = useState<{ tep: string; ds: SoSanhThua[] } | null>(null);
   const [khoGiay, setKhoGiay] = useState<KhoGiay>("A3");
   const [dangPdf, setDangPdf] = useState(false);
   const [phongToi, setPhongToi] = useState<{ vong: import("@gpmb/gis").Diem[][]; n: number } | null>(null);
   const inputTep = useRef<HTMLInputElement>(null);
-  const khoaNap = duAn?.banDo ? `${duAnId}|${duAn.banDo.ngayNhap}` : "";
+  const khoaNap = duAn?.banDo ? `${duAnId}|${khoaNapBanDo(duAn.banDo)}` : "";
 
   // Đổi dự án hoặc đổi bản đồ: bỏ thửa đang chọn, chế độ chọn thửa, lỗi của lần nạp trước
   useEffect(() => {
@@ -68,20 +73,18 @@ export function BanDo({ duAnId }: { duAnId: string }) {
     if (dl || !duAn?.banDo || dangDoc) return;
     const banDo = duAn.banDo;
     let huy = false;
-    kho
-      .docBanDo(duAnId)
-      .then((b) => {
+    napTatCa(kho, duAn)
+      .then((d) => {
         if (huy) return;
-        if (!b) return setLoi("Không tìm thấy tệp bản đồ đã nạp của dự án. Hãy xóa bản đồ và nạp lại tệp DGN.");
-        const d = phanTich(b, banDo.cauHinh);
-        boNho.set(duAnId, { ngayNhap: banDo.ngayNhap, d });
+        if (!d) return setLoi("Không tìm thấy tệp bản đồ đã nạp của dự án. Hãy xóa bản đồ và nạp lại tệp DGN.");
+        boNho.set(duAnId, { ngayNhap: khoaNapBanDo(banDo), d });
         veLai();
       })
       .catch((e) => !huy && setLoi((e as Error).message));
     return () => {
       huy = true;
     };
-  }, [duAnId, duAn?.banDo, dl, dangDoc, kho]);
+  }, [duAnId, duAn?.banDo, dl, dangDoc, kho]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Phạm vi thu hồi = hợp các vùng ranh / vùng thửa thu hồi đã chọn ∪ các thửa chọn trực tiếp
   const maVungChon = duAn?.banDo?.vungChonDs ?? (duAn?.banDo?.vungChon ? [duAn.banDo.vungChon] : []);
@@ -102,6 +105,15 @@ export function BanDo({ duAnId }: { duAnId: string }) {
       }),
     );
   }, [dl, maVungChon.join("|"), thuaChon, ranhNhap]); // eslint-disable-line react-hooks/exhaustive-deps
+  const lopPhu = useMemo(
+    () => ({
+      ghiChu: duAn?.banDo?.ghiChu ?? [],
+      diemDo: duAn?.banDo?.diemDo ?? [],
+      ketQuaDo: duAn?.banDo?.ketQuaDo ?? [],
+      soSanh: (soSanh?.ds ?? []).filter((x) => x.trangThai !== "GIONG").map((x) => ({ vong: (x.vongMoi ?? x.vongCu)!, mau: MAU_SO_SANH[x.trangThai], net: x.trangThai === "MAT" ? [6, 4] : undefined })),
+    }),
+    [duAn?.banDo?.ghiChu, duAn?.banDo?.diemDo, duAn?.banDo?.ketQuaDo, soSanh],
+  );
   const coPhamVi = vungDs.length > 0 || thuaChon.size > 0 || ranhNhap.length > 0;
   const luuRanhVe = (diem: import("@gpmb/gis").Diem[]) => {
     const k = kiemTraVung(diem);
@@ -146,10 +158,12 @@ export function BanDo({ duAnId }: { duAnId: string }) {
       const d = phanTich(bytes);
       const ngayNhap = new Date().toISOString();
       await kho.luuBanDo(duAnId, bytes);
-      boNho.set(duAnId, { ngayNhap, d });
+      boNho.set(duAnId, { ngayNhap: ngayNhap, d });
       // Bản đồ mới: bỏ phạm vi thu hồi, thửa chọn và cấu hình lớp đã chốt của tệp cũ
       // Ranh GPMB nhập ngoài (tọa độ tuyệt đối VN-2000) giữ lại
-      await luuDuAn({ ...duAn, banDo: { tenTep: f.name, ngayNhap, vungChon: null, vungChonDs: [], thuaChon: [], ranhNhap: duAn.banDo?.ranhNhap ?? [] } });
+      // Nạp tệp khác thay toàn bộ bản vẽ: bỏ các tệp ghép cũ
+      for (const t of duAn.banDo?.tepGhep ?? []) await kho.xoaBanDo(khoaTepGhep(duAnId, t.id));
+      await luuDuAn({ ...duAn, banDo: { tenTep: f.name, ngayNhap, vungChon: null, vungChonDs: [], thuaChon: [], ranhNhap: duAn.banDo?.ranhNhap ?? [], ghiChu: duAn.banDo?.ghiChu, diemDo: duAn.banDo?.diemDo, ketQuaDo: duAn.banDo?.ketQuaDo } });
       bao(`Đã nạp bản đồ ${f.name}: ${d.kq.thua.length} thửa`);
     } catch (e) {
       setLoi((e as Error).message);
@@ -174,6 +188,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
     setDangDoc(true);
     try {
       await kho.xoaBanDo(duAnId);
+      for (const t of duAn.banDo.tepGhep ?? []) await kho.xoaBanDo(khoaTepGhep(duAnId, t.id));
       boNho.delete(duAnId);
       setChon(null);
       setCheDoChonThua(false);
@@ -191,7 +206,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
     if (!dl || !duAn.banDo) return;
     const goiY = ch ? null : goiYCauHinh(dl.ban, CAU_HINH_MAC_DINH);
     const d = dungLai(dl.ban, ch ?? goiY!.cauHinh, !ch, goiY?.ghiChu ?? []);
-    boNho.set(duAnId, { ngayNhap: duAn.banDo.ngayNhap, d });
+    boNho.set(duAnId, { ngayNhap: khoaNapBanDo(duAn.banDo), d });
     veLai();
     setChon(null);
     const { cauHinh: _bo, ...banDo } = duAn.banDo;
@@ -234,6 +249,8 @@ export function BanDo({ duAnId }: { duAnId: string }) {
               Xóa bản đồ
             </button>
           )}
+          {dl && <button className="nut" onClick={() => setHopPhu("GHEP")} title="Ghép nhiều tờ, mảnh trích đo vào một bản đồ">Ghép tệp{duAn.banDo?.tepGhep?.length ? ` (${duAn.banDo.tepGhep.length + 1})` : ""}…</button>}
+          {dl && <button className="nut" onClick={() => setHopPhu("SO_SANH")} title="So sánh với bản trích đo khác: thửa đổi diện tích, hình dạng, thửa mới/không còn">So sánh bản đồ…</button>}
           {dl && (
             <span className="nhom-nut" style={{ gap: 4 }}>
               <Chon value={khoGiay} onChange={(e) => setKhoGiay(e.target.value as KhoGiay)} aria-label="Khổ giấy PDF"><option value="A3">A3 ngang</option><option value="A4">A4 ngang</option></Chon>
@@ -270,7 +287,9 @@ export function BanDo({ duAnId }: { duAnId: string }) {
       )}
       {dl && (
         <div className="ban-do-khung">
-          <KhungVe key={khoaNap} dl={dl} vungChon={maVungChon} thuHoi={thuHoi} khoaThua={khoaThua} chon={chon} setChon={setChon} daLienKet={daLienKet} ttThua={ttThua} bamThua={cheDoChonThua && quyen("SUA_HO_SO") ? batTatThua : undefined} thuaChon={thuaChon} khoaLuu={duAnId} ranhThem={ranhVe} luuVung={quyen("SUA_HO_SO") ? luuRanhVe : undefined} batVeVung={veRanh} quet={(ds, them) => setQuet(new Set([...(them ? quet : []), ...ds.map(khoaThua)]))} thuaQuet={quet} phongToi={phongToi} />
+          <KhungVe key={khoaNap} dl={dl} vungChon={maVungChon} thuHoi={thuHoi} khoaThua={khoaThua} chon={chon} setChon={setChon} daLienKet={daLienKet} ttThua={ttThua} bamThua={cheDoChonThua && quyen("SUA_HO_SO") ? batTatThua : undefined} thuaChon={thuaChon} khoaLuu={duAnId} ranhThem={ranhVe} luuVung={quyen("SUA_HO_SO") ? luuRanhVe : undefined} batVeVung={veRanh} quet={(ds, them) => setQuet(new Set([...(them ? quet : []), ...ds.map(khoaThua)]))} thuaQuet={quet} phongToi={phongToi} lopPhu={lopPhu} batGhiChu={batGhiChu}
+            themGhiChu={quyen("SUA_HO_SO") ? (loai, diem) => setGhiChuMoi({ loai, diem }) : undefined}
+            luuDo={quyen("SUA_HO_SO") ? (loai, diem, giaTri) => void luuBanDoDa({ ketQuaDo: [...lopPhu.ketQuaDo, taoKetQuaDo(lopPhu.ketQuaDo, loai, diem, giaTri, nguoiDung)] }) : undefined} />
           <div className="ben-phai">
             <div className="nhom-nut"><TimThua dl={dl} daLienKet={daLienKet} chon={(t) => { setChon(t); setPhongToi({ vong: t.vong, n: Date.now() }); }} /></div>
             {quet.size > 0 && <TheVungChon duAn={duAn} dl={dl} chon={quet} boChon={() => setQuet(new Set())} thuHoi={thuHoi} khoaThua={khoaThua} daLienKet={daLienKet} ttThua={ttThua} />}
@@ -322,6 +341,15 @@ export function BanDo({ duAnId }: { duAnId: string }) {
                 })()}
               </div>
             </div>
+            <TheGhiChu duAn={duAn} hos={hos} luu={luuBanDoDa} phongToi={(v) => setPhongToi({ vong: v, n: Date.now() })} batCongCu={() => setBatGhiChu((x) => x + 1)} />
+            <TheDiemDo duAn={duAn} dl={dl} daLienKet={daLienKet} hos={hos} luu={luuBanDoDa} phongToi={(v) => setPhongToi({ vong: v, n: Date.now() })} />
+            <TheKetQuaDo duAn={duAn} luu={luuBanDoDa} phongToi={(v) => setPhongToi({ vong: v, n: Date.now() })} />
+            {soSanh && (
+              <div className="the co-dinh" aria-label="Kết quả so sánh bản đồ">
+                <div className="the-dau"><h3>So sánh với {soSanh.tep}</h3><div className="phai"><button className="nut nut-chu nut-nho" onClick={() => setSoSanh(null)}>Tắt</button></div></div>
+                <div className="the-than chu-nho">{soSanh.ds.filter((x) => x.trangThai !== "GIONG").length} thửa thay đổi (tô viền trên bản đồ: cam đổi diện tích, vàng đổi hình, xanh thửa mới, đỏ nét đứt thửa không còn) · {soSanh.ds.filter((x) => x.trangThai === "GIONG").length} thửa không đổi</div>
+              </div>
+            )}
             <div className="the gian">
               <div className="the-dau">
                 <h3>Thửa</h3>
@@ -371,6 +399,9 @@ export function BanDo({ duAnId }: { duAnId: string }) {
           <p className="mo chu-nho">Diện tích thu hồi của thửa chọn trực tiếp mặc định bằng cả thửa; thửa thu hồi một phần sửa trong hồ sơ theo trích đo được duyệt.</p>
         </HopThoai>
       )}
+      {ghiChuMoi && dl && <HopGhiChu dl={dl} loai={ghiChuMoi.loai} diem={ghiChuMoi.diem} daLienKet={daLienKet} hos={hos} dong={() => setGhiChuMoi(null)} luu={(g) => void luuBanDoDa({ ghiChu: [...lopPhu.ghiChu, { ...g, id: taoId(), ngay: new Date().toISOString(), nguoi: nguoiDung }] })} />}
+      {hopPhu === "GHEP" && <HopTepGhep duAn={duAn} dong={() => setHopPhu(null)} />}
+      {hopPhu === "SO_SANH" && dl && <HopSoSanh duAn={duAn} dl={dl} ketQua={setSoSanh} dong={() => setHopPhu(null)} />}
       {capNhatDt && dl && <HopCapNhatDt duAn={duAn} dl={dl} thuHoi={thuHoi} khoaThua={khoaThua} hos={hos} dong={() => setCapNhatDt(false)} />}
       {taoHo && dl && coPhamVi && (
         <HopTaoHo duAn={duAn} dl={dl} thuHoi={thuHoi} khoaThua={khoaThua} daLienKet={daLienKet} dong={() => setTaoHo(false)} />

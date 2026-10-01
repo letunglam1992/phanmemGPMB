@@ -16,7 +16,7 @@ function trongPhamVi(vong: Diem[], pham: DuLieuBanDo["pham"]): boolean {
   return vong.some((d) => d.x >= pham.minX - le && d.x <= pham.maxX + le && d.y >= pham.minY - le && d.y <= pham.maxY + le);
 }
 
-async function docBang(f: File): Promise<unknown[][]> {
+export async function docBang(f: File): Promise<unknown[][]> {
   const ten = f.name.toLowerCase();
   if (ten.endsWith(".xlsx")) {
     const { default: Excel } = await import("exceljs");

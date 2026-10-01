@@ -452,6 +452,49 @@ export interface BanDoDuAn {
    * các vùng đã chọn để tính diện tích thu hồi từng thửa. Tọa độ VN-2000 cùng hệ bản đồ (x = Đông, y = Bắc).
    */
   ranhNhap?: RanhNhap[];
+  /** Ghi chú hiện trường (điểm/đường) gắn với hộ — docs/08 §9.6. */
+  ghiChu?: GhiChuHienTruong[];
+  /** Điểm đo hiện trạng (bảng tọa độ VN-2000) gắn vị trí tài sản kiểm đếm — docs/08 §9.7. */
+  diemDo?: DiemDoHienTrang[];
+  /** Kết quả đo đã lưu (chiều dài, diện tích) — docs/08 §9.10. */
+  ketQuaDo?: KetQuaDoLuu[];
+  /** Tệp DGN ghép thêm (tờ khác, mảnh trích đo khác) — lưu ở kho bản đồ với khóa "{duAnId}#{id}" — docs/08 §9.9. */
+  tepGhep?: { id: string; tenTep: string; ngayNhap: string }[];
+}
+
+export type NhomGhiChu = "VUONG_MAC" | "MO" | "CONG_TRINH" | "KHAC";
+export const TEN_NHOM_GHI_CHU: Record<NhomGhiChu, string> = { VUONG_MAC: "Vướng mắc", MO: "Mồ mả", CONG_TRINH: "Công trình chưa kiểm đếm", KHAC: "Khác" };
+export interface GhiChuHienTruong {
+  id: string;
+  loai: "DIEM" | "DUONG";
+  nhom: NhomGhiChu;
+  noiDung: string;
+  diem: import("@gpmb/gis").Diem[];
+  hoId?: string;
+  ngay: string;
+  nguoi?: string;
+  daXuLy?: boolean;
+}
+export interface DiemDoHienTrang {
+  id: string;
+  ten: string;
+  x: number;
+  y: number;
+  moTa: string;
+  tep?: string;
+  /** Tài sản kiểm đếm mà điểm này là vị trí đo thực địa (hộ, tài sản). */
+  hoId?: string;
+  taiSanId?: string;
+}
+export interface KetQuaDoLuu {
+  id: string;
+  ten: string;
+  loai: "DAI" | "DT";
+  diem: import("@gpmb/gis").Diem[];
+  /** m hoặc m² */
+  giaTri: number;
+  ngay: string;
+  nguoi?: string;
 }
 
 export interface RanhNhap {
