@@ -33,6 +33,8 @@ export async function napBanDoDuAn(kho: { docBanDo(id: string): Promise<Uint8Arr
   return d;
 }
 export type { DuLieuBanDo };
+/** Thửa cần phóng tới khi mở màn Bản đồ (từ hồ sơ hộ: "Xem trên bản đồ" → "Mở màn Bản đồ tại thửa này"). */
+export const choPhongThua = new Map<string, string>();
 
 export function BanDo({ duAnId }: { duAnId: string }) {
   const { dsDuAn, kho, luuDuAn, hoCua, di, chinhSach, quyen, bao, nguoiDung } = useUngDung();
@@ -85,6 +87,18 @@ export function BanDo({ duAnId }: { duAnId: string }) {
       huy = true;
     };
   }, [duAnId, duAn?.banDo, dl, dangDoc, kho]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Mở từ hồ sơ hộ: phóng tới, chọn thửa đã yêu cầu
+  useEffect(() => {
+    const ma = choPhongThua.get(duAnId);
+    if (!dl || !ma) return;
+    choPhongThua.delete(duAnId);
+    const t = dl.kq.thua.find((x) => x.ma === ma);
+    if (t) {
+      setChon(t);
+      setPhongToi({ vong: t.vong, n: Date.now() });
+    }
+  }, [dl, duAnId]);
 
   // Phạm vi thu hồi = hợp các vùng ranh / vùng thửa thu hồi đã chọn ∪ các thửa chọn trực tiếp
   const maVungChon = duAn?.banDo?.vungChonDs ?? (duAn?.banDo?.vungChon ? [duAn.banDo.vungChon] : []);

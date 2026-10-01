@@ -1,4 +1,5 @@
 import { Fragment, useState } from "react";
+import { HopXemThuaBanDo } from "./XemThuaBanDo";
 import { taoId, type DuAn, type Ho, type Thua } from "../../mo-hinh";
 import { ChonGiaDat } from "../../thanh-phan/ChonGiaDat";
 import { tien } from "../../thanh-phan/chung";
@@ -25,6 +26,7 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
   const [moRong, setMoRong] = useState<string | null>(null);
   const [chonTuyen, setChonTuyen] = useState<string | null>(null);
   const [chonGiaHT, setChonGiaHT] = useState<string | null>(null);
+  const [xemBanDo, setXemBanDo] = useState<string | null>(null);
   const [chonGiaKgt, setChonGiaKgt] = useState<{ id: string; loai: "KD" | "CL"; loaiDat: string } | null>(null);
   const { chinhSach } = useUngDung();
   const cs = chinhSach(duAn);
@@ -86,6 +88,7 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
                       )}
                     </td>
                     <td className="khong-xuong-dong">
+                      {duAn.banDo && <button className="nut nut-chu nut-nho" title="Xem thửa này trên bản đồ GPMB đã nạp của dự án" aria-label={`Xem thửa ${t.soThua} tờ ${t.soTo} trên bản đồ`} onClick={() => setXemBanDo(t.id)}>🗺</button>}
                       <button className="nut nut-chu nut-nho" title="Giấy chứng nhận, phân lớp đất, không có giấy tờ (NĐ 88), chênh lệch giá, chi phí đầu tư, hành lang, tùy chọn cây trồng xen" onClick={() => setMoRong(moRong === t.id ? null : t.id)}>⋯</button>
                       <button className="nut nut-chu nut-nguy nut-nho" onClick={() => { if (h.taiSan.some((x) => x.thuaId === t.id) && !confirm("Thửa có tài sản kiểm đếm. Xóa cả tài sản?")) return; doi({ ...h, thua: h.thua.filter((x) => x.id !== t.id), taiSan: h.taiSan.filter((x) => x.thuaId !== t.id) }); }}>✕</button>
                     </td>
@@ -290,6 +293,7 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
         const k = t.khongGiayTo;
         return <ChonGiaDat xa={duAn.xa} loaiDat={chonGiaKgt.loaiDat} dong={() => setChonGiaKgt(null)} chon={(g) => { sua(t.id, { khongGiayTo: chonGiaKgt.loai === "KD" ? { ...k, giaSxkd: g } : { ...k, giaConLai: { ...g, loaiDat: chonGiaKgt.loaiDat } } }); setChonGiaKgt(null); }} />;
       })()}
+      {xemBanDo && h.thua.some((t) => t.id === xemBanDo) && <HopXemThuaBanDo duAn={duAn} h={h} thua={h.thua.find((t) => t.id === xemBanDo)!} doi={doi} dong={() => setXemBanDo(null)} />}
       {thuaChon && (
         <ChonGiaDat xa={duAn.xa} loaiDat={thuaChon.loaiDat} dong={() => setChonGia(null)} chon={(g) => { sua(thuaChon.id, { gia: g }); setChonGia(null); }} />
       )}
