@@ -105,11 +105,15 @@ export function tinhChiTra(h: Ho, dsPA: PhienBanPA[], giaiDoan: GiaiDoanTyLe[], 
     return { ban: null, phaiTra: null, ngayHieuLuc: null, hanChi: null, daChi, conLai: null, chamTra: [], tienChamTra: null, trangThai: "CHUA_DUYET", canhBao };
   }
   const phaiTra = D(ban.ho.find((x) => x.hoId === h.id)!.conLai);
-  const ngayHieuLuc = ct.ngayHieuLuc || ban.pheDuyet.ngay;
-  const hanChi = cong(ngayHieuLuc, 30);
+  const ngayHieuLuc = ct.ngayHieuLuc || ban.pheDuyet.ngay || null;
   const conLai = phaiTra.minus(daChi);
   const trangThai = daChi.isZero() ? "CHUA_CHI" : conLai.gt(0) ? "CHI_MOT_PHAN" : conLai.lt(0) ? "CHI_VUOT" : "DA_CHI_DU";
   if (trangThai === "CHI_VUOT") canhBao.push(`Đã chi vượt số được duyệt ${conLai.neg().toFixed(0)} đ — kiểm tra lại`);
+  if (!ngayHieuLuc) {
+    canhBao.push("Chưa có ngày quyết định phê duyệt phương án — bổ sung số, ngày QĐ (Phương án → Bổ sung số, ngày QĐ) hoặc nhập ngày QĐ có hiệu lực để tính hạn chi trả 30 ngày (điểm a khoản 3 Điều 94 Luật Đất đai 2024)");
+    return { ban, phaiTra, ngayHieuLuc: null, hanChi: null, daChi, conLai, chamTra: [], tienChamTra: null, trangThai, canhBao };
+  }
+  const hanChi = cong(ngayHieuLuc, 30);
 
   // Khoản chi sau hạn: chậm trả từ ngày liền sau hạn đến ngày chi; khoản còn nợ: tạm tính đến hôm nay
   const chamTra: KetQuaChiTra["chamTra"] = [];

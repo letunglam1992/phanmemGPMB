@@ -21,7 +21,7 @@ export function lyDoKhongXoaHo(duAn: DuAn | undefined, h: Ho): string[] {
   const ly: string[] = [];
   for (const p of duAn?.phuongAn ?? []) {
     if (p.trangThai === "DA_HUY" || !p.ho.some((x) => x.hoId === h.id)) continue;
-    ly.push(`có trong bản phương án số ${p.so} ${p.trangThai === "DA_PHE_DUYET" ? `đã phê duyệt${p.pheDuyet ? ` (${p.pheDuyet.so})` : ""}` : "đã chốt"}`);
+    ly.push(`có trong bản phương án số ${p.so} ${p.trangThai === "DA_PHE_DUYET" ? `đã phê duyệt${p.pheDuyet?.so ? ` (${p.pheDuyet.so})` : ""}` : "đã chốt"}`);
   }
   const chi = dotHieuLuc(h.chiTra).length;
   if (chi) ly.push(`đã ghi ${chi} đợt chi trả`);

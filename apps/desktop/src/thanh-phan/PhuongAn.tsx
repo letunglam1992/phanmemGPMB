@@ -4,7 +4,7 @@ import { D, dinhDang } from "@gpmb/core";
 import { useUngDung } from "../ung-dung";
 import type { KetQuaHo } from "../tinh-ho";
 import type { DuAn, Ho } from "../mo-hinh";
-import { HopThoai, O, ngayVN } from "./chung";
+import { HopThoai, O } from "./chung";
 import { xuatExcelChiTra, xuatExcelDuAn, xuatPhieuDoiChieu } from "../xuat-excel";
 import { useMauExcel } from "./MauExcel";
 import { homNayIso } from "../trang-thai";
@@ -21,6 +21,9 @@ import {
   huyBan,
   kiemTraToanVen,
   pheDuyet,
+  boSungQd,
+  dotPheDuyet,
+  moTaQd,
   soSanh,
   tinhLaiBan,
   type LoaiThayDoi,
@@ -39,7 +42,16 @@ const TEN_LOAI: Record<LoaiThayDoi, [string, string]> = { THEM: ["Thêm", "nhan-
 export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo }[] }) {
   const { chinhSach, luuDuAn, luuHo, nguoiDung, quyen, ghiNhatKy, tyLeCham, nguongLechDt, nguoiCoDat } = useUngDung();
   const ds = useMemo(() => [...(duAn.phuongAn ?? [])].sort((a, b) => b.so - a.so), [duAn.phuongAn]);
-  const [hop, setHop] = useState<null | { loai: "chot" } | { loai: "soat" } | { loai: "duyet" | "huy" | "xem"; p: PhienBanPA } | { loai: "so-sanh"; a?: string; b?: string }>(null);
+  /** Lưu bản đã ghi nhận/bổ sung QĐ; ghi số, ngày (ô có giá trị) vào văn bản dự án hoặc của đợt (P3-1). */
+  const ghiQd = async (d: PhienBanPA, ghiVanBan: boolean) => {
+    const vbQd = { ...(d.pheDuyet!.so ? { qd_phe_duyet_so: d.pheDuyet!.so } : {}), ...(d.pheDuyet!.ngay ? { qd_phe_duyet_ngay: ngayChu(d.pheDuyet!.ngay) } : {}) };
+    const coGhi = ghiVanBan && Object.keys(vbQd).length > 0;
+    const dotGhi = coGhi && d.dotId ? timDot(duAn, d.dotId) : undefined;
+    const vanBan = coGhi && !dotGhi ? { ...(duAn.vanBan ?? {}), ...vbQd } : duAn.vanBan;
+    const dotThuHoi = dotGhi ? duAn.dotThuHoi!.map((x) => (x.id === dotGhi.id ? { ...x, vanBan: { ...(x.vanBan ?? {}), ...vbQd } } : x)) : duAn.dotThuHoi;
+    await luuDuAn({ ...duAn, vanBan, dotThuHoi, phuongAn: (duAn.phuongAn ?? []).map((x) => (x.id === d.id ? d : x)) }, "PHE_DUYET_PA");
+  };
+  const [hop, setHop] = useState<null | { loai: "chot" } | { loai: "soat" } | { loai: "duyet" | "huy" | "xem" | "bo-sung"; p: PhienBanPA } | { loai: "so-sanh"; a?: string; b?: string }>(null);
   const [toanVen, setToanVen] = useState<Record<string, boolean>>({});
   const [loi, setLoi] = useState("");
   const lech = hoLechSauPheDuyet(ds, kq);
@@ -104,7 +116,7 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
                   <td className="so">{p.ho.length}</td>
                   <td className="so">{dong(p.tong)}</td>
                   <td className="chu-nho">{new Date(p.luc).toLocaleString("vi-VN", { hour12: false })}<div className="mo">{p.nguoi}</div></td>
-                  <td className="chu-nho">{p.pheDuyet ? `${p.pheDuyet.so} ngày ${ngayVN(p.pheDuyet.ngay)}${p.pheDuyet.coQuan ? ` (${p.pheDuyet.coQuan})` : ""}` : "—"}</td>
+                  <td className="chu-nho">{p.pheDuyet ? <>Đợt {dotPheDuyet(duAn.phuongAn ?? [], p)} · {moTaQd(p.pheDuyet)}{p.pheDuyet.coQuan ? ` (${p.pheDuyet.coQuan})` : ""}{(!p.pheDuyet.so || !p.pheDuyet.ngay) && quyen("PHE_DUYET_PA") && <div><button className="nut nut-chu nut-nho" onClick={() => setHop({ loai: "bo-sung", p })}>Bổ sung số, ngày QĐ…</button></div>}</> : "—"}</td>
                   <td>{toanVen[p.id] === undefined ? "…" : toanVen[p.id] ? <span className="nhan nhan-xanh">Khớp</span> : <span className="nhan nhan-do" title="Mã băm không khớp: số liệu bản chốt đã bị sửa ngoài phần mềm">Không khớp</span>}</td>
                   <td className="khong-xuong-dong">
                     <button className="nut nut-nho" onClick={() => setHop({ loai: "xem", p })}>Xem</button>{" "}
@@ -138,18 +150,26 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
           p={hop.p}
           dong={() => setHop(null)}
           luu={async (qd, ghiVanBan) => {
-            const d = pheDuyet(hop.p, qd, nguoiDung);
-            const vbQd = { qd_phe_duyet_so: d.pheDuyet!.so, qd_phe_duyet_ngay: ngayChu(d.pheDuyet!.ngay) };
-            // P3-1: phương án của đợt → số, ngày QĐ ghi vào văn bản của đợt (văn bản cấp dự án giữ nguyên)
-            const dotGhi = ghiVanBan && d.dotId ? timDot(duAn, d.dotId) : undefined;
-            const vanBan = ghiVanBan && !dotGhi ? { ...(duAn.vanBan ?? {}), ...vbQd } : duAn.vanBan;
-            const dotThuHoi = dotGhi ? duAn.dotThuHoi!.map((x) => (x.id === dotGhi.id ? { ...x, vanBan: { ...(x.vanBan ?? {}), ...vbQd } } : x)) : duAn.dotThuHoi;
-            await luuDuAn({ ...duAn, vanBan, dotThuHoi, phuongAn: (duAn.phuongAn ?? []).map((x) => (x.id === d.id ? d : x)) }, "PHE_DUYET_PA");
-            await ghiNhatKy("Ghi nhận phê duyệt phương án", `${duAn.ten} – bản ${d.so}: ${d.pheDuyet!.so} ngày ${ngayVN(d.pheDuyet!.ngay)}; ${d.ho.length} hộ, ${dong(d.tong)} đ`);
+            const d = pheDuyet(hop.p, { ...qd, dot: dotPheDuyet(duAn.phuongAn ?? [], hop.p) }, nguoiDung);
+            await ghiQd(d, ghiVanBan);
+            await ghiNhatKy("Ghi nhận phê duyệt phương án", `${duAn.ten} – bản ${d.so}, đợt ${d.pheDuyet!.dot}: ${moTaQd(d.pheDuyet)}; ${d.ho.length} hộ, ${dong(d.tong)} đ`);
             for (const x of d.ho) {
               const h = kq.find((y) => y.h.id === x.hoId)?.h;
-              if (h) await luuHo(h, `Phương án bản ${d.so} được phê duyệt: ${d.pheDuyet!.so} ngày ${ngayVN(d.pheDuyet!.ngay)}; giá trị ${dong(x.tong)} đ`);
+              if (h) await luuHo(h, `Phương án bản ${d.so} được phê duyệt (đợt ${d.pheDuyet!.dot}): ${moTaQd(d.pheDuyet)}; giá trị ${dong(x.tong)} đ`);
             }
+          }}
+        />
+      )}
+      {hop?.loai === "bo-sung" && (
+        <HopPheDuyet
+          duAn={duAn}
+          p={hop.p}
+          boSung
+          dong={() => setHop(null)}
+          luu={async (qd, ghiVanBan) => {
+            const d = boSungQd(hop.p, qd);
+            await ghiQd(d, ghiVanBan);
+            await ghiNhatKy("Bổ sung số, ngày QĐ phê duyệt phương án", `${duAn.ten} – bản ${d.so}: ${moTaQd(d.pheDuyet)}`);
           }}
         />
       )}
@@ -268,31 +288,35 @@ function HopChot({ duAn, kq: kqDuAn, dong: dongHop }: { duAn: DuAn; kq: { h: Ho;
   );
 }
 
-function HopPheDuyet({ duAn, p, dong: dongHop, luu }: { duAn: DuAn; p: PhienBanPA; dong: () => void; luu: (qd: { so: string; ngay: string; coQuan: string }, ghiVanBan: boolean) => Promise<void> }) {
-  const [so, setSo] = useState((p.dotId ? timDot(duAn, p.dotId)?.vanBan?.qd_phe_duyet_so : duAn.vanBan?.qd_phe_duyet_so) ?? "");
-  const [ngay, setNgay] = useState("");
-  const [coQuan, setCoQuan] = useState(`UBND ${duAn.xa.replace(/^(Xã|Phường) /, (m) => m.toLowerCase())}`);
+function HopPheDuyet({ duAn, p, boSung, dong: dongHop, luu }: { duAn: DuAn; p: PhienBanPA; boSung?: boolean; dong: () => void; luu: (qd: { so: string; ngay: string; coQuan: string }, ghiVanBan: boolean) => Promise<void> }) {
+  const [so, setSo] = useState(boSung ? p.pheDuyet?.so ?? "" : ((p.dotId ? timDot(duAn, p.dotId)?.vanBan?.qd_phe_duyet_so : duAn.vanBan?.qd_phe_duyet_so) ?? ""));
+  const [ngay, setNgay] = useState(boSung ? p.pheDuyet?.ngay ?? "" : "");
+  const [coQuan, setCoQuan] = useState(boSung && p.pheDuyet?.coQuan ? p.pheDuyet.coQuan : `UBND ${duAn.xa.replace(/^(Xã|Phường) /, (m) => m.toLowerCase())}`);
+  const dot = dotPheDuyet(duAn.phuongAn ?? [], p);
+  const tenDotThuHoi = p.dotId ? (tenDot(timDot(duAn, p.dotId)) === "Chưa xếp đợt" ? p.dotTen : tenDot(timDot(duAn, p.dotId))) : undefined;
   const [ghi, setGhi] = useState(true);
   const [loi, setLoi] = useState("");
   return (
     <HopThoai
-      tieuDe={`Ghi nhận phê duyệt – bản ${p.so}`}
+      tieuDe={boSung ? `Bổ sung số, ngày QĐ phê duyệt – đợt ${dot}` : `Ghi nhận phê duyệt – đợt ${dot}`}
       dong={dongHop}
       rong={620}
       chan={
         <>
           <button className="nut" onClick={dongHop}>Đóng</button>
-          <button className="nut nut-chinh" disabled={!so.trim() || !ngay} onClick={async () => { try { await luu({ so, ngay, coQuan }, ghi); dongHop(); } catch (e) { setLoi((e as Error).message); } }}>Ghi nhận phê duyệt</button>
+          <button className="nut nut-chinh" disabled={boSung && ((!!p.pheDuyet?.so || !so.trim()) && (!!p.pheDuyet?.ngay || !ngay))} onClick={async () => { try { await luu({ so, ngay, coQuan }, ghi); dongHop(); } catch (e) { setLoi((e as Error).message); } }}>{boSung ? "Lưu bổ sung" : "Ghi nhận phê duyệt"}</button>
         </>
       }
     >
+      <p className="mt-0"><b>Đợt phê duyệt {dot}</b> · bản phương án {p.so}{tenDotThuHoi ? ` · ${tenDotThuHoi}` : ""} · {p.ho.length} hộ · {dong(p.tong)} đ</p>
       <p className="mo mt-0">
         Phần mềm chỉ <b>ghi nhận</b> quyết định phê duyệt đã được cấp có thẩm quyền ký ban hành (điểm c khoản 3 Điều 87 Luật Đất đai 2024). Sau khi ghi nhận, bản {p.so} ({p.ho.length} hộ, {dong(p.tong)} đ) không sửa, không hủy được.
       </p>
       <div className="luoi luoi-2">
-        <O nhan="Số quyết định"><input value={so} placeholder="…/QĐ-UBND" onChange={(e) => setSo(e.target.value)} /></O>
-        <O nhan="Ngày quyết định"><ONgay value={ngay} onChange={(e) => setNgay(e.target.value)} /></O>
+        <O nhan="Số quyết định (có thể bổ sung sau)"><input value={so} placeholder="…/QĐ-UBND" disabled={boSung && !!p.pheDuyet?.so} onChange={(e) => setSo(e.target.value)} /></O>
+        <O nhan="Ngày quyết định (có thể bổ sung sau)"><ONgay value={ngay} disabled={boSung && !!p.pheDuyet?.ngay} onChange={(e) => setNgay(e.target.value)} /></O>
       </div>
+      {(!so.trim() || !ngay) && <div className="thong-bao thong-bao-vang chu-nho mt-8" role="status">Chưa có {!so.trim() && !ngay ? "số, ngày" : !so.trim() ? "số" : "ngày"} quyết định — vẫn ghi nhận được; bổ sung sau bằng nút “Bổ sung số, ngày QĐ…” ở bảng phương án. Văn bản các bước sau để trống số, ngày QĐ; chưa có ngày QĐ thì chưa tính được hạn chi trả 30 ngày (điểm a khoản 3 Điều 94 Luật Đất đai 2024).</div>}
       <O nhan="Cơ quan ban hành"><input value={coQuan} onChange={(e) => setCoQuan(e.target.value)} /></O>
       <label style={{ display: "block", marginTop: 8 }}>
         <input type="checkbox" checked={ghi} onChange={(e) => setGhi(e.target.checked)} /> Ghi số, ngày quyết định vào thông tin văn bản của dự án (làm căn cứ cho Mẫu 16 và các mẫu sau)

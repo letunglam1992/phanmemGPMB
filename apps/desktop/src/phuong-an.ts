@@ -59,7 +59,8 @@ export interface PhienBanPA {
   ho: HoChot[];
   tong: string;
   bam: string;
-  pheDuyet?: { so: string; ngay: string; coQuan: string; luc: string; nguoi: string };
+  /** Ghi nhận phê duyệt: số, ngày QĐ có thể để trống khi ghi nhận và bổ sung sau; `dot` = đợt phê duyệt thứ mấy của dự án. */
+  pheDuyet?: { so: string; ngay: string; coQuan: string; luc: string; nguoi: string; dot?: number };
   huy?: { luc: string; nguoi: string; lyDo: string };
   /** P3-1: bản phương án của đợt thu hồi (dự án có đợt: chốt, phê duyệt theo đợt). Trống = cả dự án (dự án không chia đợt). */
   dotId?: string;
@@ -159,10 +160,32 @@ export async function chotPhuongAn(
   };
 }
 
-export function pheDuyet(p: PhienBanPA, qd: { so: string; ngay: string; coQuan: string }, nguoi: string, luc = new Date().toISOString()): PhienBanPA {
+export function pheDuyet(p: PhienBanPA, qd: { so: string; ngay: string; coQuan: string; dot?: number }, nguoi: string, luc = new Date().toISOString()): PhienBanPA {
   if (p.trangThai !== "DA_CHOT") throw new LoiPhuongAn(`Chỉ phê duyệt được bản "Đã chốt" (bản này: ${TEN_TT_PA[p.trangThai]}).`);
-  if (!qd.so.trim() || !qd.ngay) throw new LoiPhuongAn("Phải ghi số và ngày quyết định phê duyệt phương án.");
-  return { ...p, trangThai: "DA_PHE_DUYET", pheDuyet: { so: qd.so.trim(), ngay: qd.ngay, coQuan: qd.coQuan.trim(), luc, nguoi } };
+  return { ...p, trangThai: "DA_PHE_DUYET", pheDuyet: { so: qd.so.trim(), ngay: qd.ngay, coQuan: qd.coQuan.trim(), luc, nguoi, ...(qd.dot ? { dot: qd.dot } : {}) } };
+}
+
+/** Bổ sung số, ngày, cơ quan QĐ cho bản đã ghi nhận phê duyệt mà còn trống — chỉ điền ô trống, không sửa số đã ghi. */
+export function boSungQd(p: PhienBanPA, qd: { so: string; ngay: string; coQuan: string }): PhienBanPA {
+  if (p.trangThai !== "DA_PHE_DUYET" || !p.pheDuyet) throw new LoiPhuongAn("Chỉ bổ sung cho bản đã ghi nhận phê duyệt.");
+  const c = p.pheDuyet;
+  return { ...p, pheDuyet: { ...c, so: c.so || qd.so.trim(), ngay: c.ngay || qd.ngay, coQuan: c.coQuan || qd.coQuan.trim() } };
+}
+
+/** Đợt phê duyệt thứ mấy: số đã ghi khi phê duyệt; bản cũ thì theo thứ tự ghi nhận phê duyệt trong dự án. */
+export function dotPheDuyet(ds: PhienBanPA[], p: PhienBanPA): number {
+  if (p.pheDuyet?.dot) return p.pheDuyet.dot;
+  const da = ds.filter((x) => x.trangThai === "DA_PHE_DUYET" && x.pheDuyet).sort((a, b) => a.pheDuyet!.luc.localeCompare(b.pheDuyet!.luc));
+  const i = da.findIndex((x) => x.id === p.id);
+  return i >= 0 ? i + 1 : da.length + 1;
+}
+
+/** Số, ngày QĐ để hiển thị: "12/QĐ-UBND ngày 01/10/2026"; trống → "(chưa ghi số, ngày QĐ)". */
+export function moTaQd(qd: { so: string; ngay: string } | undefined): string {
+  if (!qd) return "";
+  const n = qd.ngay ? qd.ngay.split("-").reverse().join("/") : "";
+  if (!qd.so && !n) return "(chưa ghi số, ngày QĐ)";
+  return `${qd.so || "(chưa ghi số)"}${n ? ` ngày ${n}` : " (chưa ghi ngày)"}`;
 }
 
 export function huyBan(p: PhienBanPA, lyDo: string, nguoi: string, luc = new Date().toISOString()): PhienBanPA {
@@ -256,7 +279,7 @@ export function hoLechSauPheDuyet(dsPA: PhienBanPA[], hienTai: { h: Ho; k: KetQu
 export function moTaBan(p: PhienBanPA): string {
   const ngay = (iso: string) => iso.split("-").reverse().join("/");
   const chot = `${p.dotTen ? `${p.dotTen}, ` : ""}chốt ngày ${ngay(p.luc.slice(0, 10))}`;
-  if (p.trangThai === "DA_PHE_DUYET" && p.pheDuyet) return `Phương án bản ${p.so} – ĐÃ PHÊ DUYỆT theo Quyết định số ${p.pheDuyet.so} ngày ${ngay(p.pheDuyet.ngay)}${p.pheDuyet.coQuan ? ` của ${p.pheDuyet.coQuan}` : ""} (${chot})`;
+  if (p.trangThai === "DA_PHE_DUYET" && p.pheDuyet) return `Phương án bản ${p.so} – ĐÃ PHÊ DUYỆT${p.pheDuyet.dot ? ` (đợt ${p.pheDuyet.dot})` : ""} theo Quyết định số ${moTaQd(p.pheDuyet)}${p.pheDuyet.coQuan ? ` của ${p.pheDuyet.coQuan}` : ""} (${chot})`;
   if (p.trangThai === "DA_HUY") return `Phương án bản ${p.so} – ĐÃ HỦY (${chot}) – không dùng để chi trả`;
   return `Phương án bản ${p.so} – ĐÃ CHỐT, CHỜ PHÊ DUYỆT (${chot})`;
 }

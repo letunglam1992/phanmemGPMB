@@ -252,7 +252,7 @@ export function canhBaoDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: st
     if (Object.values(h.tienDo).some((b) => b.trangThai === "CHO_DUYET" && !b.tuDuAn)) out.push({ muc: "THONG_TIN", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: có bước chờ duyệt` });
   }
   for (const l of hoLechSauPheDuyet(duAn.phuongAn ?? [], ds))
-    out.push({ muc: "CAO", duAnId: duAn.id, hoId: l.h.id, noiDung: `${l.h.ma} · ${l.h.ten}: hồ sơ đã sửa sau khi phương án bản ${l.ban.so} được phê duyệt (${l.ban.pheDuyet?.so ?? ""}) — tạm tính khác số đã duyệt; nếu đúng cần lập phương án điều chỉnh` });
+    out.push({ muc: "CAO", duAnId: duAn.id, hoId: l.h.id, noiDung: `${l.h.ma} · ${l.h.ten}: hồ sơ đã sửa sau khi phương án bản ${l.ban.so} được phê duyệt${l.ban.pheDuyet?.so ? ` (${l.ban.pheDuyet.so})` : ""} — tạm tính khác số đã duyệt; nếu đúng cần lập phương án điều chỉnh` });
   const chuaDu = ds.filter(({ h, k }) => k.tong.soDongThieuCanCu && !dangLapPhuongAn(hoHieuLuc(duAn, h))).length;
   if (chuaDu) out.push({ muc: "THONG_TIN", duAnId: duAn.id, noiDung: `${chuaDu} hồ sơ đang điều tra, kiểm đếm chưa đủ số liệu tính (giá đất, khối lượng…)` });
   return out;

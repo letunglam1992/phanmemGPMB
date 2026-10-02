@@ -59,7 +59,7 @@ export function TabHoTroKhac({ h, doi, duAn, kq }: Tab & { duAn: DuAn; kq: KetQu
             {(k.doiTuongCs ?? []).map((x) => {
               const dm = cs?.doiTuongChinhSach.diem?.find((y) => y.ma === x.diem);
               return (
-                <div key={x.id} className="luoi" style={{ gridTemplateColumns: "1fr 1.6fr 1.1fr 36px", gap: 6, alignItems: "end" }}>
+                <div key={x.id} className="luoi dong-doi-tuong" style={{ gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1.6fr) minmax(0, 1.1fr) auto", gap: 6, alignItems: "end" }}>
                   <O nhan="Họ tên người hưởng"><input value={x.ten} onChange={(e) => suaDt(x.id, { ten: e.target.value })} /></O>
                   <O nhan="Đối tượng (điểm, mức)">
                     <Chon value={x.diem ?? (x.muc ? "__muc" : "")} aria-label="Đối tượng hưởng trợ cấp" className={x.diem || x.muc ? "" : "loi-nhap"} title={dm?.ten} onChange={(e) => { const m = cs?.doiTuongChinhSach.diem?.find((y) => y.ma === e.target.value); suaDt(x.id, { diem: m?.ma, muc: m?.muc ?? "" }); }}>
@@ -69,7 +69,7 @@ export function TabHoTroKhac({ h, doi, duAn, kq }: Tab & { duAn: DuAn; kq: KetQu
                     </Chon>
                   </O>
                   <O nhan="Xác nhận của phòng chuyên môn *"><input className={x.xacNhan.trim() ? "" : "loi-nhap"} value={x.xacNhan} placeholder="Số, ngày văn bản xác nhận" onChange={(e) => suaDt(x.id, { xacNhan: e.target.value })} /></O>
-                  <button className="nut nut-chu nut-nguy nut-nho" aria-label="Xóa đối tượng" onClick={() => { const con = k.doiTuongCs!.filter((y) => y.id !== x.id); dat({ doiTuongCs: con.length ? con : undefined }); }}><BieuTuong ten="thungRac" co={15} /></button>
+                  <button className="nut nut-chu nut-nguy nut-nho" aria-label={`Xóa đối tượng ${x.ten || "chưa ghi tên"}`} title="Xóa đối tượng này" onClick={() => { if ((x.ten || x.diem || x.xacNhan) && !confirm(`Xóa đối tượng ${x.ten || "(chưa ghi tên)"}?`)) return; const con = k.doiTuongCs!.filter((y) => y.id !== x.id); dat({ doiTuongCs: con.length ? con : undefined }); }}><BieuTuong ten="thungRac" co={15} /> Xóa</button>
                   {dm && <div className="chu-nho mo ca-hang">Điểm {dm.ma}: {dm.ten}</div>}
                 </div>
               );

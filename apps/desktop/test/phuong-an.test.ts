@@ -33,10 +33,11 @@ describe("Phiên bản phương án", () => {
     expect(await kiemTraToanVen({ ...p, tong: "1" })).toBe(false);
   });
 
-  it("phê duyệt cần số, ngày QĐ; bản đã duyệt không hủy được; điều chỉnh phải có lý do", async () => {
+  it("phê duyệt không bắt buộc số, ngày QĐ (người dùng 02/10/2026); bản đã duyệt không hủy được; điều chỉnh phải có lý do", async () => {
     const { duAn: da, ho: hs } = taoDuAnMau();
     const p = await chotPhuongAn(cs, da, [hs[0]!], O);
-    expect(() => pheDuyet(p, { so: "", ngay: "2026-10-01", coQuan: "UBND xã" }, "B")).toThrow(LoiPhuongAn);
+    expect(pheDuyet(p, { so: "", ngay: "", coQuan: "UBND xã" }, "B").trangThai).toBe("DA_PHE_DUYET");
+    expect(() => pheDuyet({ ...p, trangThai: "DA_HUY" }, { so: "1", ngay: "2026-10-01", coQuan: "" }, "B")).toThrow(LoiPhuongAn);
     const d = pheDuyet(p, { so: "123/QĐ-UBND", ngay: "2026-10-01", coQuan: "UBND xã" }, "B");
     expect(d.trangThai).toBe("DA_PHE_DUYET");
     expect(() => huyBan(d, "x", "B")).toThrow(/không hủy/);

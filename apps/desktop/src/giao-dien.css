@@ -155,7 +155,11 @@ button.chip:hover { border-color: var(--vien-dam); color: var(--chu); }
 .the-dau .phai { margin-left: auto; display: flex; gap: 6px; align-items: center; }
 .the-than { padding: 16px 18px; }
 .luoi { display: grid; gap: 16px; }
-.luoi-2 { grid-template-columns: 1fr 1fr; }
+.luoi-2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.luoi-2 > * { min-width: 0; }
+.dong-doi-tuong select, .dong-doi-tuong input { width: 100%; min-width: 0; max-width: 100%; text-overflow: ellipsis; }
+.dong-doi-tuong > * { min-width: 0; }
+.dong-doi-tuong > button { white-space: nowrap; }
 .luoi-3 { grid-template-columns: repeat(3, 1fr); }
 .luoi-4 { grid-template-columns: repeat(4, 1fr); }
 .luoi-chinh { grid-template-columns: minmax(0, 1fr) 360px; }

@@ -1,3 +1,4 @@
+import { moTaQd } from "./phuong-an";
 /**
  * Xuất Excel theo cấu trúc biểu áp giá người dùng cung cấp:
  *  - Mỗi hộ một trang "phương án chi tiết" (A. Bồi thường, B. Hỗ trợ, tổng, làm tròn, khấu trừ);
@@ -298,9 +299,9 @@ export async function taoWorkbookChiTra(duAn: DuAn, hos: Ho[], tyLe: GiaiDoanTyL
       i + 1,
       h.ma,
       h.ten,
-      `Bản ${c.ban!.so} – ${c.ban!.pheDuyet!.so} ngày ${c.ban!.pheDuyet!.ngay.split("-").reverse().join("/")}`,
-      c.ngayHieuLuc!.split("-").reverse().join("/"),
-      c.hanChi!.split("-").reverse().join("/"),
+      `Bản ${c.ban!.so} – ${moTaQd(c.ban!.pheDuyet)}`,
+      c.ngayHieuLuc ? c.ngayHieuLuc.split("-").reverse().join("/") : "Chưa có",
+      c.hanChi ? c.hanChi.split("-").reverse().join("/") : "Chưa có",
       so(c.phaiTra!),
       so(c.daChi),
       so(c.conLai!),

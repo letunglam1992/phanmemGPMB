@@ -1,3 +1,4 @@
+import { moTaQd } from "../../phuong-an";
 import { ONgay } from "../../thanh-phan/ONgay";
 import { useState } from "react";
 import { D, dinhDang } from "@gpmb/core";
@@ -42,7 +43,7 @@ export function TabChiTra({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) =>
   return (
     <div className="luoi">
       <div className="luoi luoi-4">
-        <div className="the the-than"><div className="mo chu-nho">Phải trả theo bản {r.ban!.so} ({r.ban!.pheDuyet!.so})</div><div className="so-mau" style={{ fontSize: 20 }}>{tien(r.phaiTra)} đ</div></div>
+        <div className="the the-than"><div className="mo chu-nho">Phải trả theo bản {r.ban!.so} ({moTaQd(r.ban!.pheDuyet)})</div><div className="so-mau" style={{ fontSize: 20 }}>{tien(r.phaiTra)} đ</div></div>
         <div className="the the-than"><div className="mo chu-nho">Đã chi</div><div className="so-mau" style={{ fontSize: 20 }}>{tien(r.daChi)} đ</div></div>
         <div className="the the-than"><div className="mo chu-nho">Còn phải chi</div><div className="so-mau" style={{ fontSize: 20, color: r.conLai!.gt(0) ? "var(--do)" : undefined }}>{tien(r.conLai)} đ</div></div>
         <div className="the the-than"><div className="mo chu-nho">Tiền chậm trả (tạm tính)</div><div className="so-mau" style={{ fontSize: 20 }}>{r.chamTra.length ? (r.tienChamTra ? `${tien(r.tienChamTra)} đ` : "Thiếu căn cứ") : "0 đ"}</div></div>
@@ -51,7 +52,7 @@ export function TabChiTra({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) =>
       <div className="the">
         <div className="the-dau"><h3>Thời hạn chi trả</h3><span className="mo chu-nho">điểm a khoản 3 Điều 94 Luật Đất đai 2024</span></div>
         <div className="the-than luoi luoi-3">
-          <O nhan="Ngày QĐ phê duyệt có hiệu lực" goiY={`Mặc định ngày QĐ ${ngayVN(r.ban!.pheDuyet!.ngay)}; sửa nếu QĐ quy định hiệu lực khác`}>
+          <O nhan="Ngày QĐ phê duyệt có hiệu lực" goiY={r.ban!.pheDuyet!.ngay ? `Mặc định ngày QĐ ${ngayVN(r.ban!.pheDuyet!.ngay)}; sửa nếu QĐ quy định hiệu lực khác` : "Chưa ghi ngày QĐ phê duyệt — nhập ngày QĐ có hiệu lực để tính hạn chi trả"}>
             <ONgay value={r.ngayHieuLuc ?? ""} onChange={(e) => datCt({ ngayHieuLuc: e.target.value || undefined })} />
           </O>
           <O nhan="Hạn chi trả (30 ngày)"><input readOnly value={ngayVN(r.hanChi ?? undefined)} /></O>
