@@ -1,8 +1,10 @@
 import { HopThoai } from "./chung";
 import { BAN_QUYEN, MA_BUILD, NGAY_BUILD, PHIEN_BAN } from "../phien-ban";
+import { TheCapNhat } from "./CapNhat";
+import type { KetQuaKiemTra } from "../cap-nhat";
 
 /** Giới thiệu phần mềm, phiên bản, bản quyền, liên hệ. */
-export function HopGioiThieu({ dong }: { dong: () => void }) {
+export function HopGioiThieu({ dong, kqCapNhat }: { dong: () => void; kqCapNhat?: KetQuaKiemTra | null }) {
   return (
     <HopThoai tieuDe="Giới thiệu, bản quyền" rong={620} dong={dong} chan={<button className="nut nut-chinh" onClick={dong}>Đóng</button>}>
       <div className="gt-dau">
@@ -22,6 +24,7 @@ export function HopGioiThieu({ dong }: { dong: () => void }) {
           <tr><th>Bộ chính sách</th><td>Sơn La, hiệu lực 31/3/2026 (QĐ 106/2025, QĐ 14/2026, QĐ 32/2025, NQ 152/2025)</td></tr>
         </tbody>
       </table>
+      <TheCapNhat kqDau={kqCapNhat} />
       <p className="chu-nho mo mb-0">
         © {BAN_QUYEN.nam} {BAN_QUYEN.tacGia}. Bảo lưu mọi quyền. Phần mềm hỗ trợ tính toán, theo dõi và soạn thảo; số liệu, văn bản do phần mềm lập là dự thảo — cán bộ có thẩm quyền kiểm tra, phê duyệt theo quy định.
         Dữ liệu hồ sơ lưu trên máy (hoặc máy chủ mạng nội bộ của đơn vị), không gửi ra ngoài.

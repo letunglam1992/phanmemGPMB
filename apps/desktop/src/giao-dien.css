@@ -1117,3 +1117,7 @@ kbd.phim { display: inline-block; min-width: 20px; padding: 1px 6px; border: 1px
 .bd-thanh .bd-mo-thanh { font-weight: 600; }
 .bd-thanh:not(.thu-gon) { animation: bd-keo-ra 160ms var(--ease-out, ease-out); transform-origin: left center; }
 @keyframes bd-keo-ra { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+/* Cập nhật phần mềm (Giới thiệu) */
+.the-cap-nhat { border: 1px solid var(--vien); border-radius: var(--r-lg, 10px); padding: 10px 12px; margin: 10px 0; }
+.cap-nhat-ghi-chu { white-space: pre-wrap; max-height: 180px; overflow: auto; margin: 6px 0 0; font-family: inherit; background: color-mix(in srgb, var(--be-mat) 70%, transparent); padding: 6px 8px; border-radius: 6px; }
+.ben-ban-moi { width: 100%; margin-bottom: 6px; }

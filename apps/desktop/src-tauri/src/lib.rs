@@ -2,6 +2,7 @@
 //! vỏ Rust chỉ mở cửa sổ WebView2, ghi tệp sao lưu tự động và tệp tải về (Downloads) trên máy.
 //! Không mở cổng mạng, không gửi dữ liệu ra ngoài.
 
+pub mod cap_nhat;
 pub mod ket_noi;
 pub mod may_chu;
 
@@ -387,6 +388,9 @@ pub fn run() {
     let _ = rustls::crypto::ring::default_provider().install_default();
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        // Khóa công khai lấy từ khoa-cap-nhat.pub (biên dịch kèm); cấu hình plugins.updater giữ endpoint
+        .plugin(tauri_plugin_updater::Builder::new().pubkey(cap_nhat::KHOA_CONG_KHAI.trim()).build())
+        .manage(cap_nhat::BanCho::default())
         .manage(TrangThaiMayChu::default())
         .manage(MayDon::default())
         .invoke_handler(tauri::generate_handler![
@@ -402,7 +406,9 @@ pub fn run() {
             trang_thai_may_chu,
             doc_van_tay_may_chu,
             goi_may_chu,
-            goi_noi_bo
+            goi_noi_bo,
+            cap_nhat::cap_nhat_kiem_tra,
+            cap_nhat::cap_nhat_cai_dat
         ])
         // Cửa sổ chính tạo trong mã để gắn trình xử lý tải xuống của WebView2: mọi lượt tải (kể cả liên kết
         // blob của giao diện) lưu thẳng vào Downloads, không phụ thuộc giao diện tải mặc định của WebView2.

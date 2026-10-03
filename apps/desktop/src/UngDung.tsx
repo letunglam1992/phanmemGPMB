@@ -31,6 +31,7 @@ import { RaoLoi } from "./thanh-phan/RaoLoi";
 import { useTongHop } from "./thanh-phan/dung-canh-bao";
 import { donViSuDung } from "./don-vi";
 import { HopGioiThieu } from "./thanh-phan/GioiThieu";
+import { denLucKiemTra, docCaiDat, kiemTraCapNhat, type KetQuaKiemTra } from "./cap-nhat";
 import { BAN_QUYEN, MA_BUILD, moTaPhienBan } from "./phien-ban";
 
 type MucBen = { ten: string; bt: string; chon?: boolean; bam: () => void; tat?: boolean; an?: boolean };
@@ -62,6 +63,14 @@ export function UngDung() {
   const [giaoDien, setGiaoDien] = useState<GiaoDien>(docGiaoDien);
   useEffect(() => ghiGiaoDien(giaoDien), [giaoDien]);
   const [gioiThieu, setGioiThieu] = useState(false);
+  // Tự kiểm tra bản mới khi mở (bản cài Windows, tối đa 1 lần/ngày, tắt được ở Giới thiệu); lỗi mạng bỏ qua im lặng
+  const [banMoi, setBanMoi] = useState<KetQuaKiemTra | null>(null);
+  useEffect(() => {
+    if (!taiKhoan || !denLucKiemTra(docCaiDat())) return;
+    kiemTraCapNhat()
+      .then((kq) => { if (kq.ban_moi && kq.ban_moi.phien_ban !== docCaiDat().boQua) setBanMoi(kq); })
+      .catch(() => undefined);
+  }, [taiKhoan]);
   if (!taiKhoan) return (<><ManDangNhap /><ThongBaoNhanh /></>);
 
   const duAnId = ("duAnId" in man && man.duAnId) || (duAnGanNhat && dsDuAn.some((d) => d.id === duAnGanNhat) ? duAnGanNhat : dsDuAn[0]?.id);
@@ -155,6 +164,7 @@ export function UngDung() {
         ))}
         <div className="ben-chan">
           <span className="chip" title={moTaCheDo(cheDo)}><span className="cham" style={cheDo.cheDo === "MAY_DON" ? undefined : { background: "var(--xanh-duong-to)" }} />{cheDo.cheDo === "MAY_DON" ? "Lưu trên máy này" : cheDo.cheDo === "MAY_CHU" ? "Máy chủ mạng nội bộ" : "Máy trạm"}</span>
+          {banMoi?.ban_moi && <button className="nut nut-nho nut-chinh ben-ban-moi" onClick={() => setGioiThieu(true)} title="Mở Giới thiệu để xem nội dung và cập nhật">Có bản mới {banMoi.ban_moi.phien_ban}</button>}
           <button className="ben-phien-ban" onClick={() => setGioiThieu(true)} title={`${moTaPhienBan()}${MA_BUILD ? ` · mã ${MA_BUILD}` : ""} — bấm để xem giới thiệu, bản quyền`}>
             {moTaPhienBan()}<br />© {BAN_QUYEN.nam} {BAN_QUYEN.tacGia}
           </button>
@@ -259,7 +269,7 @@ export function UngDung() {
       </footer>
       {!quyen("SUA_HO_SO") && <div className="dai-chi-xem">Tài khoản chỉ xem: không sửa được dữ liệu</div>}
       {hopSaoLuu && <HopSaoLuu />}
-      {gioiThieu && <HopGioiThieu dong={() => setGioiThieu(false)} />}
+      {gioiThieu && <HopGioiThieu dong={() => setGioiThieu(false)} kqCapNhat={banMoi} />}
       {(hop === "mat-khau" || taiKhoan.phaiDoiMatKhau) && <HopDoiMatKhau batBuoc={taiKhoan.phaiDoiMatKhau} dong={() => setHop(null)} />}
       {hop === "tai-khoan" && <HopQuanLyTaiKhoan dong={() => setHop(null)} />}
       {hop === "nhat-ky" && <HopNhatKy dong={() => setHop(null)} />}
