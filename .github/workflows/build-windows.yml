@@ -7,6 +7,11 @@ on:
     tags: ["v*"]
   pull_request:
   workflow_dispatch:
+    inputs:
+      phat_hanh:
+        description: "Phát hành bản cập nhật (tạo nhãn vX.Y.Z theo phiên bản trong tauri.conf.json, đăng GitHub Release có chữ ký)"
+        type: boolean
+        default: false
 
 jobs:
   kiem-thu:
@@ -73,7 +78,7 @@ jobs:
   phat-hanh:
     # Bản cập nhật trong phần mềm (docs/09 "Cập nhật phần mềm"): build bộ cài NSIS, ký bằng khóa bí mật trong Secrets,
     # đăng lên GitHub Releases kèm latest.json — phần mềm đã cài tự tìm thấy và cài đè (giữ dữ liệu).
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.phat_hanh)
     needs: [kiem-thu, giao-dien]
     runs-on: windows-latest
     permissions:
@@ -86,7 +91,10 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
         run: |
           pb=$(node -p "require('./apps/desktop/src-tauri/tauri.conf.json').version")
-          [ "v$pb" = "$GITHUB_REF_NAME" ] || { echo "::error::Nhãn $GITHUB_REF_NAME khác phiên bản $pb trong tauri.conf.json"; exit 1; }
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            [ "v$pb" = "$GITHUB_REF_NAME" ] || { echo "::error::Nhãn $GITHUB_REF_NAME khác phiên bản $pb trong tauri.conf.json"; exit 1; }
+          fi
+          echo "NHAN=v$pb" >> "$GITHUB_ENV"
           [ -n "$TAURI_SIGNING_PRIVATE_KEY" ] || { echo "::error::Chưa có secret TAURI_SIGNING_PRIVATE_KEY"; exit 1; }
           [ -s apps/desktop/src-tauri/khoa-cap-nhat.pub ] || { echo "::error::Chưa có khóa công khai apps/desktop/src-tauri/khoa-cap-nhat.pub"; exit 1; }
           { echo 'NOI_DUNG<<HET_NOI_DUNG'; git log -1 --format=%B | grep -v -E '^(Co-Authored-By|Claude-Session):'; echo 'HET_NOI_DUNG'; } >> "$GITHUB_ENV"
@@ -108,8 +116,9 @@ jobs:
           projectPath: apps/desktop
           tauriScript: npx tauri
           args: --bundles nsis --config src-tauri/tauri.phat-hanh.conf.json
-          tagName: ${{ github.ref_name }}
-          releaseName: GPMB Sơn La ${{ github.ref_name }}
+          tagName: ${{ env.NHAN }}
+          releaseName: GPMB Sơn La ${{ env.NHAN }}
+          releaseCommitish: ${{ github.sha }}
           releaseBody: ${{ env.NOI_DUNG }}
           releaseDraft: false
           prerelease: false

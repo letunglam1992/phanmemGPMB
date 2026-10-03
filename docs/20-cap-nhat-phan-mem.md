@@ -21,7 +21,9 @@ Mất khóa bí mật → các bản đã cài không nhận cập nhật nữa 
 
 ## Mỗi lần phát hành
 1. Tăng phiên bản ở 5 chỗ (CLAUDE.md), commit (thông điệp commit = nội dung bản mới hiện trong phần mềm), push.
-2. Tạo nhãn trùng phiên bản và push: `git tag v0.9.16 && git push origin v0.9.16`.
+2. Phát hành — một trong hai cách:
+   - **Bấm nút (khuyên dùng):** GitHub → Actions → "Kiểm thử và đóng gói Windows" → **Run workflow** → chọn nhánh → đánh dấu **"Phát hành bản cập nhật"** → Run. Nhãn `vX.Y.Z` lấy theo phiên bản trong `tauri.conf.json`, tạo tại commit đó.
+   - Hoặc tạo nhãn trùng phiên bản và push: `git tag v0.9.16 && git push origin v0.9.16`.
 3. GitHub Actions (job `phat-hanh`): kiểm thử → build NSIS có chữ ký → GitHub Release `v0.9.16` kèm `…setup.exe`, `.sig`, `latest.json`. Job dừng báo lỗi nếu nhãn khác phiên bản, thiếu secret hoặc thiếu khóa công khai.
 
 ## Đã kiểm thử / hạn chế
