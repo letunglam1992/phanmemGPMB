@@ -101,9 +101,15 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
     // Thứ tự ưu tiên: mặc định < Thiết lập đơn vị < thông tin đã lưu riêng cho dự án
     if (duAn) setChung({ ...thongTinChungMacDinh(duAn), ...truongVanBanTuDonVi(dsDonVi), ...(duAn.vanBan ?? {}) });
   }, [duAn?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Văn bản theo đợt từ bước lập, trình phương án (bước 8) trở đi (R1–R5, T6, T7): chỉ hộ đã có trong bản phương án đã chốt
+  // hoặc đã phê duyệt (không tính bản hủy); hộ chưa chốt hiện mờ, không chọn được. T2, T3 (bước 3) chọn mọi hộ trong đợt.
+  const canChot = mau.phamVi === "DOT" && Number(mau.buoc) >= 8;
+  const hoDaChot = useMemo(() => new Set((duAn?.phuongAn ?? []).filter((x) => x.trangThai !== "DA_HUY").flatMap((x) => x.ho.map((y) => y.hoId))), [duAn?.phuongAn]);
+  const duocChon = (id: string) => !canChot || hoDaChot.has(id);
   useEffect(() => {
     if (duAn) setRieng(giaTriNhapThem(mau, duAn, ds));
-    if (mau.phamVi === "DOT" && chonHo.size === 0) setChonHo(new Set(hoCua(duAnId).filter((h) => !dotVb || h.dotId === dotVb).map((h) => h.id)));
+    if (mau.phamVi === "DOT" && chonHo.size === 0) setChonHo(new Set(hoCua(duAnId).filter((h) => (!dotVb || h.dotId === dotVb) && duocChon(h.id)).map((h) => h.id)));
+    else if (canChot) setChonHo((c) => new Set([...c].filter(duocChon)));
     setSo("");
     setThongBao(null);
   }, [ma]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -129,8 +135,10 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
     { tieuDe: "Theo văn bản thực tế (UBND phường/xã, 2026)", ds: dsMau.filter((m) => m.nguon === "THUC_TE") },
     { tieuDe: "Mẫu riêng của xã", ds: dsMau.filter((m) => m.nguon === "RIENG") },
   ].filter((x) => x.ds.length);
-  const dsHoChon = ds.filter(({ h }) => chonHo.has(h.id));
+  const dsHoChon = ds.filter(({ h }) => chonHo.has(h.id) && duocChon(h.id));
   const hoLoc = dsDot_.filter(({ h }) => khopLocHo(locHo, h));
+  const hoLocChon = hoLoc.filter(({ h }) => duocChon(h.id));
+  const soChuaChot = canChot ? dsDot_.filter(({ h }) => !hoDaChot.has(h.id)).length : 0;
   const hoXemTruoc = mau.phamVi === "HO" ? dsHoChon[0] : undefined;
   const duLieuXem = hoXemTruoc
     ? ghepDuLieu({ mau, ...choHo(hoXemTruoc.h), ds, ho: hoXemTruoc, rieng, so, ngayKy })
@@ -239,7 +247,7 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
             <div className="mo chu-nho">22 mẫu Sổ tay (QĐ 1966/QĐ-UBND) và mẫu riêng của xã · tự điền thông tin hộ, thửa, tài sản, số tiền theo kết quả Tính toán, giải trình · văn bản trước đã cấp số được tự điền vào văn bản sau</div>
           </div>
           {coDot(duAn) && (
-            <Chon value={dotVb} aria-label="Soạn cho đợt" onChange={(e) => { setDotVb(e.target.value); if (mau.phamVi === "DOT") setChonHo(new Set(ds.filter(({ h }) => !e.target.value || h.dotId === e.target.value).map(({ h }) => h.id))); }}>
+            <Chon value={dotVb} aria-label="Soạn cho đợt" onChange={(e) => { setDotVb(e.target.value); if (mau.phamVi === "DOT") setChonHo(new Set(ds.filter(({ h }) => (!e.target.value || h.dotId === e.target.value) && duocChon(h.id)).map(({ h }) => h.id))); }}>
               <option value="">Cả dự án</option>
               {dsDot(duAn).map((d) => <option key={d.id} value={d.id}>{tenDot(d)}</option>)}
             </Chon>
@@ -261,7 +269,7 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
             {dsDuAn.map((d) => <option key={d.id} value={d.id}>{d.ten}</option>)}
           </Chon>
           {coDot(duAn) && (
-            <Chon value={dotVb} aria-label="Soạn cho đợt" title="Văn bản của đợt dùng căn cứ, ngày thông báo, số văn bản của đợt; số văn bản cấp đợt ghi vào đợt" onChange={(e) => { setDotVb(e.target.value); if (mau.phamVi === "DOT") setChonHo(new Set(ds.filter(({ h }) => !e.target.value || h.dotId === e.target.value).map(({ h }) => h.id))); }}>
+            <Chon value={dotVb} aria-label="Soạn cho đợt" title="Văn bản của đợt dùng căn cứ, ngày thông báo, số văn bản của đợt; số văn bản cấp đợt ghi vào đợt" onChange={(e) => { setDotVb(e.target.value); if (mau.phamVi === "DOT") setChonHo(new Set(ds.filter(({ h }) => (!e.target.value || h.dotId === e.target.value) && duocChon(h.id)).map(({ h }) => h.id))); }}>
               <option value="">Cả dự án</option>
               {dsDot(duAn).map((d) => <option key={d.id} value={d.id}>{tenDot(d)}</option>)}
             </Chon>
@@ -310,20 +318,21 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
                 <div>
                   <div className="nhom-nut" style={{ alignItems: "center", marginBottom: 6 }}>
                     <b className="chu-nho" aria-label="Số hộ đã chọn">{mau.phamVi === "DOT" ? "Hộ, tổ chức trong đợt" : "Chọn hộ, tổ chức"} — đã chọn {chonHo.size}/{dsDot_.length}{dotChon ? ` · ${tenDot(dotChon)}` : ""}</b>
-                    <input placeholder="Lọc mã, tên hộ… (Enter để chọn)" aria-label="Lọc hộ" title="Gõ mã hoặc tên hộ (không cần dấu, gạch); Enter: chọn thêm các hộ đang hiện" value={locHo} onChange={(e) => setLocHo(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); setChonHo(new Set([...chonHo, ...hoLoc.map(({ h }) => h.id)])); } }} style={{ width: 240 }} />
-                    <button className="nut nut-nho" disabled={!hoLoc.length} onClick={() => setChonHo(new Set([...chonHo, ...hoLoc.map(({ h }) => h.id)]))}>{locHo.trim() ? `Chọn thêm ${hoLoc.length} hộ đang lọc` : "Chọn tất cả"}</button>
+                    <input placeholder="Lọc mã, tên hộ… (Enter để chọn)" aria-label="Lọc hộ" title="Gõ mã hoặc tên hộ (không cần dấu, gạch); Enter: chọn thêm các hộ đang hiện" value={locHo} onChange={(e) => setLocHo(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); setChonHo(new Set([...chonHo, ...hoLocChon.map(({ h }) => h.id)])); } }} style={{ width: 240 }} />
+                    <button className="nut nut-nho" disabled={!hoLocChon.length} onClick={() => setChonHo(new Set([...chonHo, ...hoLocChon.map(({ h }) => h.id)]))}>{locHo.trim() ? `Chọn thêm ${hoLocChon.length} hộ đang lọc` : canChot ? `Chọn tất cả hộ đã chốt (${hoLocChon.length})` : "Chọn tất cả"}</button>
                     <button className="nut nut-nho" disabled={!chonHo.size} onClick={() => setChonHo(new Set())}>Bỏ chọn tất cả</button>
                   </div>
                   <div className="ds-chon-ho">
                     {hoLoc.map(({ h }) => (
-                      <label key={h.id}>
-                        <input type="checkbox" checked={chonHo.has(h.id)} onChange={(e) => { const s = new Set(chonHo); if (e.target.checked) s.add(h.id); else s.delete(h.id); setChonHo(s); }} />
+                      <label key={h.id} className={duocChon(h.id) ? undefined : "mo"} title={duocChon(h.id) ? undefined : "Hộ chưa có trong bản phương án đã chốt — chốt phương án trước (Hồ sơ dự án → Chốt phương án)"}>
+                        <input type="checkbox" disabled={!duocChon(h.id)} checked={chonHo.has(h.id) && duocChon(h.id)} onChange={(e) => { const s = new Set(chonHo); if (e.target.checked) s.add(h.id); else s.delete(h.id); setChonHo(s); }} />
                         {h.ma} · {h.ten}
                       </label>
                     ))}
                     {ds.length === 0 && <span className="mo">Dự án chưa có hồ sơ.</span>}
                     {ds.length > 0 && !hoLoc.length && <span className="mo">Không có hộ khớp “{locHo}”.</span>}
                   </div>
+                  {soChuaChot > 0 && <div className="chu-nho mo mt-4" role="note">{soChuaChot} hộ chưa có trong bản phương án đã chốt (hiện mờ, không chọn được) — văn bản này chỉ lập cho hộ đã chốt phương án.</div>}
                 </div>
               )}
               <div className="luoi luoi-3">

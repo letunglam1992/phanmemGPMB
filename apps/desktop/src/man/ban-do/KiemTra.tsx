@@ -88,9 +88,10 @@ export function KiemTraBanDo({ dl, coPhamVi, soVung, moCauHinh, ttThua }: { dl: 
   );
 }
 
-export function ChiTietThua({ t, th, ho, tt, moHo, tomTat, xoa }: { t: ThuaBanDo; th?: DienTichThuHoi; ho?: Ho; tt?: TrangThaiGpmb; moHo: (h: Ho) => void; tomTat?: React.ReactNode; xoa?: () => void }) {
+export function ChiTietThua({ t, th, ho, tt, moHo, tomTat, xoa, quayLai }: { t: ThuaBanDo; th?: DienTichThuHoi; ho?: Ho; tt?: TrangThaiGpmb; moHo: (h: Ho) => void; tomTat?: React.ReactNode; xoa?: () => void; quayLai?: () => void }) {
   return (
     <div className="the">
+      {quayLai && <div className="the-quay-lai" data-chi-tiet-thua><button className="nut nut-chu nut-nho" onClick={quayLai}>← Danh sách thửa</button></div>}
       <div className="the-dau"><h3>Tờ {t.soTo ?? "?"}, thửa {t.soThua ?? "?"}</h3>{xoa && <div className="phai"><button className="nut nut-chu nut-nguy nut-nho" title="Bỏ thửa khỏi bản đồ của phần mềm (thửa dựng sai, trùng…) — tệp DGN giữ nguyên, khôi phục được" onClick={xoa}>Xóa thửa khỏi bản đồ</button></div>}</div>
       <div className="the-than chu-nho" style={{ display: "grid", gap: 4 }}>
         <div>Chủ sử dụng: <b>{t.chuSuDung ?? "—"}</b> · Loại (bản đồ): <b>{t.loaiDatBanDo ? tenDayDu(t.loaiDatBanDo) : "—"}</b></div>

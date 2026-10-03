@@ -60,6 +60,18 @@ export function BanDo({ duAnId }: { duAnId: string }) {
   const [soSanh, setSoSanh] = useState<{ tep: string; ds: SoSanhThua[] } | null>(null);
   const [khoGiay, setKhoGiay] = useState<KhoGiay>("A3");
   const [dangPdf, setDangPdf] = useState(false);
+  /** Thửa vừa xem chi tiết — khi quay lại danh sách thì cuộn tới, tô dòng */
+  const [xemLai, setXemLai] = useState<string | null>(null);
+  useEffect(() => {
+    if (!xemLai) return;
+    requestAnimationFrame(() => document.querySelector(`[data-ma-thua="${CSS.escape(xemLai)}"]`)?.scrollIntoView({ block: "center" }));
+  }, [xemLai]);
+  // Chọn thửa (danh sách, bản đồ, hộp tạo hồ sơ) → cuộn thẻ chi tiết vào tầm nhìn ở cột phải
+  useEffect(() => {
+    if (chon) requestAnimationFrame(() => document.querySelector("[data-chi-tiet-thua]")?.scrollIntoView({ block: "nearest" }));
+  }, [chon]);
+  /** Hộp tạo hồ sơ đang tạm ẩn để xem một thửa trên bản đồ */
+  const [taoHoAn, setTaoHoAn] = useState<ThuaBanDo | null>(null);
   const [phongToi, setPhongToi] = useState<{ vong: import("@gpmb/gis").Diem[][]; n: number; vua?: boolean } | null>(null);
   const inputTep = useRef<HTMLInputElement>(null);
   const khoaNap = duAn?.banDo ? `${duAnId}|${khoaNapBanDo(duAn.banDo)}` : "";
@@ -337,7 +349,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
       )}
       {dl && (
         <div className="ban-do-khung">
-          <KhungVe key={khoaNap} dl={dl} vungChon={maVungChon} thuHoi={thuHoi} khoaThua={khoaThua} chon={chon} setChon={setChon} daLienKet={daLienKet} ttThua={ttThua} bamThua={cheDoChonThua && quyen("SUA_HO_SO") ? batTatThua : undefined} thuaChon={thuaChon} khoaLuu={duAnId} ranhThem={ranhVe} luuVung={quyen("SUA_HO_SO") ? luuRanhVe : undefined} batVeVung={veRanh} quet={(ds, them) => setQuet(new Set([...(them ? quet : []), ...ds.map(khoaThua)]))} thuaQuet={quet} phongToi={phongToi} lopPhu={lopPhu} batGhiChu={batGhiChu}
+          <KhungVe key={khoaNap} xaDuAn={duAn.xa} dl={dl} vungChon={maVungChon} thuHoi={thuHoi} khoaThua={khoaThua} chon={chon} setChon={setChon} daLienKet={daLienKet} ttThua={ttThua} bamThua={cheDoChonThua && quyen("SUA_HO_SO") ? batTatThua : undefined} thuaChon={thuaChon} khoaLuu={duAnId} ranhThem={ranhVe} luuVung={quyen("SUA_HO_SO") ? luuRanhVe : undefined} batVeVung={veRanh} quet={(ds, them) => setQuet(new Set([...(them ? quet : []), ...ds.map(khoaThua)]))} thuaQuet={quet} phongToi={phongToi} lopPhu={lopPhu} batGhiChu={batGhiChu}
             themGhiChu={quyen("SUA_HO_SO") ? (loai, diem) => setGhiChuMoi({ loai, diem }) : undefined}
             luuDo={quyen("SUA_HO_SO") ? (loai, diem, giaTri) => void luuBanDoDa({ ketQuaDo: [...lopPhu.ketQuaDo, taoKetQuaDo(lopPhu.ketQuaDo, loai, diem, giaTri, nguoiDung)] }) : undefined} />
           <div className="ben-phai">
@@ -401,7 +413,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
                 <div className="the-than chu-nho">{soSanh.ds.filter((x) => x.trangThai !== "GIONG").length} thửa thay đổi (tô viền trên bản đồ: cam đổi diện tích, vàng đổi hình, xanh thửa mới, đỏ nét đứt thửa không còn) · {soSanh.ds.filter((x) => x.trangThai === "GIONG").length} thửa không đổi</div>
               </div>
             )}
-            <div className="the gian">
+            {!chon && <div className="the gian">
               <div className="the-dau">
                 <h3>Thửa</h3>
                 <span className="mo chu-nho">{dsThua.length}/{dl.kq.thua.length}</span>
@@ -420,7 +432,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
                     {dsThua.slice(0, 800).map((t) => {
                       const th = thuHoi.get(khoaThua(t));
                       return (
-                        <tr key={khoaThua(t)} data-phim-chon className={`co-the-chon ${chon === t ? "dang-chon" : ""}`} onClick={() => setChon(t)}>
+                        <tr key={khoaThua(t)} data-phim-chon data-ma-thua={t.ma} className={`co-the-chon ${xemLai === t.ma ? "dang-chon" : ""}`} title="Bấm để xem chi tiết và phóng tới thửa trên bản đồ" onClick={() => { setChon(t); setPhongToi({ vong: t.vong, n: Date.now() }); }}>
                           <td onClick={(e) => e.stopPropagation()}><input type="checkbox" disabled={!quyen("SUA_HO_SO")} checked={thuaChon.has(t.ma)} onChange={() => batTatThua(t)} aria-label={`Chọn thửa ${t.soTo ?? "?"}-${t.soThua ?? "?"} là thửa thu hồi`} title="Chọn tay là thửa thu hồi" /></td>
                           <td className="khong-xuong-dong">{t.soTo ?? "?"}-{t.soThua ?? "?"}{t.co.length > 0 && <span className="nhan nhan-vang" style={{ marginLeft: 4 }} title={t.co.map((c) => TEN_CO[c]).join(", ")}>!</span>}</td>
                           <td title={t.loaiDatBanDo ?? undefined}>{t.loaiDatBanDo ? tenDayDu(t.loaiDatBanDo) : "—"}</td>
@@ -433,8 +445,8 @@ export function BanDo({ duAnId }: { duAnId: string }) {
                   </tbody>
                 </table>
               </div>
-            </div>
-            {chon && <ChiTietThua xoa={quyen("SUA_HO_SO") ? () => void xoaThua([chon]) : undefined} t={chon} th={thuHoi.get(khoaThua(chon))} ho={daLienKet.get(chon.ma)} tt={ttThua.get(chon.ma)} moHo={(h) => di({ ten: "ho", duAnId, hoId: h.id, tab: "thua" })} tomTat={daLienKet.get(chon.ma) ? <TomTatHo duAn={duAn} h={daLienKet.get(chon.ma)!} tt={ttThua.get(chon.ma)} moHo={() => di({ ten: "ho", duAnId, hoId: daLienKet.get(chon.ma)!.id })} /> : undefined} />}
+            </div>}
+            {chon && <ChiTietThua quayLai={() => { setXemLai(chon.ma); setChon(null); }} xoa={quyen("SUA_HO_SO") ? () => void xoaThua([chon]) : undefined} t={chon} th={thuHoi.get(khoaThua(chon))} ho={daLienKet.get(chon.ma)} tt={ttThua.get(chon.ma)} moHo={(h) => di({ ten: "ho", duAnId, hoId: h.id, tab: "thua" })} tomTat={daLienKet.get(chon.ma) ? <TomTatHo duAn={duAn} h={daLienKet.get(chon.ma)!} tt={ttThua.get(chon.ma)} moHo={() => di({ ten: "ho", duAnId, hoId: daLienKet.get(chon.ma)!.id })} /> : undefined} />}
           </div>
         </div>
       )}
@@ -455,7 +467,16 @@ export function BanDo({ duAnId }: { duAnId: string }) {
       {hopPhu === "SO_SANH" && dl && <HopSoSanh duAn={duAn} dl={dl} ketQua={setSoSanh} dong={() => setHopPhu(null)} />}
       {capNhatDt && dl && <HopCapNhatDt duAn={duAn} dl={dl} thuHoi={thuHoi} khoaThua={khoaThua} hos={hos} dong={() => setCapNhatDt(false)} />}
       {taoHo && dl && coPhamVi && (
-        <HopTaoHo duAn={duAn} dl={dl} thuHoi={thuHoi} khoaThua={khoaThua} daLienKet={daLienKet} dong={() => setTaoHo(false)} />
+        <div style={taoHoAn ? { display: "none" } : undefined}>
+          <HopTaoHo duAn={duAn} dl={dl} thuHoi={thuHoi} khoaThua={khoaThua} daLienKet={daLienKet} dong={() => { setTaoHo(false); setTaoHoAn(null); }}
+            xemThua={(t) => { setTaoHoAn(t); setChon(t); setPhongToi({ vong: t.vong, n: Date.now() }); }} />
+        </div>
+      )}
+      {taoHo && taoHoAn && (
+        <div className="thanh-quay-lai" role="status">
+          Đang xem thửa <b>{taoHoAn.soTo ?? "?"}-{taoHoAn.soThua ?? "?"}</b>{taoHoAn.chuSuDung ? ` · ${taoHoAn.chuSuDung}` : ""} trên bản đồ
+          <button className="nut nut-chinh nut-nho" onClick={() => setTaoHoAn(null)}>← Quay lại danh sách tạo hồ sơ</button>
+        </div>
       )}
     </div>
   );

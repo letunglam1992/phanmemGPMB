@@ -14,6 +14,8 @@ export function HopTaoHo(p: {
   khoaThua: (t: ThuaBanDo) => string;
   daLienKet: Map<string, Ho>;
   dong: () => void;
+  /** Bấm số thửa: tạm ẩn hộp, phóng tới thửa trên bản đồ (quay lại danh sách bằng thanh "Quay lại") */
+  xemThua?: (t: ThuaBanDo) => void;
 }) {
   const { kho, taiLai, di, quyen, bao, nguoiDung, hoCua } = useUngDung();
   const nhom = useMemo(() => {
@@ -92,7 +94,7 @@ export function HopTaoHo(p: {
     >
       <div className="thong-bao thong-bao-xanh">
         Nhóm thửa theo tên chủ sử dụng đọc từ bản đồ (trùng tên có thể là người khác nhau — kiểm tra trước khi tạo). Loại đất giữ nguyên ký hiệu trên bản đồ (vd. "1L", "2L") — cán bộ đổi sang mã loại đất hiện hành và chọn giá đất trong hồ sơ.
-        DT thu hồi: thửa nằm trọn trong ranh lấy DT ghi trên bản đồ; thửa một phần lấy DT phần giao (làm tròn 2 số lẻ). Cần đối chiếu với hồ sơ trích đo được duyệt.
+        Bấm số thửa để xem thửa trên bản đồ (quay lại danh sách bằng nút “Quay lại”). DT thu hồi: thửa nằm trọn trong ranh lấy DT ghi trên bản đồ; thửa một phần lấy DT phần giao (làm tròn 2 số lẻ). Cần đối chiếu với hồ sơ trích đo được duyệt.
       </div>
       <table className="bang">
         <thead><tr><th>Chủ sử dụng (bản đồ)</th><th className="so">Số thửa</th><th>Thửa</th><th className="so">DT thu hồi (m²)</th></tr></thead>
@@ -108,7 +110,9 @@ export function HopTaoHo(p: {
                   return (
                     <span key={t.ma}>
                       {i > 0 && ", "}
-                      {nv.length ? <b className="chu-do" title={nv.join("; ")}>⚠ {nhan}</b> : nhan}
+                      {p.xemThua ? (
+                        <button className={`nut-lien-ket${nv.length ? " chu-do" : ""}`} title={`${nv.length ? `${nv.join("; ")} — ` : ""}Bấm để xem thửa ${nhan} trên bản đồ`} aria-label={`Xem thửa ${nhan} trên bản đồ`} onClick={() => p.xemThua!(t)}>{nv.length ? <b>⚠ {nhan}</b> : nhan}</button>
+                      ) : nv.length ? <b className="chu-do" title={nv.join("; ")}>⚠ {nhan}</b> : nhan}
                     </span>
                   );
                 })}

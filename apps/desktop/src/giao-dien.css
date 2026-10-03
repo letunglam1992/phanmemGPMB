@@ -1121,3 +1121,8 @@ kbd.phim { display: inline-block; min-width: 20px; padding: 1px 6px; border: 1px
 .the-cap-nhat { border: 1px solid var(--vien); border-radius: var(--r-lg, 10px); padding: 10px 12px; margin: 10px 0; }
 .cap-nhat-ghi-chu { white-space: pre-wrap; max-height: 180px; overflow: auto; margin: 6px 0 0; font-family: inherit; background: color-mix(in srgb, var(--be-mat) 70%, transparent); padding: 6px 8px; border-radius: 6px; }
 .ben-ban-moi { width: 100%; margin-bottom: 6px; }
+/* Quay lại danh sách (bản đồ) */
+.the-quay-lai { padding: 8px 12px 0; }
+.thanh-quay-lai { position: fixed; top: 64px; left: 50%; transform: translateX(-50%); z-index: 60; display: flex; gap: 10px; align-items: center; background: var(--be-mat); border: 1px solid var(--vien); border-radius: 12px; padding: 8px 12px; box-shadow: 0 6px 24px rgba(0,0,0,.18); }
+.nut-lien-ket { background: none; border: 0; padding: 0; color: var(--chinh, #1f6b4f); cursor: pointer; text-decoration: underline dotted; font: inherit; }
+.nut-lien-ket.chu-do { color: var(--do, #c0392b); }

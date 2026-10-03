@@ -185,17 +185,30 @@ function HopChot({ duAn, kq: kqDuAn, dong: dongHop }: { duAn: DuAn; kq: { h: Ho;
   // P3-1: dự án có đợt → phương án chốt theo đợt, chỉ gồm hộ thuộc đợt
   const coDotTH = coDot(duAn);
   const [dotId, setDotId] = useState(() => dsDot(duAn)[0]?.id ?? "");
-  const kq = useMemo(() => (coDotTH ? kqDuAn.filter(({ h }) => h.dotId === dotId) : kqDuAn), [kqDuAn, coDotTH, dotId]);
+  const kqDot = useMemo(() => (coDotTH ? kqDuAn.filter(({ h }) => h.dotId === dotId) : kqDuAn), [kqDuAn, coDotTH, dotId]);
+  // Danh sách hộ: mặc định chỉ hộ đã xác nhận hoàn thành bước 5 "Lập phương án" (nếu dự án có dùng tiến độ bước 5);
+  // hộ đã có trong bản phê duyệt thì ẩn (bật "Hiện cả hộ đã phê duyệt" khi cần lập bản điều chỉnh)
+  const daLapPA = (h: Ho) => h.tienDo["5"]?.trangThai === "XONG";
+  const coBuoc5 = kqDot.some(({ h }) => daLapPA(h));
+  const [chiDaLap, setChiDaLap] = useState(coBuoc5);
+  const [hienDaDuyet, setHienDaDuyet] = useState(false);
+  const daDuyet0 = useMemo(() => hoDaPheDuyet(duAn.phuongAn ?? []), [duAn.phuongAn]);
+  const dangCho = useMemo(() => new Map((duAn.phuongAn ?? []).filter((p) => p.trangThai === "DA_CHOT").flatMap((p) => p.ho.map((x) => [x.hoId, p.so] as const))), [duAn.phuongAn]);
+  const kq = useMemo(() => kqDot.filter(({ h }) => (!chiDaLap || daLapPA(h)) && (hienDaDuyet || !daDuyet0.has(h.id))), [kqDot, chiDaLap, hienDaDuyet, daDuyet0]);
+  const soAnDuyet = kqDot.filter(({ h }) => daDuyet0.has(h.id) && (!chiDaLap || daLapPA(h))).length;
+  const soChuaLap = kqDot.filter(({ h }) => !daLapPA(h) && !daDuyet0.has(h.id)).length;
+  /** Mặc định chọn: đủ điều kiện, chưa phê duyệt, chưa nằm trong bản đang chờ duyệt */
+  const macDinhChon = (ds: { h: Ho }[]) => new Set(ds.filter(({ h }) => !chua.has(h.id) && !daDuyet0.has(h.id) && !dangCho.has(h.id)).map(({ h }) => h.id));
   const soBan = (duAn.phuongAn ?? []).reduce((m, p) => Math.max(m, p.so), 0) + 1;
   const chua = useMemo(() => new Map(hoChuaDuDieuKien(kqDuAn).map((x) => [x.h.id, x.lyDo])), [kqDuAn]);
-  const daDuyet = useMemo(() => hoDaPheDuyet(duAn.phuongAn ?? []), [duAn.phuongAn]);
-  const [chon, setChon] = useState<Set<string>>(() => new Set(kq.filter(({ h }) => !chua.has(h.id)).map(({ h }) => h.id)));
+  const daDuyet = daDuyet0;
+  const [chon, setChon] = useState<Set<string>>(() => macDinhChon(kq));
   const tenMacDinh = (id: string) => `Phương án bồi thường, hỗ trợ, TĐC${coDotTH ? ` – ${tenDot(timDot(duAn, id))}` : ""} – bản ${soBan}`;
   const [ten, setTen] = useState(() => tenMacDinh(dotId));
   const doiDot = (id: string) => {
     setDotId(id);
-    const moi = kqDuAn.filter(({ h }) => h.dotId === id);
-    setChon(new Set(moi.filter(({ h }) => !chua.has(h.id)).map(({ h }) => h.id)));
+    const moi = kqDuAn.filter(({ h }) => h.dotId === id && (!chiDaLap || daLapPA(h)) && (hienDaDuyet || !daDuyet0.has(h.id)));
+    setChon(macDinhChon(moi));
     if (ten === tenMacDinh(dotId)) setTen(tenMacDinh(id));
   };
   const [lyDo, setLyDo] = useState("");
@@ -261,16 +274,21 @@ function HopChot({ duAn, kq: kqDuAn, dong: dongHop }: { duAn: DuAn; kq: { h: Ho;
           <input value={lyDo} onChange={(e) => setLyDo(e.target.value)} />
         </O>
       </div>
+      <div className="nhom-nut mt-8" style={{ alignItems: "center" }}>
+        <label className="chu-nho" title="Theo tiến độ từng hộ: bước 5 đã được xác nhận hoàn thành"><input type="checkbox" checked={chiDaLap} onChange={(e) => { setChiDaLap(e.target.checked); setChon(macDinhChon(kqDot.filter(({ h }) => (!e.target.checked || daLapPA(h)) && (hienDaDuyet || !daDuyet0.has(h.id))))); }} /> Chỉ hộ đã xác nhận hoàn thành bước 5 “Lập phương án”{soChuaLap && chiDaLap ? ` (ẩn ${soChuaLap} hộ chưa xác nhận)` : ""}</label>
+        <label className="chu-nho" title="Hộ đã có trong bản phương án đã phê duyệt — chỉ hiện khi cần lập bản điều chỉnh, bổ sung (bắt buộc lý do)"><input type="checkbox" checked={hienDaDuyet} onChange={(e) => { setHienDaDuyet(e.target.checked); if (!e.target.checked) setChon(new Set([...chon].filter((id) => !daDuyet0.has(id)))); }} /> Hiện cả hộ đã phê duyệt (lập bản điều chỉnh){soAnDuyet && !hienDaDuyet ? ` — đang ẩn ${soAnDuyet} hộ` : ""}</label>
+      </div>
+      {chiDaLap && !kq.length && <div className="thong-bao thong-bao-vang mt-8">Chưa có hộ nào {coDotTH ? "trong đợt này " : ""}được xác nhận hoàn thành bước 5 “Lập phương án” (hoặc đã phê duyệt hết). Bỏ đánh dấu “Chỉ hộ đã xác nhận…” để xem mọi hộ.</div>}
       <table className="bang mt-10">
         <thead>
           <tr>
-            <th><input type="checkbox" aria-label="Chọn tất cả hộ đủ điều kiện" checked={dsChon.length > 0 && dsChon.length === kq.filter(({ h }) => !chua.has(h.id)).length} onChange={(e) => setChon(new Set(e.target.checked ? kq.filter(({ h }) => !chua.has(h.id)).map(({ h }) => h.id) : []))} /></th>
+            <th><input type="checkbox" aria-label="Chọn tất cả hộ đủ điều kiện" checked={dsChon.length > 0 && dsChon.length === kq.filter(({ h }) => !chua.has(h.id)).length} onChange={(e) => setChon(new Set(e.target.checked ? kq.filter(({ h }) => !chua.has(h.id) && (hienDaDuyet || !daDuyet0.has(h.id))).map(({ h }) => h.id) : []))} /></th>
             <th>Mã</th><th>Họ tên / tổ chức</th><th className="so">Tổng tạm tính (đ)</th><th>Tình trạng</th>
           </tr>
         </thead>
         <tbody>
           {kq.map(({ h, k }) => (
-            <tr key={h.id}>
+            <tr key={h.id} className={daDuyet.has(h.id) ? "mo" : undefined}>
               <td><input type="checkbox" disabled={chua.has(h.id)} checked={chon.has(h.id)} onChange={(e) => { const s = new Set(chon); if (e.target.checked) s.add(h.id); else s.delete(h.id); setChon(s); }} /></td>
               <td>{h.ma}</td>
               <td>{h.ten}</td>
@@ -278,6 +296,8 @@ function HopChot({ duAn, kq: kqDuAn, dong: dongHop }: { duAn: DuAn; kq: { h: Ho;
               <td>
                 {chua.has(h.id) ? <span className="nhan nhan-do">Chưa chốt được: {chua.get(h.id)}</span> : <span className="nhan nhan-xanh">Đủ điều kiện</span>}
                 {daDuyet.has(h.id) && <span className="nhan nhan-tim" style={{ marginLeft: 4 }}>Đã có trong bản duyệt {daDuyet.get(h.id)!.so}</span>}
+                {dangCho.has(h.id) && <span className="nhan nhan-vang" style={{ marginLeft: 4 }}>Đang trong bản {dangCho.get(h.id)} chờ duyệt</span>}
+                {!chiDaLap && coBuoc5 && !daLapPA(h) && <span className="nhan" style={{ marginLeft: 4 }}>Chưa xác nhận bước 5</span>}
               </td>
             </tr>
           ))}

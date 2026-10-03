@@ -5,6 +5,7 @@ import { THU_TU_TRANG_THAI, TT_GPMB, type TrangThaiGpmb } from "../../trang-thai
 import { Chon } from "../../thanh-phan/Chon";
 import { type DuLieuBanDo } from "./du-lieu";
 import { boOLoi, layO } from "./anh-nen";
+import { chieuRanhXa, cungTenXa, napRanhXa, xaChua, type RanhXa } from "./ranh-xa";
 import { TEN_KIEU_BAT, TEN_LOAI, batDiemNangCao, chieuDai, chuanBiVe, dienTich, hinhTuVong, khoangCach, mauLop, phamViToanBo, timPhanTu, type ChuVe, type HinhVe, type KieuBat } from "./hinh-hoc";
 import { type DiemDoHienTrang, type GhiChuHienTruong, type KetQuaDoLuu, type NhomGhiChu } from "../../mo-hinh";
 
@@ -96,11 +97,14 @@ export function KhungVe(p: {
   lopPhu?: { ghiChu: GhiChuHienTruong[]; diemDo: DiemDoHienTrang[]; ketQuaDo: KetQuaDoLuu[]; soSanh: { vong: Diem[][]; mau: string; net?: number[] }[] };
   themGhiChu?: (loai: "DIEM" | "DUONG", diem: Diem[]) => void;
   luuDo?: (loai: "DAI" | "DT", diem: Diem[], giaTri: number) => void;
+  /** Xã, phường của dự án — tô đậm ranh xã này trên lớp ranh giới xã */
+  xaDuAn?: string;
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const khoa = `gpmb-ban-do-${p.khoaLuu ?? "chung"}`;
   const [cheDo, setCheDo] = useState<"HIEN_TRANG" | "PHAM_VI">("HIEN_TRANG");
-  const [lop, setLop] = useState({ nen: true, thua: true, to: true, ranh: true, nhan: true, diaDanh: true });
+  const [lop, setLop] = useState({ nen: true, thua: true, to: true, ranh: true, nhan: true, diaDanh: true, xa: docLuu<boolean>(`gpmb-ban-do-lop-xa`, true) });
+  useEffect(() => ghiLuu("gpmb-ban-do-lop-xa", lop.xa), [lop.xa]);
   const [lopAn, setLopAn] = useState<Set<number>>(() => new Set(docLuu<number[]>(`${khoa}-lop-an`, [])));
   const [nenToi, setNenToi] = useState<boolean>(() => docLuu(`${khoa}-nen-toi`, false));
   const [mauTheoLop, setMauTheoLop] = useState<boolean>(() => docLuu(`${khoa}-mau-lop`, true));
@@ -122,6 +126,15 @@ export function KhungVe(p: {
   };
   const [ktNhap, setKtNhap] = useState(() => ghiKinhTuyen(anhNen.kt));
   const [taiO, setTaiO] = useState(0);
+  // Ranh giới xã, phường (tệp trong máy) đổi sang VN-2000 theo kinh tuyến trục đang dùng cho ảnh nền
+  const [ranhXa, setRanhXa] = useState<RanhXa[] | null>(null);
+  const [loiXa, setLoiXa] = useState("");
+  useEffect(() => {
+    if (!lop.xa) return;
+    let huy = false;
+    napRanhXa().then((t) => !huy && setRanhXa(chieuRanhXa(t, { kinhTuyenTruc: anhNen.kt, mui: anhNen.mui }))).catch((e) => !huy && setLoiXa(String((e as Error).message ?? e)));
+    return () => { huy = true; };
+  }, [lop.xa, anhNen.kt, anhNen.mui]);
   const [trangThaiAnh, setTrangThaiAnh] = useState<{ tong: number; loi: number; z: number; phongTo: number; mucThay: number } | null>(null);
   const choVe = useRef(false);
   const batAnhNen = (bat: boolean) => {
@@ -304,6 +317,18 @@ export function KhungVe(p: {
           ctx.stroke();
         }
       }
+      // 1b. Ranh giới xã, phường (nét đứt tím); xã của dự án nét đậm
+      const xaHien = lop.xa && ranhXa ? ranhXa.filter((x) => !(x.hop.maxX < nx0 || x.hop.minX > nx1 || x.hop.maxY < ny0 || x.hop.minY > ny1)) : [];
+      for (const x of xaHien) {
+        const cua = cungTenXa(x.ten, p.xaDuAn);
+        ctx.beginPath();
+        for (const pg of x.da_giac) for (const v of pg) { duong(v); ctx.closePath(); }
+        ctx.setLineDash(cua ? [10, 4] : [7, 5]);
+        ctx.lineWidth = cua ? 2.8 : 1.6;
+        ctx.strokeStyle = coAnh ? "#ff8ee6" : "#a03c8c";
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
       // 2. Thửa (tô màu theo hiện trạng / phạm vi)
       for (const t of p.dl.kq.thua) {
         if (!lop.thua) break;
@@ -484,6 +509,20 @@ export function KhungVe(p: {
         ctx.shadowBlur = 0;
         ctx.shadowColor = "transparent";
       }
+      // 5b. Tên xã, phường (khi nhìn rộng; nhìn gần chỉ hiện ở thanh tọa độ)
+      if (xaHien.length && v.tyLe < 0.6) {
+        ctx.font = "600 13px Segoe UI, sans-serif";
+        ctx.textAlign = "center";
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = coAnh ? "rgba(0,0,0,.75)" : "rgba(255,255,255,.9)";
+        ctx.fillStyle = coAnh ? "#ffd6f5" : "#7a2868";
+        for (const x of xaHien) {
+          const tx = sx(x.nhan.x), ty = sy(x.nhan.y);
+          if (tx < 0 || ty < 0 || tx > W || ty > H) continue;
+          ctx.strokeText(x.ten, tx, ty);
+          ctx.fillText(x.ten, tx, ty);
+        }
+      }
       // 6. Đo đạc
       const dsDo = xongDo || !troDo ? diemDo : [...diemDo, troDo];
       if (dsDo.length) {
@@ -562,7 +601,7 @@ export function KhungVe(p: {
     const ro = new ResizeObserver(veLai);
     ro.observe(cv);
     return () => ro.disconnect();
-  }, [nhin, hinhHien, chuHien, p.dl, p.thuHoi, p.vungChon.join("|"), p.thuaChon, p.chon, p.ttThua, p.khoaThua, pham, lop, cheDo, nenToi, mauTheoLop, diemDo, troDo, xongDo, khung, batHien, thongTin, cong, p.thuaQuet, p.ranhThem, p.lopPhu, anhNen, taiO]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [nhin, hinhHien, chuHien, p.dl, p.thuHoi, p.vungChon.join("|"), p.thuaChon, p.chon, p.ttThua, p.khoaThua, pham, lop, cheDo, nenToi, mauTheoLop, diemDo, troDo, xongDo, khung, batHien, thongTin, cong, p.thuaQuet, p.ranhThem, p.lopPhu, anhNen, taiO, ranhXa, p.xaDuAn]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const doiToaDo = (e: { clientX: number; clientY: number }): Diem => {
     const cv = ref.current!;
@@ -633,7 +672,8 @@ export function KhungVe(p: {
         onMouseMove={(e) => {
           if (!nhin) return;
           const d = doiToaDo(e);
-          setToaDo(`X ${so(d.y, 2)} · Y ${so(d.x, 2)}`);
+          const xa = lop.xa && ranhXa ? xaChua(ranhXa, d) : undefined;
+          setToaDo(`X ${so(d.y, 2)} · Y ${so(d.x, 2)}${xa ? ` · ${xa.ten}` : ""}`);
           if (khung) setKhung({ ...khung, b: d });
           if (coBat) {
             const b = diemBat(d);
@@ -721,6 +761,7 @@ export function KhungVe(p: {
         <button className="nut nut-nho" title="Thu nhỏ" aria-label="Thu nhỏ" onClick={() => nhin && setNhin({ ...nhin, tyLe: nhin.tyLe / 1.4 })}>－</button>
         <button className="nut nut-nho" title="Vừa vùng thửa, ranh GPMB" aria-label="Vừa vùng thửa" onClick={() => setNhin(null)}>⤢<span className="bd-chu">Vùng thửa</span></button>
         <button className="nut nut-nho" title="Vừa toàn bộ bản vẽ" aria-label="Toàn bộ bản vẽ" disabled={!phamToanBo} onClick={() => phamToanBo && vuaKhung(phamToanBo)}>⛶<span className="bd-chu">Toàn bộ bản vẽ</span></button>
+        {(() => { const x = ranhXa?.find((r) => cungTenXa(r.ten, p.xaDuAn)); return x && lop.xa ? <button className="nut nut-nho" title={`Vừa ranh giới ${x.ten} (xã của dự án)`} aria-label="Vừa ranh xã của dự án" onClick={() => vuaKhung(x.hop)}>▢<span className="bd-chu">{x.ten}</span></button> : null; })()}
         <span className="bd-vach" />
         <details className="bd-bat chu-nho" title="Bắt điểm khi đo, lấy tọa độ, ghi chú">
           <summary aria-label="Kiểu bắt điểm">Bắt: {bat ? [...kieuBat].map((k) => TEN_KIEU_BAT[k]).join(", ") : "tắt"}</summary>
@@ -752,6 +793,7 @@ export function KhungVe(p: {
               ["nhan", "Nhãn thửa"],
               ["nen", "Nền địa hình, hạ tầng", "Nét bản vẽ của các lớp DGN đang bật"],
               ["diaDanh", "Địa danh", "Chữ bản vẽ (tên đường, cánh đồng, ghi chú…) của các lớp DGN đang bật"],
+              ["xa", "Ranh giới xã, phường", "Ranh 75 xã, phường tỉnh Sơn La (tệp tác giả cung cấp, tham khảo — không dùng xác định ranh giới hành chính); xã của dự án nét đậm; tên xã hiện khi thu nhỏ và ở thanh tọa độ"],
             ] as const).map(([k, ten, goiY]) => (
               <label key={k} title={goiY}><input type="checkbox" checked={lop[k]} onChange={(e) => setLop({ ...lop, [k]: e.target.checked })} /> {ten}</label>
             ))}
@@ -827,6 +869,7 @@ export function KhungVe(p: {
               </>
             )}
             <span><i style={{ background: "#fff", borderColor: "#c0392b", borderWidth: 2 }} />Ranh GPMB đã chọn</span>
+            {lop.xa && <span><i style={{ background: "#fff", borderColor: "#a03c8c", borderStyle: "dashed" }} />Ranh giới xã, phường{loiXa ? ` (lỗi: ${loiXa})` : ""}</span>}
             {p.thuaChon.size > 0 && <span><i style={{ background: "#fff", borderColor: "#c0392b", borderStyle: "dashed" }} />Thửa chọn tay</span>}
             <span><i style={{ background: "#fff", borderColor: "#6a3fb5", borderStyle: "dashed" }} />Ranh ứng viên</span>
           </div>

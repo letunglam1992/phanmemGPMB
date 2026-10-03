@@ -64,15 +64,22 @@ test("T5 phê duyệt PA 01 hộ ghi số vào hộ → T7 thu hồi nhiều h�
   expect(t5).toMatch(/8\.1\. Tổng kinh phí bồi thường, hỗ trợ \(đã làm tròn\): [\d.]+ đồng/);
   expect(t5).toContain("Hỗ trợ khác theo khoản 13 Điều 6 Quyết định số 14/2026/QĐ-UBND");
 
-  // Văn bản cấp dự án: T7 thu hồi đất nhiều hộ
+  // Văn bản cấp dự án: T7 thu hồi đất nhiều hộ — chỉ hộ đã chốt phương án (0.9.17) → chốt phương án H01 trước
   await p.keyboard.press("Alt+3");
+  await p.getByRole("button", { name: "Chốt phương án…" }).click();
+  const chot = p.locator("[role=dialog]", { hasText: "Chốt phương án" });
+  await chot.getByLabel("Chọn tất cả hộ đủ điều kiện").check();
+  await chot.getByRole("button", { name: "Chốt, đóng băng số liệu" }).click();
+  await expect(chot).toHaveCount(0);
   await p.getByRole("button", { name: "Văn bản dự án, đợt" }).click();
   await p.locator(".muc-mau", { hasText: /^T7/ }).click();
   const kt = p.getByLabel("Kiểm tra thống nhất");
-  await expect(kt).toContainText("1 hộ chưa có số, ngày QĐ phê duyệt phương án");
+  // chỉ H01 (đã chốt, đã có QĐ PA số 31) được chọn → không còn cảnh báo hộ thiếu số QĐ (H02 chưa chốt, mờ)
+  await expect(kt).not.toContainText("chưa có số, ngày QĐ phê duyệt phương án");
+  await expect(p.locator(".ds-chon-ho label", { hasText: "H02" }).locator("input")).toBeDisabled();
   await expect(kt).toContainText("Chưa nhập số văn bản");
   await p.locator(".o-nhap", { has: p.locator("label:text-is('Số văn bản')") }).locator("input").fill("40");
-  await expect(kt).not.toContainText("Chưa nhập số văn bản");
+  await expect(p.getByText(/Chưa nhập số văn bản/)).toHaveCount(0);
   await p.getByRole("button", { name: /Tạo văn bản cho đợt/ }).click();
   await expect(p.getByText(/Đã tạo Quyết định thu hồi đất \(nhiều hộ\)/)).toBeVisible();
   const t7 = await chuDocx(p, /^Mau-T7_/);
