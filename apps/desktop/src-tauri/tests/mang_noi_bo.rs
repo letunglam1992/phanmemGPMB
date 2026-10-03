@@ -602,17 +602,20 @@ async fn may_chu_dinh_kem() {
     sai["meta"] = json!(json!({ "id": "c", "duAnId": "da1" }).to_string());
     assert_eq!(m.goi("POST", "/api/lo", Some(&qt), json!({ "tep": [sai] })).await.0, 400);
     assert_eq!(m.goi("POST", "/api/lo", Some(&qt), json!({ "tep": [tep("lon", "h1", may_chu::TOI_DA_DINH_KEM + 1)] })).await.0, 413);
+    // tài liệu chung của dự án: hoId rỗng (0.9.18)
+    let (ma, v) = m.goi("POST", "/api/lo", Some(&qt), json!({ "tep": [tep("da", "", 5)] })).await;
+    assert_eq!(ma, 200, "{v}");
     let (_, ds) = m.goi("GET", "/api/dinh-kem?duAn=da1", Some(&xem), Value::Null).await;
     let mut ids: Vec<String> = ds.as_array().unwrap().iter().map(|x| x["id"].as_str().unwrap().to_string()).collect();
     ids.sort();
-    assert_eq!(ids, vec!["a", "b"]);
+    assert_eq!(ids, vec!["a", "b", "da"]);
     // xóa hẳn hộ h2 (đã trong thùng rác đủ hạn) → tệp của h2 bị xóa, tệp h1 còn
     let mut h2 = ho_mau("h2", "H2");
     h2["daXoa"] = json!({ "luc": "2000-01-01T00:00:00.000Z", "nguoi": "qt", "lyDo": "thử" });
     assert_eq!(m.goi("POST", "/api/lo", Some(&qt), json!({ "ghiDe": true, "ghi": [{ "loai": "ho", "duLieu": h2 }] })).await.0, 200);
     assert_eq!(m.goi("POST", "/api/lo", Some(&qt), json!({ "xoaHo": ["h2"] })).await.0, 200);
     let (_, ds) = m.goi("GET", "/api/dinh-kem?duAn=da1", Some(&xem), Value::Null).await;
-    assert_eq!(ds.as_array().unwrap().len(), 1);
+    assert_eq!(ds.as_array().unwrap().len(), 2, "còn tệp h1 và tài liệu dự án");
     // P2-1: nạp gói chính sách chỉ quản trị (lãnh đạo có CAI_DAT nhưng không có NAP_CHINH_SACH)
     assert_eq!(m.goi("PUT", "/api/nguoi-dung/ld", Some(&qt), tai_khoan("ld", "LANH_DAO", "Matkhau2026")).await.0, 200);
     let ld = m.dang_nhap("ld", "Matkhau2026").await;

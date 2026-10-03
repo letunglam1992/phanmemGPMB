@@ -1174,7 +1174,7 @@ async fn xoa_ho(State(st): State<St>, h: HeaderMap, Path(id): Path<String>) -> K
     Ok(Json(json!({})))
 }
 
-/// Tệp đính kèm hồ sơ (P2-2): tối đa 20 MB mỗi tệp; thông tin kèm theo phải có hồ sơ, dự án. Trả mã dự án.
+/// Tệp đính kèm (P2-2): tối đa 20 MB mỗi tệp; thông tin kèm theo phải có dự án và trường hồ sơ (rỗng = tài liệu cấp dự án). Trả mã dự án.
 pub const TOI_DA_DINH_KEM: usize = 20 * 1024 * 1024;
 fn kiem_tep(loai: &str, meta: &str, co: usize) -> Kq<String> {
     if loai != "dinhKem" {
@@ -1184,8 +1184,9 @@ fn kiem_tep(loai: &str, meta: &str, co: usize) -> Kq<String> {
         return Err(loi(StatusCode::PAYLOAD_TOO_LARGE, "Tệp đính kèm tối đa 20 MB"));
     }
     let m: Value = serde_json::from_str(meta).map_err(|_| loi(StatusCode::BAD_REQUEST, "Thông tin tệp đính kèm không đúng dạng"))?;
+    // hoId rỗng = tài liệu chung của dự án (văn bản pháp lý chung); thiếu hẳn hoId hoặc duAnId → từ chối
     match (m["hoId"].as_str(), m["duAnId"].as_str()) {
-        (Some(h), Some(d)) if !h.is_empty() && !d.is_empty() => Ok(d.to_string()),
+        (Some(_), Some(d)) if !d.is_empty() => Ok(d.to_string()),
         _ => Err(loi(StatusCode::BAD_REQUEST, "Tệp đính kèm thiếu hồ sơ, dự án")),
     }
 }

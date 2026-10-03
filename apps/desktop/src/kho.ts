@@ -28,9 +28,10 @@ export interface LoGhi {
   dinhKem?: { meta: DinhKem; bytes: Uint8Array | null }[];
 }
 
-/** Thông tin tệp đính kèm hồ sơ (P2-2) — biên bản ký, QĐ bản quét, GCN… theo hộ và bước. */
+/** Thông tin tệp đính kèm hồ sơ (P2-2) — biên bản ký, QĐ bản quét, GCN… theo hộ và bước; hoId rỗng = tài liệu chung của dự án. */
 export interface DinhKem {
   id: string;
+  /** "" = tài liệu chung của dự án (văn bản pháp lý chung) */
   hoId: string;
   duAnId: string;
   /** Mã bước (1–16) hoặc "" = chung của hồ sơ */
@@ -41,6 +42,10 @@ export interface DinhKem {
   luc: string;
   nguoi: string;
   ghiChu?: string;
+  /** Nhóm tài liệu cấp dự án (NHOM_TAI_LIEU) */
+  nhom?: string;
+  /** Số, ký hiệu, ngày văn bản (tra cứu khi thanh tra, kiểm tra) */
+  soHieu?: string;
 }
 export const TOI_DA_DINH_KEM = 20 * 1024 * 1024;
 

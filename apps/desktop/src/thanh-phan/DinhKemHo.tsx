@@ -6,10 +6,12 @@ import { taiXuong } from "../tai-xuong";
 import { Chon } from "./Chon";
 
 /** Loại tệp nhận: văn bản, bản quét, ảnh, bảng tính. */
-export const DUOI_DINH_KEM = [".pdf", ".jpg", ".jpeg", ".png", ".tif", ".tiff", ".doc", ".docx", ".xls", ".xlsx"];
+export const DUOI_DINH_KEM = [".pdf", ".jpg", ".jpeg", ".png", ".heic", ".heif", ".webp", ".bmp", ".tif", ".tiff", ".doc", ".docx", ".xls", ".xlsx"];
+/** Ảnh xem trước được trong phần mềm (HEIC của iPhone: tải về mở bằng Ảnh của Windows) */
+export const laAnhXemDuoc = (ten: string) => /\.(jpe?g|png|webp|bmp)$/i.test(ten);
 export const loiTepDinhKem = (ten: string, co: number): string | null =>
   !DUOI_DINH_KEM.some((d) => ten.toLowerCase().endsWith(d)) ? `"${ten}": chỉ nhận ${DUOI_DINH_KEM.join(", ")}` : co > TOI_DA_DINH_KEM ? `"${ten}": quá 20 MB` : co === 0 ? `"${ten}": tệp rỗng` : null;
-const kb = (n: number) => (n >= 1048576 ? `${(n / 1048576).toFixed(1).replace(".", ",")} MB` : `${Math.max(1, Math.round(n / 1024))} KB`);
+export const kb = (n: number) => (n >= 1048576 ? `${(n / 1048576).toFixed(1).replace(".", ",")} MB` : `${Math.max(1, Math.round(n / 1024))} KB`);
 
 /**
  * Tệp đính kèm hồ sơ (P2-2): biên bản đã ký, QĐ bản quét, GCN… theo hộ và theo bước. Lưu trên máy / máy chủ nội bộ,
@@ -57,7 +59,7 @@ export function DinhKemHo({ h, duAn }: { h: Ho; duAn: DuAn }) {
   const hien = (ds ?? []).filter((x) => loc === "*" || x.buoc === loc);
   return (
     <div className="the">
-      <div className="the-dau"><h2>Tệp đính kèm</h2><span className="mo chu-nho">Biên bản đã ký, QĐ bản quét, GCN… — tối đa 20 MB mỗi tệp; có trong bản sao lưu</span></div>
+      <div className="the-dau"><h2>Tệp đính kèm</h2><span className="mo chu-nho">Biên bản đã ký, QĐ bản quét, GCN, ảnh chụp điện thoại… — PDF, Word, Excel, ảnh (JPG, PNG, HEIC); tối đa 20 MB mỗi tệp; có trong bản sao lưu. Tài liệu chung của dự án: Hồ sơ dự án → thẻ “Tài liệu, văn bản”</span></div>
       {sua && (
         <div className="the-than" style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
           <Chon value={buoc} onChange={(e) => setBuoc(e.target.value)} aria-label="Bước của tệp đính kèm">

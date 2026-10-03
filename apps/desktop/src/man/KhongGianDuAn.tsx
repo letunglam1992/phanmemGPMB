@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { TaiLieuDuAn } from "../thanh-phan/TaiLieuDuAn";
 import { TabCuon } from "../thanh-phan/TabCuon";
 import { useUngDung } from "../ung-dung";
 import { tinhHo } from "../tinh-ho";
@@ -50,6 +51,7 @@ const THE = [
   { ma: "ho", ten: "Hộ, cá nhân, tổ chức", bt: "nguoi" },
   { ma: "tai-dinh-cu", ten: "Tái định cư", bt: "nha" },
   { ma: "ban-do", ten: "Bản đồ", bt: "thua" },
+  { ma: "tai-lieu", ten: "Tài liệu, văn bản", bt: "saoChep" },
 ] as const;
 // Văn bản từng hộ soạn trong hồ sơ hộ (thẻ "Văn bản" sau "Tính toán, giải trình"); văn bản cấp dự án, theo đợt mở bằng nút
 // "Văn bản dự án, đợt" ở đầu trang (tab "van-ban", chỉ các mẫu cấp dự án, đợt).
@@ -134,6 +136,7 @@ export function KhongGianDuAn({ duAnId, tab = "tong-quan", ma, hoId }: { duAnId:
         </div>
       )}
       {tab === "ho" && <TheHo duAn={duAn} kq={kq} />}
+      {tab === "tai-lieu" && <TaiLieuDuAn duAn={duAn} />}
       {tab === "tai-dinh-cu" && <TheQuyTdc duAn={duAn} hos={hoCua(duAnId, true)} />}
       {tab === "ban-do" && <div className="kg-nhung"><BanDo duAnId={duAnId} /></div>}
       {tab === "van-ban" && <div className="kg-nhung"><VanBan key={`${duAnId}-${ma}-${hoId}`} duAnId={duAnId} maDau={ma} hoIdDau={hoId} chiDuAn={!hoId} /></div>}
