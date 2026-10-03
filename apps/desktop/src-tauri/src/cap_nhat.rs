@@ -91,4 +91,11 @@ mod kiem_thu {
         assert_eq!(khoa.len(), 42, "khóa Ed25519 minisign: 2 byte thuật toán + 8 byte mã khóa + 32 byte khóa");
         assert_eq!(&khoa[..2], b"Ed");
     }
+
+    /// CLI ký bản cập nhật đọc khóa ở tauri.conf.json (plugins.updater.pubkey) — phải trùng khoa-cap-nhat.pub.
+    #[test]
+    fn khoa_cau_hinh_trung_tep() {
+        let c: serde_json::Value = serde_json::from_str(include_str!("../tauri.conf.json")).unwrap();
+        assert_eq!(c["plugins"]["updater"]["pubkey"].as_str(), super::khoa());
+    }
 }

@@ -56,7 +56,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEU3NzU0QjA3QjlCQTM3REIKUldUYk43cTVCMHQxNXlhcXEyWmJtcGNPNENjVlhHdVlSN05wRFFpbzdvMWVBRlpxeXc4d3Q3azAK",
       "endpoints": [
         "https://github.com/letunglam1992/phanmemGPMB/releases/latest/download/latest.json"
       ],

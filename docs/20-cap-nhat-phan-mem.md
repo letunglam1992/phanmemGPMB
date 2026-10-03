@@ -6,7 +6,7 @@ Phần mềm đã cài tự tìm bản mới trên GitHub Releases của kho `le
 | Thành phần | Nội dung |
 |---|---|
 | Vỏ Rust (`src-tauri/src/cap_nhat.rs`) | Lệnh `cap_nhat_kiem_tra`, `cap_nhat_cai_dat` dùng `tauri-plugin-updater`; giao diện không có quyền gọi plugin trực tiếp |
-| Khóa công khai | `src-tauri/khoa-cap-nhat.pub` (biên dịch kèm; trống = chưa bật). **Đã gắn từ 0.9.16**: khóa minisign mã `E7754B07B9BA37DB` |
+| Khóa công khai | `src-tauri/khoa-cap-nhat.pub` (biên dịch kèm; trống = chưa bật) — trùng `plugins.updater.pubkey` trong `tauri.conf.json` (CLI dùng khi ký; `cargo test` kiểm trùng). **Đã gắn từ 0.9.16**: khóa minisign mã `E7754B07B9BA37DB` |
 | Nguồn bản mới | `https://github.com/letunglam1992/phanmemGPMB/releases/latest/download/latest.json` (công khai; chỉ tải tệp này, không gửi dữ liệu hồ sơ) |
 | Cài | Windows NSIS chế độ `passive` (hiện tiến trình, không hỏi), cài cho người dùng hiện tại, đè bản cũ |
 | Giao diện | Giới thiệu, bản quyền → "Cập nhật phần mềm": Kiểm tra cập nhật, nội dung bản mới, "Sao lưu và cập nhật" (tài khoản có quyền Cài đặt — Quản trị), "Để sau"; tùy chọn "Tự kiểm tra khi mở phần mềm" (mặc định bật, tối đa 1 lần/ngày, lỗi mạng bỏ qua); nút "Có bản mới x.y.z" ở cột trái |
