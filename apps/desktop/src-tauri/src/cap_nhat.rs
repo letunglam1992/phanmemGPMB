@@ -74,3 +74,21 @@ pub async fn cap_nhat_cai_dat(app: AppHandle, cho: State<'_, BanCho>) -> Result<
     .map_err(|e| format!("Không cài được bản mới: {e}"))?;
     app.restart();
 }
+
+#[cfg(test)]
+mod kiem_thu {
+    use base64::Engine;
+
+    /// Khóa công khai gắn kèm đúng định dạng minisign (base64 của tệp .pub do `tauri signer generate` tạo).
+    #[test]
+    fn khoa_cong_khai_hop_le() {
+        let k = super::khoa().expect("chưa có khóa công khai");
+        let tep = base64::engine::general_purpose::STANDARD.decode(k).expect("không phải base64");
+        let tep = String::from_utf8(tep).expect("không phải văn bản");
+        let mut dong = tep.lines();
+        assert!(dong.next().unwrap_or("").starts_with("untrusted comment: minisign public key"));
+        let khoa = base64::engine::general_purpose::STANDARD.decode(dong.next().unwrap_or("")).expect("dòng khóa không phải base64");
+        assert_eq!(khoa.len(), 42, "khóa Ed25519 minisign: 2 byte thuật toán + 8 byte mã khóa + 32 byte khóa");
+        assert_eq!(&khoa[..2], b"Ed");
+    }
+}
