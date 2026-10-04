@@ -86,7 +86,7 @@ describe("Gói gửi tỉnh", () => {
     await new Promise((r) => setTimeout(r, 5));
     const g2 = await taoGoiTinh(kho, await tuyChon([a.duAn.id], ky));
     expect((await nhapGoi(g2.bytes, k, "CONG", { homNay: "2026-10-04" })).loai).toBe("CAP_NHAT");
-    expect((await nhapGoi(g1.bytes, k, "TEP", { homNay: "2026-10-04" })).loai).toBe("CU_HON");
+    expect((await nhapGoi(g1.bytes, k, "TEP", { homNay: "2026-10-04" })).loai).toBe("TRUNG"); // đã nằm trong các bản trước
     await new Promise((r) => setTimeout(r, 5));
     const g3 = await taoGoiTinh(kho, await tuyChon([a.duAn.id])); // khóa ký mới (cài lại phần mềm / giả danh)
     await expect(nhapGoi(g3.bytes, k, "TEP", { homNay: "2026-10-04" })).rejects.toBeInstanceOf(LoiDoiKhoaKy);

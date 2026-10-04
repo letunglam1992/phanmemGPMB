@@ -17,16 +17,19 @@ import { PHIEN_BAN } from "../phien-ban";
 import { TT_GPMB } from "../trang-thai";
 import { tenTep } from "../ten-tep";
 import {
-  DUOI_GOI, DUOI_KHOA, KHOA_CD_GUI, KHOA_CD_KHOA_TINH, KHOA_CD_KY, LoiGoiTinh, THU_TU_TT, docTepKhoa, kiemVanTay, moKhoaTinh, nhomVanTay,
-  taoGoiTinh, taoKhoaKy, taoKhoaTinh, tenTepGoi, tepDuPhongKhoa, tepKhoaCongKhai, tomTatDuAn,
-  type KhoaCongKhaiTinh, type KhoaKy, type KhoaTinh, type TomTatDuAn,
+  DUOI_GOI, DUOI_KHOA, KHOA_CD_GUI, KHOA_CD_KHOA_TINH, LoiGoiTinh, THU_TU_TT, docTepKhoa, kiemVanTay, moKhoaTinh, nhomVanTay,
+  taoKhoaTinh, tenTepGoi, tepDuPhongKhoa, tepKhoaCongKhai, tomTatDuAn,
+  type KhoaCongKhaiTinh, type KhoaTinh, type TomTatDuAn,
 } from "../tong-hop-tinh/goi-tinh";
-import { LoiDoiKhoaKy, type KetQuaNhap, docKhoaTinh, dsGoi, dsNhanGoi, luuKhoaTinh, moGoiDaLuu, nhapGoi, xoaGoi, type BanGhiGoi, type DongNhanGoi } from "../tong-hop-tinh/kho-tinh";
+import { LoiDoiKhoaKy, type KetQuaNhap, type BanCu, docBanCu, dsBanCuTatCa, GIU_BAN_CU, docKhoaTinh, dsGoi, dsNhanGoi, luuKhoaTinh, moGoiDaLuu, nhapGoi, xoaGoi, type BanGhiGoi, type DongNhanGoi } from "../tong-hop-tinh/kho-tinh";
 import {
   capMaXa, chuanDiaChi, docCauHinhCong, dsGoiTrenCong, dsXaTrenCong, guiGoiLenCong, kiemTraCong, luuCauHinhCong, maTuTen, taiGoiTuCong, thuHoiXa, xoaCauHinhCong,
   type CauHinhCong, type GoiTrenCong, type VaiTroCong, type XaTrenCong,
 } from "../tong-hop-tinh/cong-tinh";
 import { moPhienXem, taoKhoXem } from "../tong-hop-tinh/xem-xa";
+import { SU_KIEN_TU_GUI, lanTuGuiTiep, taoGoiTheoCaiDat, type CaiDatGui } from "../tong-hop-tinh/tu-gui";
+import { docNguong, dsChamGui, ghiNguong, moTaCham, soNgayTu } from "../tong-hop-tinh/canh-bao";
+import { HopBaoCaoTinh } from "../thanh-phan/HopBaoCaoTinh";
 import { RaoLoi } from "../thanh-phan/RaoLoi";
 
 const ngayGio = (iso: string) => {
@@ -90,24 +93,23 @@ export function TongHopTinh() {
 function PhanGui() {
   const { kho, dsDuAn, hoCua, quyen, taiKhoan, dsDonVi, bao, ghiNhatKy } = useUngDung();
   const [khoa, setKhoa] = useState<KhoaCongKhaiTinh | null>(null);
-  const [gui, setGui] = useState<{ maGui: string; ten: string; lanGui?: { luc: string; cach: string } } | null>(null);
-  const [chon, setChon] = useState<Set<string> | null>(null);
-  const [kemTep, setKemTep] = useState(true);
-  const [kemBanDo, setKemBanDo] = useState(true);
+  const [gui, setGui] = useState<CaiDatGui | null>(null);
   const [dang, setDang] = useState("");
   const [soTep, setSoTep] = useState<Map<string, number>>(new Map());
   const [cong, setCong] = useState<CauHinhCong | null>(() => docCauHinhCong("XA"));
   useEffect(() => {
     void (async () => {
       setKhoa(await kho.docCaiDat<KhoaCongKhaiTinh>(KHOA_CD_KHOA_TINH));
-      const g = await kho.docCaiDat<{ maGui: string; ten: string; lanGui?: { luc: string; cach: string } }>(KHOA_CD_GUI);
+      const g = await kho.docCaiDat<CaiDatGui>(KHOA_CD_GUI);
       setGui(g ?? { maGui: taoId(), ten: donViSuDung(dsDonVi)?.ten ?? "" });
       const m = new Map<string, number>();
       for (const d of dsDuAn) m.set(d.id, (await kho.dsDinhKem(d.id)).length);
       setSoTep(m);
     })();
   }, [kho, dsDuAn, dsDonVi]);
-  const dsChon = useMemo(() => dsDuAn.filter((d) => !chon || chon.has(d.id)), [dsDuAn, chon]);
+  const kemTep = gui?.kemTep ?? true;
+  const kemBanDo = gui?.kemBanDo ?? true;
+  const dsChon = useMemo(() => dsDuAn.filter((d) => !gui?.boQua?.includes(d.id)), [dsDuAn, gui?.boQua]);
   const tomTat = useMemo(() => tomTatDuAn(dsChon, dsChon.flatMap((d) => hoCua(d.id)), (id) => soTep.get(id) ?? 0, homNay()), [dsChon, hoCua, soTep]);
   const coQuyenGui = quyen("SAO_LUU");
 
@@ -124,21 +126,20 @@ function PhanGui() {
       bao(loiChu(e), "loi");
     }
   };
-  const luuGui = async (g: NonNullable<typeof gui>) => {
+  const luuGui = async (g: CaiDatGui) => {
     setGui(g);
     await kho.luuCaiDat(KHOA_CD_GUI, g).catch(() => undefined);
   };
+  /** Đổi một phần cài đặt gửi và lưu ngay (tự gửi định kỳ dùng đúng lựa chọn này). */
+  const doiGui = (x: Partial<CaiDatGui>) =>
+    gui && void luuGui({ ...gui, ...x }).then(() => { if (x.tuDong) window.dispatchEvent(new Event(SU_KIEN_TU_GUI)); }); // bật/đổi chu kỳ: kiểm tra ngay
   const taoGoi = async () => {
     if (!khoa || !gui) throw new LoiGoiTinh("Chưa có khóa của tỉnh");
-    let ky = await kho.docCaiDat<KhoaKy>(KHOA_CD_KY);
-    if (!ky) {
-      ky = await taoKhoaKy();
-      await kho.luuCaiDat(KHOA_CD_KY, ky);
-    }
-    return taoGoiTinh(kho, { khoaTinh: khoa, khoaKy: ky, maGui: gui.maGui, donViGui: gui.ten, duAnIds: dsChon.map((d) => d.id), kemDinhKem: kemTep, kemBanDo, ungDung: PHIEN_BAN, nguoiXuat: taiKhoan ? `${taiKhoan.hoTen} (${taiKhoan.ten})` : "" });
+    return taoGoiTheoCaiDat(kho, gui, { khoaTinh: khoa, ungDung: PHIEN_BAN, nguoiXuat: taiKhoan ? `${taiKhoan.hoTen} (${taiKhoan.ten})` : "" });
   };
   const ghiLanGui = async (cach: string, chiTiet: string) => {
-    const g = { ...gui!, lanGui: { luc: new Date().toISOString(), cach } };
+    const { loiTuGui: _bo, ...con } = gui!;
+    const g = { ...con, lanGui: { luc: new Date().toISOString(), cach } };
     await luuGui(g);
     await ghiNhatKy(`Gửi dữ liệu lên tỉnh (${cach})`, chiTiet);
   };
@@ -204,14 +205,14 @@ function PhanGui() {
           <div style={{ maxHeight: 220, overflow: "auto", border: "1px solid var(--vien)", borderRadius: 8, padding: 8 }}>
             {dsDuAn.map((d) => (
               <label key={d.id} className="chu-nho" style={{ display: "flex", gap: 6, padding: "2px 0" }}>
-                <input type="checkbox" checked={!chon || chon.has(d.id)} onChange={(e) => { const s = new Set(chon ?? dsDuAn.map((x) => x.id)); if (e.target.checked) s.add(d.id); else s.delete(d.id); setChon(s); }} />
+                <input type="checkbox" checked={!gui.boQua?.includes(d.id)} onChange={(e) => { const bo = new Set(gui.boQua ?? []); if (e.target.checked) bo.delete(d.id); else bo.add(d.id); doiGui({ boQua: [...bo] }); }} />
                 <span>{d.ten}{d.xa ? ` · ${d.xa}` : ""} · {hoCua(d.id).length} hồ sơ</span>
               </label>
             ))}
             {!dsDuAn.length && <div className="mo">Chưa có dự án.</div>}
           </div>
-          <label className="chu-nho"><input type="checkbox" checked={kemTep} onChange={(e) => setKemTep(e.target.checked)} /> Kèm tệp đính kèm, tài liệu dự án ({[...soTep.entries()].filter(([id]) => dsChon.some((d) => d.id === id)).reduce((s, [, n]) => s + n, 0)} tệp)</label>
-          <label className="chu-nho"><input type="checkbox" checked={kemBanDo} onChange={(e) => setKemBanDo(e.target.checked)} /> Kèm bản đồ địa chính (DGN) đã nạp</label>
+          <label className="chu-nho"><input type="checkbox" checked={kemTep} onChange={(e) => doiGui({ kemTep: e.target.checked })} /> Kèm tệp đính kèm, tài liệu dự án ({[...soTep.entries()].filter(([id]) => dsChon.some((d) => d.id === id)).reduce((s, [, n]) => s + n, 0)} tệp)</label>
+          <label className="chu-nho"><input type="checkbox" checked={kemBanDo} onChange={(e) => doiGui({ kemBanDo: e.target.checked })} /> Kèm bản đồ địa chính (DGN) đã nạp</label>
           <div className="mo chu-nho">Gói gồm đầy đủ dữ liệu các dự án chọn (hồ sơ hộ, kiểm đếm, phương án, tiến độ, văn bản đã ghi số){kemTep ? ", tệp đính kèm" : ""}{kemBanDo ? ", bản đồ" : ""} — không gồm tài khoản, mật khẩu, nhật ký hệ thống.</div>
         </div>
       </div>
@@ -232,6 +233,22 @@ function PhanGui() {
           </div>
           {dang && <div className="mo" role="status">{dang}</div>}
           <div className="mo chu-nho">Gói được mã hóa (AES-256) bằng khóa của tỉnh: người chuyển tệp, hộp thư, Zalo hay cổng Cloudflare đều không đọc được nội dung. Gửi lại bất kỳ lúc nào — tỉnh luôn giữ bản mới nhất.</div>
+          {cong && (
+            <div className="tht-tu-gui" aria-label="Tự động gửi định kỳ">
+              <label className="chu-nho" style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                <input type="checkbox" aria-label="Bật tự động gửi" checked={!!gui.tuDong?.bat} disabled={!coQuyenGui || !khoa} onChange={(e) => doiGui({ tuDong: { bat: e.target.checked, soNgay: gui.tuDong?.soNgay ?? 0 }, loiTuGui: undefined })} />
+                Tự động gửi lên cổng của tỉnh, mỗi
+                <input type="number" min={1} max={365} aria-label="Chu kỳ tự gửi (ngày)" style={{ width: 70 }} value={gui.tuDong?.soNgay || ""} placeholder="số" onChange={(e) => doiGui({ tuDong: { bat: !!gui.tuDong?.bat, soNgay: Math.max(0, Math.floor(Number(e.target.value) || 0)) } })} />
+                ngày
+              </label>
+              {gui.tuDong?.bat && !(gui.tuDong.soNgay >= 1) && <div className="chu-nho" style={{ color: "var(--do)" }}>Nhập số ngày giữa hai lần gửi.</div>}
+              {(() => {
+                const tiep = lanTuGuiTiep(gui);
+                return tiep ? <div className="chu-nho">Lần tự gửi tiếp theo: <b>{tiep.getTime() <= Date.now() ? "ngay khi phần mềm đang mở (trong vài phút)" : ngayGio(tiep.toISOString())}</b>. Gửi theo lựa chọn dự án, tệp đính kèm, bản đồ ở mục 2; chỉ chạy khi phần mềm đang mở (máy đơn hoặc máy chủ).</div> : null;
+              })()}
+              {gui.loiTuGui && <div className="chu-nho" style={{ color: "var(--do)" }}>Lần tự gửi {ngayGio(gui.loiTuGui.luc)} không thành công: {gui.loiTuGui.loi} — phần mềm thử lại sau 1 giờ.</div>}
+            </div>
+          )}
           <CaiDatCong vaiTro="XA" cong={cong} datCong={setCong} />
         </div>
       </div>
@@ -309,6 +326,17 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
   const [loc, setLoc] = useState({ xa: "", tim: "" });
   const [ketQua, setKetQua] = useState<string[]>([]);
   const [taoMoi, setTaoMoi] = useState(false);
+  const [banCu, setBanCu] = useState<BanCu[]>([]);
+  const [moBanCu, setMoBanCu] = useState<string | null>(null);
+  const [nguong, setNguong] = useState<number | null>(docNguong);
+  const [xaCong, setXaCong] = useState<XaTrenCong[]>([]);
+  const [hopBc, setHopBc] = useState(false);
+  useEffect(() => {
+    if (!cong) return setXaCong([]);
+    let bo = false;
+    dsXaTrenCong(cong).then((x) => { if (!bo) setXaCong(x); }, () => undefined);
+    return () => { bo = true; };
+  }, [cong]);
   /** Gói trên cổng chưa tải về máy này (hiện nhắc khi đang khóa). */
   const [choNhan, setChoNhan] = useState<GoiTrenCong[]>([]);
   useEffect(() => {
@@ -326,6 +354,7 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
   const napLai = async () => {
     setDs((await dsGoi()).sort((a, b) => a.donViGui.localeCompare(b.donViGui, "vi")));
     setNhan(await dsNhanGoi());
+    setBanCu(await dsBanCuTatCa());
   };
   useEffect(() => {
     void docKhoaTinh().then((k) => {
@@ -349,6 +378,7 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
     }
     return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0], "vi"));
   }, [hien]);
+  const cham = useMemo(() => dsChamGui(ds, xaCong, nguong, new Date()), [ds, xaCong, nguong]);
 
   if (!quyen("CAI_DAT")) return <div className="thong-bao thong-bao-vang">Phần tổng hợp cấp tỉnh dành cho tài khoản quản trị hoặc lãnh đạo.</div>;
   if (khoa === undefined) return <div className="trong">Đang tải…</div>;
@@ -428,7 +458,7 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
     setDang("");
     await napLai();
   };
-  const xem = async (g: BanGhiGoi, duAnId?: string) => {
+  const xem = async (g: BanGhiGoi, duAnId?: string, cu = false) => {
     const k = canMo();
     if (!k || !taiKhoan) return;
     setDang(`Đang mở dữ liệu ${g.donViGui}…`);
@@ -436,7 +466,7 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
       const ban = await moGoiDaLuu(g, k);
       const khoXem = await taoKhoXem(ban);
       await ghiNhatKy("Xem dữ liệu đơn vị gửi lên tỉnh", `${g.donViGui} · số liệu đến ${ngayGio(g.thongTin.luc)}`);
-      moPhienXem({ kho: khoXem, nhan: `${g.donViGui} (số liệu đến ${ngayGio(g.thongTin.luc)})`, manDau: duAnId ? { ten: "du-an", duAnId } : undefined, quayVe: { taiKhoan, man: { ten: "tong-hop-tinh", tab: "tinh" } } });
+      moPhienXem({ kho: khoXem, nhan: `${g.donViGui} (${cu ? "bản cũ — " : ""}số liệu đến ${ngayGio(g.thongTin.luc)})`, manDau: duAnId ? { ten: "du-an", duAnId } : undefined, quayVe: { taiKhoan, man: { ten: "tong-hop-tinh", tab: "tinh" } } });
     } catch (e) {
       bao(loiChu(e), "loi");
     } finally {
@@ -470,6 +500,12 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
 
   return (
     <div className="luoi" style={{ gap: 16 }}>
+      {cham.length > 0 && (
+        <div className="thong-bao thong-bao-do" role="alert" aria-label="Cảnh báo chậm gửi" style={{ margin: 0 }}>
+          <b>{cham.length} đơn vị quá {nguong} ngày chưa gửi số liệu mới:</b>{" "}
+          {cham.slice(0, 8).map((c) => `${c.ten} — ${moTaCham(c)}`).join("; ")}{cham.length > 8 ? `; … và ${cham.length - 8} đơn vị khác` : ""}.
+        </div>
+      )}
       {!moKhoa && choNhan.length > 0 && (
         <div className="thong-bao thong-bao-vang" role="status" aria-label="Gói chờ nhận" style={{ margin: 0 }}>
           Có <b>{choNhan.length} gói mới</b> trên cổng ({choNhan.map((g) => `${g.ten}, ${ngayGio(g.luc)}`).join("; ")}) — nhập mật khẩu khóa, bấm <b>Mở khóa</b> để nhận.
@@ -522,6 +558,12 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
             </select>
             <input aria-label="Tìm dự án" placeholder="Tìm dự án, chủ đầu tư, đơn vị gửi…" value={loc.tim} onChange={(e) => setLoc({ ...loc, tim: e.target.value })} />
             <button className="nut nut-nho" disabled={!hien.length} onClick={() => void xuatExcel()}>Xuất Excel</button>
+            <button className="nut nut-nho nut-chinh" disabled={!hien.length} onClick={() => setHopBc(true)}>Báo cáo Word</button>
+            <label className="chu-nho" title="Đơn vị quá số ngày này chưa gửi số liệu mới thì cảnh báo. Để trống = không cảnh báo." style={{ display: "flex", gap: 4, alignItems: "center" }}>
+              Cảnh báo chậm gửi sau
+              <input type="number" min={1} max={365} aria-label="Số ngày cảnh báo chậm gửi" style={{ width: 64 }} placeholder="—" value={nguong ?? ""} onChange={(e) => { const n = Math.floor(Number(e.target.value)); const v = n > 0 ? n : null; setNguong(v); ghiNguong(v); }} />
+              ngày
+            </label>
           </div>
         </div>
         <div className="the-than">
@@ -585,12 +627,16 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
         <div className="the-than" style={{ overflowX: "auto" }}>
           {!ds.length ? <div className="trong">Chưa có.</div> : (
             <table className="bang tht-bang" aria-label="Đơn vị đã gửi">
-              <thead><tr><th>Đơn vị gửi</th><th>Số liệu đến</th><th>Nhận lúc</th><th>Nguồn</th><th className="so">Dự án</th><th className="so">Hồ sơ</th><th className="so">Tệp</th><th>Khóa ký</th><th /></tr></thead>
+              <thead><tr><th>Đơn vị gửi</th><th>Số liệu đến</th><th className="so">Số ngày</th><th>Nhận lúc</th><th>Nguồn</th><th className="so">Dự án</th><th className="so">Hồ sơ</th><th className="so">Tệp</th><th>Khóa ký</th><th /></tr></thead>
               <tbody>
-                {ds.map((g) => (
+                {ds.map((g) => {
+                  const cu = banCu.filter((b) => b.maGui === g.maGui).sort((a, b) => b.thongTin.luc.localeCompare(a.thongTin.luc));
+                  const soNgay = soNgayTu(g.thongTin.luc, new Date());
+                  return [
                   <tr key={g.maGui}>
                     <td>{g.donViGui}<div className="mo chu-nho">{g.thongTin.tenDuAn.slice(0, 3).join("; ")}{g.thongTin.tenDuAn.length > 3 ? "…" : ""}</div></td>
                     <td>{ngayGio(g.thongTin.luc)}</td>
+                    <td className="so" style={nguong && soNgay > nguong ? { color: "var(--do)", fontWeight: 700 } : undefined} title={nguong && soNgay > nguong ? `Quá ${nguong} ngày chưa gửi số liệu mới` : undefined}>{soNgay}</td>
                     <td>{ngayGio(g.nhanLuc)}</td>
                     <td>{g.nguon === "CONG" ? "Cổng" : "Tệp"}</td>
                     <td className="so">{g.thongTin.soDuAn}</td>
@@ -599,10 +645,19 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
                     <td className="tht-van-tay chu-nho">{nhomVanTay(g.thongTin.khoaKy.vanTay)}</td>
                     <td className="nhom-nut">
                       <button className="nut nut-nho" disabled={!moKhoa || !!dang} onClick={() => void xem(g)}>Xem chi tiết</button>
-                      <button className="nut nut-nho nut-nguy" onClick={async () => { if (!confirm(`Xóa dữ liệu "${g.donViGui}" khỏi máy tổng hợp? (Đơn vị gửi lại thì nhận lại được)`)) return; await xoaGoi(g.maGui); await ghiNhatKy("Xóa gói dữ liệu gửi tỉnh", g.donViGui); await napLai(); }}>Xóa</button>
+                      <button className="nut nut-nho" disabled={!cu.length} aria-expanded={moBanCu === g.maGui} onClick={() => setMoBanCu(moBanCu === g.maGui ? null : g.maGui)}>Các bản trước ({cu.length})</button>
+                      <button className="nut nut-nho nut-nguy" onClick={async () => { if (!confirm(`Xóa dữ liệu "${g.donViGui}" (kể cả các bản trước) khỏi máy tổng hợp? (Đơn vị gửi lại thì nhận lại được)`)) return; await xoaGoi(g.maGui); await ghiNhatKy("Xóa gói dữ liệu gửi tỉnh", g.donViGui); await napLai(); }}>Xóa</button>
                     </td>
-                  </tr>
-                ))}
+                  </tr>,
+                  moBanCu === g.maGui && (
+                    <tr key={`${g.maGui}-cu`}>
+                      <td colSpan={10} style={{ background: "var(--be-mat-2, transparent)" }}>
+                        <BangBanTruoc hienTai={g} cu={cu} xem={(id) => void docBanCu(id).then((b) => (b ? xem(b, undefined, true) : bao("Không còn bản này", "loi")))} moKhoa={moKhoa && !dang} />
+                      </td>
+                    </tr>
+                  ),
+                  ];
+                })}
               </tbody>
             </table>
           )}
@@ -614,6 +669,59 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
           )}
         </div>
       </div>
+      {hopBc && (
+        <HopBaoCaoTinh
+          dong={() => setHopBc(false)}
+          tenCoQuan={khoa.donVi}
+          dong_={hien.map((d) => ({ ...d, donViGui: d.goi.donViGui, luc: d.goi.thongTin.luc }))}
+          phamVi={loc.xa || "tỉnh"}
+          soDonVi={new Set(hien.map((d) => d.goi.maGui)).size}
+          cham={cham}
+          nguong={nguong}
+        />
+      )}
+    </div>
+  );
+}
+
+/** So sánh bản hiện tại với các bản gửi trước của một đơn vị (số liệu tóm tắt, không cần mở khóa). */
+function BangBanTruoc({ hienTai, cu, xem, moKhoa }: { hienTai: BanGhiGoi; cu: BanCu[]; xem: (id: number) => void; moKhoa: boolean }) {
+  const tong = (b: { tomTat: TomTatDuAn[] }) => ({
+    soDuAn: b.tomTat.length,
+    soHo: b.tomTat.reduce((s, d) => s + d.soHo, 0),
+    banGiao: b.tomTat.reduce((s, d) => s + (d.theoTrangThai.HOAN_THANH ?? 0), 0),
+    vuongMac: b.tomTat.reduce((s, d) => s + d.soVuongMac, 0),
+    duyet: b.tomTat.reduce((s, d) => s + d.soHoDaDuyetPA, 0),
+    tien: b.tomTat.reduce((s, d) => s.plus(D(d.tongTamTinh)), D(0)),
+  });
+  const ht = tong(hienTai);
+  const lech = (a: number, b: number) => (a === b ? "" : ` (${a > b ? "+" : ""}${a - b})`);
+  return (
+    <div className="luoi" style={{ gap: 6 }}>
+      <div className="chu-nho"><b>Các bản gửi của {hienTai.donViGui}</b> — máy này giữ tối đa {GIU_BAN_CU} bản gần nhất; số trong ngoặc là thay đổi của bản mới nhất so với bản đó.</div>
+      <table className="bang tht-bang chu-nho" aria-label="Các bản trước">
+        <thead><tr><th>Số liệu đến</th><th>Nhận lúc</th><th className="so">Dự án</th><th className="so">Hồ sơ</th><th className="so">Đã bàn giao</th><th className="so">Vướng mắc</th><th className="so">Đã duyệt PA</th><th className="so">Tạm tính (đồng)</th><th /></tr></thead>
+        <tbody>
+          <tr style={{ fontWeight: 600 }}>
+            <td>{ngayGio(hienTai.thongTin.luc)} (mới nhất)</td><td>{ngayGio(hienTai.nhanLuc)}</td>
+            <td className="so">{ht.soDuAn}</td><td className="so">{ht.soHo}</td><td className="so">{ht.banGiao}</td><td className="so">{ht.vuongMac}</td><td className="so">{ht.duyet}</td><td className="so">{dinhDang(ht.tien, 0)}</td><td />
+          </tr>
+          {cu.map((b) => {
+            const t = tong(b);
+            return (
+              <tr key={b.id}>
+                <td>{ngayGio(b.thongTin.luc)}</td><td>{ngayGio(b.nhanLuc)}</td>
+                <td className="so">{t.soDuAn}</td><td className="so">{t.soHo}</td>
+                <td className="so">{t.banGiao}<span className="mo">{lech(ht.banGiao, t.banGiao)}</span></td>
+                <td className="so">{t.vuongMac}<span className="mo">{lech(ht.vuongMac, t.vuongMac)}</span></td>
+                <td className="so">{t.duyet}<span className="mo">{lech(ht.duyet, t.duyet)}</span></td>
+                <td className="so">{dinhDang(t.tien, 0)}</td>
+                <td><button className="nut nut-nho" disabled={!moKhoa} onClick={() => xem(b.id)}>Xem chi tiết</button></td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }

@@ -110,6 +110,49 @@ Dữ liệu tổng hợp nằm trong cơ sở dữ liệu riêng của máy tỉ
 
 Dữ liệu này **không nằm trong bản sao lưu** của phần mềm. Khi mất, chỉ cần khôi phục khóa từ bản dự phòng rồi nhận lại gói.
 
+### Bổ sung ở bản 0.9.25
+
+**Cảnh báo xã lâu chưa gửi số liệu** (cấp tỉnh)
+- Đặt ở ô "Cảnh báo chậm gửi sau … ngày", trên bảng tổng hợp. Số ngày do tỉnh tự đặt; để trống thì không cảnh báo.
+- Đơn vị bị cảnh báo khi:
+  - gói gần nhất có "số liệu đến" quá số ngày đã đặt; hoặc
+  - xã đã được cấp mã cổng nhưng quá số ngày chưa gửi lên cổng, hoặc chưa gửi lần nào (tính từ ngày cấp mã).
+- Khi có đơn vị bị cảnh báo:
+  - Dải đỏ ở đầu màn liệt kê các đơn vị đó.
+  - Cột "Số ngày" ở bảng Đơn vị đã gửi tô đỏ.
+  - Báo cáo Word ghi ở mục II.
+
+**Xã tự gửi định kỳ** (cấp xã, khi đã cài cổng)
+- Ở khung "3. Gửi": tích "Tự động gửi lên cổng của tỉnh, mỗi … ngày". Số ngày do xã tự đặt.
+- Phần mềm gửi theo lựa chọn ở mục 2:
+  - Dự án: phần mềm nhớ các dự án bị bỏ chọn; dự án mới thêm sau tự được gửi.
+  - Kèm tệp đính kèm, kèm bản đồ theo ô đã tích.
+- Thời điểm chạy:
+  - Bật lần đầu (chưa gửi lần nào) thì gửi ngay.
+  - Sau đó gửi khi đến hạn: phần mềm kiểm tra khi mở và mỗi 30 phút.
+  - Chỉ chạy khi phần mềm đang mở, trên máy đơn hoặc máy chủ; máy trạm không tự gửi.
+- Gửi lỗi (mất mạng, mã bị thu hồi): phần mềm ghi lỗi, báo cho người dùng và thử lại sau 1 giờ.
+- Nhật ký hệ thống ghi mỗi lần tự gửi.
+
+**Tỉnh xem lại các bản gửi cũ**
+- Máy tỉnh giữ các bản trước của từng đơn vị, tối đa 20 bản gần nhất mỗi đơn vị (giới hạn dung lượng).
+- Bản được lưu vào danh sách khi:
+  - nhận bản mới, bản cũ chuyển sang;
+  - nhập một gói cũ hơn bản đang có.
+- Xem: bảng Đơn vị đã gửi → **Các bản trước (n)**.
+  - So sánh số hộ, đã bàn giao, vướng mắc, đã duyệt phương án, tạm tính giữa các bản; trong ngoặc là thay đổi của bản mới nhất.
+  - **Xem chi tiết** từng bản cũ (chỉ xem).
+- Lưu ý: cổng Cloudflare giữ 5 bản gần nhất, nhưng phần mềm chỉ tải bản mới nhất. Lịch sử hình thành dần trên máy tỉnh qua mỗi lần nhận.
+
+**Báo cáo tổng hợp toàn tỉnh (Word)**
+- Nút **Báo cáo Word** trên bảng tổng hợp; dùng mẫu `bao-cao-tong-hop-tinh.docx` (thể thức NĐ 30/2020/NĐ-CP).
+- Phần mềm tự điền theo các dự án đang hiện (theo bộ lọc xã):
+  - Kết quả chung: số đơn vị, xã, dự án, hộ, diện tích, đã bàn giao, đã duyệt phương án, vướng mắc, giá trị tạm tính.
+  - Bảng theo xã, phường; bảng từng dự án.
+  - Tình hình gửi số liệu (theo ngưỡng cảnh báo); số hộ vướng mắc.
+- Cán bộ nhập: cơ quan, số, ký hiệu, kính gửi, mở đầu, khó khăn khác, nhiệm vụ, kiến nghị, nơi nhận, người ký. Phần mềm nhớ cho lần sau.
+- Giá trị "tạm tính" ghi rõ chưa phải số đã phê duyệt.
+
 ## 4. Cổng Cloudflare (phương án 2 mức b)
 
 ### 4.1. Cổng làm gì

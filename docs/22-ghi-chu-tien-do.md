@@ -1,6 +1,6 @@
 # 22. Ghi chú tiến độ — đọc file này trước khi làm tiếp
 
-Cập nhật: tối 04/10/2026. Bản mới nhất đã phát hành: **0.9.24**. Nhánh làm việc: `claude/great-rubin-4x4alw`; mọi thay đổi đã commit và đẩy lên.
+Cập nhật: tối 04/10/2026. Bản mới nhất đã phát hành: **0.9.25**. Nhánh làm việc: `claude/great-rubin-4x4alw`; mọi thay đổi đã commit và đẩy lên.
 
 Tài liệu nên đọc trước:
 - `CLAUDE.md`: quy tắc, lệnh.
@@ -22,6 +22,7 @@ Tài liệu nên đọc trước:
 | 0.9.21 | Gửi tỉnh, tổng hợp tỉnh: gói `.gpmbtinh` mã hóa cho khóa tỉnh; cổng Cloudflare; bảng tổng hợp theo xã; xem chi tiết chỉ xem |
 | 0.9.22 | Nút "Tạo khóa mới (thay khóa cũ)"; mở khóa tự tải gói từ cổng; rào lỗi từng khung; sửa chữ tràn khung "3. Gửi" |
 | 0.9.23 | Trợ lý AI nổi: nút robot góc dưới phải mở khung chat; thanh bên "Trợ lý AI (hỏi đáp)" |
+| 0.9.25 | Cảnh báo xã lâu chưa gửi (ngưỡng do tỉnh đặt); xã tự gửi định kỳ lên cổng (chu kỳ do xã đặt); tỉnh xem lại các bản gửi trước (≤ 20 bản/đơn vị); báo cáo Word tổng hợp toàn tỉnh |
 | 0.9.24 | **Sửa trắng màn hình khi mở Trợ lý AI và lỗi "e is not a function"**; màn tỉnh nhắc "Có n gói mới trên cổng (xã, thời gian) — mở khóa để nhận" |
 
 Kiểm thử ở 0.9.24 (tất cả đạt):
@@ -74,10 +75,10 @@ Gặp lỗi: bấm **"Chép chi tiết lỗi"** (nếu có), hoặc chụp màn 
 
 - [ ] Cổng Worker tự bỏ khoảng trắng thừa trong `MA_QUAN_TRI`.
   - Phải dán lại mã Worker lên Cloudflare (Edit code → dán `tools/cong-tinh/worker.js` → Deploy).
-- [ ] Cảnh báo "xã lâu chưa gửi số liệu" (số ngày do người dùng đặt, không tự đặt mốc).
-- [ ] Xã tự gửi định kỳ lên cổng.
-- [ ] Tỉnh xem lại các bản gửi cũ (cổng giữ 5 bản/xã).
-- [ ] Báo cáo tổng hợp tỉnh theo mẫu văn bản (Word).
+- [x] Cảnh báo xã lâu chưa gửi, xã tự gửi định kỳ, tỉnh xem lại bản gửi cũ, báo cáo Word toàn tỉnh — đã làm ở 0.9.25 (docs/21 "Bổ sung ở bản 0.9.25"). Cần anh Lâm thử trên máy thật:
+  - [ ] Máy xã: bật tự gửi, mỗi N ngày.
+  - [ ] Máy tỉnh: đặt ngưỡng cảnh báo; xem "Các bản trước"; bấm "Báo cáo Word".
+- [ ] Tỉnh tải cả các bản cũ trên cổng (cổng giữ 5 bản/xã) — cần thêm API cho Worker và dán lại mã Worker lên Cloudflare.
 - [ ] Danh sách P0–P3 còn lại trong `docs/17-danh-gia-toan-dien.md`.
 
 ## 3. Quy trình mỗi lần sửa (để phiên mới làm đúng ngay)
@@ -113,6 +114,7 @@ Gặp lỗi: bấm **"Chép chi tiết lỗi"** (nếu có), hoặc chụp màn 
 | — cổng | `cong-tinh.ts` (gọi cổng; Rust `src-tauri/src/cong_tinh.rs` `goi_cong_tinh`) |
 | — xem chỉ đọc | `xem-xa.ts` (phiên chỉ xem: kho bộ nhớ chặn ghi, `main.tsx` đổi phiên, `NhaCungCap` có `chiXem`/`phienDau`) |
 | Cổng Cloudflare | `tools/cong-tinh/worker.js`, `wrangler.toml` |
+| Cảnh báo chậm gửi, tự gửi, báo cáo tỉnh | `src/tong-hop-tinh/canh-bao.ts`, `tu-gui.ts` (+ `src/thanh-phan/TuDongGuiTinh.tsx` chạy nền), `bao-cao-tinh.ts` + `src/thanh-phan/HopBaoCaoTinh.tsx`, mẫu `public/mau-van-ban/bao-cao-tong-hop-tinh.docx` (dựng bằng `tools/mau-van-ban/mau-bao-cao-tinh.cjs`, cần gói `docx` qua NODE_PATH) |
 | Kiểm thử | `test/goi-tinh.test.ts`, `test/cong-tinh.test.ts`, `test/hoi-dap-*.test.ts`, `e2e/tong-hop-tinh.spec.ts`, `e2e/hoi-dap.spec.ts` |
 
 ## 5. Bí mật — không ghi vào kho, không hỏi lại

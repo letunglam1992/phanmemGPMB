@@ -105,6 +105,20 @@ test("tỉnh tạo khóa; xã xuất gói mã hóa; tỉnh nhận, tổng hợp 
   // Excel tổng hợp
   await p.getByRole("button", { name: "Xuất Excel" }).click();
   await tep(p, "Tong-hop-GPMB-toan-tinh_");
+  // báo cáo Word toàn tỉnh
+  await p.getByRole("button", { name: "Báo cáo Word" }).click();
+  await p.getByLabel("Cơ quan chủ quản").fill("UBND tỉnh Sơn La");
+  await p.getByLabel("Họ tên người ký").fill("Người ký thử");
+  await p.getByRole("button", { name: "Tạo tệp Word" }).click();
+  const bc = await tep(p, "Bao-cao-tong-hop-GPMB-toan-tinh_");
+  const xmlBc = new PizZip(bc.buf).file("word/document.xml")!.asText().replace(/<[^>]+>/g, "");
+  expect(xmlBc).toContain("Dự án mẫu – Khu công nghiệp (dữ liệu ẩn danh) (Xã Chiềng Mung)");
+  expect(xmlBc).toContain("UBND TỈNH SƠN LA");
+  expect(xmlBc).not.toContain("Hộ mẫu 01");
+  // ngưỡng cảnh báo chậm gửi: gói vừa gửi → không cảnh báo
+  await p.getByLabel("Số ngày cảnh báo chậm gửi").fill("7");
+  await expect(p.getByRole("alert", { name: "Cảnh báo chậm gửi" })).toHaveCount(0);
+  await expect(p.getByRole("table", { name: "Đơn vị đã gửi" })).toContainText("0");
   // --- xem chi tiết như cấp xã (chỉ xem)
   await bang.getByRole("button", { name: /Dự án mẫu – Khu công nghiệp/ }).click();
   await expect(p.getByRole("status").filter({ hasText: "Đang xem dữ liệu" })).toContainText("UBND xã Chiềng Mung (thử)");
@@ -117,6 +131,22 @@ test("tỉnh tạo khóa; xã xuất gói mã hóa; tỉnh nhận, tổng hợp 
   await expect(p.getByRole("table", { name: "Bảng tổng hợp tỉnh" })).toBeVisible();
   await expect(p.locator(".ten-nguoi")).toContainText("Quản trị");
   await expect(p.getByText("Đã mở khóa")).toBeVisible();
+  // xã gửi lại → bản cũ chuyển sang "Các bản trước"
+  await p.getByRole("tab", { name: "Gửi lên tỉnh (cấp xã)" }).click();
+  await p.evaluate(() => { (window as unknown as { __tep: Record<string, string> }).__tep = {}; });
+  await p.getByRole("button", { name: /Xuất gói gửi tỉnh/ }).click();
+  const goi2 = await tep(p, "GPMB-gui-tinh_");
+  await p.getByRole("tab", { name: "Tổng hợp tỉnh (cấp tỉnh)" }).click();
+  await p.getByLabel("Chọn gói dữ liệu của xã").setInputFiles({ name: goi2.ten, mimeType: "application/octet-stream", buffer: goi2.buf });
+  await expect(p.getByLabel("Kết quả nhận gói")).toContainText("cập nhật");
+  await p.getByRole("button", { name: "Các bản trước (1)" }).click();
+  const bt = p.getByRole("table", { name: "Các bản trước" });
+  await expect(bt.locator("tbody tr")).toHaveCount(2);
+  await expect(bt).toContainText("(mới nhất)");
+  await bt.getByRole("button", { name: "Xem chi tiết" }).click();
+  await expect(p.getByRole("status").filter({ hasText: "Đang xem dữ liệu" })).toContainText("bản cũ");
+  await p.getByRole("button", { name: "Thoát xem" }).click();
+  await expect(p.getByRole("table", { name: "Bảng tổng hợp tỉnh" })).toBeVisible();
   // dữ liệu nghiệp vụ của máy không bị thay
   await p.getByRole("button", { name: "Tổng quan" }).first().click();
   await expect(p.getByText(/Đang theo dõi 1 dự án/)).toBeVisible();
@@ -173,8 +203,11 @@ test("cổng Cloudflare: tỉnh cấp mã cho xã; xã gửi gói lên cổng; t
   await p.getByLabel("Mã truy cập cổng XA").fill(token);
   await p.getByRole("button", { name: "Lưu và kiểm tra kết nối" }).click();
   await expect(p.getByText("Đã kết nối cổng — mã của Xã Chiềng Mung")).toBeVisible();
-  await p.getByRole("button", { name: "Gửi lên cổng của tỉnh" }).click();
-  await expect(p.getByText(/Đã gửi lên cổng của tỉnh lúc/)).toBeVisible();
+  // tự động gửi định kỳ: bật + chu kỳ → chưa gửi lần nào nên gửi ngay
+  await p.getByLabel("Chu kỳ tự gửi (ngày)").fill("7");
+  await p.getByLabel("Bật tự động gửi").check();
+  await expect(p.getByText(/Đã tự động gửi số liệu lên cổng của tỉnh/)).toBeVisible({ timeout: 20_000 });
+  await expect(p.getByText(/Lần tự gửi tiếp theo/)).toBeVisible();
   const daLuu = [...kho.entries()].filter(([k]) => k.startsWith("goi/chieng-mung/"));
   expect(daLuu).toHaveLength(1);
   expect(Buffer.from(daLuu[0]![1]).toString("utf8")).not.toContain("Hộ mẫu 01");
