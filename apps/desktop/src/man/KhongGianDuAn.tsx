@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { HopChotPhuongAn } from "../thanh-phan/PhuongAn";
 import { TaiLieuDuAn } from "../thanh-phan/TaiLieuDuAn";
 import { TabCuon } from "../thanh-phan/TabCuon";
 import { useUngDung } from "../ung-dung";
@@ -281,7 +282,10 @@ function TheThongTin({ duAn, tiep }: { duAn: DuAn; tiep: () => void }) {
 }
 
 function TheHo({ duAn, kq }: { duAn: DuAn; kq: Kq }) {
-  const { di, quyen } = useUngDung();
+  const { di, quyen, bao } = useUngDung();
+  const [hopChot, setHopChot] = useState(false);
+  const [dangXuatChon, setDangXuatChon] = useState(false);
+  const docMauExcelChon = useMauExcel();
   // Bộ lọc, vị trí cuộn, hộ vừa làm được nhớ theo dự án (quay lại từ hồ sơ hộ giữ nguyên)
   const nho = useMemo(() => layNhoDsHo(duAn.id), [duAn.id]);
   const [locDot, setLocDot] = useState(nho.locDot);
@@ -347,6 +351,16 @@ function TheHo({ duAn, kq }: { duAn: DuAn; kq: Kq }) {
     });
   // chỉ giữ lựa chọn của hộ còn trong dự án
   const dsChon = kq.filter((x) => chon.has(x.h.id)).map((x) => x.h);
+  const xuatChon = async () => {
+    setDangXuatChon(true);
+    try {
+      await xuatExcelDuAn(duAn, kq.filter((x) => chon.has(x.h.id)), undefined, await docMauExcelChon());
+    } catch (e) {
+      bao(`Không xuất được Excel: ${(e as Error).message}`, "loi");
+    } finally {
+      setDangXuatChon(false);
+    }
+  };
   return (
     <div className="the">
       {maTrung.length > 0 && (
@@ -384,12 +398,20 @@ function TheHo({ duAn, kq }: { duAn: DuAn; kq: Kq }) {
           <b>Đã chọn {dsChon.length} hồ sơ</b>
           {dsChon.length > ds.filter((x) => chon.has(x.h.id)).length && <span className="mo chu-nho">(có {dsChon.length - ds.filter((x) => chon.has(x.h.id)).length} hồ sơ nằm ngoài bộ lọc hiện tại)</span>}
           <div className="phai" style={{ display: "flex", gap: 8 }}>
+            <button className="nut nut-nho" disabled={dangXuatChon} title="Xuất Excel phương án (bảng tổng hợp, biểu từng hộ) chỉ gồm các hồ sơ đã chọn" onClick={() => void xuatChon()}>{dangXuatChon ? "Đang xuất…" : `Xuất Excel ${dsChon.length} hồ sơ`}</button>
+            {quyen("CHOT_PA") && <button className="nut nut-nho nut-chinh" onClick={() => setHopChot(true)}>Chốt phương án {dsChon.length} hồ sơ…</button>}
             <button className="nut nut-nho nut-nguy" onClick={() => setHopXoa(true)}>Xóa {dsChon.length} hồ sơ</button>
             <button className="nut nut-nho" onClick={() => setChon(new Set())}>Bỏ chọn</button>
           </div>
         </div>
       )}
       <BangHo ds={ds} homNay={homNay} chon={quyen("SUA_HO_SO") ? chon : undefined} doiChon={quyen("SUA_HO_SO") ? doiChon : undefined} toSang={toSang} mo={(x) => di({ ten: "ho", duAnId: duAn.id, hoId: x.h.id })} trong={kq.length ? "Không có hồ sơ khớp điều kiện lọc." : "Chưa có hồ sơ. Bấm “Thêm hộ, tổ chức”, nhập Excel (menu Thêm) hoặc tạo từ bản đồ."} />
+      {quyen("CHOT_PA") && kq.length > 0 && (
+        <div className="nhom-nut mt-8" style={{ justifyContent: "flex-end" }}>
+          <button className="nut nut-chinh" title={dsChon.length ? "Mở hộp chốt phương án với các hồ sơ đã chọn" : "Chọn hồ sơ (ô đánh dấu đầu dòng) để chốt riêng; không chọn thì mở hộp chốt với mọi hồ sơ"} onClick={() => setHopChot(true)}>{dsChon.length ? `Chốt phương án ${dsChon.length} hồ sơ đã chọn…` : "Chốt phương án…"}</button>
+        </div>
+      )}
+      {hopChot && <HopChotPhuongAn duAn={duAn} kq={kq} chonDau={dsChon.map((h) => h.id)} dong={() => setHopChot(false)} />}
       {hopXoa && <HopXoaNhieuHo duAn={duAn} hos={dsChon} dong={() => setHopXoa(false)} xong={(ids) => setChon((c) => new Set([...c].filter((id) => !ids.includes(id))))} />}
       {phanCong && <HopPhanCong hos={kq.map((x) => x.h)} dong={() => setPhanCong(false)} />}
       {xepDot && <HopXepDot duAn={duAn} hos={kq.map((x) => x.h)} dong={() => setXepDot(false)} />}

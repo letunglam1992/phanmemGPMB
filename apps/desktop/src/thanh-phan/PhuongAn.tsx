@@ -180,19 +180,25 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
   );
 }
 
-function HopChot({ duAn, kq: kqDuAn, dong: dongHop }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo }[]; dong: () => void }) {
+/** Hộp chốt phương án; `chonDau`: các hồ sơ đã chọn ở danh sách hộ (mở từ "Chốt phương án các hồ sơ đã chọn"). */
+export function HopChotPhuongAn(p: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo }[]; dong: () => void; chonDau?: string[] }) {
+  return <HopChot {...p} />;
+}
+
+function HopChot({ duAn, kq: kqDuAn, dong: dongHop, chonDau }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo }[]; dong: () => void; chonDau?: string[] }) {
   const { chinhSach, luuDuAn, nguoiDung, ghiNhatKy, nguongLechDt, nguoiCoDat } = useUngDung();
   // P3-1: dự án có đợt → phương án chốt theo đợt, chỉ gồm hộ thuộc đợt
   const coDotTH = coDot(duAn);
-  const [dotId, setDotId] = useState(() => dsDot(duAn)[0]?.id ?? "");
+  const [dotId, setDotId] = useState(() => (chonDau?.length ? kqDuAn.find(({ h }) => chonDau.includes(h.id) && h.dotId)?.h.dotId : undefined) ?? dsDot(duAn)[0]?.id ?? "");
   const kqDot = useMemo(() => (coDotTH ? kqDuAn.filter(({ h }) => h.dotId === dotId) : kqDuAn), [kqDuAn, coDotTH, dotId]);
   // Danh sách hộ: mặc định chỉ hộ đã xác nhận hoàn thành bước 5 "Lập phương án" (nếu dự án có dùng tiến độ bước 5);
   // hộ đã có trong bản phê duyệt thì ẩn (bật "Hiện cả hộ đã phê duyệt" khi cần lập bản điều chỉnh)
   const daLapPA = (h: Ho) => h.tienDo["5"]?.trangThai === "XONG";
   const coBuoc5 = kqDot.some(({ h }) => daLapPA(h));
-  const [chiDaLap, setChiDaLap] = useState(coBuoc5);
-  const [hienDaDuyet, setHienDaDuyet] = useState(false);
   const daDuyet0 = useMemo(() => hoDaPheDuyet(duAn.phuongAn ?? []), [duAn.phuongAn]);
+  // Mở với hồ sơ đã chọn: không lọc theo bước 5; hiện hộ đã phê duyệt nếu có trong lựa chọn (lập bản điều chỉnh)
+  const [chiDaLap, setChiDaLap] = useState(chonDau?.length ? false : coBuoc5);
+  const [hienDaDuyet, setHienDaDuyet] = useState(!!chonDau?.some((id) => daDuyet0.has(id)));
   const dangCho = useMemo(() => new Map((duAn.phuongAn ?? []).filter((p) => p.trangThai === "DA_CHOT").flatMap((p) => p.ho.map((x) => [x.hoId, p.so] as const))), [duAn.phuongAn]);
   const kq = useMemo(() => kqDot.filter(({ h }) => (!chiDaLap || daLapPA(h)) && (hienDaDuyet || !daDuyet0.has(h.id))), [kqDot, chiDaLap, hienDaDuyet, daDuyet0]);
   const soAnDuyet = kqDot.filter(({ h }) => daDuyet0.has(h.id) && (!chiDaLap || daLapPA(h))).length;
@@ -202,7 +208,9 @@ function HopChot({ duAn, kq: kqDuAn, dong: dongHop }: { duAn: DuAn; kq: { h: Ho;
   const soBan = (duAn.phuongAn ?? []).reduce((m, p) => Math.max(m, p.so), 0) + 1;
   const chua = useMemo(() => new Map(hoChuaDuDieuKien(kqDuAn).map((x) => [x.h.id, x.lyDo])), [kqDuAn]);
   const daDuyet = daDuyet0;
-  const [chon, setChon] = useState<Set<string>>(() => macDinhChon(kq));
+  const [chon, setChon] = useState<Set<string>>(() => (chonDau?.length ? new Set(kq.filter(({ h }) => chonDau.includes(h.id) && !chua.has(h.id)).map(({ h }) => h.id)) : macDinhChon(kq)));
+  const ngoaiDot = chonDau?.length && coDotTH ? kqDuAn.filter(({ h }) => chonDau.includes(h.id) && h.dotId !== dotId).length : 0;
+  const chuaDuDk = chonDau?.length ? kqDuAn.filter(({ h }) => chonDau.includes(h.id) && chua.has(h.id)).length : 0;
   const tenMacDinh = (id: string) => `Phương án bồi thường, hỗ trợ, TĐC${coDotTH ? ` – ${tenDot(timDot(duAn, id))}` : ""} – bản ${soBan}`;
   const [ten, setTen] = useState(() => tenMacDinh(dotId));
   const doiDot = (id: string) => {
@@ -258,6 +266,13 @@ function HopChot({ duAn, kq: kqDuAn, dong: dongHop }: { duAn: DuAn; kq: { h: Ho;
           {xemSoat && <div className="mt-8"><KetQuaSoatPA ds={soat} duAnId={duAn.id} /></div>}
         </div>
       )}
+      {chonDau?.length ? (
+        <div className="thong-bao thong-bao-xanh mt-8" role="status">
+          Mở từ danh sách hộ: đã chọn sẵn {chon.size}/{chonDau.length} hồ sơ đã chọn.
+          {chuaDuDk > 0 && ` ${chuaDuDk} hồ sơ chưa đủ điều kiện chốt (còn khoản Thiếu căn cứ/Cần xác nhận) — không chọn được.`}
+          {ngoaiDot > 0 && ` ${ngoaiDot} hồ sơ thuộc đợt khác — chốt riêng theo từng đợt.`}
+        </div>
+      ) : null}
       {coDotTH && (
         <div className="luoi luoi-2 mt-8">
           <O nhan="Đợt thu hồi" goiY="Phương án chốt, phê duyệt theo từng đợt — chỉ hộ thuộc đợt">

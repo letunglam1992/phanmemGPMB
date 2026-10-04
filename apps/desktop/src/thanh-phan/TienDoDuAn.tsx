@@ -153,6 +153,36 @@ function BuocChungCua({ duAn, dot, hos, tiep }: { duAn: DuAn; dot?: DotThuHoi; h
   );
 }
 
+/** Lần cập nhật hàng loạt gần nhất (theo dự án, trong phiên làm việc) — để hoàn tác khi chọn nhầm hộ, nhầm bước. */
+export interface LanCapNhat {
+  duAnId: string;
+  buoc: string;
+  moTa: string;
+  luc: string;
+  ds: { id: string; ma: string; cu?: BuocHo; moi: BuocHo }[];
+}
+const lanCuoi = new Map<string, LanCapNhat>();
+const giong = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+
+/**
+ * Hoàn tác: trả bước về trạng thái trước lần cập nhật, chỉ với hộ mà bước đó chưa bị sửa tiếp sau lần cập nhật
+ * (hộ đã sửa tiếp: bỏ qua, nêu tên). Trả các hộ cần ghi và danh sách bỏ qua.
+ */
+export function hoanTacCapNhat(lan: LanCapNhat, hos: Ho[]): { ghi: Ho[]; boQua: string[] } {
+  const ghi: Ho[] = [];
+  const boQua: string[] = [];
+  for (const x of lan.ds) {
+    const h = hos.find((y) => y.id === x.id);
+    if (!h) { boQua.push(`${x.ma}: không còn hồ sơ`); continue; }
+    if (!giong(h.tienDo[lan.buoc], x.moi)) { boQua.push(`${x.ma}: bước ${lan.buoc} đã sửa tiếp sau lần cập nhật`); continue; }
+    const tienDo = { ...h.tienDo };
+    if (x.cu) tienDo[lan.buoc] = x.cu;
+    else delete tienDo[lan.buoc];
+    ghi.push({ ...h, tienDo });
+  }
+  return { ghi, boQua };
+}
+
 function HangLoat({ duAn, hos }: { duAn: DuAn; hos: Ho[] }) {
   const { luuNhieuHo, taiKhoan, quyen, bao } = useUngDung();
   const td = useMemo(() => new Map(hos.map((h) => [h.id, tienDoHieuLuc(duAn, h)])), [hos, duAn]);
@@ -165,6 +195,24 @@ function HangLoat({ duAn, hos }: { duAn: DuAn; hos: Ho[] }) {
   const [tim, setTim] = useState("");
   const [dang, setDang] = useState(false);
   const [ketQua, setKetQua] = useState<{ daLuu: number; boQua: string[] } | null>(null);
+  const [lan, setLan] = useState<LanCapNhat | undefined>(() => lanCuoi.get(duAn.id));
+  const hoanTac = async () => {
+    if (!lan) return;
+    if (lan.ds.some((x) => x.moi.trangThai === "XONG" || x.moi.trangThai === "KHONG_AP_DUNG") && !quyen("DUYET_BUOC")) return bao("Chỉ người có quyền xác nhận bước mới hoàn tác được bước đã xác nhận hoàn thành", "loi");
+    const { ghi, boQua } = hoanTacCapNhat(lan, hos);
+    if (!ghi.length) return bao(`Không còn hộ nào hoàn tác được${boQua.length ? `: ${boQua.join("; ")}` : ""}`, "loi");
+    if (!confirm(`Hoàn tác "${lan.moTa}" cho ${ghi.length} hộ (trả bước ${lan.buoc} về trạng thái trước đó)?${boQua.length ? `\n\nBỏ qua ${boQua.length} hộ: ${boQua.join("; ")}` : ""}`)) return;
+    setDang(true);
+    try {
+      const r = await luuNhieuHo(ghi.map((h) => ({ h, nhatKy: `Hoàn tác: ${lan.moTa}` })));
+      lanCuoi.delete(duAn.id);
+      setLan(undefined);
+      setKetQua({ daLuu: r.daLuu, boQua: [...boQua, ...r.loi] });
+      bao(`Đã hoàn tác ${r.daLuu} hộ`);
+    } finally {
+      setDang(false);
+    }
+  };
   const b = CAC_BUOC.find((x) => x.ma === buoc)!;
   const iBuoc = CAC_BUOC.findIndex((x) => x.ma === buoc);
   const truoc = CAC_BUOC[iBuoc - 1];
@@ -209,6 +257,15 @@ function HangLoat({ duAn, hos }: { duAn: DuAn; hos: Ho[] }) {
     setDang(true);
     try {
       const r = await luuNhieuHo(ghi);
+      const moi: LanCapNhat = {
+        duAnId: duAn.id,
+        buoc,
+        moTa: `${TEN_TRANG_THAI_BUOC[hanhDong]} — bước ${b.ma}. ${b.ten} (${ghi.length} hộ, ${new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })})`,
+        luc: new Date().toISOString(),
+        ds: ghi.map(({ h }) => ({ id: h.id, ma: h.ma, cu: hos.find((y) => y.id === h.id)?.tienDo[buoc], moi: h.tienDo[buoc]! })),
+      };
+      lanCuoi.set(duAn.id, moi);
+      setLan(moi);
       setKetQua({ daLuu: r.daLuu, boQua: [...boQua, ...r.loi] });
       setChon(new Set());
       if (r.loi.length) bao(r.loi[0]!, "loi");
@@ -280,6 +337,7 @@ function HangLoat({ duAn, hos }: { duAn: DuAn; hos: Ho[] }) {
         </div>
       )}
       <div className="nhom-nut" style={{ justifyContent: "flex-end" }}>
+        {lan && <button className="nut" disabled={dang || !quyen("SUA_HO_SO")} title={`Trả về trạng thái trước lần cập nhật: ${lan.moTa}`} onClick={() => void hoanTac()}>↶ Hoàn tác lần cập nhật vừa rồi ({lan.ds.length} hộ)</button>}
         <button className="nut nut-chinh" disabled={!chon.size || dang || !quyen("SUA_HO_SO")} onClick={apDung}>
           {dang ? "Đang cập nhật…" : `Áp dụng cho ${chon.size} hộ`}
         </button>
