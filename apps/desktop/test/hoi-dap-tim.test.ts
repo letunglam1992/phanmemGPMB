@@ -1,0 +1,28 @@
+/** Hỏi đáp: tìm đoạn văn bản liên quan trong kho tri thức (chạy trên máy). */
+import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { taoChiMuc, timDoan, tachTu, boDau, type KhoTriThuc } from "../src/hoi-dap/tim-kiem";
+
+const kho = JSON.parse(readFileSync(new URL("../public/tri-thuc/kho.json", import.meta.url), "utf8")) as KhoTriThuc;
+const cm = taoChiMuc(kho.doan);
+describe("Tìm đoạn tri thức", () => {
+  it("bỏ dấu, từ dừng, cặp từ", () => {
+    expect(boDau("Đất ở")).toBe("dat o");
+    expect(tachTu("Hỗ trợ ổn định đời sống")).toContain("on_dinh");
+  });
+  it("hỗ trợ ổn định đời sống → Điều 12 NĐ 88 hoặc QĐ 106", () => {
+    const r = timDoan(cm, "Hỗ trợ ổn định đời sống khi thu hồi đất nông nghiệp tính thế nào?", 5);
+    expect(r.length).toBeGreaterThan(0);
+    expect(r.slice(0, 3).some((x) => /Điều 12|ổn định đời sống/i.test(x.doan.tieuDe + x.doan.noiDung))).toBe(true);
+  });
+  it("hạn mức công nhận đất ở trước 1980 → Phụ lục I QĐ 106 Điều 3", () => {
+    const r = timDoan(cm, "hạn mức công nhận đất ở sử dụng trước ngày 18/12/1980", 3);
+    expect(r[0]!.doan.nguon).toContain("Phụ lục I");
+    expect(r[0]!.doan.tieuDe).toMatch(/Điều 3/);
+  });
+  it("nêu số Điều được ưu tiên; câu hỏi rỗng trả rỗng", () => {
+    const r = timDoan(cm, "Điều 6 hỗ trợ khác", 3);
+    expect(r[0]!.doan.tieuDe).toMatch(/^Điều 6/);
+    expect(timDoan(cm, "là của và", 3)).toEqual([]);
+  });
+});

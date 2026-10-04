@@ -34,6 +34,8 @@ export type Man =
   | { ten: "bao-cao" }
   | { ten: "don-vi" }
   | { ten: "huong-dan" }
+  /** Hỏi đáp AI: nội bộ (không dùng mạng) hoặc Gemini API (khóa của người dùng). */
+  | { ten: "hoi-dap" }
   /** P3-4: hồ sơ được phân công cho tài khoản đang đăng nhập. */
   | { ten: "viec-cua-toi" }
   /** P3-2: người có đất có nhiều hồ sơ (khớp số định danh). */
