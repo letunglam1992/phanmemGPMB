@@ -1,0 +1,8 @@
+# Cổng tổng hợp cấp tỉnh — GPMB Sơn La. Hướng dẫn: docs/21-tong-hop-cap-tinh.md
+name = "gpmb-cong-tinh"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+[[r2_buckets]]
+binding = "KHO"
+bucket_name = "gpmb-cong-tinh"

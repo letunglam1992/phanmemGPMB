@@ -4,6 +4,7 @@
 
 pub mod cap_nhat;
 pub mod hoi_dap;
+pub mod cong_tinh;
 pub mod ket_noi;
 pub mod may_chu;
 
@@ -410,7 +411,8 @@ pub fn run() {
             goi_noi_bo,
             cap_nhat::cap_nhat_kiem_tra,
             cap_nhat::cap_nhat_cai_dat,
-            hoi_dap::goi_gemini
+            hoi_dap::goi_gemini,
+            cong_tinh::goi_cong_tinh
         ])
         // Cửa sổ chính tạo trong mã để gắn trình xử lý tải xuống của WebView2: mọi lượt tải (kể cả liên kết
         // blob của giao diện) lưu thẳng vào Downloads, không phụ thuộc giao diện tải mặc định của WebView2.

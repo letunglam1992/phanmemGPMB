@@ -1,5 +1,6 @@
 import { ViecCuaToi } from "./man/ViecCuaToi";
 import { HoiDap } from "./man/HoiDap";
+import { TongHopTinh } from "./man/TongHopTinh";
 import { NguoiCoDat } from "./man/NguoiCoDat";
 import { useEffect, useState } from "react";
 import { useUngDung } from "./ung-dung";
@@ -38,7 +39,7 @@ import { BAN_QUYEN, MA_BUILD, moTaPhienBan } from "./phien-ban";
 type MucBen = { ten: string; bt: string; chon?: boolean; bam: () => void; tat?: boolean; an?: boolean };
 
 export function UngDung() {
-  const { man, di, dsDuAn, hopSaoLuu, moSaoLuu, taiKhoan, quyen, dangXuat, hopCaiDat, moCaiDat, quayLai, coTheQuayLai, dsDonVi, anhNen, taiLai, bao, ghiNhatKy, thungRac, hoCua } = useUngDung();
+  const { chiXem, man, di, dsDuAn, hopSaoLuu, moSaoLuu, taiKhoan, quyen, dangXuat, hopCaiDat, moCaiDat, quayLai, coTheQuayLai, dsDonVi, anhNen, taiLai, bao, ghiNhatKy, thungRac, hoCua } = useUngDung();
   const [menu, setMenu] = useState(false);
   const [chuong, setChuong] = useState(false);
   const [benGon, setBenGon] = useState(() => {
@@ -67,11 +68,11 @@ export function UngDung() {
   // Tự kiểm tra bản mới khi mở (bản cài Windows, tối đa 1 lần/ngày, tắt được ở Giới thiệu); lỗi mạng bỏ qua im lặng
   const [banMoi, setBanMoi] = useState<KetQuaKiemTra | null>(null);
   useEffect(() => {
-    if (!taiKhoan || !denLucKiemTra(docCaiDat())) return;
+    if (!taiKhoan || chiXem || !denLucKiemTra(docCaiDat())) return;
     kiemTraCapNhat()
       .then((kq) => { if (kq.ban_moi && kq.ban_moi.phien_ban !== docCaiDat().boQua) setBanMoi(kq); })
       .catch(() => undefined);
-  }, [taiKhoan]);
+  }, [taiKhoan, chiXem]);
   if (!taiKhoan) return (<><ManDangNhap /><ThongBaoNhanh /></>);
 
   const duAnId = ("duAnId" in man && man.duAnId) || (duAnGanNhat && dsDuAn.some((d) => d.id === duAnGanNhat) ? duAnGanNhat : dsDuAn[0]?.id);
@@ -110,6 +111,7 @@ export function UngDung() {
         { ten: "Người có đất nhiều hồ sơ", bt: "traCuu", chon: man.ten === "nguoi-co-dat", bam: () => di({ ten: "nguoi-co-dat" }) },
         { ten: "Đọc văn bản scan (OCR)", bt: "ocr", chon: man.ten === "doc-scan", bam: () => di({ ten: "doc-scan" }) },
         { ten: "Hỏi đáp AI", bt: "hoiDap", chon: man.ten === "hoi-dap", bam: () => di({ ten: "hoi-dap" }) },
+        { ten: "Gửi tỉnh, tổng hợp tỉnh", bt: "mang", chon: man.ten === "tong-hop-tinh", bam: () => di({ ten: "tong-hop-tinh" }), an: !!chiXem },
       ],
     },
     {
@@ -124,7 +126,7 @@ export function UngDung() {
       muc: [
         { ten: "Sao lưu, khôi phục", bt: "saoLuu", bam: () => moSaoLuu(true), an: !(quyen("SAO_LUU") || quyen("KHOI_PHUC")) },
         { ten: `Thùng rác${thungRac.duAn.length + thungRac.ho.length ? ` (${thungRac.duAn.length + thungRac.ho.length})` : ""}`, bt: "thungRac", chon: man.ten === "thung-rac", bam: () => di({ ten: "thung-rac" }) },
-        { ten: "Cài đặt chung", bt: "caiDat", bam: () => moCaiDat(true) },
+        { ten: "Cài đặt chung", bt: "caiDat", bam: () => moCaiDat(true), an: !!chiXem },
         { ten: "Tài khoản", bt: "taiKhoan", bam: () => setHop("tai-khoan"), an: !quyen("TAI_KHOAN") },
         { ten: "Nhật ký hệ thống", bt: "nhatKy", bam: () => setHop("nhat-ky"), an: !quyen("XEM_NHAT_KY") },
       ],
@@ -180,7 +182,7 @@ export function UngDung() {
           </button>
           <button className="thuong-hieu-dau" onClick={() => di({ ten: "tong-quan" })} title="Về Tổng quan" aria-label="Về Tổng quan"><BieuTuong ten="nha" co={24} /></button>
           <div>
-            <div className="to-chuc" title={dvSuDung ? `Đơn vị sử dụng: ${dvSuDung.ten}` : "Chưa thiết lập đơn vị (Công cụ → Thiết lập đơn vị)"}>{dvSuDung ? dvSuDung.ten : "Tỉnh Sơn La"}</div>
+            <div className="to-chuc" title={chiXem ? `Dữ liệu do ${chiXem.nhan} gửi lên tỉnh` : dvSuDung ? `Đơn vị sử dụng: ${dvSuDung.ten}` : "Chưa thiết lập đơn vị (Công cụ → Thiết lập đơn vị)"}>{chiXem ? `Xem dữ liệu: ${chiXem.nhan}` : dvSuDung ? dvSuDung.ten : "Tỉnh Sơn La"}</div>
             <div className="ten-ung-dung">Bồi thường, hỗ trợ, tái định cư</div>
           </div>
         </div>
@@ -225,14 +227,14 @@ export function UngDung() {
                 <div className="menu-tha" role="menu" onMouseLeave={() => setMenu(false)}>
                   <div className="menu-nhan">Đăng nhập: {taiKhoan.ten}</div>
                   <div className="menu-nhan menu-meta">{homNay} · {moTaCheDo(cheDo)}</div>
-                  <button role="menuitem" onClick={() => { setHop("mat-khau"); setMenu(false); }}><BieuTuong ten="khoa" co={16} /> Đổi mật khẩu</button>
-                  <button role="menuitem" onClick={() => { moCaiDat(true); setMenu(false); }}><BieuTuong ten="caiDat" co={16} /> Cài đặt chung</button>
+                  {!chiXem && <button role="menuitem" onClick={() => { setHop("mat-khau"); setMenu(false); }}><BieuTuong ten="khoa" co={16} /> Đổi mật khẩu</button>}
+                  {!chiXem && <button role="menuitem" onClick={() => { moCaiDat(true); setMenu(false); }}><BieuTuong ten="caiDat" co={16} /> Cài đặt chung</button>}
                   <button role="menuitem" onClick={() => { di({ ten: "huong-dan" }); setMenu(false); }}><BieuTuong ten="hoiDap" co={16} /> Hướng dẫn sử dụng</button>
                   <button role="menuitem" onClick={() => { setGioiThieu(true); setMenu(false); }}><BieuTuong ten="thongTin" co={16} /> Giới thiệu, bản quyền</button>
                   {quyen("TAI_KHOAN") && <button role="menuitem" onClick={() => { setHop("tai-khoan"); setMenu(false); }}><BieuTuong ten="taiKhoan" co={16} /> Quản lý tài khoản</button>}
                   {quyen("XEM_NHAT_KY") && <button role="menuitem" onClick={() => { setHop("nhat-ky"); setMenu(false); }}><BieuTuong ten="nhatKy" co={16} /> Nhật ký hệ thống</button>}
                   <div className="menu-vach" />
-                  <button role="menuitem" onClick={() => { setMenu(false); void dangXuat(); }}><BieuTuong ten="thoat" co={16} /> Đăng xuất</button>
+                  <button role="menuitem" onClick={() => { setMenu(false); void dangXuat(); }}><BieuTuong ten="thoat" co={16} /> {chiXem ? "Thoát xem, trở lại Tổng hợp tỉnh" : "Đăng xuất"}</button>
                 </div>
               )}
             </div>
@@ -253,6 +255,7 @@ export function UngDung() {
         {man.ten === "ho" && <HoSo key={man.hoId} duAnId={man.duAnId} hoId={man.hoId} tabDau={man.tab} />}
         {man.ten === "ban-do" && <KhongGianDuAn duAnId={man.duAnId} tab="ban-do" />}
         {man.ten === "hoi-dap" && <HoiDap />}
+        {man.ten === "tong-hop-tinh" && <TongHopTinh />}
         {man.ten === "tra-cuu" && <TraCuu key={man.tim ?? ""} timDau={man.tim} />}
         {man.ten === "doc-scan" && <DocScan />}
         {man.ten === "kiem-tra-pa" && <KiemTraPhuongAn />}
@@ -270,7 +273,12 @@ export function UngDung() {
         <span>Bộ chính sách: Sơn La, hiệu lực 31/3/2026 (QĐ 106/2025, QĐ 14/2026, QĐ 32/2025, NQ 152/2025)</span>
         <span>Phần mềm hỗ trợ tính toán — cán bộ có thẩm quyền kiểm tra, phê duyệt</span>
       </footer>
-      {!quyen("SUA_HO_SO") && <div className="dai-chi-xem">Tài khoản chỉ xem: không sửa được dữ liệu</div>}
+      {chiXem ? (
+        <div className="dai-chi-xem dai-xem-tinh" role="status">
+          <span>Đang xem dữ liệu <b>{chiXem.nhan}</b> gửi lên tỉnh — chỉ xem, không sửa</span>
+          <button className="nut nut-nho nut-chinh" onClick={chiXem.thoat}>Thoát xem</button>
+        </div>
+      ) : !quyen("SUA_HO_SO") && <div className="dai-chi-xem">Tài khoản chỉ xem: không sửa được dữ liệu</div>}
       {hopSaoLuu && <HopSaoLuu />}
       {gioiThieu && <HopGioiThieu dong={() => setGioiThieu(false)} kqCapNhat={banMoi} />}
       {(hop === "mat-khau" || taiKhoan.phaiDoiMatKhau) && <HopDoiMatKhau batBuoc={taiKhoan.phaiDoiMatKhau} dong={() => setHop(null)} />}

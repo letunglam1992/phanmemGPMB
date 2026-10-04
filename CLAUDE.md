@@ -8,6 +8,7 @@ Tác giả, bản quyền: Lê Tùng Lâm – Sở Nông nghiệp và Môi trư�
 - `docs/17-danh-gia-toan-dien.md`: đánh giá toàn diện, danh sách P0–P3 và lộ trình (việc tiếp theo lấy từ đây).
 - `docs/02` ma trận nghiệp vụ, `docs/03` sổ vướng mắc (VM-xx), `docs/06` quyết định nghiệp vụ (QD-xx).
 - `docs/19-van-ban-du-an-thuc-te.md` + `docs/mau-thuc-te/`: bộ văn bản dự án thực tế (đã ẩn danh) để soạn mẫu văn bản, biểu Excel; `docs/08` mục 9: lộ trình bản đồ.
+- `docs/21-tong-hop-cap-tinh.md`: gửi dữ liệu lên tỉnh (gói `.gpmbtinh` mã hóa cho khóa tỉnh), tổng hợp, xem chỉ đọc; cổng Cloudflare `tools/cong-tinh`.
 
 ## Cấu trúc
 - `packages/core`: tính toán thuần (decimal.js), có căn cứ từng dòng. `packages/gis`: đọc DGN V7/V8, dựng thửa.

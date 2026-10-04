@@ -32,7 +32,7 @@ test("nội bộ: không gọi mạng ngoài; trích nguyên văn; trả lời s
   await expect(doan).toContainText("Phụ lục I");
   await expect(doan).toContainText("Điều 3");
   await p.getByLabel("Câu hỏi").fill("Dự án có bao nhiêu hộ, tổng kinh phí bao nhiêu?");
-  await p.getByRole("button", { name: "Gửi" }).click();
+  await p.getByRole("button", { name: "Gửi", exact: true }).click();
   await expect(p.getByRole("note", { name: "Số liệu dự án" }).last()).toContainText("2 hồ sơ");
   await expect(p.getByRole("note", { name: "Số liệu dự án" }).last()).toContainText("Tổng giá trị bồi thường, hỗ trợ tạm tính");
   expect(ngoai).toEqual([]);

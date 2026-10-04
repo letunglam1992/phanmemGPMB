@@ -49,6 +49,8 @@ const LOAI_TEP: Record<string, string> = {
   gpmb: "Bản sao lưu GPMB",
   txt: "Văn bản thuần",
   pdf: "Tệp PDF",
+  gpmbtinh: "Gói dữ liệu gửi tỉnh (GPMB)",
+  gpmbkhoa: "Khóa cấp tỉnh (GPMB)",
 };
 const duoiTep = (ten: string) => (/\.([a-z0-9]+)$/i.exec(ten)?.[1] ?? "").toLowerCase();
 

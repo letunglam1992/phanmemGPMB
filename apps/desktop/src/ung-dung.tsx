@@ -36,6 +36,8 @@ export type Man =
   | { ten: "huong-dan" }
   /** Hỏi đáp AI: nội bộ (không dùng mạng) hoặc Gemini API (khóa của người dùng). */
   | { ten: "hoi-dap" }
+  /** Gửi dữ liệu lên tỉnh (cấp xã) / tổng hợp các đơn vị gửi lên (cấp tỉnh) — docs/21. */
+  | { ten: "tong-hop-tinh"; tab?: "gui" | "tinh" }
   /** P3-4: hồ sơ được phân công cho tài khoản đang đăng nhập. */
   | { ten: "viec-cua-toi" }
   /** P3-2: người có đất có nhiều hồ sơ (khớp số định danh). */
@@ -43,8 +45,18 @@ export type Man =
   /** Danh sách hồ sơ (mọi dự án hoặc một dự án) lọc theo hiện trạng, chặng quy trình, từ khóa — đích khi bấm vào các chỉ số. */
   | { ten: "ds-ho"; duAnId?: string; trangThai?: string; chang?: string; tim?: string };
 
+/** Phiên xem dữ liệu đơn vị gửi lên tỉnh (tong-hop-tinh/xem-xa.ts): tài khoản chỉ xem, không tự sao lưu. */
+export interface CheDoChiXem {
+  taiKhoan: NguoiDung;
+  nhan: string;
+  manDau?: Man;
+  thoat: () => void;
+}
+
 interface NguCanh {
   kho: Kho;
+  /** Đang xem dữ liệu đơn vị gửi lên tỉnh (chỉ xem) */
+  chiXem?: { nhan: string; thoat: () => void };
   /** Dự án đang dùng (không gồm dự án trong thùng rác). */
   dsDuAn: DuAn[];
   /** Hồ sơ của dự án (không gồm hồ sơ trong thùng rác; `kemDaXoa` = gồm cả — dùng khi kiểm trùng mã). */
@@ -161,12 +173,13 @@ export function useUngDung(): NguCanh {
   return c;
 }
 
-export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho?: Kho }) {
+/** `phienDau`: trở lại phiên làm việc (tài khoản, màn hình) sau khi thoát phiên chỉ xem — không phải đăng nhập lại. */
+export function NhaCungCap({ children, kho: khoVao, chiXem, phienDau }: { children: ReactNode; kho?: Kho; chiXem?: CheDoChiXem; phienDau?: { taiKhoan: NguoiDung; man: Man } }) {
   const kho = useMemo(() => khoVao ?? taoKhoIndexedDb(), [khoVao]);
   const [dsDuAn, setDsDuAn] = useState<DuAn[]>([]);
   const [dsHo, setDsHo] = useState<Ho[]>([]);
   const [khoaKhoiPhuc, setKhoaKhoiPhuc] = useState<KhoaKhoiPhuc | null>(null);
-  const [man, setMan] = useState<Man>({ ten: "tong-quan" });
+  const [man, setMan] = useState<Man>(chiXem?.manDau ?? phienDau?.man ?? { ten: "tong-quan" });
   const [lichSu, setLichSu] = useState<Man[]>([]);
   const [dsDonVi, setDsDonVi] = useState<DonVi[]>([]);
   const [anhNen, setAnhNen] = useState<string | null>(null);
@@ -192,7 +205,7 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
     setMan(m);
   }, []);
   const [dangTai, setDangTai] = useState(true);
-  const [taiKhoan, setTaiKhoan] = useState<NguoiDung | null>(null);
+  const [taiKhoan, setTaiKhoan] = useState<NguoiDung | null>(chiXem?.taiKhoan ?? phienDau?.taiKhoan ?? null);
   const [coTaiKhoan, setCoTaiKhoan] = useState<boolean | null>(null);
   const [thongBao, setThongBao] = useState<NguCanh["thongBao"]>(null);
   const [lich, setLich] = useState<LichLamViec>(LICH_TRONG);
@@ -383,7 +396,7 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
     async (epBuoc: boolean): Promise<CaiDatTuDong> => {
       const c = { ...MAC_DINH_TU_DONG, ...((await kho.docCaiDat<CaiDatTuDong>(KHOA_TU_DONG)) ?? {}) };
       // máy trạm không tự sao lưu (máy chủ hoặc máy đơn đảm nhận)
-      if (dangTuDong.current || !coVoWindows() || docCheDo().cheDo === "MAY_TRAM") return c;
+      if (dangTuDong.current || !coVoWindows() || docCheDo().cheDo === "MAY_TRAM" || chiXem) return c;
       if (!epBuoc && (!denHan(c) || (await kho.dsDuAn()).length === 0)) return c;
       dangTuDong.current = true;
       try {
@@ -396,17 +409,17 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
         dangTuDong.current = false;
       }
     },
-    [kho],
+    [kho, chiXem],
   );
   useEffect(() => {
-    if (!taiKhoan || !coVoWindows()) return;
+    if (!taiKhoan || !coVoWindows() || chiXem) return;
     const t0 = setTimeout(() => void chayTuDong(false), 15_000);
     const t = setInterval(() => void chayTuDong(false), 30 * 60_000);
     return () => {
       clearTimeout(t0);
       clearInterval(t);
     };
-  }, [taiKhoan?.ten, chayTuDong]);
+  }, [taiKhoan?.ten, chayTuDong, chiXem]);
 
   const dauXoa = (lyDo: string) => ({ luc: new Date().toISOString(), nguoi: nguoiDung, lyDo: lyDo.trim() });
   // P1-1: danh sách dẫn xuất ghi nhớ theo dữ liệu gốc — màn hình dùng useMemo phụ thuộc các giá trị này không tính lại
@@ -427,6 +440,7 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
   const nguoiCoDat = useMemo(() => chiMucNguoi(dsDuAn, dsHo), [dsDuAn, dsHo]);
   const giaTri: NguCanh = {
     kho,
+    chiXem: chiXem ? { nhan: chiXem.nhan, thoat: chiXem.thoat } : undefined,
     nguoiCoDat,
     dsCanBo,
     dsDuAn: dsDuAnCon,
@@ -623,6 +637,7 @@ export function NhaCungCap({ children, kho: khoVao }: { children: ReactNode; kho
       return null;
     },
     dangXuat: async () => {
+      if (chiXem) return chiXem.thoat();
       if (laKhoMang(kho)) await kho.dangXuat().catch(() => undefined);
       else if (taiKhoan) await ghiNhatKy("Đăng xuất");
       setTaiKhoan(null);

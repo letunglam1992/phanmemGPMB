@@ -1144,3 +1144,19 @@ kbd.phim { display: inline-block; min-width: 20px; padding: 1px 6px; border: 1px
 .hd-doan mark { background: #ffe58a; color: inherit; padding: 0 1px; }
 .hd-nhap { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr) auto auto; gap: 8px; padding: 10px 16px 14px; border-top: 1px solid var(--vien); align-items: center; }
 .hd-nhap textarea { resize: vertical; min-height: 44px; }
+
+/* Gửi tỉnh, tổng hợp tỉnh (docs/21) */
+.dai-xem-tinh { display: flex; align-items: center; gap: 12px; padding: 6px 8px 6px 16px; font-size: 13px; color: var(--chu); border-color: var(--xanh-duong-to); }
+.tht-luoi { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; align-items: start; }
+.tht-van-tay { font-family: ui-monospace, Consolas, monospace; font-weight: 600; letter-spacing: .5px; }
+.tht-chi-so { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0 14px; }
+.tht-chi-so > div { background: var(--be-mat); border: 1px solid var(--vien); border-radius: 10px; padding: 8px 14px; min-width: 120px; }
+.tht-chi-so b { display: block; font-size: 20px; }
+.tht-chi-so span { font-size: 12px; color: var(--chu-phu); }
+.tht-bang td.so, .tht-bang th.so { text-align: right; white-space: nowrap; }
+.tht-bang tr.tht-xa td { background: var(--nen-phu, rgba(0,0,0,.03)); font-weight: 600; }
+.tht-thanh { display: flex; height: 8px; border-radius: 4px; overflow: hidden; min-width: 90px; background: var(--vien); }
+.tht-ma { font-family: ui-monospace, Consolas, monospace; user-select: all; word-break: break-all; background: var(--be-mat); border: 1px dashed var(--vien); padding: 8px; border-radius: 6px; }
+.tht-o { display: grid; gap: 4px; }
+.dai-xem-tinh { max-width: min(860px, 90vw); white-space: normal; }
+.dai-xem-tinh > span { flex: 1; }

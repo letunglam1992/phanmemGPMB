@@ -53,15 +53,25 @@ async function sha256(s: string): Promise<string> {
   return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-export async function taoBanSaoLuu(kho: Kho, ungDung = "0.1"): Promise<{ bytes: Uint8Array; thongTin: ThongTinSaoLuu }> {
-  const duAn = await kho.dsDuAn();
+/** Lọc nội dung (gói gửi cấp tỉnh): chỉ các dự án chọn; bỏ tệp đính kèm / bản đồ / mẫu văn bản. */
+export interface LocSaoLuu {
+  duAnIds?: string[];
+  boDinhKem?: boolean;
+  boBanDo?: boolean;
+  boMau?: boolean;
+}
+
+export async function taoBanSaoLuu(kho: Kho, ungDung = "0.1", loc: LocSaoLuu = {}): Promise<{ bytes: Uint8Array; thongTin: ThongTinSaoLuu }> {
+  const chon = loc.duAnIds ? new Set(loc.duAnIds) : null;
+  const duAn = (await kho.dsDuAn()).filter((d) => !chon || chon.has(d.id));
   const ho = (await Promise.all(duAn.map((d) => kho.dsHo(d.id)))).flat();
   const zip = new PizZip();
   const caiDat = { lichLamViec: await kho.docCaiDat(KHOA_LICH), tyLeChamTra: await kho.docCaiDat("tyLeChamTra"), kyBaoCao: await kho.docCaiDat("kyBaoCao"), donVi: await kho.docCaiDat("donVi"), anhNen: await kho.docCaiDat("anhNen"), goiChinhSach: await kho.docCaiDat("goiChinhSach") };
   const duLieu = JSON.stringify({ duAn, ho, caiDat });
   zip.file("du-lieu.json", duLieu);
   let soBanDo = 0;
-  for (const id of await kho.dsBanDo()) {
+  for (const id of loc.boBanDo ? [] : await kho.dsBanDo()) {
+    if (chon && !chon.has(id.split("#")[0]!)) continue;
     const b = await kho.docBanDo(id);
     if (b) {
       zip.file(`ban-do/${id}.dgn`, b);
@@ -69,7 +79,7 @@ export async function taoBanSaoLuu(kho: Kho, ungDung = "0.1"): Promise<{ bytes: 
     }
   }
   const dsMau: { ma: string; tenTep: string; luc: string }[] = [];
-  for (const ma of await kho.dsMauTuy()) {
+  for (const ma of loc.boMau ? [] : await kho.dsMauTuy()) {
     const m = await kho.docMau(ma);
     if (m) {
       zip.file(`mau/${ma}.docx`, m.bytes);
@@ -78,7 +88,7 @@ export async function taoBanSaoLuu(kho: Kho, ungDung = "0.1"): Promise<{ bytes: 
   }
   zip.file("mau/danh-sach.json", JSON.stringify(dsMau));
   const dsDk: DinhKem[] = [];
-  for (const d of duAn)
+  for (const d of loc.boDinhKem ? [] : duAn)
     for (const m of await kho.dsDinhKem(d.id)) {
       const b = await kho.docDinhKem(m.id);
       if (b) {
