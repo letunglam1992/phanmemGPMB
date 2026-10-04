@@ -69,7 +69,8 @@ export function HoiDap({ dong, hien = true }: { dong?: () => void; hien?: boolea
   const oHoi = useRef<HTMLTextAreaElement>(null);
   const [to, setTo] = useState(false);
   useEffect(() => { if (hien) oHoi.current?.focus(); }, [hien]);
-  useEffect(() => cuoi.current?.scrollIntoView({ block: "end", behavior: "smooth" }), [luot]);
+  // Thân hàm có ngoặc: scrollIntoView ở một số bản WebView2 trả về Promise — React sẽ gọi nó như hàm dọn dẹp ("e is not a function")
+  useEffect(() => { cuoi.current?.scrollIntoView({ block: "end", behavior: "smooth" }); }, [luot]);
 
   const duLieu = useMemo((): DuLieuDuAn[] => {
     const ds = duAnId === "*" ? dsDuAn : dsDuAn.filter((d) => d.id === duAnId);

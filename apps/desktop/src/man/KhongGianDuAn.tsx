@@ -327,7 +327,7 @@ function TheHo({ duAn, kq }: { duAn: DuAn; kq: Kq }) {
     .filter((x) => khopTuKhoa({ h: x.h, duAnTen: "" }, loc))
     .filter((x) => !locIds || locIds.has(x.h.id));
   const thuTu = ds.map((x) => x.h.id).join("|");
-  useEffect(() => ghiNhoDsHo(duAn.id, { loc, locTt, locDot, locPc, locPl, thuTu: thuTu ? thuTu.split("|") : [] }), [duAn.id, loc, locTt, locDot, locPc, locPl, thuTu]);
+  useEffect(() => { ghiNhoDsHo(duAn.id, { loc, locTt, locDot, locPc, locPl, thuTu: thuTu ? thuTu.split("|") : [] }); }, [duAn.id, loc, locTt, locDot, locPc, locPl, thuTu]);
   // Khôi phục vị trí cuộn, đưa hộ vừa làm vào tầm nhìn; nhớ vị trí cuộn khi cuộn
   useLayoutEffect(() => {
     const k = khungNoiDung();

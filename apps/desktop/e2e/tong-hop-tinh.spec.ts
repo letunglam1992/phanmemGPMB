@@ -12,6 +12,13 @@ test.beforeEach(async ({ page }) => {
   page.on("pageerror", (e) => loiTrang.push(e.message));
   page.on("dialog", (d) => void d.accept());
   await page.addInitScript(() => {
+    // WebView2 bản mới: các hàm cuộn trả về Promise
+    for (const [o, k] of [[Element.prototype, "scrollIntoView"], [Element.prototype, "scrollTo"], [window, "scrollTo"]] as const) {
+      const goc = (o as unknown as Record<string, (...a: unknown[]) => void>)[k]!;
+      (o as unknown as Record<string, unknown>)[k] = function (this: unknown, ...a: unknown[]) { goc.apply(this, a); return Promise.resolve(); };
+    }
+  });
+  await page.addInitScript(() => {
     const w = window as unknown as { __tep: Record<string, string>; showSaveFilePicker: unknown };
     w.__tep = {};
     w.showSaveFilePicker = async (o: { suggestedName: string }) => ({
@@ -173,6 +180,8 @@ test("cổng Cloudflare: tỉnh cấp mã cho xã; xã gửi gói lên cổng; t
   expect(Buffer.from(daLuu[0]![1]).toString("utf8")).not.toContain("Hộ mẫu 01");
   // tỉnh: mở khóa, tải từ cổng
   await p.getByRole("tab", { name: "Tổng hợp tỉnh (cấp tỉnh)" }).click();
+  await expect(p.getByLabel("Gói chờ nhận")).toContainText("1 gói mới");
+  await expect(p.getByLabel("Gói chờ nhận")).toContainText("Xã Chiềng Mung");
   await p.getByLabel("Mật khẩu khóa cấp tỉnh").fill("MatKhauTinh2026");
   await p.getByRole("button", { name: "Mở khóa" }).click(); // mở khóa xong tự tải gói mới từ cổng
   await expect(p.getByLabel("Kết quả nhận gói")).toContainText("UBND xã Chiềng Mung (thử): nhận mới");

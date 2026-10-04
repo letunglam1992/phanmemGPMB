@@ -385,7 +385,7 @@ export function NhaCungCap({ children, kho: khoVao, chiXem, phienDau }: { childr
       /* không có sessionStorage */
     }
   }, [taiKhoan, bao]);
-  useEffect(() => kho.datNguoi(taiKhoan ? `${taiKhoan.hoTen} (${taiKhoan.ten})` : ""), [kho, taiKhoan]);
+  useEffect(() => { kho.datNguoi(taiKhoan ? `${taiKhoan.hoTen} (${taiKhoan.ten})` : ""); }, [kho, taiKhoan]);
   useEffect(() => {
     void taiLai();
     if (laKhoMang(kho)) void kho.trangThai().then((t) => setCoTaiKhoan(t.coTaiKhoan), (e) => bao(String((e as Error).message ?? e), "loi"));

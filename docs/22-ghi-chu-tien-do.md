@@ -15,6 +15,7 @@ Trạng thái chi tiết của từng chức năng (đã chạy / đã kiểm th
 | 0.9.19 | Xuất Excel, chốt phương án theo hồ sơ đã chọn; hoàn tác lần cập nhật tiến độ nhiều hộ; văn bản theo đợt phương án |
 | 0.9.20 | Hỏi đáp AI: chế độ nội bộ (không dùng mạng) và chế độ Gemini API (người dùng tự dán khóa, có hướng dẫn) |
 | 0.9.21 | Gửi tỉnh, tổng hợp tỉnh: gói `.gpmbtinh` mã hóa cho khóa tỉnh; cổng Cloudflare (Worker + R2); bảng tổng hợp theo xã; xem chi tiết chỉ xem (docs/21) |
+| 0.9.24 | Sửa lỗi trắng màn hình khi mở Trợ lý AI và lỗi "e is not a function" (effect trả về Promise của hàm cuộn trên WebView2 mới); màn tỉnh nhắc "có gói mới trên cổng chờ nhận" |
 | 0.9.23 | Trợ lý AI nổi: nút tròn hình robot ở góc dưới phải mở khung chat (Nội bộ / Gemini); phóng to, hội thoại mới, Esc đóng; chuyển màn vẫn giữ hội thoại. Thanh bên → "Trợ lý AI (hỏi đáp)" |
 | 0.9.22 | Nút "Tạo khóa mới (thay khóa cũ)" khi quên mật khẩu khóa cấp tỉnh; mở khóa xong tự tải gói từ cổng; rào lỗi riêng cho từng khung; sửa chữ địa chỉ cổng tràn khung "3. Gửi" |
 
@@ -33,7 +34,8 @@ Kiểm thử của 0.9.23: typecheck, npm test (78 + 48 + 356), cargo test, esli
      - Quên mật khẩu khóa: dùng "Tạo khóa mới (thay khóa cũ)…" → xuất khóa công khai mới → nhập lại ở thẻ Gửi lên tỉnh → gửi lại gói.
    - [ ] Bấm tên dự án → xem chi tiết (chỉ xem) → Thoát xem.
    - [ ] Trợ lý AI: nút robot, hỏi nội bộ, thử Gemini với khóa thật.
-2. **Lỗi `e is not a function`** ở thẻ Tổng hợp tỉnh (bản .exe 0.9.21)
+2. **Lỗi `e is not a function` / trắng màn khi mở Trợ lý AI** — đã tìm ra nguyên nhân và sửa ở 0.9.24 (xem docs/09). Cần anh Lâm xác nhận trên máy thật.
+   Ghi chú cũ (bản .exe 0.9.21):
    - Chưa tái hiện được trên trình duyệt. Lần sau màn hiện bình thường.
    - Bản 0.9.22 đã rào lỗi từng khung.
    - Nếu còn gặp: bấm **"Chép chi tiết lỗi"** và gửi nội dung để định vị và sửa tận gốc.

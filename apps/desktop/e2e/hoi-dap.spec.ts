@@ -13,7 +13,14 @@ async function vao(p: Page) {
   await expect(p.getByText(/Đang theo dõi 1 dự án/)).toBeVisible();
 }
 const loiTrang: string[] = [];
-test.beforeEach(({ page }) => {
+test.beforeEach(async ({ page }) => {
+  // WebView2 bản mới: các hàm cuộn trả về Promise — effect trả về giá trị đó từng làm trắng màn hình ("e is not a function")
+  await page.addInitScript(() => {
+    for (const [o, k] of [[Element.prototype, "scrollIntoView"], [Element.prototype, "scrollTo"], [Element.prototype, "scrollBy"], [window, "scrollTo"], [window, "scrollBy"]] as const) {
+      const goc = (o as unknown as Record<string, (...a: unknown[]) => void>)[k]!;
+      (o as unknown as Record<string, unknown>)[k] = function (this: unknown, ...a: unknown[]) { goc.apply(this, a); return Promise.resolve(); };
+    }
+  });
   loiTrang.length = 0;
   page.on("pageerror", (e) => loiTrang.push(e.message));
   page.on("dialog", (d) => void d.accept());

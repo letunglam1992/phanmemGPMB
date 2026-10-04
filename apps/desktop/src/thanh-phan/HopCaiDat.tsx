@@ -236,7 +236,7 @@ function TheTuDong() {
   const [dang, setDang] = useState(false);
   const coVo = coVoWindows();
   const choSua = quyen("CAI_DAT");
-  useEffect(() => setBan(tuDong), [tuDong]);
+  useEffect(() => { setBan(tuDong); }, [tuDong]);
   useEffect(() => {
     if (coVo) void thuMucSaoLuu(tuDong.thuMuc).then(setDuongDan, (e) => setDuongDan(`Lỗi: ${String(e)}`));
   }, [coVo, tuDong.thuMuc]);

@@ -24,7 +24,7 @@ import {
 import { LoiDoiKhoaKy, type KetQuaNhap, docKhoaTinh, dsGoi, dsNhanGoi, luuKhoaTinh, moGoiDaLuu, nhapGoi, xoaGoi, type BanGhiGoi, type DongNhanGoi } from "../tong-hop-tinh/kho-tinh";
 import {
   capMaXa, chuanDiaChi, docCauHinhCong, dsGoiTrenCong, dsXaTrenCong, guiGoiLenCong, kiemTraCong, luuCauHinhCong, maTuTen, taiGoiTuCong, thuHoiXa, xoaCauHinhCong,
-  type CauHinhCong, type VaiTroCong, type XaTrenCong,
+  type CauHinhCong, type GoiTrenCong, type VaiTroCong, type XaTrenCong,
 } from "../tong-hop-tinh/cong-tinh";
 import { moPhienXem, taoKhoXem } from "../tong-hop-tinh/xem-xa";
 import { RaoLoi } from "../thanh-phan/RaoLoi";
@@ -309,6 +309,20 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
   const [loc, setLoc] = useState({ xa: "", tim: "" });
   const [ketQua, setKetQua] = useState<string[]>([]);
   const [taoMoi, setTaoMoi] = useState(false);
+  /** Gói trên cổng chưa tải về máy này (hiện nhắc khi đang khóa). */
+  const [choNhan, setChoNhan] = useState<GoiTrenCong[]>([]);
+  useEffect(() => {
+    if (!cong || moKhoa) {
+      setChoNhan([]);
+      return;
+    }
+    let bo = false;
+    dsGoiTrenCong(cong).then(
+      (ds) => { if (!bo) setChoNhan(ds.filter((g) => (docDaTai()[g.ma] ?? "") < g.luc)); },
+      () => undefined,
+    );
+    return () => { bo = true; };
+  }, [cong, moKhoa]);
   const napLai = async () => {
     setDs((await dsGoi()).sort((a, b) => a.donViGui.localeCompare(b.donViGui, "vi")));
     setNhan(await dsNhanGoi());
@@ -456,6 +470,11 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
 
   return (
     <div className="luoi" style={{ gap: 16 }}>
+      {!moKhoa && choNhan.length > 0 && (
+        <div className="thong-bao thong-bao-vang" role="status" aria-label="Gói chờ nhận" style={{ margin: 0 }}>
+          Có <b>{choNhan.length} gói mới</b> trên cổng ({choNhan.map((g) => `${g.ten}, ${ngayGio(g.luc)}`).join("; ")}) — nhập mật khẩu khóa, bấm <b>Mở khóa</b> để nhận.
+        </div>
+      )}
       <div className="tht-luoi">
         <RaoLoi ten="khung Khóa cấp tỉnh">
           <TheKhoa
@@ -475,7 +494,7 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
               <input type="file" multiple accept={DUOI_GOI} aria-label="Chọn gói dữ liệu của xã" disabled={!moKhoa || !!dang} onChange={(e) => { void nhapTep(e.target.files); e.target.value = ""; }} />
             </label>
             {cong && <button className="nut" disabled={!moKhoa || !!dang} onClick={() => void taiTuCong()}>Tải gói mới từ cổng Cloudflare</button>}
-            {!moKhoa && <div className="mo chu-nho">Mở khóa cấp tỉnh trước khi nhận gói.</div>}
+            {!moKhoa && !choNhan.length && <div className="mo chu-nho">Mở khóa cấp tỉnh trước khi nhận gói.</div>}
             {dang && <div className="mo" role="status">{dang}</div>}
             {ketQua.length > 0 && <ul className="chu-nho" aria-label="Kết quả nhận gói" style={{ margin: 0, paddingLeft: 18 }}>{ketQua.map((k, i) => <li key={i}>{k}</li>)}</ul>}
             <div className="mo chu-nho">Mỗi đơn vị gửi giữ gói mới nhất; gói cũ hơn hoặc trùng bị bỏ qua. Gói bị sửa, sai chữ ký, mã hóa cho khóa khác đều bị từ chối.</div>

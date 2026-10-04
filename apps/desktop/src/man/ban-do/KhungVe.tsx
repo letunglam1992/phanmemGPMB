@@ -104,7 +104,7 @@ export function KhungVe(p: {
   const khoa = `gpmb-ban-do-${p.khoaLuu ?? "chung"}`;
   const [cheDo, setCheDo] = useState<"HIEN_TRANG" | "PHAM_VI">("HIEN_TRANG");
   const [lop, setLop] = useState({ nen: true, thua: true, to: true, ranh: true, nhan: true, diaDanh: true, xa: docLuu<boolean>(`gpmb-ban-do-lop-xa`, true) });
-  useEffect(() => ghiLuu("gpmb-ban-do-lop-xa", lop.xa), [lop.xa]);
+  useEffect(() => { ghiLuu("gpmb-ban-do-lop-xa", lop.xa); }, [lop.xa]);
   const [lopAn, setLopAn] = useState<Set<number>>(() => new Set(docLuu<number[]>(`${khoa}-lop-an`, [])));
   const [nenToi, setNenToi] = useState<boolean>(() => docLuu(`${khoa}-nen-toi`, false));
   const [mauTheoLop, setMauTheoLop] = useState<boolean>(() => docLuu(`${khoa}-mau-lop`, true));
@@ -158,8 +158,8 @@ export function KhungVe(p: {
     setBangLop(s);
     ghiLuu(`${khoa}-muc`, [...s]);
   };
-  useEffect(() => ghiLuu(`${khoa}-an-bang`, anBang), [khoa, anBang]);
-  useEffect(() => ghiLuu(`${khoa}-an-thanh`, anThanh), [khoa, anThanh]);
+  useEffect(() => { ghiLuu(`${khoa}-an-bang`, anBang); }, [khoa, anBang]);
+  useEffect(() => { ghiLuu(`${khoa}-an-thanh`, anThanh); }, [khoa, anThanh]);
   const [timLop, setTimLop] = useState("");
   const [nhin, setNhin] = useState<{ cx: number; cy: number; tyLe: number } | null>(null);
   const [toaDo, setToaDo] = useState<string>("");
@@ -176,9 +176,9 @@ export function KhungVe(p: {
   }, [nhin]);
   const { pham } = p.dl;
 
-  useEffect(() => ghiLuu(`${khoa}-lop-an`, [...lopAn]), [khoa, lopAn]);
-  useEffect(() => ghiLuu(`${khoa}-nen-toi`, nenToi), [khoa, nenToi]);
-  useEffect(() => ghiLuu(`${khoa}-mau-lop`, mauTheoLop), [khoa, mauTheoLop]);
+  useEffect(() => { ghiLuu(`${khoa}-lop-an`, [...lopAn]); }, [khoa, lopAn]);
+  useEffect(() => { ghiLuu(`${khoa}-nen-toi`, nenToi); }, [khoa, nenToi]);
+  useEffect(() => { ghiLuu(`${khoa}-mau-lop`, mauTheoLop); }, [khoa, mauTheoLop]);
 
   const ve = useMemo(() => chuanBiVe(p.dl.ban), [p.dl]);
   const hinhHien = useMemo(() => ve.hinh.filter((h) => !lopAn.has(h.lop)), [ve, lopAn]);

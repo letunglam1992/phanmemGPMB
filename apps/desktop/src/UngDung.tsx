@@ -63,7 +63,7 @@ export function UngDung() {
   }, [quayLai]);
   const [hop, setHop] = useState<null | "mat-khau" | "tai-khoan" | "nhat-ky">(null);
   const [giaoDien, setGiaoDien] = useState<GiaoDien>(docGiaoDien);
-  useEffect(() => ghiGiaoDien(giaoDien), [giaoDien]);
+  useEffect(() => { ghiGiaoDien(giaoDien); }, [giaoDien]);
   const [gioiThieu, setGioiThieu] = useState(false);
   // Tự kiểm tra bản mới khi mở (bản cài Windows, tối đa 1 lần/ngày, tắt được ở Giới thiệu); lỗi mạng bỏ qua im lặng
   const [banMoi, setBanMoi] = useState<KetQuaKiemTra | null>(null);
@@ -285,7 +285,7 @@ export function UngDung() {
       {hop === "nhat-ky" && <HopNhatKy dong={() => setHop(null)} />}
       {hopCaiDat && <HopCaiDat />}
       <ThongBaoNhanh />
-      <TroLyAi />
+      <RaoLoi ten="trợ lý AI" khiLoi={(m) => void ghiNhatKy("Lỗi giao diện", m).catch(() => undefined)}><TroLyAi /></RaoLoi>
       <BanPhim diMuc={diMuc} napLai={taiLai} bao={bao} />
       <MenuChuotPhai laToi={giaoDien === "toi"} doiGiaoDien={() => setGiaoDien(giaoDien === "toi" ? "sang" : "toi")} />
     </div>
