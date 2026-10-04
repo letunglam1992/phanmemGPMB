@@ -49,6 +49,7 @@ const P: Record<string, ReactNode> = {
   danhDau: <path d="M6 3h12v18l-6-4-6 4z" />,
   saoChep: <><rect x="8" y="8" width="12" height="12" rx="2" /><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" /></>,
   moNgoai: <><path d="M14 4h6v6M20 4l-9 9" /><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" /></>,
+  roBot: <><path d="M12 3v2.5" /><rect x="4.5" y="6" width="15" height="12" rx="4" /><circle cx="9.3" cy="11.5" r="1" /><circle cx="14.7" cy="11.5" r="1" /><path d="M9.5 15h5M2.5 11v3M21.5 11v3" /></>,
   hoiDap: <><circle cx="12" cy="12" r="9" /><path d="M9.6 9.3a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.2-2.4 3.8M12 17.2v.3" /></>,
   nha: <><path d="M3.5 11L12 4l8.5 7" /><path d="M5.5 9.5V20h13V9.5M10 20v-5.5h4V20" /></>,
   phai: <path d="M9 6l6 6-6 6" />,

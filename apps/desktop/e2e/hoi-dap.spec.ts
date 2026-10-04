@@ -1,4 +1,4 @@
-/** Hỏi đáp AI: nội bộ (không dùng mạng) và Gemini API (giả lập máy chủ, kiểm nội dung gửi đi). */
+/** Trợ lý AI nổi (Hỏi đáp AI): nội bộ (không dùng mạng) và Gemini API (giả lập máy chủ, kiểm nội dung gửi đi). */
 import { expect, test, type Page } from "@playwright/test";
 
 async function vao(p: Page) {
@@ -24,7 +24,9 @@ test("nội bộ: không gọi mạng ngoài; trích nguyên văn; trả lời s
   const ngoai: string[] = [];
   p.on("request", (r) => { if (!r.url().startsWith("http://localhost")) ngoai.push(r.url()); });
   await vao(p);
-  await p.getByRole("button", { name: "Hỏi đáp AI" }).click();
+  // nút robot nổi ở góc dưới phải → mở khung chat; Esc đóng, mở lại vẫn còn hội thoại
+  await p.getByRole("button", { name: "Mở trợ lý AI" }).click();
+  await expect(p.getByRole("dialog", { name: "Trợ lý AI" })).toBeVisible();
   await expect(p.getByRole("radio", { name: "Nội bộ — không dùng mạng" })).toHaveAttribute("aria-checked", "true");
   await p.getByLabel("Câu hỏi").fill("Hạn mức công nhận đất ở đối với đất sử dụng trước ngày 18/12/1980?");
   await p.getByLabel("Câu hỏi").press("Enter");
@@ -35,6 +37,15 @@ test("nội bộ: không gọi mạng ngoài; trích nguyên văn; trả lời s
   await p.getByRole("button", { name: "Gửi", exact: true }).click();
   await expect(p.getByRole("note", { name: "Số liệu dự án" }).last()).toContainText("2 hồ sơ");
   await expect(p.getByRole("note", { name: "Số liệu dự án" }).last()).toContainText("Tổng giá trị bồi thường, hỗ trợ tạm tính");
+  await p.keyboard.press("Escape");
+  await expect(p.getByRole("dialog", { name: "Trợ lý AI" })).toBeHidden();
+  await p.getByRole("button", { name: "Dự án", exact: true }).click(); // chuyển màn: hội thoại vẫn giữ
+  await p.getByRole("button", { name: "Mở trợ lý AI" }).click();
+  await expect(p.getByRole("note", { name: "Số liệu dự án" }).last()).toContainText("2 hồ sơ");
+  await p.getByRole("button", { name: "Phóng to khung" }).click();
+  await expect(p.locator(".tl-khung.to")).toBeVisible();
+  await p.getByRole("button", { name: "Đóng trợ lý", exact: true }).click();
+  await expect(p.getByRole("dialog", { name: "Trợ lý AI" })).toBeHidden();
   expect(ngoai).toEqual([]);
 });
 
@@ -49,7 +60,7 @@ test("Gemini: cần khóa và đồng ý; chỉ gửi câu hỏi đã che số +
     return r.fulfill({ status: 200, headers: h, contentType: "application/json", body: JSON.stringify({ candidates: [{ content: { parts: [{ text: "Theo [1], hạn mức công nhận đất ở … (trả lời thử)." }] } }] }) });
   });
   await vao(p);
-  await p.getByRole("button", { name: "Hỏi đáp AI" }).click();
+  await p.getByRole("button", { name: "Trợ lý AI (hỏi đáp)" }).click(); // lối vào từ thanh bên
   await p.getByRole("radio", { name: "Gemini API — cần Internet" }).click();
   // chưa có khóa → không gửi
   await p.getByLabel("Câu hỏi").fill("Thử");

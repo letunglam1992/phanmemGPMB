@@ -1,5 +1,5 @@
 import { ViecCuaToi } from "./man/ViecCuaToi";
-import { HoiDap } from "./man/HoiDap";
+import { TroLyAi, moTroLy } from "./man/HoiDap";
 import { TongHopTinh } from "./man/TongHopTinh";
 import { NguoiCoDat } from "./man/NguoiCoDat";
 import { useEffect, useState } from "react";
@@ -110,7 +110,7 @@ export function UngDung() {
         { ten: "Kiểm tra phương án", bt: "kiemTra", chon: man.ten === "kiem-tra-pa", bam: () => di({ ten: "kiem-tra-pa" }) },
         { ten: "Người có đất nhiều hồ sơ", bt: "traCuu", chon: man.ten === "nguoi-co-dat", bam: () => di({ ten: "nguoi-co-dat" }) },
         { ten: "Đọc văn bản scan (OCR)", bt: "ocr", chon: man.ten === "doc-scan", bam: () => di({ ten: "doc-scan" }) },
-        { ten: "Hỏi đáp AI", bt: "hoiDap", chon: man.ten === "hoi-dap", bam: () => di({ ten: "hoi-dap" }) },
+        { ten: "Trợ lý AI (hỏi đáp)", bt: "roBot", bam: moTroLy },
         { ten: "Gửi tỉnh, tổng hợp tỉnh", bt: "mang", chon: man.ten === "tong-hop-tinh", bam: () => di({ ten: "tong-hop-tinh" }), an: !!chiXem },
       ],
     },
@@ -254,7 +254,6 @@ export function UngDung() {
         {man.ten === "nguoi-co-dat" && <NguoiCoDat />}
         {man.ten === "ho" && <HoSo key={man.hoId} duAnId={man.duAnId} hoId={man.hoId} tabDau={man.tab} />}
         {man.ten === "ban-do" && <KhongGianDuAn duAnId={man.duAnId} tab="ban-do" />}
-        {man.ten === "hoi-dap" && <HoiDap />}
         {man.ten === "tong-hop-tinh" && <TongHopTinh />}
         {man.ten === "tra-cuu" && <TraCuu key={man.tim ?? ""} timDau={man.tim} />}
         {man.ten === "doc-scan" && <DocScan />}
@@ -286,6 +285,7 @@ export function UngDung() {
       {hop === "nhat-ky" && <HopNhatKy dong={() => setHop(null)} />}
       {hopCaiDat && <HopCaiDat />}
       <ThongBaoNhanh />
+      <TroLyAi />
       <BanPhim diMuc={diMuc} napLai={taiLai} bao={bao} />
       <MenuChuotPhai laToi={giaoDien === "toi"} doiGiaoDien={() => setGiaoDien(giaoDien === "toi" ? "sang" : "toi")} />
     </div>

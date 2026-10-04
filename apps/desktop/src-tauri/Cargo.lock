@@ -1313,7 +1313,7 @@ dependencies = [
 
 [[package]]
 name = "gpmb-sonla"
-version = "0.9.22"
+version = "0.9.23"
 dependencies = [
  "axum",
  "axum-server",

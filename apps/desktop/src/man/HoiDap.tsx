@@ -49,7 +49,7 @@ function DoanTrich({ x, so, cauHoi }: { x: KetQuaTim; so: number; cauHoi: string
  * số liệu dự án trên máy) và chế độ Gemini API (khóa của người dùng; chỉ gửi câu hỏi đã che số và các đoạn văn bản liên quan,
  * tùy chọn số liệu tổng hợp không có thông tin cá nhân).
  */
-export function HoiDap() {
+export function HoiDap({ dong, hien = true }: { dong?: () => void; hien?: boolean }) {
   const { dsDuAn, hoCua, chinhSach, bao } = useUngDung();
   const [cheDo, setCheDo] = useState<CheDo>(docCheDo);
   useEffect(() => { try { localStorage.setItem(KHOA_CHE_DO, cheDo); } catch { /* bỏ qua */ } }, [cheDo]);
@@ -66,6 +66,9 @@ export function HoiDap() {
   const [moCaiDat, setMoCaiDat] = useState(() => !docCaiDatGemini().khoa);
   const [dangKiem, setDangKiem] = useState(false);
   const cuoi = useRef<HTMLDivElement>(null);
+  const oHoi = useRef<HTMLTextAreaElement>(null);
+  const [to, setTo] = useState(false);
+  useEffect(() => { if (hien) oHoi.current?.focus(); }, [hien]);
   useEffect(() => cuoi.current?.scrollIntoView({ block: "end", behavior: "smooth" }), [luot]);
 
   const duLieu = useMemo((): DuLieuDuAn[] => {
@@ -117,37 +120,40 @@ export function HoiDap() {
     }
   };
 
+  const tieuDeCheDo = cheDo === "NOI_BO" ? "Nội bộ — không dùng mạng" : `Gemini (${cg.moHinh})`;
   return (
-    <div className="trang" style={{ maxWidth: 1200 }}>
-      <div className="dong-tieu-de">
-        <div>
-          <div className="nhan-trang">Công cụ</div>
-          <h1>Hỏi đáp AI</h1>
-          <div className="mo-ta">Hỏi về quy định bồi thường, hỗ trợ, tái định cư (Sơn La) và số liệu dự án. Câu trả lời chỉ để tham khảo — cán bộ kiểm tra theo văn bản gốc.</div>
+    <div className={`tl-khung${to ? " to" : ""}`} role="dialog" aria-label="Trợ lý AI">
+      <div className="tl-dau">
+        <span className="tl-bt" aria-hidden><RoBot co={22} /></span>
+        <div className="tl-ten">
+          <b>Trợ lý AI</b>
+          <span className="chu-nho">{tieuDeCheDo}</span>
         </div>
-        <div className="phai nhom-nut">
-          <div className="hd-che-do" role="radiogroup" aria-label="Chế độ hỏi đáp">
-            <button role="radio" aria-checked={cheDo === "NOI_BO"} className={cheDo === "NOI_BO" ? "chon" : ""} onClick={() => setCheDo("NOI_BO")}>Nội bộ — không dùng mạng</button>
-            <button role="radio" aria-checked={cheDo === "GEMINI"} className={cheDo === "GEMINI" ? "chon" : ""} onClick={() => setCheDo("GEMINI")}>Gemini API — cần Internet</button>
-          </div>
-        </div>
+        <button className="tl-nut-nho" title={to ? "Thu nhỏ khung" : "Phóng to khung"} aria-label={to ? "Thu nhỏ khung" : "Phóng to khung"} onClick={() => setTo(!to)}>{to ? "▭" : "⛶"}</button>
+        {luot.length > 0 && <button className="tl-nut-nho" title="Hội thoại mới" aria-label="Hội thoại mới" onClick={() => setLuot([])}>↺</button>}
+        {dong && <button className="tl-nut-nho" title="Đóng (Esc)" aria-label="Đóng trợ lý" onClick={dong}>✕</button>}
       </div>
-
-      <div className="thong-bao chu-nho" style={{ marginBottom: 12 }}>
-        {cheDo === "NOI_BO" ? (
-          <><b>Chế độ nội bộ:</b> chạy hoàn toàn trên máy, không gửi gì ra ngoài. Phần mềm tìm và trích <b>nguyên văn</b> các đoạn liên quan trong {cm ? `${cm.doan.length} đoạn` : "kho"} văn bản có sẵn (NĐ 88/2024, NĐ 226/2025, QĐ 106/2025 Phụ lục I, II, QĐ 14/2026, tài liệu nghiệp vụ) và trả lời số liệu dự án (số hộ, kinh phí, diện tích, hiện trạng, vướng mắc, phương án). Không tự soạn câu trả lời — cán bộ đọc đoạn trích để kết luận.</>
-        ) : (
-          <><b>Chế độ Gemini:</b> gửi tới Google <b>câu hỏi</b> (đã tự che số CCCD, số điện thoại) và <b>các đoạn văn bản pháp lý liên quan</b>{kemSoLieu ? <> cùng <b>số liệu tổng hợp</b> của dự án</> : null}; không gửi hồ sơ, tên chủ sử dụng, tệp, bản đồ. Không gõ họ tên, số giấy tờ vào câu hỏi. Gemini chỉ được dặn trả lời theo đoạn trích, ghi [nguồn] — vẫn có thể sai, phải đối chiếu đoạn trích bên dưới.</>
+      <div className="tl-che-do">
+        <div className="hd-che-do" role="radiogroup" aria-label="Chế độ hỏi đáp">
+          <button role="radio" aria-checked={cheDo === "NOI_BO"} className={cheDo === "NOI_BO" ? "chon" : ""} onClick={() => setCheDo("NOI_BO")}>Nội bộ — không dùng mạng</button>
+          <button role="radio" aria-checked={cheDo === "GEMINI"} className={cheDo === "GEMINI" ? "chon" : ""} onClick={() => setCheDo("GEMINI")}>Gemini API — cần Internet</button>
+        </div>
+        {cheDo === "GEMINI" && (
+          <button className="nut nut-chu nut-nho" aria-expanded={moCaiDat} onClick={() => setMoCaiDat(!moCaiDat)} title="Cài đặt Gemini API">
+            ⚙ {cg.khoa ? (cg.dongY ? "Cài đặt" : "Chưa đồng ý điều kiện") : "Chưa có khóa"}
+          </button>
         )}
       </div>
-
-      {cheDo === "GEMINI" && (
-        <div className="the" aria-label="Cài đặt Gemini API">
-          <button className="the-dau hd-muc" aria-expanded={moCaiDat} onClick={() => setMoCaiDat(!moCaiDat)}>
-            <h3>{moCaiDat ? "▾" : "▸"} Cài đặt Gemini API</h3>
-            <span className="mo chu-nho">{cg.khoa ? `Đã có khóa${cg.maHoa ? " (mã hóa)" : ""} · mô hình ${cg.moHinh}` : "Chưa có khóa"}{cg.dongY ? "" : " · chưa đồng ý điều kiện"}</span>
-          </button>
-          {moCaiDat && (
+      <div className="tl-than">
+        <div className="tl-chu-thich chu-nho">
+          {cheDo === "NOI_BO" ? (
+            <>Chạy trên máy, không gửi gì ra ngoài. Trích <b>nguyên văn</b> văn bản pháp lý, tài liệu nghiệp vụ có sẵn{cm ? ` (${cm.doan.length} đoạn)` : ""} và trả lời số liệu dự án. Cán bộ đọc đoạn trích để kết luận.</>
+          ) : (
+            <>Gửi tới Google <b>câu hỏi</b> (đã che số CCCD, điện thoại) và <b>đoạn văn bản liên quan</b>{kemSoLieu ? <> cùng <b>số liệu tổng hợp</b></> : null}; không gửi hồ sơ, tên, tệp. Không gõ họ tên, số giấy tờ vào câu hỏi; câu trả lời phải đối chiếu đoạn trích.</>
+          )}
+        </div>
+        {cheDo === "GEMINI" && moCaiDat && (
+          <div className="the" aria-label="Cài đặt Gemini API">
             <div className="the-than luoi" style={{ gap: 12 }}>
               <div className="hd-huong-dan chu-nho">
                 <b>Hướng dẫn tạo khóa API Gemini (miễn phí, làm một lần):</b>
@@ -161,13 +167,13 @@ export function HoiDap() {
                 </ol>
                 <div className="mo">Lưu ý: khóa API như mật khẩu — không gửi cho người khác; nếu lộ, vào trang trên xóa khóa và tạo khóa mới. Gói miễn phí có giới hạn số lần hỏi mỗi phút/ngày; theo điều khoản của Google, dữ liệu gửi qua gói miễn phí có thể được Google dùng để cải thiện dịch vụ — vì vậy tuyệt đối không đưa thông tin cá nhân vào câu hỏi. Khóa lưu trên máy này{coVoWindows() ? ", mã hóa bằng tài khoản Windows" : ""}; mỗi máy dán khóa riêng.</div>
               </div>
-              <div className="luoi" style={{ gridTemplateColumns: "minmax(0, 2fr) auto auto auto", gap: 8, alignItems: "end" }}>
-                <label className="chu-nho">Khóa API<input type="password" autoComplete="off" aria-label="Khóa API Gemini" placeholder={cg.khoa ? "•••••••• (đã lưu — dán khóa mới để thay)" : "Dán khóa AIza…"} value={khoaNhap} onChange={(e) => setKhoaNhap(e.target.value)} /></label>
+              <div className="tl-hang">
+                <label className="chu-nho tl-o-khoa">Khóa API<input type="password" autoComplete="off" aria-label="Khóa API Gemini" placeholder={cg.khoa ? "•••••••• (đã lưu — dán khóa mới để thay)" : "Dán khóa AIza…"} value={khoaNhap} onChange={(e) => setKhoaNhap(e.target.value)} /></label>
                 <button className="nut nut-chinh" disabled={!khoaNhap.trim()} onClick={() => void luuKhoa()}>Lưu khóa</button>
                 <button className="nut" disabled={!cg.khoa || dangKiem} onClick={() => void kiem()}>{dangKiem ? "Đang kiểm tra…" : "Kiểm tra khóa"}</button>
                 <button className="nut nut-nguy" disabled={!cg.khoa} onClick={async () => { if (confirm("Xóa khóa API khỏi máy này?")) setCg(await luuCaiDatGemini({ xoaKhoa: true })); }}>Xóa khóa</button>
               </div>
-              <div className="luoi luoi-2" style={{ gap: 8 }}>
+              <div className="luoi" style={{ gap: 8 }}>
                 <label className="chu-nho">Mô hình
                   {dsMoHinh.length ? (
                     <Chon aria-label="Mô hình Gemini" value={cg.moHinh} onChange={async (e) => setCg(await luuCaiDatGemini({ moHinh: e.target.value }))}>
@@ -177,19 +183,15 @@ export function HoiDap() {
                     <input aria-label="Mô hình Gemini" value={cg.moHinh} placeholder={MO_HINH_MAC_DINH} onChange={(e) => setCg({ ...cg, moHinh: e.target.value })} onBlur={async () => setCg(await luuCaiDatGemini({ moHinh: cg.moHinh || MO_HINH_MAC_DINH }))} />
                   )}
                 </label>
-                <label className="chu-nho" style={{ alignSelf: "end" }}><input type="checkbox" checked={kemSoLieu} onChange={(e) => setKemSoLieu(e.target.checked)} /> Kèm số liệu tổng hợp của dự án đang chọn (số hộ, kinh phí, diện tích, hiện trạng — không có tên, số giấy tờ)</label>
+                <label className="chu-nho"><input type="checkbox" checked={kemSoLieu} onChange={(e) => setKemSoLieu(e.target.checked)} /> Kèm số liệu tổng hợp của dự án đang chọn (số hộ, kinh phí, diện tích, hiện trạng — không có tên, số giấy tờ)</label>
               </div>
               <label className="thong-bao thong-bao-vang chu-nho" style={{ display: "flex", gap: 8, margin: 0 }}>
                 <input type="checkbox" aria-label="Đồng ý điều kiện gửi dữ liệu cho Gemini" checked={!!cg.dongY} onChange={async (e) => setCg(await luuCaiDatGemini({ dongY: e.target.checked }))} />
                 <span>Tôi hiểu: ở chế độ Gemini, câu hỏi và các đoạn văn bản pháp lý liên quan được gửi tới máy chủ của Google qua Internet; tôi không nhập họ tên, số giấy tờ, thông tin cá nhân vào câu hỏi; câu trả lời của AI chỉ để tham khảo và phải đối chiếu văn bản gốc.</span>
               </label>
             </div>
-          )}
-        </div>
-      )}
-
-      <div className="the hd-hoi-thoai" aria-label="Hội thoại">
-        <div className="the-than luoi" style={{ gap: 14 }}>
+          </div>
+        )}
           {loiKho && <div className="thong-bao thong-bao-do">{loiKho}</div>}
           {!luot.length && (
             <div className="hd-goi-y">
@@ -218,17 +220,63 @@ export function HoiDap() {
             </div>
           ))}
           <div ref={cuoi} />
-        </div>
-        <div className="hd-nhap">
-          <Chon aria-label="Dự án cho số liệu" value={duAnId} onChange={(e) => setDuAnId(e.target.value)} title="Dự án dùng để trả lời câu hỏi số liệu">
-            {dsDuAn.map((d) => <option key={d.id} value={d.id}>{d.ten}</option>)}
-            {dsDuAn.length > 1 && <option value="*">Mọi dự án</option>}
-          </Chon>
-          <textarea aria-label="Câu hỏi" rows={2} placeholder="Nhập câu hỏi (Enter để gửi, Shift+Enter xuống dòng)…" value={cauHoi} onChange={(e) => setCauHoi(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void hoi(); } }} />
+      </div>
+      <div className="tl-nhap">
+        <Chon aria-label="Dự án cho số liệu" value={duAnId} onChange={(e) => setDuAnId(e.target.value)} title="Dự án dùng để trả lời câu hỏi số liệu">
+          {dsDuAn.map((d) => <option key={d.id} value={d.id}>{d.ten}</option>)}
+          {dsDuAn.length > 1 && <option value="*">Mọi dự án</option>}
+        </Chon>
+        <div className="tl-o-hoi">
+          <textarea ref={oHoi} aria-label="Câu hỏi" rows={2} placeholder="Nhập câu hỏi (Enter để gửi, Shift+Enter xuống dòng)…" value={cauHoi} onChange={(e) => setCauHoi(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void hoi(); } }} />
           <button className="nut nut-chinh" disabled={!cauHoi.trim() || !cm} onClick={() => void hoi()}>Gửi</button>
-          {luot.length > 0 && <button className="nut" onClick={() => setLuot([])}>Hội thoại mới</button>}
         </div>
       </div>
     </div>
   );
 }
+
+/** Hình robot của trợ lý. */
+export function RoBot({ co = 26 }: { co?: number }) {
+  return (
+    <svg width={co} height={co} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M12 3v2.5" />
+      <circle cx="12" cy="2.6" r="1" fill="currentColor" />
+      <rect x="4.5" y="6" width="15" height="12" rx="4" />
+      <circle cx="9.3" cy="11.5" r="1.4" fill="currentColor" stroke="none" />
+      <circle cx="14.7" cy="11.5" r="1.4" fill="currentColor" stroke="none" />
+      <path d="M9.5 15h5" />
+      <path d="M2.5 11v3M21.5 11v3" />
+    </svg>
+  );
+}
+
+/**
+ * Trợ lý AI nổi: nút tròn hình robot ở góc dưới phải mọi màn hình; bấm mở khung chat (Hỏi đáp AI). Khung chỉ dựng ở lần mở
+ * đầu (không nạp kho tri thức khi chưa dùng); đóng khung vẫn giữ hội thoại. Esc đóng khung.
+ */
+export function TroLyAi() {
+  const [mo, setMo] = useState(false);
+  const [daMo, setDaMo] = useState(false);
+  useEffect(() => {
+    const f = () => { setMo(true); setDaMo(true); };
+    window.addEventListener("gpmb-mo-tro-ly", f);
+    return () => window.removeEventListener("gpmb-mo-tro-ly", f);
+  }, []);
+  useEffect(() => {
+    if (!mo) return;
+    const f = (e: KeyboardEvent) => { if (e.key === "Escape") setMo(false); };
+    window.addEventListener("keydown", f);
+    return () => window.removeEventListener("keydown", f);
+  }, [mo]);
+  return (
+    <>
+      {daMo && <div className="tl-vung" hidden={!mo}><HoiDap dong={() => setMo(false)} hien={mo} /></div>}
+      <button className={`tl-nut${mo ? " dang-mo" : ""}`} title={mo ? "Đóng trợ lý AI" : "Trợ lý AI — hỏi đáp quy định, số liệu dự án"} aria-label={mo ? "Đóng trợ lý AI" : "Mở trợ lý AI"} aria-expanded={mo} onClick={() => { setDaMo(true); setMo(!mo); }}>
+        {mo ? <span style={{ fontSize: 22, lineHeight: 1 }}>✕</span> : <RoBot co={28} />}
+      </button>
+    </>
+  );
+}
+
+/** Mở trợ lý AI từ nơi khác (thanh bên, phím tắt). */
+export const moTroLy = () => window.dispatchEvent(new Event("gpmb-mo-tro-ly"));

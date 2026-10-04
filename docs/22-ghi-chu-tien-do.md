@@ -13,6 +13,7 @@ Trạng thái chức năng chi tiết xem docs/09. Ghi chú này nêu những g�
 | 0.9.19 | Xuất Excel, chốt phương án theo hồ sơ đã chọn; hoàn tác lần cập nhật tiến độ nhiều hộ; văn bản theo đợt phương án |
 | 0.9.20 | Hỏi đáp AI: chế độ nội bộ (không mạng) + Gemini API (người dùng tự dán khóa, có hướng dẫn) |
 | 0.9.21 | Gửi tỉnh, tổng hợp tỉnh: gói `.gpmbtinh` mã hóa cho khóa tỉnh; cổng Cloudflare (Worker + R2); bảng tổng hợp theo xã; xem chi tiết chỉ xem (docs/21) |
+| 0.9.23 | Trợ lý AI nổi: nút robot góc dưới phải, khung chat (việc 3 dưới đây đã xong) |
 | 0.9.22 | Nút "Tạo khóa mới (thay khóa cũ)" khi quên mật khẩu khóa; mở khóa tự tải gói từ cổng; rào lỗi từng khung; sửa chữ lẹm ở khung "3. Gửi" (việc 2 dưới đây đã xong) |
 
 Cổng Cloudflare đã được anh Lâm triển khai thật tại `https://gpmb-cong-tinh.letunglam1992.workers.dev`, gồm: R2 `gpmb-cong-tinh`, binding `KHO`, secret `MA_QUAN_TRI`. Máy cấp xã đã kết nối và gửi gói thành công (04/10/2026 20:09).
@@ -28,9 +29,9 @@ Cổng Cloudflare đã được anh Lâm triển khai thật tại `https://gpmb
      - Kiểm tra dữ liệu tóm tắt của dự án thật (4 dự án, 171 hồ sơ).
    - Ngày 04/10, màn đã hiện bình thường trên máy anh Lâm (khóa ở trạng thái "Đang khóa"). 0.9.22 thêm rào lỗi từng khung và tự tải gói khi mở khóa. Nếu còn gặp lỗi: gửi "Chép chi tiết lỗi".
 2. ~~**Chữ bị lẹm ra ngoài khung**~~ (đã sửa ở 0.9.22) ở thẻ Gửi lên tỉnh: dòng "▸ Cổng Cloudflare của tỉnh (đã kết nối: https://…)" và đoạn ghi chú vượt mép phải khung "3. Gửi". Cần cho xuống dòng, cắt bớt địa chỉ dài.
-3. **Đổi Hỏi đáp AI thành trợ lý chat nổi:** nút tròn hình robot ở góc dưới phải, bấm mở khung chat (giữ 2 chế độ Nội bộ / Gemini). Bỏ hoặc giữ mục "Hỏi đáp AI" ở thanh bên làm lối vào phụ.
+3. ~~**Đổi Hỏi đáp AI thành trợ lý chat nổi:**~~ (đã làm ở 0.9.23) nút tròn hình robot ở góc dưới phải, bấm mở khung chat (giữ 2 chế độ Nội bộ / Gemini). Bỏ hoặc giữ mục "Hỏi đáp AI" ở thanh bên làm lối vào phụ.
 
-Việc 3 (trợ lý chat nổi) làm ở bản 0.9.23. Sau khi làm xong: kiểm thử đầy đủ (typecheck, npm test, cargo test, eslint, Playwright), cập nhật docs/09, nâng bản, phát hành.
+Việc tiếp theo: chờ anh Lâm thử bản 0.9.23 (mở khóa, tải gói từ cổng thật; trợ lý chat). Mỗi lần sửa xong: kiểm thử đầy đủ (typecheck, npm test, cargo test, eslint, Playwright), cập nhật docs/09, nâng bản, phát hành.
 
 ## Lưu ý vận hành
 

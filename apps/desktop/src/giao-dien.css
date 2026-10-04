@@ -488,7 +488,7 @@ table.bang { width: 100%; border-collapse: collapse; font-size: 13px; }
 .menu-tha button:hover { background: var(--be-mat-hover); }
 .menu-nhan { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--chu-mo); padding: 6px 10px 2px; }
 .menu-vach { height: 1px; background: var(--vien); margin: 6px 4px; }
-.thong-bao-nhanh { position: fixed; right: 20px; bottom: 36px; z-index: 100; max-width: 460px; background: var(--dau-1); color: #fff; padding: 12px 16px; border-radius: var(--r-md); box-shadow: var(--bong-3); font-size: 13px; border-left: 4px solid var(--xanh-to); animation: hien 180ms var(--ease-out); }
+.thong-bao-nhanh { position: fixed; right: 94px; bottom: 36px; z-index: 100; max-width: 460px; background: var(--dau-1); color: #fff; padding: 12px 16px; border-radius: var(--r-md); box-shadow: var(--bong-3); font-size: 13px; border-left: 4px solid var(--xanh-to); animation: hien 180ms var(--ease-out); }
 .thong-bao-nhanh.loi { background: #5c1d17; border-left-color: #f07a6b; }
 .dai-chi-xem { position: fixed; left: calc(50% + var(--side-w) / 2); transform: translateX(-50%); bottom: 30px; background: var(--be-mat); color: var(--chu-phu); border: 1px solid var(--vien); border-radius: 99px; padding: 4px 14px; font-size: 12px; z-index: 40; box-shadow: var(--bong); }
 .khung-quyen { border: 0; padding: 0; margin: 0; min-width: 0; }
@@ -1163,3 +1163,31 @@ kbd.phim { display: inline-block; min-width: 20px; padding: 1px 6px; border: 1px
 .tht-luoi > *, .tht-luoi .the-than { min-width: 0; }
 .tht-luoi .the-than { overflow-wrap: anywhere; }
 .tht-cong-nut { white-space: normal; text-align: left; height: auto; line-height: 1.4; overflow-wrap: anywhere; }
+
+/* Trợ lý AI nổi (Hỏi đáp AI) */
+.tl-nut { position: fixed; right: 22px; bottom: 44px; z-index: 65; width: 58px; height: 58px; border-radius: 50%; border: 0; cursor: pointer; display: grid; place-items: center; background: var(--chinh, #1f6b4f); color: #fff; box-shadow: 0 6px 18px rgba(0,0,0,.25); transition: transform .15s ease, box-shadow .15s ease; }
+.tl-nut:hover { transform: translateY(-2px) scale(1.04); box-shadow: 0 10px 24px rgba(0,0,0,.3); }
+.tl-nut:focus-visible { outline: 3px solid color-mix(in srgb, var(--chinh, #1f6b4f) 40%, #fff); outline-offset: 2px; }
+.tl-vung[hidden] { display: none; }
+.tl-khung { position: fixed; right: 22px; bottom: 112px; z-index: 65; width: min(460px, calc(100vw - 44px)); height: min(680px, calc(100vh - 150px)); display: flex; flex-direction: column; background: var(--be-mat); color: var(--chu); border: 1px solid var(--vien); border-radius: 16px; box-shadow: 0 16px 48px rgba(0,0,0,.28); overflow: hidden; }
+.tl-khung.to { width: min(900px, calc(100vw - 44px)); height: calc(100vh - 150px); }
+.tl-dau { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--chinh, #1f6b4f); color: #fff; }
+.tl-bt { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.18); }
+.tl-ten { flex: 1; min-width: 0; display: grid; line-height: 1.25; }
+.tl-ten b { font-size: 15px; }
+.tl-ten span { opacity: .85; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tl-nut-nho { flex: none; width: 30px; height: 30px; border: 0; border-radius: 8px; background: transparent; color: #fff; cursor: pointer; font-size: 16px; }
+.tl-nut-nho:hover { background: rgba(255,255,255,.18); }
+.tl-che-do { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid var(--vien); }
+.tl-che-do .hd-che-do button { padding: 6px 10px; font-size: 12.5px; }
+.tl-than { flex: 1; min-height: 0; overflow-y: auto; padding: 12px; display: grid; align-content: start; gap: 12px; overflow-wrap: anywhere; }
+.tl-chu-thich { color: var(--chu-phu); background: color-mix(in srgb, var(--be-mat) 70%, var(--vien)); border-radius: 8px; padding: 6px 10px; }
+.tl-than .hd-goi-y .nhom-nut { display: grid; gap: 6px; }
+.tl-than .hd-goi-y .nut { text-align: left; white-space: normal; height: auto; padding: 6px 10px; }
+.tl-than .hd-dap { max-width: 100%; }
+.tl-nhap { display: grid; gap: 6px; padding: 8px 12px 12px; border-top: 1px solid var(--vien); }
+.tl-o-hoi { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; }
+.tl-o-hoi textarea { resize: none; min-height: 44px; max-height: 140px; }
+.tl-hang { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; }
+.tl-o-khoa { flex: 1 1 100%; display: grid; gap: 4px; }
+@media print { .tl-nut, .tl-vung { display: none !important; } }
