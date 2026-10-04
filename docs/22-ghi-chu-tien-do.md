@@ -15,13 +15,8 @@ Trạng thái chi tiết của từng chức năng (đã chạy / đã kiểm th
 | 0.9.19 | Xuất Excel, chốt phương án theo hồ sơ đã chọn; hoàn tác lần cập nhật tiến độ nhiều hộ; văn bản theo đợt phương án |
 | 0.9.20 | Hỏi đáp AI: chế độ nội bộ (không dùng mạng) và chế độ Gemini API (người dùng tự dán khóa, có hướng dẫn) |
 | 0.9.21 | Gửi tỉnh, tổng hợp tỉnh: gói `.gpmbtinh` mã hóa cho khóa tỉnh; cổng Cloudflare (Worker + R2); bảng tổng hợp theo xã; xem chi tiết chỉ xem (docs/21) |
-| 0.9.22 | Nút "Tạo khóa mới (thay khóa cũ)" khi quên mật khẩu khóa cấp tỉnh; mở khóa xong tự tải gói từ cổng; rào lỗi riêng cho từng khung; sửa chữ địa chỉ cổng tràn khung "3. Gửi" |
-
-### Đã làm xong, đang dựng bản cài
-
-| Bản | Nội dung |
-|---|---|
 | 0.9.23 | Trợ lý AI nổi: nút tròn hình robot ở góc dưới phải mở khung chat (Nội bộ / Gemini); phóng to, hội thoại mới, Esc đóng; chuyển màn vẫn giữ hội thoại. Thanh bên → "Trợ lý AI (hỏi đáp)" |
+| 0.9.22 | Nút "Tạo khóa mới (thay khóa cũ)" khi quên mật khẩu khóa cấp tỉnh; mở khóa xong tự tải gói từ cổng; rào lỗi riêng cho từng khung; sửa chữ địa chỉ cổng tràn khung "3. Gửi" |
 
 Kiểm thử của 0.9.23: typecheck, npm test (78 + 48 + 356), cargo test, eslint (3 cảnh báo cũ), Playwright 57/57 — tất cả đạt.
 
