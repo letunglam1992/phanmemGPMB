@@ -27,6 +27,7 @@ import {
   type CauHinhCong, type VaiTroCong, type XaTrenCong,
 } from "../tong-hop-tinh/cong-tinh";
 import { moPhienXem, taoKhoXem } from "../tong-hop-tinh/xem-xa";
+import { RaoLoi } from "../thanh-phan/RaoLoi";
 
 const ngayGio = (iso: string) => {
   if (!iso) return "";
@@ -267,7 +268,7 @@ function CaiDatCong({ vaiTro, cong, datCong }: { vaiTro: VaiTroCong; cong: CauHi
   if (!quyen("CAI_DAT")) return cong ? <div className="mo chu-nho">Đã cài đặt cổng: {cong.diaChi}</div> : null;
   return (
     <div style={{ borderTop: "1px solid var(--vien)", paddingTop: 10 }}>
-      <button className="nut nut-chu nut-nho" aria-expanded={mo} onClick={() => setMo(!mo)}>{mo ? "▾" : "▸"} Cổng Cloudflare của tỉnh {cong ? `(đã kết nối: ${cong.diaChi})` : "(tùy chọn)"}</button>
+      <button className="nut nut-chu nut-nho tht-cong-nut" aria-expanded={mo} onClick={() => setMo(!mo)}>{mo ? "▾" : "▸"} Cổng Cloudflare của tỉnh {cong ? `(đã kết nối: ${cong.diaChi})` : "(tùy chọn)"}</button>
       {mo && (
         <div className="luoi" style={{ gap: 8, marginTop: 8 }}>
           <div className="mo chu-nho">
@@ -307,6 +308,7 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
   const [dang, setDang] = useState("");
   const [loc, setLoc] = useState({ xa: "", tim: "" });
   const [ketQua, setKetQua] = useState<string[]>([]);
+  const [taoMoi, setTaoMoi] = useState(false);
   const napLai = async () => {
     setDs((await dsGoi()).sort((a, b) => a.donViGui.localeCompare(b.donViGui, "vi")));
     setNhan(await dsNhanGoi());
@@ -337,6 +339,20 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
   if (!quyen("CAI_DAT")) return <div className="thong-bao thong-bao-vang">Phần tổng hợp cấp tỉnh dành cho tài khoản quản trị hoặc lãnh đạo.</div>;
   if (khoa === undefined) return <div className="trong">Đang tải…</div>;
   if (!khoa) return <ThietLapKhoa xong={(k) => { setKhoa(k); daCoKhoa(); }} tenMacDinh={donViSuDung(dsDonVi)?.ten ?? ""} />;
+  if (taoMoi)
+    return (
+      <ThietLapKhoa
+        khoaCu={khoa}
+        huy={() => setTaoMoi(false)}
+        xong={(k) => {
+          khoaDaMo = null;
+          setMoKhoa(false);
+          setKhoa(k);
+          setTaoMoi(false);
+        }}
+        tenMacDinh={khoa.donVi}
+      />
+    );
 
   const canMo = () => {
     if (!khoaDaMo) {
@@ -441,7 +457,17 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
   return (
     <div className="luoi" style={{ gap: 16 }}>
       <div className="tht-luoi">
-        <TheKhoa khoa={khoa} moKhoa={moKhoa} datMo={setMoKhoa} />
+        <RaoLoi ten="khung Khóa cấp tỉnh">
+          <TheKhoa
+            khoa={khoa}
+            moKhoa={moKhoa}
+            datMo={(v) => {
+              setMoKhoa(v);
+              if (v && cong) void taiTuCong(); // mở khóa xong: tự tải gói mới từ cổng
+            }}
+            taoMoi={quyen("TAI_KHOAN") ? () => setTaoMoi(true) : undefined}
+          />
+        </RaoLoi>
         <div className="the">
           <div className="the-dau"><h3>Nhận gói của xã, phường</h3></div>
           <div className="the-than luoi" style={{ gap: 10 }}>
@@ -459,8 +485,10 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
           <div className="the-dau"><h3>Cổng Cloudflare (tùy chọn)</h3></div>
           <div className="the-than luoi" style={{ gap: 10 }}>
             <div className="mo chu-nho">Các xã gửi gói (đã mã hóa) lên cổng của tỉnh thay cho gửi tệp. Cách triển khai: docs/21, mục 4 (một lần, miễn phí trong hạn mức của Cloudflare).</div>
-            <CaiDatCong vaiTro="TINH" cong={cong} datCong={setCong} />
-            {cong && <MaXa cong={cong} />}
+            <RaoLoi ten="phần cổng Cloudflare">
+              <CaiDatCong vaiTro="TINH" cong={cong} datCong={setCong} />
+              {cong && <MaXa cong={cong} />}
+            </RaoLoi>
           </div>
         </div>
       </div>
@@ -571,7 +599,8 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
   );
 }
 
-function ThietLapKhoa({ xong, tenMacDinh }: { xong: (k: KhoaTinh) => void; tenMacDinh: string }) {
+/** Tạo khóa cấp tỉnh lần đầu; hoặc tạo khóa mới thay khóa cũ (`khoaCu`: quên mật khẩu khóa, nghi lộ khóa). */
+function ThietLapKhoa({ xong, tenMacDinh, khoaCu, huy }: { xong: (k: KhoaTinh) => void; tenMacDinh: string; khoaCu?: KhoaTinh; huy?: () => void }) {
   const { taiKhoan, bao, ghiNhatKy, quyen } = useUngDung();
   const [ten, setTen] = useState(tenMacDinh);
   const [mk, setMk] = useState("");
@@ -579,12 +608,13 @@ function ThietLapKhoa({ xong, tenMacDinh }: { xong: (k: KhoaTinh) => void; tenMa
   const [dang, setDang] = useState(false);
   const loi = mk ? loiMatKhau(mk) : null;
   const tao = async () => {
+    if (khoaCu && !confirm(`Thay khóa cấp tỉnh (vân tay ${nhomVanTay(khoaCu.vanTay)}) bằng khóa mới?\n\n- Các gói đã nhận vẫn giữ số liệu tổng hợp, nhưng KHÔNG xem chi tiết được nữa (mã hóa cho khóa cũ).\n- Các gói trên cổng chưa tải về cũng không mở được.\n- Phải gửi khóa công khai MỚI cho các xã; các xã nhập lại khóa rồi gửi lại gói.\n\nTiếp tục?`)) return;
     setDang(true);
     try {
       const k = await taoKhoaTinh(mk, ten, taiKhoan?.ten ?? "");
       await luuKhoaTinh(k);
-      await ghiNhatKy("Tạo khóa cấp tỉnh (tổng hợp dữ liệu các xã)", `${k.donVi} · vân tay ${nhomVanTay(k.vanTay)}`);
-      bao("Đã tạo khóa cấp tỉnh — xuất bản dự phòng khóa và cất giữ an toàn");
+      await ghiNhatKy(khoaCu ? "Thay khóa cấp tỉnh (tạo khóa mới)" : "Tạo khóa cấp tỉnh (tổng hợp dữ liệu các xã)", `${k.donVi} · vân tay ${nhomVanTay(k.vanTay)}${khoaCu ? ` · thay khóa ${nhomVanTay(khoaCu.vanTay)}` : ""}`);
+      bao(khoaCu ? "Đã tạo khóa mới — xuất khóa công khai mới gửi các xã, xuất bản dự phòng khóa và cất giữ" : "Đã tạo khóa cấp tỉnh — xuất bản dự phòng khóa và cất giữ an toàn");
       xong(k);
     } catch (e) {
       bao(loiChu(e), "loi");
@@ -597,6 +627,7 @@ function ThietLapKhoa({ xong, tenMacDinh }: { xong: (k: KhoaTinh) => void; tenMa
     try {
       const { duPhong } = docTepKhoa(await f.text());
       if (!duPhong) throw new LoiGoiTinh("Đây là tệp khóa công khai (gửi các xã) — cần tệp DỰ PHÒNG khóa (có khóa bí mật).");
+      if (khoaCu && duPhong.vanTay !== khoaCu.vanTay && !confirm(`Thay khóa hiện tại (${nhomVanTay(khoaCu.vanTay)}) bằng khóa trong bản dự phòng (${nhomVanTay(duPhong.vanTay)})?`)) return;
       await luuKhoaTinh(duPhong);
       await ghiNhatKy("Khôi phục khóa cấp tỉnh từ bản dự phòng", `${duPhong.donVi} · vân tay ${nhomVanTay(duPhong.vanTay)}`);
       xong(duPhong);
@@ -608,8 +639,13 @@ function ThietLapKhoa({ xong, tenMacDinh }: { xong: (k: KhoaTinh) => void; tenMa
   return (
     <div className="tht-luoi">
       <div className="the">
-        <div className="the-dau"><h3>Tạo khóa cấp tỉnh (làm một lần)</h3></div>
+        <div className="the-dau"><h3>{khoaCu ? "Tạo khóa mới (thay khóa cũ)" : "Tạo khóa cấp tỉnh (làm một lần)"}</h3></div>
         <div className="the-than luoi" style={{ gap: 10 }}>
+          {khoaCu && (
+            <div className="thong-bao thong-bao-do chu-nho" style={{ margin: 0 }}>
+              Dùng khi quên mật khẩu khóa hoặc nghi khóa bị lộ. Khóa hiện tại: <b className="tht-van-tay">{nhomVanTay(khoaCu.vanTay)}</b>. Sau khi thay: gói đã nhận chỉ còn số liệu tổng hợp (không xem chi tiết được); phải gửi <b>khóa công khai mới</b> cho các xã, các xã nhập lại khóa và gửi lại gói.
+            </div>
+          )}
           <div className="chu-nho">Khóa gồm hai phần: <b>khóa công khai</b> gửi cho các xã để mã hóa gói; <b>khóa bí mật</b> ở lại máy này, bảo vệ bằng mật khẩu khóa — chỉ máy này (khi nhập đúng mật khẩu) mở được gói của xã.</div>
           <label className="chu-nho tht-o">Tên đơn vị tổng hợp<input aria-label="Tên đơn vị tổng hợp" value={ten} placeholder="vd. Sở Nông nghiệp và Môi trường tỉnh Sơn La" onChange={(e) => setTen(e.target.value)} /></label>
           <label className="chu-nho tht-o">Mật khẩu khóa<input type="password" aria-label="Mật khẩu khóa mới" value={mk} onChange={(e) => setMk(e.target.value)} /></label>
@@ -617,7 +653,10 @@ function ThietLapKhoa({ xong, tenMacDinh }: { xong: (k: KhoaTinh) => void; tenMa
           {loi && <div className="chu-nho" style={{ color: "var(--do)" }}>{loi}</div>}
           {mk2 && mk !== mk2 && <div className="chu-nho" style={{ color: "var(--do)" }}>Hai lần nhập không khớp</div>}
           <div className="thong-bao thong-bao-vang chu-nho" style={{ margin: 0 }}>Quên mật khẩu khóa hoặc mất máy mà không có bản dự phòng: không mở được các gói đã nhận — phải tạo khóa mới và các xã gửi lại.</div>
-          <button className="nut nut-chinh" disabled={dang || !ten.trim() || !mk || !!loi || mk !== mk2} onClick={() => void tao()}>{dang ? "Đang tạo khóa…" : "Tạo khóa cấp tỉnh"}</button>
+          <div className="nhom-nut">
+            <button className="nut nut-chinh" disabled={dang || !ten.trim() || !mk || !!loi || mk !== mk2} onClick={() => void tao()}>{dang ? "Đang tạo khóa…" : khoaCu ? "Tạo khóa mới" : "Tạo khóa cấp tỉnh"}</button>
+            {huy && <button className="nut" disabled={dang} onClick={huy}>Hủy, giữ khóa cũ</button>}
+          </div>
         </div>
       </div>
       <div className="the">
@@ -631,7 +670,7 @@ function ThietLapKhoa({ xong, tenMacDinh }: { xong: (k: KhoaTinh) => void; tenMa
   );
 }
 
-function TheKhoa({ khoa, moKhoa, datMo }: { khoa: KhoaTinh; moKhoa: boolean; datMo: (v: boolean) => void }) {
+function TheKhoa({ khoa, moKhoa, datMo, taoMoi }: { khoa: KhoaTinh; moKhoa: boolean; datMo: (v: boolean) => void; taoMoi?: () => void }) {
   const { bao, ghiNhatKy } = useUngDung();
   const [mk, setMk] = useState("");
   const [dang, setDang] = useState(false);
@@ -664,6 +703,11 @@ function TheKhoa({ khoa, moKhoa, datMo }: { khoa: KhoaTinh; moKhoa: boolean; dat
           <button className="nut nut-nho" onClick={async () => { if (!confirm("Bản dự phòng chứa khóa bí mật (đã mã hóa bằng mật khẩu khóa). Chỉ cất vào USB, két — KHÔNG gửi cho xã. Tiếp tục?")) return; if (await taiXuong(new TextEncoder().encode(tepDuPhongKhoa(khoa)), `DU-PHONG-khoa-tinh_${ten}${DUOI_KHOA}`, "application/json")) await ghiNhatKy("Xuất bản dự phòng khóa cấp tỉnh", nhomVanTay(khoa.vanTay)); }}>Xuất bản dự phòng khóa</button>
         </div>
         <div className="mo chu-nho">Gửi tệp khóa công khai cho các xã (thư điện tử, Zalo…) và đọc vân tay qua điện thoại để xã đối chiếu. Khóa công khai không bí mật; mật khẩu khóa không bao giờ rời máy này.</div>
+        {taoMoi && (
+          <div className="chu-nho" style={{ borderTop: "1px solid var(--vien)", paddingTop: 8 }}>
+            Quên mật khẩu khóa? <button className="nut nut-nho nut-nguy" onClick={taoMoi}>Tạo khóa mới (thay khóa cũ)…</button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -174,8 +174,7 @@ test("cổng Cloudflare: tỉnh cấp mã cho xã; xã gửi gói lên cổng; t
   // tỉnh: mở khóa, tải từ cổng
   await p.getByRole("tab", { name: "Tổng hợp tỉnh (cấp tỉnh)" }).click();
   await p.getByLabel("Mật khẩu khóa cấp tỉnh").fill("MatKhauTinh2026");
-  await p.getByRole("button", { name: "Mở khóa" }).click();
-  await p.getByRole("button", { name: "Tải gói mới từ cổng Cloudflare" }).click();
+  await p.getByRole("button", { name: "Mở khóa" }).click(); // mở khóa xong tự tải gói mới từ cổng
   await expect(p.getByLabel("Kết quả nhận gói")).toContainText("UBND xã Chiềng Mung (thử): nhận mới");
   await expect(p.getByRole("table", { name: "Bảng tổng hợp tỉnh" })).toContainText("Dự án mẫu – Khu công nghiệp");
   await expect(p.getByRole("table", { name: "Đơn vị đã gửi" })).toContainText("Cổng");
@@ -187,4 +186,57 @@ test("cổng Cloudflare: tỉnh cấp mã cho xã; xã gửi gói lên cổng; t
   await p.getByRole("tab", { name: "Gửi lên tỉnh (cấp xã)" }).click();
   await p.getByRole("button", { name: "Gửi lên cổng của tỉnh" }).click();
   await expect(p.getByText("Mã truy cập không đúng hoặc đã bị thu hồi")).toBeVisible();
+});
+
+test("tạo khóa mới thay khóa cũ (quên mật khẩu): hủy giữ khóa cũ; tạo mới thì vân tay đổi, gói cũ còn số liệu nhưng không xem chi tiết", async ({ page: p }) => {
+  await vao(p);
+  await p.getByRole("button", { name: "Gửi tỉnh, tổng hợp tỉnh" }).click();
+  await p.getByRole("tab", { name: "Tổng hợp tỉnh (cấp tỉnh)" }).click();
+  await p.getByLabel("Tên đơn vị tổng hợp").fill("Sở (thử)");
+  await p.getByLabel("Mật khẩu khóa mới").fill("MatKhauTinh2026");
+  await p.getByLabel("Nhập lại mật khẩu khóa").fill("MatKhauTinh2026");
+  await p.getByRole("button", { name: "Tạo khóa cấp tỉnh" }).click();
+  const vanTayCu = (await p.getByLabel("Vân tay khóa cấp tỉnh").textContent())!;
+  await p.getByRole("button", { name: "Xuất khóa công khai gửi các xã" }).click();
+  const khoa = await tep(p, "Khoa-cong-khai_");
+  await p.getByRole("tab", { name: "Gửi lên tỉnh (cấp xã)" }).click();
+  await p.getByLabel("Chọn tệp khóa của tỉnh").setInputFiles({ name: khoa.ten, mimeType: "application/json", buffer: khoa.buf });
+  await p.getByLabel("Tên đơn vị gửi").fill("UBND xã Thử");
+  await p.getByRole("button", { name: /Xuất gói gửi tỉnh/ }).click();
+  const goi = await tep(p, "GPMB-gui-tinh_");
+  await p.getByRole("tab", { name: "Tổng hợp tỉnh (cấp tỉnh)" }).click();
+  await p.getByLabel("Mật khẩu khóa cấp tỉnh").fill("MatKhauTinh2026");
+  await p.getByRole("button", { name: "Mở khóa" }).click();
+  await expect(p.getByText("Đã mở khóa")).toBeVisible();
+  await p.getByLabel("Chọn gói dữ liệu của xã").setInputFiles({ name: goi.ten, mimeType: "application/octet-stream", buffer: goi.buf });
+  await expect(p.getByLabel("Kết quả nhận gói")).toContainText("nhận mới");
+  // quên mật khẩu → tạo khóa mới; hủy thì giữ khóa cũ
+  await p.getByRole("button", { name: "Tạo khóa mới (thay khóa cũ)…" }).click();
+  await expect(p.getByText("Dùng khi quên mật khẩu khóa")).toBeVisible();
+  await p.getByRole("button", { name: "Hủy, giữ khóa cũ" }).click();
+  await expect(p.getByLabel("Vân tay khóa cấp tỉnh")).toHaveText(vanTayCu);
+  await p.getByRole("button", { name: "Tạo khóa mới (thay khóa cũ)…" }).click();
+  await expect(p.getByLabel("Tên đơn vị tổng hợp")).toHaveValue("Sở (thử)");
+  await p.getByLabel("Mật khẩu khóa mới").fill("MatKhauMoi2026x");
+  await p.getByLabel("Nhập lại mật khẩu khóa").fill("MatKhauMoi2026x");
+  await p.getByRole("button", { name: "Tạo khóa mới", exact: true }).click();
+  await expect(p.getByLabel("Vân tay khóa cấp tỉnh")).not.toHaveText(vanTayCu);
+  await expect(p.getByText("Đang khóa")).toBeVisible();
+  // mật khẩu cũ không mở được khóa mới; mật khẩu mới mở được
+  await p.getByLabel("Mật khẩu khóa cấp tỉnh").fill("MatKhauTinh2026");
+  await p.getByRole("button", { name: "Mở khóa" }).click();
+  await expect(p.getByText("Mật khẩu khóa không đúng")).toBeVisible();
+  await p.getByLabel("Mật khẩu khóa cấp tỉnh").fill("MatKhauMoi2026x");
+  await p.getByRole("button", { name: "Mở khóa" }).click();
+  await expect(p.getByText("Đã mở khóa")).toBeVisible();
+  // gói cũ: còn số liệu tổng hợp; xem chi tiết báo mã hóa cho khóa khác
+  const bang = p.getByRole("table", { name: "Bảng tổng hợp tỉnh" });
+  await expect(bang).toContainText("Dự án mẫu – Khu công nghiệp");
+  await bang.getByRole("button", { name: /Dự án mẫu – Khu công nghiệp/ }).click();
+  await expect(p.getByText("Gói được mã hóa cho khóa khác")).toBeVisible();
+  // xuất khóa công khai MỚI để gửi lại các xã
+  const vanTayMoi = (await p.getByLabel("Vân tay khóa cấp tỉnh").textContent())!.replace(/-/g, "").toLowerCase();
+  await p.evaluate(() => { (window as unknown as { __tep: Record<string, string> }).__tep = {}; });
+  await p.getByRole("button", { name: "Xuất khóa công khai gửi các xã" }).click();
+  expect((await tep(p, "Khoa-cong-khai_")).buf.toString()).toContain(vanTayMoi);
 });

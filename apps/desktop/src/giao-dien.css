@@ -1160,3 +1160,6 @@ kbd.phim { display: inline-block; min-width: 20px; padding: 1px 6px; border: 1px
 .tht-o { display: grid; gap: 4px; }
 .dai-xem-tinh { max-width: min(860px, 90vw); white-space: normal; }
 .dai-xem-tinh > span { flex: 1; }
+.tht-luoi > *, .tht-luoi .the-than { min-width: 0; }
+.tht-luoi .the-than { overflow-wrap: anywhere; }
+.tht-cong-nut { white-space: normal; text-align: left; height: auto; line-height: 1.4; overflow-wrap: anywhere; }

@@ -62,6 +62,12 @@ Vân tay là 16 ký tự, dạng `AAAA-BBBB-CCCC-DDDD`. Cấp tỉnh đọc vân
 3. Bấm **Xuất bản dự phòng khóa**. Cất vào USB hoặc két. **Tuyệt đối không gửi tệp này cho xã.** Nếu mất khóa (hỏng máy, quên mật khẩu) mà không có bản dự phòng, sẽ không mở được các gói đã nhận; khi đó phải tạo khóa mới và các xã phải gửi lại.
 4. Bấm **Xuất khóa công khai gửi các xã** → gửi tệp `Khoa-cong-khai_….gpmbkhoa` cho các xã, phường. Đọc vân tay để xã đối chiếu.
 5. Chuyển sang máy tổng hợp mới: ở màn hình tạo khóa, chọn **Hoặc khôi phục khóa đã có** → chọn tệp dự phòng.
+6. **Quên mật khẩu khóa hoặc nghi lộ khóa** (0.9.22): ở khung Khóa cấp tỉnh, bấm **Tạo khóa mới (thay khóa cũ)…**. Cần tài khoản quản trị.
+   - Nhập tên đơn vị, mật khẩu mới → **Tạo khóa mới**. Bấm **Hủy, giữ khóa cũ** nếu đổi ý.
+   - Sau khi thay khóa:
+     - Các gói đã nhận vẫn còn số liệu trong bảng tổng hợp, nhưng không xem chi tiết được nữa (vì được mã hóa cho khóa cũ).
+     - Xuất **khóa công khai mới** gửi các xã, đọc vân tay mới để xã đối chiếu.
+     - Các xã nhập lại khóa (thẻ Gửi lên tỉnh → "Thay bằng tệp khóa khác") rồi gửi lại gói.
 
 ## 3. Sử dụng hằng ngày
 
@@ -79,7 +85,7 @@ Vân tay là 16 ký tự, dạng `AAAA-BBBB-CCCC-DDDD`. Cấp tỉnh đọc vân
 
 ### Cấp tỉnh — thẻ "Tổng hợp tỉnh"
 
-1. Nhập **mật khẩu khóa** → **Mở khóa**. Mỗi lần mở phần mềm làm một lần; bấm "Khóa lại" khi rời máy.
+1. Nhập **mật khẩu khóa** → **Mở khóa**. Mỗi lần mở phần mềm làm một lần; bấm "Khóa lại" khi rời máy. Đã cài cổng Cloudflare thì mở khóa xong phần mềm **tự tải gói mới** từ cổng.
 2. **Nhận gói**: chọn một hoặc nhiều tệp `.gpmbtinh`, hoặc bấm **Tải gói mới từ cổng Cloudflare**.
    - Mỗi đơn vị gửi chỉ giữ gói mới nhất. Gói trùng hoặc cũ hơn bị bỏ qua.
    - Lịch sử nhận gói xem ở cuối màn hình.
