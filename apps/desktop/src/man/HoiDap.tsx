@@ -148,7 +148,7 @@ export function HoiDap({ dong, hien = true }: { dong?: () => void; hien?: boolea
       <div className="tl-than">
         <div className="tl-chu-thich chu-nho">
           {cheDo === "NOI_BO" ? (
-            <>Chạy trên máy, không gửi gì ra ngoài. Trích <b>nguyên văn</b> văn bản pháp lý, tài liệu nghiệp vụ có sẵn{cm ? ` (${cm.doan.length} đoạn)` : ""} và trả lời số liệu dự án. Cán bộ đọc đoạn trích để kết luận.</>
+            <>Chạy trên máy, không gửi gì ra ngoài. Trích <b>nguyên văn</b> văn bản pháp lý (Luật Đất đai hợp nhất, NĐ 88, NĐ 226, QĐ 106, QĐ 14, NQ 152) và tài liệu nghiệp vụ có sẵn{cm ? ` (${cm.doan.length} đoạn)` : ""} và trả lời số liệu dự án. Cán bộ đọc đoạn trích để kết luận.</>
           ) : (
             <>Gửi tới Google <b>câu hỏi</b> (đã che số CCCD, điện thoại) và <b>đoạn văn bản liên quan</b>{kemSoLieu ? <> cùng <b>số liệu tổng hợp</b></> : null}; không gửi hồ sơ, tên, tệp. Không gõ họ tên, số giấy tờ vào câu hỏi; câu trả lời phải đối chiếu đoạn trích.</>
           )}

@@ -1,3 +1,5 @@
+import { conDung, xoaMemTep } from "../dinh-kem-thung-rac";
+import { ThungRacTep } from "./ThungRacTep";
 import { useEffect, useMemo, useState } from "react";
 import { useUngDung } from "../ung-dung";
 import { CAC_BUOC, taoId, type DuAn } from "../mo-hinh";
@@ -88,8 +90,8 @@ export function TaiLieuDuAn({ duAn }: { duAn: DuAn }) {
     }
   };
   const xoa = async (x: DinhKem) => {
-    if (!confirm(`Xóa tệp "${x.ten}"? Tệp đã xóa chỉ lấy lại được từ bản sao lưu.`)) return;
-    await kho.ghiLo({ dinhKem: [{ meta: x, bytes: null }] });
+    if (!confirm(`Xóa tệp "${x.ten}"? Tệp chuyển vào mục "Tệp đã xóa", khôi phục được.`)) return;
+    await xoaMemTep(kho, x, nguoiDung);
     await ghiNhatKy("Xóa tài liệu", `${duAn.ten}${x.hoId ? ` — hồ sơ ${hoTheoId.get(x.hoId)?.ma ?? ""}` : ""}: ${x.ten}`);
     await tai();
   };
@@ -100,7 +102,7 @@ export function TaiLieuDuAn({ duAn }: { duAn: DuAn }) {
     await taiXuong(b, x.ten, x.loai);
   };
 
-  const hien = (ds ?? []).filter((x) => {
+  const hien = (ds ?? []).filter(conDung).filter((x) => {
     if (pham === "DU_AN" && x.hoId) return false;
     if (pham === "HO" && !x.hoId) return false;
     if (locNhom !== "*" && (x.hoId || (x.nhom ?? "KHAC") !== locNhom)) return false;
@@ -197,6 +199,7 @@ export function TaiLieuDuAn({ duAn }: { duAn: DuAn }) {
             {ds === null && <tr><td colSpan={8} className="trong">Đang tải…</td></tr>}
           </tbody>
         </table>
+        <ThungRacTep ds={(ds ?? []).filter((x) => !conDung(x))} nhan={(x) => (x.hoId ? `hồ sơ ${hoTheoId.get(x.hoId)?.ma ?? ""}` : "tài liệu dự án")} xong={tai} />
       </div>
       {xem && (
         <HopThoai tieuDe={xem.ten} rong={1000} dong={() => setXem(null)} chan={<button className="nut" onClick={() => setXem(null)}>Đóng</button>}>

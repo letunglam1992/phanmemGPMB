@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 const goc = join(dirname(fileURLToPath(import.meta.url)), "../..");
 /** [tệp, tên nguồn hiển thị, loại] — VAN_BAN: văn bản pháp luật nguyên văn; NGHIEP_VU: tài liệu nghiệp vụ, hướng dẫn */
 export const NGUON = [
+  ["policy/nguon/luat-dat-dai-vbhn-44-2026.md", "Luật Đất đai (VBHN 44/VBHN-VPQH ngày 16/3/2026)", "VAN_BAN"],
   ["policy/nguon/nd88-2024-dieu-5-12.md", "Nghị định 88/2024/NĐ-CP (Điều 5, 8–12)", "VAN_BAN"],
   ["policy/nguon/nd226-2025-sua-nd88.md", "Nghị định 226/2025/NĐ-CP (sửa đổi NĐ 88/2024)", "VAN_BAN"],
   ["policy/nguon/qd106-2025-phu-luc-1.md", "QĐ 106/2025/QĐ-UBND – Phụ lục I", "VAN_BAN"],

@@ -66,4 +66,22 @@ describe("Cập nhật DT thu hồi từ ranh GPMB", () => {
     // ngưỡng dự án thiếu căn cứ → không dùng
     expect(nguongTachThua(cs, { ...duAn, tachThuaToiThieu: [{ id: "a", loaiDat: "DGT", dienTich: "100", canCu: "" }] }, "DGT")).toEqual([]);
   });
+
+  it("Điều 14, 17 PL I QĐ 106/2025: cán bộ chọn trường hợp (có căn cứ) — Đ14 đối chiếu mức đất ở, Đ17 không áp dụng; thiếu căn cứ thì như cũ", () => {
+    const vu = (x0: number, w: number, h = 10) => [[{ x: x0, y: 0 }, { x: x0 + w, y: 0 }, { x: x0 + w, y: h }, { x: x0, y: h }, { x: x0, y: 0 }]];
+    // thửa CLN 2.000 m², thu hồi 1.300 m², còn lại 700 m² (< 1.000 m² đất CLN tại xã; ≥ 60 m² đất ở)
+    const t0: ThuaBanDo = { ...tb("e", 2000), loaiDatBanDo: "CLN", vong: vu(0, 100, 20) };
+    const m3 = new Map([["e#0", { ...th("e", 2000, 1300, "MOT_PHAN"), vongThuHoi: [vu(35, 65, 20)] }]]);
+    const kh = () => "e#0";
+    const hs = (tachThua?: Thua["tachThua"]) => new Map([["e", { id: "e", soTo: "5", soThua: "e", loaiDat: "CLN", dienTich: "2000", dienTichThuHoi: "1300", nguonGoc: "", gia: null, tachThua } as unknown as Thua]]);
+    expect(canhBaoConLai(cs, duAn, [t0], m3, kh, hs())[0]).toMatchObject({ muc: "NHO", nguong: { dienTich: 1000 } });
+    const k1 = canhBaoConLai(cs, duAn, [t0], m3, kh, hs({ truongHop: "D14_K1", canCu: "GCN số AB 123" }));
+    expect(k1).toEqual([]); // 700 m² ≥ mức đất ở tại xã
+    const k2 = canhBaoConLai(cs, duAn, [{ ...t0, vong: vu(0, 100, 20) }], new Map([["e#0", { ...th("e", 2000, 1960, "MOT_PHAN"), vongThuHoi: [vu(2, 98, 20)] }]]), kh, new Map([["e", { id: "e", soTo: "5", soThua: "e", loaiDat: "CLN", dienTich: "2000", dienTichThuHoi: "1960", nguonGoc: "", gia: null, tachThua: { truongHop: "D14_K2", canCu: "Biên bản xác minh" } } as unknown as Thua]]));
+    expect(k2[0]).toMatchObject({ muc: "NHO", nguong: { dienTich: 50 } });
+    expect(k2[0]!.ghiChu.join(" ")).toMatch(/khoản 2 Điều 14 Phụ lục I .*căn cứ: Biên bản xác minh/);
+    expect(canhBaoConLai(cs, duAn, [t0], m3, kh, hs({ truongHop: "D17_K2", canCu: "Văn bản tặng cho" }))).toEqual([]);
+    // chưa ghi căn cứ → vẫn đối chiếu theo loại đất của thửa
+    expect(canhBaoConLai(cs, duAn, [t0], m3, kh, hs({ truongHop: "D17_K2", canCu: " " }))[0]).toMatchObject({ muc: "NHO" });
+  });
 });

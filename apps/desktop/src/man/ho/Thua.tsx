@@ -1,3 +1,4 @@
+import { TRUONG_HOP_TACH_THUA } from "../ban-do/ranh";
 import { Fragment, useState } from "react";
 import { HopXemThuaBanDo } from "./XemThuaBanDo";
 import { taoId, type DuAn, type Ho, type Thua } from "../../mo-hinh";
@@ -229,6 +230,16 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
                                 </>
                               )}
                             </div>
+                            <div className="luoi mt-6" style={{ gridTemplateColumns: "minmax(260px, 1.4fr) 1fr", alignItems: "end" }}>
+                              <div className="o-nhap"><label>Tách thửa — trường hợp đặc thù (Điều 14, 17 PL I QĐ 106/2025)</label>
+                                <Chon value={t.tachThua?.truongHop ?? ""} aria-label="Trường hợp tách thửa đặc thù" onChange={(e) => sua(t.id, { tachThua: e.target.value ? { canCu: "", ...t.tachThua, truongHop: e.target.value as NonNullable<Thua["tachThua"]>["truongHop"] } : undefined })}>
+                                  <option value="">Không (đối chiếu theo loại đất của thửa)</option>
+                                  {Object.entries(TRUONG_HOP_TACH_THUA).map(([k, v]) => <option key={k} value={k}>{v.canCu.replace(/ Phụ lục I.*$/, "")} — {v.ten}</option>)}
+                                </Chon>
+                              </div>
+                              {t.tachThua && <div className="o-nhap"><label>Căn cứ xác định trường hợp (bắt buộc)</label><input aria-label="Căn cứ trường hợp tách thửa" className={t.tachThua.canCu.trim() ? "" : "loi-nhap"} placeholder="vd. GCN số …, biên bản xác minh ngày …" value={t.tachThua.canCu} onChange={(e) => sua(t.id, { tachThua: { ...t.tachThua!, canCu: e.target.value } })} /></div>}
+                            </div>
+                            {t.tachThua && <div className="mo chu-nho mt-4">{TRUONG_HOP_TACH_THUA[t.tachThua.truongHop].khongApDung ? "Phần đất còn lại của thửa không đối chiếu diện tích tối thiểu tách thửa." : "Phần đất còn lại đối chiếu mức tối thiểu của đất ở (Điều 13) theo xã, phường và vị trí thửa."} Chưa ghi căn cứ thì phần mềm vẫn đối chiếu theo loại đất của thửa.</div>}
                             {(t.chiPhiDauTu || t.hanhLang) && <div className="mo chu-nho mt-4">{t.chiPhiDauTu ? "Chi phí đầu tư: áp dụng khi không có giấy tờ quy định tại k3 Đ17 NĐ 88/2024 nhưng thực tế đã đầu tư vào đất. " : ""}{t.hanhLang ? `Hành lang: phần đất không thu hồi, tính theo giá đất đã chọn cho thửa × hệ số điều chỉnh của dự án (giá đất cụ thể); ${t.hanhLang.loai === "DIEN" ? "80% / 50% / 30% theo nhóm đất" : "50%, không áp dụng cho đất trồng cây hàng năm"}.` : ""}</div>}
                           </div>
                         )}

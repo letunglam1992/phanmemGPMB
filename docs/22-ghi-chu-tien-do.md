@@ -1,6 +1,6 @@
 # 22. Ghi chú tiến độ — đọc file này trước khi làm tiếp
 
-Cập nhật: tối 04/10/2026. Bản mới nhất đã phát hành: **0.9.25**. Nhánh làm việc: `claude/great-rubin-4x4alw`; mọi thay đổi đã commit và đẩy lên.
+Cập nhật: 05/10/2026. Bản mới nhất đã phát hành: **0.9.26**. Nhánh làm việc: `claude/great-rubin-4x4alw`; mọi thay đổi đã commit và đẩy lên.
 
 Tài liệu nên đọc trước:
 - `CLAUDE.md`: quy tắc, lệnh.
@@ -23,11 +23,12 @@ Tài liệu nên đọc trước:
 | 0.9.22 | Nút "Tạo khóa mới (thay khóa cũ)"; mở khóa tự tải gói từ cổng; rào lỗi từng khung; sửa chữ tràn khung "3. Gửi" |
 | 0.9.23 | Trợ lý AI nổi: nút robot góc dưới phải mở khung chat; thanh bên "Trợ lý AI (hỏi đáp)" |
 | 0.9.25 | Cảnh báo xã lâu chưa gửi (ngưỡng do tỉnh đặt); xã tự gửi định kỳ lên cổng (chu kỳ do xã đặt); tỉnh xem lại các bản gửi trước (≤ 20 bản/đơn vị); báo cáo Word tổng hợp toàn tỉnh |
+| 0.9.26 | Tỉnh tự nhận gói mới từ cổng mỗi 30 phút khi khóa đang mở, chuông báo gói chờ nhận; phụ lục Excel kèm báo cáo Word tỉnh; thời gian không tính vào thời hạn (bước có thời hạn, bắt buộc lý do, tạm dừng); trường hợp Điều 14/17 PL I QĐ 106 do người dùng chọn + căn cứ; ghi chú bản đồ trong hồ sơ hộ; thùng rác tệp đính kèm, tài liệu; Luật Đất đai hợp nhất (VBHN 44/VBHN-VPQH) trong Trợ lý AI |
 | 0.9.24 | **Sửa trắng màn hình khi mở Trợ lý AI và lỗi "e is not a function"**; màn tỉnh nhắc "Có n gói mới trên cổng (xã, thời gian) — mở khóa để nhận" |
 
-Kiểm thử ở 0.9.24 (tất cả đạt):
+Kiểm thử ở 0.9.26 (tất cả đạt):
 - typecheck
-- npm test: 78 + 48 + 356
+- npm test: 78 + 48 + 365
 - cargo test
 - eslint: 3 cảnh báo cũ
 - Playwright: 57/57
@@ -70,6 +71,19 @@ Kiểm thử ở 0.9.24 (tất cả đạt):
 6. [ ] Trợ lý AI chế độ Gemini với khóa thật: tạo khóa ở aistudio.google.com/apikey → ⚙ trong khung chat.
 
 Gặp lỗi: bấm **"Chép chi tiết lỗi"** (nếu có), hoặc chụp màn hình gửi vào phiên làm việc.
+
+### A2. Thử bản 0.9.26 trên máy thật
+
+- [ ] Máy tỉnh: mở khóa cấp tỉnh, để phần mềm mở; xã gửi gói → trong ≤ 30 phút gói tự về (thông báo "Đã tự nhận…"). Khi chưa mở khóa: chuông có dòng "Có n gói mới trên cổng chờ nhận".
+- [ ] Báo cáo Word toàn tỉnh: tích "Kèm phụ lục Excel" → có 2 tệp.
+- [ ] Hồ sơ hộ → Tiến độ: thêm khoảng không tính (có lý do) → hạn chót lùi; để trống ngày kết thúc → Tạm dừng.
+- [ ] Thửa đất: chọn trường hợp Điều 14/17 PL I, ghi căn cứ → cảnh báo phần còn lại thay đổi.
+- [ ] Xóa một tệp đính kèm → "Tệp đã xóa" → Khôi phục.
+- [ ] Trợ lý AI: hỏi "Điều 95 Luật Đất đai" → trích nguyên văn VBHN 44.
+
+### Chờ tài liệu từ anh Lâm
+
+- [ ] **4.2 / VM-29**: Quyết định sửa đổi, bổ sung QĐ 106/2025 (bản đã ký: số, ngày, ngày hiệu lực). Có văn bản thì cập nhật bộ chính sách `policy/goi/*.json` (thay bộ "Dự thảo"), docs/03 VM-29, docs/06 QD-32.
 
 ### B. Việc lập trình có thể làm tiếp (chờ anh Lâm chọn)
 
@@ -115,6 +129,13 @@ Gặp lỗi: bấm **"Chép chi tiết lỗi"** (nếu có), hoặc chụp màn 
 | — xem chỉ đọc | `xem-xa.ts` (phiên chỉ xem: kho bộ nhớ chặn ghi, `main.tsx` đổi phiên, `NhaCungCap` có `chiXem`/`phienDau`) |
 | Cổng Cloudflare | `tools/cong-tinh/worker.js`, `wrangler.toml` |
 | Cảnh báo chậm gửi, tự gửi, báo cáo tỉnh | `src/tong-hop-tinh/canh-bao.ts`, `tu-gui.ts` (+ `src/thanh-phan/TuDongGuiTinh.tsx` chạy nền), `bao-cao-tinh.ts` + `src/thanh-phan/HopBaoCaoTinh.tsx`, mẫu `public/mau-van-ban/bao-cao-tong-hop-tinh.docx` (dựng bằng `tools/mau-van-ban/mau-bao-cao-tinh.cjs`, cần gói `docx` qua NODE_PATH) |
+| Tỉnh tự nhận gói, chuông | `src/tong-hop-tinh/phien-tinh.ts` (khóa mở trong phiên, `taiGoiMoi`, gói chờ nhận), `src/thanh-phan/TheoDoiGoiTinh.tsx` (chạy nền), `src/thanh-phan/dung-canh-bao.ts` (mục `tinh`) |
+| Phụ lục Excel tỉnh | `src/tong-hop-tinh/excel-tinh.ts`, `HopBaoCaoTinh.tsx` |
+| Thời gian không tính | `BuocHo.khongTinh` (`mo-hinh.ts`), `ngayKhongTinh`/`tinhHanBuoc` (`han-buoc.ts`), giao diện `man/ho/TienDo.tsx` |
+| Điều 14/17 PL I | `Thua.tachThua` (`mo-hinh.ts`), `TRUONG_HOP_TACH_THUA`, `canhBaoConLai` (`man/ban-do/ranh.ts`), `man/ho/Thua.tsx` |
+| Ghi chú bản đồ trong hồ sơ | `GhiChuBanDoHo` trong `man/HoSo.tsx` |
+| Thùng rác tệp | `src/dinh-kem-thung-rac.ts`, `thanh-phan/ThungRacTep.tsx`; `DinhKem.daXoa` (`kho.ts`); `LocSaoLuu.boTepDaXoa` |
+| Luật Đất đai hợp nhất | `policy/nguon/luat-dat-dai-vbhn-44-2026.md`, nguồn đầu trong `tools/tri-thuc/tao-kho.mjs` |
 | Kiểm thử | `test/goi-tinh.test.ts`, `test/cong-tinh.test.ts`, `test/hoi-dap-*.test.ts`, `e2e/tong-hop-tinh.spec.ts`, `e2e/hoi-dap.spec.ts` |
 
 ## 5. Bí mật — không ghi vào kho, không hỏi lại

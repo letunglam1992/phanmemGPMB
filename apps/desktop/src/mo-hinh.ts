@@ -91,6 +91,12 @@ export interface Thua {
    */
   hanhLang?: { loai: "DIEN" | "KHAC"; nhomDat: import("@gpmb/core").NhomDatHanhLang; dienTich: string; canCu?: string };
   /**
+   * Trường hợp tách thửa đặc thù khi đối chiếu phần đất còn lại với diện tích tối thiểu (PL I QĐ 106/2025): cán bộ chọn, bắt
+   * buộc ghi căn cứ. D14_K1, D14_K2: thửa có đất ở và đất nông nghiệp trong cùng thửa (Điều 14 — phần còn lại đối chiếu mức
+   * đất ở Điều 13); D17_K1/K2/K3: trường hợp không áp dụng diện tích tối thiểu (Điều 17).
+   */
+  tachThua?: { truongHop: "D14_K1" | "D14_K2" | "D17_K1" | "D17_K2" | "D17_K3"; canCu: string };
+  /**
    * B03, B04, B05 — bồi thường về đất khi không có giấy tờ, có vi phạm trước 01/7/2014, giao không đúng thẩm quyền
    * (Điều 5, 8, 9, 10, 12 NĐ 88/2024). Có mục này thì dòng bồi thường về đất của thửa được thay bằng các dòng phân bổ.
    * Giá theo GCN/loại đất của thửa là giá đất ở (Điều 8–10) hoặc giá đất NN (Điều 12); giá SXKD, giá đất NN phần còn lại
@@ -356,6 +362,12 @@ export interface BuocHo {
   duyetBoi?: string;
   /** Ngày bắt đầu tính thời hạn của bước do cán bộ nhập (src/han-buoc.ts), vd. ngày nhận đủ hồ sơ. */
   mocHan?: string;
+  /**
+   * Khoảng thời gian không tính vào thời hạn của bước (vd. bước 8: thời gian bổ sung hồ sơ không tính — k3 Đ3 NĐ 88/2024):
+   * từ ngày `tu` (vd. ngày yêu cầu bổ sung) đến ngày `den` (ngày nhận đủ hồ sơ bổ sung; trống = đang tạm dừng). Cán bộ nhập,
+   * bắt buộc lý do; hạn chót lùi thêm đúng số ngày (làm việc) trong các khoảng này.
+   */
+  khongTinh?: { tu: string; den?: string; lyDo: string }[];
   /**
    * Khó khăn, vướng mắc của hộ tại bước này (bước 5–16), vd. không nhất trí phương án, chưa nhận tiền, tranh chấp.
    * Có nội dung → hộ ở trạng thái "Vướng mắc", đưa vào cảnh báo và báo cáo lãnh đạo; giải quyết xong thì xóa (ghi nhật ký).

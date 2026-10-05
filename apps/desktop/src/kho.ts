@@ -46,6 +46,8 @@ export interface DinhKem {
   nhom?: string;
   /** Số, ký hiệu, ngày văn bản (tra cứu khi thanh tra, kiểm tra) */
   soHieu?: string;
+  /** Đã xóa (thùng rác tệp): giữ nội dung để khôi phục; xóa hẳn cần quyền Quản trị (dinh-kem-thung-rac.ts) */
+  daXoa?: { luc: string; nguoi: string };
 }
 export const TOI_DA_DINH_KEM = 20 * 1024 * 1024;
 

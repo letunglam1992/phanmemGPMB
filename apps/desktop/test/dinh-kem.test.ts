@@ -3,6 +3,7 @@ import { taoKhoBoNho, TOI_DA_DINH_KEM, type DinhKem } from "../src/kho";
 import { taoDuAnMau } from "../src/du-lieu-mau";
 import { docBanSaoLuu, khoiPhuc, taoBanSaoLuu } from "../src/sao-luu";
 import { loiTepDinhKem } from "../src/thanh-phan/DinhKemHo";
+import { conDung, khoiPhucTep, xoaHanTep, xoaMemTep } from "../src/dinh-kem-thung-rac";
 
 const meta = (id: string, hoId: string, duAnId: string, buoc = ""): DinhKem => ({ id, hoId, duAnId, buoc, ten: `${id}.pdf`, loai: "application/pdf", kichThuoc: 3, luc: "2026-09-29T00:00:00.000Z", nguoi: "cb" });
 
@@ -34,5 +35,22 @@ describe("Tệp đính kèm hồ sơ (P2-2)", () => {
     expect(loiTepDinhKem("QĐ.DOCX", 10)).toBeNull();
     expect(loiTepDinhKem("x.exe", 10)).toMatch(/chỉ nhận/);
     expect(loiTepDinhKem("x.pdf", TOI_DA_DINH_KEM + 1)).toMatch(/20 MB/);
+  });
+  it("thùng rác: xóa mềm giữ nội dung, khôi phục được; xóa hẳn bỏ nội dung; bản sao lưu gửi tỉnh bỏ tệp đã xóa", async () => {
+    const { duAn, ho } = taoDuAnMau();
+    const k = taoKhoBoNho();
+    await k.ghiLo({ duAn: [duAn], ho, dinhKem: [{ meta: meta("a", ho[0]!.id, duAn.id), bytes: new Uint8Array([1, 2]) }, { meta: meta("b", ho[0]!.id, duAn.id), bytes: new Uint8Array([3]) }] });
+    const a = (await k.dsDinhKem(duAn.id)).find((x) => x.id === "a")!;
+    await xoaMemTep(k, a, "cb");
+    const ds = await k.dsDinhKem(duAn.id);
+    expect(ds.filter(conDung).map((x) => x.id)).toEqual(["b"]);
+    expect(ds.find((x) => x.id === "a")!.daXoa?.nguoi).toBe("cb");
+    expect([...(await k.docDinhKem("a"))!]).toEqual([1, 2]);
+    const ban = await docBanSaoLuu((await taoBanSaoLuu(k, "0.1", { boTepDaXoa: true })).bytes);
+    expect(ban.thongTin.soDinhKem).toBe(1);
+    await khoiPhucTep(k, ds.find((x) => x.id === "a")!);
+    expect((await k.dsDinhKem(duAn.id)).filter(conDung).length).toBe(2);
+    await xoaHanTep(k, a);
+    expect(await k.docDinhKem("a")).toBeNull();
   });
 });

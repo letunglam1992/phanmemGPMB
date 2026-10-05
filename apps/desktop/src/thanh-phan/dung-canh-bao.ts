@@ -8,6 +8,7 @@ import { useUngDung } from "../ung-dung";
 import { tinhHo } from "../tinh-ho";
 import { canhBaoSaoLuu } from "../sao-luu";
 import { canhBaoChung, canhBaoDuAn, homNayIso, thongKe } from "../trang-thai";
+import { useChoNhan } from "../tong-hop-tinh/phien-tinh";
 
 export interface MucCanhBao {
   muc: "CAO" | "TRUNG_BINH" | "THONG_TIN";
@@ -17,6 +18,8 @@ export interface MucCanhBao {
   hoId?: string;
   saoLuu?: boolean;
   caiDat?: boolean;
+  /** Gói mới trên cổng chờ nhận (cấp tỉnh) — bấm để mở Tổng hợp tỉnh */
+  tinh?: boolean;
 }
 
 type ThamSo = Parameters<typeof tinhTongHop>;
@@ -40,13 +43,15 @@ export function useTongHop() {
   const { dsDuAn, hoCua, chinhSach, lich, tyLeCham, lanSaoLuu, quyen, di, moCaiDat, moSaoLuu, khoaKhoiPhuc } = useUngDung();
   const homNay = homNayIso();
   const duLieu = useMemo(() => tongHopNho(dsDuAn, hoCua, chinhSach, homNay, lich, tyLeCham), [dsDuAn, hoCua, chinhSach, homNay, lich, tyLeCham]);
+  const choNhan = useChoNhan();
   const nhacSaoLuu = quyen("SAO_LUU") ? canhBaoSaoLuu(lanSaoLuu, homNay, dsDuAn.length > 0) : null;
   const canhBao: MucCanhBao[] = [
     ...canhBaoChung(homNay, lich, quyen("KHOI_PHUC") && !khoaKhoiPhuc && dsDuAn.length > 0).map((c) => ({ ...c, muc: c.muc ?? ("CAO" as const), duAnId: "" })),
     ...(nhacSaoLuu ? [{ noiDung: nhacSaoLuu, canCu: "Bấm để mở Sao lưu, khôi phục", muc: "TRUNG_BINH" as const, duAnId: "", saoLuu: true }] : []),
+    ...(choNhan.length && quyen("CAI_DAT") ? [{ noiDung: `Có ${choNhan.length} gói mới trên cổng chờ nhận (${choNhan.map((g) => g.ten).join(", ")}) — mở khóa cấp tỉnh để nhận`, canCu: "Bấm để mở Gửi tỉnh, tổng hợp tỉnh", muc: "TRUNG_BINH" as const, duAnId: "", tinh: true }] : []),
     ...duLieu.flatMap((x) => x.cb),
   ];
   const mo = (c: MucCanhBao) =>
-    c.caiDat ? moCaiDat(true) : c.saoLuu ? moSaoLuu(true) : c.duAnId && (c.hoId ? di({ ten: "ho", duAnId: c.duAnId, hoId: c.hoId, tab: "tien-do" }) : di({ ten: "du-an", duAnId: c.duAnId }));
+    c.tinh ? di({ ten: "tong-hop-tinh", tab: "tinh" }) : c.caiDat ? moCaiDat(true) : c.saoLuu ? moSaoLuu(true) : c.duAnId && (c.hoId ? di({ ten: "ho", duAnId: c.duAnId, hoId: c.hoId, tab: "tien-do" }) : di({ ten: "du-an", duAnId: c.duAnId }));
   return { duLieu, canhBao, mo, homNay };
 }

@@ -23,14 +23,16 @@ import {
 } from "../tong-hop-tinh/goi-tinh";
 import { LoiDoiKhoaKy, type KetQuaNhap, type BanCu, docBanCu, dsBanCuTatCa, GIU_BAN_CU, docKhoaTinh, dsGoi, dsNhanGoi, luuKhoaTinh, moGoiDaLuu, nhapGoi, xoaGoi, type BanGhiGoi, type DongNhanGoi } from "../tong-hop-tinh/kho-tinh";
 import {
-  capMaXa, chuanDiaChi, docCauHinhCong, dsGoiTrenCong, dsXaTrenCong, guiGoiLenCong, kiemTraCong, luuCauHinhCong, maTuTen, taiGoiTuCong, thuHoiXa, xoaCauHinhCong,
+  capMaXa, chuanDiaChi, docCauHinhCong, dsGoiTrenCong, dsXaTrenCong, guiGoiLenCong, kiemTraCong, luuCauHinhCong, maTuTen, thuHoiXa, xoaCauHinhCong,
   type CauHinhCong, type GoiTrenCong, type VaiTroCong, type XaTrenCong,
 } from "../tong-hop-tinh/cong-tinh";
 import { moPhienXem, taoKhoXem } from "../tong-hop-tinh/xem-xa";
 import { SU_KIEN_TU_GUI, lanTuGuiTiep, taoGoiTheoCaiDat, type CaiDatGui } from "../tong-hop-tinh/tu-gui";
 import { docNguong, dsChamGui, ghiNguong, moTaCham, soNgayTu } from "../tong-hop-tinh/canh-bao";
 import { HopBaoCaoTinh } from "../thanh-phan/HopBaoCaoTinh";
+import { taoExcelTinh } from "../tong-hop-tinh/excel-tinh";
 import { RaoLoi } from "../thanh-phan/RaoLoi";
+import { SU_KIEN_GOI_MOI, chuaTai, datChoNhan, datKhoaMo, layKhoaMo, taiGoiMoi } from "../tong-hop-tinh/phien-tinh";
 
 const ngayGio = (iso: string) => {
   if (!iso) return "";
@@ -41,26 +43,6 @@ const ngayGio = (iso: string) => {
 const homNay = () => new Date().toISOString().slice(0, 10);
 const loiChu = (e: unknown) => String((e as Error)?.message ?? e);
 const docTep = (f: File) => f.arrayBuffer().then((b) => new Uint8Array(b));
-
-/** Lần gửi của từng xã trên cổng đã tải về máy này (mã xã → thời điểm gửi). */
-const KHOA_DA_TAI = "gpmb-cong-tinh-da-tai";
-function docDaTai(): Record<string, string> {
-  try {
-    return JSON.parse(localStorage.getItem(KHOA_DA_TAI) ?? "{}") as Record<string, string>;
-  } catch {
-    return {};
-  }
-}
-function ghiDaTai(m: Record<string, string>) {
-  try {
-    localStorage.setItem(KHOA_DA_TAI, JSON.stringify(m));
-  } catch {
-    /* bỏ qua */
-  }
-}
-
-/** Khóa tỉnh đã mở trong phiên làm việc (không lưu mật khẩu). */
-let khoaDaMo: { vanTay: string; biMat: CryptoKey } | null = null;
 
 export function TongHopTinh() {
   const { man, di } = useUngDung();
@@ -103,7 +85,7 @@ function PhanGui() {
       const g = await kho.docCaiDat<CaiDatGui>(KHOA_CD_GUI);
       setGui(g ?? { maGui: taoId(), ten: donViSuDung(dsDonVi)?.ten ?? "" });
       const m = new Map<string, number>();
-      for (const d of dsDuAn) m.set(d.id, (await kho.dsDinhKem(d.id)).length);
+      for (const d of dsDuAn) m.set(d.id, (await kho.dsDinhKem(d.id)).filter((x) => !x.daXoa).length);
       setSoTep(m);
     })();
   }, [kho, dsDuAn, dsDonVi]);
@@ -318,7 +300,7 @@ interface DongTongHop extends TomTatDuAn {
 function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
   const { quyen, taiKhoan, bao, ghiNhatKy, dsDonVi } = useUngDung();
   const [khoa, setKhoa] = useState<KhoaTinh | null | undefined>(undefined);
-  const [moKhoa, setMoKhoa] = useState(!!khoaDaMo);
+  const [moKhoa, setMoKhoa] = useState(!!layKhoaMo());
   const [ds, setDs] = useState<BanGhiGoi[]>([]);
   const [nhan, setNhan] = useState<DongNhanGoi[]>([]);
   const [cong, setCong] = useState<CauHinhCong | null>(() => docCauHinhCong("TINH"));
@@ -346,7 +328,7 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
     }
     let bo = false;
     dsGoiTrenCong(cong).then(
-      (ds) => { if (!bo) setChoNhan(ds.filter((g) => (docDaTai()[g.ma] ?? "") < g.luc)); },
+      (ds) => { if (!bo) { setChoNhan(chuaTai(ds)); datChoNhan(chuaTai(ds)); } },
       () => undefined,
     );
     return () => { bo = true; };
@@ -357,10 +339,15 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
     setBanCu(await dsBanCuTatCa());
   };
   useEffect(() => {
+    const f = () => void napLai();
+    window.addEventListener(SU_KIEN_GOI_MOI, f);
+    return () => window.removeEventListener(SU_KIEN_GOI_MOI, f);
+  }, []);
+  useEffect(() => {
     void docKhoaTinh().then((k) => {
       setKhoa(k);
-      if (k && khoaDaMo?.vanTay !== k.vanTay) khoaDaMo = null;
-      setMoKhoa(!!khoaDaMo);
+      if (k && layKhoaMo()?.vanTay !== k.vanTay) datKhoaMo(null);
+      setMoKhoa(!!layKhoaMo());
     });
     void napLai();
   }, []);
@@ -389,7 +376,7 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
         khoaCu={khoa}
         huy={() => setTaoMoi(false)}
         xong={(k) => {
-          khoaDaMo = null;
+          datKhoaMo(null);
           setMoKhoa(false);
           setKhoa(k);
           setTaoMoi(false);
@@ -399,11 +386,12 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
     );
 
   const canMo = () => {
-    if (!khoaDaMo) {
+    const km = layKhoaMo();
+    if (!km) {
       bao("Nhập mật khẩu khóa cấp tỉnh và bấm \"Mở khóa\" trước", "loi");
       return null;
     }
-    return { tinh: khoa, biMat: khoaDaMo.biMat };
+    return { tinh: khoa, biMat: km.biMat };
   };
   const nhapBytes = async (bytes: Uint8Array, nguon: "TEP" | "CONG", ten: string): Promise<string> => {
     const k = canMo();
@@ -436,20 +424,19 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
     await napLai();
   };
   const taiTuCong = async () => {
-    if (!cong || !canMo()) return;
+    const k = cong ? canMo() : null;
+    if (!cong || !k) return;
     setDang("Đang tải gói từ cổng…");
-    const kq: string[] = [];
+    let kq: string[] = [];
     try {
-      const tren = await dsGoiTrenCong(cong);
-      const daTai = docDaTai();
-      for (const g of tren) {
-        if ((daTai[g.ma] ?? "") >= g.luc) continue; // đã tải lần gửi này của xã
-        setDang(`Đang tải gói của ${g.ten}…`);
-        kq.push(await nhapBytes(await taiGoiTuCong(cong, g.ma), "CONG", g.ten));
-        daTai[g.ma] = g.luc;
-        ghiDaTai(daTai);
-      }
-      if (!tren.length) kq.push("Cổng chưa có gói nào.");
+      const r = await taiGoiMoi(cong, k, {
+        homNay: homNay(),
+        tienDo: (ten) => setDang(`Đang tải gói của ${ten}…`),
+        xacNhanDoiKhoa: (e) => confirm(`${e.message}\n\nKhóa ký cũ: ${nhomVanTay(e.vanTayCu)}\nKhóa ký mới: ${nhomVanTay(e.thongTin.khoaKy.vanTay)}\n\nĐã xác minh với đơn vị gửi và chấp nhận gói này?`),
+        khiNhan: (x) => ghiNhatKy("Nhận gói dữ liệu gửi tỉnh", `${x.banGhi.donViGui} · xuất ${ngayGio(x.banGhi.thongTin.luc)} · ${x.banGhi.thongTin.soDuAn} dự án, ${x.banGhi.thongTin.soHo} hồ sơ · cổng`),
+      });
+      kq = r.ketQua;
+      if (!r.tongTrenCong) kq.push("Cổng chưa có gói nào.");
       else if (!kq.length) kq.push("Không có gói mới trên cổng.");
     } catch (e) {
       kq.push(loiChu(e));
@@ -474,27 +461,10 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
     }
   };
   const xuatExcel = async () => {
-    const { default: Excel } = await import("exceljs");
-    const wb = new Excel.Workbook();
-    const ws = wb.addWorksheet("Tong hop GPMB");
-    ws.addRow([`TỔNG HỢP TIẾN ĐỘ BỒI THƯỜNG, HỖ TRỢ, TÁI ĐỊNH CƯ — ${khoa.donVi.toUpperCase()}`]).font = { bold: true, size: 13 };
-    ws.addRow([`Lập lúc ${ngayGio(new Date().toISOString())}; số liệu theo gói các đơn vị gửi (cột "Số liệu đến").`]);
-    ws.addRow([]);
-    const dau = ["STT", "Xã, phường", "Dự án", "Chủ đầu tư", "Đơn vị gửi", "Số liệu đến", "Số hộ", ...THU_TU_TT.map((t) => TT_GPMB[t].ten), "Tỷ lệ đã bàn giao (%)", "Hộ đã chốt PA", "Hộ đã phê duyệt PA", "Hộ có vướng mắc", "Giá trị tạm tính (đồng)", "Diện tích thu hồi (m²)", "Tệp đính kèm"];
-    const h = ws.addRow(dau);
-    h.font = { bold: true };
-    h.alignment = { wrapText: true, vertical: "middle" };
-    let stt = 0;
-    for (const [xa, dsx] of nhom) {
-      const r = ws.addRow(["", xa, `${dsx.length} dự án`]);
-      r.font = { bold: true };
-      for (const d of dsx)
-        ws.addRow([++stt, xa, d.ten, d.chuDauTu, d.goi.donViGui, ngayGio(d.goi.thongTin.luc), d.soHo, ...THU_TU_TT.map((t) => d.theoTrangThai[t] ?? 0), d.soHo ? Number(D(d.theoTrangThai.HOAN_THANH ?? 0).div(d.soHo).times(100).toFixed(1)) : 0, d.soHoDaChotPA, d.soHoDaDuyetPA, d.soVuongMac, Number(d.tongTamTinh), Number(d.dienTichThuHoi), d.soTepDinhKem]);
-    }
-    ws.columns.forEach((c, i) => (c.width = i === 2 ? 40 : i === 1 || i === 4 ? 24 : 14));
-    const bytes = new Uint8Array(await wb.xlsx.writeBuffer());
+    const bytes = await taoExcelTinh(hien.map((d) => ({ ...d, donViGui: d.goi.donViGui, luc: d.goi.thongTin.luc })), khoa.donVi);
     await taiXuong(bytes, tenTep(`Tong-hop-GPMB-toan-tinh_${homNay()}.xlsx`), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
   };
+
   const tong = (f: (d: DongTongHop) => number) => hien.reduce((s, d) => s + f(d), 0);
   const tongTien = hien.reduce((s, d) => s.plus(D(d.tongTamTinh)), D(0));
 
@@ -806,7 +776,7 @@ function TheKhoa({ khoa, moKhoa, datMo, taoMoi }: { khoa: KhoaTinh; moKhoa: bool
     const bm = await moKhoaTinh(khoa, mk);
     setDang(false);
     if (!bm) return bao("Mật khẩu khóa không đúng", "loi");
-    khoaDaMo = { vanTay: khoa.vanTay, biMat: bm };
+    datKhoaMo({ vanTay: khoa.vanTay, biMat: bm });
     setMk("");
     datMo(true);
   };
@@ -818,7 +788,7 @@ function TheKhoa({ khoa, moKhoa, datMo, taoMoi }: { khoa: KhoaTinh; moKhoa: bool
         <div>{khoa.donVi}</div>
         <div>Vân tay: <span className="tht-van-tay" aria-label="Vân tay khóa cấp tỉnh">{nhomVanTay(khoa.vanTay)}</span></div>
         {moKhoa ? (
-          <button className="nut nut-nho" onClick={() => { khoaDaMo = null; datMo(false); }}>Khóa lại</button>
+          <button className="nut nut-nho" onClick={() => { datKhoaMo(null); datMo(false); }}>Khóa lại</button>
         ) : (
           <div className="nhom-nut">
             <input type="password" aria-label="Mật khẩu khóa cấp tỉnh" placeholder="Mật khẩu khóa" value={mk} onChange={(e) => setMk(e.target.value)} onKeyDown={(e) => e.key === "Enter" && void mo()} />

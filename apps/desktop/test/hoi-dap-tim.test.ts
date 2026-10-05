@@ -25,4 +25,11 @@ describe("Tìm đoạn tri thức", () => {
     expect(r[0]!.doan.tieuDe).toMatch(/^Điều 6/);
     expect(timDoan(cm, "là của và", 3)).toEqual([]);
   });
+  it("Luật Đất đai hợp nhất (VBHN 44/VBHN-VPQH): trình tự bồi thường, thu hồi → Điều 87; điều kiện bồi thường đất → Điều 95", () => {
+    expect(kho.doan.filter((d) => d.nguon.startsWith("Luật Đất đai")).length).toBeGreaterThan(250);
+    const r = timDoan(cm, "trình tự thủ tục bồi thường hỗ trợ tái định cư thu hồi đất Điều 87 Luật Đất đai", 5);
+    expect(r.some((x) => x.doan.nguon.startsWith("Luật Đất đai") && /^Điều 87\./.test(x.doan.tieuDe))).toBe(true);
+    const r2 = timDoan(cm, "điều kiện được bồi thường về đất khi Nhà nước thu hồi đất", 5);
+    expect(r2.some((x) => x.doan.nguon.startsWith("Luật Đất đai") && /^Điều 95\./.test(x.doan.tieuDe))).toBe(true);
+  });
 });

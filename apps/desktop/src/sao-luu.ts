@@ -59,6 +59,8 @@ export interface LocSaoLuu {
   boDinhKem?: boolean;
   boBanDo?: boolean;
   boMau?: boolean;
+  /** Bỏ tệp đính kèm đã xóa (thùng rác tệp) — gói gửi tỉnh */
+  boTepDaXoa?: boolean;
 }
 
 export async function taoBanSaoLuu(kho: Kho, ungDung = "0.1", loc: LocSaoLuu = {}): Promise<{ bytes: Uint8Array; thongTin: ThongTinSaoLuu }> {
@@ -90,6 +92,7 @@ export async function taoBanSaoLuu(kho: Kho, ungDung = "0.1", loc: LocSaoLuu = {
   const dsDk: DinhKem[] = [];
   for (const d of loc.boDinhKem ? [] : duAn)
     for (const m of await kho.dsDinhKem(d.id)) {
+      if (loc.boTepDaXoa && m.daXoa) continue;
       const b = await kho.docDinhKem(m.id);
       if (b) {
         zip.file(`dinh-kem/${m.id}.bin`, b);

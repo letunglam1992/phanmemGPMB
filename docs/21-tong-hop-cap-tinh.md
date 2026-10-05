@@ -153,6 +153,20 @@ Dữ liệu này **không nằm trong bản sao lưu** của phần mềm. Khi m
 - Cán bộ nhập: cơ quan, số, ký hiệu, kính gửi, mở đầu, khó khăn khác, nhiệm vụ, kiến nghị, nơi nhận, người ký. Phần mềm nhớ cho lần sau.
 - Giá trị "tạm tính" ghi rõ chưa phải số đã phê duyệt.
 
+### Bổ sung ở bản 0.9.26
+
+**Máy tỉnh tự nhận gói mới từ cổng**
+- Điều kiện: máy tỉnh đã cài cổng (mã quản trị), người dùng có quyền cài đặt, phần mềm đang mở.
+- Khi khóa cấp tỉnh **đang mở** (đã nhập mật khẩu khóa trong phiên): phần mềm kiểm tra cổng 20 giây sau khi mở và mỗi 30 phút, tự tải và nhập gói mới, báo "Đã tự nhận n gói mới từ cổng", ghi nhật ký. Màn tỉnh tự nạp lại bảng.
+- Gói ký bằng khóa khác lần nhận trước: **không tự nhận** — chờ người dùng bấm "Tải từ cổng" ở màn tỉnh và xác nhận.
+- Khi khóa **đang khóa**: chuông cảnh báo hiện "Có n gói mới trên cổng chờ nhận (xã, thời gian) — mở khóa cấp tỉnh để nhận". Bấm vào để mở màn tỉnh.
+- Khóa mở chỉ giữ trong bộ nhớ; tắt phần mềm thì phải mở khóa lại.
+
+**Phụ lục Excel kèm báo cáo Word**
+- Hộp "Báo cáo Word" có ô **Kèm phụ lục Excel** (mặc định bật). Sau khi lưu tệp Word, phần mềm lưu thêm tệp `Phu-luc-bao-cao-tong-hop-GPMB-toan-tinh_<ngày>.xlsx` gồm trang "Theo xa" và "Tung du an" (cùng số liệu với nút Xuất Excel).
+
+**Tệp đã xóa** (thùng rác tệp, 0.9.26) không được đưa vào gói gửi tỉnh và không tính vào số tệp.
+
 ## 4. Cổng Cloudflare (phương án 2 mức b)
 
 ### 4.1. Cổng làm gì
@@ -215,8 +229,7 @@ Cần kiểm tra lại bảng giá Cloudflare tại thời điểm triển khai.
 
 ## 5. Còn hạn chế
 
-- Tỉnh xem bản **mới nhất** của từng đơn vị, chưa xem lại được các bản cũ. Cổng giữ 5 bản gần nhất nhưng phần mềm chỉ tải bản mới nhất.
+- Tỉnh chỉ tải bản **mới nhất** của từng đơn vị từ cổng (cổng giữ 5 bản gần nhất); các bản trước hình thành dần trên máy tỉnh qua mỗi lần nhận (0.9.25).
 - Phiên xem chi tiết dựng toàn bộ dữ liệu của đơn vị trong bộ nhớ. Gói rất lớn (hàng trăm MB tệp đính kèm) mở chậm, tốn bộ nhớ.
-- Chưa tự gửi định kỳ; xã bấm gửi khi cập nhật.
-- Chưa có cảnh báo "xã lâu chưa gửi"; xem cột "Số liệu đến" và lịch sử nhận gói.
+- Tự gửi (xã) và tự nhận (tỉnh) chỉ chạy khi phần mềm đang mở; tự nhận cần khóa cấp tỉnh đã mở trong phiên.
 - Cổng Cloudflare mới được kiểm thử bằng Worker chạy trong môi trường thử với R2 giả lập, chưa triển khai trên tài khoản Cloudflare thật.

@@ -43,6 +43,20 @@ describe("Ngày làm việc (VM-25)", () => {
     expect(tinhHanBuoc(h({ "13": { trangThai: "DANG", mocHan: "2026-09-24" } }), b13, "2026-09-25", lich).hanChot).toBe("2026-10-06");
   });
 
+  it("thời gian không tính vào thời hạn: có lý do mới tính; chưa có ngày kết thúc → tạm dừng", () => {
+    const { ho } = taoDuAnMau();
+    const b11 = HAN_BUOC.find((x) => x.buoc === "11")!;
+    const h = (kt: { tu: string; den?: string; lyDo: string }[]): Ho => ({ ...ho[0]!, tienDo: { "9": { trangThai: "XONG", ngay: "2026-10-01" }, "11": { trangThai: "DANG", khongTinh: kt } } });
+    const goc = tinhHanBuoc(h([]), b11, "2026-10-02", lich);
+    expect(goc).toMatchObject({ hanChot: "2026-10-07", khongTinh: 0 });
+    const r = tinhHanBuoc(h([{ tu: "2026-10-02", den: "2026-10-07", lyDo: "Chờ ý kiến cơ quan chuyên môn" }]), b11, "2026-10-08", lich);
+    expect(r.khongTinh).toBeGreaterThan(0);
+    expect(r.hanChot! > "2026-10-07").toBe(true);
+    expect(r.trangThai).not.toBe("QUA_HAN");
+    expect(tinhHanBuoc(h([{ tu: "2026-10-02", den: "2026-10-07", lyDo: " " }]), b11, "2026-10-08", lich)).toMatchObject({ khongTinh: 0, trangThai: "QUA_HAN" });
+    expect(tinhHanBuoc(h([{ tu: "2026-10-02", lyDo: "Tạm dừng theo văn bản" }]), b11, "2026-10-20", lich).trangThai).toBe("TAM_DUNG");
+  });
+
   it("cảnh báo: bước quá hạn theo ngày làm việc; chưa xác nhận lịch năm", () => {
     const { duAn, ho } = taoDuAnMau();
     const h: Ho = { ...ho[0]!, tienDo: { ...ho[0]!.tienDo, "9": { trangThai: "XONG", ngay: "2026-10-01" } } };

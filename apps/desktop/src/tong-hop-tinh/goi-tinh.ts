@@ -229,7 +229,7 @@ export async function taoGoiTinh(kho: Kho, o: TuyChonGoi): Promise<{ bytes: Uint
   if (!o.duAnIds.length) throw new LoiGoiTinh("Chưa chọn dự án nào để gửi.");
   if (!(await kiemVanTay(o.khoaTinh))) throw new LoiGoiTinh("Khóa công khai của tỉnh không hợp lệ (vân tay không khớp) — nhập lại tệp khóa do tỉnh gửi.");
   if (!o.donViGui.trim()) throw new LoiGoiTinh("Chưa nhập tên đơn vị gửi.");
-  const ban = await taoBanSaoLuu(kho, o.ungDung, { duAnIds: o.duAnIds, boDinhKem: !o.kemDinhKem, boBanDo: !o.kemBanDo, boMau: false });
+  const ban = await taoBanSaoLuu(kho, o.ungDung, { duAnIds: o.duAnIds, boDinhKem: !o.kemDinhKem, boBanDo: !o.kemBanDo, boMau: false, boTepDaXoa: true });
   const dsDa = (await kho.dsDuAn()).filter((d) => o.duAnIds.includes(d.id));
   // mã hóa phong bì: K ngẫu nhiên → AES-GCM; K bọc RSA-OAEP bằng khóa công khai tỉnh
   const kRaw = crypto.getRandomValues(new Uint8Array(32));
@@ -326,6 +326,6 @@ export async function giaiMaGoi(t: ThongTinGoi, du: Uint8Array, khoaBiMat: Crypt
 export function tomTatBan(ban: BanSaoLuu, homNay: string): TomTatDuAn[] {
   if (Array.isArray(ban.caiDat?.goiChinhSach)) dangKyGoi(ban.caiDat.goiChinhSach as GoiDaNap[]);
   const dem = new Map<string, number>();
-  for (const f of ban.dinhKem) dem.set(f.meta.duAnId, (dem.get(f.meta.duAnId) ?? 0) + 1);
+  for (const f of ban.dinhKem.filter((x) => !x.meta.daXoa)) dem.set(f.meta.duAnId, (dem.get(f.meta.duAnId) ?? 0) + 1);
   return tomTatDuAn(ban.duAn.filter((d) => !d.daXoa), ban.ho, (id) => dem.get(id) ?? 0, homNay);
 }

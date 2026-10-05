@@ -1,3 +1,5 @@
+import { conDung, xoaMemTep } from "../dinh-kem-thung-rac";
+import { ThungRacTep } from "./ThungRacTep";
 import { useEffect, useState } from "react";
 import { useUngDung } from "../ung-dung";
 import { CAC_BUOC, taoId, type DuAn, type Ho } from "../mo-hinh";
@@ -45,8 +47,8 @@ export function DinhKemHo({ h, duAn }: { h: Ho; duAn: DuAn }) {
     }
   };
   const xoa = async (x: DinhKem) => {
-    if (!confirm(`Xóa tệp "${x.ten}" khỏi hồ sơ? Tệp đã xóa chỉ lấy lại được từ bản sao lưu.`)) return;
-    await kho.ghiLo({ dinhKem: [{ meta: x, bytes: null }] });
+    if (!confirm(`Xóa tệp "${x.ten}"? Tệp chuyển vào mục "Tệp đã xóa", khôi phục được.`)) return;
+    await xoaMemTep(kho, x, nguoiDung);
     await ghiNhatKy("Xóa tệp đính kèm", `${h.ma} · ${h.ten}: ${x.ten}`);
     await tai();
   };
@@ -56,7 +58,7 @@ export function DinhKemHo({ h, duAn }: { h: Ho; duAn: DuAn }) {
     await taiXuong(b, x.ten, x.loai);
   };
   const tenBuoc = (m: string) => (m ? `${m}. ${CAC_BUOC.find((b) => b.ma === m)?.ten ?? ""}` : "Chung");
-  const hien = (ds ?? []).filter((x) => loc === "*" || x.buoc === loc);
+  const hien = (ds ?? []).filter((x) => conDung(x) && (loc === "*" || x.buoc === loc));
   return (
     <div className="the">
       <div className="the-dau"><h2>Tệp đính kèm</h2><span className="mo chu-nho">Biên bản đã ký, QĐ bản quét, GCN, ảnh chụp điện thoại… — PDF, Word, Excel, ảnh (JPG, PNG, HEIC); tối đa 20 MB mỗi tệp; có trong bản sao lưu. Tài liệu chung của dự án: Hồ sơ dự án → thẻ “Tài liệu, văn bản”</span></div>
@@ -97,6 +99,7 @@ export function DinhKemHo({ h, duAn }: { h: Ho; duAn: DuAn }) {
           {ds === null && <tr><td colSpan={6} className="trong">Đang tải…</td></tr>}
         </tbody>
       </table>
+      <ThungRacTep ds={(ds ?? []).filter((x) => !conDung(x))} nhan={(x) => (x.buoc ? `bước ${x.buoc}` : "chung")} xong={tai} />
     </div>
   );
 }

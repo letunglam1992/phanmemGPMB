@@ -122,6 +122,21 @@ export function TabTienDo({ h, duAn, doi, luuNgay, soanMau, moDuAn }: Tab & { du
                     <label className="chu-nho">Ngày mốc: <ONgay value={bh.mocHan ?? ""} onChange={(e) => datBuoc({ mocHan: e.target.value || undefined })} /></label>
                   </div>
                 )}
+                <div className="mt-6 chu-nho" aria-label="Thời gian không tính vào thời hạn">
+                  <b>Thời gian không tính vào thời hạn</b> (vd. từ ngày yêu cầu bổ sung đến ngày nhận đủ hồ sơ bổ sung — bắt buộc lý do):
+                  {(bh.khongTinh ?? []).map((p, i) => {
+                    const doi = (x: Partial<{ tu: string; den?: string; lyDo: string }>) => datBuoc({ khongTinh: (bh.khongTinh ?? []).map((y, j) => (j === i ? { ...y, ...x } : y)) });
+                    return (
+                      <div key={i} className="nhom-nut mt-4" style={{ alignItems: "center" }}>
+                        từ <ONgay aria-label={`Không tính từ ngày ${i + 1}`} value={p.tu} onChange={(e) => doi({ tu: e.target.value })} />
+                        đến <ONgay aria-label={`Không tính đến ngày ${i + 1}`} value={p.den ?? ""} onChange={(e) => doi({ den: e.target.value || undefined })} />
+                        <input aria-label={`Lý do không tính ${i + 1}`} className={p.lyDo.trim() ? "" : "loi-nhap"} placeholder="Lý do, văn bản (vd. CV yêu cầu bổ sung số …)" value={p.lyDo} onChange={(e) => doi({ lyDo: e.target.value })} style={{ minWidth: 260 }} />
+                        <button className="nut nut-nho nut-nguy" onClick={() => datBuoc({ khongTinh: (bh.khongTinh ?? []).filter((_, j) => j !== i) })}>Xóa</button>
+                      </div>
+                    );
+                  })}
+                  <div className="mt-4"><button className="nut nut-nho" onClick={() => datBuoc({ khongTinh: [...(bh.khongTinh ?? []), { tu: homNayIso(), lyDo: "" }] })}>+ Thêm khoảng không tính</button> <span className="mo">Để trống "đến" khi đang chờ bổ sung — thời hạn tạm dừng.</span></div>
+                </div>
                 <div className="mt-4">
                   {th.trangThai === "CHUA_CO_MOC" && (han.moc.loai === "NHAP" ? "Chưa nhập ngày mốc — chưa tính hạn." : `Chưa có ${han.moc.nhan} — chưa tính hạn.`)}
                   {th.hanChot && <>Hạn chót: <b>{ngayVN(th.hanChot)}</b>. </>}
@@ -130,6 +145,8 @@ export function TabTienDo({ h, duAn, doi, luuNgay, soanMau, moDuAn }: Tab & { du
                   {th.trangThai === "QUA_HAN" && "Đã quá hạn."}
                   {th.trangThai === "XONG_DUNG_HAN" && "Hoàn thành trong hạn."}
                   {th.trangThai === "XONG_QUA_HAN" && "Hoàn thành sau hạn."}
+                  {th.trangThai === "TAM_DUNG" && "Đang tạm dừng tính hạn (khoảng không tính chưa có ngày kết thúc)."}
+                  {th.khongTinh > 0 && <div className="chu-nho">Đã lùi hạn {th.khongTinh} {han.loai === "NLV" ? "ngày làm việc" : "ngày"} theo thời gian không tính.</div>}
                   {th.thieuLich.length > 0 && <div className="chu-nho">Chưa xác nhận lịch ngày nghỉ năm {th.thieuLich.join(", ")} — hạn chỉ trừ thứ Bảy, Chủ nhật (Cài đặt chung → Lịch ngày nghỉ).</div>}
                 </div>
               </div>

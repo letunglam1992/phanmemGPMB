@@ -1,6 +1,7 @@
 import { ViecCuaToi } from "./man/ViecCuaToi";
 import { TroLyAi, moTroLy } from "./man/HoiDap";
 import { TuDongGuiTinh } from "./thanh-phan/TuDongGuiTinh";
+import { TheoDoiGoiTinh } from "./thanh-phan/TheoDoiGoiTinh";
 import { TongHopTinh } from "./man/TongHopTinh";
 import { NguoiCoDat } from "./man/NguoiCoDat";
 import { useEffect, useState } from "react";
@@ -288,6 +289,7 @@ export function UngDung() {
       <ThongBaoNhanh />
       <RaoLoi ten="trợ lý AI" khiLoi={(m) => void ghiNhatKy("Lỗi giao diện", m).catch(() => undefined)}><TroLyAi /></RaoLoi>
       <TuDongGuiTinh />
+      <TheoDoiGoiTinh />
       <BanPhim diMuc={diMuc} napLai={taiLai} bao={bao} />
       <MenuChuotPhai laToi={giaoDien === "toi"} doiGiaoDien={() => setGiaoDien(giaoDien === "toi" ? "sang" : "toi")} />
     </div>

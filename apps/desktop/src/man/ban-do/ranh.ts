@@ -79,6 +79,15 @@ export function nguongTachThua(cs: BoChinhSach, duAn: DuAn, loaiDat: string, viT
   return d ? [{ dienTich: Number(d.dienTich), rong: null, canCu: d.canCu.trim(), moTa: `Ngưỡng của dự án (${d.loaiDat})`, nguon: "DU_AN" }] : [];
 }
 
+/** Trường hợp tách thửa đặc thù (PL I QĐ 106/2025) — cán bộ chọn ở chi tiết thửa, bắt buộc căn cứ. */
+export const TRUONG_HOP_TACH_THUA: Record<NonNullable<Thua["tachThua"]>["truongHop"], { ten: string; canCu: string; khongApDung?: boolean }> = {
+  D14_K1: { ten: "Tách đất ở gắn liền với đất nông nghiệp trong cùng thửa đất ở — phần đất ở theo Điều 13; đất NN gắn liền không áp dụng; thửa NN còn lại theo Điều 13", canCu: "khoản 1 Điều 14 Phụ lục I QĐ 106/2025/QĐ-UBND" },
+  D14_K2: { ten: "Tách đất nông nghiệp trong cùng thửa có đất ở — chuyển mục đích sang đất ở; thửa tách ra và thửa còn lại theo Điều 13", canCu: "khoản 2 Điều 14 Phụ lục I QĐ 106/2025/QĐ-UBND" },
+  D17_K1: { ten: "Thừa kế, tặng cho — không làm thủ tục chia tách thửa (cấp GCN theo k2 Đ135 LĐĐ)", canCu: "khoản 1 Điều 17 Phụ lục I QĐ 106/2025/QĐ-UBND", khongApDung: true },
+  D17_K2: { ten: "Tách thửa để tặng cho Nhà nước, cộng đồng dân cư, mở rộng công trình công cộng — không áp dụng", canCu: "khoản 2 Điều 17 Phụ lục I QĐ 106/2025/QĐ-UBND", khongApDung: true },
+  D17_K3: { ten: "Dự án phát triển KT-XH qua thỏa thuận về QSDĐ hoặc đang có QSDĐ (Điều 127 LĐĐ) — không áp dụng", canCu: "khoản 3 Điều 17 Phụ lục I QĐ 106/2025/QĐ-UBND", khongApDung: true },
+};
+
 export interface CanhBaoConLai {
   tb: ThuaBanDo;
   loaiDat: string;
@@ -114,7 +123,11 @@ export function canhBaoConLai(cs: BoChinhSach, duAn: DuAn, dsThua: ThuaBanDo[], 
     if (ml.length > 1) ghiChu.push(`Ranh chia phần còn lại thành ${ml.length} mảnh (${ml.map((m) => dt1(m.dienTich)).join("; ")} m²) — mỗi mảnh xét như một thửa`);
     if (conLai <= 0.05) continue;
     const viTri = t?.khongGiayTo?.viTriHanMuc;
-    const ds = loaiDat ? nguongTachThua(cs, duAn, loaiDat, viTri) : [];
+    // Trường hợp đặc thù cán bộ đã chọn (có căn cứ): Điều 17 → không áp dụng; Điều 14 → phần còn lại đối chiếu mức đất ở (Điều 13)
+    const th14 = t?.tachThua?.canCu.trim() ? TRUONG_HOP_TACH_THUA[t.tachThua.truongHop] : null;
+    if (th14?.khongApDung) continue;
+    if (th14) ghiChu.push(`${th14.canCu}: ${th14.ten} — căn cứ: ${t!.tachThua!.canCu.trim()}`);
+    const ds = th14 ? nguongTachThua(cs, duAn, /^Phường /.test(duAn.xa) ? "ODT" : "ONT", viTri) : loaiDat ? nguongTachThua(cs, duAn, loaiDat, viTri) : [];
     const base = { tb, loaiDat, conLai, manh: ml.map((m) => m.dienTich) };
     if (!ds.length) {
       out.push({ ...base, nguong: null, muc: "THIEU_CAN_CU", ghiChu });

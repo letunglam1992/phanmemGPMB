@@ -8,6 +8,7 @@ import { dienMau } from "../van-ban/dien-mau";
 import { taiXuong } from "../tai-xuong";
 import { duLieuBaoCaoTinh, type DongBaoCao, type ThongTinBaoCaoTinh } from "../tong-hop-tinh/bao-cao-tinh";
 import type { ChamGui } from "../tong-hop-tinh/canh-bao";
+import { taoExcelTinh } from "../tong-hop-tinh/excel-tinh";
 
 const KHOA_TT = "gpmb-bao-cao-tinh-thong-tin";
 const macDinh = (coQuan: string): ThongTinBaoCaoTinh => ({
@@ -39,6 +40,7 @@ export function HopBaoCaoTinh(p: { dong: () => void; tenCoQuan: string; dong_: D
   const { bao, ghiNhatKy } = useUngDung();
   const [t, setT] = useState<ThongTinBaoCaoTinh>(() => docTt(p.tenCoQuan));
   const [dang, setDang] = useState(false);
+  const [kemExcel, setKemExcel] = useState(true);
   const o = (k: keyof ThongTinBaoCaoTinh, nhan: string, dong = 1, goiY?: string) => (
     <O nhan={nhan} goiY={goiY} style={dong > 1 ? { gridColumn: "1/-1" } : undefined}>
       {dong > 1 ? <textarea aria-label={nhan} rows={dong} value={t[k]} onChange={(e) => setT({ ...t, [k]: e.target.value })} /> : <input aria-label={nhan} value={t[k]} onChange={(e) => setT({ ...t, [k]: e.target.value })} />}
@@ -56,8 +58,10 @@ export function HopBaoCaoTinh(p: { dong: () => void; tenCoQuan: string; dong_: D
       const duLieu = duLieuBaoCaoTinh(p.dong_, t, { phamVi: p.phamVi, denNgay: homNayIso(), soDonVi: p.soDonVi, cham: p.cham, nguong: p.nguong });
       const ten = `Bao-cao-tong-hop-GPMB-toan-tinh_${homNayIso()}.docx`;
       if (!(await taiXuong(dienMau(mau, duLieu), ten, "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))) return;
-      await ghiNhatKy("Tạo báo cáo tổng hợp toàn tỉnh (Word)", `${p.dong_.length} dự án, ${p.soDonVi} đơn vị gửi`);
-      bao("Đã tạo báo cáo Word (dự thảo) — kiểm tra trước khi trình ký");
+      // Phụ lục Excel (báo cáo ghi "Phụ lục Excel kèm theo")
+      const coExcel = kemExcel && !!(await taiXuong(await taoExcelTinh(p.dong_, t.coQuan || p.tenCoQuan, true), `Phu-luc-bao-cao-tong-hop-GPMB-toan-tinh_${homNayIso()}.xlsx`, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+      await ghiNhatKy("Tạo báo cáo tổng hợp toàn tỉnh (Word)", `${p.dong_.length} dự án, ${p.soDonVi} đơn vị gửi${coExcel ? ", kèm phụ lục Excel" : ""}`);
+      bao(`Đã tạo báo cáo Word${coExcel ? " và phụ lục Excel" : ""} (dự thảo) — kiểm tra trước khi trình ký`);
       p.dong();
     } catch (e) {
       bao(`Không tạo được báo cáo: ${(e as Error).message}`, "loi");
@@ -70,6 +74,7 @@ export function HopBaoCaoTinh(p: { dong: () => void; tenCoQuan: string; dong_: D
       <div className="mo chu-nho mb-10">
         Phần số liệu phần mềm tự điền từ {p.dong_.length} dự án đang hiện ở bảng tổng hợp ({p.phamVi === "tỉnh" ? "toàn tỉnh" : p.phamVi}): kết quả chung, bảng theo xã, phường, bảng từng dự án, tình hình gửi số liệu{p.nguong ? ` (ngưỡng ${p.nguong} ngày)` : ""}, số hộ vướng mắc. Các ô dưới đây cán bộ nhập; thông tin cơ quan, người ký được nhớ cho lần sau trên máy này.
       </div>
+      <label className="chu-nho mb-10" style={{ display: "flex", gap: 6, alignItems: "center" }}><input type="checkbox" aria-label="Kèm phụ lục Excel" checked={kemExcel} onChange={(e) => setKemExcel(e.target.checked)} /> Kèm phụ lục Excel (theo xã, phường và chi tiết từng dự án) — lưu thành tệp thứ hai</label>
       <div className="luoi luoi-2">
         {o("coQuanCapTren", "Cơ quan chủ quản", 1, "vd. UBND tỉnh Sơn La")}
         {o("coQuan", "Cơ quan báo cáo")}

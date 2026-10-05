@@ -74,6 +74,11 @@ export function timDoan(cm: ChiMuc, cauHoi: string, k = 5): KetQuaTim[] {
     }
     if (s > 0 && dieu.length && dieu.some((x) => new RegExp(`^dieu\\s+${x}\\b`).test(boDau(d.tieuDe)))) s *= 1.8;
     if (s > 0 && d.loai === "VAN_BAN") s *= 1.1;
+    if (s > 0 && q.length >= 3) {
+      // Câu hỏi trùng phần lớn tên Điều (vd "điều kiện được bồi thường về đất") → cộng điểm theo tỷ lệ từ khớp tiêu đề
+      const td = new Set(tachTu(d.tieuDe));
+      s *= 1 + 0.8 * (q.filter((t) => td.has(t)).length / q.length) ** 2;
+    }
     if (s > 0) ra.push({ doan: d, diem: s });
   });
   return ra.sort((a, b2) => b2.diem - a.diem).slice(0, k);

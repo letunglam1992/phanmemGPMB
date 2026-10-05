@@ -5,7 +5,7 @@ import { DinhKemHo } from "../thanh-phan/DinhKemHo";
 import { TT_GPMB, homNayIso, trangThaiHo, type TrangThaiGpmb } from "../trang-thai";
 import { useUngDung } from "../ung-dung";
 import { tinhHo } from "../tinh-ho";
-import { tienDoHo, daQuaBuoc, CAC_BUOC, TEN_DOI_TUONG, TEN_TRANG_THAI_BUOC, hoHieuLuc, laBuocChung, type Ho } from "../mo-hinh";
+import { tienDoHo, daQuaBuoc, CAC_BUOC, TEN_DOI_TUONG, TEN_TRANG_THAI_BUOC, hoHieuLuc, laBuocChung, TEN_NHOM_GHI_CHU, type DuAn, type Ho } from "../mo-hinh";
 import { ngayVN, tien } from "../thanh-phan/chung";
 import { BieuTuong } from "../thanh-phan/BieuDo";
 import { TabThua } from "./ho/Thua";
@@ -190,6 +190,8 @@ export function HoSo({ duAnId, hoId, tabDau, maVbDau }: { duAnId: string; hoId: 
         <BuocTron ho={hieuLuc} onChon={() => setTab("tien-do")} />
         <div className="buoc-tron-chu"><span>Bước 1–4: bước chung của dự án</span><span>Bước 5–16: theo từng hộ, cá nhân, tổ chức</span></div>
       </div>
+
+      <GhiChuBanDoHo duAn={duAn} hoId={h.id} />
 
       <div className="the the-tab">
         <TabCuon className="tab tab-bt tab-gon" chon={tab}>
@@ -386,6 +388,30 @@ function TheThongTinHo({ h, hieuLuc, tt, moTab, soanVanBan }: { h: Ho; hieuLuc: 
           {tatCa ? "Thu gọn" : `Xem tất cả ${CAC_BUOC.length} bước`} <span style={{ display: "inline-flex", transform: tatCa ? "rotate(180deg)" : undefined }}><BieuTuong ten="xuong" co={14} /></span>
         </button>
       </div>
+    </div>
+  );
+}
+
+/** Ghi chú hiện trường gắn với hộ trên bản đồ (docs/08 §9.6) — hiện ngay trong hồ sơ hộ; đánh dấu đã xử lý / mở lại; mở bản đồ. */
+function GhiChuBanDoHo({ duAn, hoId }: { duAn: DuAn; hoId: string }) {
+  const { luuDuAn, quyen, di, nguoiDung } = useUngDung();
+  const ds = (duAn.banDo?.ghiChu ?? []).filter((g) => g.hoId === hoId);
+  if (!ds.length) return null;
+  const chua = ds.filter((g) => !g.daXuLy).length;
+  const doi = (id: string, daXuLy: boolean) =>
+    void luuDuAn({ ...duAn, banDo: { ...duAn.banDo!, ghiChu: (duAn.banDo?.ghiChu ?? []).map((g) => (g.id === id ? { ...g, daXuLy, ...(daXuLy ? { xuLyLuc: new Date().toISOString(), xuLyBoi: nguoiDung } : {}) } : g)) } });
+  return (
+    <div className={`thong-bao ${chua ? "thong-bao-vang" : ""} mb-10`} aria-label="Ghi chú hiện trường của hộ">
+      <b>Ghi chú hiện trường trên bản đồ</b> ({ds.length}{chua ? `, ${chua} chưa xử lý` : ", đã xử lý hết"}):
+      <ul style={{ margin: "6px 0 0", paddingLeft: 18, display: "grid", gap: 4 }}>
+        {ds.map((g) => (
+          <li key={g.id} className="chu-nho" style={g.daXuLy ? { opacity: 0.65 } : undefined}>
+            <b>{TEN_NHOM_GHI_CHU[g.nhom]}</b>: {g.noiDung} <span className="mo">({ngayVN(g.ngay)}{g.nguoi ? ` · ${g.nguoi}` : ""}{g.daXuLy ? " · đã xử lý" : ""})</span>{" "}
+            {quyen("SUA_HO_SO") && <button className="nut nut-chu nut-nho" onClick={() => doi(g.id, !g.daXuLy)}>{g.daXuLy ? "Mở lại" : "Đánh dấu đã xử lý"}</button>}
+          </li>
+        ))}
+      </ul>
+      <button className="nut nut-nho mt-4" onClick={() => di({ ten: "du-an", duAnId: duAn.id, tab: "ban-do" })}>Xem trên bản đồ</button>
     </div>
   );
 }
