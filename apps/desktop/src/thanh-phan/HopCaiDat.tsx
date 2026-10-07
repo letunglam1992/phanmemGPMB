@@ -8,8 +8,9 @@ import { OSo } from "./OSo";
 import { loiNguong, type NguongLechDt } from "../doi-chieu-dt";
 import { TheGoiChinhSach } from "./GoiChinhSach";
 import type { GiaiDoanTyLe } from "../chi-tra";
-import { LE_DUONG_LICH_CO_DINH, type LichLamViec, type NgayDacBiet } from "../lich-lam-viec";
+import { deXuatNgayNghi, type LichLamViec, type NgayDacBiet } from "../lich-lam-viec";
 import { Chon } from "./Chon";
+import { KHOA_THE_CAI_DAT } from "./BatDau";
 import { datHoiNoiLuu, hoiNoiLuu } from "../tai-xuong";
 import { loiMatKhau, taoKhoaKhoiPhuc, thuMatKhauKhoiPhuc } from "../ma-hoa";
 
@@ -22,7 +23,11 @@ const vn = (iso: string) => iso.split("-").reverse().join("/");
 export function HopCaiDat({ them }: { them?: { ma: string; ten: string; noiDung: ReactNode }[] }) {
   const { moCaiDat } = useUngDung();
   const cacThe = [{ ma: "lich", ten: "Lịch ngày nghỉ", noiDung: <TheLich /> }, { ma: "tu-dong", ten: "Tự động sao lưu", noiDung: <TheTuDong /> }, { ma: "cham-tra", ten: "Tiền chậm trả", noiDung: <TheTyLeCham /> }, { ma: "mang", ten: "Mạng nội bộ", noiDung: <TheMangNoiBo /> }, { ma: "luu-tep", ten: "Lưu tệp xuất", noiDung: <TheLuuTep /> }, { ma: "lich-su", ten: "Lịch sử bản ghi", noiDung: <TheLichSu /> }, { ma: "nguong-dt", ten: "Ngưỡng lệch diện tích", noiDung: <TheNguongDt /> }, { ma: "goi-cs", ten: "Gói chính sách", noiDung: <TheGoiChinhSach /> }, { ma: "giao-dien", ten: "Giao diện", noiDung: <TheGiaoDien /> }, ...(them ?? [])];
-  const [the, setThe] = useState(cacThe[0]!.ma);
+  const [the, setThe] = useState(() => {
+    let t: string | null = null;
+    try { t = sessionStorage.getItem(KHOA_THE_CAI_DAT); sessionStorage.removeItem(KHOA_THE_CAI_DAT); } catch { /* bỏ qua */ }
+    return cacThe.some((x) => x.ma === t) ? t! : cacThe[0]!.ma;
+  });
   return (
     <HopThoai tieuDe="Cài đặt chung" dong={() => moCaiDat(false)} rong={920}>
       <div className="tab" style={{ marginTop: -4 }}>
@@ -107,10 +112,16 @@ function TheLich() {
     setMoi({ ...moi, ngay: "", ten: "" });
   };
   const xoa = (loai: "nghi" | "lamBu", ngay: string) => setBan({ ...ban, [loai]: ban[loai].filter((x) => x.ngay !== ngay) });
-  const themCoDinh = () => {
+  const [deXuat, setDeXuat] = useState<{ ds: ReturnType<typeof deXuatNgayNghi>; chon: Set<string> } | null>(null);
+  const moDeXuat = () => {
     const co = new Set(ban.nghi.map((x) => x.ngay));
-    const moiNgay = LE_DUONG_LICH_CO_DINH.map((x) => ({ ngay: `${nam}-${x.thangNgay}`, ten: x.ten })).filter((x) => !co.has(x.ngay));
-    setBan({ ...ban, nghi: [...ban.nghi, ...moiNgay] });
+    const ds = deXuatNgayNghi(nam).filter((x) => !co.has(x.ngay));
+    setDeXuat({ ds, chon: new Set(ds.map((x) => x.ngay)) });
+  };
+  const themDeXuat = () => {
+    if (!deXuat) return;
+    setBan({ ...ban, nghi: [...ban.nghi, ...deXuat.ds.filter((x) => deXuat.chon.has(x.ngay)).map((x) => ({ ngay: x.ngay, ten: `${x.ten} (${x.canCu.split(";")[0]})` }))] });
+    setDeXuat(null);
   };
   const daDu = ban.namDaDu.includes(nam);
 
@@ -137,13 +148,38 @@ function TheLich() {
   return (
     <div>
       <p className="mo mt-0">
-        Dùng để tính các thời hạn theo <b>ngày làm việc</b> (VM-25). Phần mềm không tự tính lịch âm, ngày nghỉ bù, hoán đổi ngày làm việc: cán bộ nhập theo thông báo nghỉ lễ, Tết hằng năm của cơ quan có thẩm quyền (Tết Âm lịch, Giỗ Tổ Hùng Vương, ngày nghỉ liền kề Quốc khánh, nghỉ bù, làm bù). Nút bên dưới chỉ thêm các ngày lễ cố định theo dương lịch (khoản 1 Điều 112 Bộ luật Lao động 2019).
+        Dùng để tính các thời hạn theo <b>ngày làm việc</b> (VM-25). Nút <b>Đề xuất ngày nghỉ</b> liệt kê các ngày lễ, Tết theo khoản 1 Điều 112 Bộ luật Lao động 2019 (Tết Âm lịch, Giỗ Tổ Hùng Vương đổi từ âm lịch) — chỉ là đề xuất: cán bộ đối chiếu thông báo nghỉ lễ, Tết hằng năm của cơ quan có thẩm quyền rồi chọn thêm. Ngày nghỉ Tết còn lại, ngày liền kề Quốc khánh, nghỉ bù, làm bù nhập tay theo thông báo; phần mềm không tự đặt.
       </p>
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
         <label>Năm <input type="number" value={nam} min={2024} max={2100} onChange={(e) => setNam(Number(e.target.value))} style={{ width: 90 }} /></label>
-        {choSua && <button className="nut" onClick={themCoDinh}>Thêm ngày lễ dương lịch cố định năm {nam}</button>}
+        {choSua && <button className="nut" onClick={moDeXuat}>Đề xuất ngày nghỉ năm {nam}…</button>}
         <span className="day-phai">{daDu ? <span className="nhan nhan-xanh">Đã xác nhận đủ danh mục năm {nam}</span> : <span className="nhan nhan-vang">Chưa xác nhận danh mục năm {nam}</span>}</span>
       </div>
+      {deXuat && (
+        <div className="thong-bao mt-8" role="region" aria-label={`Đề xuất ngày nghỉ năm ${nam}`}>
+          {deXuat.ds.length ? (
+            <>
+              <b>Đề xuất ngày nghỉ năm {nam} — đối chiếu thông báo chính thức trước khi thêm</b>
+              <table className="bang mt-6">
+                <thead><tr><th /><th>Ngày</th><th>Thứ</th><th>Nội dung</th><th>Căn cứ, lưu ý</th></tr></thead>
+                <tbody>
+                  {deXuat.ds.map((x) => (
+                    <tr key={x.ngay}>
+                      <td><input type="checkbox" aria-label={`Chọn ${x.ten}`} checked={deXuat.chon.has(x.ngay)} onChange={(e) => { const c = new Set(deXuat.chon); if (e.target.checked) c.add(x.ngay); else c.delete(x.ngay); setDeXuat({ ...deXuat, chon: c }); }} /></td>
+                      <td>{vn(x.ngay)}</td><td>{thu(x.ngay)}</td><td>{x.ten}</td>
+                      <td className="chu-nho">{x.canCu}{x.ghiChu && <div style={{ color: "var(--vang)" }}>{x.ghiChu}</div>}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
+          ) : <span>Các ngày đề xuất của năm {nam} đã có trong danh mục.</span>}
+          <div className="nhom-nut mt-8" style={{ justifyContent: "flex-end" }}>
+            <button className="nut" onClick={() => setDeXuat(null)}>Đóng</button>
+            {deXuat.ds.length > 0 && <button className="nut nut-chinh" disabled={!deXuat.chon.size} onClick={themDeXuat}>Thêm {deXuat.chon.size} ngày đã chọn</button>}
+          </div>
+        </div>
+      )}
       <div className="luoi luoi-2">
         {bang("nghi", "Ngày nghỉ lễ, Tết, nghỉ bù")}
         {bang("lamBu", "Ngày làm bù (thứ Bảy, Chủ nhật đi làm)")}

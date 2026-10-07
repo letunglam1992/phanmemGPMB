@@ -1,4 +1,5 @@
 import { ONgay } from "../thanh-phan/ONgay";
+import { TheBatDau } from "../thanh-phan/BatDau";
 import { useRef, useState } from "react";
 import { D } from "@gpmb/core";
 import { useUngDung } from "../ung-dung";
@@ -87,6 +88,7 @@ export function TongQuan() {
         </div>
       </div>
 
+      <TheBatDau taoDuAn={() => setTaoMoi(true)} />
       <section className="the tq-tinh-trang" aria-label="Tình trạng chung">
         <div className="tq-tt-dau">
           <span className="bt"><BieuTuong ten="baoCao" co={30} /></span>
