@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { ChonTep } from "./ChonTep";
 import { useUngDung } from "../ung-dung";
 import { HopThoai } from "./chung";
 import { taiXuong } from "../tai-xuong";
@@ -113,7 +114,7 @@ export function HopNhapExcel({ duAn, dong }: { duAn: DuAn; dong: () => void }) {
       <p className="mo mt-0">
         Dùng <b>tệp mẫu</b> của phần mềm hoặc <b>tệp Excel sẵn có</b> (danh sách hộ, thửa… cấu trúc cột khác): phần mềm tự đoán trang, dòng tiêu đề và cột theo tên cột — anh/chị chỉ cần chỉnh nếu đoán sai, rồi xem bảng xem trước. Tệp không có mã hộ thì chọn cột <b>Tên chủ sử dụng</b>: thửa cùng chủ gộp một hồ sơ. Phần mềm kiểm tra toàn bộ tệp trước; <b>còn lỗi thì không nhập dòng nào</b>. Tệp chỉ đọc trên máy.
       </p>
-      <input type="file" accept=".xlsx" aria-label="Chọn tệp Excel" disabled={dang} onChange={(e) => void chon(e.target.files?.[0])} />
+      <ChonTep accept=".xlsx" aria-label="Chọn tệp Excel" disabled={dang} onChange={(e) => void chon(e.target.files?.[0])} />
       {dang && <span className="mo" style={{ marginLeft: 8 }}>Đang đọc…</span>}
       {loiDoc && <div className="thong-bao thong-bao-do mt-12">{loiDoc}</div>}
       {xong && <div className="thong-bao thong-bao-xanh mt-12" role="status">{xong}</div>}

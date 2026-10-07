@@ -107,11 +107,11 @@ export function TongQuan() {
               {theoDoi.length === 0 && <div className="tq-trong"><BieuTuong ten="hopThu" co={40} /><span>Không có việc sắp đến hạn.</span></div>}
             </div>
           </div>
-          <div className="tq-panel do">
-            <div className="tq-panel-dau"><BieuTuong ten="canhBao" co={22} /><h3>Việc cần xử lý ngay</h3><span className="dem">({cao.length})</span>{cao.length > 3 && <button className="nut nut-chu nut-nho day-phai" onClick={cuonXuong}>Xem tất cả</button>}</div>
+          <div className={`tq-panel ${cao.length ? "do" : "on"}`}>
+            <div className="tq-panel-dau"><BieuTuong ten={cao.length ? "canhBao" : "pheDuyet"} co={22} /><h3>Việc cần xử lý ngay</h3><span className="dem">({cao.length})</span>{cao.length > 3 && <button className="nut nut-chu nut-nho day-phai" onClick={cuonXuong}>Xem tất cả</button>}</div>
             <div className="tq-panel-than">
               {cao.slice(0, 3).map(mucTq)}
-              {cao.length === 0 && <div className="tq-trong"><BieuTuong ten="hopThu" co={40} /><span>Không có việc quá hạn,<br />vướng mắc cần xử lý ngay.</span></div>}
+              {cao.length === 0 && <div className="tq-trong"><BieuTuong ten="pheDuyet" co={40} /><span>Không có việc quá hạn,<br />vướng mắc cần xử lý ngay.</span></div>}
             </div>
           </div>
         </div>

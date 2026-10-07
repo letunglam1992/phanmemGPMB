@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ChonTep } from "./ChonTep";
 import { useUngDung } from "../ung-dung";
 import { laKhoMang } from "../kho-mang";
 import { HopThoai } from "./chung";
@@ -152,7 +153,7 @@ export function HopSaoLuu() {
       {quyen("KHOI_PHUC") && <div className="the" style={{ padding: 14 }}>
         <h3 className="mt-0">Khôi phục từ tệp sao lưu</h3>
         {laKhoMang(kho) && !kho.noiBo && <div className="thong-bao thong-bao-vang">Đang làm việc trên <b>máy chủ mạng nội bộ</b>: khôi phục thay đổi dữ liệu chung của mọi người dùng.</div>}
-        <input type="file" accept=".gpmb,application/zip" aria-label="Chọn tệp sao lưu" disabled={dangLam} onChange={(e) => void chonTep(e.target.files?.[0])} />
+        <ChonTep accept=".gpmb,application/zip" aria-label="Chọn tệp sao lưu" disabled={dangLam} onChange={(e) => void chonTep(e.target.files?.[0])} />
         {cho && (
           <div className="mt-10">
             <div className="mo chu-nho">Tệp <b>{cho.ten}</b> đã mã hóa (sao lưu lúc {ngayGio(cho.tt.luc)}; {cho.tt.soDuAn} dự án, {cho.tt.soHo} hồ sơ). Mở bằng {moTaCachMo(cho.tt.maHoa)}.</div>

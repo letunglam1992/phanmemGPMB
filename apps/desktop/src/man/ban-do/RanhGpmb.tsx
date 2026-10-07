@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { ChonTep } from "../../thanh-phan/ChonTep";
 import { docDgn, docToaDoMoc, kiemTraVung, thongKeLop, vungTuLop, type DienTichThuHoi, type Diem, type KetQuaDocDgn, type ThuaBanDo, type VungUngVien } from "@gpmb/gis";
 import { useUngDung } from "../../ung-dung";
 import { taoId, type DuAn, type Ho, type RanhNhap, type Thua } from "../../mo-hinh";
@@ -8,7 +9,7 @@ import { type DuLieuBanDo } from "./du-lieu";
 import { apDtVaoHoSo, canhBaoConLai, dongCapNhatDt } from "./ranh";
 
 const so = (v: number, le = 1) => v.toLocaleString("vi-VN", { minimumFractionDigits: le, maximumFractionDigits: le });
-const TEN_NGUON: Record<RanhNhap["nguon"], string> = { EXCEL: "bảng tọa độ mốc", DGN: "tệp DGN khác", VE: "vẽ trên bản đồ" };
+const TEN_NGUON: Record<RanhNhap["nguon"], string> = { EXCEL: "bảng tọa độ mốc", DGN: "tệp bản đồ khác (DGN, DXF)", VE: "vẽ trên bản đồ" };
 
 /** Vùng có nằm (ít nhất một phần) trong phạm vi bản đồ không — phát hiện nhầm trục X/Y, nhầm hệ tọa độ. */
 function trongPhamVi(vong: Diem[], pham: DuLieuBanDo["pham"]): boolean {
@@ -50,10 +51,10 @@ export function TheRanhNhap(p: { duAn: DuAn; dl: DuLieuBanDo; veRanh: boolean; b
   };
   return (
     <>
-      <div className="mo chu-nho mt-4">Cách 3 — ranh GPMB nhập ngoài (tọa độ mốc, tệp DGN khác, vẽ trên bản đồ): phần mềm tự cắt thửa theo ranh, tính DT thu hồi và DT còn lại từng thửa.</div>
+      <div className="mo chu-nho mt-4">Cách 3 — ranh GPMB nhập ngoài (tọa độ mốc, tệp DGN/DXF khác, vẽ trên bản đồ): phần mềm tự cắt thửa theo ranh, tính DT thu hồi và DT còn lại từng thửa.</div>
       <div className="nhom-nut">
         <button className="nut nut-nho" disabled={!sua} onClick={() => setHop("EXCEL")}>Nạp tọa độ mốc…</button>
-        <button className="nut nut-nho" disabled={!sua} onClick={() => setHop("DGN")}>Lấy từ tệp DGN khác…</button>
+        <button className="nut nut-nho" disabled={!sua} onClick={() => setHop("DGN")}>Lấy từ tệp DGN, DXF khác…</button>
         <button className={`nut nut-nho ${p.veRanh ? "nut-chinh" : ""}`} disabled={!sua} onClick={p.batVe} title="Bấm các đỉnh ranh trên bản đồ; bấm đúp để khép; bấm “Dùng làm ranh GPMB”">{p.veRanh ? "Đang vẽ ranh…" : "Vẽ ranh trên bản đồ"}</button>
       </div>
       {ds.length > 0 && (
@@ -104,7 +105,7 @@ function HopNapMoc(p: { dl: DuLieuBanDo; dong: () => void; them: (x: Omit<RanhNh
   return (
     <HopThoai tieuDe="Nạp tọa độ mốc ranh GPMB" dong={p.dong} rong={720} chan={<><button className="nut" onClick={p.dong}>Hủy</button><button className="nut nut-chinh" disabled={!hopLe.length} onClick={() => void p.them(hopLe.map(({ v, k }) => ({ ten: v.ten, nguon: "EXCEL", tep: kq!.tep, vong: [k.vong], dienTich: k.dienTich })))}>Thêm {hopLe.length} ranh hợp lệ</button></>}>
       <p className="mt-0 chu-nho">Tệp Excel (.xlsx) hoặc CSV/TXT: các cột <b>Tên mốc · X · Y</b> (tọa độ VN-2000, mét), cột <b>Vùng</b> nếu có nhiều ranh; hoặc để một dòng trống giữa các ranh. Theo quy ước trắc địa, X là tọa độ Bắc — phần mềm tự nhận và đổi trục cho khớp bản đồ. Mốc theo thứ tự đi vòng quanh ranh.</p>
-      <input type="file" aria-label="Tệp tọa độ mốc" accept=".xlsx,.csv,.txt" onChange={async (e) => {
+      <ChonTep aria-label="Tệp tọa độ mốc" accept=".xlsx,.csv,.txt" onChange={async (e) => {
         const f = e.target.files?.[0];
         if (!f) return;
         setLoi(null);
@@ -137,9 +138,9 @@ function HopRanhDgn(p: { dl: DuLieuBanDo; dong: () => void; them: (x: Omit<RanhN
   const vung: VungUngVien[] = useMemo(() => (ban && lop !== null ? vungTuLop(ban.ban, lop) : []), [ban, lop]);
   const dsChon = vung.filter((v) => chon.has(v.ma));
   return (
-    <HopThoai tieuDe="Lấy ranh GPMB từ tệp DGN khác" dong={p.dong} rong={760} chan={<><button className="nut" onClick={p.dong}>Hủy</button><button className="nut nut-chinh" disabled={!dsChon.length} onClick={() => void p.them(dsChon.map((v, i) => ({ ten: `Lớp ${lop} – vùng ${i + 1}`, nguon: "DGN", tep: ban!.tep, vong: v.vong, dienTich: v.dienTich })))}>Thêm {dsChon.length} vùng làm ranh</button></>}>
+    <HopThoai tieuDe="Lấy ranh GPMB từ tệp bản đồ khác (DGN, DXF)" dong={p.dong} rong={760} chan={<><button className="nut" onClick={p.dong}>Hủy</button><button className="nut nut-chinh" disabled={!dsChon.length} onClick={() => void p.them(dsChon.map((v, i) => ({ ten: `Lớp ${lop} – vùng ${i + 1}`, nguon: "DGN", tep: ban!.tep, vong: v.vong, dienTich: v.dienTich })))}>Thêm {dsChon.length} vùng làm ranh</button></>}>
       <p className="mt-0 chu-nho">Tệp ranh thu hồi đo đạc riêng (điểm k khoản 1 Điều 16 TT 26/2024 — tách khu vực thu hồi thành mảnh đo đạc bổ sung), cùng hệ tọa độ VN-2000 với bản đồ đang xem. Chọn lớp chứa ranh rồi chọn vùng.</p>
-      <input type="file" aria-label="Tệp DGN chứa ranh" accept=".dgn,.dxf,.dwg" onChange={async (e) => {
+      <ChonTep aria-label="Tệp DGN chứa ranh" accept=".dgn,.dxf,.dwg" onChange={async (e) => {
         const f = e.target.files?.[0];
         if (!f) return;
         setLoi(null);

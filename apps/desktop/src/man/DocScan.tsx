@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { ChonTep } from "../thanh-phan/ChonTep";
 import { useUngDung } from "../ung-dung";
 import { dongOcr, nhanDang, type TienDo, type TrangOcr } from "../ocr/ocr";
 import { trichThongTin, type ThongTinVanBan } from "../ocr/nhan-dien";
@@ -74,7 +75,7 @@ export function DocScan() {
           </div>
         </div>
         <div className="the-than">
-          <input type="file" multiple accept="application/pdf,image/png,image/jpeg,image/bmp,image/webp" disabled={dangChay} onChange={(e) => setTep([...(e.target.files ?? [])])} />
+          <ChonTep multiple accept="application/pdf,image/png,image/jpeg,image/bmp,image/webp" disabled={dangChay} onChange={(e) => setTep([...(e.target.files ?? [])])} />
           <div className="mo chu-nho mt-6">PDF scan, ảnh PNG/JPG. Ảnh rõ, thẳng, độ phân giải khoảng 300 dpi cho kết quả tốt nhất; chữ viết tay, con dấu đè chữ thường đọc sai. Nhiều trang có thể mất vài phút.</div>
           {tienDo && (
             <div className="mt-10">

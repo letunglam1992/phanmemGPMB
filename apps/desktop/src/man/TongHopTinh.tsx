@@ -6,6 +6,7 @@
  *   xem chi tiết từng dự án như cấp xã (chỉ xem), xuất Excel; quản lý mã truy cập cổng của các xã.
  */
 import { useEffect, useMemo, useState } from "react";
+import { ChonTep } from "../thanh-phan/ChonTep";
 import { D, dinhDang } from "@gpmb/core";
 import { useUngDung } from "../ung-dung";
 import { taiXuong } from "../tai-xuong";
@@ -170,9 +171,9 @@ function PhanGui() {
             <div className="thong-bao thong-bao-vang chu-nho" style={{ margin: 0 }}>Chưa có khóa của tỉnh. Cấp tỉnh gửi tệp <code>{DUOI_KHOA}</code> (Tổng hợp tỉnh → Xuất khóa công khai gửi các xã); nhập tệp đó tại đây một lần.</div>
           )}
           {quyen("CAI_DAT") ? (
-            <label className="chu-nho tht-o">{khoa ? "Thay bằng tệp khóa khác" : "Nhập tệp khóa của tỉnh"}
-              <input type="file" accept={`${DUOI_KHOA},.json`} aria-label="Chọn tệp khóa của tỉnh" onChange={(e) => void nhapKhoa(e.target.files?.[0])} />
-            </label>
+            <div className="chu-nho tht-o">{khoa ? "Thay bằng tệp khóa khác" : "Nhập tệp khóa của tỉnh"}
+              <ChonTep accept={`${DUOI_KHOA},.json`} aria-label="Chọn tệp khóa của tỉnh" onChange={(e) => void nhapKhoa(e.target.files?.[0])} />
+            </div>
           ) : <div className="mo chu-nho">Cần tài khoản quản trị hoặc lãnh đạo để nhập khóa.</div>}
         </div>
       </div>
@@ -194,7 +195,7 @@ function PhanGui() {
             {!dsDuAn.length && <div className="mo">Chưa có dự án.</div>}
           </div>
           <label className="chu-nho"><input type="checkbox" checked={kemTep} onChange={(e) => doiGui({ kemTep: e.target.checked })} /> Kèm tệp đính kèm, tài liệu dự án ({[...soTep.entries()].filter(([id]) => dsChon.some((d) => d.id === id)).reduce((s, [, n]) => s + n, 0)} tệp)</label>
-          <label className="chu-nho"><input type="checkbox" checked={kemBanDo} onChange={(e) => doiGui({ kemBanDo: e.target.checked })} /> Kèm bản đồ địa chính (DGN) đã nạp</label>
+          <label className="chu-nho"><input type="checkbox" checked={kemBanDo} onChange={(e) => doiGui({ kemBanDo: e.target.checked })} /> Kèm bản đồ địa chính (DGN, DXF) đã nạp</label>
           <div className="mo chu-nho">Gói gồm đầy đủ dữ liệu các dự án chọn (hồ sơ hộ, kiểm đếm, phương án, tiến độ, văn bản đã ghi số){kemTep ? ", tệp đính kèm" : ""}{kemBanDo ? ", bản đồ" : ""} — không gồm tài khoản, mật khẩu, nhật ký hệ thống.</div>
         </div>
       </div>
@@ -496,9 +497,9 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
         <div className="the">
           <div className="the-dau"><h3>Nhận gói của xã, phường</h3></div>
           <div className="the-than luoi" style={{ gap: 10 }}>
-            <label className="chu-nho tht-o">Chọn tệp gói ({DUOI_GOI}, chọn được nhiều tệp)
-              <input type="file" multiple accept={DUOI_GOI} aria-label="Chọn gói dữ liệu của xã" disabled={!moKhoa || !!dang} onChange={(e) => { void nhapTep(e.target.files); e.target.value = ""; }} />
-            </label>
+            <div className="chu-nho tht-o">Chọn tệp gói ({DUOI_GOI}, chọn được nhiều tệp)
+              <ChonTep multiple accept={DUOI_GOI} aria-label="Chọn gói dữ liệu của xã" disabled={!moKhoa || !!dang} onChange={(e) => { void nhapTep(e.target.files); e.target.value = ""; }} />
+            </div>
             {cong && <button className="nut" disabled={!moKhoa || !!dang} onClick={() => void taiTuCong()}>Tải gói mới từ cổng Cloudflare</button>}
             {!moKhoa && !choNhan.length && <div className="mo chu-nho">Mở khóa cấp tỉnh trước khi nhận gói.</div>}
             {dang && <div className="mo" role="status">{dang}</div>}
@@ -760,7 +761,7 @@ function ThietLapKhoa({ xong, tenMacDinh, khoaCu, huy }: { xong: (k: KhoaTinh) =
         <div className="the-dau"><h3>Hoặc khôi phục khóa đã có</h3></div>
         <div className="the-than luoi" style={{ gap: 10 }}>
           <div className="mo chu-nho">Chuyển sang máy tổng hợp mới: chọn tệp dự phòng khóa đã xuất trước đây ({DUOI_KHOA}, loại "dự phòng").</div>
-          <input type="file" accept={`${DUOI_KHOA},.json`} aria-label="Chọn tệp dự phòng khóa" onChange={(e) => void khoiPhuc(e.target.files?.[0])} />
+          <ChonTep accept={`${DUOI_KHOA},.json`} aria-label="Chọn tệp dự phòng khóa" onChange={(e) => void khoiPhuc(e.target.files?.[0])} />
         </div>
       </div>
     </div>

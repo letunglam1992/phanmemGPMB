@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { ChonTep } from "../../thanh-phan/ChonTep";
 import { diemTrongThua, docBangDiem, docDgn, dungThua, soSanhBanDo, type Diem, type SoSanhThua, type ThuaBanDo } from "@gpmb/gis";
 import { useUngDung } from "../../ung-dung";
 import { taoId, TEN_NHOM_GHI_CHU, type DiemDoHienTrang, type DuAn, type GhiChuHienTruong, type Ho, type KetQuaDoLuu, type NhomGhiChu } from "../../mo-hinh";
@@ -305,7 +306,7 @@ export function HopSoSanh(p: { duAn: DuAn; dl: DuLieuBanDo; ketQua: (kq: { tep: 
   return (
     <HopThoai tieuDe="So sánh với bản đồ khác (trích đo bổ sung)" dong={p.dong} rong={820} chan={<><button className="nut" disabled={!kq} onClick={() => void xuat()}>Xuất Excel</button><button className="nut" onClick={p.dong}>Đóng</button><button className="nut nut-chinh" disabled={!kq} onClick={() => { p.ketQua(kq); p.dong(); }}>Hiện trên bản đồ</button></>}>
       <p className="mt-0 chu-nho">Bản đang xem là bản cũ; chọn tệp DGN hoặc DXF bản mới (cùng hệ VN-2000). Thửa ghép theo số tờ, số thửa (thửa thiếu số ghép theo vị trí nhãn). Đổi diện tích: lệch &gt; 0,5 m² và &gt; 0,1%; đổi hình: phần khác biệt &gt; 1 m². Dùng cấu hình lớp của bản đồ đang xem.</p>
-      <input type="file" aria-label="Tệp bản đồ bản mới" accept=".dgn,.dxf,.dwg" onChange={async (e) => {
+      <ChonTep aria-label="Tệp bản đồ bản mới" accept=".dgn,.dxf,.dwg" onChange={async (e) => {
         const f = e.target.files?.[0];
         if (!f) return;
         setLoi(null);
