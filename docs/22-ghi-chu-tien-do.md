@@ -1,6 +1,6 @@
 # 22. Ghi chú tiến độ — đọc file này trước khi làm tiếp
 
-Cập nhật: 07/10/2026. Bản mới nhất đã phát hành: **1.0.2**. Nhánh làm việc: `claude/great-rubin-4x4alw`; mọi thay đổi đã commit và đẩy lên.
+Cập nhật: 07/10/2026. Bản mới nhất đã phát hành: **1.0.3**. Nhánh làm việc: `claude/great-rubin-4x4alw`; mọi thay đổi đã commit và đẩy lên.
 
 Tài liệu nên đọc trước:
 - `CLAUDE.md`: quy tắc, lệnh.
@@ -24,7 +24,7 @@ Tài liệu nên đọc trước:
 | 0.9.23 | Trợ lý AI nổi: nút robot góc dưới phải mở khung chat; thanh bên "Trợ lý AI (hỏi đáp)" |
 | 0.9.25 | Cảnh báo xã lâu chưa gửi (ngưỡng do tỉnh đặt); xã tự gửi định kỳ lên cổng (chu kỳ do xã đặt); tỉnh xem lại các bản gửi trước (≤ 20 bản/đơn vị); báo cáo Word tổng hợp toàn tỉnh |
 | 0.9.26 | Tỉnh tự nhận gói mới từ cổng mỗi 30 phút khi khóa đang mở, chuông báo gói chờ nhận; phụ lục Excel kèm báo cáo Word tỉnh; thời gian không tính vào thời hạn (bước có thời hạn, bắt buộc lý do, tạm dừng); trường hợp Điều 14/17 PL I QĐ 106 do người dùng chọn + căn cứ; ghi chú bản đồ trong hồ sơ hộ; thùng rác tệp đính kèm, tài liệu; Luật Đất đai hợp nhất (VBHN 44/VBHN-VPQH) trong Trợ lý AI |
-| (chưa phát hành, đã push) | Excel tổng hợp toàn tỉnh theo thể thức biểu báo cáo; rà soát giao diện (ô chọn tệp tiếng Việt, số kiểu Việt, Kiểm đếm, khung giải trình thu gọn, nút sang Phương án từ Chi trả, dòng đợt trong báo cáo Word) — xem docs/09. Phát hành: nâng 1.0.3 theo quy trình mục 3 |
+| 1.0.3 | Excel tổng hợp toàn tỉnh theo thể thức biểu báo cáo; rà soát giao diện (ô chọn tệp tiếng Việt, số kiểu Việt, Kiểm đếm, khung giải trình thu gọn, nút sang Phương án từ Chi trả, dòng đợt trong báo cáo Word) — xem docs/09 |
 | 1.0.2 | Nút **"Tệp đã xuất"** (⤓) trên thanh tiêu đề như nút tải về của trình duyệt: xuất Excel, Word… xong tự mở danh sách vài giây; bấm tên tệp mở bằng Excel/Word, "Thư mục" mở Explorer chọn sẵn tệp; giữ 30 tệp gần nhất (theo máy); lệnh Rust `mo_tep_da_xuat`, `mo_noi_luu_tep` chỉ mở loại tệp phần mềm xuất (không mở .exe, .bat) |
 | 1.0.1 | **Sửa lỗi "Command plugin:dialog|confirm not allowed by ACL"**: bỏ `tauri-plugin-dialog` (bản 2.8.0 chèn script thay `window.confirm` bằng lệnh không còn trong plugin → `confirm()` trả Promise, **mọi hộp hỏi xác nhận trên bản .exe bị bỏ qua — thao tác chạy luôn**); hộp "Lưu thành" gọi thẳng `rfd`; kiểm thử Rust chặn đưa plugin trở lại. Nội dung bản quyền mới ở Giới thiệu ("© 2026 Lê Tùng Lâm. All rights reserved." + câu bảo hộ quyền tác giả), thuộc tính tệp .exe |
 | 0.9.27 | Khôi phục tiến độ, chi trả, thông tin dự án về bản cũ; lịch sử thay đổi trong tệp sao lưu; hoàn tác bước chung 1–4 và tiến độ hộ; đợt thu hồi: cột "Đợt thu hồi" khi nhập Excel, báo cáo tách theo đợt, số đợt phê duyệt theo đợt; so sánh bản đồ đối chiếu hồ sơ + xuất Excel; ảnh cho ghi chú hiện trường; **bản đồ DXF** (DWG: báo cách đổi sang DXF); nạp bản đồ xong chọn **tự nhận diện / tự chọn lớp cho từng đối tượng** (bảng tích lớp, thêm lớp loại đất, diện tích); nhãn thửa nhiều nội dung ("CLN" · "13"/"1310,0" · tên chủ); **số tờ nhập tay** theo tệp |
