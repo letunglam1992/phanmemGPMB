@@ -167,6 +167,25 @@ Dữ liệu này **không nằm trong bản sao lưu** của phần mềm. Khi m
 
 **Tệp đã xóa** (thùng rác tệp, 0.9.26) không được đưa vào gói gửi tỉnh và không tính vào số tệp.
 
+### Bổ sung ở bản 1.0.4 — Dự án liên xã (tuyến qua nhiều xã)
+
+Mỗi xã lập hồ sơ, phương án cho phần đất trên địa bàn mình (khoản 2 Điều 83 Luật Đất đai 2024; thẩm quyền chuyển cho cấp xã theo phân định chính quyền hai cấp), nên ở tỉnh một tuyến là nhiều "đoạn" do nhiều xã gửi.
+
+**Cấp tỉnh — khai một lần cho mỗi tuyến** (màn "Tổng hợp tỉnh" → khối "Dự án liên xã" → "Khai dự án liên xã")
+- **Mã dự án dùng chung** (phần mềm gợi ý `LX-<năm>-NNN`, sửa được; chỉ chữ không dấu, số, `- . _ /`).
+- Tên dự án, chủ đầu tư, **danh sách xã, phường dọc tuyến** (ít nhất 2; theo quyết định chủ trương / phạm vi dự án). Có nút thêm nhanh các xã đã từng gửi gói.
+- Báo mã cho các xã bằng văn bản (công văn, nhóm Zalo…). Danh sách tuyến lưu ở máy tỉnh, chưa đồng bộ qua cổng.
+
+**Cấp xã** — Thông tin dự án → tích **"Là dự án liên xã"** → điền đúng mã tỉnh cấp; tên toàn tuyến, đoạn từ Km / đến Km (không bắt buộc). Gửi gói như thường lệ. Nếu xã ghi lý trình theo thửa, gói kèm số km mặt bằng sạch của đoạn.
+
+**Cách tỉnh tổng hợp**
+- Gom các đoạn theo mã: mỗi tuyến một bảng — từng xã (số hộ, đã bàn giao, duyệt PA, vướng mắc, tạm tính, DT thu hồi, km sạch), dòng **"Toàn tuyến (x/y xã có số liệu)"**.
+- Xã dọc tuyến chưa gửi đoạn của mình: dòng đỏ **"Chưa có số liệu"**. Xã gửi mã nhưng không có trong danh sách: nhãn "ngoài danh sách". Mã xã ghi mà tỉnh chưa khai: nhãn "Mã chưa khai ở tỉnh".
+- "Hoàn thành GPMB toàn tuyến" chỉ khi mọi xã dọc tuyến đã gửi và mọi hộ đã bàn giao.
+- **Số dự án toàn tỉnh đếm theo mã** (một tuyến = một dự án) ở chỉ số, Excel (TỔNG CỘNG trang 1, 2) và báo cáo Word ("Trong đó có n dự án liên xã…").
+- Excel thêm **Phụ lục 03 — Dự án liên xã** (trang "Lien xa").
+- Đoạn gửi từ bản cũ (chưa có mã): phần mềm **gợi ý ghép** khi tên giống ≥ 50% và cùng chủ đầu tư hoặc xã nằm trong danh sách; cán bộ tỉnh bấm **Ghép** (có thể **Bỏ ghép**). Không tự ghép.
+
 ## 4. Cổng Cloudflare (phương án 2 mức b)
 
 ### 4.1. Cổng làm gì

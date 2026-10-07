@@ -36,6 +36,13 @@ Quá hạn kế hoạch; bước quá hạn theo luật (thẩm định 30 ngày
 
 ## 4. Lưu ý
 
+- **Lần đầu dùng trên máy mới:** thẻ **Bắt đầu sử dụng** ở Tổng quan liệt kê 6 bước (Thiết lập đơn vị → Lịch ngày nghỉ → Mật khẩu khôi phục sao lưu → Tự động sao lưu → Tạo dự án → Nạp bản đồ / nhập Excel); bước nào xong phần mềm tự đánh dấu.
+- **Lịch ngày nghỉ:** Cài đặt chung → Lịch ngày nghỉ → **Đề xuất ngày nghỉ năm …**: phần mềm liệt kê ngày lễ, Tết theo khoản 1 Điều 112 Bộ luật Lao động 2019 (Tết Âm lịch, Giỗ Tổ đã đổi sang dương lịch). Đây chỉ là đề xuất — đối chiếu thông báo nghỉ lễ, Tết năm đó, bỏ chọn ngày không đúng, thêm tay 02 ngày Tết còn lại, ngày liền kề Quốc khánh, nghỉ bù, làm bù; rồi tích "đã nhập đủ".
+- **Dự án tuyến qua nhiều xã (liên xã):** tỉnh cấp **mã dự án dùng chung** và khai danh sách xã dọc tuyến; ở xã: Thông tin dự án → tích **Là dự án liên xã** → điền đúng mã tỉnh cấp (kèm tên toàn tuyến, đoạn Km nếu có). Tỉnh gom các đoạn theo mã (docs/21).
+- **Lý trình (không bắt buộc):** ghi ở ô "Lý trình" dưới loại đất của từng thửa (Km12+350 hoặc Km12+350 – Km12+480); ghi nhanh: chọn nhiều hồ sơ ở danh sách → **Ghi lý trình…** (Enter sang thửa kế tiếp, hoặc áp một đoạn chung), hoặc cột "Lý trình" khi nhập Excel. Có lý trình thì Tổng quan dự án hiện thẻ **Mặt bằng theo lý trình** (km sạch, đoạn còn vướng, Excel).
+- **In bảng tính, giải trình của hộ:** Hồ sơ → Tính toán, giải trình → **Xuất Word (kèm giải trình)** hoặc **In / PDF** (chọn máy in "Microsoft Print to PDF" để lưu PDF).
+- **Tìm nhanh (Ctrl + K):** gõ tên, mã hộ, tờ/thửa (5/85 — đúng số tờ, số thửa), 4 số cuối số định danh, hoặc lý trình (Km1+300); Enter mở thẳng thửa tìm được.
+- **Soát phương án** (trước khi chốt): hàng tóm tắt theo quy tắc cho biết bao nhiêu hồ sơ còn vướng từng điều kiện; bấm một dòng để mở đúng thẻ, đúng thửa cần sửa.
 - Mọi lựa chọn khác mặc định (giá sửa tay, mức hỗ trợ lựa chọn) **bắt buộc ghi lý do**; được ghi vào nhật ký hồ sơ.
 - Làm việc qua mạng nội bộ: nếu thấy thông báo "Dữ liệu đã được … sửa", phần mềm đã tải bản mới nhất; bản đang nhập của anh/chị vẫn còn trên màn hình để nhập lại rồi lưu.
 - Tra cứu đơn giá, giá đất: menu **Tra cứu đơn giá, giá đất**.
