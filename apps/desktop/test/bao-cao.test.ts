@@ -135,6 +135,25 @@ describe("Báo cáo tổng hợp — mẫu Word", () => {
     expect(t2).toContain("các dự án trên địa bàn xã Mai Sơn");
     expect(t2.split("\n").filter((d) => d.trim() === "").length).toBeLessThan(t.split("\n").filter((d) => d.trim() === "").length + 3);
   });
+  it("1.0.3: dự án có đợt thu hồi — bảng Word thêm dòng từng đợt dưới dự án (không đánh số), danh sách theo_dot", async () => {
+    const { readFileSync } = await import("node:fs");
+    const PizZip = (await import("pizzip")).default;
+    const { dienMau } = await import("../src/van-ban/dien-mau");
+    const { duLieuBaoCaoWord } = await import("../src/bao-cao-van-ban");
+    const { duAnA, duAnB, duLieu } = await haiDuAn();
+    const da: DuAn = { ...duAnA, dotThuHoi: [{ id: "d1", so: 1, ten: "Đợt 1" }] };
+    const duLieu2 = (d: DuAn) => (d.id === da.id ? duLieu(duAnA).map((x, i) => ({ ...x, h: i === 0 ? { ...x.h, dotId: "d1" } : x.h })) : duLieu(d));
+    const bc = lapBaoCao([da, duAnB], duLieu2, { denNgay: "2026-11-15" });
+    const tt = { coQuanCapTren: "", coQuan: "", kyHieu: "", diaDanh: "", kinhGui: "", so: "", ngayKy: "", moDau: "", khoKhanKhac: "", nhiemVu: "", kienNghi: "", ketThuc: "", noiNhan: "", quyenHan: "", nguoiKy: "" };
+    const du = duLieuBaoCaoWord(bc, tt) as { du_an: { tt: number | string; ten: string; so_ho: number }[]; co_dot: boolean; theo_dot: { ten: string; du_an: string }[] };
+    expect(du.du_an.map((x) => [x.tt, x.ten, x.so_ho])).toEqual([[1, `${da.ten} (${da.xa})`, 2], ["", "– Đợt 1", 1], ["", "– Chưa xếp đợt", 1], [2, "Dự án mẫu B (Xã Mai Sơn)", 2]]);
+    expect(du.co_dot).toBe(true);
+    expect(du.theo_dot.map((x) => x.ten)).toEqual(["– Đợt 1", "– Chưa xếp đợt"]);
+    const mau = readFileSync(new URL("../public/mau-van-ban/bao-cao-tong-hop.docx", import.meta.url));
+    const t = new PizZip(dienMau(mau, du)).file("word/document.xml")!.asText().replace(/<[^>]+>/g, "");
+    expect(t).toContain("– Đợt 1");
+    expect(t).toContain("Tổng số 2 dự án");
+  });
 });
 
 describe("Chốt số liệu kỳ báo cáo, so sánh kỳ trước", () => {

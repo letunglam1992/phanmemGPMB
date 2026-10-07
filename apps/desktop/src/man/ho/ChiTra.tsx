@@ -15,7 +15,14 @@ const tien = (d: Decimal | null | undefined) => (d ? dinhDang(d, 0) : "—");
 
 /** Thẻ Chi trả của hồ sơ: số phải trả theo bản phương án đã duyệt, các đợt chi, tiền chậm trả tạm tính. */
 export function TabChiTra({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => void }) {
-  const { tyLeCham, nguoiDung, moCaiDat } = useUngDung();
+  const { tyLeCham, nguoiDung, moCaiDat, di } = useUngDung();
+  /** 1.0.3: đi tới thẻ Phương án – phiên bản (Tổng quan dự án), cuộn tới thẻ. */
+  const moPhuongAn = () => {
+    di({ ten: "du-an", duAnId: duAn.id, tab: "tong-quan" });
+    window.setTimeout(() => {
+      document.getElementById("the-phuong-an")?.scrollIntoView({ block: "start", behavior: "smooth" });
+    }, 300);
+  };
   const r = tinhChiTra(h, duAn.phuongAn ?? [], tyLeCham, homNayIso());
   const ct = h.chiTra ?? { dot: [] };
   const [moi, setMoi] = useState<{ ngay: string; soTien: string; hinhThuc: HinhThucChi; chungTu: string; ghiChu: string }>({ ngay: homNayIso(), soTien: "", hinhThuc: "CHUYEN_KHOAN", chungTu: "", ghiChu: "" });
@@ -35,7 +42,10 @@ export function TabChiTra({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) =>
   if (r.trangThai === "CHUA_DUYET")
     return (
       <div className="the"><div className="the-than">
-        <div className="thong-bao thong-bao-vang mb-0">Hộ chưa có trong bản phương án đã ghi nhận phê duyệt (màn Dự án → Phương án – phiên bản). Số phải trả chỉ lấy từ bản đã phê duyệt.</div>
+        <div className="thong-bao thong-bao-vang mb-0" style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+          <span style={{ flex: 1, minWidth: 260 }}>Hộ chưa có trong bản phương án đã ghi nhận phê duyệt. Số phải trả chỉ lấy từ bản đã phê duyệt — chốt phương án, ghi nhận phê duyệt ở thẻ Phương án của dự án.</span>
+          <button className="nut nut-nho" onClick={moPhuongAn}>Mở Phương án của dự án →</button>
+        </div>
         {r.canhBao.map((c) => <div key={c} className="thong-bao thong-bao-do mt-8">{c}</div>)}
       </div></div>
     );

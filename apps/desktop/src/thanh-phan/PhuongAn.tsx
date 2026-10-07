@@ -78,7 +78,7 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
   };
 
   return (
-    <div className="the mb-14">
+    <div className="the mb-14" id="the-phuong-an">
       <div className="the-dau">
         <h2>Phương án – phiên bản</h2>
         <span className="mo chu-nho">Chốt để đóng băng số liệu; phê duyệt ghi theo quyết định; mọi thay đổi sau đó lập bản điều chỉnh</span>

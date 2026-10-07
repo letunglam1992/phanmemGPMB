@@ -1,6 +1,6 @@
 /** Dữ liệu điền mẫu Word "Báo cáo tổng hợp" (public/mau-van-ban/bao-cao-tong-hop.docx). */
 import { dinhDang } from "@gpmb/core";
-import { TEN_TINH_TRANG, type BaoCao } from "./bao-cao";
+import { TEN_TINH_TRANG, type BaoCao, type DongDot } from "./bao-cao";
 import type { SoSanhKy } from "./ky-bao-cao";
 import type { HoVuongMac } from "./bao-cao-dinh-ky";
 
@@ -55,16 +55,23 @@ export function duLieuBaoCaoWord(bc: BaoCao, t: ThongTinBaoCao, ss?: SoSanhKy | 
     den_ngay: ngayVN(bc.loc.denNgay),
     mo_dau: t.moDau,
     tong_quat: tongQuat,
-    du_an: bc.dong.map((x, i) => ({
-      tt: i + 1,
-      ten: `${x.duAn.ten} (${x.duAn.xa})`,
-      so_ho: x.soHo,
-      dt: dinhDang(x.dtThuHoi, 2),
-      da_duyet: x.soHoDaDuyet ? tien(x.daDuyet) : "Chưa duyệt",
-      da_chi: tien(x.daChi),
-      hoan_thanh: `${x.theoTrangThai.HOAN_THANH}/${x.soHo}`,
-      tinh_trang: TEN_TINH_TRANG[x.tinhTrang],
-    })),
+    // P3-1 (1.0.3): dự án có đợt thu hồi — thêm dòng từng đợt ngay dưới dòng dự án (cùng vòng lặp, mẫu đơn vị tự chỉnh vẫn dùng được)
+    du_an: bc.dong.flatMap((x, i) => [
+      {
+        tt: i + 1,
+        ten: `${x.duAn.ten} (${x.duAn.xa})`,
+        so_ho: x.soHo,
+        dt: dinhDang(x.dtThuHoi, 2),
+        da_duyet: x.soHoDaDuyet ? tien(x.daDuyet) : "Chưa duyệt",
+        da_chi: tien(x.daChi),
+        hoan_thanh: `${x.theoTrangThai.HOAN_THANH}/${x.soHo}`,
+        tinh_trang: TEN_TINH_TRANG[x.tinhTrang],
+        la_dot: false,
+      },
+      ...(x.theoDot ?? []).map((d) => dongDotWord(d)),
+    ]),
+    co_dot: bc.dong.some((x) => x.theoDot?.length),
+    theo_dot: bc.dong.flatMap((x) => (x.theoDot ?? []).map((d) => ({ ...dongDotWord(d), du_an: x.duAn.ten }))),
     so_ho: s.soHo,
     dt: dinhDang(s.dtThuHoi, 2),
     da_duyet: tien(s.daDuyet),
@@ -81,6 +88,21 @@ export function duLieuBaoCaoWord(bc: BaoCao, t: ThongTinBaoCao, ss?: SoSanhKy | 
     noi_nhan_ds: noiNhan.map((x, i) => `- ${x.replace(/[;.]$/, "")}${i === noiNhan.length - 1 ? "." : ";"}`),
     quyen_han: t.quyenHan.toUpperCase(),
     nguoi_ky: t.nguoiKy,
+  };
+}
+
+/** Dòng một đợt thu hồi trong bảng Word (không đánh số thứ tự, không tính là một dự án). */
+function dongDotWord(d: DongDot) {
+  return {
+    tt: "",
+    ten: `– ${d.ten}`,
+    so_ho: d.soHo,
+    dt: dinhDang(d.dtThuHoi, 2),
+    da_duyet: d.soHoDaDuyet ? tien(d.daDuyet) : "Chưa duyệt",
+    da_chi: tien(d.daChi),
+    hoan_thanh: `${d.theoTrangThai.HOAN_THANH}/${d.soHo}`,
+    tinh_trang: "",
+    la_dot: true,
   };
 }
 

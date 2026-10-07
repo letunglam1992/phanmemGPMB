@@ -9,8 +9,27 @@ import { GiaiTrinh, NhanDong, lopDong, tien } from "../../thanh-phan/chung";
 import { xuatExcelHo } from "../../xuat-excel";
 import { useMauExcel } from "../../thanh-phan/MauExcel";
 
+const KHOA_MO_GT = "gpmb-mo-giai-trinh";
+
 export function TabTinhToan({ h, duAn, kq }: { h: Ho; duAn: DuAn; kq: KetQuaHo }) {
   const docMauExcel = useMauExcel();
+  // 1.0.3: khung giải trình thu gọn được — màn hẹp (laptop 1366) bảng tính dùng hết chiều ngang; bấm dòng thì mở
+  const [moGt, setMoGt] = useState(() => {
+    try {
+      const v = localStorage.getItem(KHOA_MO_GT);
+      return v === null ? window.innerWidth >= 1600 : v === "1";
+    } catch {
+      return true;
+    }
+  });
+  const datMoGt = (v: boolean) => {
+    setMoGt(v);
+    try {
+      localStorage.setItem(KHOA_MO_GT, v ? "1" : "0");
+    } catch {
+      /* bỏ qua */
+    }
+  };
   const [chon, setChon] = useState<DongKetQua | null>(kq.tatCa.find((x) => x.dong.trangThai !== "TAM_TINH") ?? kq.tatCa[0] ?? null);
   const chonHienTai = chon && kq.tatCa.find((x) => x.dong.noiDung === chon.dong.noiDung && x.taiSanId === chon.taiSanId && x.thuaId === chon.thuaId);
   const cong = (ds: DongKetQua[]) => ds.reduce((s, x) => (x.dong.trangThai === "TAM_TINH" && x.dong.thanhTien ? s.plus(x.dong.thanhTien) : s), D(0) as Decimal);
@@ -36,7 +55,7 @@ export function TabTinhToan({ h, duAn, kq }: { h: Ho; duAn: DuAn; kq: KetQuaHo }
                   stt++;
                   const ts = Object.entries(x.dong.thamSo).slice(0, 2).map(([k, v]) => `${k}: ${v}`).join(" · ");
                   return (
-                    <tr key={j} data-phim-chon className={`co-the-chon ${lopDong(x.dong)} ${chonHienTai === x ? "dang-chon" : ""}`} onClick={() => setChon(x)}>
+                    <tr key={j} data-phim-chon className={`co-the-chon ${lopDong(x.dong)} ${chonHienTai === x ? "dang-chon" : ""}`} onClick={() => { setChon(x); if (!moGt) datMoGt(true); }}>
                       <td className="mo">{stt}</td>
                       <td>{x.dong.noiDung}</td>
                       <td className="chu-nho mo" style={{ maxWidth: 360 }}>{ts || x.dong.canhBao[0]}</td>
@@ -55,14 +74,17 @@ export function TabTinhToan({ h, duAn, kq }: { h: Ho; duAn: DuAn; kq: KetQuaHo }
   );
 
   return (
-    <div className="luoi" style={{ gridTemplateColumns: "minmax(0,1fr) 400px" }}>
+    <div className="luoi" style={{ gridTemplateColumns: moGt ? "minmax(0,1fr) 400px" : "minmax(0,1fr)" }}>
       <div className="the">
         <div className="the-dau">
           <h2>Bảng tính chi tiết</h2>
           <span className="nhom-nut chu-nho">
             <span className="nhan nhan-xanh">Tạm tính</span><span className="nhan nhan-vang">Cần xác nhận</span><span className="nhan nhan-do">Thiếu căn cứ</span><span className="nhan nhan-tim">Có lựa chọn</span>
           </span>
-          <div className="phai"><button className="nut nut-nho" onClick={async () => xuatExcelHo(duAn, h, kq, await docMauExcel())}>Xuất Excel phương án chi tiết</button></div>
+          <div className="phai">
+            {!moGt && <button className="nut nut-nho" title="Mở khung giải trình bên phải (hoặc bấm một dòng)" onClick={() => datMoGt(true)}>Giải trình ‹</button>}
+            <button className="nut nut-nho" onClick={async () => xuatExcelHo(duAn, h, kq, await docMauExcel())}>Xuất Excel phương án chi tiết</button>
+          </div>
         </div>
         <div className="bang-cuon">
           <table className="bang">
@@ -71,18 +93,20 @@ export function TabTinhToan({ h, duAn, kq }: { h: Ho; duAn: DuAn; kq: KetQuaHo }
               {phanA.length > 0 && veNhom(phanA, "A", "GIÁ TRỊ BỒI THƯỜNG")}
               {phanB.length > 0 && veNhom(phanB, "B", "GIÁ TRỊ HỖ TRỢ")}
               {kq.tatCa.length === 0 && <tr><td colSpan={6} className="trong">Chưa có khoản nào. Nhập thửa đất, kiểm đếm tài sản và chọn hỗ trợ.</td></tr>}
-              <tr className="tong"><td /><td colSpan={2}>Tổng cộng (A + B) — chưa làm tròn</td><td className="so">{tien(kq.tong.tongChuaLamTron.toDecimalPlaces(0))}</td><td colSpan={2} className="chu-nho mo">{kq.tong.tongChuaLamTron.isInteger() ? "" : kq.tong.tongChuaLamTron.toString()}</td></tr>
-              <tr className="tong"><td /><td colSpan={2}>Tổng sau làm tròn — {kq.moTaLamTron}</td><td className="so">{tien(kq.tong.tongLamTron)}</td><td colSpan={2} className="chu-nho mo">Chênh lệch làm tròn: {kq.tong.chenhLechLamTron.toDecimalPlaces(2).toString()} đ</td></tr>
+              <tr className="tong"><td /><td colSpan={2}>Tổng cộng (A + B) — chưa làm tròn</td><td className="so">{tien(kq.tong.tongChuaLamTron.toDecimalPlaces(0))}</td><td colSpan={2} className="chu-nho mo">{kq.tong.tongChuaLamTron.isInteger() ? "" : hienSo(kq.tong.tongChuaLamTron.toString())}</td></tr>
+              <tr className="tong"><td /><td colSpan={2}>Tổng sau làm tròn — {kq.moTaLamTron}</td><td className="so">{tien(kq.tong.tongLamTron)}</td><td colSpan={2} className="chu-nho mo">Chênh lệch làm tròn: {hienSo(kq.tong.chenhLechLamTron.toDecimalPlaces(2).toString())} đ</td></tr>
               <tr><td /><td colSpan={2}>Khấu trừ nghĩa vụ tài chính</td><td className="so">{tien(kq.khauTru)}</td><td colSpan={2} /></tr>
               <tr className="tong"><td /><td colSpan={2}>Số tiền thực nhận</td><td className="so">{tien(kq.conLai)}</td><td colSpan={2}>{kq.tong.duocChot ? <span className="nhan nhan-xanh">Đủ điều kiện chốt</span> : <span className="nhan nhan-vang">Chưa chốt được</span>}</td></tr>
             </tbody>
           </table>
         </div>
       </div>
-      <div className="the" style={{ alignSelf: "start", position: "sticky", top: 10 }}>
-        <div className="the-dau"><h3>Giải trình khoản tính</h3></div>
-        <div className="the-than">{chonHienTai ? <GiaiTrinh d={chonHienTai.dong} /> : <div className="trong">Chọn một dòng để xem giải trình.</div>}</div>
-      </div>
+      {moGt && (
+        <div className="the" style={{ alignSelf: "start", position: "sticky", top: 10 }}>
+          <div className="the-dau"><h3>Giải trình khoản tính</h3><div className="phai"><button className="nut nut-chu nut-nho" title="Thu gọn để bảng tính rộng hơn" aria-label="Thu gọn giải trình" onClick={() => datMoGt(false)}>Thu gọn ›</button></div></div>
+          <div className="the-than">{chonHienTai ? <GiaiTrinh d={chonHienTai.dong} /> : <div className="trong">Chọn một dòng để xem giải trình.</div>}</div>
+        </div>
+      )}
     </div>
   );
 }
