@@ -5,7 +5,8 @@ import { docLyTrinh, hienLyTrinh, type LyTrinh } from "../ly-trinh";
 export function OLyTrinh({ value, onChange, nhan, className }: { value: LyTrinh | undefined; onChange: (l: LyTrinh | undefined) => void; nhan: string; className?: string }) {
   const [chu, setChu] = useState(hienLyTrinh(value));
   const [loi, setLoi] = useState<string | null>(null);
-  useEffect(() => { setChu(hienLyTrinh(value)); setLoi(null); }, [value?.tu, value?.den]);
+  const hien = hienLyTrinh(value);
+  useEffect(() => { setChu(hien); setLoi(null); }, [hien]);
   const ghi = () => {
     const r = docLyTrinh(chu);
     if ("loi" in r) return setLoi(r.loi);
