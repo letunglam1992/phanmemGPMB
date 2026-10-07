@@ -1,6 +1,5 @@
 /** 1.0.4: đề xuất ngày nghỉ, Bắt đầu sử dụng, Word bảng tính hộ, tìm tờ/thửa, soát đi tới đúng ô. */
 import { expect, test, type Page } from "@playwright/test";
-import ExcelJS from "exceljs";
 
 async function vao(p: Page) {
   await p.goto("/");
