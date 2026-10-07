@@ -8,11 +8,17 @@ import type { DongKetQua, KetQuaHo } from "../../tinh-ho";
 import { GiaiTrinh, NhanDong, lopDong, tien } from "../../thanh-phan/chung";
 import { xuatExcelHo } from "../../xuat-excel";
 import { useMauExcel } from "../../thanh-phan/MauExcel";
+import { taiLieuBangTinh } from "../../van-ban/bang-tinh-ho";
+import { inTaiLieu, taoDocx } from "../../van-ban/tai-lieu-don-gian";
+import { taiXuong } from "../../tai-xuong";
+import { tenTep } from "../../ten-tep";
+import { useUngDung } from "../../ung-dung";
 
 const KHOA_MO_GT = "gpmb-mo-giai-trinh";
 
 export function TabTinhToan({ h, duAn, kq }: { h: Ho; duAn: DuAn; kq: KetQuaHo }) {
   const docMauExcel = useMauExcel();
+  const { bao } = useUngDung();
   // 1.0.3: khung giải trình thu gọn được — màn hẹp (laptop 1366) bảng tính dùng hết chiều ngang; bấm dòng thì mở
   const [moGt, setMoGt] = useState(() => {
     try {
@@ -84,6 +90,11 @@ export function TabTinhToan({ h, duAn, kq }: { h: Ho; duAn: DuAn; kq: KetQuaHo }
           <div className="phai">
             {!moGt && <button className="nut nut-nho" title="Mở khung giải trình bên phải (hoặc bấm một dòng)" onClick={() => datMoGt(true)}>Giải trình ‹</button>}
             <button className="nut nut-nho" onClick={async () => xuatExcelHo(duAn, h, kq, await docMauExcel())}>Xuất Excel phương án chi tiết</button>
+            <button className="nut nut-nho" title="Bảng tính chi tiết kèm giải trình từng khoản (công thức, tham số, căn cứ) — tệp Word" onClick={async () => {
+              const tl = taiLieuBangTinh(duAn, h, kq);
+              if (await taiXuong(taoDocx(tl), tenTep(`Bang-tinh-giai-trinh_${h.ma} ${h.ten}.docx`), "application/vnd.openxmlformats-officedocument.wordprocessingml.document")) bao("Đã xuất Word bảng tính, giải trình");
+            }}>Xuất Word (kèm giải trình)</button>
+            <button className="nut nut-nho" title="In bảng tính kèm giải trình; chọn máy in “Microsoft Print to PDF” để lưu PDF" onClick={() => inTaiLieu(taiLieuBangTinh(duAn, h, kq))}>In / PDF</button>
           </div>
         </div>
         <div className="bang-cuon">
