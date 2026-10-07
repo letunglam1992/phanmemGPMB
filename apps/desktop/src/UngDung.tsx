@@ -1,3 +1,4 @@
+import { NutTepDaXuat } from "./thanh-phan/TepDaXuat";
 import { ViecCuaToi } from "./man/ViecCuaToi";
 import { TroLyAi, moTroLy } from "./man/HoiDap";
 import { TuDongGuiTinh } from "./thanh-phan/TuDongGuiTinh";
@@ -201,6 +202,7 @@ export function UngDung() {
             <button className="nut-tren nut-tren-bt" title={giaoDien === "toi" ? "Giao diện sáng" : "Giao diện tối"} aria-label="Đổi giao diện sáng/tối" onClick={() => setGiaoDien(giaoDien === "toi" ? "sang" : "toi")}>
               <BieuTuong ten={giaoDien === "toi" ? "sang" : "toi"} co={17} />
             </button>
+            <NutTepDaXuat />
             <div className="menu-nguoi">
               <button className="nut-tren nut-tren-bt nut-chuong" title={`${canhBao.length} cảnh báo, việc cần theo dõi`} aria-label="Thông báo" aria-expanded={chuong} onClick={() => setChuong(!chuong)}>
                 <BieuTuong ten="chuong" co={17} />

@@ -1191,3 +1191,14 @@ kbd.phim { display: inline-block; min-width: 20px; padding: 1px 6px; border: 1px
 .tl-hang { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; }
 .tl-o-khoa { flex: 1 1 100%; display: grid; gap: 4px; }
 @media print { .tl-nut, .tl-vung { display: none !important; } }
+/* 1.0.2: Tệp đã xuất (thanh tiêu đề) */
+.cham-chuong.xanh { background: var(--chinh); }
+.menu-tep { width: 420px; }
+.menu-tep .tep-dong { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 8px; }
+.menu-tep .tep-dong:hover { background: var(--be-mat-2); }
+.menu-tep .tep-bt { flex: none; width: 28px; height: 28px; border-radius: 7px; display: grid; place-items: center; background: var(--be-mat-2); color: var(--chinh); font-weight: 700; font-size: 12px; }
+.menu-tep .tep-ten { flex: 1; min-width: 0; text-align: left; background: none; border: 0; padding: 0; cursor: pointer; color: inherit; display: block !important; }
+.menu-tep .tep-ten:disabled { cursor: default; }
+.menu-tep .tep-ten b { display: block; font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.menu-tep .tep-ten:not(:disabled):hover b { text-decoration: underline; color: var(--chinh); }
+.menu-tep .tep-ten small { display: block; font-size: 11.5px; color: var(--chu-mo); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

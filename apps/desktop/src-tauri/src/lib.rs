@@ -128,6 +128,48 @@ fn mo_explorer_chon(tep: &std::path::Path) {
     let _ = tep;
 }
 
+/// Loại tệp phần mềm xuất ra — chỉ những loại này được mở bằng ứng dụng mặc định (không mở tệp chạy được như .exe, .bat).
+const DUOI_MO_DUOC: &[&str] = &["xlsx", "docx", "pdf", "zip", "txt", "csv", "json", "png", "jpg", "gpmb", "gpmbtinh", "gpmbkhoa"];
+
+/// Kiểm đường dẫn tệp đã xuất: tuyệt đối, còn tồn tại, đúng loại tệp xuất.
+fn tep_da_xuat(duong_dan: &str) -> Result<PathBuf, String> {
+    let p = PathBuf::from(duong_dan);
+    if !p.is_absolute() || !p.is_file() {
+        return Err(format!("Không còn tệp {duong_dan} (đã xóa hoặc chuyển chỗ)"));
+    }
+    let duoi = p.extension().and_then(|x| x.to_str()).unwrap_or("").to_lowercase();
+    if !DUOI_MO_DUOC.contains(&duoi.as_str()) {
+        return Err("Chỉ mở được tệp phần mềm đã xuất (Excel, Word, PDF, zip…)".into());
+    }
+    Ok(p)
+}
+
+/// 1.0.2: mở tệp vừa xuất bằng ứng dụng mặc định (Excel, Word…) — danh sách "Tệp đã xuất" trên thanh tiêu đề.
+#[tauri::command]
+fn mo_tep_da_xuat(duong_dan: String) -> Result<(), String> {
+    let p = tep_da_xuat(&duong_dan)?;
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        // explorer.exe "<tệp>" mở bằng ứng dụng gắn với loại tệp
+        std::process::Command::new("explorer").raw_arg(format!("\"{}\"", p.display())).spawn().map_err(|e| e.to_string())?;
+    }
+    #[cfg(not(target_os = "windows"))]
+    std::process::Command::new("xdg-open").arg(&p).spawn().map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+/// 1.0.2: mở thư mục chứa tệp đã xuất, chọn sẵn tệp.
+#[tauri::command]
+fn mo_noi_luu_tep(duong_dan: String) -> Result<(), String> {
+    let p = tep_da_xuat(&duong_dan)?;
+    #[cfg(target_os = "windows")]
+    mo_explorer_chon(&p);
+    #[cfg(not(target_os = "windows"))]
+    std::process::Command::new("xdg-open").arg(p.parent().unwrap_or(&p)).spawn().map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 /// Thư mục lưu tệp tải về: Downloads, không có thì Documents.
 fn thu_muc_tai_ve(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     let dir = app
@@ -401,6 +443,8 @@ pub fn run() {
             mo_thu_muc_sao_luu,
             luu_tai_xuong,
             luu_tep_chon_noi,
+            mo_tep_da_xuat,
+            mo_noi_luu_tep,
             dpapi_boc,
             dpapi_mo,
             bat_may_chu,
@@ -448,7 +492,22 @@ pub fn run() {
 
 #[cfg(test)]
 mod kiem_thu {
-    use super::{ghi_va_don, giai_ma, ten_chua_co, ten_tep_an_toan};
+    use super::{ghi_va_don, giai_ma, ten_chua_co, ten_tep_an_toan, tep_da_xuat};
+
+    #[test]
+    fn chi_mo_tep_da_xuat_dung_loai() {
+        let dir = std::env::temp_dir().join(format!("gpmb-mo-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        for t in ["a.xlsx", "b.exe", "c.BAT"] {
+            std::fs::write(dir.join(t), b"1").unwrap();
+        }
+        assert!(tep_da_xuat(dir.join("a.xlsx").to_str().unwrap()).is_ok());
+        assert!(tep_da_xuat(dir.join("b.exe").to_str().unwrap()).is_err());
+        assert!(tep_da_xuat(dir.join("c.BAT").to_str().unwrap()).is_err());
+        assert!(tep_da_xuat(dir.join("khong-co.docx").to_str().unwrap()).is_err());
+        assert!(tep_da_xuat("a.xlsx").is_err());
+        let _ = std::fs::remove_dir_all(&dir);
+    }
 
     /// 1.0.1: tauri-plugin-dialog (2.8.0) chèn script thay window.confirm bằng lệnh "plugin:dialog|confirm" không còn
     /// trong plugin → confirm() trả Promise (luôn "đúng"), mọi bước hỏi xác nhận bị bỏ qua, báo lỗi ACL. Không đưa lại.

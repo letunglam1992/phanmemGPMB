@@ -7,6 +7,8 @@
  * Thành công phát sự kiện "gpmb-da-tai" (thông báo đường dẫn); lỗi ném ra để nút gọi báo cho người dùng.
  */
 
+import { ghiTepDaXuat } from "./tep-da-xuat";
+
 const KHOA_HOI = "gpmb-hoi-noi-luu";
 const KHOA_THU_MUC = "gpmb-thu-muc-luu-cuoi";
 
@@ -54,7 +56,10 @@ const LOAI_TEP: Record<string, string> = {
 };
 const duoiTep = (ten: string) => (/\.([a-z0-9]+)$/i.exec(ten)?.[1] ?? "").toLowerCase();
 
-const baoDaLuu = (noi: string) => window.dispatchEvent(new CustomEvent("gpmb-da-tai", { detail: noi }));
+const baoDaLuu = (noi: string, ghi = true) => {
+  if (ghi) ghiTepDaXuat(noi); // 1.0.2: danh sách "Tệp đã xuất" trên thanh tiêu đề
+  window.dispatchEvent(new CustomEvent("gpmb-da-tai", { detail: noi }));
+};
 
 export async function taiXuong(bytes: Uint8Array, ten: string, loai: string): Promise<string | null> {
   const hoi = hoiNoiLuu();
@@ -77,7 +82,7 @@ export async function taiXuong(bytes: Uint8Array, ten: string, loai: string): Pr
     } catch (e) {
       console.error("luu_tai_xuong", e);
       taiBangLienKet(bytes, ten, loai);
-      baoDaLuu(`thư mục Downloads (${ten})`);
+      baoDaLuu(`thư mục Downloads (${ten})`, false);
       return ten;
     }
   }
@@ -102,6 +107,7 @@ export async function taiXuong(bytes: Uint8Array, ten: string, loai: string): Pr
     return tep.name;
   }
   taiBangLienKet(bytes, ten, loai);
+  ghiTepDaXuat(ten);
   return ten;
 }
 
