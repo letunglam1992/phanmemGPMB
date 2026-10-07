@@ -186,7 +186,6 @@ fn luu_tai_xuong(app: tauri::AppHandle, request: Request<'_>) -> Result<String, 
 /// Trả về đường dẫn đã lưu; `None` khi cán bộ bấm Hủy.
 #[tauri::command]
 async fn luu_tep_chon_noi(app: tauri::AppHandle, request: Request<'_>) -> Result<Option<String>, String> {
-    use tauri_plugin_dialog::DialogExt;
     let InvokeBody::Raw(du_lieu) = request.body() else {
         return Err("Dữ liệu tệp không đúng dạng".into());
     };
@@ -199,22 +198,24 @@ async fn luu_tep_chon_noi(app: tauri::AppHandle, request: Request<'_>) -> Result
         .filter(|p| p.is_absolute() && p.is_dir())
         .or_else(|| thu_muc_tai_ve(&app).ok());
     let duoi = ten.rsplit_once('.').map(|(_, d)| d.to_string()).filter(|d| !d.is_empty() && d.len() <= 8);
-    let a = app.clone();
-    // Hộp thoại chặn luồng → chạy ở luồng phụ, không treo cửa sổ chính
+    let cua_so = app.get_webview_window("main");
+    // Hộp thoại chặn luồng → chạy ở luồng phụ, không treo cửa sổ chính; gắn cửa sổ chính làm cha (hộp thoại nằm trên)
     let chon = tauri::async_runtime::spawn_blocking(move || {
-        let mut hop = a.dialog().file().set_title("Chọn nơi lưu tệp").set_file_name(ten);
+        let mut hop = rfd::FileDialog::new().set_title("Chọn nơi lưu tệp").set_file_name(ten);
+        if let Some(w) = cua_so.as_ref() {
+            hop = hop.set_parent(w);
+        }
         if let Some(d) = thu_muc_dau {
             hop = hop.set_directory(d);
         }
         if let Some(d) = duoi.as_deref() {
             hop = hop.add_filter(loai, &[d]);
         }
-        hop.blocking_save_file()
+        hop.save_file()
     })
     .await
     .map_err(|e| e.to_string())?;
-    let Some(tep) = chon else { return Ok(None) };
-    let dich = tep.into_path().map_err(|e| format!("Đường dẫn không hợp lệ: {e}"))?;
+    let Some(dich) = chon else { return Ok(None) };
     fs::write(&dich, &du_lieu).map_err(|e| format!("Không ghi được {}: {e}", dich.display()))?;
     Ok(Some(dich.display().to_string()))
 }
@@ -389,7 +390,6 @@ async fn goi_may_chu(request: Request<'_>) -> Result<tauri::ipc::Response, Strin
 pub fn run() {
     let _ = rustls::crypto::ring::default_provider().install_default();
     tauri::Builder::default()
-        .plugin(tauri_plugin_dialog::init())
         // Khóa công khai lấy từ khoa-cap-nhat.pub (biên dịch kèm); cấu hình plugins.updater giữ endpoint
         .plugin(tauri_plugin_updater::Builder::new().pubkey(cap_nhat::KHOA_CONG_KHAI.trim()).build())
         .manage(cap_nhat::BanCho::default())
@@ -449,6 +449,15 @@ pub fn run() {
 #[cfg(test)]
 mod kiem_thu {
     use super::{ghi_va_don, giai_ma, ten_chua_co, ten_tep_an_toan};
+
+    /// 1.0.1: tauri-plugin-dialog (2.8.0) chèn script thay window.confirm bằng lệnh "plugin:dialog|confirm" không còn
+    /// trong plugin → confirm() trả Promise (luôn "đúng"), mọi bước hỏi xác nhận bị bỏ qua, báo lỗi ACL. Không đưa lại.
+    #[test]
+    fn khong_dung_plugin_dialog_chen_script_confirm() {
+        let cargo = include_str!("../Cargo.toml");
+        assert!(!cargo.lines().any(|l| l.trim_start().starts_with("tauri-plugin-dialog")), "Không dùng tauri-plugin-dialog — dùng rfd cho hộp thoại Lưu thành");
+        assert!(!include_str!("lib.rs").contains(concat!("tauri_plugin_", "dialog::init")));
+    }
 
     #[test]
     fn ten_tep_tai_ve_an_toan_va_khong_ghi_de() {

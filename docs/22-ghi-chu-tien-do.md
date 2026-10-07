@@ -1,6 +1,6 @@
 # 22. Ghi chú tiến độ — đọc file này trước khi làm tiếp
 
-Cập nhật: 07/10/2026. Bản mới nhất đã phát hành: **0.9.27**. Nhánh làm việc: `claude/great-rubin-4x4alw`; mọi thay đổi đã commit và đẩy lên.
+Cập nhật: 07/10/2026. Bản mới nhất đã phát hành: **1.0.1**. Nhánh làm việc: `claude/great-rubin-4x4alw`; mọi thay đổi đã commit và đẩy lên.
 
 Tài liệu nên đọc trước:
 - `CLAUDE.md`: quy tắc, lệnh.
@@ -24,6 +24,7 @@ Tài liệu nên đọc trước:
 | 0.9.23 | Trợ lý AI nổi: nút robot góc dưới phải mở khung chat; thanh bên "Trợ lý AI (hỏi đáp)" |
 | 0.9.25 | Cảnh báo xã lâu chưa gửi (ngưỡng do tỉnh đặt); xã tự gửi định kỳ lên cổng (chu kỳ do xã đặt); tỉnh xem lại các bản gửi trước (≤ 20 bản/đơn vị); báo cáo Word tổng hợp toàn tỉnh |
 | 0.9.26 | Tỉnh tự nhận gói mới từ cổng mỗi 30 phút khi khóa đang mở, chuông báo gói chờ nhận; phụ lục Excel kèm báo cáo Word tỉnh; thời gian không tính vào thời hạn (bước có thời hạn, bắt buộc lý do, tạm dừng); trường hợp Điều 14/17 PL I QĐ 106 do người dùng chọn + căn cứ; ghi chú bản đồ trong hồ sơ hộ; thùng rác tệp đính kèm, tài liệu; Luật Đất đai hợp nhất (VBHN 44/VBHN-VPQH) trong Trợ lý AI |
+| 1.0.1 | **Sửa lỗi "Command plugin:dialog|confirm not allowed by ACL"**: bỏ `tauri-plugin-dialog` (bản 2.8.0 chèn script thay `window.confirm` bằng lệnh không còn trong plugin → `confirm()` trả Promise, **mọi hộp hỏi xác nhận trên bản .exe bị bỏ qua — thao tác chạy luôn**); hộp "Lưu thành" gọi thẳng `rfd`; kiểm thử Rust chặn đưa plugin trở lại. Nội dung bản quyền mới ở Giới thiệu ("© 2026 Lê Tùng Lâm. All rights reserved." + câu bảo hộ quyền tác giả), thuộc tính tệp .exe |
 | 0.9.27 | Khôi phục tiến độ, chi trả, thông tin dự án về bản cũ; lịch sử thay đổi trong tệp sao lưu; hoàn tác bước chung 1–4 và tiến độ hộ; đợt thu hồi: cột "Đợt thu hồi" khi nhập Excel, báo cáo tách theo đợt, số đợt phê duyệt theo đợt; so sánh bản đồ đối chiếu hồ sơ + xuất Excel; ảnh cho ghi chú hiện trường; **bản đồ DXF** (DWG: báo cách đổi sang DXF); nạp bản đồ xong chọn **tự nhận diện / tự chọn lớp cho từng đối tượng** (bảng tích lớp, thêm lớp loại đất, diện tích); nhãn thửa nhiều nội dung ("CLN" · "13"/"1310,0" · tên chủ); **số tờ nhập tay** theo tệp |
 | 0.9.24 | **Sửa trắng màn hình khi mở Trợ lý AI và lỗi "e is not a function"**; màn tỉnh nhắc "Có n gói mới trên cổng (xã, thời gian) — mở khóa để nhận" |
 
@@ -97,7 +98,9 @@ Gặp lỗi: bấm **"Chép chi tiết lỗi"** (nếu có), hoặc chụp màn 
 - [x] Danh sách P0–P3 trong `docs/17` đã làm hết (còn P2-1 "chưa ký số" theo QD-26(4) và phần thương mại GĐ5 — chờ quyết định). Việc tiếp theo lấy từ cột "Hạn chế" của docs/09.
 - [ ] Đọc trực tiếp DWG (cần thư viện bên ngoài — xem giấy phép trước khi dùng); báo cáo Word có bảng theo đợt thu hồi; lưu kết quả so sánh bản đồ.
 
-### A3. Thử bản 0.9.27 trên máy thật
+### A3. Thử bản 0.9.27 / 1.0.1 trên máy thật
+
+- [ ] **1.0.1:** xóa thử một ghi chú hiện trường, một hồ sơ (thùng rác) → phải hiện hộp hỏi "OK / Cancel" của Windows; bấm Cancel thì không xóa. Không còn thông báo lỗi "plugin:dialog|confirm". Xuất Excel → hộp "Lưu thành" vẫn mở bình thường.
 
 - [ ] Nạp một tệp **DXF** thật của địa phương (bản đồ địa chính / trích đo): thửa dựng đúng, chữ tiếng Việt đúng (TCVN3 hoặc Unicode). Nạp tệp **DWG** → phải thấy hướng dẫn lưu sang DXF.
 - [ ] Sau khi nạp: hộp "Đã nạp bản đồ" → thử "Tự chọn lớp cho từng đối tượng": tích lớp ở bảng, chốt cấu hình → thửa dựng lại đúng.

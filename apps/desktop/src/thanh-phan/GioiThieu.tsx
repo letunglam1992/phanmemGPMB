@@ -25,9 +25,10 @@ export function HopGioiThieu({ dong, kqCapNhat }: { dong: () => void; kqCapNhat?
         </tbody>
       </table>
       <TheCapNhat kqDau={kqCapNhat} />
-      <p className="chu-nho mo mb-0">
-        © {BAN_QUYEN.nam} {BAN_QUYEN.tacGia}. Bảo lưu mọi quyền. Phần mềm hỗ trợ tính toán, theo dõi và soạn thảo; số liệu, văn bản do phần mềm lập là dự thảo — cán bộ có thẩm quyền kiểm tra, phê duyệt theo quy định.
-        Dữ liệu hồ sơ lưu trên máy (hoặc máy chủ mạng nội bộ của đơn vị), không gửi ra ngoài.
+      <p className="chu-nho mb-0">
+        <b>© {BAN_QUYEN.nam} {BAN_QUYEN.tacGia}. All rights reserved.</b>
+        <br />
+        Phần mềm được bảo hộ quyền tác giả. Nghiêm cấm sao chép, sửa đổi, phân phối, dịch ngược hoặc khai thác thương mại khi chưa được chủ sở hữu cho phép.
       </p>
     </HopThoai>
   );
