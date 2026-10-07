@@ -5,7 +5,7 @@ import { CAC_CHANG, THU_TU_TRANG_THAI, TT_GPMB, daQuaChang, homNayIso, trangThai
 import { CAC_BUOC } from "../mo-hinh";
 import { BangHo, type DongHo } from "../thanh-phan/BangHo";
 import { BieuTuong } from "../thanh-phan/BieuDo";
-import { khopTuKhoa } from "../tim-kiem";
+import { timHo } from "../tim-kiem";
 import { Chon } from "../thanh-phan/Chon";
 export { khongDau, khopTuKhoa } from "../tim-kiem";
 
@@ -24,7 +24,7 @@ export function DanhSachHo(p: { duAnId?: string; trangThai?: string; chang?: str
     .filter((x) => !duAnId || x.duAn.id === duAnId)
     .filter((x) => !trangThai || x.tt === trangThai)
     .filter((x) => !chang || daQuaChang(x.duAn, x.h, chang))
-    .filter((x) => khopTuKhoa({ h: x.h, duAnTen: x.duAn.ten }, tim));
+    .filter((x) => timHo(x.h, tim, x.duAn.ten).khop);
   const tenChang = CAC_CHANG.find((c) => c.buoc === chang);
   const tieuDe = trangThai ? TT_GPMB[trangThai].ten : tenChang ? `Đã qua chặng: ${tenChang.ten}` : tim ? `Kết quả tìm “${tim}”` : "Tất cả hồ sơ";
   return (

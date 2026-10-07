@@ -12,7 +12,7 @@ import { ghiNhoDsHo, khungNoiDung, layNhoDsHo } from "../nho-ds-ho";
 import { HopThoai } from "../thanh-phan/chung";
 import type { Ho } from "../mo-hinh";
 import { lyDoKhongXoaHo } from "../rang-buoc";
-import { khopTuKhoa } from "../tim-kiem";
+import { timHo } from "../tim-kiem";
 import { THU_TU_TRANG_THAI, TT_GPMB, homNayIso, mocTienDo, thongKe, trangThaiHo, type TrangThaiGpmb } from "../trang-thai";
 import { xuatExcelDuAn } from "../xuat-excel";
 import { HopMauExcel, useMauExcel } from "../thanh-phan/MauExcel";
@@ -333,7 +333,7 @@ function TheHo({ duAn, kq }: { duAn: DuAn; kq: Kq }) {
     .filter((x) => khopDot(x.h, locDot, duAn))
     .filter((x) => !locPc || (locPc === "__chua__" ? !x.h.phuTrach : x.h.phuTrach === locPc))
     .filter((x) => !locPl || x.h.thua.some((t) => Number(t.dienTichThuHoi) > 0 && (t.phapLy ?? "CHUA") === locPl))
-    .filter((x) => khopTuKhoa({ h: x.h, duAnTen: "" }, loc))
+    .filter((x) => timHo(x.h, loc).khop)
     .filter((x) => !locIds || locIds.has(x.h.id));
   const thuTu = ds.map((x) => x.h.id).join("|");
   useEffect(() => { ghiNhoDsHo(duAn.id, { loc, locTt, locDot, locPc, locPl, thuTu: thuTu ? thuTu.split("|") : [] }); }, [duAn.id, loc, locTt, locDot, locPc, locPl, thuTu]);

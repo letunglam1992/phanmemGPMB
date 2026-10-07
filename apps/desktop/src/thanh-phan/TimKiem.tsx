@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useUngDung } from "../ung-dung";
-import { khongDau, khopTuKhoa } from "../man/DanhSachHo";
+import { khongDau } from "../man/DanhSachHo";
+import { timHo } from "../tim-kiem";
 import { TEN_DOI_TUONG } from "../mo-hinh";
 import { BieuTuong } from "./BieuDo";
 
-/** Tìm nhanh toàn phần mềm (Ctrl + K): tên dự án, xã; tên, mã hộ, cá nhân, tổ chức; tờ/thửa. */
+/** Tìm nhanh toàn phần mềm (Ctrl + K): tên dự án, xã; tên, mã hộ, cá nhân, tổ chức; tờ/thửa (5/85); số định danh; lý trình. */
 export function TimKiemChung() {
   const { dsDuAn, hoCua, di } = useUngDung();
   const [q, setQ] = useState("");
@@ -35,12 +36,12 @@ export function TimKiemChung() {
     if (!t) return { duAn: [], ho: [], tongHo: 0 };
     const k = khongDau(t);
     const duAn = dsDuAn.filter((d) => khongDau(`${d.ten} ${d.xa} ${d.chuDauTu}`).includes(k)).slice(0, 5);
-    const hoAll = dsDuAn.flatMap((d) => hoCua(d.id).filter((h) => khopTuKhoa({ h, duAnTen: "" }, t)).map((h) => ({ h, d })));
+    const hoAll = dsDuAn.flatMap((d) => hoCua(d.id).map((h) => ({ h, d, k: timHo(h, t) })).filter((x) => x.k.khop).map(({ h, d, k }) => ({ h, d, lyDo: k.lyDo })));
     return { duAn, ho: hoAll.slice(0, 8), tongHo: hoAll.length };
   }, [q, dsDuAn, hoCua]);
   const muc: (() => void)[] = [
     ...kq.duAn.map((d) => () => di({ ten: "du-an", duAnId: d.id })),
-    ...kq.ho.map(({ h, d }) => () => di({ ten: "ho", duAnId: d.id, hoId: h.id })),
+    ...kq.ho.map(({ h, d, lyDo }) => () => di({ ten: "ho", duAnId: d.id, hoId: h.id, ...(lyDo?.startsWith("Thửa") ? { tab: "thua" } : {}) })),
     ...(q.trim() ? [() => di({ ten: "ds-ho", tim: q.trim() })] : []),
   ];
   const chay = (i: number) => { muc[i]?.(); setMo(false); setQ(""); o.current?.blur(); };
@@ -50,7 +51,7 @@ export function TimKiemChung() {
       <input
         ref={o}
         value={q}
-        placeholder="Tìm dự án, hộ gia đình, cá nhân, tổ chức…"
+        placeholder="Tìm dự án, hộ, tờ/thửa (5/85), số định danh…"
         aria-label="Tìm kiếm dự án, hồ sơ"
         onFocus={() => setMo(true)}
         onChange={(e) => { setQ(e.target.value); setChon(0); setMo(true); }}
@@ -72,12 +73,12 @@ export function TimKiemChung() {
             </button>
           ))}
           {kq.ho.length > 0 && <div className="tim-nhom">Hộ gia đình, cá nhân, tổ chức</div>}
-          {kq.ho.map(({ h, d }, j) => {
+          {kq.ho.map(({ h, d, lyDo }, j) => {
             const i = kq.duAn.length + j;
             return (
               <button key={h.id} tabIndex={-1} className={chon === i ? "chon" : ""} onMouseEnter={() => setChon(i)} onMouseDown={(e) => e.preventDefault()} onClick={() => chay(i)}>
                 <span className="bt"><BieuTuong ten="nguoi" co={16} /></span>
-                <span><b>{h.ma} · {h.ten}</b><small>{TEN_DOI_TUONG[h.loai]} · {h.diaChi || "—"} · {d.ten}</small></span>
+                <span><b>{h.ma} · {h.ten}</b><small>{lyDo && <b className="tim-ly-do">{lyDo} · </b>}{TEN_DOI_TUONG[h.loai]} · {h.diaChi || "—"} · {d.ten}</small></span>
               </button>
             );
           })}
