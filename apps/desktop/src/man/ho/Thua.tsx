@@ -1,5 +1,5 @@
 import { TRUONG_HOP_TACH_THUA } from "../ban-do/ranh";
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { HopXemThuaBanDo } from "./XemThuaBanDo";
 import { taoId, type DuAn, type Ho, type Thua } from "../../mo-hinh";
 import { ChonGiaDat } from "../../thanh-phan/ChonGiaDat";
@@ -23,7 +23,17 @@ export const LOAI_DAT = ["LUC", "LUK", "LUN", "HNK", "BHK", "NHK", "CLN", "RSX",
 /** Giá trị mặc định của cây trồng xen; sửa một ô thì giữ nguyên các lựa chọn khác (VM-34, VM-35). */
 const XEN0 = { dienTichTru: "", lyDoTru: "", cachXep: "DUNG_KHI_VUOT" as const };
 
-export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => void }) {
+export function TabThua({ h, duAn, doi, noiBat }: { h: Ho; duAn: DuAn; doi: (h: Ho) => void; noiBat?: string }) {
+  // 1.0.4: mở từ dòng soát phương án / tìm kiếm → cuộn tới thửa, làm nổi vài giây
+  useEffect(() => {
+    if (!noiBat) return;
+    const tr = document.querySelector<HTMLElement>(`tr[data-thua-id="${CSS.escape(noiBat)}"]`);
+    if (!tr) return;
+    tr.scrollIntoView({ block: "center" });
+    tr.classList.add("noi-bat");
+    const t = setTimeout(() => tr.classList.remove("noi-bat"), 3000);
+    return () => clearTimeout(t);
+  }, [noiBat]);
   const [chonGia, setChonGia] = useState<string | null>(null);
   const [moRong, setMoRong] = useState<string | null>(null);
   const [chonTuyen, setChonTuyen] = useState<string | null>(null);
@@ -58,7 +68,7 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
               const lechBanDo = t.dienTichBanDo !== undefined && t.dienTichThuHoi && Math.abs(Number(t.dienTichThuHoi) - t.dienTichBanDo) > 0.05;
               return (
                 <Fragment key={t.id}>
-                  <tr>
+                  <tr data-thua-id={t.id}>
                     <td data-lich-su={`thua:${t.id}.soTo`} data-lich-su-ten={`Tờ bản đồ (thửa ${t.soThua})`}><input value={t.soTo} onChange={(e) => sua(t.id, { soTo: e.target.value })} /></td>
                     <td data-lich-su={`thua:${t.id}.soThua`} data-lich-su-ten={`Số thửa (tờ ${t.soTo})`}><input value={t.soThua} onChange={(e) => sua(t.id, { soThua: e.target.value })} /></td>
                     <td data-lich-su={`thua:${t.id}.loaiDat`} data-lich-su-ten={`Loại đất thửa ${t.soThua} tờ ${t.soTo}`}>

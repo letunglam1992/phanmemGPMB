@@ -43,6 +43,7 @@ export interface DongDoiChieu {
   ma: string;
   ten: string;
   thua: string;
+  thuaId?: string;
   cap: CapDoiChieu;
   a: string;
   b: string;
@@ -75,7 +76,7 @@ export function doiChieuDienTich(duAn: DuAn, hos: Ho[], nguong: NguongLechDt | n
         if (!a || !b) return;
         const chenh = a.minus(b);
         const tyLe = b.isZero() ? null : chenh.div(b).mul(100);
-        out.push({ hoId: h.id, ma: h.ma, ten: h.ten, thua: ten, cap, a: a.toString(), b: b.toString(), chenh: chenh.toString(), tyLe: tyLe ? tyLe.toDecimalPlaces(2).toString() : null, vuot: vuotNguong(chenh, tyLe, nguong), nguonB });
+        out.push({ hoId: h.id, ma: h.ma, ten: h.ten, thua: ten, thuaId: t.id, cap, a: a.toString(), b: b.toString(), chenh: chenh.toString(), tyLe: tyLe ? tyLe.toDecimalPlaces(2).toString() : null, vuot: vuotNguong(chenh, tyLe, nguong), nguonB });
       };
       if (t.dienTichBanDo !== undefined) them("BAN_DO_HO_SO", D(t.dienTichBanDo).toDecimalPlaces(2), so(t.dienTichThuHoi));
       if (trongPa) {

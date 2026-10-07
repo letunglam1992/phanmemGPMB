@@ -1234,3 +1234,9 @@ kbd.phim { display: inline-block; min-width: 20px; padding: 1px 6px; border: 1px
 .bd-nd { flex: 1; min-width: 0; }
 .bd-nd .nhan { margin-left: 6px; }
 .bd-buoc li > .nut, .bd-buoc li > span.mo { flex: none; align-self: center; }
+/* 1.0.4: dòng được làm nổi khi mở từ soát phương án */
+tr.noi-bat > td { background: var(--vang-nen) !important; transition: background 0.4s; box-shadow: inset 0 2px 0 var(--vang-to), inset 0 -2px 0 var(--vang-to); }
+.soat-tom-tat { display: flex; flex-wrap: wrap; gap: 6px; }
+.soat-qt { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border: 1px solid var(--vien); border-radius: 999px; background: var(--be-mat); color: var(--chu); font-size: 12.5px; cursor: pointer; }
+.soat-qt:hover { background: var(--be-mat-hover); }
+.soat-qt.chon { border-color: var(--chinh); box-shadow: 0 0 0 1px var(--chinh) inset; }

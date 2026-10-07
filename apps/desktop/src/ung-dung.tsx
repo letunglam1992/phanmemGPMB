@@ -23,7 +23,7 @@ import { coQuyen, dungMatKhau, taoTaiKhoan, tenHienThi, type NguoiDung, type Quy
 export type Man =
   | { ten: "tong-quan" }
   | { ten: "du-an"; duAnId?: string; tab?: string; ma?: string; hoId?: string }
-  | { ten: "ho"; duAnId: string; hoId: string; tab?: string }
+  | { ten: "ho"; duAnId: string; hoId: string; tab?: string; /** 1.0.4: thửa cần làm nổi ở thẻ Thửa đất */ thuaId?: string }
   | { ten: "ban-do"; duAnId: string }
   | { ten: "van-ban"; duAnId: string; ma?: string; hoId?: string }
   | { ten: "tra-cuu"; tim?: string }

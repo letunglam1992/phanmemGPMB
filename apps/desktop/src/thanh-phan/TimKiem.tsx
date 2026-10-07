@@ -36,12 +36,12 @@ export function TimKiemChung() {
     if (!t) return { duAn: [], ho: [], tongHo: 0 };
     const k = khongDau(t);
     const duAn = dsDuAn.filter((d) => khongDau(`${d.ten} ${d.xa} ${d.chuDauTu}`).includes(k)).slice(0, 5);
-    const hoAll = dsDuAn.flatMap((d) => hoCua(d.id).map((h) => ({ h, d, k: timHo(h, t) })).filter((x) => x.k.khop).map(({ h, d, k }) => ({ h, d, lyDo: k.lyDo })));
+    const hoAll = dsDuAn.flatMap((d) => hoCua(d.id).map((h) => ({ h, d, k: timHo(h, t) })).filter((x) => x.k.khop).map(({ h, d, k }) => ({ h, d, lyDo: k.lyDo, thuaId: k.thuaId })));
     return { duAn, ho: hoAll.slice(0, 8), tongHo: hoAll.length };
   }, [q, dsDuAn, hoCua]);
   const muc: (() => void)[] = [
     ...kq.duAn.map((d) => () => di({ ten: "du-an", duAnId: d.id })),
-    ...kq.ho.map(({ h, d, lyDo }) => () => di({ ten: "ho", duAnId: d.id, hoId: h.id, ...(lyDo?.startsWith("Thửa") ? { tab: "thua" } : {}) })),
+    ...kq.ho.map(({ h, d, thuaId }) => () => di({ ten: "ho", duAnId: d.id, hoId: h.id, ...(thuaId ? { tab: "thua", thuaId } : {}) })),
     ...(q.trim() ? [() => di({ ten: "ds-ho", tim: q.trim() })] : []),
   ];
   const chay = (i: number) => { muc[i]?.(); setMo(false); setQ(""); o.current?.blur(); };

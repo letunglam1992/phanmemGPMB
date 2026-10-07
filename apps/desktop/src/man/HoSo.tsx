@@ -43,7 +43,7 @@ const CAC_TAB = [
 
 const CO_COT_BEN: string[] = ["thong-tin", "nhan-khau", "ho-tro", "nhat-ky"];
 
-export function HoSo({ duAnId, hoId, tabDau, maVbDau }: { duAnId: string; hoId: string; tabDau?: string; maVbDau?: string }) {
+export function HoSo({ duAnId, hoId, tabDau, maVbDau, thuaDau }: { duAnId: string; hoId: string; tabDau?: string; maVbDau?: string; thuaDau?: string }) {
   const { dsDuAn, hoCua, di, luuHo, chinhSach, xoaHo, quyen, bao } = useUngDung();
   const choSua = quyen("SUA_HO_SO");
   const duAn = dsDuAn.find((d) => d.id === duAnId);
@@ -223,7 +223,7 @@ export function HoSo({ duAnId, hoId, tabDau, maVbDau }: { duAnId: string; hoId: 
           <fieldset className="khung-quyen" disabled={!choSua}>
           {tab === "thong-tin" && <TabThongTin h={h} doi={doi} duAn={duAn} goc={goc} />}
           {tab === "nhan-khau" && <TabNhanKhau h={h} doi={doi} />}
-          {tab === "thua" && <TabThua h={h} duAn={duAn} doi={doi} />}
+          {tab === "thua" && <TabThua h={h} duAn={duAn} doi={doi} noiBat={thuaDau} />}
           {tab === "kiem-dem" && <TabKiemDem h={h} doi={doi} duAn={duAn} />}
           {tab === "ho-tro" && <TabHoTro h={h} doi={doi} duAn={duAn} kq={kq} />}
           {tab === "ho-tro-khac" && <TabHoTroKhac h={h} doi={doi} duAn={duAn} kq={kq} />}

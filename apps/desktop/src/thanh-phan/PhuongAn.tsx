@@ -479,31 +479,44 @@ function HopSoSanh({ ds, kq, dong: dongHop }: { ds: PhienBanPA[]; kq: { h: Ho; k
 
 const NHAN_MUC: Record<KetQuaSoat["muc"], string> = { LOI: "nhan-do", CANH_BAO: "nhan-vang", THONG_TIN: "nhan-xam" };
 
-/** Bảng kết quả soát phương án (§11.1) — mỗi dòng: mức, hồ sơ, nội dung, căn cứ; bấm mã hộ để mở hồ sơ. */
+/** Bảng kết quả soát phương án (§11.1) — mỗi dòng: mức, hồ sơ, nội dung, căn cứ; bấm để mở đúng thẻ, đúng thửa của hồ sơ. */
 export function KetQuaSoatPA({ ds, duAnId }: { ds: KetQuaSoat[]; duAnId: string }) {
   const { di } = useUngDung();
   const [loc, setLoc] = useState<KetQuaSoat["muc"] | "">("");
+  const [quyTac, setQuyTac] = useState("");
   const dem = demSoat(ds);
   if (!ds.length) return <div className="thong-bao thong-bao-xanh">Không phát hiện vấn đề theo các quy tắc soát. Kết quả soát không thay cho việc thẩm định phương án.</div>;
+  // Tóm tắt điều kiện chốt theo quy tắc: số dòng, số hồ sơ
+  const theoQt = QUY_TAC_SOAT.map((q) => { const x = ds.filter((y) => y.quyTac === q.ma); return { ...q, dong: x.length, ho: new Set(x.map((y) => y.hoId).filter(Boolean)).size, muc: x[0]?.muc }; }).filter((q) => q.dong);
+  const moO = (x: KetQuaSoat) => x.hoId && di({ ten: "ho", duAnId, hoId: x.hoId, ...(x.tab ? { tab: x.tab } : {}), ...(x.thuaId ? { thuaId: x.thuaId } : {}) });
   return (
     <div>
-      <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8, flexWrap: "wrap" }}>
+      <div className="soat-tom-tat" role="group" aria-label="Tóm tắt điều kiện chốt theo quy tắc">
+        {theoQt.map((q) => (
+          <button key={q.ma} className={`soat-qt${quyTac === q.ma ? " chon" : ""}`} onClick={() => setQuyTac(quyTac === q.ma ? "" : q.ma)} title={q.canCu}>
+            <span className={`nhan ${NHAN_MUC[q.muc!]}`}>{q.ho ? `${q.ho} hồ sơ` : `${q.dong}`}</span> {q.ten}
+          </button>
+        ))}
+      </div>
+      <div style={{ display: "flex", gap: 8, alignItems: "center", margin: "8px 0", flexWrap: "wrap" }}>
         {(["", "LOI", "CANH_BAO", "THONG_TIN"] as const).map((m) => (
           <button key={m} className={`nut nut-nho${loc === m ? " nut-chinh" : ""}`} onClick={() => setLoc(m)}>
             {m ? `${TEN_MUC_SOAT[m]} (${dem[m]})` : `Tất cả (${ds.length})`}
           </button>
         ))}
-        <span className="mo chu-nho day-phai">Chỉ để nhắc — phần mềm không kết luận điều kiện bồi thường, hỗ trợ, TĐC.</span>
+        {quyTac && <button className="nut nut-nho" onClick={() => setQuyTac("")}>Bỏ lọc quy tắc</button>}
+        <span className="mo chu-nho day-phai">Chỉ để nhắc — phần mềm không kết luận điều kiện bồi thường, hỗ trợ, TĐC. Bấm dòng để mở đúng chỗ cần sửa.</span>
       </div>
       <table className="bang">
-        <thead><tr><th>Mức</th><th>Hồ sơ</th><th>Nội dung</th><th>Căn cứ</th></tr></thead>
+        <thead><tr><th>Mức</th><th>Hồ sơ</th><th>Nội dung</th><th>Căn cứ</th><th /></tr></thead>
         <tbody>
-          {ds.filter((x) => !loc || x.muc === loc).map((x, i) => (
-            <tr key={i}>
+          {ds.filter((x) => (!loc || x.muc === loc) && (!quyTac || x.quyTac === quyTac)).map((x, i) => (
+            <tr key={i} className={x.hoId ? "co-the-chon" : ""} onClick={() => moO(x)}>
               <td><span className={`nhan ${NHAN_MUC[x.muc]}`}>{TEN_MUC_SOAT[x.muc]}</span></td>
-              <td className="chu-nho">{x.hoId ? <a href="#" onClick={(e) => { e.preventDefault(); di({ ten: "ho", duAnId, hoId: x.hoId! }); }}>{x.doiTuong}</a> : x.doiTuong}</td>
+              <td className="chu-nho">{x.doiTuong}</td>
               <td>{x.noiDung}</td>
               <td className="chu-nho">{x.canCu}</td>
+              <td>{x.hoId && <button className="nut nut-chu nut-nho" aria-label={`Đi tới chỗ sửa: ${x.doiTuong}`} onClick={(e) => { e.stopPropagation(); moO(x); }}>Đi tới ›</button>}</td>
             </tr>
           ))}
         </tbody>

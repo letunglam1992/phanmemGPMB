@@ -25,6 +25,9 @@ export interface KetQuaSoat {
   doiTuong: string;
   noiDung: string;
   canCu: string;
+  /** 1.0.4: thẻ hồ sơ cần mở (và thửa cần làm nổi) khi bấm vào dòng soát */
+  tab?: string;
+  thuaId?: string;
 }
 
 export const KIEM_TRA_SO_LIEU = "Kiểm tra số liệu";
@@ -45,6 +48,8 @@ export const QUY_TAC_SOAT: { ma: string; ten: string; canCu: string }[] = [
   { ma: "HO_TRO_TRUNG", ten: "Cùng số định danh có hồ sơ khác (dự án này hoặc dự án khác) đã ghi khoản hỗ trợ cùng loại (P3-2)", canCu: "Điều 108, 109, 111 Luật Đất đai 2024 (cán bộ kiểm tra điều kiện)" },
   { ma: "NIEM_YET", ten: "Chưa ghi hoàn thành niêm yết công khai phương án", canCu: "điểm a khoản 3 Điều 87 Luật Đất đai 2024" },
 ];
+/** Thẻ hồ sơ chứa ô cần sửa theo từng quy tắc. */
+const TAB_QUY_TAC: Record<string, string> = { DT_VUOT: "thua", DT_TRONG: "thua", PHAP_LY: "thua", DT_LECH: "thua", KHOAN_CHUA_DU: "tinh", DAT_O_HET: "ho-tro", NN_ON_DINH: "ho-tro", TAM_CU_NK: "nhan-khau", TDC_LO: "ho-tro", HO_TRO_TRUNG: "ho-tro", NIEM_YET: "tien-do" };
 const canCu = (ma: string) => QUY_TAC_SOAT.find((q) => q.ma === ma)!.canCu;
 
 const so = (v: string | undefined) => (v && laSoMay(v) ? D(v) : null);
@@ -52,8 +57,8 @@ const khoaThua = (soTo: string, soThua: string) => `${soTo.trim().replace(/^0+(?
 
 export function soatPhuongAn(duAn: DuAn, kq: { h: Ho; k: KetQuaHo }[], nguong?: NguongLechDt | null, nguoiCoDat?: Map<string, HoSoNguoi[]>): KetQuaSoat[] {
   const out: KetQuaSoat[] = [];
-  const bao = (quyTac: string, muc: MucSoat, h: Ho | null, noiDung: string) =>
-    out.push({ quyTac, muc, hoId: h?.id, doiTuong: h ? `${h.ma} – ${h.ten}` : "Dự án", noiDung, canCu: canCu(quyTac) });
+  const bao = (quyTac: string, muc: MucSoat, h: Ho | null, noiDung: string, thuaId?: string) =>
+    out.push({ quyTac, muc, hoId: h?.id, doiTuong: h ? `${h.ma} – ${h.ten}` : "Dự án", noiDung, canCu: canCu(quyTac), ...(h ? { tab: TAB_QUY_TAC[quyTac] } : {}), ...(thuaId ? { thuaId } : {}) });
 
   for (const n of nhomMaTrung(kq.map((x) => x.h)))
     bao("MA_TRUNG", "LOI", null, `Mã "${n.ma}" dùng cho ${n.ho.length} hồ sơ: ${n.ho.map((h) => h.ten).join("; ")}`);
@@ -82,9 +87,9 @@ export function soatPhuongAn(duAn: DuAn, kq: { h: Ho; k: KetQuaHo }[], nguong?: 
       const ten = `Thửa ${t.soThua} tờ ${t.soTo}`;
       const dt = so(t.dienTich);
       const th = so(t.dienTichThuHoi);
-      if (dt && th && th.gt(dt)) bao("DT_VUOT", "LOI", h, `${ten}: DT thu hồi ${hienSo(t.dienTichThuHoi)} m² > DT thửa ${hienSo(t.dienTich)} m²`);
-      if (!th || th.lte(0)) bao("DT_TRONG", "CANH_BAO", h, `${ten}: chưa có DT thu hồi (không tính tiền về đất cho thửa này)`);
-      if (th && th.gt(0) && !t.phapLy) bao("PHAP_LY", "THONG_TIN", h, `${ten}: chưa chọn tình trạng pháp lý nguồn gốc`);
+      if (dt && th && th.gt(dt)) bao("DT_VUOT", "LOI", h, `${ten}: DT thu hồi ${hienSo(t.dienTichThuHoi)} m² > DT thửa ${hienSo(t.dienTich)} m²`, t.id);
+      if (!th || th.lte(0)) bao("DT_TRONG", "CANH_BAO", h, `${ten}: chưa có DT thu hồi (không tính tiền về đất cho thửa này)`, t.id);
+      if (th && th.gt(0) && !t.phapLy) bao("PHAP_LY", "THONG_TIN", h, `${ten}: chưa chọn tình trạng pháp lý nguồn gốc`, t.id);
     }
 
     const chua = k.tatCa.filter((d) => d.dong.trangThai === "THIEU_CAN_CU" || d.dong.trangThai === "CAN_XAC_NHAN");
@@ -113,7 +118,7 @@ export function soatPhuongAn(duAn: DuAn, kq: { h: Ho; k: KetQuaHo }[], nguong?: 
   if (nguong && (nguong.m2.trim() || nguong.phanTram.trim()))
     for (const x of doiChieuDienTich(duAn, kq.map((y) => y.h), nguong).filter((y) => y.vuot)) {
       const h = kq.find((y) => y.h.id === x.hoId)!.h;
-      out.push({ quyTac: "DT_LECH", muc: "CANH_BAO", hoId: h.id, doiTuong: `${h.ma} – ${h.ten}`, noiDung: `${x.thua}: ${TEN_CAP[x.cap][0]} ${hienSo(x.a)} m² ↔ ${TEN_CAP[x.cap][1]} ${hienSo(x.b)} m² (lệch ${hienSo(x.chenh)} m²${x.tyLe ? `, ${hienSo(x.tyLe)}%` : ""})`, canCu: `Ngưỡng do đơn vị đặt: ${nguong.canCu}` });
+      out.push({ quyTac: "DT_LECH", muc: "CANH_BAO", hoId: h.id, tab: "thua", ...(x.thuaId ? { thuaId: x.thuaId } : {}), doiTuong: `${h.ma} – ${h.ten}`, noiDung: `${x.thua}: ${TEN_CAP[x.cap][0]} ${hienSo(x.a)} m² ↔ ${TEN_CAP[x.cap][1]} ${hienSo(x.b)} m² (lệch ${hienSo(x.chenh)} m²${x.tyLe ? `, ${hienSo(x.tyLe)}%` : ""})`, canCu: `Ngưỡng do đơn vị đặt: ${nguong.canCu}` });
     }
 
   // P3-3: đối chiếu hồ sơ với quỹ tái định cư (chỉ hộ đang soát)
@@ -121,14 +126,14 @@ export function soatPhuongAn(duAn: DuAn, kq: { h: Ho; k: KetQuaHo }[], nguong?: 
   for (const c of soatQuyTdc(duAn, kq.map((x) => x.h))) {
     if (c.muc === "THONG_TIN" || (c.hoId && !idSoat.has(c.hoId))) continue;
     const h = c.hoId ? kq.find((x) => x.h.id === c.hoId)?.h : undefined;
-    out.push({ quyTac: "TDC_LO", muc: c.muc, hoId: h?.id, doiTuong: h ? `${h.ma} – ${h.ten}` : "Dự án", noiDung: c.noiDung, canCu: c.canCu ?? canCu("TDC_LO") });
+    out.push({ quyTac: "TDC_LO", muc: c.muc, hoId: h?.id, ...(h ? { tab: "ho-tro" } : {}), doiTuong: h ? `${h.ma} – ${h.ten}` : "Dự án", noiDung: c.noiDung, canCu: c.canCu ?? canCu("TDC_LO") });
   }
 
   // P3-2: hỗ trợ cùng loại đã ghi ở hồ sơ khác của cùng người (không kết luận, chỉ nhắc kiểm tra)
   if (nguoiCoDat)
     for (const { h } of kq)
       for (const c of canhBaoHoTroTrung(nguoiCoDat, h))
-        out.push({ quyTac: "HO_TRO_TRUNG", muc: "CANH_BAO", hoId: h.id, doiTuong: `${h.ma} – ${h.ten}`, noiDung: c.noiDung, canCu: c.canCu });
+        out.push({ quyTac: "HO_TRO_TRUNG", muc: "CANH_BAO", hoId: h.id, tab: "ho-tro", doiTuong: `${h.ma} – ${h.ten}`, noiDung: c.noiDung, canCu: c.canCu });
 
   const thuTu: Record<MucSoat, number> = { LOI: 0, CANH_BAO: 1, THONG_TIN: 2 };
   return out.sort((a, b) => thuTu[a.muc] - thuTu[b.muc]);

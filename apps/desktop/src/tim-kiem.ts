@@ -21,19 +21,19 @@ export function docToThua(q: string): { to: string; thua: string } | null {
 }
 const soChuan = (s: string) => (/^\d+$/.test(s.trim()) ? String(Number(s.trim())) : s.trim());
 
-type HoTim = { ma: string; ten: string; diaChi: string; soDinhDanh: string; thua: { soTo: string; soThua: string; loaiDat?: string; dienTichThuHoi?: string; lyTrinh?: import("./ly-trinh").LyTrinh }[] };
+type HoTim = { ma: string; ten: string; diaChi: string; soDinhDanh: string; thua: { id?: string; soTo: string; soThua: string; loaiDat?: string; dienTichThuHoi?: string; lyTrinh?: import("./ly-trinh").LyTrinh }[] };
 
 /**
  * Tìm chung (Ctrl + K, 1.0.4): tờ/thửa so đúng số (5/85 không ra 15/85, 5/850); số định danh từ 4 chữ số khớp phần
  * đầu hoặc cuối; lý trình (Km1+200) ra thửa có đoạn chứa điểm đó; còn lại như khopTuKhoa. Trả lý do khớp để hiện.
  */
-export function timHo(h: HoTim, tuKhoa: string, duAnTen = ""): { khop: boolean; lyDo?: string } {
+export function timHo(h: HoTim, tuKhoa: string, duAnTen = ""): { khop: boolean; lyDo?: string; thuaId?: string } {
   const q = tuKhoa.trim();
   if (!q) return { khop: true };
   const tt = docToThua(q);
   if (tt) {
     const t = h.thua.find((x) => soChuan(x.soTo) === tt.to && soChuan(x.soThua) === tt.thua);
-    return t ? { khop: true, lyDo: `Thửa ${t.soThua} tờ ${t.soTo}${t.loaiDat ? ` · ${t.loaiDat}` : ""}` } : { khop: false };
+    return t ? { khop: true, lyDo: `Thửa ${t.soThua} tờ ${t.soTo}${t.loaiDat ? ` · ${t.loaiDat}` : ""}`, thuaId: t.id } : { khop: false };
   }
   const so = q.replace(/[\s.]/g, "");
   if (/^\d{4,12}$/.test(so) && h.soDinhDanh) {
@@ -44,7 +44,7 @@ export function timHo(h: HoTim, tuKhoa: string, duAnTen = ""): { khop: boolean; 
     const m = docDiemTim(q);
     if (m !== null) {
       const t = h.thua.find((x) => x.lyTrinh && m >= x.lyTrinh.tu && m <= (x.lyTrinh.den ?? x.lyTrinh.tu));
-      return t ? { khop: true, lyDo: `Thửa ${t.soThua} tờ ${t.soTo} · lý trình chứa ${q.trim()}` } : { khop: false };
+      return t ? { khop: true, lyDo: `Thửa ${t.soThua} tờ ${t.soTo} · lý trình chứa ${q.trim()}`, thuaId: t.id } : { khop: false };
     }
   }
   return { khop: khopTuKhoa({ h, duAnTen }, q) };

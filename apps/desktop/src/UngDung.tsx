@@ -256,7 +256,7 @@ export function UngDung() {
         {man.ten === "huong-dan" && <HuongDan />}
         {man.ten === "viec-cua-toi" && <ViecCuaToi />}
         {man.ten === "nguoi-co-dat" && <NguoiCoDat />}
-        {man.ten === "ho" && <HoSo key={man.hoId} duAnId={man.duAnId} hoId={man.hoId} tabDau={man.tab} />}
+        {man.ten === "ho" && <HoSo key={man.hoId} duAnId={man.duAnId} hoId={man.hoId} tabDau={man.tab} thuaDau={man.thuaId} />}
         {man.ten === "ban-do" && <KhongGianDuAn duAnId={man.duAnId} tab="ban-do" />}
         {man.ten === "tong-hop-tinh" && <TongHopTinh />}
         {man.ten === "tra-cuu" && <TraCuu key={man.tim ?? ""} timDau={man.tim} />}
