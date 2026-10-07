@@ -31,6 +31,8 @@ Tài liệu nên đọc trước:
 | 0.9.27 | Khôi phục tiến độ, chi trả, thông tin dự án về bản cũ; lịch sử thay đổi trong tệp sao lưu; hoàn tác bước chung 1–4 và tiến độ hộ; đợt thu hồi: cột "Đợt thu hồi" khi nhập Excel, báo cáo tách theo đợt, số đợt phê duyệt theo đợt; so sánh bản đồ đối chiếu hồ sơ + xuất Excel; ảnh cho ghi chú hiện trường; **bản đồ DXF** (DWG: báo cách đổi sang DXF); nạp bản đồ xong chọn **tự nhận diện / tự chọn lớp cho từng đối tượng** (bảng tích lớp, thêm lớp loại đất, diện tích); nhãn thửa nhiều nội dung ("CLN" · "13"/"1310,0" · tên chủ); **số tờ nhập tay** theo tệp |
 | 0.9.24 | **Sửa trắng màn hình khi mở Trợ lý AI và lỗi "e is not a function"**; màn tỉnh nhắc "Có n gói mới trên cổng (xã, thời gian) — mở khóa để nhận" |
 
+Kiểm thử ở 1.0.4 (chưa phát hành, tất cả đạt): typecheck; npm test 78 + 58 + 391; cargo test; eslint 3 cảnh báo cũ; Playwright 63/63 (thêm `e2e/ly-trinh.spec.ts`, `e2e/de-xuat-1-0-4.spec.ts`, ca liên xã trong `tong-hop-tinh.spec.ts`).
+
 Kiểm thử ở 0.9.27 (tất cả đạt):
 - typecheck
 - npm test: 78 + 58 + 373

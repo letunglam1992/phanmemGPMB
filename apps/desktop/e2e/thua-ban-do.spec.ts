@@ -69,7 +69,7 @@ test("thửa trong hồ sơ → xem trên bản đồ GPMB, gắn thửa, mở m
   await expect(kq).toContainText("Thửa bản đồ 7/3");
   await expect(kq).toContainText("tìm theo liên kết bản đồ đã gắn");
   await expect(kq).toContainText("Số tờ/số thửa hồ sơ (07/9) khác nhãn bản đồ");
-  await expect(dong.getByText("Bản đồ: 400.00")).toBeVisible();
+  await expect(dong.getByText("Bản đồ: 400,00")).toBeVisible();
   await p.screenshot({ path: "test-results/thua-ban-do.png" });
   // mở màn Bản đồ tại thửa
   await p.getByRole("button", { name: "Mở màn Bản đồ tại thửa này" }).click();
