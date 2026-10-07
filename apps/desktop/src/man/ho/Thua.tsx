@@ -13,7 +13,8 @@ import { ONgay } from "../../thanh-phan/ONgay";
 import type { KhongGiayTo } from "../../mo-hinh";
 import { useUngDung } from "../../ung-dung";
 import { Chon } from "../../thanh-phan/Chon";
-import { soD } from "../../so";
+import { hienSo, soD } from "../../so";
+import { OLyTrinh } from "../../thanh-phan/OLyTrinh";
 import { OSo } from "../../thanh-phan/OSo";
 import { NHOM_PHAP_LY, THU_TU_PHAP_LY, goiYPhapLy, type NhomPhapLy } from "../../nguon-goc";
 
@@ -65,11 +66,14 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
                         {!LOAI_DAT.includes(t.loaiDat) && <option>{t.loaiDat}</option>}
                         {LOAI_DAT.map((l) => <option key={l} value={l}>{tenDayDu(l)}</option>)}
                       </Chon>
+                      <div className="mt-4" data-lich-su={`thua:${t.id}.lyTrinh`} data-lich-su-ten={`Lý trình thửa ${t.soThua} tờ ${t.soTo}`}>
+                        <OLyTrinh value={t.lyTrinh} nhan={`Lý trình thửa ${t.soThua} tờ ${t.soTo}`} onChange={(l) => sua(t.id, { lyTrinh: l })} />
+                      </div>
                     </td>
                     <td data-lich-su={`thua:${t.id}.dienTich`} data-lich-su-ten={`DT thửa ${t.soThua} tờ ${t.soTo}`}><OSo className="o-so" value={t.dienTich} onChange={(v) => sua(t.id, { dienTich: v })} /></td>
                     <td data-lich-su={`thua:${t.id}.dienTichThuHoi`} data-lich-su-ten={`DT thu hồi thửa ${t.soThua} tờ ${t.soTo}`}>
                       <OSo className={`o-so ${loiDt ? "loi-nhap" : ""}`} value={t.dienTichThuHoi} onChange={(v) => sua(t.id, { dienTichThuHoi: v })} />
-                      {t.dienTichBanDo !== undefined && <div className={`chu-nho ${lechBanDo ? "" : "mo"}`} style={lechBanDo ? { color: "var(--vang)" } : undefined}>Bản đồ: {t.dienTichBanDo.toFixed(2)}</div>}
+                      {t.dienTichBanDo !== undefined && <div className={`chu-nho ${lechBanDo ? "" : "mo"}`} style={lechBanDo ? { color: "var(--vang)" } : undefined}>Bản đồ: {hienSo(t.dienTichBanDo.toFixed(2))}</div>}
                     </td>
                     <td>
                       {/* P2-5: tình trạng pháp lý (danh mục) + diễn giải nguồn gốc (chữ) */}

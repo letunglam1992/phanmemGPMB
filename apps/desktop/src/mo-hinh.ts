@@ -48,6 +48,8 @@ export interface Thua {
   phapLy?: import("./nguon-goc").NhomPhapLy;
   gia: GiaThua | null;
   phanLop?: PhanLopThua;
+  /** Lý trình trên tuyến (mét từ Km0+000; không bắt buộc — 1.0.4, ly-trinh.ts). */
+  lyTrinh?: import("./ly-trinh").LyTrinh;
   /** Thông tin Giấy chứng nhận (dùng cho danh sách thu hồi đất theo mẫu của xã). */
   gcn?: { seri: string; soTo: string; soThua: string; dienTich: string; loaiDat: string; dtThuHoiCoGcn: string; loaiDatThuHoi: string };
   /** Diện tích thu hồi thuộc loại không được bồi thường, hỗ trợ về đất (cán bộ xác định, vd. đất rừng phòng hộ do cộng đồng quản lý, đất chưa sử dụng). */

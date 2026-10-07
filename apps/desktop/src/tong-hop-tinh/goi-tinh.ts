@@ -13,6 +13,7 @@
  * gói trước đó của cùng đơn vị — phát hiện gói giả danh (khóa ký khác lần trước). Đây là chữ ký kỹ thuật của bản cài phần
  * mềm, không thay chữ ký số của cơ quan theo pháp luật về giao dịch điện tử.
  */
+import { dsDoan, matBangTheoLyTrinh } from "../ly-trinh";
 import PizZip from "pizzip";
 import { D } from "@gpmb/core";
 import type { Kho } from "../kho";
@@ -135,6 +136,8 @@ export interface TomTatDuAn {
   soTepDinhKem: number;
   /** 1.0.4: dự án liên xã — mã dùng chung do tỉnh cấp, tên tuyến, đoạn Km (gói cũ không có) */
   lienXa?: import("./lien-xa").LienXaDuAn;
+  /** 1.0.4: mặt bằng theo lý trình (chỉ khi xã có ghi lý trình thửa) — mét */
+  lyTrinh?: { tongM: number; sachM: number; chua: [number, number][] };
 }
 
 /** Tóm tắt từng dự án (chạy trên máy tỉnh sau khi giải mã, hoặc trên máy xã để xem trước). */
@@ -182,6 +185,12 @@ export function tomTatDuAn(duAn: DuAn[], ho: Ho[], soTep: (duAnId: string) => nu
       tienDoBinhQuan: hs.length ? td / hs.length : 0,
       soTepDinhKem: soTep(d.id),
       ...(d.lienXa?.ma?.trim() ? { lienXa: d.lienXa } : {}),
+      ...(() => {
+        const ds = dsDoan(hs, (h) => !!h.banGiao?.ngay);
+        if (!ds.length) return {};
+        const mb = matBangTheoLyTrinh(ds);
+        return { lyTrinh: { tongM: mb.tongM, sachM: mb.sachM, chua: mb.chua } };
+      })(),
     };
   });
 }

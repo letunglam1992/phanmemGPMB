@@ -74,6 +74,18 @@ describe("Nhập hồ sơ từ Excel", () => {
     expect(k2.loi.some((l) => /chưa khai đợt/.test(l.noiDung))).toBe(true);
   });
 
+  it("1.0.4: cột Lý trình (không bắt buộc) — đọc điểm/đoạn; viết sai thì cảnh báo, để trống", async () => {
+    const { duAn, ho } = taoDuAnMau();
+    const b = await tep((wb) => {
+      them(wb, "Ho", ["H31", "Hộ lý trình"]);
+      them(wb, "Thua", ["H31", "5", "301", "CLN", 1000, 100, "", "", "", "Km2+100 – Km2+180"], ["H31", "5", "302", "CLN", 1000, 100, "", "", "", "Km2+190"], ["H31", "5", "303", "CLN", 1000, 100, "", "", "", "km hai"], ["H31", "5", "304", "CLN", 1000, 100]);
+    });
+    const k = await docTepNhap(b, duAn, ho);
+    expect(k.loi.filter((l) => l.muc === "LOI")).toEqual([]);
+    expect(k.hoMoi[0]!.thua.map((t) => t.lyTrinh)).toEqual([{ tu: 2100, den: 2180 }, { tu: 2190 }, undefined, undefined]);
+    expect(k.loi.some((l) => l.muc === "CANH_BAO" && /km hai/.test(l.noiDung))).toBe(true);
+  });
+
   it("báo lỗi theo trang, dòng, cột; không đoán số mơ hồ; còn lỗi thì chặn nhập", async () => {
     const { duAn, ho } = taoDuAnMau();
     const b = await tep((wb) => {

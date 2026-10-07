@@ -8,6 +8,7 @@
  *  - Trang Hộ chỉ tạo hồ sơ mới; mã trùng hồ sơ đã có → lỗi. Thửa, kiểm đếm được bổ sung cho hồ sơ đã có
  *    (tham chiếu theo mã hộ); thửa trùng tờ/thửa trong cùng hộ → lỗi.
  */
+import { docLyTrinh } from "./ly-trinh";
 import type ExcelJS from "exceljs";
 import { D } from "@gpmb/core";
 import { DON_GIA } from "./du-lieu";
@@ -62,6 +63,7 @@ export const MAU: Record<string, CotMau[]> = {
     { khoa: "nguonGoc", tieuDe: "Nguồn gốc sử dụng đất", rong: 30 },
     { khoa: "phapLy", tieuDe: "Tình trạng pháp lý", rong: 20, ghiChu: "Có GCN / Có giấy tờ / Không giấy tờ / Thuê đất / Giao khoán / Công ích / Lấn chiếm, vi phạm / Khác" },
     { khoa: "ghiChu", tieuDe: "Ghi chú", rong: 24 },
+    { khoa: "lyTrinh", tieuDe: "Lý trình", rong: 22, ghiChu: "Không bắt buộc: Km12+350 hoặc Km12+350 – Km12+480" },
   ],
   KiemDem: [
     { khoa: "maHo", tieuDe: "Mã hộ", batBuoc: true, rong: 10 },
@@ -207,6 +209,7 @@ export const TRUONG: Record<LoaiTrang, TruongNhap[]> = {
     { khoa: "dienTichThuHoi", tieuDe: "DT thu hồi (m²)", batBuoc: true, dongNghia: ["dien tich thu hoi", "dt thu hoi", "thu hoi", "dien tich bi thu hoi", "dien tich anh huong", "dien tich thu hoi m", "dien tich thu hoi dat"] },
     { khoa: "phapLy", tieuDe: "Tình trạng pháp lý", dongNghia: ["phap ly", "tinh trang phap ly", "tinh trang phap ly nguon goc", "phap ly nguon goc"] },
     { khoa: "nguonGoc", tieuDe: "Nguồn gốc sử dụng đất", dongNghia: ["nguon goc", "nguon goc su dung dat", "nguon goc dat"] },
+    { khoa: "lyTrinh", tieuDe: "Lý trình", ghiChu: "Không bắt buộc: Km12+350 hoặc đoạn Km12+350 – Km12+480", dongNghia: ["ly trinh", "km", "ly trinh km", "vi tri ly trinh", "tu km den km"] },
     { khoa: "ghiChu", tieuDe: "Ghi chú", dongNghia: ["ghi chu"] },
     { khoa: "dotThuHoi", tieuDe: "Đợt thu hồi", ghiChu: "Dùng cho hồ sơ tạo mới theo tên chủ (tệp không có trang hộ)", dongNghia: ["dot thu hoi", "thuoc dot", "dot gpmb"] },
   ],
@@ -597,7 +600,10 @@ export function kiemTraNhap(tep: TepExcel, ax: AnhXa, duAn: DuAn, hienCoTatCa: H
     const plChu = chuO(o.phapLy);
     const phapLy = nhomTuChu(plChu) ?? THU_TU_PHAP_LY.find((k) => khongDau(NHOM_PHAP_LY[k].ngan) === khongDau(plChu).trim()) ?? undefined;
     if (plChu && !phapLy) bao("Thua", dong, "phapLy", `Không nhận ra tình trạng pháp lý "${plChu}" — để trống, chọn lại trong hồ sơ`, "CANH_BAO");
+    const lt = docLyTrinh(chuO(o.lyTrinh));
+    if ("loi" in lt) bao("Thua", dong, "lyTrinh", `${lt.loi} — để trống, ghi lại trong hồ sơ`, "CANH_BAO");
     const t: Thua = { id: taoId(), soTo, soThua, loaiDat, dienTich: dt.so ?? "", dienTichThuHoi: dtth.so ?? "", nguonGoc: chuO(o.nguonGoc), phapLy, gia: null, ghiChu: chuO(o.ghiChu) || undefined };
+    if ("ly" in lt && lt.ly) t.lyTrinh = lt.ly;
     h.thua.push(t);
     dem.thua++;
   }

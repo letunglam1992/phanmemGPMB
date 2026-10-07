@@ -34,6 +34,7 @@ import { CauHinhThuongBanGiao } from "../thanh-phan/CauHinhThuong";
 import { TheBoChinhSachDuAn } from "../thanh-phan/GoiChinhSach";
 import { LichSuDuAn } from "../thanh-phan/LichSuHo";
 import { TheLienXa } from "../thanh-phan/LienXa";
+import { HopGhiLyTrinh, TheLyTrinh } from "../thanh-phan/LyTrinh";
 import { TheDoiChieuDt } from "../thanh-phan/DoiChieuDt";
 import { TheDuBao } from "../thanh-phan/DuBao";
 import { TheQuyTdc } from "../thanh-phan/QuyTdc";
@@ -157,6 +158,7 @@ type Kq = { h: import("../mo-hinh").Ho; k: import("../tinh-ho").KetQuaHo }[];
 
 function TheTongQuan({ duAn, kq, moHo, moDot, capNhatTd, keHoach }: { duAn: DuAn; kq: Kq; moHo: (t: TrangThaiGpmb) => void; moDot: (dotId: string) => void; capNhatTd: (t: "chung" | "hang-loat") => void; keHoach: () => void }) {
   const { di, quyen } = useUngDung();
+  const [ghiLt, setGhiLt] = useState(false);
   const homNay = homNayIso();
   const tk = thongKe(duAn, kq, homNay);
   const moc = mocTienDo(duAn, kq.map((x) => x.h), homNay);
@@ -203,7 +205,9 @@ function TheTongQuan({ duAn, kq, moHo, moDot, capNhatTd, keHoach }: { duAn: DuAn
         </div>
       </div>
       {coDot(duAn) && <TheTongHopDot duAn={duAn} kq={kq} moDot={moDot} />}
+      <TheLyTrinh duAn={duAn} hos={kq.map((x) => x.h)} ghi={quyen("SUA_HO_SO") ? () => setGhiLt(true) : undefined} />
       <ThePhuongAn duAn={duAn} kq={kq} />
+      {ghiLt && <HopGhiLyTrinh hos={kq.map((x) => x.h)} dong={() => setGhiLt(false)} />}
     </>
   );
 }
@@ -310,6 +314,7 @@ function TheHo({ duAn, kq }: { duAn: DuAn; kq: Kq }) {
   const [toSang] = useState(nho.vuaLam);
   const [chon, setChon] = useState<Set<string>>(new Set());
   const [hopXoa, setHopXoa] = useState(false);
+  const [ghiLt, setGhiLt] = useState(false);
   useEffect(() => {
     const nghe = (e: Event) => setLocTt((e as CustomEvent<TrangThaiGpmb>).detail);
     window.addEventListener("gpmb-loc-ho", nghe);
@@ -404,6 +409,7 @@ function TheHo({ duAn, kq }: { duAn: DuAn; kq: Kq }) {
           <div className="phai" style={{ display: "flex", gap: 8 }}>
             <button className="nut nut-nho" disabled={dangXuatChon} title="Xuất Excel phương án (bảng tổng hợp, biểu từng hộ) chỉ gồm các hồ sơ đã chọn" onClick={() => void xuatChon()}>{dangXuatChon ? "Đang xuất…" : `Xuất Excel ${dsChon.length} hồ sơ`}</button>
             {quyen("CHOT_PA") && <button className="nut nut-nho nut-chinh" onClick={() => setHopChot(true)}>Chốt phương án {dsChon.length} hồ sơ…</button>}
+            <button className="nut nut-nho" title="Ghi lý trình (Km) cho các thửa của hồ sơ đã chọn — không bắt buộc" onClick={() => setGhiLt(true)}>Ghi lý trình…</button>
             <button className="nut nut-nho nut-nguy" onClick={() => setHopXoa(true)}>Xóa {dsChon.length} hồ sơ</button>
             <button className="nut nut-nho" onClick={() => setChon(new Set())}>Bỏ chọn</button>
           </div>
@@ -417,6 +423,7 @@ function TheHo({ duAn, kq }: { duAn: DuAn; kq: Kq }) {
       )}
       {hopChot && <HopChotPhuongAn duAn={duAn} kq={kq} chonDau={dsChon.map((h) => h.id)} dong={() => setHopChot(false)} />}
       {hopXoa && <HopXoaNhieuHo duAn={duAn} hos={dsChon} dong={() => setHopXoa(false)} xong={(ids) => setChon((c) => new Set([...c].filter((id) => !ids.includes(id))))} />}
+      {ghiLt && <HopGhiLyTrinh hos={dsChon} dong={() => setGhiLt(false)} />}
       {phanCong && <HopPhanCong hos={kq.map((x) => x.h)} dong={() => setPhanCong(false)} />}
       {xepDot && <HopXepDot duAn={duAn} hos={kq.map((x) => x.h)} dong={() => setXepDot(false)} />}
     </div>

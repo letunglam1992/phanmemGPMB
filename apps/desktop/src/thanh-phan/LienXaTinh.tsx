@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { hienDiem } from "../ly-trinh";
 import { D, dinhDang } from "@gpmb/core";
 import { useUngDung } from "../ung-dung";
 import { HopThoai, O } from "./chung";
@@ -97,7 +98,7 @@ function KhoiTuyen({ t, sua, suaTuyen, xoa, boGhep }: { t: TongHopTuyen; sua: bo
               x.doan.map((d, i) => (
                 <tr key={khoaDoan(d)}>
                   {i === 0 && <td rowSpan={x.doan.length}>{x.xa}{x.ngoaiDs && <div><span className="nhan nhan-vang" title="Xã không có trong danh sách xã dọc tuyến tỉnh khai">ngoài danh sách</span></div>}</td>}
-                  <td className="chu-nho">{d.lienXa?.kmDau || d.lienXa?.kmCuoi ? `${d.lienXa?.kmDau ?? "?"} – ${d.lienXa?.kmCuoi ?? "?"}` : "—"}</td>
+                  <td className="chu-nho">{d.lienXa?.kmDau || d.lienXa?.kmCuoi ? `${d.lienXa?.kmDau ?? "?"} – ${d.lienXa?.kmCuoi ?? "?"}` : "—"}{d.lyTrinh && <div className="mo" title={d.lyTrinh.chua.length ? `Đoạn còn vướng: ${d.lyTrinh.chua.map(([a, b]) => `${hienDiem(a)} – ${hienDiem(b)}`).join("; ")}` : "Không còn đoạn vướng"}>sạch {(d.lyTrinh.sachM / 1000).toLocaleString("vi-VN", { maximumFractionDigits: 3 })}/{(d.lyTrinh.tongM / 1000).toLocaleString("vi-VN", { maximumFractionDigits: 3 })} km</div>}</td>
                   <td className="chu-nho">{d.donViGui}<div className="mo">{d.ten}{ghepTay.has(khoaDoan(d)) && <> · ghép tay {sua && <button className="nut nut-chu nut-nho" onClick={() => boGhep(d)}>Bỏ ghép</button>}</>}</div></td>
                   <td className="so">{d.soHo}</td>
                   <td className="so">{d.theoTrangThai.HOAN_THANH ?? 0} ({ptBanGiao(d.theoTrangThai.HOAN_THANH ?? 0, d.soHo)})</td>
