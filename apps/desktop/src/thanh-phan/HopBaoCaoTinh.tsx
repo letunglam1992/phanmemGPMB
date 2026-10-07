@@ -1,4 +1,5 @@
 /** Soạn báo cáo tổng hợp toàn tỉnh (Word) từ số liệu các xã, phường gửi lên — mẫu public/mau-van-ban/bao-cao-tong-hop-tinh.docx. */
+import type { TuyenLienXa } from "../tong-hop-tinh/lien-xa";
 import { useState } from "react";
 import { useUngDung } from "../ung-dung";
 import { ONgay } from "./ONgay";
@@ -36,7 +37,7 @@ function docTt(coQuan: string): ThongTinBaoCaoTinh {
   }
 }
 
-export function HopBaoCaoTinh(p: { dong: () => void; tenCoQuan: string; dong_: DongBaoCao[]; phamVi: string; soDonVi: number; cham: ChamGui[]; nguong: number | null }) {
+export function HopBaoCaoTinh(p: { dong: () => void; tenCoQuan: string; dong_: DongBaoCao[]; phamVi: string; soDonVi: number; cham: ChamGui[]; nguong: number | null; tuyen?: TuyenLienXa[] }) {
   const { bao, ghiNhatKy } = useUngDung();
   const [t, setT] = useState<ThongTinBaoCaoTinh>(() => docTt(p.tenCoQuan));
   const [dang, setDang] = useState(false);
@@ -55,11 +56,11 @@ export function HopBaoCaoTinh(p: { dong: () => void; tenCoQuan: string; dong_: D
         /* bỏ qua */
       }
       const mau = await (await fetch("/mau-van-ban/bao-cao-tong-hop-tinh.docx")).arrayBuffer();
-      const duLieu = duLieuBaoCaoTinh(p.dong_, t, { phamVi: p.phamVi, denNgay: homNayIso(), soDonVi: p.soDonVi, cham: p.cham, nguong: p.nguong });
+      const duLieu = duLieuBaoCaoTinh(p.dong_, t, { phamVi: p.phamVi, denNgay: homNayIso(), soDonVi: p.soDonVi, cham: p.cham, nguong: p.nguong, tuyen: p.tuyen });
       const ten = `Bao-cao-tong-hop-GPMB-toan-tinh_${homNayIso()}.docx`;
       if (!(await taiXuong(dienMau(mau, duLieu), ten, "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))) return;
       // Phụ lục Excel (báo cáo ghi "Phụ lục Excel kèm theo")
-      const coExcel = kemExcel && !!(await taiXuong(await taoExcelTinh(p.dong_, t.coQuan || p.tenCoQuan, true), `Phu-luc-bao-cao-tong-hop-GPMB-toan-tinh_${homNayIso()}.xlsx`, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+      const coExcel = kemExcel && !!(await taiXuong(await taoExcelTinh(p.dong_, t.coQuan || p.tenCoQuan, true, p.tuyen), `Phu-luc-bao-cao-tong-hop-GPMB-toan-tinh_${homNayIso()}.xlsx`, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
       await ghiNhatKy("Tạo báo cáo tổng hợp toàn tỉnh (Word)", `${p.dong_.length} dự án, ${p.soDonVi} đơn vị gửi${coExcel ? ", kèm phụ lục Excel" : ""}`);
       bao(`Đã tạo báo cáo Word${coExcel ? " và phụ lục Excel" : ""} (dự thảo) — kiểm tra trước khi trình ký`);
       p.dong();

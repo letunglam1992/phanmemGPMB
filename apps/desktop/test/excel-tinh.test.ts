@@ -36,4 +36,19 @@ describe("Excel tổng hợp toàn tỉnh", () => {
     expect(h2.find((r) => r.getCell(1).value === 1)!.getCell(3).value).toMatch(/^Khai thác đá vôi/);
     expect(w2.views[0]).toMatchObject({ state: "frozen" });
   });
+  it("1.0.4: dự án liên xã — trang Lien xa (Phụ lục 03): nhóm tuyến, xã chưa có số liệu, cộng toàn tuyến; tổng số dự án đếm theo mã", async () => {
+    const ds = MAU.map((d, i) => (i === 0 ? d : { ...d, lienXa: { ma: "LX-2026-001", kmDau: "Km0", kmCuoi: "Km3" } }));
+    const tuyen = [{ ma: "LX-2026-001", ten: "Đường nối QL6", chuDauTu: "Ban QLDA", dsXa: ["Xã Chiềng Mung", "Xã Mường Bon"], taoLuc: "", taoBoi: "" }];
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load((await taoExcelTinh(ds, "Sở Nông nghiệp và Môi trường", true, tuyen)) as unknown as ArrayBuffer);
+    const w3 = wb.getWorksheet("Lien xa")!;
+    expect(w3.getCell("A2").value).toBe("PHỤ LỤC 03");
+    const r = w3.getRows(1, w3.rowCount)!.map((x) => [x.getCell(2).value, x.getCell(4).value, x.getCell(5).value]);
+    expect(r.find((x) => x[0] === "Xã Mường Bon")).toEqual(["Xã Mường Bon", "Chưa có số liệu", null]);
+    const tong = w3.getRows(1, w3.rowCount)!.find((x) => String(x.getCell(2).value).startsWith("Cộng toàn tuyến"))!;
+    expect(String(tong.getCell(2).value)).toContain("1/2 xã có số liệu");
+    expect(tong.getCell(5).value).toBe(121);
+    const w1 = wb.getWorksheet("Theo xa")!;
+    expect(w1.getRows(1, w1.rowCount)!.find((x) => String(x.getCell(2).value).startsWith("TỔNG CỘNG"))!.getCell(3).value).toBe(2);
+  });
 });

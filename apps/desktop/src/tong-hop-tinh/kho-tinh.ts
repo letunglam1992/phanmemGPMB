@@ -3,12 +3,14 @@
  *   khoa   – khóa cấp tỉnh (khóa bí mật đã mã hóa bằng mật khẩu khóa)
  *   goi    – gói mới nhất của từng đơn vị gửi (giữ nguyên bản mã hóa) + tóm tắt số liệu để xem nhanh không cần mật khẩu
  *   nhatKy – lịch sử nhận gói (thời điểm, nguồn: tệp / cổng, kết quả)
+ *   tuyen  – dự án liên xã do tỉnh khai: mã dùng chung, tên, chủ đầu tư, xã dọc tuyến, đoạn ghép tay (1.0.4, lien-xa.ts)
  *   banCu, banCuTep – các bản gửi trước của từng đơn vị (thông tin + tóm tắt; tệp gói riêng để danh sách nhẹ), giữ tối đa
  *                     GIU_BAN_CU bản mỗi đơn vị (giới hạn dung lượng máy, bản cũ nhất bị bỏ)
  * Chi tiết hồ sơ chỉ giải mã khi xem (cần mật khẩu khóa) và chỉ giữ trong bộ nhớ.
  */
 import { docThongTinGoi, giaiMaGoi, LoiGoiTinh, tomTatBan, type KhoaTinh, type ThongTinGoi, type TomTatDuAn } from "./goi-tinh";
 import type { BanSaoLuu } from "../sao-luu";
+import type { TuyenLienXa } from "./lien-xa";
 
 export interface BanGhiGoi {
   maGui: string;
@@ -33,7 +35,7 @@ export interface DongNhanGoi {
 const TEN = "gpmb-tong-hop-tinh";
 function mo(): Promise<IDBDatabase> {
   return new Promise((ok, loi) => {
-    const r = indexedDB.open(TEN, 2);
+    const r = indexedDB.open(TEN, 3);
     r.onupgradeneeded = (e) => {
       const db = r.result;
       if (e.oldVersion < 1) {
@@ -45,6 +47,7 @@ function mo(): Promise<IDBDatabase> {
         db.createObjectStore("banCu", { keyPath: "id", autoIncrement: true }).createIndex("maGui", "maGui");
         db.createObjectStore("banCuTep");
       }
+      if (e.oldVersion < 3) db.createObjectStore("tuyen", { keyPath: "ma" });
     };
     r.onsuccess = () => ok(r.result);
     r.onerror = () => loi(r.error);
@@ -63,6 +66,9 @@ async function giaoDich<T>(kho: string, che: IDBTransactionMode, f: (s: IDBObjec
 
 export const docKhoaTinh = async () => ((await giaoDich<KhoaTinh | undefined>("khoa", "readonly", (s) => s.get("tinh"))) ?? null);
 export const luuKhoaTinh = (k: KhoaTinh) => giaoDich("khoa", "readwrite", (s) => void s.put(k, "tinh"));
+export const dsTuyen = () => giaoDich<TuyenLienXa[]>("tuyen", "readonly", (s) => s.getAll());
+export const luuTuyen = (t: TuyenLienXa) => giaoDich("tuyen", "readwrite", (s) => void s.put(t));
+export const xoaTuyen = (ma: string) => giaoDich("tuyen", "readwrite", (s) => void s.delete(ma));
 export const dsGoi = () => giaoDich<BanGhiGoi[]>("goi", "readonly", (s) => s.getAll());
 export const docGoi = async (maGui: string) => ((await giaoDich<BanGhiGoi | undefined>("goi", "readonly", (s) => s.get(maGui))) ?? null);
 export async function xoaGoi(maGui: string) {

@@ -3,6 +3,7 @@
  * tools/mau-van-ban/mau-bao-cao-tinh.cjs). Số liệu lấy từ tóm tắt các gói xã, phường đã gửi (không có thông tin cá nhân);
  * phần nhận định (khó khăn khác, nhiệm vụ, kiến nghị) do cán bộ nhập.
  */
+import { gomLienXa, type TuyenLienXa } from "./lien-xa";
 import { D, dinhDang } from "@gpmb/core";
 import type { ThongTinBaoCao } from "../bao-cao-van-ban";
 import type { TomTatDuAn } from "./goi-tinh";
@@ -11,6 +12,8 @@ import { moTaCham, type ChamGui } from "./canh-bao";
 export type ThongTinBaoCaoTinh = ThongTinBaoCao;
 export interface DongBaoCao extends TomTatDuAn {
   donViGui: string;
+  /** Mã bộ dữ liệu gửi (để nhận đoạn ghép tay vào dự án liên xã) */
+  maGui?: string;
   /** ISO thời điểm số liệu của gói */
   luc: string;
 }
@@ -20,7 +23,13 @@ const pt = (a: number, b: number) => (b ? `${dinhDang((a / b) * 100, 1).replace(
 const ngayVN = (iso: string) => iso.slice(0, 10).split("-").reverse().join("/");
 const tenXa = (d: { xa: string }) => d.xa || "(Chưa ghi xã, phường)";
 
-export function duLieuBaoCaoTinh(dong: DongBaoCao[], t: ThongTinBaoCaoTinh, o: { phamVi: string; denNgay: string; soDonVi: number; cham: ChamGui[]; nguong: number | null }): Record<string, unknown> {
+export function duLieuBaoCaoTinh(dong: DongBaoCao[], t: ThongTinBaoCaoTinh, o: { phamVi: string; denNgay: string; soDonVi: number; cham: ChamGui[]; nguong: number | null; tuyen?: TuyenLienXa[] }): Record<string, unknown> {
+  // 1.0.4: dự án liên xã — đếm một lần theo mã dùng chung; nêu từng tuyến (xã có số liệu, bàn giao, xã chưa gửi)
+  const lx = gomLienXa(dong.map((d) => ({ ...d, maGui: d.maGui ?? d.donViGui })), o.tuyen ?? []);
+  const tuyenCo = lx.tuyen.filter((x) => x.xa.some((y) => y.doan.length));
+  const cauLienXa = tuyenCo.length
+    ? `Trong đó có ${tuyenCo.length} dự án liên xã (tuyến qua nhiều xã, phường): ${tuyenCo.map((x) => `${x.ten} (mã ${x.ma}) — ${x.xa.filter((y) => y.doan.length).length}/${x.xa.length} xã có số liệu, đã bàn giao ${x.tong.banGiao}/${x.tong.soHo} hộ${x.xaThieu.length ? `, chưa có số liệu: ${x.xaThieu.join(", ")}` : ""}`).join("; ")}.`
+    : "";
   const cong = (f: (d: DongBaoCao) => number, ds = dong) => ds.reduce((s, d) => s + f(d), 0);
   const tamTinh = (ds: DongBaoCao[]) => ds.reduce((s, d) => s.plus(D(d.tongTamTinh)), D(0));
   const bg = (d: DongBaoCao) => d.theoTrangThai.HOAN_THANH ?? 0;
@@ -31,10 +40,11 @@ export function duLieuBaoCaoTinh(dong: DongBaoCao[], t: ThongTinBaoCaoTinh, o: {
   const dt = dong.reduce((s, d) => s.plus(D(d.dienTichThuHoi)), D(0));
   const vm = dong.filter((d) => d.soVuongMac > 0);
   const tongQuat = [
-    `Tổng hợp từ số liệu của ${o.soDonVi} đơn vị gửi (${xa.length} xã, phường): ${dong.length} dự án; ${soHo} hộ gia đình, cá nhân, tổ chức có đất thu hồi; tổng diện tích thu hồi theo hồ sơ ${dinhDang(dt, 1)} m².`,
+    `Tổng hợp từ số liệu của ${o.soDonVi} đơn vị gửi (${xa.length} xã, phường): ${lx.soDuAn} dự án; ${soHo} hộ gia đình, cá nhân, tổ chức có đất thu hồi; tổng diện tích thu hồi theo hồ sơ ${dinhDang(dt, 1)} m².`,
     `Đã bàn giao mặt bằng ${cong(bg)}/${soHo} hộ (${pt(cong(bg), soHo)}); ${cong((d) => d.soHoDaDuyetPA)} hộ đã có phương án được phê duyệt; ${cong((d) => d.soVuongMac)} hộ đang ghi vướng mắc.`,
     `Giá trị bồi thường, hỗ trợ tạm tính theo hồ sơ ${tien(tamTinh(dong))} đồng (chưa phải số đã phê duyệt).`,
-  ].join(" ");
+    cauLienXa,
+  ].filter(Boolean).join(" ");
   const [y, m, dd] = t.ngayKy ? t.ngayKy.split("-") : ["", "", ""];
   const noiNhan = t.noiNhan.split("\n").map((x) => x.trim()).filter(Boolean);
   return {
@@ -52,7 +62,9 @@ export function duLieuBaoCaoTinh(dong: DongBaoCao[], t: ThongTinBaoCaoTinh, o: {
     mo_dau: t.moDau,
     tong_quat: tongQuat,
     xa: xa.map(([ten, ds], i) => ({ tt: i + 1, ten, so_du_an: ds.length, so_ho: cong((d) => d.soHo, ds), ban_giao: cong(bg, ds), vuong_mac: cong((d) => d.soVuongMac, ds), da_duyet: cong((d) => d.soHoDaDuyetPA, ds), tam_tinh: tien(tamTinh(ds)) })),
-    so_du_an: dong.length,
+    so_du_an: lx.soDuAn,
+    co_lien_xa: tuyenCo.length > 0,
+    lien_xa: tuyenCo.map((x, i) => ({ tt: i + 1, ma: x.ma, ten: x.ten, so_xa: `${x.xa.filter((y) => y.doan.length).length}/${x.xa.length}`, so_ho: x.tong.soHo, ban_giao: `${x.tong.banGiao} (${pt(x.tong.banGiao, x.tong.soHo)})`, xa_thieu: x.xaThieu.join(", ") })),
     so_ho: soHo,
     ban_giao: cong(bg),
     vuong_mac: cong((d) => d.soVuongMac),

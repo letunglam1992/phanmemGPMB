@@ -553,6 +553,11 @@ export const TEN_TRANG_THAI_DU_AN: Record<TrangThaiDuAn, string> = { DANG_TRIEN_
 export interface DuAn {
   id: string;
   ten: string;
+  /**
+   * 1.0.4: dự án liên xã (tuyến qua nhiều xã) — mã dự án dùng chung do tỉnh cấp, xã điền; tỉnh gom các đoạn theo mã
+   * (tong-hop-tinh/lien-xa.ts). Km đầu, Km cuối: phạm vi đoạn tuyến trên địa bàn xã (không bắt buộc).
+   */
+  lienXa?: import("./tong-hop-tinh/lien-xa").LienXaDuAn;
   /** Loại dự án (biểu tượng, lọc); không ảnh hưởng tính toán. */
   loaiDuAn?: LoaiDuAn;
   /** Trạng thái do cán bộ ghi; bỏ trống = Đang triển khai. */

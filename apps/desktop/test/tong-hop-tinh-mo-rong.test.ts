@@ -130,5 +130,13 @@ describe("Báo cáo Word toàn tỉnh", () => {
     expect(xml).toContain("Có 3 hộ đang ghi vướng mắc");
     expect(xml).toContain("3.000.000");
     expect(xml).not.toMatch(/\{[#/^]?[a-z_]+\}/); // không còn trường chưa điền
+    // 1.0.4: dự án liên xã — đếm một lần; câu nêu tuyến, xã chưa có số liệu
+    const lx = { ma: "LX-2026-001" };
+    const dong2 = [{ ...dong[0]!, lienXa: lx }, dong[1]!, { ...dong[2]!, lienXa: lx }];
+    const tuyen = [{ ma: "LX-2026-001", ten: "Đường nối QL6", chuDauTu: "", dsXa: ["Xã Chiềng Mung", "Phường Tô Hiệu", "Xã Mường Bon"], taoLuc: "", taoBoi: "" }];
+    const dl2 = duLieuBaoCaoTinh(dong2, tt, { phamVi: "tỉnh", denNgay: "2026-10-20", soDonVi: 2, cham: [], nguong: null, tuyen });
+    expect(dl2.so_du_an).toBe(2);
+    expect(String(dl2.tong_quat)).toContain("2 dự án; 18 hộ");
+    expect(String(dl2.tong_quat)).toContain("Trong đó có 1 dự án liên xã (tuyến qua nhiều xã, phường): Đường nối QL6 (mã LX-2026-001) — 2/3 xã có số liệu, đã bàn giao 4/13 hộ, chưa có số liệu: Xã Mường Bon.");
   });
 });

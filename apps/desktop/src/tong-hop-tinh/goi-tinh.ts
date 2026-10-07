@@ -133,6 +133,8 @@ export interface TomTatDuAn {
   /** Tỷ lệ bước quy trình đã hoàn thành bình quân (0–1) */
   tienDoBinhQuan: number;
   soTepDinhKem: number;
+  /** 1.0.4: dự án liên xã — mã dùng chung do tỉnh cấp, tên tuyến, đoạn Km (gói cũ không có) */
+  lienXa?: import("./lien-xa").LienXaDuAn;
 }
 
 /** Tóm tắt từng dự án (chạy trên máy tỉnh sau khi giải mã, hoặc trên máy xã để xem trước). */
@@ -179,6 +181,7 @@ export function tomTatDuAn(duAn: DuAn[], ho: Ho[], soTep: (duAnId: string) => nu
       soHoDaDuyetPA: duyet.length,
       tienDoBinhQuan: hs.length ? td / hs.length : 0,
       soTepDinhKem: soTep(d.id),
+      ...(d.lienXa?.ma?.trim() ? { lienXa: d.lienXa } : {}),
     };
   });
 }

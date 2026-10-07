@@ -152,6 +152,59 @@ test("tỉnh tạo khóa; xã xuất gói mã hóa; tỉnh nhận, tổng hợp 
   await expect(p.getByText(/Đang theo dõi 1 dự án/)).toBeVisible();
 });
 
+test("1.0.4: dự án liên xã — xã điền mã tỉnh cấp; tỉnh khai tuyến, xã dọc tuyến; thấy đoạn của xã và xã chưa có số liệu", async ({ page: p }) => {
+  await vao(p);
+  // --- cấp xã: Thông tin dự án → Dự án liên xã
+  await p.keyboard.press("Alt+3");
+  await p.locator("[role=tablist] button", { hasText: "Thông tin dự án" }).click();
+  await p.getByLabel("Là dự án liên xã").check();
+  await p.getByLabel("Mã dự án dùng chung").fill("lx-2026-001");
+  await p.getByLabel("Đoạn tuyến từ Km").fill("Km0+000");
+  await p.getByLabel("Đoạn tuyến đến Km").fill("Km3+200");
+  await p.getByRole("button", { name: "Lưu", exact: true }).click();
+  await expect(p.getByLabel("Mã dự án dùng chung")).toHaveValue("LX-2026-001");
+  // --- tỉnh tạo khóa, xã xuất gói, tỉnh nhận
+  await p.getByRole("button", { name: "Gửi tỉnh, tổng hợp tỉnh" }).click();
+  await p.getByRole("tab", { name: "Tổng hợp tỉnh (cấp tỉnh)" }).click();
+  await p.getByLabel("Tên đơn vị tổng hợp").fill("Sở Nông nghiệp và Môi trường (thử)");
+  await p.getByLabel("Mật khẩu khóa mới").fill("MatKhauTinh2026");
+  await p.getByLabel("Nhập lại mật khẩu khóa").fill("MatKhauTinh2026");
+  await p.getByRole("button", { name: "Tạo khóa cấp tỉnh" }).click();
+  await p.getByRole("button", { name: "Xuất khóa công khai gửi các xã" }).click();
+  const khoa = await tep(p, "Khoa-cong-khai_");
+  await p.getByRole("tab", { name: "Gửi lên tỉnh (cấp xã)" }).click();
+  await p.getByLabel("Chọn tệp khóa của tỉnh").setInputFiles({ name: khoa.ten, mimeType: "application/json", buffer: khoa.buf });
+  await p.getByLabel("Tên đơn vị gửi").fill("UBND xã Chiềng Mung (thử)");
+  await p.getByRole("button", { name: /Xuất gói gửi tỉnh/ }).click();
+  const goi = await tep(p, "GPMB-gui-tinh_");
+  await p.getByRole("tab", { name: "Tổng hợp tỉnh (cấp tỉnh)" }).click();
+  await p.getByLabel("Mật khẩu khóa cấp tỉnh").fill("MatKhauTinh2026");
+  await p.getByRole("button", { name: "Mở khóa" }).click();
+  await expect(p.getByText("Đã mở khóa")).toBeVisible();
+  await p.getByLabel("Chọn gói dữ liệu của xã").setInputFiles({ name: goi.ten, mimeType: "application/octet-stream", buffer: goi.buf });
+  await expect(p.getByLabel("Kết quả nhận gói")).toContainText("nhận mới");
+  await expect(p.getByRole("table", { name: "Bảng tổng hợp tỉnh" })).toContainText("LX-2026-001");
+  // --- tỉnh khai dự án liên xã
+  const lx = p.getByLabel("Dự án liên xã", { exact: true });
+  await expect(lx.getByText("Mã chưa khai ở tỉnh")).toBeVisible();
+  await lx.getByRole("button", { name: "+ Khai dự án liên xã" }).click();
+  await p.getByLabel("Mã dự án liên xã").fill("LX-2026-001");
+  await p.getByLabel("Tên dự án liên xã").fill("Đường nối QL6 – Bản Mòng");
+  await p.getByLabel("Chủ đầu tư dự án liên xã").fill("Ban QLDA giao thông");
+  await p.getByLabel("Xã dọc tuyến").fill("Xã Chiềng Mung\nXã Mường Bon");
+  await p.getByRole("button", { name: "Lưu", exact: true }).click();
+  const khoi = p.getByLabel("Dự án liên xã LX-2026-001");
+  await expect(khoi).toContainText("Đường nối QL6 – Bản Mòng");
+  await expect(khoi).toContainText("Km0+000 – Km3+200");
+  await expect(khoi.locator("tr", { hasText: "Xã Mường Bon" })).toContainText("Chưa có số liệu");
+  await expect(khoi).toContainText("Toàn tuyến (1/2 xã có số liệu)");
+  await expect(khoi.getByText("1 xã chưa có số liệu")).toBeVisible();
+  // Excel tổng hợp có trang Lien xa
+  await p.getByRole("button", { name: "Xuất Excel" }).click();
+  const ex = await tep(p, "Tong-hop-GPMB-toan-tinh_");
+  expect(new PizZip(ex.buf).file("xl/workbook.xml")!.asText()).toContain("Lien xa");
+});
+
 test("cổng Cloudflare: tỉnh cấp mã cho xã; xã gửi gói lên cổng; tỉnh tải về, cổng chỉ giữ dữ liệu đã mã hóa", async ({ page: p }) => {
   // Worker thật (tools/cong-tinh/worker.js) chạy trong tiến trình kiểm thử, R2 trong bộ nhớ
   const kho = new Map<string, Uint8Array>();

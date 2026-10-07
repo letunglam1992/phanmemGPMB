@@ -3,6 +3,7 @@
  * trang "Tung du an" (chi tiết từng dự án, số hộ theo hiện trạng). Số liệu từ tóm tắt gói các đơn vị gửi — không có tên người.
  */
 import { D } from "@gpmb/core";
+import { gomLienXa, type TuyenLienXa } from "./lien-xa";
 import { THU_TU_TRANG_THAI, TT_GPMB } from "../trang-thai";
 import type { DongBaoCao } from "./bao-cao-tinh";
 
@@ -91,7 +92,7 @@ function trangBieu(wb: import("exceljs").Workbook, ten: string, o: { donVi: stri
   return { ws, dong, chuThich };
 }
 
-export async function taoExcelTinh(dong: DongBaoCao[], donVi: string, tieuDePhuLuc = false): Promise<Uint8Array> {
+export async function taoExcelTinh(dong: DongBaoCao[], donVi: string, tieuDePhuLuc = false, dsTuyen: TuyenLienXa[] = []): Promise<Uint8Array> {
   const { default: Excel } = await import("exceljs");
   const wb = new Excel.Workbook();
   wb.creator = "GPMB Sơn La";
@@ -130,7 +131,10 @@ export async function taoExcelTinh(dong: DongBaoCao[], donVi: string, tieuDePhuL
     return [ds.length, so, cong(ds, bg), tyLe(cong(ds, bg), so), cong(ds, (d) => d.soVuongMac), cong(ds, (d) => d.soHoDaChotPA), cong(ds, (d) => d.soHoDaDuyetPA), tien(ds), dt(ds)];
   };
   xa.forEach(([ten, ds], i) => t1.dong([i + 1, ten, ...soLieuXa(ds)]));
-  t1.dong(["", `TỔNG CỘNG (${xa.length} xã, phường)`, ...soLieuXa(dong)], "tong");
+  // Dự án liên xã đếm một lần theo mã dùng chung (mỗi xã vẫn tính phần đoạn của mình ở dòng xã)
+  const soDuAnTinh = gomLienXa(dong.map((d) => ({ ...d, maGui: d.maGui ?? d.donViGui })), dsTuyen).soDuAn;
+  const [, ...conLaiTong] = soLieuXa(dong);
+  t1.dong(["", `TỔNG CỘNG (${xa.length} xã, phường)`, soDuAnTinh, ...conLaiTong], "tong");
   t1.ws.addRow([]);
   t1.chuThich("Ghi chú: Đã bàn giao mặt bằng = hộ ở hiện trạng Hoàn thành GPMB; tỷ lệ bàn giao = số hộ đã bàn giao / tổng số hộ. Số liệu tổng hợp từ gói dữ liệu mã hóa các đơn vị gửi, không gồm thông tin cá nhân.");
 
@@ -168,8 +172,51 @@ export async function taoExcelTinh(dong: DongBaoCao[], donVi: string, tieuDePhuL
     t2.dong([la[k] ?? String(k + 1), `${ten} (${ds.length} dự án)`], "nhom");
     for (const d of ds) t2.dong([++stt, ten, d.ten, d.chuDauTu, d.donViGui, ngayGio(d.luc), ...soLieuDa([d])]);
   });
-  t2.dong(["", `TỔNG CỘNG (${dong.length} dự án)`, "", "", "", "", ...soLieuDa(dong)], "tong", 6);
+  t2.dong(["", `TỔNG CỘNG (${soDuAnTinh} dự án${soDuAnTinh < dong.length ? `, ${dong.length} đoạn theo xã` : ""})`, "", "", "", "", ...soLieuDa(dong)], "tong", 6);
   t2.ws.addRow([]);
   t2.chuThich(`Ghi chú: Số hộ theo hiện trạng GPMB (${THU_TU_TRANG_THAI.map((t) => TT_GPMB[t].ten).join("; ")}); "Số liệu đến" là thời điểm đơn vị lập gói gửi. Giá trị tạm tính theo bảng tính hiện tại của đơn vị, chưa phải số đã phê duyệt.`);
+  // Trang 3 (1.0.4): dự án liên xã — mỗi tuyến một nhóm, từng xã dọc tuyến (xã chưa gửi: "Chưa có số liệu"), cộng toàn tuyến
+  const lx = gomLienXa(dong.map((d) => ({ ...d, maGui: d.maGui ?? d.donViGui })), dsTuyen).tuyen.filter((x) => x.xa.length);
+  if (lx.length) {
+    const t3 = trangBieu(wb, "Lien xa", {
+      donVi,
+      phuLuc: tieuDePhuLuc ? "PHỤ LỤC 03" : undefined,
+      tieuDe: "TIẾN ĐỘ BỒI THƯỜNG, HỖ TRỢ, TÁI ĐỊNH CƯ CÁC DỰ ÁN LIÊN XÃ (TUYẾN QUA NHIỀU XÃ, PHƯỜNG)",
+      ghiChu,
+      cot: [
+        { ten: "STT", rong: 6, kieu: "giua" },
+        { ten: "Dự án / xã, phường", rong: 34, kieu: "chu" },
+        { ten: "Đoạn tuyến (Km)", rong: 18, kieu: "giua" },
+        { ten: "Đơn vị gửi", rong: 20, kieu: "chu" },
+        { ten: "Số hộ", rong: 9, kieu: "so" },
+        { ten: "Đã bàn giao mặt bằng (hộ)", rong: 12, kieu: "so" },
+        { ten: "Tỷ lệ bàn giao", rong: 10, kieu: "tyLe" },
+        { ten: "Hộ đã chốt phương án", rong: 11, kieu: "so" },
+        { ten: "Hộ đã duyệt phương án", rong: 11, kieu: "so" },
+        { ten: "Hộ có vướng mắc", rong: 10, kieu: "so" },
+        { ten: "Giá trị tạm tính (đồng)", rong: 18, kieu: "tien" },
+        { ten: "Diện tích thu hồi (m²)", rong: 14, kieu: "dt" },
+      ],
+    });
+    const so = (x: { soHo: number; banGiao: number; chotPA: number; duyetPA: number; soVuongMac: number; tamTinh: { toFixed: (n: number) => string }; dienTich: { toFixed: (n: number) => string } }) =>
+      [x.soHo, x.banGiao, tyLe(x.banGiao, x.soHo), x.chotPA, x.duyetPA, x.soVuongMac, Number(x.tamTinh.toFixed(0)), Number(x.dienTich.toFixed(2))];
+    lx.forEach((x, k) => {
+      t3.dong([la[k] ?? String(k + 1), `${x.ten} — mã ${x.ma}${x.tuyen?.chuDauTu ? ` (${x.tuyen.chuDauTu})` : ""}`], "nhom");
+      let i = 0;
+      for (const y of x.xa) {
+        if (!y.doan.length) {
+          t3.dong([++i, y.xa, "", "Chưa có số liệu", null, null, null, null, null, null, null, null]);
+          continue;
+        }
+        for (const d of y.doan) {
+          const s1 = { soHo: d.soHo, banGiao: d.theoTrangThai.HOAN_THANH ?? 0, chotPA: d.soHoDaChotPA, duyetPA: d.soHoDaDuyetPA, soVuongMac: d.soVuongMac, tamTinh: D(d.tongTamTinh), dienTich: D(d.dienTichThuHoi) };
+          t3.dong([++i, `${y.xa}${y.ngoaiDs ? " (ngoài danh sách dọc tuyến)" : ""}`, d.lienXa?.kmDau || d.lienXa?.kmCuoi ? `${d.lienXa?.kmDau ?? "?"} – ${d.lienXa?.kmCuoi ?? "?"}` : "", d.donViGui, ...so(s1)]);
+        }
+      }
+      t3.dong(["", `Cộng toàn tuyến (${x.xa.filter((y) => y.doan.length).length}/${x.xa.length} xã có số liệu${x.hoanThanh ? " — hoàn thành GPMB toàn tuyến" : ""})`, "", "", ...so(x.tong)], "tong", 4);
+    });
+    t3.ws.addRow([]);
+    t3.chuThich("Ghi chú: Dự án liên xã do cấp tỉnh khai (mã dùng chung, xã dọc tuyến); mỗi xã gửi số liệu phần dự án trên địa bàn mình. \"Chưa có số liệu\": xã dọc tuyến chưa gửi gói có dự án ghi mã này. Toàn tuyến hoàn thành khi mọi xã đã gửi và mọi hộ đã bàn giao mặt bằng.");
+  }
   return new Uint8Array(await wb.xlsx.writeBuffer());
 }

@@ -1214,3 +1214,8 @@ kbd.phim { display: inline-block; min-width: 20px; padding: 1px 6px; border: 1px
 .the-dau-kd > .phai { flex-wrap: wrap; justify-content: flex-end; }
 .o-tich-dong { display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; white-space: nowrap; }
 .o-tich-dong input[type="checkbox"] { width: auto; margin: 0; }
+/* 1.0.4: dự án liên xã (Tổng hợp tỉnh) */
+.lx-khoi { border: 1px solid var(--vien); border-radius: 10px; overflow-x: auto; }
+.lx-dau { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 12px; background: var(--be-mat-2); }
+.lx-dau .phai { margin-left: auto; }
+.lx-thieu td { background: color-mix(in srgb, var(--do-nen) 40%, transparent); }

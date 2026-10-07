@@ -5,6 +5,8 @@
  * - Cấp tỉnh ("Tổng hợp tỉnh"): tạo khóa cấp tỉnh, nhận gói (tệp hoặc tải từ cổng), bảng tổng hợp theo xã, phường,
  *   xem chi tiết từng dự án như cấp xã (chỉ xem), xuất Excel; quản lý mã truy cập cổng của các xã.
  */
+import { TheLienXaTinh } from "../thanh-phan/LienXaTinh";
+import { gomLienXa, type DoanTinh, type TuyenLienXa } from "../tong-hop-tinh/lien-xa";
 import { useEffect, useMemo, useState } from "react";
 import { ChonTep } from "../thanh-phan/ChonTep";
 import { D, dinhDang } from "@gpmb/core";
@@ -22,7 +24,7 @@ import {
   taoKhoaTinh, tenTepGoi, tepDuPhongKhoa, tepKhoaCongKhai, tomTatDuAn,
   type KhoaCongKhaiTinh, type KhoaTinh, type TomTatDuAn,
 } from "../tong-hop-tinh/goi-tinh";
-import { LoiDoiKhoaKy, type KetQuaNhap, type BanCu, docBanCu, dsBanCuTatCa, GIU_BAN_CU, docKhoaTinh, dsGoi, dsNhanGoi, luuKhoaTinh, moGoiDaLuu, nhapGoi, xoaGoi, type BanGhiGoi, type DongNhanGoi } from "../tong-hop-tinh/kho-tinh";
+import { LoiDoiKhoaKy, type KetQuaNhap, type BanCu, docBanCu, dsBanCuTatCa, GIU_BAN_CU, docKhoaTinh, dsGoi, dsNhanGoi, dsTuyen, luuKhoaTinh, moGoiDaLuu, nhapGoi, xoaGoi, type BanGhiGoi, type DongNhanGoi } from "../tong-hop-tinh/kho-tinh";
 import {
   capMaXa, chuanDiaChi, docCauHinhCong, dsGoiTrenCong, dsXaTrenCong, guiGoiLenCong, kiemTraCong, luuCauHinhCong, maTuTen, thuHoiXa, xoaCauHinhCong,
   type CauHinhCong, type GoiTrenCong, type VaiTroCong, type XaTrenCong,
@@ -303,6 +305,7 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
   const [khoa, setKhoa] = useState<KhoaTinh | null | undefined>(undefined);
   const [moKhoa, setMoKhoa] = useState(!!layKhoaMo());
   const [ds, setDs] = useState<BanGhiGoi[]>([]);
+  const [tuyen, setTuyen] = useState<TuyenLienXa[]>([]);
   const [nhan, setNhan] = useState<DongNhanGoi[]>([]);
   const [cong, setCong] = useState<CauHinhCong | null>(() => docCauHinhCong("TINH"));
   const [dang, setDang] = useState("");
@@ -335,6 +338,7 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
     return () => { bo = true; };
   }, [cong, moKhoa]);
   const napLai = async () => {
+    setTuyen(await dsTuyen());
     setDs((await dsGoi()).sort((a, b) => a.donViGui.localeCompare(b.donViGui, "vi")));
     setNhan(await dsNhanGoi());
     setBanCu(await dsBanCuTatCa());
@@ -353,6 +357,7 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
     void napLai();
   }, []);
   const dong = useMemo<DongTongHop[]>(() => ds.flatMap((g) => g.tomTat.map((t) => ({ ...t, goi: g }))), [ds]);
+  const doanTinh = (x: DongTongHop[]): DoanTinh[] => x.map((d) => ({ ...d, maGui: d.goi.maGui, donViGui: d.goi.donViGui, luc: d.goi.thongTin.luc }));
   const dsXa = useMemo(() => [...new Set(dong.map((d) => d.xa || "(Chưa ghi xã, phường)"))].sort((a, b) => a.localeCompare(b, "vi")), [dong]);
   const hien = useMemo(() => {
     const q = loc.tim.trim().toLowerCase();
@@ -462,7 +467,7 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
     }
   };
   const xuatExcel = async () => {
-    const bytes = await taoExcelTinh(hien.map((d) => ({ ...d, donViGui: d.goi.donViGui, luc: d.goi.thongTin.luc })), khoa.donVi);
+    const bytes = await taoExcelTinh(hien.map((d) => ({ ...d, maGui: d.goi.maGui, donViGui: d.goi.donViGui, luc: d.goi.thongTin.luc })), khoa.donVi, false, tuyen);
     await taiXuong(bytes, tenTep(`Tong-hop-GPMB-toan-tinh_${homNay()}.xlsx`), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
   };
 
@@ -541,7 +546,7 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
           <div className="tht-chi-so" aria-label="Chỉ số toàn tỉnh">
             <div><b>{new Set(hien.map((d) => d.goi.maGui)).size}</b><span>đơn vị gửi</span></div>
             <div><b>{new Set(hien.map((d) => d.xa)).size}</b><span>xã, phường</span></div>
-            <div><b>{hien.length}</b><span>dự án</span></div>
+            <div title="Dự án liên xã đếm một lần theo mã dùng chung"><b>{gomLienXa(doanTinh(hien), tuyen).soDuAn}</b><span>dự án</span></div>
             <div><b>{tong((d) => d.soHo)}</b><span>hộ, tổ chức</span></div>
             <div><b>{tong((d) => d.theoTrangThai.HOAN_THANH ?? 0)}</b><span>đã bàn giao mặt bằng</span></div>
             <div><b>{tong((d) => d.soVuongMac)}</b><span>hộ có vướng mắc</span></div>
@@ -569,7 +574,7 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
                     </tr>,
                     ...dsx.map((d) => (
                       <tr key={`${d.goi.maGui}-${d.id}`}>
-                        <td><button className="nut-chu" title="Xem chi tiết dự án như cấp xã (chỉ xem)" disabled={!moKhoa} onClick={() => void xem(d.goi, d.id)}>{d.ten}</button>{d.chuDauTu && <div className="mo chu-nho">{d.chuDauTu}</div>}</td>
+                        <td><button className="nut-chu" title="Xem chi tiết dự án như cấp xã (chỉ xem)" disabled={!moKhoa} onClick={() => void xem(d.goi, d.id)}>{d.ten}</button>{d.lienXa?.ma && <span className="nhan nhan-tim" style={{ marginLeft: 6 }} title="Dự án liên xã — xem thẻ Dự án liên xã">{d.lienXa.ma}</span>}{d.chuDauTu && <div className="mo chu-nho">{d.chuDauTu}</div>}</td>
                         <td className="chu-nho">{d.goi.donViGui}<div className="mo">{ngayGio(d.goi.thongTin.luc)}</div></td>
                         <td className="so">{d.soHo}</td>
                         <td>
@@ -592,6 +597,10 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
           <div className="mo chu-nho" style={{ marginTop: 8 }}>Hiện trạng tính theo cùng quy tắc như cấp xã (tại ngày nhận gói); giá trị "tạm tính" là tổng các khoản phần mềm tính, chưa phải số đã phê duyệt. Bấm tên dự án để xem chi tiết (hồ sơ hộ, kiểm đếm, phương án, bản đồ, văn bản, tệp đính kèm) — chỉ xem.</div>
         </div>
       </div>
+
+      <RaoLoi ten="khung Dự án liên xã">
+        <TheLienXaTinh doan={doanTinh(dong)} dsTuyen={tuyen} napLai={napLai} sua={quyen("CAI_DAT")} xaGoiY={dsXa} />
+      </RaoLoi>
 
       <div className="the">
         <div className="the-dau"><h3>Đơn vị đã gửi ({ds.length})</h3></div>
@@ -644,7 +653,8 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
         <HopBaoCaoTinh
           dong={() => setHopBc(false)}
           tenCoQuan={khoa.donVi}
-          dong_={hien.map((d) => ({ ...d, donViGui: d.goi.donViGui, luc: d.goi.thongTin.luc }))}
+          dong_={hien.map((d) => ({ ...d, maGui: d.goi.maGui, donViGui: d.goi.donViGui, luc: d.goi.thongTin.luc }))}
+          tuyen={tuyen}
           phamVi={loc.xa || "tỉnh"}
           soDonVi={new Set(hien.map((d) => d.goi.maGui)).size}
           cham={cham}

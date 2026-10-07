@@ -33,6 +33,7 @@ import { hienSo } from "../so";
 import { CauHinhThuongBanGiao } from "../thanh-phan/CauHinhThuong";
 import { TheBoChinhSachDuAn } from "../thanh-phan/GoiChinhSach";
 import { LichSuDuAn } from "../thanh-phan/LichSuHo";
+import { TheLienXa } from "../thanh-phan/LienXa";
 import { TheDoiChieuDt } from "../thanh-phan/DoiChieuDt";
 import { TheDuBao } from "../thanh-phan/DuBao";
 import { TheQuyTdc } from "../thanh-phan/QuyTdc";
@@ -248,6 +249,7 @@ function TheThongTin({ duAn, tiep }: { duAn: DuAn; tiep: () => void }) {
         <CauHinhThuongBanGiao d={d} setD={setD} />
         <TheBoChinhSachDuAn duAn={duAn} />
         <TheDotThuHoi d={d} setD={setD} hos={hoCua(duAn.id, true)} />
+        <TheLienXa d={d} setD={setD} />
         <div className="the" style={{ gridColumn: "1" }}>
           <div className="the-dau"><h3>Mẫu mã hồ sơ</h3><span className="mo chu-nho">do đơn vị đặt</span></div>
           <div className="the-than">
