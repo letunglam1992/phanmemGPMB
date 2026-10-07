@@ -36,8 +36,9 @@ test("lăn chuột phóng bản đồ, không cuộn trang; bảng lớp giữ t
   await vao(p);
   await p.keyboard.press("Alt+3");
   await p.locator("[role=tablist] button", { hasText: "Bản đồ" }).click();
-  await p.locator('input[type=file][accept=".dgn,.DGN"]').setInputFiles({ name: "thu.dgn", mimeType: "application/octet-stream", buffer: Buffer.from(v.xuat()) });
+  await p.locator('input[type=file][accept=".dgn,.dxf,.dwg"]').setInputFiles({ name: "thu.dgn", mimeType: "application/octet-stream", buffer: Buffer.from(v.xuat()) });
   await expect(p.getByText("thu.dgn ·")).toBeVisible();
+  await p.getByRole("button", { name: "Để sau" }).click();
   const cv = p.locator(".ban-do canvas");
   await expect(cv).toBeVisible();
 

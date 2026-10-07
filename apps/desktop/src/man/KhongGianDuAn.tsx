@@ -32,6 +32,7 @@ import { NHOM_PHAP_LY, THU_TU_PHAP_LY, thongKePhapLy, type NhomPhapLy } from "..
 import { hienSo } from "../so";
 import { CauHinhThuongBanGiao } from "../thanh-phan/CauHinhThuong";
 import { TheBoChinhSachDuAn } from "../thanh-phan/GoiChinhSach";
+import { LichSuDuAn } from "../thanh-phan/LichSuHo";
 import { TheDoiChieuDt } from "../thanh-phan/DoiChieuDt";
 import { TheDuBao } from "../thanh-phan/DuBao";
 import { TheQuyTdc } from "../thanh-phan/QuyTdc";
@@ -276,6 +277,7 @@ function TheThongTin({ duAn, tiep }: { duAn: DuAn; tiep: () => void }) {
             ))}
           </div>
         </div>
+        <LichSuDuAn duAn={duAn} />
       </div>
     </fieldset>
   );

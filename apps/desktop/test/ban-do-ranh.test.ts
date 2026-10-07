@@ -85,3 +85,16 @@ describe("Cập nhật DT thu hồi từ ranh GPMB", () => {
     expect(canhBaoConLai(cs, duAn, [t0], m3, kh, hs({ truongHop: "D17_K2", canCu: " " }))[0]).toMatchObject({ muc: "NHO" });
   });
 });
+
+describe("Đối chiếu so sánh bản đồ với hồ sơ (0.9.27)", () => {
+  it("ghép theo tờ-thửa (bỏ số 0 đầu), nhiều hộ cùng thửa; thửa không có số → không ghép", async () => {
+    const { doiChieuSoSanh } = await import("../src/man/ban-do/ranh");
+    const { ho } = taoDuAnMau();
+    const t = ho[0]!.thua[0]!;
+    const x = { ma: "a", soTo: `0${t.soTo}`, soThua: t.soThua, trangThai: "DOI_DT" as const, dtCu: 100, dtMoi: 90, khacBiet: 10 };
+    const kq = doiChieuSoSanh([x, { ...x, soTo: null, soThua: null }], [ho[0]!, { ...ho[1]!, thua: [t] }]);
+    expect(kq[0]!.ho.map((h) => h.ma)).toEqual([ho[0]!.ma, ho[1]!.ma]);
+    expect(kq[0]!.ho[0]!.dtThuHoi).toBe(t.dienTichThuHoi);
+    expect(kq[1]!.ho).toEqual([]);
+  });
+});

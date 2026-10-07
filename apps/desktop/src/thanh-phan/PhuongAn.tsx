@@ -333,7 +333,7 @@ function HopPheDuyet({ duAn, p, boSung, dong: dongHop, luu }: { duAn: DuAn; p: P
   const [loi, setLoi] = useState("");
   return (
     <HopThoai
-      tieuDe={boSung ? `Bổ sung số, ngày QĐ phê duyệt – đợt ${dot}` : `Ghi nhận phê duyệt – đợt ${dot}`}
+      tieuDe={`${boSung ? "Bổ sung số, ngày QĐ phê duyệt" : "Ghi nhận phê duyệt"} – đợt ${dot}${tenDotThuHoi ? ` (${tenDotThuHoi})` : ""}`}
       dong={dongHop}
       rong={620}
       chan={

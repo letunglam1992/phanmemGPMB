@@ -9,7 +9,7 @@ import { PhanBoTrangThai } from "../thanh-phan/BieuDo";
 import { Chon } from "../thanh-phan/Chon";
 import { type DuLieuBanDo, boNho, layDem, TEN_CO, phanTich, dungLai, khoaNapBanDo, khoaTepGhep, napTatCa, thamChieuThieu, locThuaXoa } from "./ban-do/du-lieu";
 import { TheThuaXoa } from "./ban-do/ThuaXoa";
-import { HopCauHinhLop } from "./ban-do/CauHinhLop";
+import { HopCachGanLop, HopCauHinhLop } from "./ban-do/CauHinhLop";
 import { TomTatThuHoi, KiemTraBanDo, ChiTietThua } from "./ban-do/KiemTra";
 import { KhungVe } from "./ban-do/KhungVe";
 import { HopTaoHo } from "./ban-do/TaoHo";
@@ -50,6 +50,8 @@ export function BanDo({ duAnId }: { duAnId: string }) {
   const [loc, setLoc] = useState<"TRONG_RANH" | "TAT_CA" | "CO_CO">("TRONG_RANH");
   const [taoHo, setTaoHo] = useState(false);
   const [moCauHinh, setMoCauHinh] = useState(false);
+  /** 0.9.27: hỏi cách gán lớp ngay sau khi nạp bản đồ */
+  const [hoiGanLop, setHoiGanLop] = useState<{ tep: string; soThua: number; thieuSoTo: number } | null>(null);
   const [cheDoChonThua, setCheDoChonThua] = useState(false);
   const [veRanh, setVeRanh] = useState(0);
   const [capNhatDt, setCapNhatDt] = useState(false);
@@ -221,6 +223,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
       for (const t of duAn.banDo?.tepGhep ?? []) await kho.xoaBanDo(khoaTepGhep(duAnId, t.id));
       await luuDuAn({ ...duAn, banDo: { tenTep: f.name, ngayNhap, vungChon: null, vungChonDs: [], thuaChon: [], ranhNhap: duAn.banDo?.ranhNhap ?? [], ghiChu: duAn.banDo?.ghiChu, diemDo: duAn.banDo?.diemDo, ketQuaDo: duAn.banDo?.ketQuaDo } });
       bao(`Đã nạp bản đồ ${f.name}: ${d.kq.thua.length} thửa`);
+      setHoiGanLop({ tep: f.name, soThua: d.kq.thua.length, thieuSoTo: d.kq.thua.filter((t) => !t.soTo).length });
     } catch (e) {
       setLoi((e as Error).message);
     } finally {
@@ -297,8 +300,8 @@ export function BanDo({ duAnId }: { duAnId: string }) {
         <div className="phai">
           {dl && <button className="nut" onClick={() => setMoCauHinh(true)}>Cấu hình lớp{dl.laGoiY ? " (gợi ý)" : ""}</button>}
           <label className="nut" aria-disabled={dangDoc}>
-            {dangDoc ? "Đang đọc…" : duAn.banDo ? "Nạp tệp khác" : "Nạp tệp DGN"}
-            <input ref={inputTep} type="file" accept=".dgn,.DGN" disabled={dangDoc} className="an" onChange={(e) => e.target.files?.[0] && void napTep(e.target.files[0])} />
+            {dangDoc ? "Đang đọc…" : duAn.banDo ? "Nạp tệp khác" : "Nạp tệp bản đồ (DGN, DXF)"}
+            <input ref={inputTep} type="file" accept=".dgn,.dxf,.dwg" disabled={dangDoc} className="an" onChange={(e) => e.target.files?.[0] && void napTep(e.target.files[0])} />
           </label>
           {duAn.banDo && (
             <button className="nut nut-nguy" disabled={dangDoc || !quyen("SUA_HO_SO")} onClick={() => void xoaBanDo()} title="Xóa tệp bản đồ đã nạp để nạp bản đồ mới; hồ sơ hộ giữ nguyên">
@@ -342,9 +345,10 @@ export function BanDo({ duAnId }: { duAnId: string }) {
       {!dl && !loi && duAn.banDo && <div className="the the-than trong" style={{ textAlign: "center", padding: 40 }}>Đang đọc bản đồ {duAn.banDo.tenTep}…</div>}
       {!dl && !loi && !duAn.banDo && (
         <div className="the the-than" style={{ textAlign: "center", padding: 50 }}>
-          <h2>Nạp bản đồ DGN (MicroStation V7, V8/V8i)</h2>
+          <h2>Nạp bản đồ DGN (MicroStation V7, V8/V8i) hoặc DXF (AutoCAD)</h2>
           <p className="mo">Phần mềm khép thửa từ đường ranh, đọc nhãn số tờ, số thửa, loại đất, diện tích, chủ sử dụng (phông TCVN3 hoặc Unicode). Kết quả là dữ liệu đề xuất để cán bộ kiểm tra.</p>
           <p className="mo chu-nho">Lớp mặc định: ranh thửa 10 · nhãn thửa 13 · số thửa 4 · số tờ 5 · chủ sử dụng 6 · ranh GPMB 30. Bản đồ lập bằng gCadas: phần mềm tự nhận nút thuộc tính thửa; cán bộ xem và chốt ở “Cấu hình lớp”.</p>
+          <p className="mo chu-nho">Tệp DXF: lớp tên là số (“10”, “Level 10”) giữ số đó, lớp tên chữ đánh số từ 1000 (xem tên ở “Cấu hình lớp”). Tệp DWG chưa đọc trực tiếp — lưu sang DXF (AutoCAD: Save As → DXF, hoặc ODA File Converter) rồi nạp.</p>
         </div>
       )}
       {dl && (
@@ -434,7 +438,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
                       return (
                         <tr key={khoaThua(t)} data-phim-chon data-ma-thua={t.ma} className={`co-the-chon ${xemLai === t.ma ? "dang-chon" : ""}`} title="Bấm để xem chi tiết và phóng tới thửa trên bản đồ" onClick={() => { setChon(t); setPhongToi({ vong: t.vong, n: Date.now() }); }}>
                           <td onClick={(e) => e.stopPropagation()}><input type="checkbox" disabled={!quyen("SUA_HO_SO")} checked={thuaChon.has(t.ma)} onChange={() => batTatThua(t)} aria-label={`Chọn thửa ${t.soTo ?? "?"}-${t.soThua ?? "?"} là thửa thu hồi`} title="Chọn tay là thửa thu hồi" /></td>
-                          <td className="khong-xuong-dong">{t.soTo ?? "?"}-{t.soThua ?? "?"}{t.co.length > 0 && <span className="nhan nhan-vang" style={{ marginLeft: 4 }} title={t.co.map((c) => TEN_CO[c]).join(", ")}>!</span>}</td>
+                          <td className="khong-xuong-dong" title={t.soToNhapTay ? "Số tờ nhập tay cho tệp (bản đồ không ghi)" : undefined}>{t.soTo ?? "?"}{t.soToNhapTay ? "*" : ""}-{t.soThua ?? "?"}{t.co.length > 0 && <span className="nhan nhan-vang" style={{ marginLeft: 4 }} title={t.co.map((c) => TEN_CO[c]).join(", ")}>!</span>}</td>
                           <td title={t.loaiDatBanDo ?? undefined}>{t.loaiDatBanDo ? tenDayDu(t.loaiDatBanDo) : "—"}</td>
                           <td className="so">{t.dienTichGhi ?? "—"}</td>
                           <td className="so">{th ? (th.phamVi === "NGOAI" ? "—" : th.dienTichThuHoi.toFixed(1)) : ""}</td>
@@ -451,6 +455,18 @@ export function BanDo({ duAnId }: { duAnId: string }) {
         </div>
       )}
       {dl && dl.ban.canhBao.length > 0 && <div className="mo chu-nho mt-8">Ghi chú đọc tệp: {dl.ban.canhBao.join(" ")}</div>}
+      {hoiGanLop && duAn.banDo && (
+        <HopCachGanLop
+          {...hoiGanLop}
+          soTo={duAn.banDo.soTo ?? ""}
+          dong={() => setHoiGanLop(null)}
+          chon={async (cach, soTo) => {
+            setHoiGanLop(null);
+            if ((soTo.trim() || undefined) !== duAn.banDo?.soTo) await luuDuAn({ ...duAn, banDo: { ...duAn.banDo!, soTo: soTo.trim() || undefined } });
+            if (cach === "CHON") setMoCauHinh(true);
+          }}
+        />
+      )}
       {moCauHinh && dl && <HopCauHinhLop dl={dl} sua={quyen("SUA_HO_SO")} apDung={apDungCauHinh} dong={() => setMoCauHinh(false)} />}
       {thieuPhamVi && dl && (
         <HopThoai tieuDe="Chưa xác định thửa thu hồi" dong={() => setThieuPhamVi(false)} rong={640} chan={<button className="nut nut-chinh" onClick={() => setThieuPhamVi(false)}>Đã hiểu</button>}>

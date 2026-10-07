@@ -1,5 +1,6 @@
 import { laCfb } from "./cfb.js";
 import { docDgnV8 } from "./dgn-v8.js";
+import { HUONG_DAN_DWG, docDxf, laDwg, laDxf, laDxfNhiPhan } from "./dxf.js";
 
 /**
  * Bộ đọc tệp MicroStation DGN phiên bản 7 (ISFF), 2D và 3D. Tệp V8/V8i chuyển sang dgn-v8.ts.
@@ -43,6 +44,8 @@ interface PhanTuCoSo {
   oDungChung?: string;
   /** Phần tử dựng từ kích thước (DGN V8 kiểu 33): chiều dài đo giữa hai điểm định vị, đơn vị chính. */
   kichThuoc?: number;
+  /** Số tờ cán bộ nhập cho tệp chứa phần tử (bản đồ không ghi số tờ) — gắn khi đọc nhiều tệp ở phần mềm. */
+  soToTep?: string;
 }
 
 export interface PhanTuHinh extends PhanTuCoSo {
@@ -101,6 +104,8 @@ export interface KetQuaDocDgn {
   /** Bảng màu (256 màu, "#rrggbb") nếu tệp có; không có thì null. */
   bangMau: string[] | null;
   canhBao: string[];
+  /** Tên lớp gốc theo số lớp (tệp DXF: lớp là tên — dxf.ts); DGN không có. */
+  tenLop?: Record<number, string>;
 }
 
 export class LoiDgn extends Error {}
@@ -174,6 +179,8 @@ export function xapXiCung(
 export function docDgn(duLieu: ArrayBuffer | Uint8Array): KetQuaDocDgn {
   const u8 = duLieu instanceof Uint8Array ? duLieu : new Uint8Array(duLieu);
   if (laCfb(u8)) return docDgnV8(u8); // MicroStation V8 / V8i (tệp ghép OLE)
+  if (laDxf(u8) || laDxfNhiPhan(u8)) return docDxf(u8); // AutoCAD DXF — cùng cấu trúc kết quả (dxf.ts)
+  if (laDwg(u8)) throw new LoiDgn(HUONG_DAN_DWG);
   const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
   const canhBao: string[] = [];
   const phanTu: PhanTu[] = [];
@@ -189,7 +196,7 @@ export function docDgn(duLieu: ArrayBuffer | Uint8Array): KetQuaDocDgn {
   const dau1 = dv.getUint8(1);
   if (!((dau0 === 0x08 || dau0 === 0xc8) && dau1 === 0x09)) {
     throw new LoiDgn(
-      "Không nhận dạng được tệp DGN: không phải DGN V7 (thiếu bản ghi TCB đầu tệp) cũng không phải DGN V8 (tệp ghép OLE).",
+      "Không nhận dạng được tệp bản đồ: không phải DGN V7 (thiếu bản ghi TCB đầu tệp), DGN V8 (tệp ghép OLE) hay DXF.",
     );
   }
 

@@ -43,8 +43,9 @@ test("bản đồ: chi tiết thửa ↔ danh sách; tạo hồ sơ → xem th�
   await vao(p);
   await p.keyboard.press("Alt+3");
   await p.locator("[role=tablist] button", { hasText: "Bản đồ" }).click();
-  await p.locator('input[type=file][accept=".dgn,.DGN"]').first().setInputFiles({ name: "thu.dgn", mimeType: "application/octet-stream", buffer: banDo() });
+  await p.locator('input[type=file][accept=".dgn,.dxf,.dwg"]').first().setInputFiles({ name: "thu.dgn", mimeType: "application/octet-stream", buffer: banDo() });
   await expect(p.getByText("thu.dgn ·")).toBeVisible();
+  await p.getByRole("button", { name: "Để sau" }).click();
   const ds = p.locator(".the.gian");
   await ds.locator("select").selectOption("TAT_CA");
   // 1. bấm thửa → chi tiết thay danh sách → quay lại, dòng vừa xem được tô

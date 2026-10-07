@@ -168,13 +168,24 @@ export function BaoCao() {
                 <Fragment key={n.xa}>
                   <tr><td colSpan={10} style={{ background: "var(--be-mat-2)", fontWeight: 600 }}>{n.xa} · {n.dong.length} dự án</td></tr>
                   {n.dong.map((x) => (
-                    <tr key={x.duAn.id} className="co-the-chon" onClick={() => di({ ten: "du-an", duAnId: x.duAn.id })}>
+                    <Fragment key={x.duAn.id}>
+                    <tr className="co-the-chon" onClick={() => di({ ten: "du-an", duAnId: x.duAn.id })}>
                       <td><b>{x.duAn.ten}</b>{x.canhBaoCao > 0 && <div className="can-cu" style={{ color: "var(--do-to)" }}>{x.canhBaoCao} cảnh báo cần xử lý ngay</div>}</td>
                       <td><span className={LOP_TT[x.tinhTrang]}>{TEN_TINH_TRANG[x.tinhTrang]}</span></td>
                       <td><PhanBoTrangThaiGon dem={x.theoTrangThai} tong={x.soHo} /><div className="can-cu">{x.theoTrangThai.HOAN_THANH}/{x.soHo} hoàn thành · tiến độ {Math.round(x.tienDoChung * 100)}%</div></td>
                       {dongSo(x)}
                       <td className="chu-nho">{x.changHienTai}</td>
                     </tr>
+                    {(x.theoDot ?? []).map((d) => (
+                    <tr key={`${x.duAn.id}:${d.dotId}`} className="chu-nho" aria-label={`${x.duAn.ten} – ${d.ten}`}>
+                      <td style={{ paddingLeft: 24 }}>↳ {x.duAn.ten} – <b>{d.ten}</b></td>
+                      <td />
+                      <td><PhanBoTrangThaiGon dem={d.theoTrangThai} tong={d.soHo} /><div className="can-cu">{d.theoTrangThai.HOAN_THANH}/{d.soHo} hoàn thành</div></td>
+                      {dongSo(d)}
+                      <td>{d.changHienTai}</td>
+                    </tr>
+                    ))}
+                    </Fragment>
                   ))}
                   {bc.theoXa.length > 1 && (
                     <tr className="tong"><td colSpan={3}>Cộng {n.xa}</td>{dongSo(n.tong)}<td /></tr>

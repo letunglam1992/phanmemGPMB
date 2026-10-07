@@ -46,7 +46,7 @@ function thongTinTep(khoa: string, ten: string, bytes: Uint8Array, ban: KetQuaDo
 export const boNho = new Map<string, { ngayNhap: string; d: DuLieuBanDo }>();
 
 /** Khóa lần nạp: tệp chính + các tệp ghép và trạng thái bật/tắt từng tờ (thêm/bỏ/bật/tắt thì dựng lại). */
-export const khoaNapBanDo = (b: NonNullable<DuAn["banDo"]>) => [b.ngayNhap + (b.anTepChinh ? "~" : ""), ...(b.tepGhep ?? []).map((t) => t.id + (t.an ? "~" : "")), ...(b.thuaXoa?.length ? [`x:${b.thuaXoa.map((t) => t.ma).join(",")}`] : [])].join("|");
+export const khoaNapBanDo = (b: NonNullable<DuAn["banDo"]>) => [b.ngayNhap + (b.anTepChinh ? "~" : "") + (b.soTo ? `@${b.soTo}` : ""), ...(b.tepGhep ?? []).map((t) => t.id + (t.an ? "~" : "") + (t.soTo ? `@${t.soTo}` : "")), ...(b.thuaXoa?.length ? [`x:${b.thuaXoa.map((t) => t.ma).join(",")}`] : [])].join("|");
 
 /** Thửa bản đồ trùng một thửa đã xóa: cùng mã (hoặc cùng số tờ, số thửa) và tâm nhãn lệch < 1 m. */
 export const laThuaXoa = (t: ThuaBanDo, x: ThuaXoa) => Math.hypot(t.tamNhan.x - x.tam.x, t.tamNhan.y - x.tam.y) < 1 && (t.ma === x.ma || (!!x.soTo && !!x.soThua && t.soTo === x.soTo && t.soThua === x.soThua));
@@ -74,18 +74,24 @@ export async function napTatCa(kho: { docBanDo(id: string): Promise<Uint8Array |
   const bat = tepDangBat(duAn.banDo);
   const chinh = await kho.docBanDo(duAn.id);
   if (!chinh) return null;
-  const ds: { khoa: string; ten: string; bytes: Uint8Array }[] = bat.chinh ? [{ khoa: "", ten: duAn.banDo.tenTep, bytes: chinh }] : [];
+  const soTo = duAn.banDo.soTo;
+  const ds: { khoa: string; ten: string; bytes: Uint8Array; soTo?: string }[] = bat.chinh ? [{ khoa: "", ten: duAn.banDo.tenTep, bytes: chinh, soTo }] : [];
   for (const t of bat.ghep) {
     const b = await kho.docBanDo(khoaTepGhep(duAn.id, t.id));
-    if (b) ds.push({ khoa: t.id, ten: t.tenTep, bytes: b });
+    if (b) ds.push({ khoa: t.id, ten: t.tenTep, bytes: b, soTo: t.soTo });
   }
-  if (!ds.length) ds.push({ khoa: "", ten: duAn.banDo.tenTep, bytes: chinh });
+  if (!ds.length) ds.push({ khoa: "", ten: duAn.banDo.tenTep, bytes: chinh, soTo });
   return locThuaXoa(phanTichNhieu(ds, duAn.banDo.cauHinh), duAn.banDo.thuaXoa);
 }
 
 /** Dựng thửa từ một hay nhiều tệp (tờ bản đồ) cùng hệ VN-2000. */
-export function phanTichNhieu(ds: { khoa?: string; ten: string; bytes: Uint8Array }[], daChot?: CauHinhLop): DuLieuBanDo {
-  const doc = ds.map((x) => ({ ten: x.ten, ban: docDgn(x.bytes) }));
+export function phanTichNhieu(ds: { khoa?: string; ten: string; bytes: Uint8Array; soTo?: string }[], daChot?: CauHinhLop): DuLieuBanDo {
+  const doc = ds.map((x) => {
+    const ban = docDgn(x.bytes);
+    // 0.9.27: số tờ cán bộ nhập cho tệp — dùng cho thửa bản đồ không ghi số tờ (dungThua)
+    if (x.soTo?.trim()) for (const pt of ban.phanTu) pt.soToTep = x.soTo.trim();
+    return { ten: x.ten, ban };
+  });
   const tep = ds.map((x, i) => thongTinTep(x.khoa ?? "", x.ten, x.bytes, doc[i]!.ban));
   const ban = doc.length === 1 ? doc[0]!.ban : ghepBanDo(doc);
   const goiY = daChot ? null : goiYCauHinh(ban, CAU_HINH_MAC_DINH);
@@ -131,8 +137,8 @@ export const TEN_CO: Record<string, string> = {
 };
 
 /** Đọc tệp và dựng thửa; không có cấu hình đã chốt thì dùng cấu hình gợi ý từ cấu trúc tệp. */
-export function phanTich(bytes: Uint8Array, daChot?: CauHinhLop, ten = ""): DuLieuBanDo {
-  return phanTichNhieu([{ khoa: "", ten, bytes }], daChot);
+export function phanTich(bytes: Uint8Array, daChot?: CauHinhLop, ten = "", soTo?: string): DuLieuBanDo {
+  return phanTichNhieu([{ khoa: "", ten, bytes, soTo }], daChot);
 }
 
 export function dungLai(ban: KetQuaDocDgn, cauHinh: CauHinhLop, laGoiY: boolean, ghiChuGoiY: string[]): DuLieuBanDo {

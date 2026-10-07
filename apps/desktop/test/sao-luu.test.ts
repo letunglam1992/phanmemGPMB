@@ -69,6 +69,27 @@ describe("Sao lưu, khôi phục dữ liệu", () => {
     await expect(docBanSaoLuu(z3.generate({ type: "uint8array" }))).rejects.toThrow(/không khớp/);
   });
 
+  it("0.9.27: lịch sử thay đổi đi kèm bản sao lưu, nạp lại không trùng; tệp lịch sử bị sửa thì không khôi phục", async () => {
+    const { kho, ho } = await khoCoDuLieu();
+    await kho.luuHo({ ...ho[0]!, ten: "Sửa lần 1" });
+    await kho.luuHo({ ...ho[0]!, ten: "Sửa lần 2" });
+    const { bytes, thongTin } = await taoBanSaoLuu(kho);
+    expect(thongTin.soLichSu).toBe(2);
+    const ban = await docBanSaoLuu(bytes);
+    expect(ban.lichSu).toHaveLength(2);
+    const moi = taoKhoBoNho();
+    await khoiPhuc(moi, ban, "THAY_THE");
+    const ls = await moi.lichSu("ho", ho[0]!.id);
+    expect(ls.ds.map((x) => (x.duLieu as { ten: string }).ten)).toEqual(["Sửa lần 1", "Hộ mẫu 01"]);
+    await khoiPhuc(moi, ban, "GOP");
+    expect((await moi.lichSu("ho", ho[0]!.id)).ds).toHaveLength(2);
+    // gói gửi tỉnh bỏ lịch sử
+    expect((await taoBanSaoLuu(kho, "x", { boLichSu: true })).thongTin.soLichSu).toBeUndefined();
+    const z = new PizZip(bytes);
+    z.file("lich-su.json", z.file("lich-su.json")!.asText().replace("Sửa lần 1", "Sửa giả"));
+    await expect(docBanSaoLuu(z.generate({ type: "uint8array" }))).rejects.toThrow(/Lịch sử thay đổi .* không khớp/);
+  });
+
   it("nhắc sao lưu và tên tệp không dấu", () => {
     expect(canhBaoSaoLuu(null, "2026-09-27", false)).toBeNull();
     expect(canhBaoSaoLuu(null, "2026-09-27", true)).toContain("Chưa có bản sao lưu");

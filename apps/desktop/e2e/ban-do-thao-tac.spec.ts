@@ -61,8 +61,9 @@ test("quét khung chọn nhiều thửa, mở danh sách hộ đã lọc; tìm t
   await vao(p);
   await p.keyboard.press("Alt+3");
   await p.locator("[role=tablist] button", { hasText: "Bản đồ" }).click();
-  await p.locator('input[type=file][accept=".dgn,.DGN"]').first().setInputFiles({ name: "thu.dgn", mimeType: "application/octet-stream", buffer: banDo() });
+  await p.locator('input[type=file][accept=".dgn,.dxf,.dwg"]').first().setInputFiles({ name: "thu.dgn", mimeType: "application/octet-stream", buffer: banDo() });
   await expect(p.getByText("thu.dgn ·")).toBeVisible();
+  await p.getByRole("button", { name: "Để sau" }).click();
   await p.getByRole("button", { name: "Nạp tọa độ mốc…" }).click();
   await p.getByLabel("Tệp tọa độ mốc").setInputFiles({ name: "moc.csv", mimeType: "text/csv", buffer: Buffer.from("X,Y\n1350000,500000\n1350000,500060\n1350020,500060\n1350020,500000\n") });
   await p.locator(".hop-thoai").getByRole("button", { name: "Thêm 1 ranh hợp lệ" }).click();

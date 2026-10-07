@@ -148,3 +148,26 @@ export function canhBaoConLai(cs: BoChinhSach, duAn: DuAn, dsThua: ThuaBanDo[], 
   }
   return out;
 }
+
+/** Thửa trong hồ sơ hộ khớp tờ-thửa bản đồ (so số: "05" = "5"). */
+const chuanSo = (x: string | null | undefined) => (x ?? "").trim().replace(/^0+(?=\d)/, "").toUpperCase();
+
+export interface DongDoiChieuSoSanh {
+  x: import("@gpmb/gis").SoSanhThua;
+  /** Hồ sơ có thửa cùng tờ-thửa (có thể nhiều hộ cùng thửa) */
+  ho: { id: string; ma: string; ten: string; dtThua: string; dtThuHoi: string }[];
+}
+
+/**
+ * 0.9.27 — đối chiếu kết quả so sánh hai bản đồ với diện tích trong hồ sơ hộ (theo tờ-thửa): để cán bộ biết hồ sơ nào cần
+ * xem lại khi trích đo bổ sung đổi diện tích. Chỉ nêu, không sửa hồ sơ (DT lập phương án theo hồ sơ đo đạc được duyệt).
+ */
+export function doiChieuSoSanh(ds: import("@gpmb/gis").SoSanhThua[], hos: import("../../mo-hinh").Ho[]): DongDoiChieuSoSanh[] {
+  const theoThua = new Map<string, DongDoiChieuSoSanh["ho"]>();
+  for (const h of hos)
+    for (const t of h.thua) {
+      const k = `${chuanSo(t.soTo)}/${chuanSo(t.soThua)}`;
+      theoThua.set(k, [...(theoThua.get(k) ?? []), { id: h.id, ma: h.ma, ten: h.ten, dtThua: t.dienTich ?? "", dtThuHoi: t.dienTichThuHoi ?? "" }]);
+    }
+  return ds.map((x) => ({ x, ho: x.soTo && x.soThua ? theoThua.get(`${chuanSo(x.soTo)}/${chuanSo(x.soThua)}`) ?? [] : [] }));
+}

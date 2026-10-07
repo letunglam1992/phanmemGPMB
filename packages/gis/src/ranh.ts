@@ -192,7 +192,8 @@ export function ghepBanDo(ds: { ten: string; ban: KetQuaDocDgn }[]): KetQuaDocDg
     lech += max + 1;
     for (const c of ban.canhBao) canhBao.push(ds.length > 1 ? `[${ten}] ${c}` : c);
   }
-  return { ...ds[0]!.ban, phanTu, canhBao };
+  const tenLop = Object.assign({}, ...ds.map((x) => x.ban.tenLop ?? {})) as Record<number, string>;
+  return { ...ds[0]!.ban, phanTu, canhBao, ...(Object.keys(tenLop).length ? { tenLop } : {}) };
 }
 
 export interface SoSanhThua {

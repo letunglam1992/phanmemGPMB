@@ -229,7 +229,7 @@ export async function taoGoiTinh(kho: Kho, o: TuyChonGoi): Promise<{ bytes: Uint
   if (!o.duAnIds.length) throw new LoiGoiTinh("Chưa chọn dự án nào để gửi.");
   if (!(await kiemVanTay(o.khoaTinh))) throw new LoiGoiTinh("Khóa công khai của tỉnh không hợp lệ (vân tay không khớp) — nhập lại tệp khóa do tỉnh gửi.");
   if (!o.donViGui.trim()) throw new LoiGoiTinh("Chưa nhập tên đơn vị gửi.");
-  const ban = await taoBanSaoLuu(kho, o.ungDung, { duAnIds: o.duAnIds, boDinhKem: !o.kemDinhKem, boBanDo: !o.kemBanDo, boMau: false, boTepDaXoa: true });
+  const ban = await taoBanSaoLuu(kho, o.ungDung, { duAnIds: o.duAnIds, boDinhKem: !o.kemDinhKem, boBanDo: !o.kemBanDo, boMau: false, boTepDaXoa: true, boLichSu: true });
   const dsDa = (await kho.dsDuAn()).filter((d) => o.duAnIds.includes(d.id));
   // mã hóa phong bì: K ngẫu nhiên → AES-GCM; K bọc RSA-OAEP bằng khóa công khai tỉnh
   const kRaw = crypto.getRandomValues(new Uint8Array(32));

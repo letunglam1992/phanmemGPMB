@@ -5,6 +5,7 @@
  *   ban-do/<id>.dgn – bản đồ DGN đã nạp theo dự án
  *   mau/<ma>.docx   – mẫu văn bản cán bộ tự chỉnh (+ mau/danh-sach.json)
  *   dinh-kem/<id>.bin – tệp đính kèm hồ sơ (P2-2, + dinh-kem/danh-sach.json; tệp cũ không có)
+ *   lich-su.json    – lịch sử thay đổi (bản cũ của bản ghi, P1-5; có từ 0.9.27, mã băm riêng trong thong-tin.json)
  * Tệp chỉ tạo và đọc trên máy; không gửi đi đâu.
  *
  * Phiên bản 2 (P0-5, mã hóa): tệp .gpmb ngoài chỉ gồm
@@ -13,7 +14,7 @@
  * Tệp phiên bản 1 (không mã hóa) vẫn đọc được để không mất bản cũ.
  */
 import PizZip from "pizzip";
-import type { DinhKem, Kho } from "./kho";
+import type { BanLichSu, DinhKem, Kho } from "./kho";
 import type { DuAn, Ho } from "./mo-hinh";
 import { LoiMaHoa, giaiMa, maHoa, moTaCachMo, type CachMaHoa, type GoiMaHoa } from "./ma-hoa";
 
@@ -32,6 +33,9 @@ export interface ThongTinSaoLuu {
   soMau: number;
   /** Số tệp đính kèm (có từ 0.7.0) */
   soDinhKem?: number;
+  /** Số bản lịch sử thay đổi, mã băm lich-su.json (có từ 0.9.27) */
+  soLichSu?: number;
+  bamLichSu?: string;
   bamDuLieu: string;
 }
 
@@ -42,6 +46,8 @@ export interface BanSaoLuu {
   banDo: Map<string, Uint8Array>;
   mau: { ma: string; tenTep: string; luc: string; bytes: Uint8Array }[];
   dinhKem: { meta: DinhKem; bytes: Uint8Array }[];
+  /** Lịch sử thay đổi (0.9.27; tệp cũ không có) */
+  lichSu?: BanLichSu[];
   /** Cài đặt dùng chung (có từ bản ghi lịch làm việc; tệp cũ không có). */
   caiDat?: { lichLamViec?: unknown; tyLeChamTra?: unknown; kyBaoCao?: unknown; donVi?: unknown; anhNen?: unknown; goiChinhSach?: unknown };
 }
@@ -61,6 +67,8 @@ export interface LocSaoLuu {
   boMau?: boolean;
   /** Bỏ tệp đính kèm đã xóa (thùng rác tệp) — gói gửi tỉnh */
   boTepDaXoa?: boolean;
+  /** Bỏ lịch sử thay đổi (gói gửi tỉnh) */
+  boLichSu?: boolean;
 }
 
 export async function taoBanSaoLuu(kho: Kho, ungDung = "0.1", loc: LocSaoLuu = {}): Promise<{ bytes: Uint8Array; thongTin: ThongTinSaoLuu }> {
@@ -100,6 +108,9 @@ export async function taoBanSaoLuu(kho: Kho, ungDung = "0.1", loc: LocSaoLuu = {
       }
     }
   zip.file("dinh-kem/danh-sach.json", JSON.stringify(dsDk));
+  const lichSu = loc.boLichSu ? null : await kho.xuatLichSu(chon ? [...chon] : undefined);
+  const chuLs = lichSu && JSON.stringify(lichSu);
+  if (chuLs) zip.file("lich-su.json", chuLs);
   const thongTin: ThongTinSaoLuu = {
     dinhDang: DINH_DANG,
     phienBan: PHIEN_BAN_SAO_LUU,
@@ -110,6 +121,7 @@ export async function taoBanSaoLuu(kho: Kho, ungDung = "0.1", loc: LocSaoLuu = {
     soBanDo,
     soMau: dsMau.length,
     soDinhKem: dsDk.length,
+    ...(lichSu && chuLs ? { soLichSu: lichSu.length, bamLichSu: await sha256(chuLs) } : {}),
     bamDuLieu: await sha256(duLieu),
   };
   zip.file("thong-tin.json", JSON.stringify(thongTin, null, 2));
@@ -197,7 +209,14 @@ export async function docBanSaoLuu(bytes: Uint8Array | ArrayBuffer, cach: { matK
     return f ? [{ meta, bytes: f.asUint8Array() }] : [];
   });
   if (thongTin.soDinhKem !== undefined && dinhKem.length !== thongTin.soDinhKem) throw new LoiSaoLuu("Số tệp đính kèm không khớp thông tin sao lưu.");
-  return { thongTin, duAn, ho, banDo, mau, caiDat, dinhKem };
+  let lichSu: BanLichSu[] | undefined;
+  if (thongTin.bamLichSu) {
+    const chu = zip.file("lich-su.json")?.asText();
+    if (!chu || (await sha256(chu)) !== thongTin.bamLichSu) throw new LoiSaoLuu("Lịch sử thay đổi trong tệp sao lưu không khớp mã kiểm tra — tệp có thể bị hỏng hoặc bị sửa. Không khôi phục.");
+    lichSu = JSON.parse(chu) as BanLichSu[];
+    if (lichSu.length !== thongTin.soLichSu) throw new LoiSaoLuu("Số bản lịch sử không khớp thông tin sao lưu.");
+  }
+  return { thongTin, duAn, ho, banDo, mau, caiDat, dinhKem, ...(lichSu ? { lichSu } : {}) };
 }
 
 /** Khôi phục: THAY_THE xóa dữ liệu hiện có rồi nạp; GOP ghi đè bản ghi cùng mã, giữ bản ghi khác. */
@@ -212,6 +231,8 @@ export async function khoiPhuc(kho: Kho, ban: BanSaoLuu, cheDo: "THAY_THE" | "GO
     mau: ban.mau.map((m) => ({ ma: m.ma, bytes: m.bytes, tenTep: m.tenTep, luc: m.luc })),
     dinhKem: (ban.dinhKem ?? []).map((f) => ({ meta: f.meta, bytes: f.bytes })),
   });
+  // lịch sử thay đổi (0.9.27): thêm các bản chưa có — không đổi dữ liệu hiện hành
+  if (ban.lichSu?.length) await kho.napLichSu(ban.lichSu);
   if (ban.caiDat?.lichLamViec) await kho.luuCaiDat(KHOA_LICH, ban.caiDat.lichLamViec);
   if (ban.caiDat?.tyLeChamTra) await kho.luuCaiDat("tyLeChamTra", ban.caiDat.tyLeChamTra);
   if (ban.caiDat?.kyBaoCao) await kho.luuCaiDat("kyBaoCao", ban.caiDat.kyBaoCao);

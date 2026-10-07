@@ -1,6 +1,6 @@
 # 22. Ghi chú tiến độ — đọc file này trước khi làm tiếp
 
-Cập nhật: 05/10/2026. Bản mới nhất đã phát hành: **0.9.26**. Nhánh làm việc: `claude/great-rubin-4x4alw`; mọi thay đổi đã commit và đẩy lên.
+Cập nhật: 07/10/2026. Bản mới nhất đã phát hành: **0.9.27**. Nhánh làm việc: `claude/great-rubin-4x4alw`; mọi thay đổi đã commit và đẩy lên.
 
 Tài liệu nên đọc trước:
 - `CLAUDE.md`: quy tắc, lệnh.
@@ -24,14 +24,15 @@ Tài liệu nên đọc trước:
 | 0.9.23 | Trợ lý AI nổi: nút robot góc dưới phải mở khung chat; thanh bên "Trợ lý AI (hỏi đáp)" |
 | 0.9.25 | Cảnh báo xã lâu chưa gửi (ngưỡng do tỉnh đặt); xã tự gửi định kỳ lên cổng (chu kỳ do xã đặt); tỉnh xem lại các bản gửi trước (≤ 20 bản/đơn vị); báo cáo Word tổng hợp toàn tỉnh |
 | 0.9.26 | Tỉnh tự nhận gói mới từ cổng mỗi 30 phút khi khóa đang mở, chuông báo gói chờ nhận; phụ lục Excel kèm báo cáo Word tỉnh; thời gian không tính vào thời hạn (bước có thời hạn, bắt buộc lý do, tạm dừng); trường hợp Điều 14/17 PL I QĐ 106 do người dùng chọn + căn cứ; ghi chú bản đồ trong hồ sơ hộ; thùng rác tệp đính kèm, tài liệu; Luật Đất đai hợp nhất (VBHN 44/VBHN-VPQH) trong Trợ lý AI |
+| 0.9.27 | Khôi phục tiến độ, chi trả, thông tin dự án về bản cũ; lịch sử thay đổi trong tệp sao lưu; hoàn tác bước chung 1–4 và tiến độ hộ; đợt thu hồi: cột "Đợt thu hồi" khi nhập Excel, báo cáo tách theo đợt, số đợt phê duyệt theo đợt; so sánh bản đồ đối chiếu hồ sơ + xuất Excel; ảnh cho ghi chú hiện trường; **bản đồ DXF** (DWG: báo cách đổi sang DXF); nạp bản đồ xong chọn **tự nhận diện / tự chọn lớp cho từng đối tượng** (bảng tích lớp, thêm lớp loại đất, diện tích); nhãn thửa nhiều nội dung ("CLN" · "13"/"1310,0" · tên chủ); **số tờ nhập tay** theo tệp |
 | 0.9.24 | **Sửa trắng màn hình khi mở Trợ lý AI và lỗi "e is not a function"**; màn tỉnh nhắc "Có n gói mới trên cổng (xã, thời gian) — mở khóa để nhận" |
 
-Kiểm thử ở 0.9.26 (tất cả đạt):
+Kiểm thử ở 0.9.27 (tất cả đạt):
 - typecheck
-- npm test: 78 + 48 + 365
+- npm test: 78 + 58 + 372
 - cargo test
 - eslint: 3 cảnh báo cũ
-- Playwright: 57/57
+- Playwright: 58/58 (thêm `e2e/ban-do-dxf.spec.ts`)
 
 ### Nguyên nhân lỗi "e is not a function" (đã sửa ở 0.9.24)
 
@@ -93,7 +94,19 @@ Gặp lỗi: bấm **"Chép chi tiết lỗi"** (nếu có), hoặc chụp màn 
   - [ ] Máy xã: bật tự gửi, mỗi N ngày.
   - [ ] Máy tỉnh: đặt ngưỡng cảnh báo; xem "Các bản trước"; bấm "Báo cáo Word".
 - [ ] Tỉnh tải cả các bản cũ trên cổng (cổng giữ 5 bản/xã) — cần thêm API cho Worker và dán lại mã Worker lên Cloudflare.
-- [ ] Danh sách P0–P3 còn lại trong `docs/17-danh-gia-toan-dien.md`.
+- [x] Danh sách P0–P3 trong `docs/17` đã làm hết (còn P2-1 "chưa ký số" theo QD-26(4) và phần thương mại GĐ5 — chờ quyết định). Việc tiếp theo lấy từ cột "Hạn chế" của docs/09.
+- [ ] Đọc trực tiếp DWG (cần thư viện bên ngoài — xem giấy phép trước khi dùng); báo cáo Word có bảng theo đợt thu hồi; lưu kết quả so sánh bản đồ.
+
+### A3. Thử bản 0.9.27 trên máy thật
+
+- [ ] Nạp một tệp **DXF** thật của địa phương (bản đồ địa chính / trích đo): thửa dựng đúng, chữ tiếng Việt đúng (TCVN3 hoặc Unicode). Nạp tệp **DWG** → phải thấy hướng dẫn lưu sang DXF.
+- [ ] Sau khi nạp: hộp "Đã nạp bản đồ" → thử "Tự chọn lớp cho từng đối tượng": tích lớp ở bảng, chốt cấu hình → thửa dựng lại đúng.
+- [ ] Bản đồ có nhãn kiểu "CLN · 13/1310,0 · Lèo Văn Pản" cùng một lớp: chọn lớp đó làm "Nhãn thửa" → loại đất, số thửa, diện tích, chủ đọc đúng. Bản đồ không có số tờ: nhập số tờ (hộp sau khi nạp, hoặc Tờ bản đồ → cột "Số tờ (nhập tay)") → số tờ hiện có dấu `*`.
+- [ ] Hồ sơ → Nhật ký → Lịch sử: khôi phục một bản Tiến độ / Chi trả (tài khoản Quản trị). Thông tin dự án → "Lịch sử thay đổi thông tin dự án" → khôi phục.
+- [ ] Sao lưu → khôi phục vào máy khác: lịch sử thay đổi còn nguyên.
+- [ ] Bước chung 1–4: xác nhận một bước → "↶ Hoàn tác". Thẻ Tiến độ hộ: gửi duyệt → hoàn tác.
+- [ ] Nhập Excel có cột "Đợt thu hồi"; Báo cáo tổng hợp: dòng từng đợt.
+- [ ] Ghi chú hiện trường: 📷 thêm ảnh chụp điện thoại.
 
 ## 3. Quy trình mỗi lần sửa (để phiên mới làm đúng ngay)
 
@@ -136,6 +149,12 @@ Gặp lỗi: bấm **"Chép chi tiết lỗi"** (nếu có), hoặc chụp màn 
 | Ghi chú bản đồ trong hồ sơ | `GhiChuBanDoHo` trong `man/HoSo.tsx` |
 | Thùng rác tệp | `src/dinh-kem-thung-rac.ts`, `thanh-phan/ThungRacTep.tsx`; `DinhKem.daXoa` (`kho.ts`); `LocSaoLuu.boTepDaXoa` |
 | Luật Đất đai hợp nhất | `policy/nguon/luat-dat-dai-vbhn-44-2026.md`, nguồn đầu trong `tools/tri-thuc/tao-kho.mjs` |
+| DXF, DWG | `packages/gis/src/dxf.ts` (`docDxf`, `laDxf`, `laDwg`; `docDgn` tự chuyển), kiểm thử `packages/gis/test/dxf.test.ts` |
+| Chọn lớp theo đối tượng, nhãn nhiều nội dung, số tờ nhập tay | `HopCachGanLop`, `DOI_TUONG` (`man/ban-do/CauHinhLop.tsx`); `CauHinhLop.loaiDat/dienTich`, `RE_TEN`, `RE_DT_VN`, `soToTep` (`packages/gis/src/thua.ts`); `BanDoDuAn.soTo`, `tepGhep[].soTo`; `OSoToTep` (`LopPhu.tsx`) |
+| Khôi phục td/ct/dự án, lịch sử trong sao lưu | Rust `khoi_phuc_phan`, `xuat_lich_su`, `nap_lich_su` (`may_chu.rs`); `Kho.xuatLichSu/napLichSu`, `dungDuAnKhoiPhuc` (`kho.ts`); `LichSuDuAn` (`thanh-phan/LichSuHo.tsx`); `lich-su.json` (`sao-luu.ts`) |
+| Hoàn tác bước | `src/hoan-tac.ts`; `BuocChungCua` (`TienDoDuAn.tsx`), `TabTienDo` (`man/ho/TienDo.tsx`) |
+| Đợt thu hồi (0.9.27) | `timDotTheoChu` (`dot-thu-hoi.ts`), cột `dotThuHoi` (`nhap-excel.ts`), `dongTheoDot` (`bao-cao.ts`), `dotPheDuyet` (`phuong-an.ts`) |
+| So sánh bản đồ – hồ sơ; ảnh ghi chú | `doiChieuSoSanh` (`man/ban-do/ranh.ts`), `HopSoSanh`, `HopAnhGhiChu` (`LopPhu.tsx`), `GhiChuHienTruong.anh` |
 | Kiểm thử | `test/goi-tinh.test.ts`, `test/cong-tinh.test.ts`, `test/hoi-dap-*.test.ts`, `e2e/tong-hop-tinh.spec.ts`, `e2e/hoi-dap.spec.ts` |
 
 ## 5. Bí mật — không ghi vào kho, không hỏi lại

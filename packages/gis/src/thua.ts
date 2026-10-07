@@ -41,6 +41,10 @@ export interface CauHinhLop {
    * Chỉ dùng để đối chiếu với tiến độ trong phần mềm — không ghi đè. Nhiều bản đồ không có lớp này.
    */
   nhanHienTrang?: number[];
+  /** 0.9.27: lớp chữ loại đất riêng (vd. "CLN" tách khỏi số thửa / diện tích). */
+  loaiDat?: number[];
+  /** 0.9.27: lớp chữ diện tích riêng (nhận cả số nguyên "1310"). */
+  dienTich?: number[];
 }
 
 export type TruongNut = "soTo" | "soThua" | "loaiDat" | "chuSuDung";
@@ -84,6 +88,8 @@ export interface NhanDoc {
   truongNut?: TruongNut;
   /** Vị trí dòng đầu của nút — nút được gán trọn cho thửa chứa điểm này. */
   neoNut?: Diem;
+  /** Số tờ nhập tay của tệp chứa nhãn. */
+  soToTep?: string;
 }
 
 export interface ThuaBanDo {
@@ -101,6 +107,8 @@ export interface ThuaBanDo {
   co: CoThua[];
   /** Chữ hiện trạng GPMB ghi trên bản đồ trong thửa (lớp nhanHienTrang), nếu có. */
   hienTrangBanDo?: string | null;
+  /** Số tờ lấy theo số tờ cán bộ nhập cho tệp (bản đồ không ghi số tờ trong thửa). */
+  soToNhapTay?: boolean;
 }
 
 /** Phân loại chữ hiện trạng trên bản đồ: "Đã GPMB" → DA; "Chưa GPMB", "NQH" (ghi chú thửa chưa GPMB) → CHUA. */
@@ -184,8 +192,12 @@ export function giaiMaNhan(pt: PhanTuChu): string {
 const RE_GOP = /^(\d*[\p{L}+]+)\s*(\d+)\s*\/\s*(\d+(?:[.,]\d+)?)$/u;
 const RE_LOAI = /^\d*[\p{L}+]+$/u;
 const RE_DT = /^\d+[.,]\d+$/;
+/** Diện tích viết kiểu Việt có phân cách hàng nghìn: "1.310,0", "1 310,5", "12.450". */
+const RE_DT_VN = /^\d{1,3}([. ]\d{3})+(,\d+)?$/;
 const RE_SO = /^\d+$/;
-const soThuc = (s: string) => Number(s.replace(",", "."));
+/** Tên người, tổ chức trong nhãn thửa: từ hai từ chữ trở lên ("Lèo Văn Pản", "UBND xã"). */
+const RE_TEN = /^\p{L}[\p{L}.]*(\s+[\p{L}.]+)+$/u;
+const soThuc = (s: string) => (RE_DT_VN.test(s) ? Number(s.replace(/[. ]/g, "").replace(",", ".")) : Number(s.replace(",", ".")));
 
 function motHoacCo<T>(ds: T[], thieu: CoThua | null, nhieu: CoThua, co: CoThua[]): T | null {
   const duyNhat = [...new Set(ds)];
@@ -233,12 +245,15 @@ export function dungThua(ban: KetQuaDocDgn, ch: CauHinhLop = CAU_HINH_MAC_DINH):
         nhanHt.push({ lop: pt.lop, chu: giaiMaNhan(pt), diem: pt.goc, stt: pt.stt });
         continue;
       }
-      const laNhan = [ch.nhanThua, ch.soThua, ch.soTo, ch.chuSuDung].some((ds) => thuoc(ds, pt.lop));
-      if (laNhan) nhan.push({ lop: pt.lop, chu: giaiMaNhan(pt), diem: pt.goc, stt: pt.stt });
+      const laNhan = [ch.nhanThua, ch.soThua, ch.soTo, ch.chuSuDung, ch.loaiDat ?? [], ch.dienTich ?? []].some((ds) => thuoc(ds, pt.lop));
+      if (laNhan) nhan.push({ lop: pt.lop, chu: giaiMaNhan(pt), diem: pt.goc, stt: pt.stt, ...(pt.soToTep ? { soToTep: pt.soToTep } : {}) });
     }
   }
   const tuNut = (ds: NhanDoc[], t: TruongNut) => ds.filter((n) => n.truongNut === t && n.chu);
 
+  // Số tờ cán bộ nhập cho tệp: một giá trị cho cả bản vẽ thì dùng cho thửa không có nhãn mang số tờ
+  const soToCacTep = new Set(phanTuGoc(ban).map((pt) => pt.soToTep).filter((x): x is string => !!x));
+  const soToChung = soToCacTep.size === 1 ? [...soToCacTep][0]! : null;
   const vung = khepVung(duongRanh);
   const giuLai = vung.filter((p) => p.getArea() > ch.dienTichToiThieu);
   const daGan = new Set<number>();
@@ -260,12 +275,28 @@ export function dungThua(ban: KetQuaDocDgn, ch: CauHinhLop = CAU_HINH_MAC_DINH):
     const loai: NhanDoc[] = [];
     const dt: { dt: number; n: NhanDoc }[] = [];
     const so: NhanDoc[] = [];
+    const tenTrongNhan: NhanDoc[] = []; // tên chủ ghi chung lớp nhãn thửa (nhãn nhiều nội dung)
     for (const n of nhanTrong.filter((n) => !n.truongNut && thuoc(ch.nhanThua, n.lop))) {
       const m = RE_GOP.exec(n.chu);
       if (m) gop.push({ loai: m[1]!, so: m[2]!, dt: soThuc(m[3]!), n });
       else if (RE_LOAI.test(n.chu)) loai.push(n);
-      else if (RE_DT.test(n.chu)) dt.push({ dt: soThuc(n.chu), n });
+      else if (RE_DT.test(n.chu) || RE_DT_VN.test(n.chu)) dt.push({ dt: soThuc(n.chu), n });
       else if (RE_SO.test(n.chu)) so.push(n);
+      else if (RE_TEN.test(n.chu)) tenTrongNhan.push(n);
+    }
+    // Lớp loại đất, diện tích riêng (cán bộ chọn ở cấu hình lớp)
+    for (const n of nhanTrong.filter((n) => !n.truongNut)) {
+      if (ch.loaiDat?.length && thuoc(ch.loaiDat, n.lop) && RE_LOAI.test(n.chu)) loai.push(n);
+      if (ch.dienTich?.length && thuoc(ch.dienTich, n.lop) && (RE_DT.test(n.chu) || RE_DT_VN.test(n.chu) || RE_SO.test(n.chu))) dt.push({ dt: soThuc(n.chu), n });
+    }
+    // Nhãn dạng phân số (số thửa trên, diện tích dưới) với diện tích là số nguyên ("13" / "1310"): khi chưa có nhãn diện tích
+    // và có từ hai số, số gần diện tích hình học nhất (lệch ≤ 50%) là diện tích, các số còn lại là số thửa
+    if (!dt.length && !gop.length && so.length >= 2) {
+      const gan = so.reduce((a, b) => (Math.abs(soThuc(b.chu) - p.getArea()) < Math.abs(soThuc(a.chu) - p.getArea()) ? b : a));
+      if (Math.abs(soThuc(gan.chu) - p.getArea()) / p.getArea() <= 0.5) {
+        dt.push({ dt: soThuc(gan.chu), n: gan });
+        so.splice(so.indexOf(gan), 1);
+      }
     }
     loai.push(...tuNut(nhanTrong, "loaiDat").filter((n) => RE_LOAI.test(n.chu)));
     const soLop4 = [
@@ -303,15 +334,12 @@ export function dungThua(ban: KetQuaDocDgn, ch: CauHinhLop = CAU_HINH_MAC_DINH):
     const loaiDatBanDo = gopKhop ? gopKhop.loai : (ganNhat(loai)?.chu ?? null);
     if (!loaiDatBanDo) co.push("THIEU_LOAI_DAT");
 
-    const soTo = motHoacCo(
-      [...nhanTrong.filter((n) => !n.truongNut && thuoc(ch.soTo, n.lop)), ...tuNut(nhanTrong, "soTo")].map((n) => n.chu),
-      "THIEU_SO_TO",
-      "NHIEU_SO_TO",
-      co,
-    );
-    const chuDs = [...nhanTrong.filter((n) => !n.truongNut && thuoc(ch.chuSuDung, n.lop)), ...tuNut(nhanTrong, "chuSuDung")].map((n) =>
-      vietHoaDauTu(n.chu),
-    );
+    const soToDoc = [...nhanTrong.filter((n) => !n.truongNut && thuoc(ch.soTo, n.lop)), ...tuNut(nhanTrong, "soTo")].map((n) => n.chu);
+    // Bản đồ không ghi số tờ: dùng số tờ cán bộ nhập cho tệp (theo nhãn trong thửa, hoặc chung cả bản vẽ)
+    const soToTep = soToDoc.length ? null : (nhanTrong.find((n) => n.soToTep)?.soToTep ?? soToChung);
+    const soTo = soToTep ?? motHoacCo(soToDoc, "THIEU_SO_TO", "NHIEU_SO_TO", co);
+    const chuRieng = [...nhanTrong.filter((n) => !n.truongNut && thuoc(ch.chuSuDung, n.lop)), ...tuNut(nhanTrong, "chuSuDung")];
+    const chuDs = (chuRieng.length ? chuRieng : tenTrongNhan).map((n) => vietHoaDauTu(n.chu));
     const chuSuDung = motHoacCo(chuDs, "THIEU_CHU", "NHIEU_CHU", co);
 
     const tam = InteriorPointArea.getInteriorPoint(p);
@@ -328,6 +356,7 @@ export function dungThua(ban: KetQuaDocDgn, ch: CauHinhLop = CAU_HINH_MAC_DINH):
       nhan: nhanTrong,
       co: [...new Set(co)],
       hienTrangBanDo: nhanHt.length ? ([...new Set(nhanHt.filter((n) => diemTrongThua(n.diem, vong)).map((n) => n.chu))].join("; ") || null) : undefined,
+      ...(soToTep ? { soToNhapTay: true } : {}),
     };
   });
 

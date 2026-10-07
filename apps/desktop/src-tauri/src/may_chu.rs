@@ -1412,6 +1412,66 @@ async fn lich_su(State(st): State<St>, h: HeaderMap, Query(l): Query<LocLichSu>)
     Ok(Json(json!({ "ds": ds, "soNamGiu": so_nam_giu(&c) })))
 }
 
+/// 0.9.27: toàn bộ lịch sử (hoặc của một dự án) để đưa vào tệp sao lưu — quyền sao lưu.
+async fn xuat_lich_su(State(st): State<St>, h: HeaderMap, Query(l): Query<LocLichSu>) -> Kq<Json<Value>> {
+    let u = xac_thuc(&st, &h)?;
+    can(&st, &u, "SAO_LUU")?;
+    let c = st.db.lock().unwrap();
+    let ds: Vec<Value> = match l.du_an {
+        Some(da) => {
+            let mut q = c.prepare(&format!("SELECT {COT_LICH_SU} FROM lich_su WHERE du_an_id = ?1 ORDER BY stt")).map_err(loi_db)?;
+            let r = q.query_map([da], dong_lich_su).map_err(loi_db)?.filter_map(|x| x.ok()).collect();
+            r
+        }
+        None => {
+            let mut q = c.prepare(&format!("SELECT {COT_LICH_SU} FROM lich_su ORDER BY stt")).map_err(loi_db)?;
+            let r = q.query_map([], dong_lich_su).map_err(loi_db)?.filter_map(|x| x.ok()).collect();
+            r
+        }
+    };
+    Ok(Json(Value::Array(ds)))
+}
+
+/// 0.9.27: nạp lịch sử từ tệp sao lưu (quyền khôi phục) — bỏ qua bản đã có (cùng loại, mã, phiên bản, thời điểm, lý do, nội dung);
+/// số thứ tự mới theo máy này. Không đổi dữ liệu hiện hành.
+async fn nap_lich_su(State(st): State<St>, h: HeaderMap, b: Bytes) -> Kq<Json<Value>> {
+    let u = xac_thuc(&st, &h)?;
+    can(&st, &u, "KHOI_PHUC")?;
+    let v = tach(&b)?;
+    let ds = v["ds"].as_array().ok_or_else(|| loi(StatusCode::BAD_REQUEST, "Thiếu danh sách lịch sử"))?;
+    let mut c = st.db.lock().unwrap();
+    let tx = c.transaction().map_err(loi_db)?;
+    let mut them = 0;
+    for x in ds {
+        let (Some(loai), Some(id), Some(luu_luc)) = (x["loai"].as_str(), x["id"].as_str(), x["luuLuc"].as_str()) else {
+            return Err(loi(StatusCode::BAD_REQUEST, "Bản lịch sử thiếu loại, mã hoặc thời điểm"));
+        };
+        if !matches!(loai, "ho" | "duAn" | "pa" | "td" | "ct") || !x["duLieu"].is_object() {
+            return Err(loi(StatusCode::BAD_REQUEST, format!("Bản lịch sử không hợp lệ: {loai} {id}")));
+        }
+        let (pb, ly_do) = (x["phienBan"].as_i64(), x["lyDo"].as_str());
+        let co = {
+            let mut q = tx.prepare("SELECT noi_dung FROM lich_su WHERE loai = ?1 AND id = ?2 AND phien_ban IS ?3 AND luu_luc = ?4 AND ly_do IS ?5").map_err(loi_db)?;
+            let ds: Vec<String> = q.query_map(params![loai, id, pb, luu_luc, ly_do], |r| r.get(0)).map_err(loi_db)?.filter_map(|r| r.ok()).collect();
+            ds.iter().any(|nd| serde_json::from_str::<Value>(nd).ok().as_ref() == Some(&x["duLieu"]))
+        };
+        if co {
+            continue;
+        }
+        tx.execute(
+            "INSERT INTO lich_su(loai, id, du_an_id, phien_ban, noi_dung, sua_luc, sua_boi, luu_luc, luu_boi, ly_do) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+            params![loai, id, x["duAnId"].as_str(), pb, x["duLieu"].to_string(), x["suaLuc"].as_str(), x["suaBoi"].as_str(), luu_luc, x["luuBoi"].as_str(), ly_do],
+        )
+        .map_err(loi_db)?;
+        them += 1;
+    }
+    if them > 0 {
+        st.ghi_nhat_ky(&tx, &u.ten, &u.ho_ten, "Nạp lịch sử thay đổi từ bản sao lưu", &format!("{them} bản")).map_err(loi_db)?;
+    }
+    tx.commit().map_err(loi_db)?;
+    Ok(Json(json!({ "them": them })))
+}
+
 /// Hồ sơ đã xóa hẳn (còn trong lịch sử) của một dự án — bản cuối trước khi xóa.
 async fn lich_su_da_xoa(State(st): State<St>, h: HeaderMap, Query(l): Query<LocLichSu>) -> Kq<Json<Value>> {
     xac_thuc(&st, &h)?;
@@ -1444,10 +1504,12 @@ async fn khoi_phuc_ban_ghi(State(st): State<St>, h: HeaderMap, b: Bytes) -> Kq<J
         .optional()
         .map_err(loi_db)?
         .ok_or_else(|| loi(StatusCode::NOT_FOUND, "Không còn bản lịch sử này"))?;
-    if ls["loai"] != "ho" {
-        return Err(loi(StatusCode::BAD_REQUEST, "Chỉ khôi phục được hồ sơ hộ, cá nhân, tổ chức"));
-    }
     let id = ls["id"].as_str().unwrap_or("").to_string();
+    match ls["loai"].as_str().unwrap_or("") {
+        "ho" => {}
+        l @ ("td" | "ct" | "duAn") => return khoi_phuc_phan(&st, &u, &mut c, l, &id, &ls, &ly_do).map(Json),
+        _ => return Err(loi(StatusCode::BAD_REQUEST, "Chỉ khôi phục được hồ sơ (phần chính, tiến độ, chi trả) và thông tin dự án")),
+    }
     // bản trước 0.7.0 còn tiến độ, chi trả nhúng: chỉ khôi phục phần hồ sơ chính (tiến độ, chi trả có lịch sử riêng)
     let (mut moi, _, _) = tach_ho(ls["duLieu"].clone());
     let du_an_id = moi["duAnId"].as_str().unwrap_or("").to_string();
@@ -1503,7 +1565,68 @@ async fn khoi_phuc_ban_ghi(State(st): State<St>, h: HeaderMap, b: Bytes) -> Kq<J
     }
     st.ghi_nhat_ky(&tx, &u.ten, &u.ho_ten, "Khôi phục hồ sơ về phiên bản cũ", &format!("{} · {} — {mo_ta}", moi["ma"].as_str().unwrap_or(""), moi["ten"].as_str().unwrap_or(""))).map_err(loi_db)?;
     tx.commit().map_err(loi_db)?;
-    Ok(Json(json!({ "duLieu": moi, "phienBan": pb })))
+    Ok(Json(json!({ "loai": "ho", "id": id, "duLieu": moi, "phienBan": pb })))
+}
+
+/// 0.9.27: khôi phục tiến độ ("td"), chi trả ("ct") của hồ sơ hoặc thông tin dự án ("duAn") về bản trong lịch sử.
+/// Quản trị, bắt buộc lý do; bản đang có vào lịch sử trước. Bản ghi phải còn (hồ sơ, dự án đã xóa hẳn khôi phục ở Thùng rác).
+/// Dự án: giữ nguyên dấu thùng rác hiện tại; phương án là bản ghi riêng ("pa") nên không bị đổi (bản cũ còn nhúng thì bỏ).
+/// Như khôi phục hồ sơ, giữ nguyên người gửi/duyệt bước đã ghi trong bản cũ (không chạy lại quy tắc gửi – duyệt).
+fn khoi_phuc_phan(st: &MayChu, u: &NguoiGoi, c: &mut Connection, loai: &str, id: &str, ls: &Value, ly_do: &str) -> Kq<Value> {
+    let mut moi = ls["duLieu"].clone();
+    let hien = doc_json(c, loai, id)?;
+    let du_an_id = if loai == "duAn" { id.to_string() } else { moi["duAnId"].as_str().unwrap_or("").to_string() };
+    let ho = if loai == "duAn" { None } else { doc_json(c, "ho", id)? };
+    if loai == "duAn" && hien.is_none() {
+        return Err(loi(StatusCode::CONFLICT, "Dự án không còn — không khôi phục được"));
+    }
+    if loai != "duAn" && ho.is_none() {
+        return Err(loi(StatusCode::CONFLICT, "Hồ sơ không còn — khôi phục hồ sơ ở Thùng rác trước"));
+    }
+    if let Some(o) = moi.as_object_mut() {
+        if loai == "duAn" {
+            o.remove("phuongAn");
+            match hien.as_ref().and_then(|h| h.get("daXoa")).filter(|x| !x.is_null()) {
+                Some(x) => o.insert("daXoa".into(), x.clone()),
+                None => o.remove("daXoa"),
+            };
+        }
+    }
+    kiem_luoc_do(loai, None, &moi, false).map_err(|e| loi(StatusCode::BAD_REQUEST, e))?;
+    if loai == "duAn" {
+        kiem_tra_quy_tdc(&moi)?;
+    }
+    let luc = bay_gio();
+    let ten_phan = match loai { "td" => "tiến độ", "ct" => "chi trả", _ => "thông tin dự án" };
+    let mo_ta = format!("Quản trị khôi phục {ten_phan} về phiên bản {} (lưu lúc {}): {ly_do}", ls["phienBan"], ls["suaLuc"].as_str().unwrap_or(""));
+    if loai != "duAn" {
+        if moi.get("nhatKy").is_none_or(|x| !x.is_array()) {
+            moi["nhatKy"] = json!([]);
+        }
+        if let Some(nk) = moi["nhatKy"].as_array_mut() {
+            nk.push(json!({ "luc": luc, "nguoi": format!("{} ({})", u.ho_ten, u.ten), "noiDung": mo_ta }));
+        }
+    }
+    let tx = c.transaction().map_err(loi_db)?;
+    let pb_cu: Option<i64> = tx.query_row("SELECT phien_ban FROM ban_ghi WHERE loai = ?1 AND id = ?2", params![loai, id], |r| r.get(0)).optional().map_err(loi_db)?;
+    if pb_cu.is_some() {
+        luu_lich_su(&tx, loai, id, &format!("Trước khi khôi phục về phiên bản {}", ls["phienBan"]), &u.ten)?;
+    }
+    let pb = pb_cu.unwrap_or(0) + 1;
+    tx.execute(
+        "INSERT OR REPLACE INTO ban_ghi(loai, id, du_an_id, phien_ban, noi_dung, sua_luc, sua_boi) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+        params![loai, id, du_an_id, pb, moi.to_string(), luc, u.ten],
+    )
+    .map_err(loi_db)?;
+    MayChu::ghi_thay_doi(&tx, loai, id, &du_an_id, &u.ten).map_err(loi_db)?;
+    let doi_tuong = match (&ho, &hien) {
+        (Some(h), _) => format!("{} · {}", h["ma"].as_str().unwrap_or(""), h["ten"].as_str().unwrap_or("")),
+        (None, Some(d)) => d["ten"].as_str().unwrap_or("").to_string(),
+        _ => String::new(),
+    };
+    st.ghi_nhat_ky(&tx, &u.ten, &u.ho_ten, &format!("Khôi phục {ten_phan} về phiên bản cũ"), &format!("{doi_tuong} — {mo_ta}")).map_err(loi_db)?;
+    tx.commit().map_err(loi_db)?;
+    Ok(json!({ "loai": loai, "id": id, "duLieu": moi, "phienBan": pb }))
 }
 
 pub fn ma_hoa_url(s: &str) -> String {
@@ -1557,6 +1680,8 @@ pub fn dinh_tuyen(st: St) -> Router {
         .route("/api/lich-su", get(lich_su))
         .route("/api/lich-su/da-xoa", get(lich_su_da_xoa))
         .route("/api/lich-su/khoi-phuc", post(khoi_phuc_ban_ghi))
+        .route("/api/lich-su/xuat", get(xuat_lich_su))
+        .route("/api/lich-su/nap", post(nap_lich_su))
         .layer(DefaultBodyLimit::max(300 * 1024 * 1024))
         .with_state(st)
 }

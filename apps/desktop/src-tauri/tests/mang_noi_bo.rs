@@ -446,6 +446,45 @@ async fn may_chu_lich_su_luoc_do() {
     let (ma, v) = m.goi("POST", "/api/lich-su/khoi-phuc", Some(&qt), json!({ "stt": ls3["ds"][0]["stt"], "lyDo": "thử" })).await;
     assert_eq!(ma, 409, "{v}");
 
+    // 0.9.27: khôi phục chi trả (bản ghi con) và thông tin dự án về bản cũ — quản trị, có lý do
+    assert_eq!(m.goi("POST", "/api/lo", Some(&cb), lo_con("ct", "h1", json!({ "dot": [{ "id": "c1", "soTien": "100" }] }), None)).await.0, 200);
+    assert_eq!(m.goi("POST", "/api/lo", Some(&cb), lo_con("ct", "h1", json!({ "dot": [{ "id": "c1", "soTien": "999" }] }), Some(1))).await.0, 200);
+    let (_, lct) = m.goi("GET", "/api/lich-su?loai=ct&id=h1", Some(&cb), Value::Null).await;
+    let stt_ct = lct["ds"][0]["stt"].clone();
+    assert_eq!(m.goi("POST", "/api/lich-su/khoi-phuc", Some(&ld), json!({ "stt": stt_ct, "lyDo": "ghi nhầm" })).await.0, 403);
+    let (ma, v) = m.goi("POST", "/api/lich-su/khoi-phuc", Some(&qt), json!({ "stt": stt_ct, "lyDo": "ghi nhầm số tiền" })).await;
+    assert_eq!(ma, 200, "{v}");
+    assert_eq!((v["loai"].as_str(), v["phienBan"].as_i64()), (Some("ct"), Some(3)));
+    assert_eq!(v["duLieu"]["chiTra"]["dot"][0]["soTien"], "100");
+    assert!(v["duLieu"]["nhatKy"].as_array().unwrap().last().unwrap()["noiDung"].as_str().unwrap().contains("chi trả"));
+    let (_, nk) = m.goi("GET", "/api/nhat-ky", Some(&qt), Value::Null).await;
+    assert!(nk.as_array().unwrap().iter().any(|x| x["hanhDong"] == "Khôi phục chi trả về phiên bản cũ"));
+    let (_, dsda) = m.goi("GET", "/api/du-an", Some(&cb), Value::Null).await;
+    let da = dsda.as_array().unwrap().iter().find(|x| x["duLieu"]["id"] == "da1").unwrap().clone();
+    let mut da2 = da["duLieu"].clone();
+    let ten_goc = da2["ten"].clone();
+    da2["ten"] = json!("Tên dự án sửa nhầm");
+    assert_eq!(m.goi("PUT", "/api/du-an/da1", Some(&cb), json!({ "duLieu": da2, "phienBanTruoc": da["phienBan"] })).await.0, 200);
+    let (_, lda) = m.goi("GET", "/api/lich-su?loai=duAn&id=da1", Some(&cb), Value::Null).await;
+    let (ma, v) = m.goi("POST", "/api/lich-su/khoi-phuc", Some(&qt), json!({ "stt": lda["ds"][0]["stt"], "lyDo": "sửa nhầm tên dự án" })).await;
+    assert_eq!(ma, 200, "{v}");
+    assert_eq!((v["loai"].as_str(), &v["duLieu"]["ten"]), (Some("duAn"), &ten_goc));
+    assert!(v["duLieu"].get("phuongAn").is_none());
+
+    // 0.9.27: xuất lịch sử (sao lưu), nạp lại — bản đã có bỏ qua; nạp cần quyền khôi phục
+    let (ma, xs) = m.goi("GET", "/api/lich-su/xuat?duAn=da1", Some(&cb), Value::Null).await;
+    assert_eq!(ma, 200, "{xs}");
+    let n = xs.as_array().unwrap().len();
+    assert!(n > 5, "{n}");
+    assert_eq!(m.goi("POST", "/api/lich-su/nap", Some(&cb), json!({ "ds": xs })).await.0, 403);
+    let (ma, v) = m.goi("POST", "/api/lich-su/nap", Some(&qt), json!({ "ds": xs })).await;
+    assert_eq!((ma, v["them"].as_i64()), (200, Some(0)), "{v}");
+    let mut moi = xs[0].clone();
+    moi["luuLuc"] = json!("2026-01-01T00:00:00.000Z");
+    let (ma, v) = m.goi("POST", "/api/lich-su/nap", Some(&qt), json!({ "ds": [moi] })).await;
+    assert_eq!((ma, v["them"].as_i64()), (200, Some(1)), "{v}");
+    assert_eq!(m.goi("POST", "/api/lich-su/nap", Some(&qt), json!({ "ds": [{ "loai": "xyz", "id": "a", "luuLuc": "x", "duLieu": {} }] })).await.0, 400);
+
     // thời hạn giữ lịch sử: chỉ quản trị đặt; ngoài khoảng 0–100 → 400
     assert_eq!(m.goi("PUT", "/api/cai-dat/giuLichSu", Some(&ld), json!({ "soNam": 5 })).await.0, 403);
     assert_eq!(m.goi("PUT", "/api/cai-dat/giuLichSu", Some(&qt), json!({ "soNam": -1 })).await.0, 400);

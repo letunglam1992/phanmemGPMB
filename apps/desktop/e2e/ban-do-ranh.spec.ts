@@ -44,8 +44,9 @@ test("ranh từ tọa độ mốc → DT thu hồi từng thửa; tạo hồ sơ
   await vao(p);
   await p.keyboard.press("Alt+3");
   await p.locator("[role=tablist] button", { hasText: "Bản đồ" }).click();
-  await p.locator('input[type=file][accept=".dgn,.DGN"]').first().setInputFiles({ name: "thu.dgn", mimeType: "application/octet-stream", buffer: banDo() });
+  await p.locator('input[type=file][accept=".dgn,.dxf,.dwg"]').first().setInputFiles({ name: "thu.dgn", mimeType: "application/octet-stream", buffer: banDo() });
   await expect(p.getByText("thu.dgn ·")).toBeVisible();
+  await p.getByRole("button", { name: "Để sau" }).click();
 
   // Bảng mốc: X = Bắc, Y = Đông (quy ước VN-2000) — ranh từ x = 500003 đến 500050, y = 1350000 đến 1350020
   const csv = "Tên mốc,X,Y\nM1,1350000,500003\nM2,1350000,500050\nM3,1350020,500050\nM4,1350020,500003\n";

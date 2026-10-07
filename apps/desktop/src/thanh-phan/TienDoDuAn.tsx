@@ -1,6 +1,7 @@
 import { ONgay } from "./ONgay";
 import { useMemo, useState } from "react";
 import { useUngDung } from "../ung-dung";
+import { boLanDoi, buocDoi, canQuyenDuyet, docLanDoi, ghiLanDoi, hoanTacLan } from "../hoan-tac";
 import { daQuaBuoc, BUOC_CHUNG, CAC_BUOC, TEN_TRANG_THAI_BUOC, laBuocChung, tienDoHieuLuc, type BuocHo, type DuAn, type Ho, type TrangThaiBuoc, type DotThuHoi } from "../mo-hinh";
 import { kiemTraDuyetBuoc } from "../tai-khoan";
 import { homNayIso } from "../trang-thai";
@@ -59,7 +60,9 @@ function BuocChungCua({ duAn, dot, hos, tiep }: { duAn: DuAn; dot?: DotThuHoi; h
   const [dang, setDang] = useState(false);
   const daDoi = BUOC_CHUNG.some((ma) => JSON.stringify(nhap[ma]) !== JSON.stringify(goc[ma] ?? { trangThai: "CHUA" }));
 
-  const luu = async (moi: Record<string, BuocHo>, nk: string) => {
+  const khoaLan = `chung:${duAn.id}:${dot?.id ?? ""}`;
+  const [lan, setLan] = useState(() => docLanDoi(khoaLan));
+  const luu = async (moi: Record<string, BuocHo>, nk: string, hoanTac = false) => {
     setDang(true);
     try {
       const giu = Object.fromEntries(Object.entries(moi).filter(([ma, b]) => goc[ma] || b.trangThai !== "CHUA" || b.ngay || b.ghiChu));
@@ -67,10 +70,22 @@ function BuocChungCua({ duAn, dot, hos, tiep }: { duAn: DuAn; dot?: DotThuHoi; h
       else await luuDuAn({ ...duAn, tienDoChung: giu });
       await ghiNhatKy(nk, `${duAn.ten}${dot ? ` – ${tenDot(dot)}` : ""} — áp dụng cho ${hos.length} hộ`);
       setNhap(moi);
-      bao("Đã lưu tiến độ bước chung");
+      if (hoanTac) {
+        boLanDoi(khoaLan);
+        setLan(undefined);
+      } else setLan(ghiLanDoi(khoaLan, nk, goc, giu) ?? docLanDoi(khoaLan));
+      bao(hoanTac ? "Đã hoàn tác" : "Đã lưu tiến độ bước chung");
     } finally {
       setDang(false);
     }
+  };
+  const hoanTac = () => {
+    if (!lan) return;
+    if (canQuyenDuyet(lan) && !quyen("DUYET_BUOC")) return bao("Chỉ người có quyền xác nhận bước mới hoàn tác được thay đổi liên quan bước đã hoàn thành", "loi");
+    const kq = hoanTacLan(lan, goc);
+    if ("loi" in kq) return bao(kq.loi, "loi");
+    if (!confirm(`Hoàn tác "${lan.moTa}" (bước ${buocDoi(lan).join(", ")} về trạng thái trước đó)?`)) return;
+    void luu(Object.fromEntries(BUOC_CHUNG.map((ma) => [ma, kq.tienDo[ma] ?? { trangThai: "CHUA" as TrangThaiBuoc }])), `Hoàn tác: ${lan.moTa}`, true);
   };
   const chuyen = (ma: string, tt: TrangThaiBuoc) => {
     const b = nhap[ma]!;
@@ -141,6 +156,7 @@ function BuocChungCua({ duAn, dot, hos, tiep }: { duAn: DuAn; dot?: DotThuHoi; h
         </tbody>
       </table>
       <div className="nhom-nut" style={{ justifyContent: "flex-end" }}>
+        {lan && !daDoi && <button className="nut" disabled={dang || !quyen("SUA_HO_SO")} title={`Trả bước ${buocDoi(lan).join(", ")} về trạng thái trước lần: ${lan.moTa}`} onClick={hoanTac}>↶ Hoàn tác: {lan.moTa}</button>}
         {daDoi && <span className="nhan nhan-vang">Chưa lưu</span>}
         <button className={`nut ${tiep ? "" : "nut-chinh"}`} disabled={!daDoi || dang || !quyen("SUA_HO_SO")} onClick={() => luu(nhap, "Cập nhật bước chung của dự án")}>Lưu ngày, ghi chú, trạng thái</button>
         {tiep && (

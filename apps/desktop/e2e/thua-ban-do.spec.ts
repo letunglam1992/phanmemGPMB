@@ -41,8 +41,9 @@ test("thửa trong hồ sơ → xem trên bản đồ GPMB, gắn thửa, mở m
   await vao(p);
   await p.keyboard.press("Alt+3");
   await p.locator("[role=tablist] button", { hasText: "Bản đồ" }).click();
-  await p.locator('input[type=file][accept=".dgn,.DGN"]').first().setInputFiles({ name: "thu.dgn", mimeType: "application/octet-stream", buffer: banDo() });
+  await p.locator('input[type=file][accept=".dgn,.dxf,.dwg"]').first().setInputFiles({ name: "thu.dgn", mimeType: "application/octet-stream", buffer: banDo() });
   await expect(p.getByText("thu.dgn ·")).toBeVisible();
+  await p.getByRole("button", { name: "Để sau" }).click();
   await p.locator("[role=tablist] button", { hasText: "Hộ, cá nhân" }).click();
   await p.locator("tr[data-ho-id]").first().click();
   await p.locator("[role=tablist] button", { hasText: "Thửa đất" }).click();
@@ -84,8 +85,9 @@ test("xóa thửa khỏi bản đồ (lý do, giữ khi mở lại), khôi phụ
   await vao(p);
   await p.keyboard.press("Alt+3");
   await p.locator("[role=tablist] button", { hasText: "Bản đồ" }).click();
-  await p.locator('input[type=file][accept=".dgn,.DGN"]').first().setInputFiles({ name: "thu.dgn", mimeType: "application/octet-stream", buffer: banDo() });
+  await p.locator('input[type=file][accept=".dgn,.dxf,.dwg"]').first().setInputFiles({ name: "thu.dgn", mimeType: "application/octet-stream", buffer: banDo() });
   await expect(p.getByText("thu.dgn ·")).toBeVisible();
+  await p.getByRole("button", { name: "Để sau" }).click();
   await p.getByRole("button", { name: "Thu gọn bảng lớp" }).click();
   const cv = p.locator(".ban-do canvas");
   await cv.evaluate((e) => e.scrollIntoView({ block: "start" }));

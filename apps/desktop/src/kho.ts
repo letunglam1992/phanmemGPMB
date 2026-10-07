@@ -88,8 +88,15 @@ export interface Kho {
   lichSu(loai: "ho" | "duAn", id: string): Promise<{ ds: BanLichSu[]; soNamGiu: number }>;
   /** Hồ sơ đã xóa hẳn còn trong lịch sử (bản cuối trước khi xóa). */
   hoDaXoaHan(duAnId: string): Promise<BanLichSu[]>;
-  /** Khôi phục hồ sơ về một bản trong lịch sử (quản trị; bắt buộc lý do). */
-  khoiPhucBanLichSu(stt: number, lyDo: string, nguoi: string): Promise<Ho>;
+  /**
+   * Khôi phục về một bản trong lịch sử (quản trị; bắt buộc lý do): hồ sơ, thông tin dự án; trên máy chủ cả tiến độ ("td"),
+   * chi trả ("ct") của hồ sơ. Trả bản ghi đã ghi.
+   */
+  khoiPhucBanLichSu(stt: number, lyDo: string, nguoi: string): Promise<KetQuaGhi>;
+  /** 0.9.27: lịch sử để đưa vào tệp sao lưu (cả máy hoặc các dự án chọn), cũ nhất trước. */
+  xuatLichSu(duAnIds?: string[]): Promise<BanLichSu[]>;
+  /** 0.9.27: nạp lịch sử từ tệp sao lưu — bỏ qua bản đã có; trả số bản đã thêm. */
+  napLichSu(ds: BanLichSu[]): Promise<number>;
   /** Người đang đăng nhập — ghi vào lịch sử ở kho cục bộ (máy chủ lấy theo phiên). */
   datNguoi(ten: string): void;
   /** Tệp đính kèm của dự án (chỉ thông tin). */
@@ -158,6 +165,10 @@ function yc<T>(r: IDBRequest<T>): Promise<T> {
   });
 }
 
+/** Khóa trùng của bản lịch sử khi nạp từ sao lưu (cùng loại, mã, phiên bản, thời điểm, lý do, nội dung). */
+export const khoaLichSu = (x: BanLichSu) => [x.loai, x.id, x.phienBan ?? "", x.luuLuc, x.lyDo ?? "", JSON.stringify(x.duLieu)].join("|");
+const hopLeLichSu = (x: BanLichSu) => ["ho", "duAn", "pa", "td", "ct"].includes(x.loai) && !!x.id && !!x.luuLuc && typeof x.duLieu === "object" && x.duLieu !== null;
+
 const nam = (so: number) => new Date(Date.now() - (so * 365 + Math.floor(so / 4)) * 86400_000).toISOString();
 
 /** Dựng bản khôi phục từ một bản lịch sử (dùng chung cho kho cục bộ; máy chủ làm tương tự ở may_chu.rs). */
@@ -171,6 +182,18 @@ export function dungBanKhoiPhuc(ls: BanLichSu, lyDo: string, nguoi: string, duAn
   if (trung) throw new Error(`Mã hồ sơ ${ma} đang dùng cho "${trung.ten}" — đổi mã hồ sơ đó trước khi khôi phục`);
   h.nhatKy = [...(h.nhatKy ?? []), { luc: new Date().toISOString(), nguoi, noiDung: `Quản trị khôi phục về phiên bản ${ls.phienBan ?? "?"} (lưu lúc ${ls.suaLuc ?? ls.luuLuc}): ${lyDo.trim()}` }];
   return h;
+}
+
+/**
+ * 0.9.27: dựng bản khôi phục thông tin dự án. Giữ nguyên phương án (bản đã chốt, phê duyệt không bị thay theo bản cũ) và
+ * dấu thùng rác hiện tại; máy chủ làm tương tự ở may_chu.rs (khoi_phuc_phan).
+ */
+export function dungDuAnKhoiPhuc(ls: BanLichSu, lyDo: string, hienTai: DuAn | undefined): DuAn {
+  if (ls.loai !== "duAn") throw new Error("Bản lịch sử không phải thông tin dự án");
+  if (!lyDo.trim()) throw new Error("Khôi phục cần ghi lý do");
+  if (!hienTai) throw new Error("Dự án không còn — không khôi phục được");
+  const { phuongAn: _pa, daXoa: _x, ...cu } = structuredClone(ls.duLieu) as DuAn;
+  return { ...cu, ...(hienTai.phuongAn ? { phuongAn: hienTai.phuongAn } : {}), ...(hienTai.daXoa ? { daXoa: hienTai.daXoa } : {}) };
 }
 
 export function taoKhoIndexedDb(): Kho {
@@ -284,6 +307,20 @@ export function taoKhoIndexedDb(): Kho {
       const soNamGiu = ((await yc((await store("caiDat")).get("giuLichSu"))) as { soNam?: number } | undefined)?.soNam ?? 0;
       return { ds: ds.sort((a, b) => b.stt - a.stt), soNamGiu };
     },
+    async xuatLichSu(duAnIds) {
+      const chon = duAnIds && new Set(duAnIds);
+      return ((await yc((await store("lichSu")).getAll())) as BanLichSu[]).filter((x) => !chon || chon.has(x.duAnId ?? "")).sort((a, b) => a.stt - b.stt);
+    },
+    async napLichSu(ds) {
+      if (ds.some((x) => !hopLeLichSu(x))) throw new Error("Bản lịch sử trong tệp sao lưu không hợp lệ");
+      const co = new Set(((await yc((await store("lichSu")).getAll())) as BanLichSu[]).map(khoaLichSu));
+      const moi = ds.filter((x) => !co.has(khoaLichSu(x)) && (co.add(khoaLichSu(x)), true));
+      if (!moi.length) return 0;
+      const t = (await db).transaction("lichSu", "readwrite");
+      for (const { stt: _s, ...x } of moi) t.objectStore("lichSu").add(x);
+      await new Promise<void>((ok, loi) => ((t.oncomplete = () => ok()), (t.onerror = () => loi(t.error)), (t.onabort = () => loi(t.error))));
+      return moi.length;
+    },
     async hoDaXoaHan(duAnId) {
       const ds = ((await yc((await store("lichSu")).getAll())) as BanLichSu[]).filter((x) => x.loai === "ho" && x.duAnId === duAnId);
       const cuoi = new Map<string, BanLichSu>();
@@ -294,11 +331,17 @@ export function taoKhoIndexedDb(): Kho {
     async khoiPhucBanLichSu(stt, lyDo, ai) {
       const ls = (await yc((await store("lichSu")).get(stt))) as BanLichSu | undefined;
       if (!ls) throw new Error("Không còn bản lịch sử này");
+      const lyDoLichSu = `Trước khi khôi phục về phiên bản ${ls.phienBan ?? "?"}`;
+      if (ls.loai === "duAn") {
+        const d = dungDuAnKhoiPhuc(ls, lyDo, ((await this.dsDuAn()) as DuAn[]).find((x) => x.id === ls.id));
+        await this.ghiLo({ duAn: [d], lyDoLichSu });
+        return { duAn: [d], ho: [] };
+      }
       const h0 = ls.duLieu as Ho;
       const duAn = ((await this.dsDuAn()) as DuAn[]).find((d) => d.id === h0.duAnId);
       const h = dungBanKhoiPhuc(ls, lyDo, ai, duAn, duAn ? await this.dsHo(duAn.id) : []);
-      await this.ghiLo({ ho: [h], lyDoLichSu: `Trước khi khôi phục về phiên bản ${ls.phienBan ?? "?"}` });
-      return h;
+      await this.ghiLo({ ho: [h], lyDoLichSu });
+      return { duAn: [], ho: [h] };
     },
     async luuBanDo(duAnId, bytes) {
       await yc((await store("banDo", "readwrite")).put(bytes, duAnId));
@@ -475,6 +518,22 @@ export function taoKhoBoNho(tuyChon: { thuLoi?: (buoc: number) => void } = {}): 
       const soNamGiu = (caiDat.get("giuLichSu") as { soNam?: number } | undefined)?.soNam ?? 0;
       return { ds: lichSu.filter((x) => x.loai === loai && x.id === id).sort((a, b) => b.stt - a.stt).map((x) => structuredClone(x)), soNamGiu };
     },
+    async xuatLichSu(duAnIds) {
+      const chon = duAnIds && new Set(duAnIds);
+      return lichSu.filter((x) => !chon || chon.has(x.duAnId ?? "")).map((x) => structuredClone(x));
+    },
+    async napLichSu(ds) {
+      if (ds.some((x) => !hopLeLichSu(x))) throw new Error("Bản lịch sử trong tệp sao lưu không hợp lệ");
+      const co = new Set(lichSu.map(khoaLichSu));
+      let n = 0;
+      for (const x of ds)
+        if (!co.has(khoaLichSu(x))) {
+          co.add(khoaLichSu(x));
+          lichSu.push({ ...structuredClone(x), stt: ++sttLs });
+          n++;
+        }
+      return n;
+    },
     async hoDaXoaHan(duAnId) {
       const cuoi = new Map<string, BanLichSu>();
       for (const x of lichSu) if (x.loai === "ho" && x.duAnId === duAnId && (cuoi.get(x.id)?.stt ?? -1) < x.stt) cuoi.set(x.id, x);
@@ -483,10 +542,16 @@ export function taoKhoBoNho(tuyChon: { thuLoi?: (buoc: number) => void } = {}): 
     async khoiPhucBanLichSu(stt, lyDo, nguoiKp) {
       const ls = lichSu.find((x) => x.stt === stt);
       if (!ls) throw new Error("Không còn bản lịch sử này");
+      const lyDoLichSu = `Trước khi khôi phục về phiên bản ${ls.phienBan ?? "?"}`;
+      if (ls.loai === "duAn") {
+        const da = dungDuAnKhoiPhuc(ls, lyDo, duAn.get(ls.id));
+        await this.ghiLo({ duAn: [da], lyDoLichSu });
+        return { duAn: [structuredClone(da)], ho: [] };
+      }
       const d = duAn.get((ls.duLieu as Ho).duAnId);
       const h = dungBanKhoiPhuc(ls, lyDo, nguoiKp, d, [...ho.values()].filter((x) => x.duAnId === d?.id));
-      await this.ghiLo({ ho: [h], lyDoLichSu: `Trước khi khôi phục về phiên bản ${ls.phienBan ?? "?"}` });
-      return h;
+      await this.ghiLo({ ho: [h], lyDoLichSu });
+      return { duAn: [], ho: [h] };
     },
     async luuBanDo(id, b) {
       banDo.set(id, b);

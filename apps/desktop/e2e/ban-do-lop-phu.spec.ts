@@ -62,8 +62,9 @@ test("ghi chú hiện trường, điểm đo, bắt điểm và lưu kết quả
   await vao(p);
   await p.keyboard.press("Alt+3");
   await p.locator("[role=tablist] button", { hasText: "Bản đồ" }).click();
-  await p.locator('input[type=file][accept=".dgn,.DGN"]').first().setInputFiles({ name: "thu.dgn", mimeType: "application/octet-stream", buffer: banDo() });
+  await p.locator('input[type=file][accept=".dgn,.dxf,.dwg"]').first().setInputFiles({ name: "thu.dgn", mimeType: "application/octet-stream", buffer: banDo() });
   await expect(p.getByText("thu.dgn ·")).toBeVisible();
+  await p.getByRole("button", { name: "Để sau" }).click();
   await p.getByRole("button", { name: "Thu gọn bảng lớp" }).click();
   const cv = p.locator(".ban-do canvas");
   /** Bấm trên bản đồ theo tỷ lệ khung (cuộn bản đồ vào tầm nhìn trước, vì cột phải dài làm trang cuộn) */
@@ -110,7 +111,7 @@ test("ghi chú hiện trường, điểm đo, bắt điểm và lưu kết quả
 
   // So sánh: bản mới thửa 2 rộng 25 m, thửa 3 rộng 15 m
   await p.getByRole("button", { name: "So sánh bản đồ…" }).click();
-  await p.getByLabel("Tệp DGN bản mới").setInputFiles({ name: "moi.dgn", mimeType: "application/octet-stream", buffer: banDo("7", 500000, [20, 25, 15, 20]) });
+  await p.getByLabel("Tệp bản đồ bản mới").setInputFiles({ name: "moi.dgn", mimeType: "application/octet-stream", buffer: banDo("7", 500000, [20, 25, 15, 20]) });
   const bss = p.getByLabel("Kết quả so sánh");
   await expect(bss.locator("tr", { hasText: "7-2" })).toContainText("Đổi diện tích");
   await expect(bss.locator("tr", { hasText: "7-3" })).toContainText("-100,00");

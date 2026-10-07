@@ -29,7 +29,7 @@ describe("Lịch sử thay đổi hồ sơ (P1-5)", () => {
     expect((ls.ds[0]!.duLieu as { ten: string }).ten).toBe("Hộ mẫu 01");
     expect(ls.ds[0]!.luuBoi).toBe("Quản trị (quantri)");
     await expect(kho.khoiPhucBanLichSu(ls.ds[0]!.stt, " ", "qt")).rejects.toThrow(/lý do/);
-    const h = await kho.khoiPhucBanLichSu(ls.ds[0]!.stt, "sửa nhầm tên", "qt");
+    const h = (await kho.khoiPhucBanLichSu(ls.ds[0]!.stt, "sửa nhầm tên", "qt")).ho[0]!;
     expect(h.ten).toBe("Hộ mẫu 01");
     expect(h.nhatKy.at(-1)!.noiDung).toContain("sửa nhầm tên");
     expect((await kho.lichSu("ho", ho[0]!.id)).ds[0]!.lyDo).toMatch(/^Trước khi khôi phục/);
@@ -44,5 +44,24 @@ describe("Lịch sử thay đổi hồ sơ (P1-5)", () => {
     await kho.luuCaiDat("giuLichSu", { soNam: 1 });
     expect((await kho.lichSu("ho", ho[0]!.id)).soNamGiu).toBe(1);
     expect((await kho.lichSu("ho", ho[0]!.id)).ds.length).toBeGreaterThan(0); // bản vừa lưu còn trong hạn
+  });
+  it("0.9.27: khôi phục thông tin dự án về bản cũ — giữ phương án, dấu thùng rác hiện tại", async () => {
+    const { duAn, ho } = taoDuAnMau();
+    const kho = taoKhoBoNho();
+    kho.datNguoi("qt");
+    await kho.ghiLo({ duAn: [duAn], ho });
+    const pa = [{ id: "pa1", so: 1, trangThai: "DA_PHE_DUYET" }] as unknown as NonNullable<typeof duAn.phuongAn>;
+    await kho.luuDuAn({ ...duAn, ten: "Tên sửa nhầm", phuongAn: pa });
+    const ls = await kho.lichSu("duAn", duAn.id);
+    expect(ls.ds).toHaveLength(1);
+    await expect(kho.khoiPhucBanLichSu(ls.ds[0]!.stt, "", "qt")).rejects.toThrow(/lý do/);
+    const kq = await kho.khoiPhucBanLichSu(ls.ds[0]!.stt, "sửa nhầm tên dự án", "qt");
+    expect(kq.ho).toEqual([]);
+    expect(kq.duAn[0]!.ten).toBe(duAn.ten);
+    expect(kq.duAn[0]!.phuongAn).toEqual(pa);
+    const d = (await kho.dsDuAn()).find((x) => x.id === duAn.id)!;
+    expect(d.ten).toBe(duAn.ten);
+    expect(d.phuongAn).toEqual(pa);
+    expect((await kho.lichSu("duAn", duAn.id)).ds[0]!.lyDo).toMatch(/^Trước khi khôi phục/);
   });
 });

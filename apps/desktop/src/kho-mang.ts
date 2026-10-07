@@ -318,11 +318,23 @@ export function taoKhoMang(ketNoi: KetNoi, gui: GuiYeuCau = guiQuaVo(ketNoi)): K
       const [a, b, c] = await Promise.all([doc("ho"), doc("td"), doc("ct")]);
       return { ds: [...a.ds, ...b.ds, ...c.ds].sort((x, y) => y.stt - x.stt), soNamGiu: a.soNamGiu };
     },
+    xuatLichSu: async (duAnIds) =>
+      duAnIds ? (await Promise.all(duAnIds.map((id) => json<BanLichSu[]>("GET", `/api/lich-su/xuat?duAn=${ma(id)}`)))).flat() : json<BanLichSu[]>("GET", "/api/lich-su/xuat"),
+    napLichSu: async (ds) => {
+      let them = 0;
+      for (let i = 0; i < ds.length; i += 500) them += (await json<{ them: number }>("POST", "/api/lich-su/nap", { json: { ds: ds.slice(i, i + 500) } })).them;
+      return them;
+    },
     hoDaXoaHan: (duAnId) => json<BanLichSu[]>("GET", `/api/lich-su/da-xoa?duAn=${ma(duAnId)}`),
     async khoiPhucBanLichSu(stt, lyDo) {
-      const r = await json<{ duLieu: Ho; phienBan: number }>("POST", "/api/lich-su/khoi-phuc", { json: { stt, lyDo } });
+      const r = await json<{ loai?: string; id?: string; duLieu: { id: string }; phienBan: number }>("POST", "/api/lich-su/khoi-phuc", { json: { stt, lyDo } });
+      if (r.loai === "duAn") {
+        nho("duAn", r.duLieu, r.phienBan);
+        const pa = [...daDoc].filter(([k]) => k.startsWith("pa:")).map(([, v]) => JSON.parse(v) as { duAnId: string; pa: PhienBanPA });
+        return { duAn: [ghep(r.duLieu as DuAn, pa)], ho: [] };
+      }
       await this.docNhieu(["ho", "td", "ct"].map((loai) => ({ loai, id: r.duLieu.id })));
-      return ghepTuCache(r.duLieu.id)!;
+      return { duAn: [], ho: [ghepTuCache(r.duLieu.id)!] };
     },
     async xoaHo(id) {
       await goi("DELETE", `/api/ho/${ma(id)}`);

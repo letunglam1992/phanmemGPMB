@@ -11,6 +11,7 @@ import { canhBaoDuAn, thongKe, THU_TU_TRANG_THAI, type CanhBao, type TrangThaiGp
 import { tinhChiTra, type GiaiDoanTyLe } from "./chi-tra";
 import type { LichLamViec } from "./lich-lam-viec";
 import { soD } from "./so";
+import { CHUA_XEP_DOT, coDot, dsDot, duAnTheoDot, tenDot } from "./dot-thu-hoi";
 
 export type TinhTrangDuAn = "HOAN_THANH" | "CO_VUONG_MAC" | "DANG_THUC_HIEN" | "CHUA_CO_HO_SO";
 export const TEN_TINH_TRANG: Record<TinhTrangDuAn, string> = {
@@ -50,6 +51,16 @@ export interface DongBaoCao extends SoLieu {
   /** Chặng xa nhất có hộ đã qua */
   changHienTai: string;
   vuongMac: CanhBao[];
+  /** P3-1 (0.9.27): dự án có đợt thu hồi — số liệu tách theo từng đợt (hộ chưa xếp đợt gộp một dòng cuối). */
+  theoDot?: DongDot[];
+}
+
+/** Một dòng đợt thu hồi trong báo cáo (không tính là một dự án: soDuAn = 0). */
+export interface DongDot extends SoLieu {
+  dotId: string;
+  ten: string;
+  tyLeHoanThanh: number;
+  changHienTai: string;
 }
 
 export interface LocBaoCao {
@@ -125,6 +136,20 @@ export function dongDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], denNgay: stri
   };
 }
 
+/** Tách số liệu dự án theo đợt thu hồi (đợt theo số thứ tự; hộ chưa xếp đợt ở cuối, chỉ khi có). */
+export function dongTheoDot(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], denNgay: string, lich?: LichLamViec, tyLeCham: GiaiDoanTyLe[] = []): DongDot[] | undefined {
+  if (!coDot(duAn)) return undefined;
+  const nhom = [...dsDot(duAn).map((d) => ({ id: d.id, ten: tenDot(d), dot: d })), { id: CHUA_XEP_DOT, ten: "Chưa xếp đợt", dot: undefined }];
+  const idDot = new Set(dsDot(duAn).map((d) => d.id));
+  return nhom.flatMap(({ id, ten, dot }) => {
+    const con = ds.filter(({ h }) => (h.dotId && idDot.has(h.dotId) ? h.dotId : CHUA_XEP_DOT) === id);
+    if (id === CHUA_XEP_DOT && !con.length) return [];
+    const d = dongDuAn(duAnTheoDot(duAn, dot), con, denNgay, lich, tyLeCham);
+    const { duAn: _d, tinhTrang: _t, tienDoChung: _c, vuongMac: _v, theoDot: _x, ...so } = d;
+    return [{ ...so, soDuAn: 0, dotId: id, ten }];
+  });
+}
+
 export function lapBaoCao(
   dsDuAn: DuAn[],
   duLieu: (d: DuAn) => { h: Ho; k: KetQuaHo }[],
@@ -134,7 +159,12 @@ export function lapBaoCao(
 ): BaoCao {
   const dong = dsDuAn
     .filter((d) => !loc.xa || d.xa === loc.xa)
-    .map((d) => dongDuAn(d, duLieu(d), loc.denNgay, lich, tyLeCham))
+    .map((d) => {
+      const ds = duLieu(d);
+      const dong = dongDuAn(d, ds, loc.denNgay, lich, tyLeCham);
+      const theoDot = dongTheoDot(d, ds, loc.denNgay, lich, tyLeCham);
+      return theoDot ? { ...dong, theoDot } : dong;
+    })
     .filter((x) => !loc.tinhTrang || x.tinhTrang === loc.tinhTrang)
     .sort((a, b) => a.duAn.xa.localeCompare(b.duAn.xa, "vi") || a.duAn.ten.localeCompare(b.duAn.ten, "vi"));
   const nhomXa = new Map<string, DongBaoCao[]>();

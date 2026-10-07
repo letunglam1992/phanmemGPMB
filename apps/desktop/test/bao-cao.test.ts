@@ -86,6 +86,28 @@ describe("Báo cáo tổng hợp nhiều dự án", () => {
   });
 });
 
+describe("Báo cáo tổng hợp theo đợt thu hồi (P3-1, 0.9.27)", () => {
+  it("dự án có đợt: số liệu tách theo đợt, hộ chưa xếp đợt một dòng; tổng đợt bằng dự án; Excel có dòng đợt", async () => {
+    const { duAnA, duAnB, duLieu } = await haiDuAn();
+    const da: DuAn = { ...duAnA, dotThuHoi: [{ id: "d1", so: 1, ten: "Đợt 1" }, { id: "d2", so: 2, ten: "Đợt 2" }] };
+    const ds = duLieu(duAnA);
+    const duLieu2 = (d: DuAn) => (d.id === da.id ? ds.map((x, i) => ({ ...x, h: i === 0 ? { ...x.h, dotId: "d1" } : x.h })) : duLieu(d));
+    const bc = lapBaoCao([da, duAnB], duLieu2, { denNgay: "2026-11-15" });
+    const a = bc.dong.find((x) => x.duAn.id === da.id)!;
+    expect(a.theoDot!.map((x) => [x.ten, x.soHo, x.soDuAn])).toEqual([["Đợt 1", 1, 0], ["Đợt 2", 0, 0], ["Chưa xếp đợt", 1, 0]]);
+    expect(a.theoDot!.reduce((s, x) => s.plus(x.tamTinh), D(0)).toString()).toBe(a.tamTinh.toString());
+    expect(a.theoDot!.reduce((s, x) => s.plus(x.daDuyet), D(0)).toString()).toBe(a.daDuyet.toString());
+    expect(bc.dong.find((x) => x.duAn.id === duAnB.id)!.theoDot).toBeUndefined();
+    expect(bc.tong.soDuAn).toBe(2);
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(await (await taoWorkbookBaoCao(bc, "UBND xã mẫu")).xlsx.writeBuffer());
+    const ten = ws(wb).map((r) => String(r.getCell(2).value ?? ""));
+    expect(ten.filter((x) => x.includes("– Đợt"))).toHaveLength(2);
+    expect(ws(wb).find((r) => String(r.getCell(2).value).startsWith("TỔNG CỘNG"))!.getCell(4).value).toBe(4);
+  });
+});
+const ws = (wb: ExcelJS.Workbook) => wb.getWorksheet("Tổng hợp")!.getRows(1, wb.getWorksheet("Tổng hợp")!.rowCount)!;
+
 describe("Báo cáo tổng hợp — mẫu Word", () => {
   it("điền được mẫu, không còn trường {…}; bảng từng dự án, tổng cộng, vướng mắc", async () => {
     const { readFileSync } = await import("node:fs");

@@ -58,6 +58,22 @@ describe("Nhập hồ sơ từ Excel", () => {
     expect(k.loi.every((l) => l.muc === "CANH_BAO")).toBe(true);
   });
 
+  it("P3-1: cột Đợt thu hồi — xếp hồ sơ mới theo tên hoặc số đợt; không khớp thì cảnh báo, để chưa xếp", async () => {
+    const { duAn, ho } = taoDuAnMau();
+    const da = { ...duAn, dotThuHoi: [{ id: "d1", so: 1, ten: "Đợt 1" }, { id: "d2", so: 2, ten: "Khu tái định cư" }] };
+    const b = await tep((wb) => {
+      them(wb, "Ho", ["H21", "Hộ A", "", "", "", "", "", "Đợt 1"], ["H22", "Hộ B", "", "", "", "", "", "khu tái  định cư"], ["H23", "Hộ C", "", "", "", "", "", 2], ["H24", "Hộ D", "", "", "", "", "", "Đợt 9"], ["H25", "Hộ E"]);
+    });
+    const k = await docTepNhap(b, da, ho);
+    expect(k.loi.filter((l) => l.muc === "LOI")).toEqual([]);
+    expect(k.hoMoi.map((h) => [h.ma, h.dotId])).toEqual([["H21", "d1"], ["H22", "d2"], ["H23", "d2"], ["H24", undefined], ["H25", undefined]]);
+    expect(k.loi.find((l) => l.cot.includes("Đợt thu hồi"))?.noiDung).toMatch(/Không có đợt "Đợt 9"/);
+    // dự án chưa khai đợt → cảnh báo, không xếp
+    const k2 = await docTepNhap(b, duAn, ho);
+    expect(k2.hoMoi.every((h) => !h.dotId)).toBe(true);
+    expect(k2.loi.some((l) => /chưa khai đợt/.test(l.noiDung))).toBe(true);
+  });
+
   it("báo lỗi theo trang, dòng, cột; không đoán số mơ hồ; còn lỗi thì chặn nhập", async () => {
     const { duAn, ho } = taoDuAnMau();
     const b = await tep((wb) => {

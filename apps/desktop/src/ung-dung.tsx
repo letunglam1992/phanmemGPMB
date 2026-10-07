@@ -702,10 +702,12 @@ export function NhaCungCap({ children, kho: khoVao, chiXem, phienDau }: { childr
       if (chan("KHOI_PHUC_BAN_GHI")) return false;
       if (!lyDo.trim()) return bao("Khôi phục cần ghi lý do", "loi"), false;
       try {
-        const h = await ghi(() => kho.khoiPhucBanLichSu(stt, lyDo.trim(), nguoiDung));
-        capNhat({ ho: [h] });
-        if (!laKhoMang(kho)) await ghiNhatKy("Khôi phục hồ sơ về phiên bản cũ", `${h.ma} · ${h.ten} — ${lyDo.trim()}`); // máy chủ tự ghi
-        bao(`Đã khôi phục hồ sơ ${h.ma}`);
+        const kq = await ghi(() => kho.khoiPhucBanLichSu(stt, lyDo.trim(), nguoiDung));
+        capNhat(kq);
+        const h = kq.ho[0], d = kq.duAn[0];
+        const ten = h ? `hồ sơ ${h.ma}` : `thông tin dự án ${d?.ten ?? ""}`;
+        if (!laKhoMang(kho)) await ghiNhatKy(h ? "Khôi phục hồ sơ về phiên bản cũ" : "Khôi phục thông tin dự án về phiên bản cũ", `${h ? `${h.ma} · ${h.ten}` : d?.ten ?? ""} — ${lyDo.trim()}`); // máy chủ tự ghi
+        bao(`Đã khôi phục ${ten}`);
         return true;
       } catch (e) {
         if (!(e instanceof DaBaoLoi)) bao(`Không khôi phục được: ${(e as Error).message}`, "loi");

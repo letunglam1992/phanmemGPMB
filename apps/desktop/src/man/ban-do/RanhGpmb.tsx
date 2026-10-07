@@ -139,7 +139,7 @@ function HopRanhDgn(p: { dl: DuLieuBanDo; dong: () => void; them: (x: Omit<RanhN
   return (
     <HopThoai tieuDe="Lấy ranh GPMB từ tệp DGN khác" dong={p.dong} rong={760} chan={<><button className="nut" onClick={p.dong}>Hủy</button><button className="nut nut-chinh" disabled={!dsChon.length} onClick={() => void p.them(dsChon.map((v, i) => ({ ten: `Lớp ${lop} – vùng ${i + 1}`, nguon: "DGN", tep: ban!.tep, vong: v.vong, dienTich: v.dienTich })))}>Thêm {dsChon.length} vùng làm ranh</button></>}>
       <p className="mt-0 chu-nho">Tệp ranh thu hồi đo đạc riêng (điểm k khoản 1 Điều 16 TT 26/2024 — tách khu vực thu hồi thành mảnh đo đạc bổ sung), cùng hệ tọa độ VN-2000 với bản đồ đang xem. Chọn lớp chứa ranh rồi chọn vùng.</p>
-      <input type="file" aria-label="Tệp DGN chứa ranh" accept=".dgn,.DGN" onChange={async (e) => {
+      <input type="file" aria-label="Tệp DGN chứa ranh" accept=".dgn,.dxf,.dwg" onChange={async (e) => {
         const f = e.target.files?.[0];
         if (!f) return;
         setLoi(null);

@@ -1,5 +1,6 @@
 import { ONgay } from "../../thanh-phan/ONgay";
 import { useState } from "react";
+import { boLanDoi, buocDoi, canQuyenDuyet, docLanDoi, ghiLanDoi, hoanTacLan } from "../../hoan-tac";
 import { kiemTraDuyetBuoc } from "../../tai-khoan";
 import { hanCuaBuoc, tinhHanBuoc } from "../../han-buoc";
 import { homNayIso } from "../../trang-thai";
@@ -14,13 +15,31 @@ import type { Tab } from "./kieu";
  * Tiến độ của hộ: bước 1–4 là bước chung của dự án (chỉ xem, cập nhật một lần ở dự án); bước 5–16 theo từng hộ —
  * mỗi hộ một tiến độ riêng, mỗi bước ghi được khó khăn, vướng mắc để lãnh đạo nắm và đưa vào báo cáo.
  */
-export function TabTienDo({ h, duAn, doi, luuNgay, soanMau, moDuAn }: Tab & { duAn: DuAn; luuNgay: (h: Ho, nk: string) => Promise<void>; soanMau: (ma: string) => void; moDuAn: () => void }) {
+export function TabTienDo({ h, duAn, doi, luuNgay: luuGoc, soanMau, moDuAn }: Tab & { duAn: DuAn; luuNgay: (h: Ho, nk: string) => Promise<void>; soanMau: (ma: string) => void; moDuAn: () => void }) {
+  // 0.9.27: thao tác lưu ngay (gửi duyệt, xác nhận, không áp dụng, giải quyết vướng mắc…) ghi nhận để hoàn tác lần gần nhất
+  const { taiKhoan, quyen, bao, lich } = useUngDung();
+  const khoaLan = `ho:${h.id}`;
+  const [lan, setLan] = useState(() => docLanDoi(khoaLan));
+  const luuNgay = async (moi: Ho, nk: string) => {
+    const truoc = h.tienDo;
+    await luuGoc(moi, nk);
+    setLan(ghiLanDoi(khoaLan, nk, truoc, moi.tienDo) ?? docLanDoi(khoaLan));
+  };
+  const hoanTac = async () => {
+    if (!lan) return;
+    if (canQuyenDuyet(lan) && !quyen("DUYET_BUOC")) return bao("Chỉ người có quyền xác nhận bước mới hoàn tác được thay đổi liên quan bước đã hoàn thành, không áp dụng", "loi");
+    const kq = hoanTacLan(lan, h.tienDo);
+    if ("loi" in kq) return bao(kq.loi, "loi");
+    if (!confirm(`Hoàn tác "${lan.moTa}" (bước ${buocDoi(lan).join(", ")} về trạng thái trước đó)?`)) return;
+    await luuGoc({ ...h, tienDo: kq.tienDo as Ho["tienDo"] }, `Hoàn tác: ${lan.moTa}`);
+    boLanDoi(khoaLan);
+    setLan(undefined);
+  };
   const td = tienDoHieuLuc(duAn, h);
   const BUOC_HO = CAC_BUOC.filter((x) => !laBuocChung(x.ma));
   const [chon, setChon] = useState((BUOC_HO.find((x) => !daQuaBuoc(td[x.ma]?.trangThai)) ?? BUOC_HO[BUOC_HO.length - 1]!).ma);
   const b = CAC_BUOC.find((x) => x.ma === chon)!;
   const bh = h.tienDo[chon] ?? { trangThai: "CHUA" as TrangThaiBuoc };
-  const { taiKhoan, quyen, bao, lich } = useUngDung();
   const han = hanCuaBuoc(chon);
   const th = han ? tinhHanBuoc(hoHieuLuc(duAn, h), han, homNayIso(), lich) : null;
   const loiDuyet = taiKhoan ? kiemTraDuyetBuoc(taiKhoan.vaiTro, taiKhoan.ten, bh) : "Chưa đăng nhập";
@@ -87,7 +106,10 @@ export function TabTienDo({ h, duAn, doi, luuNgay, soanMau, moDuAn }: Tab & { du
       </div>
       <div className="luoi luoi-chinh">
         <div className="the">
-          <div className="the-dau"><h2>Tiến độ của hộ (bước 5–16)</h2><span className="mo chu-nho">Mỗi hộ một tiến độ; bấm một bước để cập nhật, ghi khó khăn, vướng mắc</span></div>
+          <div className="the-dau">
+            <h2>Tiến độ của hộ (bước 5–16)</h2><span className="mo chu-nho">Mỗi hộ một tiến độ; bấm một bước để cập nhật, ghi khó khăn, vướng mắc</span>
+            {lan && <div className="phai"><button className="nut nut-nho" disabled={!quyen("SUA_HO_SO")} title={`Trả bước ${buocDoi(lan).join(", ")} về trạng thái trước lần: ${lan.moTa}`} onClick={() => void hoanTac()}>↶ Hoàn tác: {lan.moTa}</button></div>}
+          </div>
           <div className="bang-cuon">
             <table className="bang">
               <thead><tr><th>Bước</th><th>Nội dung</th><th>Thời hạn</th><th>Trạng thái</th><th>Ngày</th><th>Khó khăn, vướng mắc</th></tr></thead>

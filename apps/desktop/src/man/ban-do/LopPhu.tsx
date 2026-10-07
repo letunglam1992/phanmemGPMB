@@ -1,14 +1,19 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { diemTrongThua, docBangDiem, docDgn, dungThua, soSanhBanDo, type Diem, type SoSanhThua, type ThuaBanDo } from "@gpmb/gis";
 import { useUngDung } from "../../ung-dung";
 import { taoId, TEN_NHOM_GHI_CHU, type DiemDoHienTrang, type DuAn, type GhiChuHienTruong, type Ho, type KetQuaDoLuu, type NhomGhiChu } from "../../mo-hinh";
 import { HopThoai, O } from "../../thanh-phan/chung";
 import { Chon } from "../../thanh-phan/Chon";
 import { taiXuong } from "../../tai-xuong";
+import type { DinhKem } from "../../kho";
+import { xoaMemTep } from "../../dinh-kem-thung-rac";
+import { laAnhXemDuoc, loiTepDinhKem } from "../../thanh-phan/DinhKemHo";
 import { tenTep } from "../../ten-tep";
 import { MAU_GHI_CHU } from "./KhungVe";
 import { type DuLieuBanDo, dsSoTo, khoaTepGhep, thamChieuThieu } from "./du-lieu";
 import { docBang } from "./RanhGpmb";
+import { doiChieuSoSanh } from "./ranh";
+import { hienSo } from "../../so";
 
 const so = (v: number, le = 2) => v.toLocaleString("vi-VN", { minimumFractionDigits: le, maximumFractionDigits: le });
 const ngayVn = (iso: string) => new Date(iso).toLocaleDateString("vi-VN");
@@ -49,10 +54,93 @@ export function HopGhiChu(p: { dl: DuLieuBanDo; loai: "DIEM" | "DUONG"; diem: Di
   );
 }
 
-/** Danh sách ghi chú hiện trường: lọc chưa xử lý, phóng tới, đánh dấu đã xử lý, mở hồ sơ, xóa. */
+/** Ảnh hiện trường nhận được (xem trước trong phần mềm trừ HEIC). */
+export const DUOI_ANH_GHI_CHU = [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif"];
+
+/**
+ * Ảnh của ghi chú hiện trường (0.9.27): lưu như tệp đính kèm (của hộ gắn với ghi chú; không gắn hộ → tài liệu chung của dự án,
+ * nhóm "Bản đồ, trích đo"), nên có trong bản sao lưu và thùng rác tệp; ghi chú giữ mã tệp.
+ */
+function HopAnhGhiChu(p: { duAn: DuAn; g: GhiChuHienTruong; hos: Ho[]; sua: boolean; doiAnh: (anh: string[]) => Promise<unknown>; dong: () => void }) {
+  const { kho, nguoiDung, ghiNhatKy, bao } = useUngDung();
+  const [ds, setDs] = useState<{ meta: DinhKem; url: string | null }[] | null>(null);
+  const [dang, setDang] = useState(false);
+  const anh = p.g.anh ?? [];
+  useEffect(() => {
+    let huy = false;
+    const urls: string[] = [];
+    void (async () => {
+      const tep = (await kho.dsDinhKem(p.duAn.id)).filter((x) => anh.includes(x.id) && !x.daXoa);
+      const out = await Promise.all(tep.map(async (meta) => {
+        const b = laAnhXemDuoc(meta.ten) ? await kho.docDinhKem(meta.id) : null;
+        const url = b ? URL.createObjectURL(new Blob([b.slice()], { type: meta.loai || "image/jpeg" })) : null;
+        if (url) urls.push(url);
+        return { meta, url };
+      }));
+      if (!huy) setDs(out);
+    })().catch(() => !huy && setDs([]));
+    return () => {
+      huy = true;
+      for (const u of urls) URL.revokeObjectURL(u);
+    };
+  }, [kho, p.duAn.id, anh.join(",")]); // eslint-disable-line react-hooks/exhaustive-deps
+  const them = async (ts: FileList) => {
+    const loi = [...ts].map((f) => (!DUOI_ANH_GHI_CHU.some((d) => f.name.toLowerCase().endsWith(d)) ? `"${f.name}": chỉ nhận ảnh ${DUOI_ANH_GHI_CHU.join(", ")}` : loiTepDinhKem(f.name, f.size))).filter(Boolean);
+    if (loi.length) return bao(`Không thêm được ảnh: ${loi.join("; ")}`, "loi");
+    setDang(true);
+    try {
+      const h = p.hos.find((x) => x.id === p.g.hoId);
+      const lo = await Promise.all([...ts].map(async (f) => ({
+        meta: { id: taoId(), hoId: h?.id ?? "", duAnId: p.duAn.id, buoc: "", ten: f.name, loai: f.type || "image/jpeg", kichThuoc: f.size, luc: new Date().toISOString(), nguoi: nguoiDung, ghiChu: `Ảnh ghi chú hiện trường: ${p.g.noiDung}`.slice(0, 300), ...(h ? {} : { nhom: "BAN_DO" }) } as DinhKem,
+        bytes: new Uint8Array(await f.arrayBuffer()),
+      })));
+      await kho.ghiLo({ dinhKem: lo });
+      await p.doiAnh([...anh, ...lo.map((x) => x.meta.id)]);
+      await ghiNhatKy("Thêm ảnh ghi chú hiện trường", `${p.duAn.ten}${h ? ` · ${h.ma} ${h.ten}` : ""}: ${p.g.noiDung} — ${lo.map((x) => x.meta.ten).join(", ")}`);
+      bao(`Đã thêm ${lo.length} ảnh`);
+    } catch (e) {
+      bao(`Không thêm được ảnh: ${(e as Error).message}`, "loi");
+    } finally {
+      setDang(false);
+    }
+  };
+  const bo = async (x: DinhKem) => {
+    if (!confirm(`Bỏ ảnh "${x.ten}" khỏi ghi chú? Tệp chuyển vào "Tệp đã xóa", khôi phục được.`)) return;
+    await xoaMemTep(kho, x, nguoiDung);
+    await p.doiAnh(anh.filter((id) => id !== x.id));
+  };
+  return (
+    <HopThoai tieuDe={`Ảnh hiện trường: ${p.g.noiDung.slice(0, 60)}`} dong={p.dong} rong={760} chan={<button className="nut" onClick={p.dong}>Đóng</button>}>
+      <p className="mo chu-nho mt-0">Ảnh lưu cùng tệp đính kèm {p.g.hoId ? "của hồ sơ hộ gắn với ghi chú" : "chung của dự án (Tài liệu, văn bản → Bản đồ, trích đo)"}; có trong bản sao lưu; tối đa 20 MB mỗi ảnh. Ảnh HEIC (iPhone): tải về mở bằng ứng dụng Ảnh.</p>
+      {p.sua && (
+        <label className={`nut nut-chinh ${dang ? "tat" : ""}`}>
+          {dang ? "Đang lưu…" : "Thêm ảnh…"}
+          <input type="file" multiple aria-label="Chọn ảnh hiện trường" accept={DUOI_ANH_GHI_CHU.join(",")} className="an" disabled={dang} onChange={(e) => { const f = e.target.files; if (f?.length) void them(f); e.target.value = ""; }} />
+        </label>
+      )}
+      {ds === null ? <div className="trong">Đang tải…</div> : !ds.length ? <div className="trong">Chưa có ảnh.</div> : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10, marginTop: 10 }}>
+          {ds.map(({ meta, url }) => (
+            <figure key={meta.id} style={{ margin: 0, border: "1px solid var(--vien)", borderRadius: 6, padding: 6 }}>
+              {url ? <img src={url} alt={meta.ten} style={{ width: "100%", height: 150, objectFit: "cover", borderRadius: 4 }} /> : <div className="trong" style={{ height: 150 }}>Không xem trước được</div>}
+              <figcaption className="chu-nho" style={{ display: "flex", gap: 4, alignItems: "center", marginTop: 4 }}>
+                <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={meta.ten}>{meta.ten}</span>
+                <button className="nut nut-chu nut-nho" onClick={async () => { const b = await kho.docDinhKem(meta.id); if (b) await taiXuong(b, meta.ten, meta.loai); }}>Tải</button>
+                {p.sua && <button className="nut nut-chu nut-nguy nut-nho" aria-label={`Bỏ ảnh ${meta.ten}`} onClick={() => void bo(meta)}>✕</button>}
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+      )}
+    </HopThoai>
+  );
+}
+
+/** Danh sách ghi chú hiện trường: lọc chưa xử lý, phóng tới, đánh dấu đã xử lý, mở hồ sơ, ảnh, xóa. */
 export function TheGhiChu(p: { duAn: DuAn; hos: Ho[]; luu: LuuBanDo; phongToi: (v: Diem[][]) => void; batCongCu: () => void }) {
   const { quyen, di } = useUngDung();
   const [tatCa, setTatCa] = useState(false);
+  const [xemAnh, setXemAnh] = useState<string | null>(null);
   const ds = (p.duAn.banDo?.ghiChu ?? []).filter((g) => tatCa || !g.daXuLy);
   const sua = quyen("SUA_HO_SO");
   const doi = (id: string, f: (g: GhiChuHienTruong) => GhiChuHienTruong | null) => p.luu({ ghiChu: (p.duAn.banDo?.ghiChu ?? []).map((g) => (g.id === id ? f(g) : g)).filter((g): g is GhiChuHienTruong => !!g) });
@@ -72,6 +160,7 @@ export function TheGhiChu(p: { duAn: DuAn; hos: Ho[]; luu: LuuBanDo; phongToi: (
                 <span className="mo"> · {g.loai === "DUONG" ? "đường" : "điểm"} · {ngayVn(g.ngay)}{g.nguoi ? ` · ${g.nguoi}` : ""}</span>
                 {h && <> · <button className="nut nut-chu nut-nho" onClick={() => di({ ten: "ho", duAnId: p.duAn.id, hoId: h.id })}>{h.ma} {h.ten}</button></>}
               </span>
+              <button className="nut nut-chu nut-nho" aria-label={`Ảnh ghi chú ${g.noiDung}`} title="Ảnh hiện trường" onClick={() => setXemAnh(g.id)}>📷{g.anh?.length ? ` ${g.anh.length}` : ""}</button>
               <button className="nut nut-chu nut-nho" aria-label={`Phóng tới ghi chú ${g.noiDung}`} onClick={() => p.phongToi(vongQuanh(g.diem))}>⌖</button>
               <button className="nut nut-chu nut-nho" disabled={!sua} onClick={() => doi(g.id, (x) => ({ ...x, daXuLy: !x.daXuLy }))}>{g.daXuLy ? "Mở lại" : "Đã xử lý"}</button>
               <button className="nut nut-chu nut-nguy nut-nho" disabled={!sua} aria-label="Xóa ghi chú" onClick={() => confirm("Xóa ghi chú này?") && doi(g.id, () => null)}>✕</button>
@@ -80,6 +169,10 @@ export function TheGhiChu(p: { duAn: DuAn; hos: Ho[]; luu: LuuBanDo; phongToi: (
         })}
         {!ds.length && <div className="mo">Chưa có ghi chú{tong ? " chưa xử lý" : ""}.</div>}
       </div>
+      {xemAnh && (() => {
+        const g = p.duAn.banDo?.ghiChu?.find((x) => x.id === xemAnh);
+        return g ? <HopAnhGhiChu duAn={p.duAn} g={g} hos={p.hos} sua={sua} doiAnh={(anh) => Promise.resolve(doi(g.id, (x) => ({ ...x, anh: anh.length ? anh : undefined })))} dong={() => setXemAnh(null)} /> : null;
+      })()}
     </div>
   );
 }
@@ -192,11 +285,27 @@ export function HopSoSanh(p: { duAn: DuAn; dl: DuLieuBanDo; ketQua: (kq: { tep: 
     for (const x of kq?.ds ?? []) m[x.trangThai] = (m[x.trangThai] ?? 0) + 1;
     return m;
   }, [kq]);
-  const khac = (kq?.ds ?? []).filter((x) => x.trangThai !== "GIONG");
+  const { hoCua, bao } = useUngDung();
+  const khac = useMemo(() => doiChieuSoSanh((kq?.ds ?? []).filter((x) => x.trangThai !== "GIONG"), hoCua(p.duAn.id)), [kq, hoCua, p.duAn.id]);
+  const xuat = async () => {
+    if (!kq) return;
+    const { default: E } = await import("exceljs");
+    const wb = new E.Workbook();
+    const ws = wb.addWorksheet("So sánh bản đồ");
+    ws.addRow([`So sánh bản đồ — ${p.duAn.ten}: bản đang dùng với tệp ${kq.tep} (${new Date().toLocaleDateString("vi-VN")})`]).font = { bold: true };
+    ws.addRow(["DT hình học tính từ bản đồ, chỉ để đối chiếu — DT lập phương án theo hồ sơ đo đạc, trích đo được duyệt."]).font = { italic: true };
+    ws.addRow(["Tờ", "Thửa", "Thay đổi", "DT cũ (m²)", "DT mới (m²)", "Chênh (m²)", "Khác biệt hình (m²)", "Hồ sơ", "DT thửa trong hồ sơ (m²)", "DT thu hồi trong hồ sơ (m²)"]).font = { bold: true };
+    const lam = (v: number | null) => (v === null ? null : Math.round(v * 100) / 100);
+    for (const { x, ho } of khac)
+      ws.addRow([x.soTo ?? "", x.soThua ?? "", TEN_SO_SANH[x.trangThai], lam(x.dtCu), lam(x.dtMoi), x.dtCu !== null && x.dtMoi !== null ? lam(x.dtMoi - x.dtCu) : null, lam(x.khacBiet), ho.map((h) => `${h.ma} ${h.ten}`).join("; "), ho.map((h) => h.dtThua).join("; "), ho.map((h) => h.dtThuHoi).join("; ")]);
+    ws.columns.forEach((c, i) => (c.width = [6, 8, 18, 12, 12, 11, 12, 30, 14, 14][i]));
+    for (const k of [4, 5, 6, 7]) ws.getColumn(k).numFmt = "#,##0.00";
+    if (await taiXuong(new Uint8Array(await wb.xlsx.writeBuffer()), tenTep(`So-sanh-ban-do - ${p.duAn.ten}.xlsx`), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) bao("Đã xuất bảng so sánh bản đồ");
+  };
   return (
-    <HopThoai tieuDe="So sánh với bản đồ khác (trích đo bổ sung)" dong={p.dong} rong={820} chan={<><button className="nut" onClick={p.dong}>Đóng</button><button className="nut nut-chinh" disabled={!kq} onClick={() => { p.ketQua(kq); p.dong(); }}>Hiện trên bản đồ</button></>}>
-      <p className="mt-0 chu-nho">Bản đang xem là bản cũ; chọn tệp DGN bản mới (cùng hệ VN-2000). Thửa ghép theo số tờ, số thửa (thửa thiếu số ghép theo vị trí nhãn). Đổi diện tích: lệch &gt; 0,5 m² và &gt; 0,1%; đổi hình: phần khác biệt &gt; 1 m². Dùng cấu hình lớp của bản đồ đang xem.</p>
-      <input type="file" aria-label="Tệp DGN bản mới" accept=".dgn,.DGN" onChange={async (e) => {
+    <HopThoai tieuDe="So sánh với bản đồ khác (trích đo bổ sung)" dong={p.dong} rong={820} chan={<><button className="nut" disabled={!kq} onClick={() => void xuat()}>Xuất Excel</button><button className="nut" onClick={p.dong}>Đóng</button><button className="nut nut-chinh" disabled={!kq} onClick={() => { p.ketQua(kq); p.dong(); }}>Hiện trên bản đồ</button></>}>
+      <p className="mt-0 chu-nho">Bản đang xem là bản cũ; chọn tệp DGN hoặc DXF bản mới (cùng hệ VN-2000). Thửa ghép theo số tờ, số thửa (thửa thiếu số ghép theo vị trí nhãn). Đổi diện tích: lệch &gt; 0,5 m² và &gt; 0,1%; đổi hình: phần khác biệt &gt; 1 m². Dùng cấu hình lớp của bản đồ đang xem.</p>
+      <input type="file" aria-label="Tệp bản đồ bản mới" accept=".dgn,.dxf,.dwg" onChange={async (e) => {
         const f = e.target.files?.[0];
         if (!f) return;
         setLoi(null);
@@ -214,9 +323,9 @@ export function HopSoSanh(p: { duAn: DuAn; dl: DuLieuBanDo; ketQua: (kq: { tep: 
           <div className="nhom-nut mt-8 chu-nho">{(Object.keys(TEN_SO_SANH) as SoSanhThua["trangThai"][]).map((k) => <span key={k} className="nhan" style={{ borderColor: MAU_SO_SANH[k] }}>{TEN_SO_SANH[k]}: {dem[k] ?? 0}</span>)}</div>
           <div className="bang-cuon" style={{ maxHeight: "45vh" }}>
             <table className="bang" aria-label="Kết quả so sánh">
-              <thead><tr><th>Tờ-thửa</th><th>Thay đổi</th><th className="so">DT cũ (m²)</th><th className="so">DT mới (m²)</th><th className="so">Chênh (m²)</th><th className="so">Khác biệt hình (m²)</th></tr></thead>
+              <thead><tr><th>Tờ-thửa</th><th>Thay đổi</th><th className="so">DT cũ (m²)</th><th className="so">DT mới (m²)</th><th className="so">Chênh (m²)</th><th className="so">Khác biệt hình (m²)</th><th>Hồ sơ (DT thửa / thu hồi)</th></tr></thead>
               <tbody>
-                {khac.map((x, i) => (
+                {khac.map(({ x, ho }, i) => (
                   <tr key={x.ma + i}>
                     <td>{x.soTo ?? "?"}-{x.soThua ?? "?"}</td>
                     <td style={{ color: MAU_SO_SANH[x.trangThai] }}>{TEN_SO_SANH[x.trangThai]}</td>
@@ -224,9 +333,10 @@ export function HopSoSanh(p: { duAn: DuAn; dl: DuLieuBanDo; ketQua: (kq: { tep: 
                     <td className="so">{x.dtMoi === null ? "—" : so(x.dtMoi)}</td>
                     <td className="so">{x.dtCu !== null && x.dtMoi !== null ? so(x.dtMoi - x.dtCu) : "—"}</td>
                     <td className="so">{so(x.khacBiet)}</td>
+                    <td className="chu-nho">{ho.length ? ho.map((h) => <div key={h.id}>{h.ma} {h.ten}: {hienSo(h.dtThua) || "—"} / {hienSo(h.dtThuHoi) || "—"}</div>) : <span className="mo">—</span>}</td>
                   </tr>
                 ))}
-                {!khac.length && <tr><td colSpan={6} className="trong">Hai bản đồ không khác nhau (theo dung sai).</td></tr>}
+                {!khac.length && <tr><td colSpan={7} className="trong">Hai bản đồ không khác nhau (theo dung sai).</td></tr>}
               </tbody>
             </table>
           </div>
@@ -234,6 +344,16 @@ export function HopSoSanh(p: { duAn: DuAn; dl: DuLieuBanDo; ketQua: (kq: { tep: 
       )}
     </HopThoai>
   );
+}
+
+/** Ô số tờ nhập tay của một tệp: lưu khi rời ô / Enter. */
+function OSoToTep(p: { giaTri: string; ten: string; sua: boolean; luu: (v: string) => void }) {
+  const [v, setV] = useState(p.giaTri);
+  useEffect(() => {
+    setV(p.giaTri);
+  }, [p.giaTri]);
+  const ghi = () => v.trim() !== p.giaTri && p.luu(v);
+  return <input style={{ width: 80 }} value={v} disabled={!p.sua} aria-label={`Số tờ nhập tay của ${p.ten}`} placeholder="—" onChange={(e) => setV(e.target.value.slice(0, 16))} onBlur={ghi} onKeyDown={(e) => e.key === "Enter" && ghi()} />;
 }
 
 /** Tệp DGN ghép thêm vào bản đồ của dự án (tờ khác, mảnh trích đo khác) — docs/08 §9.9. */
@@ -289,6 +409,12 @@ export function HopTepGhep(p: { duAn: DuAn; dl: DuLieuBanDo | null; dong: () => 
   };
   const tatCa = async (bat: boolean, chiKhoa?: string) =>
     banDo && (await luuDuAn({ ...p.duAn, banDo: { ...banDo, anTepChinh: chiKhoa !== undefined ? chiKhoa !== "" : !bat, tepGhep: ds.map((t) => ({ ...t, an: chiKhoa !== undefined ? t.id !== chiKhoa : !bat })) } }));
+  /** 0.9.27: số tờ cán bộ nhập cho từng tệp — dùng cho thửa bản đồ không ghi số tờ. */
+  const doiSoTo = async (khoa: string, v: string) => {
+    if (!banDo) return;
+    const soTo = v.trim() || undefined;
+    await luuDuAn({ ...p.duAn, banDo: khoa === "" ? { ...banDo, soTo } : { ...banDo, tepGhep: ds.map((t) => (t.id === khoa ? { ...t, soTo } : t)) } });
+  };
   const dong = (khoa: string, ten: string, ngay: string, an: boolean | undefined, laChinh: boolean) => {
     const t = tt(khoa);
     return (
@@ -297,6 +423,7 @@ export function HopTepGhep(p: { duAn: DuAn; dl: DuLieuBanDo | null; dong: () => 
         <td><b>{ten}</b>{laChinh && <span className="mo chu-nho"> (tệp chính)</span>}{t?.thamChieu.length ? <div className="mo chu-nho">Nhắc tới: {t.thamChieu.join(", ")}</div> : null}</td>
         <td>{ngayVn(ngay)}</td>
         <td className="so">{an ? "tắt" : t ? t.soPhanTu.toLocaleString("vi-VN") : "—"}</td>
+        <td><OSoToTep giaTri={(laChinh ? banDo?.soTo : ds.find((x) => x.id === khoa)?.soTo) ?? ""} ten={ten} sua={sua} luu={(v) => void doiSoTo(khoa, v)} /></td>
         <td>
           <span className="nhom-nut" style={{ gap: 4, flexWrap: "nowrap" }}>
             {t?.pham && <button className="nut nut-chu nut-nho" aria-label={`Phóng tới tờ ${ten}`} onClick={() => { p.phongToi(t.pham!); p.dong(); }}>Phóng tới</button>}
@@ -308,7 +435,7 @@ export function HopTepGhep(p: { duAn: DuAn; dl: DuLieuBanDo | null; dong: () => 
     );
   };
   return (
-    <HopThoai tieuDe="Tờ bản đồ của dự án" dong={p.dong} rong={760} chan={<button className="nut" onClick={p.dong}>Đóng</button>}>
+    <HopThoai tieuDe="Tờ bản đồ của dự án" dong={p.dong} rong={860} chan={<button className="nut" onClick={p.dong}>Đóng</button>}>
       <p className="mt-0 chu-nho">Một dự án có nhiều tờ bản đồ địa chính / mảnh trích đo (cùng hệ VN-2000): thêm từng tệp DGN làm một tờ, đánh dấu chọn các tờ cần dùng — thửa, ranh, nhãn của các tờ đang chọn dựng chung theo cấu hình lớp đã chốt. Tham chiếu ngoài (reference) trong tệp không dựng được; phần mềm dò tên tệp được tham chiếu để cán bộ nạp chính các tệp đó.</p>
       {thieu.length > 0 && (
         <div className="thong-bao thong-bao-vang" role="status" style={{ marginBottom: 8 }}>
@@ -316,14 +443,14 @@ export function HopTepGhep(p: { duAn: DuAn; dl: DuLieuBanDo | null; dong: () => 
         </div>
       )}
       <table className="bang" aria-label="Danh sách tờ bản đồ">
-        <thead><tr><th>Dùng</th><th>Tệp</th><th>Ngày nạp</th><th className="so">Phần tử</th><th /></tr></thead>
+        <thead><tr><th>Dùng</th><th>Tệp</th><th>Ngày nạp</th><th className="so">Phần tử</th><th title="Dùng cho thửa bản đồ không ghi số tờ">Số tờ (nhập tay)</th><th /></tr></thead>
         <tbody>
           {banDo && dong("", banDo.tenTep, banDo.ngayNhap, banDo.anTepChinh, true)}
           {ds.map((t) => dong(t.id, t.tenTep, t.ngayNhap, t.an, false))}
         </tbody>
       </table>
       <div className="nhom-nut mt-8">
-        <label className="nut nut-nho" aria-disabled={!sua || dang}>{dang ? "Đang nạp…" : "Thêm tờ bản đồ (DGN)…"}<input type="file" aria-label="Tệp DGN ghép thêm" accept=".dgn,.DGN" multiple className="an" disabled={!sua || dang} onChange={(e) => { if (e.target.files?.length) void them(e.target.files); e.target.value = ""; }} /></label>
+        <label className="nut nut-nho" aria-disabled={!sua || dang}>{dang ? "Đang nạp…" : "Thêm tờ bản đồ (DGN, DXF)…"}<input type="file" aria-label="Tệp DGN ghép thêm" accept=".dgn,.dxf,.dwg" multiple className="an" disabled={!sua || dang} onChange={(e) => { if (e.target.files?.length) void them(e.target.files); e.target.value = ""; }} /></label>
         {ds.length > 0 && sua && <button className="nut nut-nho" onClick={() => void tatCa(true)}>Dùng tất cả các tờ</button>}
       </div>
       {!p.dl && <p className="mo chu-nho" role="status">Đang dựng lại bản đồ từ các tờ đã chọn…</p>}

@@ -172,10 +172,15 @@ export function boSungQd(p: PhienBanPA, qd: { so: string; ngay: string; coQuan: 
   return { ...p, pheDuyet: { ...c, so: c.so || qd.so.trim(), ngay: c.ngay || qd.ngay, coQuan: c.coQuan || qd.coQuan.trim() } };
 }
 
-/** Đợt phê duyệt thứ mấy: số đã ghi khi phê duyệt; bản cũ thì theo thứ tự ghi nhận phê duyệt trong dự án. */
+/**
+ * Đợt phê duyệt thứ mấy: số đã ghi khi phê duyệt; chưa ghi thì theo thứ tự ghi nhận phê duyệt — từ 0.9.27 đếm riêng trong
+ * từng đợt thu hồi (P3-1: phương án chốt, phê duyệt theo đợt thu hồi); bản không thuộc đợt nào đếm chung với nhau.
+ */
 export function dotPheDuyet(ds: PhienBanPA[], p: PhienBanPA): number {
   if (p.pheDuyet?.dot) return p.pheDuyet.dot;
-  const da = ds.filter((x) => x.trangThai === "DA_PHE_DUYET" && x.pheDuyet).sort((a, b) => a.pheDuyet!.luc.localeCompare(b.pheDuyet!.luc));
+  const da = ds
+    .filter((x) => x.trangThai === "DA_PHE_DUYET" && x.pheDuyet && (x.dotId ?? "") === (p.dotId ?? ""))
+    .sort((a, b) => a.pheDuyet!.luc.localeCompare(b.pheDuyet!.luc));
   const i = da.findIndex((x) => x.id === p.id);
   return i >= 0 ? i + 1 : da.length + 1;
 }

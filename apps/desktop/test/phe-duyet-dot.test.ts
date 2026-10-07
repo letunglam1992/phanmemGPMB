@@ -28,5 +28,10 @@ describe("Phê duyệt theo đợt", () => {
     // bản thứ hai → đợt 2
     const c = await chotPhuongAn(cs, { ...duAn, phuongAn: [b] }, [ho[0]!], { ten: "B2", lyDo: "điều chỉnh", nguoi: "x" });
     expect(dotPheDuyet([b, c], c)).toBe(2);
+    // 0.9.27: đếm riêng trong từng đợt thu hồi
+    const e = { ...c, id: "e", dotId: "dot2" };
+    expect(dotPheDuyet([b, c, e], e)).toBe(1);
+    const f = { ...pheDuyet(e, { so: "", ngay: "", coQuan: "" }, "x"), pheDuyet: { so: "", ngay: "", coQuan: "", luc: "2026-10-03T00:00:00.000Z", nguoi: "x" } };
+    expect(dotPheDuyet([b, f, { ...c, id: "g", dotId: "dot2" }], { ...c, id: "g", dotId: "dot2" })).toBe(2);
   });
 });

@@ -471,7 +471,9 @@ export interface BanDoDuAn {
   /** Kết quả đo đã lưu (chiều dài, diện tích) — docs/08 §9.10. */
   ketQuaDo?: KetQuaDoLuu[];
   /** Tệp DGN ghép thêm (tờ khác, mảnh trích đo khác) — lưu ở kho bản đồ với khóa "{duAnId}#{id}" — docs/08 §9.9. */
-  tepGhep?: { id: string; tenTep: string; ngayNhap: string; /** tờ đang tắt (không dựng) */ an?: boolean }[];
+  tepGhep?: { id: string; tenTep: string; ngayNhap: string; /** tờ đang tắt (không dựng) */ an?: boolean; /** số tờ nhập tay (bản đồ không ghi) */ soTo?: string }[];
+  /** 0.9.27: số tờ bản đồ cán bộ nhập cho tệp chính — dùng cho thửa mà bản đồ không ghi số tờ. */
+  soTo?: string;
   /** Tắt tệp chính (chỉ dựng các tờ ghép đang bật). */
   anTepChinh?: boolean;
   /**
@@ -504,6 +506,8 @@ export interface GhiChuHienTruong {
   ngay: string;
   nguoi?: string;
   daXuLy?: boolean;
+  /** 0.9.27: ảnh hiện trường — mã tệp đính kèm (DinhKem; của hộ gắn với ghi chú, không gắn hộ thì tài liệu chung của dự án) */
+  anh?: string[];
 }
 export interface DiemDoHienTrang {
   id: string;

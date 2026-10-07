@@ -16,6 +16,7 @@ import { thuTinh } from "./bieu-thuc";
 import { TEN_LOAI_DAT } from "./van-ban/loai-dat";
 import { NHOM_PHAP_LY, THU_TU_PHAP_LY, nhomTuChu } from "./nguon-goc";
 import { khongDau } from "./tim-kiem";
+import { coDot, timDotTheoChu } from "./dot-thu-hoi";
 import { hoMoi, taoId, type DuAn, type Ho, type LoaiDoiTuong, type TaiSan, type Thua } from "./mo-hinh";
 
 export interface LoiNhap {
@@ -43,6 +44,7 @@ export const MAU: Record<string, CotMau[]> = {
     { khoa: "soDinhDanh", tieuDe: "Số định danh / CCCD", rong: 18 },
     { khoa: "dienThoai", tieuDe: "Điện thoại", rong: 14 },
     { khoa: "khauTru", tieuDe: "Khấu trừ nghĩa vụ tài chính (đồng)", rong: 18 },
+    { khoa: "dotThuHoi", tieuDe: "Đợt thu hồi", rong: 12, ghiChu: "Tên hoặc số thứ tự đợt đã khai ở Thông tin dự án (vd. Đợt 1). Bỏ trống = chưa xếp đợt" },
   ],
   NhanKhau: [
     { khoa: "maHo", tieuDe: "Mã hộ", batBuoc: true, rong: 10 },
@@ -186,6 +188,7 @@ export const TRUONG: Record<LoaiTrang, TruongNhap[]> = {
     { khoa: "soDinhDanh", tieuDe: "Số định danh / CCCD", dongNghia: ["so dinh danh", "dinh danh", "cccd", "so cccd", "can cuoc", "can cuoc cong dan", "cmnd", "so cmnd", "cmnd cccd"] },
     { khoa: "dienThoai", tieuDe: "Điện thoại", dongNghia: ["dien thoai", "so dien thoai", "sdt", "dt lien he"] },
     { khoa: "khauTru", tieuDe: "Khấu trừ nghĩa vụ tài chính (đồng)", dongNghia: ["khau tru", "khau tru nghia vu tai chinh", "nghia vu tai chinh", "tien khau tru"] },
+    { khoa: "dotThuHoi", tieuDe: "Đợt thu hồi", ghiChu: "Tên hoặc số thứ tự đợt đã khai ở Thông tin dự án", dongNghia: ["dot thu hoi", "dot", "thuoc dot", "dot gpmb", "dot giai phong mat bang"] },
   ],
   NhanKhau: [
     { khoa: "maHo", tieuDe: "Mã hộ", batBuoc: true, dongNghia: ["ma ho", "ma so ho", "ma ho so"] },
@@ -205,6 +208,7 @@ export const TRUONG: Record<LoaiTrang, TruongNhap[]> = {
     { khoa: "phapLy", tieuDe: "Tình trạng pháp lý", dongNghia: ["phap ly", "tinh trang phap ly", "tinh trang phap ly nguon goc", "phap ly nguon goc"] },
     { khoa: "nguonGoc", tieuDe: "Nguồn gốc sử dụng đất", dongNghia: ["nguon goc", "nguon goc su dung dat", "nguon goc dat"] },
     { khoa: "ghiChu", tieuDe: "Ghi chú", dongNghia: ["ghi chu"] },
+    { khoa: "dotThuHoi", tieuDe: "Đợt thu hồi", ghiChu: "Dùng cho hồ sơ tạo mới theo tên chủ (tệp không có trang hộ)", dongNghia: ["dot thu hoi", "thuoc dot", "dot gpmb"] },
   ],
   KiemDem: [
     { khoa: "maHo", tieuDe: "Mã hộ", ghiChu: "Không có cột → tìm hồ sơ theo tờ, thửa", dongNghia: ["ma ho", "ma so ho", "ma ho so"] },
@@ -439,6 +443,14 @@ export function kiemTraNhap(tep: TepExcel, ax: AnhXa, duAn: DuAn, hienCoTatCa: H
     return m;
   };
   const loaiTheoTen = (ten: string): LoaiDoiTuong => (LA_TO_CHUC.test(chuanTen(ten)) ? "TO_CHUC" : "HO_GIA_DINH");
+  /** P3-1: cột "Đợt thu hồi" — chỉ xếp hồ sơ tạo mới; không khớp đợt nào → để chưa xếp đợt, cảnh báo. */
+  const xepDot = (l: LoaiTrang, dong: number, h: Ho, v: ExcelJS.CellValue) => {
+    const chu = chuO(v);
+    if (!chu || !co(l, "dotThuHoi")) return;
+    const d = timDotTheoChu(duAn, chu);
+    if (d) h.dotId = d.id;
+    else bao(l, dong, "dotThuHoi", coDot(duAn) ? `Không có đợt "${chu}" trong dự án — hồ sơ để chưa xếp đợt` : `Dự án chưa khai đợt thu hồi — bỏ qua "${chu}"`, "CANH_BAO");
+  };
   const khoaChu = (ten: string, diaChi: string) => `${chuanTen(ten)}|${chuanTen(diaChi)}`;
   const theoChu = new Map<string, Ho>();
   let soMaTuDong = 0;
@@ -468,6 +480,7 @@ export function kiemTraNhap(tep: TepExcel, ax: AnhXa, duAn: DuAn, hienCoTatCa: H
     h.dienThoai = chuO(o.dienThoai);
     h.khauTru = kt.so ?? "0";
     h.nhatKy = [nhatKy];
+    xepDot("Ho", dong, h, o.dotThuHoi);
     if (h.soDinhDanh) {
       const trung = dinhDanh.get(h.soDinhDanh);
       if (trung) bao("Ho", dong, "soDinhDanh", `Số định danh trùng với hộ ${trung} — kiểm tra có nhập trùng người`, "CANH_BAO");
@@ -553,7 +566,10 @@ export function kiemTraNhap(tep: TepExcel, ax: AnhXa, duAn: DuAn, hienCoTatCa: H
         bao("Thua", dong, "tenChu", `Không ghi chủ sử dụng — lấy theo dòng ${chuTruoc.dong} (${ten}); kiểm tra`, "CANH_BAO");
       }
       if (!ten) bao("Thua", dong, "tenChu", "Thiếu mã hộ và tên chủ sử dụng");
-      else h = hoTheoChu(dong, ten, diaChi);
+      else {
+        h = hoTheoChu(dong, ten, diaChi);
+        if (!h.dotId && moi.get(h.ma.toLowerCase()) === h) xepDot("Thua", dong, h, o.dotThuHoi);
+      }
       if (ten && chuO(o.tenChu)) chuTruoc = { ten, diaChi, dong };
     }
     let loaiDat = chuO(o.loaiDat).toUpperCase();

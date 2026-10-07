@@ -111,7 +111,7 @@ test("Bản đồ: nạp tệp thứ hai vẫn hiển thị; xóa bản đồ", 
   p.on("dialog", (d) => void d.accept());
   await p.keyboard.press("Alt+3");
   await p.locator('[role=tablist] button', { hasText: "Bản đồ" }).click();
-  const tep = p.locator('input[type=file][accept=".dgn,.DGN"]');
+  const tep = p.locator('input[type=file][accept=".dgn,.dxf,.dwg"]');
   const doVe = () => p.evaluate(() => {
     const c = document.querySelector(".ban-do-khung canvas") as HTMLCanvasElement | null;
     if (!c) return -1;
@@ -122,8 +122,10 @@ test("Bản đồ: nạp tệp thứ hai vẫn hiển thị; xóa bản đồ", 
   });
   await tep.setInputFiles({ name: "a.dgn", mimeType: "application/octet-stream", buffer: tao(500000, 2350000, 3) });
   await expect(p.getByText("a.dgn ·")).toBeVisible();
+  await p.getByRole("button", { name: "Để sau" }).click();
   await tep.setInputFiles({ name: "b.dgn", mimeType: "application/octet-stream", buffer: tao(530000, 2410000, 5) });
   await expect(p.getByText("b.dgn ·")).toBeVisible();
+  await p.getByRole("button", { name: "Để sau" }).click();
   await expect.poll(doVe).toBeGreaterThan(3000);
   await p.getByRole("button", { name: "Xóa bản đồ" }).click();
   await expect(p.getByText("Chưa nạp bản đồ ·")).toBeVisible();

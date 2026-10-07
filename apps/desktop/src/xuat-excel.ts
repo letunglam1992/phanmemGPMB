@@ -832,6 +832,13 @@ export async function taoWorkbookBaoCao(bc: BaoCao, coQuan: string, dsKy: KyBaoC
       const [soHo, dt, tamTinh, soHoDuyet, daDuyet, daChi, conPhaiChi, hoanThanh, tyLe, vuongMac] = soLieu(d);
       row.values = [++tt, d.duAn.ten, TEN_TINH_TRANG[d.tinhTrang], soHo, dt, tamTinh, soHoDuyet, daDuyet, daChi, conPhaiChi, hoanThanh, tyLe, vuongMac, d.changHienTai, d.canhBaoCao];
       dinhDang(row);
+      // P3-1: dòng từng đợt thu hồi (không cộng thêm vào tổng — đã nằm trong dòng dự án)
+      for (const x of d.theoDot ?? []) {
+        const rd = ws.getRow(r++);
+        rd.values = ["", `   – ${x.ten}`, "", ...soLieu(x), x.changHienTai, x.canhBaoCao];
+        dinhDang(rd);
+        rd.font = { name: FONT, italic: true };
+      }
     }
     if (bc.theoXa.length > 1) {
       const rc = ws.getRow(r++);

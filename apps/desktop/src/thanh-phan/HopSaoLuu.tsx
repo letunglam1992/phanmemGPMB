@@ -50,7 +50,7 @@ export function HopSaoLuu() {
       await ghiNhatKy(khongMaHoa ? "Xuất bản sao lưu KHÔNG MÃ HÓA" : "Tạo bản sao lưu (mã hóa)", `${tt.soDuAn} dự án, ${tt.soHo} hồ sơ, ${tt.soBanDo} bản đồ, ${tt.soMau} mẫu`);
       setMk("");
       setMk2("");
-      setThongBao({ loai: "ok", noiDung: `Đã tạo bản sao lưu: ${tt.soDuAn} dự án, ${tt.soHo} hồ sơ, ${tt.soBanDo} bản đồ, ${tt.soMau} mẫu tự chỉnh. Hãy cất tệp .gpmb ra thiết bị khác (USB, ổ mạng nội bộ).` });
+      setThongBao({ loai: "ok", noiDung: `Đã tạo bản sao lưu: ${tt.soDuAn} dự án, ${tt.soHo} hồ sơ, ${tt.soBanDo} bản đồ, ${tt.soMau} mẫu tự chỉnh${tt.soLichSu ? `, ${tt.soLichSu} bản lịch sử thay đổi` : ""}. Hãy cất tệp .gpmb ra thiết bị khác (USB, ổ mạng nội bộ).` });
     } catch (e) {
       setThongBao({ loai: "loi", noiDung: `Không tạo được bản sao lưu: ${(e as Error).message}` });
     } finally {
@@ -168,7 +168,7 @@ export function HopSaoLuu() {
               <tbody>
                 <tr><th>Tệp</th><td>{ban.ten}</td></tr>
                 <tr><th>Thời điểm sao lưu</th><td>{ngayGio(ban.ban.thongTin.luc)}</td></tr>
-                <tr><th>Nội dung</th><td>{ban.ban.thongTin.soDuAn} dự án, {ban.ban.thongTin.soHo} hồ sơ, {ban.ban.thongTin.soBanDo} bản đồ, {ban.ban.thongTin.soMau} mẫu tự chỉnh</td></tr>
+                <tr><th>Nội dung</th><td>{ban.ban.thongTin.soDuAn} dự án, {ban.ban.thongTin.soHo} hồ sơ, {ban.ban.thongTin.soBanDo} bản đồ, {ban.ban.thongTin.soMau} mẫu tự chỉnh{ban.ban.thongTin.soLichSu ? `, ${ban.ban.thongTin.soLichSu} bản lịch sử thay đổi` : ""}</td></tr>
                 <tr><th>Kiểm tra toàn vẹn</th><td><span className="nhan nhan-xanh">Khớp mã SHA-256</span><span className="mo chu-nho"> · {ban.maHoa ? "tệp đã mã hóa" : "tệp KHÔNG mã hóa — sau khi khôi phục nên xóa tệp này và sao lưu lại bản mã hóa"}</span></td></tr>
                 <tr><th>Dự án trong tệp</th><td>{ban.ban.duAn.map((d) => d.ten).join("; ") || "—"}</td></tr>
               </tbody>

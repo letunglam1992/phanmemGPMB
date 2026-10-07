@@ -1,11 +1,13 @@
 import { Fragment, useEffect, useState } from "react";
 import { useUngDung } from "../ung-dung";
 import type { BanLichSu } from "../kho";
-import type { Ho } from "../mo-hinh";
+import type { DuAn, Ho } from "../mo-hinh";
 import { khacBiet, thuocO } from "../lich-su";
 import { HopThoai } from "./chung";
 
 const TEN_PHAN: Record<string, string> = { td: "Tiến độ · ", ct: "Chi trả · " };
+/** Phần được khôi phục theo loại bản lịch sử (máy chủ: hồ sơ gồm bản ghi chính, tiến độ, chi trả — khôi phục riêng từng phần). */
+const PHAN_KHOI_PHUC: Record<string, string> = { ho: "hồ sơ", td: "tiến độ", ct: "chi trả" };
 
 /**
  * Cặp (bản cũ, bản sau) để so sánh. Máy chủ lưu tiến độ ("td"), chi trả ("ct") là bản ghi con riêng (P2-7): so trong phần
@@ -42,7 +44,8 @@ export function LichSuHo({ h }: { h: Ho }) {
     };
   }, [kho, h]);
   const khoiPhuc = async (x: BanLichSu) => {
-    const lyDo = prompt(`Khôi phục hồ sơ ${h.ma} về bản lưu lúc ${gio(x.suaLuc ?? x.luuLuc)}?\nBản hiện tại được giữ trong lịch sử.\n\nLý do khôi phục (bắt buộc):`)?.trim();
+    const phan = PHAN_KHOI_PHUC[x.loai] ?? "hồ sơ";
+    const lyDo = prompt(`Khôi phục ${phan} của hồ sơ ${h.ma} về bản lưu lúc ${gio(x.suaLuc ?? x.luuLuc)}?\nBản hiện tại được giữ trong lịch sử.\n\nLý do khôi phục (bắt buộc):`)?.trim();
     if (lyDo) await khoiPhucLichSu(x.stt, lyDo);
   };
   return (
@@ -75,13 +78,81 @@ export function LichSuHo({ h }: { h: Ho }) {
                         </>
                       )}
                     </td>
-                    <td className="khong-xuong-dong">{quyen("KHOI_PHUC_BAN_GHI") && x.loai === "ho" && <button className="nut nut-nho" title="Chỉ quản trị" onClick={() => void khoiPhuc(x)}>Khôi phục bản này</button>}</td>
+                    <td className="khong-xuong-dong">{quyen("KHOI_PHUC_BAN_GHI") && x.loai in PHAN_KHOI_PHUC && <button className="nut nut-nho" title={`Chỉ quản trị — khôi phục ${PHAN_KHOI_PHUC[x.loai]}`} onClick={() => void khoiPhuc(x)}>Khôi phục bản này</button>}</td>
                   </tr>
                 </Fragment>
               );
             })}
           </tbody>
         </table>
+      )}
+    </div>
+  );
+}
+
+/**
+ * 0.9.27: lịch sử thay đổi thông tin dự án (Thông tin dự án, mở khi cần). Quản trị khôi phục được về một bản cũ; phương án
+ * (bản đã chốt, phê duyệt) và dấu thùng rác hiện tại được giữ nguyên.
+ */
+export function LichSuDuAn({ duAn }: { duAn: DuAn }) {
+  const { kho, quyen, khoiPhucLichSu, giuLichSu } = useUngDung();
+  const [mo, setMo] = useState(false);
+  const [ds, setDs] = useState<BanLichSu[] | null>(null);
+  const [loi, setLoi] = useState("");
+  const [xem, setXem] = useState<number | null>(null);
+  useEffect(() => {
+    if (!mo) return;
+    let huy = false;
+    kho.lichSu("duAn", duAn.id).then(
+      (r) => !huy && setDs(r.ds),
+      (e) => !huy && setLoi(String((e as Error).message ?? e)),
+    );
+    return () => {
+      huy = true;
+    };
+  }, [kho, duAn, mo]);
+  const bo = (d: unknown) => (({ phuongAn: _p, ...r }) => r)((d ?? {}) as Record<string, unknown>) as unknown as Ho;
+  const khoiPhuc = async (x: BanLichSu) => {
+    const lyDo = prompt(`Khôi phục thông tin dự án "${duAn.ten}" về bản lưu lúc ${gio(x.suaLuc ?? x.luuLuc)}?\nPhương án đã chốt, phê duyệt giữ nguyên; bản hiện tại được giữ trong lịch sử.\n\nLý do khôi phục (bắt buộc):`)?.trim();
+    if (lyDo) await khoiPhucLichSu(x.stt, lyDo);
+  };
+  return (
+    <div className="the" style={{ gridColumn: "1 / -1" }}>
+      <div className="the-dau">
+        <h3>Lịch sử thay đổi thông tin dự án</h3>
+        <span className="mo chu-nho">giữ {giuLichSu ? `${giuLichSu} năm` : "không thời hạn"}</span>
+        <button className="nut nut-nho" style={{ marginLeft: "auto" }} onClick={() => setMo(!mo)}>{mo ? "Thu gọn" : "Xem lịch sử"}</button>
+      </div>
+      {mo && (
+        <div className="the-than">
+          {loi && <div className="thong-bao thong-bao-do">{loi}</div>}
+          {ds === null ? <div className="trong">Đang tải…</div> : ds.length === 0 ? <div className="trong">Chưa có bản cũ.</div> : (
+            <table className="bang">
+              <thead><tr><th>Bản cũ</th><th>Bị thay lúc</th><th>Thay đổi sang bản sau</th><th /></tr></thead>
+              <tbody>
+                {ds.map((x, i) => {
+                  const sau = i ? ds[i - 1]!.duLieu : duAn;
+                  const kb = khacBiet(bo(x.duLieu), bo(sau));
+                  return (
+                    <tr key={x.stt}>
+                      <td className="chu-nho">{x.phienBan ? `Phiên bản ${x.phienBan}` : "Bản cũ"}{x.suaBoi && <div className="mo">lưu {gio(x.suaLuc)} · {x.suaBoi}</div>}</td>
+                      <td className="chu-nho">{gio(x.luuLuc)}<div className="mo">{x.luuBoi || "—"} · {x.lyDo || "Sửa"}</div></td>
+                      <td className="chu-nho">
+                        {kb.length === 0 ? <span className="mo">Không khác (chỉ phương án)</span> : (
+                          <>
+                            {kb.slice(0, xem === x.stt ? 300 : 3).map((k, j) => <div key={j}><b>{k.truong}</b>: {k.tu} → {k.thanh}</div>)}
+                            {kb.length > 3 && <button className="nut nut-chu nut-nho" onClick={() => setXem(xem === x.stt ? null : x.stt)}>{xem === x.stt ? "Thu gọn" : `Xem cả ${kb.length} thay đổi`}</button>}
+                          </>
+                        )}
+                      </td>
+                      <td className="khong-xuong-dong">{quyen("KHOI_PHUC_BAN_GHI") && x.lyDo !== "Xóa hẳn" && <button className="nut nut-nho" title="Chỉ quản trị" onClick={() => void khoiPhuc(x)}>Khôi phục bản này</button>}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
       )}
     </div>
   );

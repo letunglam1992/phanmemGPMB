@@ -23,6 +23,21 @@ export const timDot = (duAn: Pick<DuAn, "dotThuHoi">, id: string | undefined) =>
 export const dotCuaHo = (duAn: Pick<DuAn, "dotThuHoi">, h: Pick<Ho, "dotId">) => timDot(duAn, h.dotId);
 export const tenDot = (d: DotThuHoi | undefined) => (d ? (d.ten.trim() || `Đợt ${d.so}`) : "Chưa xếp đợt");
 
+/**
+ * Đợt theo chữ nhập (cột "Đợt thu hồi" khi nhập Excel): đúng tên đợt (không phân biệt hoa thường, dấu cách) hoặc số thứ
+ * tự ("2", "Đợt 2", "đợt số 2"). Không khớp → undefined (không tự tạo đợt).
+ */
+export function timDotTheoChu(duAn: Pick<DuAn, "dotThuHoi">, chu: string): DotThuHoi | undefined {
+  const bo = (x: string) => x.normalize("NFC").toLowerCase().replace(/\s+/g, " ").trim();
+  const c = bo(chu);
+  if (!c) return undefined;
+  const ds = duAn.dotThuHoi ?? [];
+  const theoTen = ds.find((d) => bo(d.ten) === c);
+  if (theoTen) return theoTen;
+  const m = /^(?:đợt|dot)?\s*(?:số|so)?\s*(\d+)$/.exec(c);
+  return m ? ds.find((d) => d.so === Number(m[1])) : undefined;
+}
+
 export function dotMoi(duAn: Pick<DuAn, "dotThuHoi">): DotThuHoi {
   const so = (duAn.dotThuHoi ?? []).reduce((m, d) => Math.max(m, d.so), 0) + 1;
   return { id: taoId(), so, ten: `Đợt ${so}` };
