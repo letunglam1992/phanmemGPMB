@@ -5,7 +5,7 @@
 import type { BoChinhSach, ViTriHanMuc } from "@gpmb/core";
 import { coTheDungRong, phanConLai, type DienTichThuHoi, type ThuaBanDo } from "@gpmb/gis";
 import type { DuAn, Ho, Thua } from "../../mo-hinh";
-import { soD } from "../../so";
+import { hienSo, soD } from "../../so";
 
 /** Làm tròn diện tích 0,1 m² (như số liệu trích đo) — dạng chuỗi số máy. */
 export const dt1 = (v: number) => (Math.round(v * 10) / 10).toFixed(1).replace(/\.0$/, "");
@@ -118,7 +118,7 @@ export function canhBaoConLai(cs: BoChinhSach, duAn: DuAn, dsThua: ThuaBanDo[], 
     let conLai = t ? soD(t.dienTich).minus(soD(t.dienTichThuHoi)).toNumber() : ml.length ? ml.reduce((s, m) => s + m.dienTich, 0) : th.dienTichHinhHoc - th.dienTichThuHoi;
     if (t?.hanhLang?.dienTich && soD(t.hanhLang.dienTich).gt(0)) {
       conLai -= soD(t.hanhLang.dienTich).toNumber();
-      ghiChu.push(`Đã trừ ${t.hanhLang.dienTich} m² hành lang bảo vệ an toàn (khoản 1 Điều 12 PL I QĐ 106/2025)`);
+      ghiChu.push(`Đã trừ ${hienSo(t.hanhLang.dienTich)} m² hành lang bảo vệ an toàn (khoản 1 Điều 12 PL I QĐ 106/2025)`);
     }
     if (ml.length > 1) ghiChu.push(`Ranh chia phần còn lại thành ${ml.length} mảnh (${ml.map((m) => dt1(m.dienTich)).join("; ")} m²) — mỗi mảnh xét như một thửa`);
     if (conLai <= 0.05) continue;

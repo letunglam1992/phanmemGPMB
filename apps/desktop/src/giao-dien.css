@@ -1208,3 +1208,9 @@ kbd.phim { display: inline-block; min-width: 20px; padding: 1px 6px; border: 1px
 /* 1.0.3: khung "Việc cần xử lý ngay" khi không có việc — trung tính (không tô đỏ) */
 .tq-panel.on { border-color: color-mix(in srgb, var(--chinh) 25%, transparent); background: color-mix(in srgb, var(--chinh) 5%, var(--be-mat)); }
 .tq-panel.on .tq-panel-dau { color: var(--chinh); }
+/* 1.0.3: tiêu đề thửa ở Kiểm đếm — xuống dòng các nút thêm thay vì bóp tên thửa */
+.the-dau-kd { flex-wrap: wrap; row-gap: 8px; }
+.the-dau-kd > h3 { flex: none; }
+.the-dau-kd > .phai { flex-wrap: wrap; justify-content: flex-end; }
+.o-tich-dong { display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; white-space: nowrap; }
+.o-tich-dong input[type="checkbox"] { width: auto; margin: 0; }

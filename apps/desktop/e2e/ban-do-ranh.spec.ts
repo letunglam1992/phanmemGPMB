@@ -62,9 +62,9 @@ test("ranh từ tọa độ mốc → DT thu hồi từng thửa; tạo hồ sơ
 
   // DT thu hồi từng thửa: 1 còn lại dải rộng 3 m (thu hồi 340 m²), 2 toàn bộ, 3 một nửa, 4 ngoài ranh
   const bang = p.locator(".the.gian table");
-  await expect(bang.locator("tr", { hasText: "7-1" })).toContainText("340.0");
-  await expect(bang.locator("tr", { hasText: "7-2" })).toContainText("400.0");
-  await expect(bang.locator("tr", { hasText: "7-3" })).toContainText("200.0");
+  await expect(bang.locator("tr", { hasText: "7-1" })).toContainText("340,0");
+  await expect(bang.locator("tr", { hasText: "7-2" })).toContainText("400,0");
+  await expect(bang.locator("tr", { hasText: "7-3" })).toContainText("200,0");
   await expect(bang.locator("tr", { hasText: "7-4" })).toHaveCount(0); // lọc "Trong ranh"
 
   // Phần còn lại (Điều 13 PL I QĐ 106/2025, đất ở tại xã): thửa 1 còn 60 m² nhưng chỉ rộng 3 m < 4 m → cảnh báo kích thước

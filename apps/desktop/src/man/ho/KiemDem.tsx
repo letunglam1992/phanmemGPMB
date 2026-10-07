@@ -1,3 +1,4 @@
+import { hienSo } from "../../so";
 import { useState } from "react";
 import { tenDayDu } from "../../van-ban/loai-dat";
 import type { LoaiDuong, LoaiVatNuoi } from "@gpmb/core";
@@ -109,9 +110,9 @@ function TheThua(p: {
   const { t, ds, sua } = p;
   return (
     <div className="the">
-      <div className="the-dau">
-        <h3>Thửa {t.soThua || "?"}, tờ {t.soTo || "?"}</h3>
-        <span className="mo chu-nho">{tenDayDu(t.loaiDat)} · DT thu hồi {t.dienTichThuHoi || "—"} m²</span>
+      <div className="the-dau the-dau-kd">
+        <h3 className="khong-xuong-dong">Thửa {t.soThua || "?"}, tờ {t.soTo || "?"}</h3>
+        <span className="mo chu-nho">{tenDayDu(t.loaiDat)} · DT thu hồi {t.dienTichThuHoi ? hienSo(t.dienTichThuHoi) : "—"} m²</span>
         {p.cs.hoTroKhac?.cayKhongDuDieuKien && (
           <Chon value={t.cayK7 ?? ""} aria-label={`Cây trồng thửa ${t.soThua} tờ ${t.soTo}`} title={`Khoản 7 Điều 6 QĐ 14/2026: ${p.cs.hoTroKhac.cayKhongDuDieuKien.dieuKien}`} style={{ maxWidth: 330 }} onChange={(e) => p.suaThua({ cayK7: (e.target.value || undefined) as "A" | "B" | undefined })}>
             <option value="">Cây trồng: bồi thường</option>
@@ -130,7 +131,7 @@ function TheThua(p: {
       <div className="bang-cuon">
         <table className="bang">
           <thead>
-            <tr><th style={{ width: 54 }}>TT</th><th style={{ width: 84 }}>Loại</th><th>Tài sản</th><th style={{ width: 70 }}>ĐVT</th><th style={{ width: 150 }}>Khối lượng / số lượng</th><th className="so" style={{ width: 120 }}>Đơn giá (đ)</th><th style={{ width: 380 }}>Tham số tính</th><th style={{ width: 50 }}>Đợt</th><th style={{ width: 30 }} /></tr>
+            <tr><th style={{ width: 54 }}>TT</th><th style={{ width: 84 }}>Loại</th><th style={{ minWidth: 220 }}>Tài sản</th><th style={{ width: 70 }}>ĐVT</th><th style={{ width: 150 }}>Khối lượng / số lượng</th><th className="so" style={{ width: 120 }}>Đơn giá (đ)</th><th style={{ width: 330 }}>Tham số tính</th><th style={{ width: 50 }}>Đợt</th><th style={{ width: 30 }} /></tr>
           </thead>
           <tbody>
             {ds.map((x, i) => {
@@ -149,10 +150,10 @@ function TheThua(p: {
                         {Object.entries(VAT_NUOI).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                       </Chon>
                     ) : (
-                      <input value={x.ten} onChange={(e) => sua(x.id, { ten: e.target.value })} />
+                      <input style={{ width: "100%" }} value={x.ten} onChange={(e) => sua(x.id, { ten: e.target.value })} />
                     )}
                     {"maDonGia" in x && <div className="can-cu">{x.maDonGia}</div>}
-                    <label className="chu-nho mo" title="Tài sản đã kiểm đếm nhưng không được bồi thường, hỗ trợ — vẫn ghi vào bảng tính (Biểu số 02) với thành tiền 0, kèm lý do và căn cứ">
+                    <label className="chu-nho mo o-tich-dong" title="Tài sản đã kiểm đếm nhưng không được bồi thường, hỗ trợ — vẫn ghi vào bảng tính (Biểu số 02) với thành tiền 0, kèm lý do và căn cứ">
                       <input type="checkbox" checked={!!x.khongBtHt} onChange={(e) => sua(x.id, { khongBtHt: e.target.checked ? { lyDo: "", canCu: "" } : undefined })} /> Không BT, HT
                     </label>
                     {x.khongBtHt && (

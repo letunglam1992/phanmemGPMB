@@ -3,6 +3,7 @@
  * khớp số tờ/số thửa) thì cán bộ bấm thửa trên bản đồ để gắn — cập nhật mã bản đồ, DT bản đồ (DT hồ sơ không tự đổi).
  */
 import { useEffect, useMemo, useState } from "react";
+import { hienSo } from "../../so";
 import type { ThuaBanDo } from "@gpmb/gis";
 import { useUngDung } from "../../ung-dung";
 import type { DuAn, Ho, Thua } from "../../mo-hinh";
@@ -39,7 +40,7 @@ export function HopXemThuaBanDo(p: { duAn: DuAn; h: Ho; thua: Thua; doi: (h: Ho)
   const sua = quyen("SUA_HO_SO");
   const ganThua = (tb: ThuaBanDo) => {
     const dt = Math.round(tb.dienTichHinhHoc * 100) / 100;
-    const ghi = `Gắn thửa bản đồ ${tb.soTo ?? "?"}/${tb.soThua ?? "?"} (DT hình học ${dt.toFixed(2)} m²)`;
+    const ghi = `Gắn thửa bản đồ ${tb.soTo ?? "?"}/${tb.soThua ?? "?"} (DT hình học ${hienSo(dt.toFixed(2))} m²)`;
     p.doi({
       ...p.h,
       thua: p.h.thua.map((t) => (t.id === p.thua.id ? { ...t, maBanDo: tb.ma, dienTichBanDo: dt, soTo: t.soTo || tb.soTo || "", soThua: t.soThua || tb.soThua || "" } : t)),

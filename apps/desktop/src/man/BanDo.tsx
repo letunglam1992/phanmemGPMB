@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { hienSo } from "../so";
 import { CAU_HINH_MAC_DINH, loaiHienTrangBanDo, goiYCauHinh, tinhDienTichThuHoi, type CauHinhLop, type DienTichThuHoi, type ThuaBanDo } from "@gpmb/gis";
 import { useUngDung } from "../ung-dung";
 import { type DuAn, type Ho } from "../mo-hinh";
@@ -441,7 +442,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
                           <td className="khong-xuong-dong" title={t.soToNhapTay ? "Số tờ nhập tay cho tệp (bản đồ không ghi)" : undefined}>{t.soTo ?? "?"}{t.soToNhapTay ? "*" : ""}-{t.soThua ?? "?"}{t.co.length > 0 && <span className="nhan nhan-vang" style={{ marginLeft: 4 }} title={t.co.map((c) => TEN_CO[c]).join(", ")}>!</span>}</td>
                           <td title={t.loaiDatBanDo ?? undefined}>{t.loaiDatBanDo ? tenDayDu(t.loaiDatBanDo) : "—"}</td>
                           <td className="so">{t.dienTichGhi ?? "—"}</td>
-                          <td className="so">{th ? (th.phamVi === "NGOAI" ? "—" : th.dienTichThuHoi.toFixed(1)) : ""}</td>
+                          <td className="so">{th ? (th.phamVi === "NGOAI" ? "—" : hienSo(th.dienTichThuHoi.toFixed(1))) : ""}</td>
                           <td className="chu-nho">{t.chuSuDung ?? "—"}</td>
                         </tr>
                       );

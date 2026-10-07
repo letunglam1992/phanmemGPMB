@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { hienSo } from "../../so";
 import { loaiHienTrangBanDo, tenLopPl21, LOP_RANH_THUA_PL21, type DienTichThuHoi, type ThuaBanDo } from "@gpmb/gis";
 import { type Ho } from "../../mo-hinh";
 import { TT_GPMB, type TrangThaiGpmb } from "../../trang-thai";
@@ -95,7 +96,7 @@ export function ChiTietThua({ t, th, ho, tt, moHo, tomTat, xoa, quayLai }: { t: 
       <div className="the-dau"><h3>Tờ {t.soTo ?? "?"}, thửa {t.soThua ?? "?"}</h3>{xoa && <div className="phai"><button className="nut nut-chu nut-nguy nut-nho" title="Bỏ thửa khỏi bản đồ của phần mềm (thửa dựng sai, trùng…) — tệp DGN giữ nguyên, khôi phục được" onClick={xoa}>Xóa thửa khỏi bản đồ</button></div>}</div>
       <div className="the-than chu-nho" style={{ display: "grid", gap: 4 }}>
         <div>Chủ sử dụng: <b>{t.chuSuDung ?? "—"}</b> · Loại (bản đồ): <b>{t.loaiDatBanDo ? tenDayDu(t.loaiDatBanDo) : "—"}</b></div>
-        <div>DT ghi: <b>{t.dienTichGhi ?? "—"}</b> m² · DT hình học: <b>{t.dienTichHinhHoc.toFixed(2)}</b> m²{th && th.phamVi !== "NGOAI" ? <> · Thu hồi: <b>{th.dienTichThuHoi.toFixed(2)}</b> m² ({th.phamVi === "TOAN_BO" ? "toàn bộ" : "một phần"})</> : null}</div>
+        <div>DT ghi: <b>{t.dienTichGhi === null ? "—" : hienSo(String(t.dienTichGhi))}</b> m² · DT hình học: <b>{hienSo(t.dienTichHinhHoc.toFixed(2))}</b> m²{th && th.phamVi !== "NGOAI" ? <> · Thu hồi: <b>{hienSo(th.dienTichThuHoi.toFixed(2))}</b> m² ({th.phamVi === "TOAN_BO" ? "toàn bộ" : "một phần"})</> : null}</div>
         {t.co.length > 0 && <div className="nhom-nut">{t.co.map((c) => <span key={c} className="nhan nhan-vang">{TEN_CO[c]}</span>)}</div>}
         {t.hienTrangBanDo && (
           <div>
