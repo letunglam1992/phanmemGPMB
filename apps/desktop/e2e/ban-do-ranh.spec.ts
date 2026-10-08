@@ -70,7 +70,7 @@ test("ranh từ tọa độ mốc → DT thu hồi từng thửa; tạo hồ sơ
   // Phần còn lại (Điều 13 PL I QĐ 106/2025, đất ở tại xã): thửa 1 còn 60 m² nhưng chỉ rộng 3 m < 4 m → cảnh báo kích thước
   const cl = p.getByLabel("Phần đất còn lại");
   await expect(cl.locator(".thong-bao-vang")).toHaveCount(1);
-  await expect(cl).toContainText("không bảo đảm kích thước tối thiểu (điểm b khoản 2 Điều 13 Phụ lục I QĐ 106/2025/QĐ-UBND)");
+  await expect(cl).toContainText("không bảo đảm kích thước tối thiểu (điểm b khoản 2 Điều 13 Phụ lục I QĐ 106/2025/QĐ-UBND (sửa đổi bởi QĐ 64/2026/QĐ-UBND))");
   await expect(cl).toContainText("Không dựng được hình chữ nhật có cạnh chiều rộng 4 m");
 
   // Tạo hồ sơ cho 3 thửa trong ranh, rồi thu hẹp ranh (vẽ) → cập nhật DT vào hồ sơ

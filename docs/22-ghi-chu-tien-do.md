@@ -24,12 +24,15 @@ Tài liệu nên đọc trước:
 | 0.9.23 | Trợ lý AI nổi: nút robot góc dưới phải mở khung chat; thanh bên "Trợ lý AI (hỏi đáp)" |
 | 0.9.25 | Cảnh báo xã lâu chưa gửi (ngưỡng do tỉnh đặt); xã tự gửi định kỳ lên cổng (chu kỳ do xã đặt); tỉnh xem lại các bản gửi trước (≤ 20 bản/đơn vị); báo cáo Word tổng hợp toàn tỉnh |
 | 0.9.26 | Tỉnh tự nhận gói mới từ cổng mỗi 30 phút khi khóa đang mở, chuông báo gói chờ nhận; phụ lục Excel kèm báo cáo Word tỉnh; thời gian không tính vào thời hạn (bước có thời hạn, bắt buộc lý do, tạm dừng); trường hợp Điều 14/17 PL I QĐ 106 do người dùng chọn + căn cứ; ghi chú bản đồ trong hồ sơ hộ; thùng rác tệp đính kèm, tài liệu; Luật Đất đai hợp nhất (VBHN 44/VBHN-VPQH) trong Trợ lý AI |
+| 1.0.5 (chưa phát hành) | **QĐ 64/2026/QĐ-UBND**: bộ chính sách `sonla-2026-10-06` (hệ số chuyển đổi nghề theo tổ, thôn của thửa; ngoại lệ k4 Đ111 cho 20% tiền SDĐ; chuyển tiếp); tuyến liên xã qua cổng (`/api/tuyen` — **cần dán lại Worker**); dải Km, chọn thửa theo đoạn trên bản đồ; báo cáo theo đoạn 1 km (màn Báo cáo, Excel, Word); mẫu T8, T9 bố trí TĐC (Điều 111) |
 | 1.0.4 | **Dự án liên xã** (mã dùng chung do tỉnh cấp, tỉnh khai xã dọc tuyến, gom đoạn, xã chưa có số liệu, gợi ý/ghép tay, Phụ lục 03, đếm dự án theo mã); **lý trình theo thửa** (không bắt buộc; ô ở bảng thửa, cột Excel, "Ghi lý trình…" nhiều hộ; thẻ Mặt bằng theo lý trình + Excel); lịch ngày nghỉ **đề xuất** theo k1 Đ112 BLLĐ (đổi âm lịch); thẻ **Bắt đầu sử dụng**; bảng tính + giải trình hộ ra **Word / In PDF**; Ctrl+K tìm tờ/thửa đúng số, số định danh, lý trình; soát phương án tóm tắt điều kiện chốt, **đi tới đúng ô** — xem docs/09 |
 | 1.0.3 | Excel tổng hợp toàn tỉnh theo thể thức biểu báo cáo; rà soát giao diện (ô chọn tệp tiếng Việt, số kiểu Việt, Kiểm đếm, khung giải trình thu gọn, nút sang Phương án từ Chi trả, dòng đợt trong báo cáo Word) — xem docs/09 |
 | 1.0.2 | Nút **"Tệp đã xuất"** (⤓) trên thanh tiêu đề như nút tải về của trình duyệt: xuất Excel, Word… xong tự mở danh sách vài giây; bấm tên tệp mở bằng Excel/Word, "Thư mục" mở Explorer chọn sẵn tệp; giữ 30 tệp gần nhất (theo máy); lệnh Rust `mo_tep_da_xuat`, `mo_noi_luu_tep` chỉ mở loại tệp phần mềm xuất (không mở .exe, .bat) |
 | 1.0.1 | **Sửa lỗi "Command plugin:dialog|confirm not allowed by ACL"**: bỏ `tauri-plugin-dialog` (bản 2.8.0 chèn script thay `window.confirm` bằng lệnh không còn trong plugin → `confirm()` trả Promise, **mọi hộp hỏi xác nhận trên bản .exe bị bỏ qua — thao tác chạy luôn**); hộp "Lưu thành" gọi thẳng `rfd`; kiểm thử Rust chặn đưa plugin trở lại. Nội dung bản quyền mới ở Giới thiệu ("© 2026 Lê Tùng Lâm. All rights reserved." + câu bảo hộ quyền tác giả), thuộc tính tệp .exe |
 | 0.9.27 | Khôi phục tiến độ, chi trả, thông tin dự án về bản cũ; lịch sử thay đổi trong tệp sao lưu; hoàn tác bước chung 1–4 và tiến độ hộ; đợt thu hồi: cột "Đợt thu hồi" khi nhập Excel, báo cáo tách theo đợt, số đợt phê duyệt theo đợt; so sánh bản đồ đối chiếu hồ sơ + xuất Excel; ảnh cho ghi chú hiện trường; **bản đồ DXF** (DWG: báo cách đổi sang DXF); nạp bản đồ xong chọn **tự nhận diện / tự chọn lớp cho từng đối tượng** (bảng tích lớp, thêm lớp loại đất, diện tích); nhãn thửa nhiều nội dung ("CLN" · "13"/"1310,0" · tên chủ); **số tờ nhập tay** theo tệp |
 | 0.9.24 | **Sửa trắng màn hình khi mở Trợ lý AI và lỗi "e is not a function"**; màn tỉnh nhắc "Có n gói mới trên cổng (xã, thời gian) — mở khóa để nhận" |
+
+Kiểm thử ở 1.0.5 (chưa phát hành, tất cả đạt): typecheck; npm test 86 + 58 + 400; cargo test; eslint 3 cảnh báo cũ; Playwright 65/65 (thêm `e2e/qd64-2026.spec.ts`, ca lý trình trên bản đồ, ca tuyến qua cổng).
 
 Kiểm thử ở 1.0.4 (tất cả đạt): typecheck; npm test 78 + 58 + 391; cargo test; eslint 3 cảnh báo cũ; Playwright 63/63 (thêm `e2e/ly-trinh.spec.ts`, `e2e/de-xuat-1-0-4.spec.ts`, ca liên xã trong `tong-hop-tinh.spec.ts`).
 
@@ -125,6 +128,13 @@ Gặp lỗi: bấm **"Chép chi tiết lỗi"** (nếu có), hoặc chụp màn 
 - [ ] Thẻ Tính toán → "Xuất Word (kèm giải trình)" mở được bằng Word; "In / PDF" → chọn "Microsoft Print to PDF" lưu được PDF (**chưa thử trong .exe**).
 - [ ] Ctrl+K gõ "5/85" → mở đúng thửa; Soát phương án → bấm dòng → mở đúng thẻ.
 
+### A5. Thử bản 1.0.5 trên máy thật (khi phát hành)
+
+- [ ] Dán lại mã Worker mới lên Cloudflare (`tools/cong-tinh/worker.js`); máy tỉnh lưu một dự án liên xã → nút "Đưa danh sách lên cổng ✓"; máy xã → Thông tin dự án → "Lấy danh sách dự án liên xã từ cổng tỉnh" → chọn mã.
+- [ ] Dự án ở phường (vd. Chiềng An): thửa đất NN chọn "Bản Cá" → chuyển đổi nghề 5 lần; "Bản Tông Hụm" → 4 lần; chưa chọn → "Cần xác nhận". Dự án cũ: Thông tin dự án thấy điều khoản chuyển tiếp QĐ 64.
+- [ ] Văn bản → T8 (dự kiến bố trí TĐC) với dự án đã khai Quỹ tái định cư: biểu lô, biểu hộ đúng.
+- [ ] Bản đồ → thẻ "Theo lý trình" → bấm đoạn vướng → thửa được tô, phóng tới. Báo cáo tổng hợp: dòng "↳ Đoạn Km…".
+
 ## 3. Quy trình mỗi lần sửa (để phiên mới làm đúng ngay)
 
 1. Sửa mã. Cập nhật `docs/09`, ghi chú này, `docs/13`/`docs/21` nếu đổi cách dùng.
@@ -177,6 +187,8 @@ Gặp lỗi: bấm **"Chép chi tiết lỗi"** (nếu có), hoặc chụp màn 
 | Lịch đề xuất, Bắt đầu sử dụng (1.0.4) | `src/am-lich.ts` (`amSangDuong`), `deXuatNgayNghi` (`lich-lam-viec.ts`), `TheLich` (`HopCaiDat.tsx`); `thanh-phan/BatDau.tsx` (`KHOA_THE_CAI_DAT` mở sẵn thẻ Cài đặt) |
 | Word / In bảng tính hộ (1.0.4) | `van-ban/tai-lieu-don-gian.ts` (`taoDocx`, `taoHtmlIn`, `inTaiLieu`), `van-ban/bang-tinh-ho.ts` (`taiLieuBangTinh`); nút ở `man/ho/TinhToan.tsx` |
 | Tìm tờ/thửa, soát đi tới ô (1.0.4) | `timHo`, `docToThua` (`tim-kiem.ts`); `Man.ho.thuaId` → `TabThua noiBat` (lớp `tr.noi-bat`); `KetQuaSoat.tab/thuaId`, `TAB_QUY_TAC` (`soat-phuong-an.ts`), `KetQuaSoatPA` (`PhuongAn.tsx`) |
+| QĐ 64/2026 (1.0.5) | `policy/goi/sonla-2026-10-06.json` (`chuyenDoiNghe.theoThon`, `chuyenTiep`, `hoTroTienSdd.ngoaiTruK4D111`); lõi `heSoChuyenDoiNghe`, `thonCoHeSo` (`packages/core/src/chinh-sach.ts`); `Thua.thonBan`, `TaiDinhCuHo.giaoDatK4D111`; `thanh-phan/OThonBan.tsx` (`OThonBan`, `HopGhiThonBan`); `GOI_MOI_NHAT`, `GOI_CO_SAN` (`goi-chinh-sach.ts`); nguyên văn `policy/nguon/qd64-2026-sua-qd106-qd14.md` |
+| Tuyến qua cổng, bản đồ Km, báo cáo đoạn, TĐC (1.0.5) | Worker `/api/tuyen`; `dsTuyenTrenCong`, `guiTuyenLenCong` (`cong-tinh.ts`); `DaiKm`, `TheLyTrinhBanDo` (`thanh-phan/LyTrinh.tsx`); `dongTheoDoan` (`bao-cao.ts`); `duLieuBoTriTdc` (`van-ban/thuc-te.ts`), mẫu T8, T9 |
 | Kiểm thử | `test/goi-tinh.test.ts`, `test/cong-tinh.test.ts`, `test/hoi-dap-*.test.ts`, `e2e/tong-hop-tinh.spec.ts`, `e2e/hoi-dap.spec.ts` |
 
 ## 5. Bí mật — không ghi vào kho, không hỏi lại
