@@ -12,7 +12,9 @@ import { nhomMaTrung } from "./ma-ho";
 import { hienSo, laSoMay } from "./so";
 import { soatQuyTdc } from "./quy-tdc";
 import { canhBaoHoTroTrung, type HoSoNguoi } from "./nguoi-co-dat";
-import { TEN_CAP, doiChieuDienTich, type NguongLechDt } from "./doi-chieu-dt";
+import { TEN_CAP, doiChieuDienTich, doiChieuTongDt, type NguongLechDt } from "./doi-chieu-dt";
+import { trangThaiDoiThoai } from "./doi-thoai";
+import { LICH_TRONG, type LichLamViec } from "./lich-lam-viec";
 
 export type MucSoat = "LOI" | "CANH_BAO" | "THONG_TIN";
 export const TEN_MUC_SOAT: Record<MucSoat, string> = { LOI: "Lỗi", CANH_BAO: "Cần kiểm tra", THONG_TIN: "Lưu ý" };
@@ -44,18 +46,21 @@ export const QUY_TAC_SOAT: { ma: string; ten: string; canCu: string }[] = [
   { ma: "TAM_CU_NK", ten: "Có hỗ trợ tạm cư mà hồ sơ chưa có nhân khẩu", canCu: "khoản 3, khoản 4 Điều 3 QĐ 14/2026" },
   { ma: "PHAP_LY", ten: "Thửa thu hồi chưa phân loại pháp lý nguồn gốc", canCu: "Điều 95 Luật Đất đai 2024 (cán bộ xác định điều kiện)" },
   { ma: "DT_LECH", ten: "Diện tích lệch giữa bản đồ, hồ sơ, phương án, GCN vượt ngưỡng đơn vị đặt (§11.3)", canCu: "Ngưỡng do đơn vị đặt (Cài đặt chung → Ngưỡng lệch diện tích)" },
+  { ma: "DT_TONG_VB", ten: "Tổng DT thu hồi trong hồ sơ lệch DT thu hồi theo văn bản (dự án, đợt) vượt ngưỡng đơn vị đặt", canCu: "Văn bản cán bộ nhập (Tổng quan dự án → Đối chiếu diện tích → DT thu hồi theo văn bản); ngưỡng do đơn vị đặt" },
   { ma: "TDC_LO", ten: "Tái định cư: hai hộ cùng một lô, hồ sơ khác lô đã giao trong quỹ, một hộ nhận nhiều lô (P3-3)", canCu: "Điều 111 Luật Đất đai 2024; quỹ tái định cư của dự án" },
   { ma: "HO_TRO_TRUNG", ten: "Cùng số định danh có hồ sơ khác (dự án này hoặc dự án khác) đã ghi khoản hỗ trợ cùng loại (P3-2)", canCu: "Điều 108, 109, 111 Luật Đất đai 2024 (cán bộ kiểm tra điều kiện)" },
+  { ma: "LUA_CHON_KHAC", ten: "Cùng một vướng mắc (VM-xx, điều khoản chưa rõ) mà các hộ trong dự án được chọn cách xử lý khác nhau", canCu: "QD-19 (docs/06): xử lý linh động, người dùng chọn kèm lý do — cùng trường hợp thì áp dụng thống nhất" },
+  { ma: "DOI_THOAI", ten: "Hộ không đồng ý phương án mà chưa tổ chức đối thoại (quá 60 ngày kể từ ngày lấy ý kiến là lỗi); đã đối thoại còn ý kiến", canCu: "điểm a khoản 3 Điều 87 Luật Đất đai 2024" },
   { ma: "NIEM_YET", ten: "Chưa ghi hoàn thành niêm yết công khai phương án", canCu: "điểm a khoản 3 Điều 87 Luật Đất đai 2024" },
 ];
 /** Thẻ hồ sơ chứa ô cần sửa theo từng quy tắc. */
-const TAB_QUY_TAC: Record<string, string> = { DT_VUOT: "thua", DT_TRONG: "thua", PHAP_LY: "thua", DT_LECH: "thua", KHOAN_CHUA_DU: "tinh", DAT_O_HET: "ho-tro", NN_ON_DINH: "ho-tro", TAM_CU_NK: "nhan-khau", TDC_LO: "ho-tro", HO_TRO_TRUNG: "ho-tro", NIEM_YET: "tien-do" };
+const TAB_QUY_TAC: Record<string, string> = { DT_VUOT: "thua", DT_TRONG: "thua", PHAP_LY: "thua", DT_LECH: "thua", KHOAN_CHUA_DU: "tinh", DAT_O_HET: "ho-tro", NN_ON_DINH: "ho-tro", TAM_CU_NK: "nhan-khau", TDC_LO: "ho-tro", HO_TRO_TRUNG: "ho-tro", NIEM_YET: "tien-do", DOI_THOAI: "tien-do" };
 const canCu = (ma: string) => QUY_TAC_SOAT.find((q) => q.ma === ma)!.canCu;
 
 const so = (v: string | undefined) => (v && laSoMay(v) ? D(v) : null);
 const khoaThua = (soTo: string, soThua: string) => `${soTo.trim().replace(/^0+(?=\d)/, "")}/${soThua.trim().replace(/^0+(?=\d)/, "")}`;
 
-export function soatPhuongAn(duAn: DuAn, kq: { h: Ho; k: KetQuaHo }[], nguong?: NguongLechDt | null, nguoiCoDat?: Map<string, HoSoNguoi[]>): KetQuaSoat[] {
+export function soatPhuongAn(duAn: DuAn, kq: { h: Ho; k: KetQuaHo }[], nguong?: NguongLechDt | null, nguoiCoDat?: Map<string, HoSoNguoi[]>, lich: LichLamViec = LICH_TRONG, homNay = new Date().toISOString().slice(0, 10)): KetQuaSoat[] {
   const out: KetQuaSoat[] = [];
   const bao = (quyTac: string, muc: MucSoat, h: Ho | null, noiDung: string, thuaId?: string) =>
     out.push({ quyTac, muc, hoId: h?.id, doiTuong: h ? `${h.ma} – ${h.ten}` : "Dự án", noiDung, canCu: canCu(quyTac), ...(h ? { tab: TAB_QUY_TAC[quyTac] } : {}), ...(thuaId ? { thuaId } : {}) });
@@ -110,6 +115,10 @@ export function soatPhuongAn(duAn: DuAn, kq: { h: Ho; k: KetQuaHo }[], nguong?: 
         bao("TAM_CU_NK", "CANH_BAO", h, "Hỗ trợ tạm cư tính theo nhân khẩu nhưng hồ sơ chưa có nhân khẩu (đang tạm tính 1 nhân khẩu) — nhập danh sách nhân khẩu");
     }
 
+    const dt = trangThaiDoiThoai(h.yKienPA, homNay, lich);
+    if (dt.tt === "CAN_DOI_THOAI" || dt.tt === "QUA_HAN")
+      bao("DOI_THOAI", dt.tt === "QUA_HAN" ? "LOI" : "CANH_BAO", h, `Không đồng ý phương án${h.yKienPA?.noiDung ? ` (${h.yKienPA.noiDung})` : ""}, chưa ghi đối thoại${dt.han ? ` — hạn ${dt.han.split("-").reverse().join("/")}${dt.tt === "QUA_HAN" ? " đã qua" : ""}` : " — chưa ghi ngày lấy ý kiến để tính hạn 60 ngày"}`);
+    else if (dt.tt === "CON_Y_KIEN") bao("DOI_THOAI", "THONG_TIN", h, "Đã đối thoại, còn ý kiến không đồng ý — tiếp thu, giải trình trong hồ sơ trình; sau phê duyệt vẫn không đồng ý thì vận động theo khoản 6 Điều 87");
     const td = tienDoHieuLuc(duAn, h);
     if (td["6"]?.trangThai !== "XONG") bao("NIEM_YET", "THONG_TIN", h, "Bước 6 \"Niêm yết công khai\" chưa ghi hoàn thành — phương án dự thảo phải được niêm yết, lấy ý kiến trước khi hoàn chỉnh trình thẩm định");
   }
@@ -120,6 +129,16 @@ export function soatPhuongAn(duAn: DuAn, kq: { h: Ho; k: KetQuaHo }[], nguong?: 
       const h = kq.find((y) => y.h.id === x.hoId)!.h;
       out.push({ quyTac: "DT_LECH", muc: "CANH_BAO", hoId: h.id, tab: "thua", ...(x.thuaId ? { thuaId: x.thuaId } : {}), doiTuong: `${h.ma} – ${h.ten}`, noiDung: `${x.thua}: ${TEN_CAP[x.cap][0]} ${hienSo(x.a)} m² ↔ ${TEN_CAP[x.cap][1]} ${hienSo(x.b)} m² (lệch ${hienSo(x.chenh)} m²${x.tyLe ? `, ${hienSo(x.tyLe)}%` : ""})`, canCu: `Ngưỡng do đơn vị đặt: ${nguong.canCu}` });
     }
+
+  // 1.0.6: lựa chọn linh động không thống nhất giữa các hộ (chỉ mã vướng mắc VM-xx, điều khoản Đ…; bỏ qua số liệu riêng của hộ)
+  for (const x of luaChonKhacNhau(kq))
+    bao("LUA_CHON_KHAC", "CANH_BAO", null, `${x.ma}: ${x.cach.map((c) => `"${c.giaTri}" — ${c.ho.join(", ")}`).join("; ")}. Xem lại trường hợp từng hộ có khác nhau không; cùng trường hợp thì chọn thống nhất`);
+
+  // 1.0.6: tổng DT thu hồi ↔ văn bản (chỉ khi đã nhập DT theo văn bản; ngưỡng chưa đặt thì mọi chênh lệch đều nhắc)
+  for (const r of doiChieuTongDt(duAn, kq.map((x) => x.h), nguong ?? null))
+    for (const x of r.so.filter((y) => y.nguon === "VAN_BAN" && y.vuot))
+      // lớn hơn văn bản: cần kiểm tra dù chỉ soát một phần hộ; nhỏ hơn: có thể do chưa nhập đủ / chỉ soát một phần → lưu ý
+      bao("DT_TONG_VB", D(x.chenh).gt(0) ? "CANH_BAO" : "THONG_TIN", null, `${r.phamVi}: tổng DT thu hồi trong ${r.soHo} hồ sơ đang soát ${hienSo(r.hoSo)} m² ${D(x.chenh).gt(0) ? "lớn hơn" : "nhỏ hơn"} DT theo văn bản ${hienSo(x.dienTich)} m² (${x.ghiChu}) ${hienSo(D(x.chenh).abs().toString())} m²`);
 
   // P3-3: đối chiếu hồ sơ với quỹ tái định cư (chỉ hộ đang soát)
   const idSoat = new Set(kq.map((x) => x.h.id));
@@ -137,6 +156,28 @@ export function soatPhuongAn(duAn: DuAn, kq: { h: Ho; k: KetQuaHo }[], nguong?: 
 
   const thuTu: Record<MucSoat, number> = { LOI: 0, CANH_BAO: 1, THONG_TIN: 2 };
   return out.sort((a, b) => thuTu[a.muc] - thuTu[b.muc]);
+}
+
+/** Mã lựa chọn là cách hiểu điều khoản chưa rõ (cần thống nhất trong dự án); mã khác là lựa chọn riêng của từng hộ. */
+const MA_THONG_NHAT = /^(VM-|Đ)/;
+/** Gom lựa chọn linh động theo mã; trả các mã có từ hai cách chọn khác nhau trở lên (so sánh bỏ qua số liệu). */
+export function luaChonKhacNhau(kq: { h: Ho; k: KetQuaHo }[]): { ma: string; cach: { giaTri: string; ho: string[] }[] }[] {
+  const theoMa = new Map<string, Map<string, { giaTri: string; ho: Set<string> }>>();
+  for (const { h, k } of kq)
+    for (const d of k.tatCa)
+      for (const l of d.dong.luaChon) {
+        const ma = l.ma;
+        if (!MA_THONG_NHAT.test(ma)) continue;
+        const khoa = l.giaTri.replace(/[\d.,]+/g, "#").trim();
+        const m = theoMa.get(ma) ?? new Map();
+        const c = m.get(khoa) ?? { giaTri: l.giaTri, ho: new Set<string>() };
+        c.ho.add(h.ma);
+        m.set(khoa, c);
+        theoMa.set(ma, m);
+      }
+  return [...theoMa]
+    .filter(([, m]) => m.size > 1)
+    .map(([ma, m]) => ({ ma, cach: [...m.values()].map((c) => ({ giaTri: c.giaTri, ho: [...c.ho].sort() })).sort((a, b) => b.ho.length - a.ho.length) }));
 }
 
 /** Đếm theo mức. */

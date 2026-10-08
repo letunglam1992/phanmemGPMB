@@ -51,3 +51,21 @@ Cập nhật đợt 5 (28/9/2026): đối chiếu phương án đã phê duyệt
 | VM-38 | 🔴 | Điểm a mục 9.1 k9 Đ6 QĐ 14/2026; k1 Đ19 NĐ 88/2024; Đ12 PL II QĐ 106/2025 | 9.1.a có **hỗ trợ ổn định đời sống** khi thu hồi từ 10% đất nông nghiệp đang sử dụng trở lên; phương án đối chiếu không có khoản này và không ghi lý do (có thể do tỷ lệ < 10%) | Phần mềm cảnh báo khi hồ sơ B13 chưa nhập "DT đất NN đang sử dụng" để xác định tỷ lệ | Đã xử lý – QD-23 (nhất trí đề xuất; làm nghiệp vụ B13) |
 | VM-39 | 🔴 | Điểm b khoản 1 Điều 8 NĐ 88 | Khoản 1 (trước 18/12/1980) điểm b ghi "**diện tích thửa đất** nhỏ hơn hạn mức", còn khoản 2, 3 ghi "diện tích thu hồi của thửa đất": trường hợp DT thu hồi < hạn mức ≤ DT thửa không thuộc điểm a, b theo câu chữ | Mặc định bồi thường đất ở toàn bộ DT thu hồi như khoản 2, 3; "Cần xác nhận" đến khi người dùng ghi lý do | Linh động – QD-31; **hạn mức theo Phụ lục I QĐ 106/2025 – QD-32** (Điều 3 trước 18/12/1980, Điều 4 đến trước 15/10/1993; tra theo vị trí thửa) |
 | VM-40 | 🟠 | Điều 9 NĐ 88 | Không quy định phần DT thu hồi còn lại sau phần được bồi thường (≤ hạn mức) của thửa làm nhà ở có vi phạm | Người dùng chọn: theo loại đất nông nghiệp hoặc không bồi thường về đất, bắt buộc lý do | Linh động – QD-31 |
+
+## Rà soát các vướng mắc còn "linh động" theo QĐ 64/2026/QĐ-UBND và NĐ 226/2025/NĐ-CP (08/10/2026)
+
+Đối chiếu nguyên văn `policy/nguon/qd64-2026-sua-qd106-qd14.md` (QĐ 64 chỉ sửa Điều 13 PL I, Điều 14 PL II QĐ 106/2025 và khoản 11 Điều 6 QĐ 14/2026) và `policy/nguon/nd226-2025-sua-nd88.md` (NĐ 226 bổ sung Điều 7a, 14a; sửa k4 Đ17; bổ sung điểm d k1 Đ19, k5 Đ22, k5–k6 Đ24; sửa k2, k7 Đ27 NĐ 88 — không sửa Điều 8, 9). Kết quả: **không vướng mắc nào được hai văn bản làm rõ thêm**; giữ xử lý linh động theo QD-19, QD-31. Từ 1.0.6, màn **Soát phương án** có quy tắc `LUA_CHON_KHAC`: cùng một vướng mắc mà các hộ trong dự án được chọn cách khác nhau → cảnh báo kèm danh sách hộ từng cách, để cán bộ thống nhất (cùng trường hợp thì cùng cách).
+
+| Mã | Điều khoản liên quan | QĐ 64/2026 | NĐ 226/2025 | Kết luận |
+|---|---|---|---|---|
+| VM-07 | k9 PL III QĐ 32/2025 | Không sửa | — | Giữ linh động |
+| VM-10 | k4, k5 Đ5 PL VIII QĐ 106 | Không sửa | Điều 14a (cây lâu năm không xác định được sản lượng → giá trị thiệt hại thực tế) không giải quyết mật độ | Giữ linh động |
+| VM-13 | k2 Đ5 PL II QĐ 106 | Không sửa Điều 5. Riêng **hỗ trợ đào tạo, chuyển đổi nghề**, Điều 14 mới xác định hệ số theo tổ, thôn nơi có **từng thửa** (k2–k4), không phụ thuộc hộ ở phường hay xã | — | Giữ linh động cho Điều 5 |
+| VM-14 | k2 Đ7 PL II QĐ 106 | Không sửa | — | Giữ "Thiếu căn cứ" |
+| VM-16 | Đ15 PL II QĐ 106 (thưởng) | Không sửa | — | Giữ linh động — cần ý kiến về cơ sở tính, trần |
+| VM-17 | k1, k2 Đ6 QĐ 14/2026 | Không sửa (chỉ sửa k11) | — | Giữ cách xử lý QD-28 |
+| VM-24 | điểm b k3 Đ7 PL II QĐ 106 (dẫn chiếu Điều 17 đã hết hiệu lực) | Không sửa — dẫn chiếu vẫn còn | — | Giữ cách hiểu k3.2, k3.3 Đ6 QĐ 14/2026; **kiến nghị** cơ quan soạn thảo sửa dẫn chiếu ở lần sửa đổi tới |
+| VM-28 | k11 Đ6 QĐ 14/2026 | Điều 2 QĐ 64 viết lại k11 nhưng **giữ nguyên cụm "20% tiền sử dụng phải nộp"**; chỉ thêm trường hợp loại trừ (giao đất có thu tiền theo k4 Điều 111 Luật Đất đai — đã làm ở 1.0.5) | — | Giữ linh động (trước hay sau ghi nợ, miễn giảm) |
+| VM-33 | k5 Đ4 NQ 152/2025 | Không liên quan | — | Giữ mặc định đã nêu |
+| VM-39 | điểm b k1 Đ8 NĐ 88 | — | Không sửa Điều 8 | Giữ QD-31 |
+| VM-40 | Điều 9 NĐ 88 | — | Không sửa Điều 9 | Giữ QD-31 |

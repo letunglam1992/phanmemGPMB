@@ -10,6 +10,7 @@ import { O, ngayVN } from "../../thanh-phan/chung";
 import { DANH_MUC_MAU } from "../../van-ban/danh-muc";
 import { Chon } from "../../thanh-phan/Chon";
 import type { Tab } from "./kieu";
+import { KhungYKienPA } from "../../thanh-phan/DoiThoai";
 
 /**
  * Tiến độ của hộ: bước 1–4 là bước chung của dự án (chỉ xem, cập nhật một lần ở dự án); bước 5–16 theo từng hộ —
@@ -180,6 +181,7 @@ export function TabTienDo({ h, duAn, doi, luuNgay: luuGoc, soanMau, moDuAn }: Ta
             </O>
             <O nhan="Ngày thực hiện / hoàn thành"><ONgay value={bh.ngay ?? ""} onChange={(e) => datBuoc({ ngay: e.target.value })} /></O>
             <O nhan="Nội dung thực hiện, ghi chú, số văn bản"><textarea rows={3} value={bh.ghiChu ?? ""} onChange={(e) => datBuoc({ ghiChu: e.target.value })} /></O>
+            {b.ma === "7" && <KhungYKienPA h={h} duAn={duAn} doi={doi} soanMau={soanMau} />}
             <O nhan="Khó khăn, vướng mắc ở bước này" goiY="vd. Không nhất trí đơn giá, đề nghị xem xét lại; chưa nhận tiền; tranh chấp ranh giới… Có nội dung → hộ ở trạng thái Vướng mắc, hiện trong cảnh báo và báo cáo.">
               <textarea rows={3} className={bh.vuongMac ? "o-vuong-mac" : ""} value={bh.vuongMac ?? ""} placeholder="Để trống nếu không có" onChange={(e) => datBuoc({ vuongMac: e.target.value || undefined, vuongMacNgay: e.target.value ? bh.vuongMacNgay ?? homNayIso() : undefined })} />
             </O>

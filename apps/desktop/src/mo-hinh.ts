@@ -434,6 +434,8 @@ export interface Ho {
   phienBanCauTruc?: number;
   /** P3-1: đợt thu hồi của hộ (DuAn.dotThuHoi); trống = chưa xếp đợt. Mã hồ sơ vẫn đánh số chung cả dự án. */
   dotId?: string;
+  /** 1.0.6: ý kiến về dự thảo phương án và đối thoại (điểm a k3 Đ87 LĐĐ 2024 — doi-thoai.ts). */
+  yKienPA?: import("./doi-thoai").YKienPA;
   /** P3-4: tài khoản cán bộ phụ trách hồ sơ (tên đăng nhập). */
   phuTrach?: string;
 }
@@ -442,6 +444,12 @@ export interface Ho {
  * P3-1: đợt thu hồi trong một dự án (thông báo thu hồi, bước chung, phương án theo đợt). Thông tin để trống thì
  * lấy theo dự án. Phương án bồi thường, hỗ trợ, tái định cư chốt và phê duyệt theo từng đợt (quyết định của đơn vị).
  */
+/** Tổng diện tích thu hồi ghi trong văn bản do cán bộ nhập (m², chuẩn máy) kèm văn bản, điều khoản. */
+export interface DtThuHoiVb {
+  dienTich: string;
+  canCu: string;
+}
+
 export interface DotThuHoi {
   id: string;
   /** Số thứ tự đợt (1, 2, …) — dùng sắp xếp, hiển thị "Đợt 2". */
@@ -451,6 +459,8 @@ export interface DotThuHoi {
   canCuThuHoi?: string;
   /** Ngày thông báo thu hồi đất của đợt — thay DuAn.ngayThongBao cho hộ thuộc đợt. */
   ngayThongBao?: string;
+  /** 1.0.6: tổng DT thu hồi của đợt theo văn bản (doi-chieu-dt.ts). */
+  dtThuHoiVb?: DtThuHoiVb;
   /** Phạm vi đợt (lý trình, bản, tờ bản đồ…) — điền trường pham_vi_dot của văn bản. */
   phamVi?: string;
   /** Bước chung 1–4 riêng của đợt; bước chưa có ở đây lấy theo bước chung của dự án. */
@@ -613,6 +623,8 @@ export interface DuAn {
   tienDoChung?: Record<string, BuocHo>;
   /** Các phiên bản phương án đã chốt/phê duyệt (src/phuong-an.ts). */
   phuongAn?: import("./phuong-an").PhienBanPA[];
+  /** 1.0.6: tổng DT thu hồi theo văn bản (thông báo thu hồi, văn bản giao đất, quy mô được duyệt…) — đối chiếu với hồ sơ. */
+  dtThuHoiVb?: DtThuHoiVb;
   /** P3-1: các đợt thu hồi (dot-thu-hoi.ts). Có đợt thì phương án chốt, phê duyệt theo đợt. */
   dotThuHoi?: DotThuHoi[];
   /** P3-3: quỹ đất, nhà tái định cư của dự án (quy-tdc.ts). */

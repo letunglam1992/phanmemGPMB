@@ -2,6 +2,7 @@
  * Dựng dữ liệu điền mẫu từ dự án, hồ sơ và kết quả tính. Các giá trị trống được thay bằng
  * dấu chấm "…………" để cán bộ viết tay/bổ sung.
  */
+import { demYKien } from "../doi-thoai";
 import { D, dinhDang } from "@gpmb/core";
 import type Decimal from "decimal.js";
 import { TEN_DOI_TUONG, type DuAn, type Ho } from "../mo-hinh";
@@ -10,7 +11,7 @@ import { docSoTien } from "./doc-so";
 import type { MauVanBan } from "./danh-muc";
 import { tenDayDu, tenLoaiDat } from "./loai-dat";
 import { soD } from "../so";
-import { duLieuBoTriTdc, duLieuChamTra, duLieuKeHoach, duLieuNhieuHo, duLieuPhuongAnHo } from "./thuc-te";
+import { duLieuBoTriTdc, duLieuChamTra, duLieuDoiThoai, duLieuThuong, duLieuKeHoach, duLieuNhieuHo, duLieuPhuongAnHo } from "./thuc-te";
 
 export const CHAM = "…………";
 
@@ -339,6 +340,8 @@ export function ghepDuLieu(p: {
   const kq: Record<string, unknown> = {
     ...tu,
     ...(p.mau.nguon === "THUC_TE" ? duLieuThucTe(p) : {}),
+    ...(p.mau.ma === "08" ? soYKienBienBan(p.ds.map((x) => x.h)) : {}),
+    ...(p.mau.ma === "20" || p.mau.ma === "21" ? duLieuThuong(p.duAn, p.ds) : {}),
     tb_thu_hoi_ngay: (p.ho?.h.vanBan?.tb_thu_hoi_ngay ?? vbDuAn.tb_thu_hoi_ngay) || (du.tb_thu_hoi_ngay_du_an as string),
     ...chung,
     ...Object.fromEntries(Object.entries(rieng).filter(([, v]) => v !== "" && v !== undefined)),
@@ -367,6 +370,13 @@ export function ghepDuLieu(p: {
   return kq;
 }
 
+/** 1.0.6: số ý kiến đồng ý, không đồng ý, khác cho biên bản lấy ý kiến (mẫu 08) từ ý kiến đã ghi ở bước 7 của các hộ. */
+function soYKienBienBan(ds: Ho[]): Record<string, string> {
+  const d = demYKien(ds);
+  if (d.dongY + d.khongDongY + d.khac === 0) return {};
+  return { so_dong_y: String(d.dongY), so_khong_dong_y: String(d.khongDongY), so_y_kien_khac: String(d.khac) };
+}
+
 /** Trường riêng của mẫu dựng theo văn bản thực tế (T1–T7, docs/19). */
 function duLieuThucTe(p: { mau: MauVanBan; duAn: DuAn; ds: { h: Ho; k: KetQuaHo }[]; ho?: { h: Ho; k: KetQuaHo }; chung: Record<string, string>; ngayKy: string; tyLeCham?: import("../chi-tra").GiaiDoanTyLe[] }): Record<string, unknown> {
   const khuDat = (p.chung.ban_khu_dan_cu || p.chung.dia_diem_du_an || p.duAn.xa).trim();
@@ -375,6 +385,7 @@ function duLieuThucTe(p: { mau: MauVanBan; duAn: DuAn; ds: { h: Ho; k: KetQuaHo 
     ...duLieuNhieuHo(p.duAn, p.ds, khuDat, lower1(p.duAn.xa)),
     ...(p.ho ? duLieuPhuongAnHo(p.ho.h, p.ho.k) : {}),
     ...(p.mau.ma === "T8" || p.mau.ma === "T9" ? duLieuBoTriTdc(p.duAn, p.ds) : {}),
+    ...(p.mau.ma === "T12" && p.ho ? duLieuDoiThoai(p.ho.h) : {}),
     ...(p.mau.ma === "T10" ? { kinh_gui: `Chủ tịch Ủy ban nhân dân ${lower1(p.duAn.xa)}` } : {}),
     ...(p.mau.ma === "T10" || p.mau.ma === "T11" ? duLieuChamTra(p.duAn, p.ds, p.tyLeCham ?? [], p.ngayKy || new Date().toISOString().slice(0, 10)) : {}),
   };

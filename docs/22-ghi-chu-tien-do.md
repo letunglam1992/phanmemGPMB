@@ -24,6 +24,7 @@ Tài liệu nên đọc trước:
 | 0.9.23 | Trợ lý AI nổi: nút robot góc dưới phải mở khung chat; thanh bên "Trợ lý AI (hỏi đáp)" |
 | 0.9.25 | Cảnh báo xã lâu chưa gửi (ngưỡng do tỉnh đặt); xã tự gửi định kỳ lên cổng (chu kỳ do xã đặt); tỉnh xem lại các bản gửi trước (≤ 20 bản/đơn vị); báo cáo Word tổng hợp toàn tỉnh |
 | 0.9.26 | Tỉnh tự nhận gói mới từ cổng mỗi 30 phút khi khóa đang mở, chuông báo gói chờ nhận; phụ lục Excel kèm báo cáo Word tỉnh; thời gian không tính vào thời hạn (bước có thời hạn, bắt buộc lý do, tạm dừng); trường hợp Điều 14/17 PL I QĐ 106 do người dùng chọn + căn cứ; ghi chú bản đồ trong hồ sơ hộ; thùng rác tệp đính kèm, tài liệu; Luật Đất đai hợp nhất (VBHN 44/VBHN-VPQH) trong Trợ lý AI |
+| 1.0.6 (chưa phát hành) | Nhóm A: rà các vướng mắc còn "linh động" theo QĐ 64/2026, NĐ 226/2025 (docs/03 mục cuối — không vướng mắc nào được làm rõ thêm) + soát lựa chọn không thống nhất giữa các hộ; **ý kiến về phương án, đối thoại** ở bước 7 (điểm a k3 Đ87, hạn 60 ngày, mẫu 08 tự đếm ý kiến, mẫu T12 biên bản đối thoại); **Mẫu 20, 21** tự điền danh sách, tổng tiền thưởng bàn giao sớm; **đối chiếu tổng DT thu hồi** (hồ sơ ↔ bản đồ ↔ phương án ↔ văn bản, theo dự án và đợt) — xem docs/09. Chưa nâng số phiên bản |
 | 1.0.5 | **QĐ 64/2026/QĐ-UBND**: bộ chính sách `sonla-2026-10-06` (hệ số chuyển đổi nghề theo tổ, thôn của thửa; ngoại lệ k4 Đ111 cho 20% tiền SDĐ; chuyển tiếp); tuyến liên xã qua cổng (`/api/tuyen` — **cần dán lại Worker**); dải Km, chọn thửa theo đoạn trên bản đồ; báo cáo theo đoạn 1 km (màn Báo cáo, Excel, Word); mẫu T8, T9 bố trí TĐC (Điều 111); căn cứ mặc định văn bản cập nhật (Luật 130, 116/2025/QH15, NĐ 226/2025, NĐ 49/2026, QĐ 64/2026) + nút cập nhật căn cứ cũ; **rà soát tác động QĐ 64** mọi dự án; gợi ý tổ, thôn của thửa theo địa chỉ hộ; **chi trả chậm**: mẫu T10 tờ trình, T11 quyết định phê duyệt phương án chi trả bồi thường chậm (điểm b k3 Đ94), theo dõi tiền gửi ngân hàng và ghi trả lãi (k4 Đ94); kiểm tra phương án Excel **dạng bảng ngang**; tra cứu hiệu lực văn bản căn cứ + cảnh báo khi soạn; kiểm tra vị trí tờ bản đồ (VN-2000, tờ lệch xa); **tim tuyến → lý trình gợi ý**; tỉnh **tải các bản cũ trên cổng**, **biểu đồ diễn biến theo tháng** (toàn tỉnh / xã / dự án liên xã); **Lưu PDF** bảng tính, giải trình không cần hộp in; **biểu ghi kết quả thử** (Excel, ở Giới thiệu); Worker bỏ khoảng trắng thừa trong `MA_QUAN_TRI` (`/api/goi/:ma/ban` — **cần dán lại Worker**) |
 | 1.0.4 | **Dự án liên xã** (mã dùng chung do tỉnh cấp, tỉnh khai xã dọc tuyến, gom đoạn, xã chưa có số liệu, gợi ý/ghép tay, Phụ lục 03, đếm dự án theo mã); **lý trình theo thửa** (không bắt buộc; ô ở bảng thửa, cột Excel, "Ghi lý trình…" nhiều hộ; thẻ Mặt bằng theo lý trình + Excel); lịch ngày nghỉ **đề xuất** theo k1 Đ112 BLLĐ (đổi âm lịch); thẻ **Bắt đầu sử dụng**; bảng tính + giải trình hộ ra **Word / In PDF**; Ctrl+K tìm tờ/thửa đúng số, số định danh, lý trình; soát phương án tóm tắt điều kiện chốt, **đi tới đúng ô** — xem docs/09 |
 | 1.0.3 | Excel tổng hợp toàn tỉnh theo thể thức biểu báo cáo; rà soát giao diện (ô chọn tệp tiếng Việt, số kiểu Việt, Kiểm đếm, khung giải trình thu gọn, nút sang Phương án từ Chi trả, dòng đợt trong báo cáo Word) — xem docs/09 |
@@ -31,6 +32,8 @@ Tài liệu nên đọc trước:
 | 1.0.1 | **Sửa lỗi "Command plugin:dialog|confirm not allowed by ACL"**: bỏ `tauri-plugin-dialog` (bản 2.8.0 chèn script thay `window.confirm` bằng lệnh không còn trong plugin → `confirm()` trả Promise, **mọi hộp hỏi xác nhận trên bản .exe bị bỏ qua — thao tác chạy luôn**); hộp "Lưu thành" gọi thẳng `rfd`; kiểm thử Rust chặn đưa plugin trở lại. Nội dung bản quyền mới ở Giới thiệu ("© 2026 Lê Tùng Lâm. All rights reserved." + câu bảo hộ quyền tác giả), thuộc tính tệp .exe |
 | 0.9.27 | Khôi phục tiến độ, chi trả, thông tin dự án về bản cũ; lịch sử thay đổi trong tệp sao lưu; hoàn tác bước chung 1–4 và tiến độ hộ; đợt thu hồi: cột "Đợt thu hồi" khi nhập Excel, báo cáo tách theo đợt, số đợt phê duyệt theo đợt; so sánh bản đồ đối chiếu hồ sơ + xuất Excel; ảnh cho ghi chú hiện trường; **bản đồ DXF** (DWG: báo cách đổi sang DXF); nạp bản đồ xong chọn **tự nhận diện / tự chọn lớp cho từng đối tượng** (bảng tích lớp, thêm lớp loại đất, diện tích); nhãn thửa nhiều nội dung ("CLN" · "13"/"1310,0" · tên chủ); **số tờ nhập tay** theo tệp |
 | 0.9.24 | **Sửa trắng màn hình khi mở Trợ lý AI và lỗi "e is not a function"**; màn tỉnh nhắc "Có n gói mới trên cổng (xã, thời gian) — mở khóa để nhận" |
+
+Kiểm thử 1.0.6 nhóm A (chưa phát hành, tất cả đạt): typecheck; npm test 86 + 58 + 431; cargo test; eslint 3 cảnh báo cũ; Playwright 68/68 (thêm `e2e/nhom-a-1-0-6.spec.ts`).
 
 Kiểm thử ở 1.0.5 (tất cả đạt): typecheck; npm test 86 + 58 + 422; cargo test; eslint 3 cảnh báo cũ; Playwright 66/66 (thêm `e2e/qd64-2026.spec.ts`, ca lý trình trên bản đồ, ca tuyến qua cổng, ca tim tuyến, ca Lưu PDF).
 
@@ -93,7 +96,8 @@ Gặp lỗi: bấm **"Chép chi tiết lỗi"** (nếu có), hoặc chụp màn 
 
 ### Chờ tài liệu từ anh Lâm
 
-- [ ] **4.2 / VM-29**: Quyết định sửa đổi, bổ sung QĐ 106/2025 (bản đã ký: số, ngày, ngày hiệu lực). Có văn bản thì cập nhật bộ chính sách `policy/goi/*.json` (thay bộ "Dự thảo"), docs/03 VM-29, docs/06 QD-32.
+- [x] **4.2 / VM-29**: đã có QĐ 64/2026/QĐ-UBND (bộ chính sách `sonla-2026-10-06`, 1.0.5). Rà các vướng mắc còn mở theo QĐ 64 và NĐ 226: docs/03 mục cuối (không vướng mắc nào được làm rõ thêm).
+- [ ] Ý kiến về VM-16 (cơ sở tính tiền thưởng, trần theo hộ hay theo người), VM-28 (20% tiền sử dụng đất trước hay sau ghi nợ, miễn giảm) — có ý kiến thì đổi mặc định.
 
 ### B. Việc lập trình có thể làm tiếp (chờ anh Lâm chọn)
 
@@ -141,6 +145,13 @@ Gặp lỗi: bấm **"Chép chi tiết lỗi"** (nếu có), hoặc chụp màn 
 - [ ] Bản đồ → thẻ "Tim tuyến → lý trình" → "Tính lý trình từ tim tuyến…": chọn lớp tim tuyến, Km đầu → bảng gợi ý lý trình từng thửa → Ghi.
 - [ ] Tổng quan → thẻ vàng "Áp dụng QĐ 64/2026/QĐ-UBND" (nếu hiện) → mở bảng rà soát, xuất Excel; Thửa đất → ô Tổ, thôn có gợi ý theo địa chỉ hộ.
 - [ ] Giới thiệu → "Biểu ghi kết quả thử (Excel)" → điền kết quả các mục trên rồi gửi lại.
+
+### A6. Thử bản 1.0.6 trên máy thật (khi phát hành)
+
+- [ ] Hồ sơ hộ → Tiến độ → bước 7: ghi "Không đồng ý", ngày lấy ý kiến → thấy hạn đối thoại; "Ghi ngày lấy ý kiến này cho … hồ sơ khác"; ghi lần đối thoại; soạn T12. Mẫu 08 tự điền số ý kiến.
+- [ ] Soát phương án: dòng "Đối thoại", "Lựa chọn không thống nhất" (khi hai hộ cùng vướng mắc chọn khác nhau), "Tổng DT thu hồi lệch văn bản".
+- [ ] Tổng quan dự án → Đối chiếu diện tích → "DT thu hồi theo văn bản…" (dự án, từng đợt) → bảng tổng; Xuất Excel có trang "Tổng DT thu hồi".
+- [ ] Khai báo mốc thưởng, ghi bàn giao vài hộ → Văn bản mẫu 20, 21: danh sách, tổng tiền, bằng chữ đúng.
 
 ## 3. Quy trình mỗi lần sửa (để phiên mới làm đúng ngay)
 

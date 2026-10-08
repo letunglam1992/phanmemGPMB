@@ -20,7 +20,7 @@ const vanBan = (u8: Uint8Array) => new PizZip(u8).file("word/document.xml")!.asT
 describe("22 mẫu văn bản QĐ 1966/QĐ-UBND", () => {
   it("đủ 22 mẫu Sổ tay + 5 mẫu riêng, mỗi mẫu có tệp và trường hợp lệ", () => {
     expect(DANH_MUC_MAU.filter((m) => !m.nguon).map((m) => m.ma)).toEqual(Array.from({ length: 22 }, (_, i) => String(i + 1).padStart(2, "0")));
-    expect(DANH_MUC_MAU.filter((m) => m.nguon === "THUC_TE").map((m) => m.ma)).toEqual(["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11"]);
+    expect(DANH_MUC_MAU.filter((m) => m.nguon === "THUC_TE").map((m) => m.ma)).toEqual(["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"]);
     expect(DANH_MUC_MAU.filter((m) => m.nguon === "RIENG").map((m) => m.ma)).toEqual(["R1", "R2", "R3", "R4", "R5"]);
     for (const m of DANH_MUC_MAU) expect(truongTrongMau(docMau(m.ma)).length).toBeGreaterThan(3);
   });
@@ -184,6 +184,44 @@ describe("Mẫu theo văn bản thực tế (T1–T7, docs/19)", () => {
     expect(t).toMatch(/TỔNG CỘNG\s*10\.415,80/);
     expect(kiemTraThongNhat("T7", duAn, du)).toEqual(["1 hộ chưa có số, ngày QĐ phê duyệt phương án (ghi khi tạo mẫu T5 có số, hoặc nhập ở hồ sơ hộ) — căn cứ in \"…\"."]);
     expect(tao("T6", ds2).t).toContain("(Kèm theo Tờ trình số 25/TTr-KT ngày 27/09/2026 của Phòng Kinh tế)");
+  });
+
+  it("1.0.6 T12 biên bản đối thoại (điểm a k3 Đ87) lấy ý kiến, giải trình từ bước 7; mẫu 08 tự đếm ý kiến", () => {
+    const h0 = { ...ho[0]!, yKienPA: { loai: "KHONG_DONG_Y" as const, ngayLay: "2026-09-01", noiDung: "Đề nghị xem lại đơn giá cây nhãn", doiThoai: [{ ngay: "2026-09-20", ketQua: "CON_Y_KIEN" as const, noiDung: "Đơn giá theo PL VIII QĐ 106/2025" }] } };
+    const h1 = { ...ho[1]!, yKienPA: { loai: "DONG_Y" as const, ngayLay: "2026-09-01" } };
+    const ds2 = [{ h: h0, k: ds[0]!.k }, { h: h1, k: ds[1]!.k }];
+    const { t, du } = tao("T12", ds2, ds2[0]);
+    expect(t).toContain("Căn cứ điểm a khoản 3 Điều 87 Luật Đất đai năm 2024");
+    expect(t).toContain("ngày 01/09/2026");
+    expect(t).toContain("Đề nghị xem lại đơn giá cây nhãn");
+    expect(t).toContain("Đơn giá theo PL VIII QĐ 106/2025");
+    expect(t).toContain("Người có đất còn ý kiến không đồng ý");
+    expect(t).toContain(h0.ten);
+    expect(kiemTraThongNhat("T12", duAn, du).some((x) => /đối thoại chỉ bắt buộc/.test(x))).toBe(false);
+    expect(kiemTraThongNhat("T12", duAn, tao("T12", ds2, ds2[1]).du).some((x) => /đối thoại chỉ bắt buộc/.test(x))).toBe(true);
+    // mẫu 08: để trống thì đếm từ bước 7; nhập tay thì giữ số nhập
+    const b = tao("08", ds2);
+    expect([b.du.so_dong_y, b.du.so_khong_dong_y, b.du.so_y_kien_khac]).toEqual(["1", "1", "0"]);
+    expect(tao("08", ds2, undefined, { so_dong_y: "15" }).du.so_dong_y).toBe("15");
+  });
+
+  it("1.0.6 Mẫu 20, 21 thưởng bàn giao sớm: danh sách, tổng, bằng chữ từ bàn giao; thiếu khai báo mốc thì báo", () => {
+    const cauHinh = { moc: [{ ten: "Mốc 1", denNgay: "2026-10-31", tyLe: "10", toiDa: "20000000" }], coSo: ["BT_DAT" as const, "BT_TAI_SAN" as const], canCu: "Điều 15 Phụ lục II QĐ 106/2025/QĐ-UBND" };
+    const duAnT = { ...duAn, thuongBanGiao: cauHinh };
+    const h0 = { ...ho[0]!, banGiao: { ngay: "2026-10-05", bienBan: "01/BB", nguoiGhi: "a" } };
+    const h1 = { ...ho[1]!, banGiao: { ngay: "2026-10-06", bienBan: "02/BB", nguoiGhi: "a", thuong: { moc: "Mốc 1", soTien: "7500000", canCu: "x" } } };
+    const ds2 = [{ h: h0, k: tinhHo(cs, duAnT, h0) }, { h: h1, k: ds[1]!.k }, { h: ho[1]!, k: ds[1]!.k }];
+    const { t, du } = tao("21", ds2, undefined, {}, duAnT);
+    expect(du.so_ho_thuong).toBe("2");
+    expect(t).toContain("7.500.000");
+    expect(t).toContain("20.000.000"); // hộ 01: 10% cơ sở vượt mức tối đa
+    expect(du.tong_tien_thuong).toBe("27.500.000");
+    expect(String(du.tong_tien_thuong_chu)).toMatch(/^Hai mươi bảy triệu năm trăm nghìn đồng/);
+    expect(t).toContain("05/10/2026");
+    expect(kiemTraThongNhat("21", duAnT, du).some((x) => /chưa ghi bàn giao/.test(x))).toBe(true);
+    // chưa khai báo mốc: hộ chưa lưu thưởng không có số, báo thiếu khai báo
+    const k2 = tao("20", [{ h: h0, k: ds[0]!.k }]);
+    expect(kiemTraThongNhat("20", duAn, k2.du).some((x) => /chưa khai báo đủ mốc/.test(x))).toBe(true);
   });
 
   it("1.0.5 T10/T11 chi trả bồi thường chậm (điểm b k3 Đ94): hộ chậm do cơ quan, tiền chậm trả theo tỷ lệ cán bộ nhập, bằng chữ", async () => {

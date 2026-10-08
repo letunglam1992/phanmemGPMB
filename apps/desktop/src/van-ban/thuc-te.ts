@@ -13,6 +13,7 @@ import { laSoMay, soD } from "../so";
 import { quyCua } from "../quy-tdc";
 import { tinhChiTra, type GiaiDoanTyLe } from "../chi-tra";
 import { canhBaoCanCu } from "../van-ban-can-cu";
+import { tinhThuong } from "../ban-giao";
 
 const soM2 = (v: Decimal) => dinhDang(v, 2);
 const tien = (v: Decimal) => dinhDang(v.toDecimalPlaces(0), 0);
@@ -252,6 +253,10 @@ export function kiemTraThongNhat(ma: string, duAn: DuAn, du: Record<string, unkn
   if ((ma === "T10" || ma === "T11") && Number(du.so_ho_thieu_ty_le) > 0) out.push(`${String(du.so_ho_thieu_ty_le)} hộ thiếu tỷ lệ tiền chậm nộp cho giai đoạn chậm — nhập ở Cài đặt chung → Tiền chậm trả; khoản này ghi "Thiếu căn cứ", không cộng vào tổng.`);
   if ((ma === "T8" || ma === "T9") && !Number(du.so_ho_tdc)) out.push("Các hộ được chọn chưa có thông tin tái định cư (Hồ sơ hộ → Hỗ trợ → Tái định cư) — biểu dự kiến bố trí trống.");
   if ((ma === "T8" || ma === "T9") && !Number(du.so_lo)) out.push("Dự án chưa khai quỹ tái định cư (Tổng quan dự án → Quỹ tái định cư) — biểu lô đất, căn nhà trống.");
+  if (ma === "T12" && du.doi_thoai_khong_can) out.push("Hộ không ghi ý kiến \"Không đồng ý\" ở bước 7 (Tiến độ) — đối thoại chỉ bắt buộc khi còn ý kiến không đồng ý (điểm a khoản 3 Điều 87).");
+  if ((ma === "20" || ma === "21") && Number(du.thuong_thieu_khai_bao) > 0) out.push(`${String(du.thuong_thieu_khai_bao)} hộ đã bàn giao nhưng chưa tính được thưởng: dự án chưa khai báo đủ mốc, tỷ lệ, cơ sở, căn cứ thưởng (Thông tin dự án → Thưởng bàn giao trước hạn — Điều 15 Phụ lục II QĐ 106/2025).`);
+  if ((ma === "20" || ma === "21") && !(Array.isArray(du.ds_thuong) && du.ds_thuong.length)) out.push("Không có hộ đã bàn giao mặt bằng được thưởng trong các hộ được chọn — danh sách để trống.");
+  else if ((ma === "20" || ma === "21") && Number(du.thuong_chua_ban_giao) > 0) out.push(`${String(du.thuong_chua_ban_giao)} hộ được chọn chưa ghi bàn giao mặt bằng — không có trong danh sách thưởng.`);
   if (ma === "T1" && !Number(du.so_moc)) out.push("Dự án chưa lập kế hoạch từng bước (Dự án → Lập kế hoạch): các mốc thời gian trong Kế hoạch để trống.");
   return out;
 }
@@ -342,4 +347,49 @@ export function duLieuChamTra(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], tyLe: Gi
     tinh_den_ngay: denNgay.split("-").reverse().join("/"),
     can_cu_ty_le: [...new Set(tyLe.map((g) => g.canCu).filter(Boolean))].join("; ") || "…………",
   };
+}
+
+/**
+ * 1.0.6 — Biên bản đối thoại (T12): lấy ý kiến không đồng ý, ngày lấy ý kiến và lần đối thoại gần nhất đã ghi ở bước 7
+ * của hộ (doi-thoai.ts). Kết quả chỉ ghi theo câu chữ điểm a khoản 3 Điều 87; cán bộ sửa ở ô nhập thêm.
+ */
+export function duLieuDoiThoai(h: Ho): Record<string, unknown> {
+  const y = h.yKienPA;
+  const vn = (iso?: string) => (iso ? iso.split("-").reverse().join("/") : "");
+  const cuoi = [...(y?.doiThoai ?? [])].filter((d) => d.ngay).sort((a, b) => a.ngay.localeCompare(b.ngay)).pop();
+  return {
+    ngay_lay_y_kien: vn(y?.ngayLay),
+    y_kien_khong_dong_y: y?.loai === "KHONG_DONG_Y" ? y.noiDung ?? "" : "",
+    giai_trinh: cuoi?.noiDung ?? "",
+    ket_qua_doi_thoai: !cuoi ? "" : cuoi.ketQua === "THONG_NHAT" ? "Sau khi được giải thích, giải trình, người có đất thống nhất với phương án bồi thường, hỗ trợ, tái định cư." : "Người có đất còn ý kiến không đồng ý về phương án. Đơn vị, tổ chức thực hiện nhiệm vụ bồi thường, hỗ trợ, tái định cư tiếp thu, giải trình ý kiến và hoàn chỉnh phương án trình cơ quan có thẩm quyền (điểm a khoản 3 Điều 87 Luật Đất đai năm 2024).",
+    doi_thoai_khong_can: y?.loai !== "KHONG_DONG_Y",
+  };
+}
+
+/**
+ * 1.0.6 — Danh sách thưởng bàn giao mặt bằng sớm cho Mẫu 20, 21 (Điều 15 Phụ lục II QĐ 106/2025): hộ đã bàn giao, lấy số
+ * thưởng đã lưu khi ghi bàn giao; chưa lưu thì tính lại theo mốc, cơ sở, căn cứ khai báo ở Thông tin dự án (ban-giao.ts).
+ * Thiếu khai báo mốc, căn cứ → không đưa số vào, báo ở "Kiểm tra thống nhất".
+ */
+export function duLieuThuong(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[]): Record<string, unknown> {
+  const dong: { stt: number; ho_ten: string; dia_chi: string; ngay_ban_giao: string; muc_ho_tro: string }[] = [];
+  let tong = D(0);
+  let thieu = 0, chuaBanGiao = 0;
+  for (const { h, k } of ds) {
+    if (!h.banGiao?.ngay) {
+      chuaBanGiao++;
+      continue;
+    }
+    let soTien: Decimal | null = h.banGiao.thuong?.soTien && laSoMay(h.banGiao.thuong.soTien) ? D(h.banGiao.thuong.soTien) : null;
+    if (!soTien) {
+      const t = tinhThuong(duAn, h, k);
+      if (t.loai === "THIEU_CAN_CU") thieu++;
+      if (t.loai === "CO") soTien = t.soTien;
+    }
+    if (!soTien || soTien.lte(0)) continue;
+    tong = tong.plus(soTien);
+    dong.push({ stt: dong.length + 1, ho_ten: h.ten, dia_chi: h.diaChi, ngay_ban_giao: h.banGiao.ngay.split("-").reverse().join("/"), muc_ho_tro: dinhDang(soTien, 0) });
+  }
+  if (!dong.length) return { thuong_thieu_khai_bao: thieu, thuong_chua_ban_giao: chuaBanGiao };
+  return { ds_thuong: dong, so_ho_thuong: String(dong.length), tong_tien_thuong: dinhDang(tong, 0), tong_tien_thuong_chu: docSoTien(tong.toFixed(0)), thuong_thieu_khai_bao: thieu, thuong_chua_ban_giao: chuaBanGiao };
 }

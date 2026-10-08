@@ -51,5 +51,14 @@
    "Tổng quan → thẻ vàng \"Áp dụng QĐ 64/2026/QĐ-UBND\" (nếu hiện) → mở bảng rà soát, xuất Excel; Thửa đất → ô Tổ, thôn có gợi ý theo địa chỉ hộ.",
    "Giới thiệu → \"Biểu ghi kết quả thử (Excel)\" → điền kết quả các mục trên rồi gửi lại."
   ]
+ },
+ {
+  "ten": "A6. Thử bản 1.0.6 trên máy thật (khi phát hành)",
+  "viec": [
+   "Hồ sơ hộ → Tiến độ → bước 7: ghi \"Không đồng ý\", ngày lấy ý kiến → thấy hạn đối thoại; \"Ghi ngày lấy ý kiến này cho … hồ sơ khác\"; ghi lần đối thoại; soạn T12. Mẫu 08 tự điền số ý kiến.",
+   "Soát phương án: dòng \"Đối thoại\", \"Lựa chọn không thống nhất\" (khi hai hộ cùng vướng mắc chọn khác nhau), \"Tổng DT thu hồi lệch văn bản\".",
+   "Tổng quan dự án → Đối chiếu diện tích → \"DT thu hồi theo văn bản…\" (dự án, từng đợt) → bảng tổng; Xuất Excel có trang \"Tổng DT thu hồi\".",
+   "Khai báo mốc thưởng, ghi bàn giao vài hộ → Văn bản mẫu 20, 21: danh sách, tổng tiền, bằng chữ đúng."
+  ]
  }
 ]

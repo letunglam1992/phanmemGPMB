@@ -40,7 +40,7 @@ const TEN_LOAI: Record<LoaiThayDoi, [string, string]> = { THEM: ["Thêm", "nhan-
 
 /** Thẻ "Phương án – phiên bản" trên màn Dự án. */
 export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo }[] }) {
-  const { chinhSach, luuDuAn, luuHo, nguoiDung, quyen, ghiNhatKy, tyLeCham, nguongLechDt, nguoiCoDat } = useUngDung();
+  const { chinhSach, luuDuAn, luuHo, nguoiDung, quyen, ghiNhatKy, tyLeCham, nguongLechDt, nguoiCoDat, lich } = useUngDung();
   const ds = useMemo(() => [...(duAn.phuongAn ?? [])].sort((a, b) => b.so - a.so), [duAn.phuongAn]);
   /** Lưu bản đã ghi nhận/bổ sung QĐ; ghi số, ngày (ô có giá trị) vào văn bản dự án hoặc của đợt (P3-1). */
   const ghiQd = async (d: PhienBanPA, ghiVanBan: boolean) => {
@@ -136,7 +136,7 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
       )}
       {hop?.loai === "soat" && (
         <HopThoai tieuDe="Soát phương án" dong={() => setHop(null)} rong={1000}>
-          <KetQuaSoatPA ds={soatPhuongAn(duAn, kq, nguongLechDt, nguoiCoDat)} duAnId={duAn.id} />
+          <KetQuaSoatPA ds={soatPhuongAn(duAn, kq, nguongLechDt, nguoiCoDat, lich)} duAnId={duAn.id} />
           <details className="mt-10">
             <summary className="mo">Các quy tắc đã soát ({QUY_TAC_SOAT.length})</summary>
             <table className="bang"><tbody>{QUY_TAC_SOAT.map((q) => <tr key={q.ma}><td>{q.ten}</td><td className="chu-nho">{q.canCu}</td></tr>)}</tbody></table>
@@ -186,7 +186,7 @@ export function HopChotPhuongAn(p: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo }[]; d
 }
 
 function HopChot({ duAn, kq: kqDuAn, dong: dongHop, chonDau }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo }[]; dong: () => void; chonDau?: string[] }) {
-  const { chinhSach, luuDuAn, nguoiDung, ghiNhatKy, nguongLechDt, nguoiCoDat } = useUngDung();
+  const { chinhSach, luuDuAn, nguoiDung, ghiNhatKy, nguongLechDt, nguoiCoDat, lich } = useUngDung();
   // P3-1: dự án có đợt → phương án chốt theo đợt, chỉ gồm hộ thuộc đợt
   const coDotTH = coDot(duAn);
   const [dotId, setDotId] = useState(() => (chonDau?.length ? kqDuAn.find(({ h }) => chonDau.includes(h.id) && h.dotId)?.h.dotId : undefined) ?? dsDot(duAn)[0]?.id ?? "");
@@ -225,7 +225,7 @@ function HopChot({ duAn, kq: kqDuAn, dong: dongHop, chonDau }: { duAn: DuAn; kq:
   const dsChon = kq.filter(({ h }) => chon.has(h.id));
   const canLyDo = dsChon.some(({ h }) => daDuyet.has(h.id));
   const tong = dsChon.reduce((s, x) => s.plus(x.k.tong.tongLamTron), D(0));
-  const soat = useMemo(() => soatPhuongAn(duAn, dsChon, nguongLechDt, nguoiCoDat).filter((x) => x.muc !== "THONG_TIN" && x.quyTac !== "KHOAN_CHUA_DU"), [duAn, dsChon, nguongLechDt, nguoiCoDat]);
+  const soat = useMemo(() => soatPhuongAn(duAn, dsChon, nguongLechDt, nguoiCoDat, lich).filter((x) => x.muc !== "THONG_TIN" && x.quyTac !== "KHOAN_CHUA_DU"), [duAn, dsChon, nguongLechDt, nguoiCoDat, lich]);
   const [xemSoat, setXemSoat] = useState(false);
 
   const chot = async () => {

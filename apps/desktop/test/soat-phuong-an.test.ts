@@ -4,6 +4,7 @@ import type { BoChinhSach } from "@gpmb/core";
 import { tinhHo } from "../src/tinh-ho";
 import { taoDuAnMau } from "../src/du-lieu-mau";
 import { QUY_TAC_SOAT, soatPhuongAn } from "../src/soat-phuong-an";
+import { D } from "@gpmb/core";
 import type { Ho } from "../src/mo-hinh";
 
 const cs = cs0 as unknown as BoChinhSach;
@@ -52,5 +53,67 @@ describe("Soát phương án (§11.1)", () => {
     expect(r).toHaveLength(1);
     expect(r[0]!.canCu).toContain("Quy chế số 01/QC");
     expect(r[0]!.noiDung).toContain("lệch 7,9 m²");
+  });
+});
+
+describe("Lựa chọn linh động không thống nhất giữa các hộ (1.0.6)", () => {
+  const gia = (h: Ho, lc: { ma: string; giaTri: string; lyDo: string }[]) => {
+    const k = tinhHo(cs, duAn, h);
+    const d = k.tatCa[0]!;
+    return { h, k: { ...k, tatCa: [{ ...d, dong: { ...d.dong, luaChon: lc } }, ...k.tatCa.slice(1)] } };
+  };
+  it("cùng mã VM, cách chọn khác → cảnh báo kèm danh sách hộ; khác số liệu cùng cách → không; mã lựa chọn riêng hộ → bỏ qua", async () => {
+    const { luaChonKhacNhau } = await import("../src/soat-phuong-an");
+    const h3: Ho = { ...ho[0]!, id: "h3", ma: "H03" };
+    const ds = [
+      gia(ho[0]!, [{ ma: "VM-39", giaTri: "Bồi thường đất ở toàn bộ DT thu hồi", lyDo: "x" }, { ma: "PLVIII-D5K4", giaTri: "A", lyDo: "x" }, { ma: "VM-34", giaTri: "Trừ 12,5 m² công trình", lyDo: "x" }]),
+      gia(ho[1]!, [{ ma: "VM-39", giaTri: "Bồi thường đất ở trong hạn mức", lyDo: "y" }, { ma: "PLVIII-D5K4", giaTri: "B", lyDo: "y" }, { ma: "VM-34", giaTri: "Trừ 3 m² công trình", lyDo: "y" }]),
+      gia(h3, [{ ma: "VM-39", giaTri: "Bồi thường đất ở toàn bộ DT thu hồi", lyDo: "z" }]),
+    ];
+    const r = luaChonKhacNhau(ds);
+    expect(r).toEqual([{ ma: "VM-39", cach: [{ giaTri: "Bồi thường đất ở toàn bộ DT thu hồi", ho: ["H01", "H03"] }, { giaTri: "Bồi thường đất ở trong hạn mức", ho: ["H02"] }] }]);
+    const s = soatPhuongAn(duAn, ds).filter((x) => x.quyTac === "LUA_CHON_KHAC");
+    expect(s).toHaveLength(1);
+    expect(s[0]!.muc).toBe("CANH_BAO");
+    expect(s[0]!.noiDung).toContain("H01, H03");
+  });
+});
+
+describe("Đối thoại khi còn ý kiến không đồng ý — điểm a k3 Đ87 (1.0.6)", () => {
+  it("chưa đối thoại = cần kiểm tra; quá 60 ngày = lỗi; đã đối thoại còn ý kiến = lưu ý; đồng ý = không nhắc", async () => {
+    const { LICH_TRONG } = await import("../src/lich-lam-viec");
+    const r = (y: Ho["yKienPA"], homNay: string) => soatPhuongAn(duAn, [{ h: { ...ho[0]!, yKienPA: y }, k: tinhHo(cs, duAn, ho[0]!) }], null, undefined, LICH_TRONG, homNay).filter((x) => x.quyTac === "DOI_THOAI");
+    const kd = { loai: "KHONG_DONG_Y" as const, ngayLay: "2026-09-01", noiDung: "Không nhất trí đơn giá" };
+    expect(r(kd, "2026-10-01").map((x) => x.muc)).toEqual(["CANH_BAO"]);
+    expect(r(kd, "2026-10-01")[0]!.noiDung).toContain("hạn 02/11/2026");
+    expect(r(kd, "2026-11-03").map((x) => x.muc)).toEqual(["LOI"]);
+    expect(r({ ...kd, doiThoai: [{ ngay: "2026-10-10", ketQua: "CON_Y_KIEN" }] }, "2026-11-03").map((x) => x.muc)).toEqual(["THONG_TIN"]);
+    expect(r({ loai: "DONG_Y" }, "2026-11-03")).toEqual([]);
+    expect(r(kd, "2026-10-01")[0]!.tab).toBe("tien-do");
+  });
+});
+
+describe("Đối chiếu tổng DT thu hồi (1.0.6)", () => {
+  it("tổng hồ sơ ↔ bản đồ (chỉ thửa đã liên kết), ↔ phương án, ↔ văn bản; theo dự án và đợt; soát nhắc khi vượt văn bản", async () => {
+    const { doiChieuTongDt } = await import("../src/doi-chieu-dt");
+    const h0 = { ...ho[0]!, dotId: "d1", thua: ho[0]!.thua.map((t, i) => (i === 0 ? { ...t, dienTichBanDo: Number(t.dienTichThuHoi) + 2 } : t)) };
+    const h1 = { ...ho[1]!, dotId: "d2" };
+    const tong0 = h0.thua.reduce((s, t) => s + Number(t.dienTichThuHoi || 0), 0);
+    const tong1 = h1.thua.reduce((s, t) => s + Number(t.dienTichThuHoi || 0), 0);
+    const duAnD = { ...duAn, dtThuHoiVb: { dienTich: "100", canCu: "TB số 1/TB-UBND" }, dotThuHoi: [{ id: "d1", so: 1, ten: "Bản A", dtThuHoiVb: { dienTich: h0.thua.reduce((a, t) => a.plus(t.dienTichThuHoi || "0"), D(0)).toString(), canCu: "TB số 2" } }, { id: "d2", so: 2, ten: "" }] };
+    const r = doiChieuTongDt(duAnD, [h0, h1], null);
+    expect(r.map((x) => x.phamVi)).toEqual(["Toàn dự án", "Đợt 1 – Bản A", "Đợt 2"]);
+    expect(Number(r[0]!.hoSo)).toBeCloseTo(tong0 + tong1, 6);
+    const bd = r[0]!.so.find((x) => x.nguon === "BAN_DO")!;
+    expect(Number(bd.chenh)).toBeCloseTo(-2, 6); // chỉ so thửa đã liên kết: hồ sơ − bản đồ
+    expect(bd.ghiChu).toMatch(/chưa liên kết bản đồ/);
+    const vb = r[0]!.so.find((x) => x.nguon === "VAN_BAN")!;
+    expect(vb.vuot).toBe(true);
+    expect(r[1]!.so.find((x) => x.nguon === "VAN_BAN")!.vuot).toBe(false); // đợt 1 khớp
+    expect(r[2]!.so.some((x) => x.nguon === "VAN_BAN")).toBe(false);
+    const s = soatPhuongAn(duAnD, [h0, h1].map((h) => ({ h, k: tinhHo(cs, duAnD, h) }))).filter((x) => x.quyTac === "DT_TONG_VB");
+    expect(s).toHaveLength(1);
+    expect(s[0]!.muc).toBe("CANH_BAO");
+    expect(s[0]!.noiDung).toMatch(/^Toàn dự án: .* lớn hơn DT theo văn bản 100 m²/);
   });
 });

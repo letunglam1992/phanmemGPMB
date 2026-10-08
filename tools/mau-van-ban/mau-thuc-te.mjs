@@ -6,7 +6,7 @@
  */
 import { writeFileSync } from "node:fs";
 import { AlignmentType, BorderStyle, Document, Packer, PageOrientation, Paragraph, Table, TableCell, TableRow, TextRun, WidthType, VerticalAlign } from "docx";
-import { FONT, P, giua, trai, lap, runs, dauVanBan, tenVanBan, kyVanBan } from "./khung.mjs";
+import { FONT, P, giua, trai, lap, runs, dauVanBan, tenVanBan, kyVanBan, quocHieu, thanhPhan, kyBienBan } from "./khung.mjs";
 
 const RA = new URL("../../apps/desktop/public/mau-van-ban/", import.meta.url);
 const UBND_XA = ["ỦY BAN NHÂN DÂN", "{TEN_XA}"];
@@ -446,7 +446,38 @@ MAU.T11 = () => [
   [...TIEU_DE_BIEU("DANH SÁCH CHI TRẢ BỒI THƯỜNG CHẬM", KT.QD), BIEU_CHAM()],
 ];
 
-const DANH_SACH = { T1: "tt-ke-hoach", T8: "tt-tb-du-kien-tdc", T9: "tt-tb-cong-bo-tdc", T10: "tt-to-trinh-cham-tra", T11: "tt-qd-cham-tra", T2: "tt-to-trinh-tb", T3: "tt-thong-bao", T4: "tt-to-trinh-pa-ho", T5: "tt-qd-pa-ho", T6: "tt-to-trinh-thu-hoi", T7: "tt-qd-thu-hoi" };
+/** 1.0.6 — Biên bản đối thoại (điểm a khoản 3 Điều 87 Luật Đất đai 2024): luật không ban hành mẫu; bố cục theo các biên bản của Sổ tay. */
+MAU.T12 = () => [
+  [
+    ...quocHieu({ ngay: true }),
+    ...tenVanBan("BIÊN BẢN", "Đối thoại về phương án bồi thường, hỗ trợ, tái định cư\nkhi Nhà nước thu hồi đất để thực hiện dự án {ten_du_an}"),
+    P("Căn cứ điểm a khoản 3 Điều 87 Luật Đất đai năm 2024;", { nghieng: true, truoc: 120 }),
+    P("Căn cứ kết quả tổ chức lấy ý kiến về phương án bồi thường, hỗ trợ, tái định cư ngày {ngay_lay_y_kien};", { nghieng: true }),
+    P("Hôm nay, vào hồi {thoi_diem}, tại {dia_diem_lam_viec}, {ten_don_vi_bt} phối hợp với Ủy ban nhân dân {ten_xa} tổ chức đối thoại với người có đất thu hồi còn ý kiến không đồng ý về phương án bồi thường, hỗ trợ, tái định cư, gồm:"),
+    P("**I. THÀNH PHẦN THAM GIA**"),
+    ...thanhPhan([
+      ["Đại diện đơn vị, tổ chức thực hiện nhiệm vụ bồi thường, hỗ trợ, tái định cư:", "tp_don_vi_bt"],
+      ["Đại diện Ủy ban nhân dân {ten_xa}:", "tp_ubnd"],
+      ["Các thành phần khác có liên quan (nếu có):", "tp_khac"],
+    ]),
+    P("**4. Người có đất thu hồi:** {ho_ten}{ho_cung_ten}; địa chỉ: {dia_chi}.", { dam: false }),
+    P("**II. NỘI DUNG ĐỐI THOẠI**"),
+    P("1. Ý kiến không đồng ý của người có đất về phương án: {y_kien_khong_dong_y}"),
+    P("2. Giải thích, giải trình, tiếp thu của {ten_don_vi_bt} và Ủy ban nhân dân {ten_xa}: {giai_trinh}"),
+    P("3. Ý kiến của người có đất sau khi được giải thích, giải trình: {y_kien_sau}"),
+    P("**III. KẾT QUẢ**"),
+    P("{ket_qua_doi_thoai}"),
+    P("Biên bản kết thúc vào hồi {gio_ket_thuc} cùng ngày, các thành phần tham gia đã đọc, nhất trí với các nội dung trên đây và ký tên dưới đây./."),
+    kyBienBan([
+      "ĐƠN VỊ, TỔ CHỨC THỰC HIỆN NHIỆM VỤ\nBỒI THƯỜNG, HỖ TRỢ, TÁI ĐỊNH CƯ",
+      "ĐẠI DIỆN UBND {TEN_XA}",
+      "CÁC THÀNH PHẦN KHÁC (NẾU CÓ)",
+      "NGƯỜI CÓ ĐẤT THU HỒI",
+    ]),
+  ],
+];
+
+const DANH_SACH = { T1: "tt-ke-hoach", T8: "tt-tb-du-kien-tdc", T9: "tt-tb-cong-bo-tdc", T10: "tt-to-trinh-cham-tra", T11: "tt-qd-cham-tra", T12: "tt-bb-doi-thoai", T2: "tt-to-trinh-tb", T3: "tt-thong-bao", T4: "tt-to-trinh-pa-ho", T5: "tt-qd-pa-ho", T6: "tt-to-trinh-thu-hoi", T7: "tt-qd-thu-hoi" };
 for (const [ma, tep] of Object.entries(DANH_SACH)) {
   const [chinh, phu] = MAU[ma]();
   const buf = await Packer.toBuffer(taoDoc(chinh, phu));

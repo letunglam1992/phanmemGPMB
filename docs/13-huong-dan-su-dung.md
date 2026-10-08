@@ -51,6 +51,9 @@ Quá hạn kế hoạch; bước quá hạn theo luật (thẩm định 30 ngày
 - **Kiểm tra phương án Excel dạng bảng ngang** (mỗi hộ một dòng, khoản theo cột): Kiểm tra phương án → **Dạng bảng: Ngang** — kiểm cộng từng hộ và dòng tổng.
 - **Tim tuyến → lý trình:** Bản đồ → thẻ "Tim tuyến → lý trình" → chọn lớp, đường tim tuyến, Km điểm đầu → phần mềm gợi ý lý trình từ–đến từng thửa → chọn dòng → Ghi. Kết quả là gợi ý hình học, đối chiếu cọc mốc thực địa.
 - **Tỉnh xem diễn biến:** Tổng hợp tỉnh → **Tải các bản cũ trên cổng** (khi khóa mở) → khung **Diễn biến theo tháng** (toàn tỉnh, một xã, một dự án liên xã).
+- **Lấy ý kiến, đối thoại (điểm a khoản 3 Điều 87):** Hồ sơ hộ → Tiến độ → bấm bước 7 → ghi ý kiến của hộ, ngày tổ chức lấy ý kiến (bấm "Ghi ngày lấy ý kiến này cho … hồ sơ khác" để ghi một lần), nội dung. Hộ không đồng ý: phần mềm hiện hạn tổ chức đối thoại (60 ngày kể từ ngày lấy ý kiến); ghi từng lần đối thoại, kết quả; soạn biên bản **T12**. Biên bản lấy ý kiến (mẫu 08) tự điền số ý kiến đồng ý, không đồng ý, khác. Soát phương án và hộp Chốt nhắc hộ chưa đối thoại, quá hạn.
+- **Diện tích thu hồi theo văn bản:** Tổng quan dự án → thẻ Đối chiếu diện tích → **DT thu hồi theo văn bản…** → nhập tổng diện tích (dự án, từng đợt) kèm văn bản → bảng so tổng hồ sơ với bản đồ, phương án, văn bản.
+- **Thưởng bàn giao sớm:** khai báo mốc thưởng ở Thông tin dự án, ghi bàn giao ở Tiến độ hộ → Văn bản → mẫu 20, 21 tự điền danh sách, tổng tiền thưởng.
 - **Thử phần mềm trên máy thật:** Giới thiệu → **Biểu ghi kết quả thử (Excel)** → điền Đạt / Không đạt / Ghi chú từng việc rồi gửi lại tác giả.
 - **Tìm nhanh (Ctrl + K):** gõ tên, mã hộ, tờ/thửa (5/85 — đúng số tờ, số thửa), 4 số cuối số định danh, hoặc lý trình (Km1+300); Enter mở thẳng thửa tìm được.
 - **Soát phương án** (trước khi chốt): hàng tóm tắt theo quy tắc cho biết bao nhiêu hồ sơ còn vướng từng điều kiện; bấm một dòng để mở đúng thẻ, đúng thửa cần sửa.

@@ -88,3 +88,49 @@ export function doiChieuDienTich(duAn: DuAn, hos: Ho[], nguong: NguongLechDt | n
   }
   return out;
 }
+
+/** 1.0.6 — Đối chiếu TỔNG diện tích thu hồi của dự án (hoặc một đợt) giữa các nguồn; mốc so sánh là tổng trong hồ sơ. */
+export interface DongTongDt {
+  phamVi: string;
+  dotId?: string;
+  /** Tổng DT thu hồi trong hồ sơ các hộ (m²) */
+  hoSo: string;
+  soHo: number;
+  /** goc: tổng DT hồ sơ của đúng phần được so (thửa đã liên kết bản đồ, hộ đã có trong phương án) — chênh = goc − dienTich */
+  so: { nguon: "BAN_DO" | "PHUONG_AN" | "VAN_BAN"; ten: string; goc: string; dienTich: string; chenh: string; tyLe: string | null; vuot: boolean; ghiChu?: string }[];
+}
+
+export function doiChieuTongDt(duAn: DuAn, hos: Ho[], nguong: NguongLechDt | null): DongTongDt[] {
+  const paMoi = [...(duAn.phuongAn ?? [])].filter((p) => p.trangThai !== "DA_HUY").sort((a, b) => b.so - a.so);
+  const phamVi: { ten: string; dotId?: string; hos: Ho[]; vb?: { dienTich: string; canCu: string } }[] = [{ ten: "Toàn dự án", hos, vb: duAn.dtThuHoiVb }];
+  for (const d of [...(duAn.dotThuHoi ?? [])].sort((a, b) => a.so - b.so)) phamVi.push({ ten: `Đợt ${d.so}${d.ten ? ` – ${d.ten}` : ""}`, dotId: d.id, hos: hos.filter((h) => h.dotId === d.id), vb: d.dtThuHoiVb });
+  return phamVi
+    .filter((p) => p.hos.length || p.vb)
+    .map((p) => {
+      const tong = (f: (h: Ho) => Decimal) => p.hos.reduce((s, h) => s.plus(f(h)), D(0));
+      const hoSo = tong((h) => h.thua.reduce((s, t) => s.plus(so(t.dienTichThuHoi) ?? 0), D(0)));
+      const out: DongTongDt["so"] = [];
+      const dtHs = (t: { dienTichThuHoi: string }) => so(t.dienTichThuHoi) ?? D(0);
+      const them = (nguon: DongTongDt["so"][number]["nguon"], ten: string, v: Decimal, ghiChu?: string, goc = hoSo) => {
+        const chenh = goc.minus(v);
+        const tyLe = v.isZero() ? null : chenh.div(v).mul(100);
+        out.push({ nguon, ten, goc: goc.toString(), dienTich: v.toString(), chenh: chenh.toString(), tyLe: tyLe ? tyLe.toDecimalPlaces(2).toString() : null, vuot: vuotNguong(chenh, tyLe, nguong), ...(ghiChu ? { ghiChu } : {}) });
+      };
+      // bản đồ: chỉ cộng thửa đã liên kết bản đồ; nêu số thửa chưa liên kết
+      const thua = p.hos.flatMap((h) => h.thua.filter((t) => (so(t.dienTichThuHoi)?.gt(0) ?? false)));
+      const coBd = thua.filter((t) => t.dienTichBanDo !== undefined);
+      if (coBd.length) them("BAN_DO", "Tổng DT thu hồi trên bản đồ", coBd.reduce((s, t) => s.plus(D(t.dienTichBanDo!).toDecimalPlaces(2)), D(0)), coBd.length < thua.length ? `${thua.length - coBd.length}/${thua.length} thửa chưa liên kết bản đồ — chỉ so các thửa đã liên kết` : undefined, coBd.reduce((s, t) => s.plus(dtHs(t)), D(0)));
+      // phương án: bản gần nhất có chứa từng hộ
+      let coPa = 0, gocPa = D(0);
+      const dtPa = tong((h) => {
+        const x = paMoi.map((pa) => pa.ho.find((y) => y.hoId === h.id)).find(Boolean);
+        if (!x) return D(0);
+        coPa++;
+        gocPa = gocPa.plus(h.thua.reduce((s, t) => s.plus(dtHs(t)), D(0)));
+        return x.duLieu.thua.reduce((s, t) => s.plus(so(t.dienTichThuHoi) ?? 0), D(0));
+      });
+      if (coPa) them("PHUONG_AN", "Tổng DT thu hồi trong phương án đã chốt/duyệt", dtPa, coPa < p.hos.length ? `${p.hos.length - coPa}/${p.hos.length} hồ sơ chưa có trong bản phương án nào — chỉ so các hồ sơ đã có` : undefined, gocPa);
+      if (p.vb && so(p.vb.dienTich)) them("VAN_BAN", "DT thu hồi theo văn bản", so(p.vb.dienTich)!, p.vb.canCu);
+      return { phamVi: p.ten, ...(p.dotId ? { dotId: p.dotId } : {}), hoSo: hoSo.toString(), soHo: p.hos.length, so: out };
+    });
+}
