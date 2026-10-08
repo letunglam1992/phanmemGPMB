@@ -145,3 +145,41 @@ test("1.0.5: lý trình trên bản đồ — dải Km, bấm đoạn còn vư�
   await the.getByRole("button", { name: "Km0+100 – Km0+300" }).click();
   await expect(the.getByRole("status")).toContainText("Đã chọn 1 thửa trên bản đồ");
 });
+
+test("1.0.5: tim tuyến → lý trình gợi ý cho thửa hồ sơ, ghi vào hồ sơ", async ({ page: p }) => {
+  const v = new VietDgn(100, 1, [0, 0]);
+  for (let i = 0; i < 4; i++) {
+    const x = 500000 + i * 20;
+    v.duongGap({ lop: 10 }, [[x, 2350000], [x + 20, 2350000], [x + 20, 2350020], [x, 2350020], [x, 2350000]], 6)
+      .chu({ lop: 4 }, [x + 5, 2350008], String(i + 1))
+      .chu({ lop: 5 }, [x + 5, 2350004], "7")
+      .chu({ lop: 13 }, [x + 10, 2350012], "CLN");
+  }
+  v.duongGap({ lop: 20 }, [[499990, 2349990], [500200, 2349990]], 4);
+  await vao(p);
+  await p.keyboard.press("Alt+3");
+  await p.locator("[role=tablist] button", { hasText: "Bản đồ" }).click();
+  await p.locator('input[type=file][accept=".dgn,.dxf,.dwg"]').first().setInputFiles({ name: "tuyen.dgn", mimeType: "application/octet-stream", buffer: Buffer.from(v.xuat()) });
+  await expect(p.getByText("tuyen.dgn ·")).toBeVisible();
+  await p.getByRole("button", { name: "Để sau" }).click();
+  // hồ sơ H01 thửa đầu → tờ 7 thửa 2
+  await p.locator("[role=tablist] button", { hasText: "Hộ, cá nhân" }).click();
+  await p.locator("tr[data-ho-id]").first().click();
+  await p.locator("[role=tablist] button", { hasText: "Thửa đất" }).click();
+  const dong = p.locator(".trang-ho table.bang tbody tr").first();
+  await dong.locator("td").nth(0).locator("input").fill("7");
+  await dong.locator("td").nth(1).locator("input").fill("2");
+  await p.getByRole("button", { name: "Lưu hồ sơ" }).click();
+  await expect(p.getByRole("button", { name: "Lưu hồ sơ" })).toBeDisabled();
+  await p.keyboard.press("Alt+3");
+  await p.locator("[role=tablist] button", { hasText: "Bản đồ" }).click();
+  await p.getByRole("button", { name: "Tính lý trình từ tim tuyến…" }).click();
+  const hop = p.locator("[role=dialog]", { hasText: "Tính lý trình từ tim tuyến" });
+  await hop.getByLabel("Lớp tim tuyến").selectOption("20");
+  await hop.getByLabel("Lý trình tại điểm đầu").fill("Km1+000");
+  const bang = hop.getByRole("table", { name: "Lý trình gợi ý" });
+  await expect(bang.locator("tr", { hasText: "7/2" })).toContainText("Km1+030 – Km1+050");
+  await hop.getByRole("button", { name: /^Ghi lý trình cho 1 thửa/ }).click();
+  await expect(p.getByText(/Đã ghi lý trình cho 1 thửa/)).toBeVisible();
+  await expect(p.getByLabel("Lý trình trên bản đồ")).toBeVisible();
+});

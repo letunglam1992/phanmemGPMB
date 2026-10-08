@@ -173,3 +173,28 @@ export function dungLai(ban: KetQuaDocDgn, cauHinh: CauHinhLop, laGoiY: boolean,
   if (pham.maxY - pham.minY < 1e-6) pham.maxY = pham.minY + 1;
   return { ban, kq, pham, cauHinh, laGoiY, ghiChuGoiY };
 }
+
+/**
+ * 1.0.5 — kiểm tra vị trí các tờ đã ghép (tham chiếu ngoài, tờ liền kề): phần mềm không đọc phép biến đổi (gốc, tỷ lệ,
+ * xoay) của tham chiếu nên nhắc khi tờ ghép (1) có tọa độ không giống VN-2000 (X 100–900 km, Y 1.000–2.600 km — phạm vi
+ * Việt Nam), hoặc (2) nằm xa tờ chính hơn 20 km. Chỉ để nhắc — cán bộ kiểm tra hệ tọa độ của tệp.
+ */
+export function kiemTraViTriTo(dl: DuLieuBanDo): { khoa: string; ten: string; noiDung: string }[] {
+  const ds = (dl.tep ?? []).filter((t) => t.pham);
+  const chinh = ds.find((t) => t.khoa === "");
+  const out: { khoa: string; ten: string; noiDung: string }[] = [];
+  const laVn2000 = (p: NonNullable<ThongTinTep["pham"]>) => p.minX >= 100000 && p.maxX <= 900000 && p.minY >= 1000000 && p.maxY <= 2600000;
+  for (const t of ds) {
+    const p = t.pham!;
+    if (!laVn2000(p)) {
+      out.push({ khoa: t.khoa, ten: t.ten, noiDung: `Tọa độ (X ${Math.round(p.minX)}–${Math.round(p.maxX)}, Y ${Math.round(p.minY)}–${Math.round(p.maxY)}) không giống hệ VN-2000 — có thể là tọa độ cục bộ hoặc tệp tham chiếu cần phép biến đổi; phần mềm không đọc phép biến đổi của tham chiếu ngoài` });
+      continue;
+    }
+    if (!chinh || t === chinh) continue;
+    const c = chinh.pham!;
+    const dx = Math.max(0, c.minX - p.maxX, p.minX - c.maxX), dy = Math.max(0, c.minY - p.maxY, p.minY - c.maxY);
+    const xa = Math.hypot(dx, dy);
+    if (xa > 20000) out.push({ khoa: t.khoa, ten: t.ten, noiDung: `Nằm cách tờ chính khoảng ${(xa / 1000).toLocaleString("vi-VN", { maximumFractionDigits: 1 })} km — kiểm tra lại có cùng dự án, cùng hệ tọa độ (kinh tuyến trục) không` });
+  }
+  return out;
+}

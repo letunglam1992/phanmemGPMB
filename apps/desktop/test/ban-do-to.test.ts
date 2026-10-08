@@ -55,3 +55,16 @@ describe("Nhiều tờ bản đồ", () => {
     expect(locThuaXoa(goc, [{ ...x, tam: { x: 0, y: 0 } }]).kq.thua).toHaveLength(3);
   });
 });
+
+import { kiemTraViTriTo } from "../src/man/ban-do/du-lieu";
+describe("1.0.5: kiểm tra vị trí tờ ghép (tham chiếu ngoài)", () => {
+  const tep = (khoa: string, ten: string, minX: number, minY: number) => ({ khoa, ten, soPhanTu: 1, thamChieu: [], pham: { minX, minY, maxX: minX + 500, maxY: minY + 500 } });
+  const dl = (ds: ReturnType<typeof tep>[]) => ({ tep: ds }) as unknown as Parameters<typeof kiemTraViTriTo>[0];
+  it("tờ liền kề cùng VN-2000 → không nhắc; tọa độ cục bộ → nhắc; xa > 20 km → nhắc", () => {
+    expect(kiemTraViTriTo(dl([tep("", "chinh.dgn", 500000, 2350000), tep("a", "ke.dgn", 500600, 2350000)]))).toEqual([]);
+    const r = kiemTraViTriTo(dl([tep("", "chinh.dgn", 500000, 2350000), tep("b", "cucbo.dgn", 0, 0), tep("c", "xa.dgn", 560000, 2350000)]));
+    expect(r.map((x) => x.ten)).toEqual(["cucbo.dgn", "xa.dgn"]);
+    expect(r[0]!.noiDung).toMatch(/không giống hệ VN-2000/);
+    expect(r[1]!.noiDung).toMatch(/cách tờ chính khoảng 59,5 km/);
+  });
+});

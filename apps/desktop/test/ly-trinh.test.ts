@@ -40,3 +40,20 @@ describe("Lý trình (1.0.4)", () => {
     expect(mb.soThuaDiem).toBe(1);
   });
 });
+
+import { chieuLenTuyen, daiTuyen, lyTrinhThua } from "../src/ly-trinh";
+describe("1.0.5: tim tuyến → lý trình gợi ý", () => {
+  const tuyen = [{ x: 0, y: 0 }, { x: 1000, y: 0 }, { x: 1000, y: 500 }];
+  it("chiếu điểm, độ dài tuyến", () => {
+    expect(daiTuyen(tuyen)).toBe(1500);
+    expect(chieuLenTuyen(tuyen, { x: 300, y: 20 })).toEqual({ s: 300, d: 20 });
+    expect(chieuLenTuyen(tuyen, { x: 1010, y: 200 })).toEqual({ s: 1200, d: 10 });
+  });
+  it("thửa 20×20 bên tuyến: đoạn theo đỉnh; gốc Km12+000; đảo chiều", () => {
+    const vong = [[{ x: 400, y: 10 }, { x: 420, y: 10 }, { x: 420, y: 30 }, { x: 400, y: 30 }]];
+    expect(lyTrinhThua(vong, tuyen)).toEqual({ ly: { tu: 400, den: 420 }, cach: 10 });
+    expect(lyTrinhThua(vong, tuyen, 12000)!.ly).toEqual({ tu: 12400, den: 12420 });
+    expect(lyTrinhThua(vong, tuyen, 0, true)!.ly).toEqual({ tu: 1080, den: 1100 });
+    expect(lyTrinhThua([], tuyen)).toBeNull();
+  });
+});

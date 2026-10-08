@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { HopTimTuyen } from "../thanh-phan/TimTuyen";
 import { TheLyTrinhBanDo } from "../thanh-phan/LyTrinh";
 import { hienSo } from "../so";
 import { CAU_HINH_MAC_DINH, loaiHienTrangBanDo, goiYCauHinh, tinhDienTichThuHoi, type CauHinhLop, type DienTichThuHoi, type ThuaBanDo } from "@gpmb/gis";
@@ -58,6 +59,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
   const [veRanh, setVeRanh] = useState(0);
   const [capNhatDt, setCapNhatDt] = useState(false);
   const [quet, setQuet] = useState<Set<string>>(new Set());
+  const [moTimTuyen, setMoTimTuyen] = useState(false);
   const [ghiChuMoi, setGhiChuMoi] = useState<{ loai: "DIEM" | "DUONG"; diem: import("@gpmb/gis").Diem[] } | null>(null);
   const [batGhiChu, setBatGhiChu] = useState(0);
   const [hopPhu, setHopPhu] = useState<"GHEP" | "SO_SANH" | null>(null);
@@ -362,6 +364,12 @@ export function BanDo({ duAnId }: { duAnId: string }) {
             <div className="nhom-nut"><TimThua dl={dl} daLienKet={daLienKet} chon={(t) => { setChon(t); setPhongToi({ vong: t.vong, n: Date.now() }); }} /></div>
             {quet.size > 0 && <TheVungChon xoa={quyen("SUA_HO_SO") ? (ds) => void xoaThua(ds) : undefined} duAn={duAn} dl={dl} chon={quet} boChon={() => setQuet(new Set())} thuHoi={thuHoi} khoaThua={khoaThua} daLienKet={daLienKet} ttThua={ttThua} />}
             {(duAn.banDo?.thuaXoa?.length ?? 0) > 0 && <TheThuaXoa ds={duAn.banDo!.thuaXoa!} sua={quyen("SUA_HO_SO")} khoiPhuc={(id) => void khoiPhucThua(id === null ? () => false : (x) => x.ma + x.ngay !== id)} />}
+            {quyen("SUA_HO_SO") && (
+              <div className="the co-dinh" aria-label="Tim tuyến">
+                <div className="the-dau"><h3>Tim tuyến → lý trình</h3><div className="phai"><button className="nut nut-nho" onClick={() => setMoTimTuyen(true)}>Tính lý trình từ tim tuyến…</button></div></div>
+              </div>
+            )}
+            {moTimTuyen && <HopTimTuyen dl={dl} hos={hos} dong={() => setMoTimTuyen(false)} />}
             <TheLyTrinhBanDo hos={hos} chonThuaBanDo={(dsHs) => {
               const so = (x: string | null | undefined) => (x ?? "").trim().replace(/^0+(?=\d)/, "");
               const theoMa = new Set(dsHs.map((x) => x.maBanDo).filter(Boolean));

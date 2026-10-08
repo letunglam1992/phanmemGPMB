@@ -166,3 +166,41 @@ export async function excelLyTrinh(tenDuAn: string, ds: DoanLyTrinh[], dtThuHoi:
   }
   return new Uint8Array(await wb.xlsx.writeBuffer());
 }
+
+/* ============================ 1.0.5: tim tuyến → lý trình gợi ý ============================ */
+
+export interface DiemXY { x: number; y: number }
+
+/** Chiếu điểm lên đường gấp khúc: lý trình (m, tính từ đỉnh đầu) và khoảng cách vuông góc tới tim tuyến. */
+export function chieuLenTuyen(tuyen: DiemXY[], p: DiemXY): { s: number; d: number } {
+  let tot = { s: 0, d: Infinity };
+  let tichLuy = 0;
+  for (let i = 0; i + 1 < tuyen.length; i++) {
+    const a = tuyen[i]!, b = tuyen[i + 1]!;
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const l2 = dx * dx + dy * dy;
+    const l = Math.sqrt(l2);
+    const t = l2 ? Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / l2)) : 0;
+    const d = Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
+    if (d < tot.d) tot = { s: tichLuy + t * l, d };
+    tichLuy += l;
+  }
+  return tot;
+}
+
+export const daiTuyen = (tuyen: DiemXY[]) => tuyen.slice(1).reduce((s, b, i) => s + Math.hypot(b.x - tuyen[i]!.x, b.y - tuyen[i]!.y), 0);
+
+/**
+ * Lý trình gợi ý của một thửa (các vòng ranh): đoạn [min, max] lý trình chiếu các đỉnh ranh lên tim tuyến, cộng lý trình
+ * điểm đầu (`gocM`, vd. Km12+000 = 12000), đảo chiều nếu Km0 ở cuối đường vẽ. Kèm khoảng cách gần nhất tới tim tuyến.
+ * Làm tròn đến mét. Chỉ là gợi ý — cán bộ xác nhận mới ghi vào hồ sơ.
+ */
+export function lyTrinhThua(vong: DiemXY[][], tuyen: DiemXY[], gocM = 0, dao = false): { ly: LyTrinh; cach: number } | null {
+  const dinh = vong.flat();
+  if (!dinh.length || tuyen.length < 2) return null;
+  const L = daiTuyen(tuyen);
+  const ch = dinh.map((p) => chieuLenTuyen(tuyen, p));
+  const s = ch.map((c) => (dao ? L - c.s : c.s));
+  const tu = Math.round(gocM + Math.min(...s)), den = Math.round(gocM + Math.max(...s));
+  return { ly: den > tu ? { tu, den } : { tu }, cach: Math.round(Math.min(...ch.map((c) => c.d)) * 10) / 10 };
+}

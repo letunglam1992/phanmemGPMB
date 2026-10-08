@@ -11,7 +11,7 @@ import { xoaMemTep } from "../../dinh-kem-thung-rac";
 import { laAnhXemDuoc, loiTepDinhKem } from "../../thanh-phan/DinhKemHo";
 import { tenTep } from "../../ten-tep";
 import { MAU_GHI_CHU } from "./KhungVe";
-import { type DuLieuBanDo, dsSoTo, khoaTepGhep, thamChieuThieu } from "./du-lieu";
+import { type DuLieuBanDo, dsSoTo, khoaTepGhep, kiemTraViTriTo, thamChieuThieu } from "./du-lieu";
 import { docBang } from "./RanhGpmb";
 import { doiChieuSoSanh } from "./ranh";
 import { hienSo } from "../../so";
@@ -440,7 +440,13 @@ export function HopTepGhep(p: { duAn: DuAn; dl: DuLieuBanDo | null; dong: () => 
       <p className="mt-0 chu-nho">Một dự án có nhiều tờ bản đồ địa chính / mảnh trích đo (cùng hệ VN-2000): thêm từng tệp DGN làm một tờ, đánh dấu chọn các tờ cần dùng — thửa, ranh, nhãn của các tờ đang chọn dựng chung theo cấu hình lớp đã chốt. Tham chiếu ngoài (reference) trong tệp không dựng được; phần mềm dò tên tệp được tham chiếu để cán bộ nạp chính các tệp đó.</p>
       {thieu.length > 0 && (
         <div className="thong-bao thong-bao-vang" role="status" style={{ marginBottom: 8 }}>
-          <b>Tệp nhắc tới chưa nạp ({thieu.length}):</b> {thieu.map((x) => `${x.ten} (trong ${x.tu})`).join("; ")}. Có thể là tờ tham chiếu — nếu đúng, thêm các tệp này làm tờ bản đồ.
+          <b>Tệp nhắc tới chưa nạp ({thieu.length}):</b> {thieu.map((x) => `${x.ten} (trong ${x.tu})`).join("; ")}. Có thể là tờ tham chiếu — nếu đúng, bấm “Thêm tờ bản đồ” và chọn một lần cả {thieu.length} tệp (giữ Ctrl để chọn nhiều tệp).
+        </div>
+      )}
+      {p.dl && kiemTraViTriTo(p.dl).length > 0 && (
+        <div className="thong-bao thong-bao-vang" role="status" aria-label="Kiểm tra vị trí tờ" style={{ marginBottom: 8 }}>
+          <b>Kiểm tra vị trí các tờ:</b>
+          <ul style={{ margin: "4px 0 0 18px", padding: 0 }}>{kiemTraViTriTo(p.dl).map((x) => <li key={x.khoa}><b>{x.ten}</b>: {x.noiDung}</li>)}</ul>
         </div>
       )}
       <table className="bang" aria-label="Danh sách tờ bản đồ">
