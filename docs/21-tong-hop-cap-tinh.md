@@ -174,9 +174,10 @@ Mỗi xã lập hồ sơ, phương án cho phần đất trên địa bàn mình
 **Cấp tỉnh — khai một lần cho mỗi tuyến** (màn "Tổng hợp tỉnh" → khối "Dự án liên xã" → "Khai dự án liên xã")
 - **Mã dự án dùng chung** (phần mềm gợi ý `LX-<năm>-NNN`, sửa được; chỉ chữ không dấu, số, `- . _ /`).
 - Tên dự án, chủ đầu tư, **danh sách xã, phường dọc tuyến** (ít nhất 2; theo quyết định chủ trương / phạm vi dự án). Có nút thêm nhanh các xã đã từng gửi gói.
-- Báo mã cho các xã bằng văn bản (công văn, nhóm Zalo…). Danh sách tuyến lưu ở máy tỉnh, chưa đồng bộ qua cổng.
+- Báo mã cho các xã bằng văn bản (công văn, nhóm Zalo…). Danh sách tuyến lưu ở máy tỉnh.
+- **Từ 1.0.5, nếu tỉnh đã cài cổng:** mỗi lần lưu / xóa khai báo, phần mềm tự đưa danh sách lên cổng (nút "Đưa danh sách lên cổng" để đưa lại). Cổng chỉ nhận mã, tên, chủ đầu tư, xã dọc tuyến, ghi chú — không có hồ sơ. **Cần dán lại mã Worker mới** (`tools/cong-tinh/worker.js`, mục 4.2) vì bản cũ chưa có API `/api/tuyen`; chưa dán thì phần mềm báo "Cổng chưa có chức năng dự án liên xã".
 
-**Cấp xã** — Thông tin dự án → tích **"Là dự án liên xã"** → điền đúng mã tỉnh cấp; tên toàn tuyến, đoạn từ Km / đến Km (không bắt buộc). Gửi gói như thường lệ. Nếu xã ghi lý trình theo thửa, gói kèm số km mặt bằng sạch của đoạn.
+**Cấp xã** — Thông tin dự án → tích **"Là dự án liên xã"** → (1.0.5, xã đã cài mã gửi cổng) bấm **"Lấy danh sách dự án liên xã từ cổng tỉnh"** rồi chọn trong danh sách — mã, tên toàn tuyến tự điền; xã không có trong danh sách xã dọc tuyến, hoặc mã gõ tay không có trong danh sách → cảnh báo vàng. Không có cổng thì điền đúng mã tỉnh cấp; tên toàn tuyến, đoạn từ Km / đến Km (không bắt buộc). Gửi gói như thường lệ. Nếu xã ghi lý trình theo thửa, gói kèm số km mặt bằng sạch của đoạn.
 
 **Cách tỉnh tổng hợp**
 - Gom các đoạn theo mã: mỗi tuyến một bảng — từng xã (số hộ, đã bàn giao, duyệt PA, vướng mắc, tạm tính, DT thu hồi, km sạch), dòng **"Toàn tuyến (x/y xã có số liệu)"**.

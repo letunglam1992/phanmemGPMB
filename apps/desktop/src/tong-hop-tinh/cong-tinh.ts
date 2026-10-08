@@ -115,6 +115,17 @@ export const dsGoiTrenCong = (c: CauHinhCong) => json<GoiTrenCong[]>(goi(c, "GET
 export const taiGoiTuCong = async (c: CauHinhCong, ma: string) => (await goi(c, "GET", `/api/goi/${encodeURIComponent(ma)}`)).than;
 export const dsXaTrenCong = (c: CauHinhCong) => json<XaTrenCong[]>(goi(c, "GET", "/api/xa"));
 export const capMaXa = (c: CauHinhCong, ma: string, ten: string) => json<{ ma: string; token: string }>(goi(c, "POST", "/api/xa", new TextEncoder().encode(JSON.stringify({ ma, ten }))));
+/** 1.0.5: danh sách dự án liên xã trên cổng (tỉnh đưa lên, xã đọc). Cổng bản cũ (chưa có API) → LoiCong 404. */
+export interface TuyenTrenCong {
+  ma: string;
+  ten: string;
+  chuDauTu: string;
+  dsXa: string[];
+  ghiChu?: string;
+}
+export const dsTuyenTrenCong = (c: CauHinhCong) => json<{ luc: string | null; tuyen: TuyenTrenCong[] }>(goi(c, "GET", "/api/tuyen"));
+export const guiTuyenLenCong = (c: CauHinhCong, ds: TuyenTrenCong[]) =>
+  json<{ soTuyen: number; luc: string }>(goi(c, "PUT", "/api/tuyen", new TextEncoder().encode(JSON.stringify(ds.map(({ ma, ten, chuDauTu, dsXa, ghiChu }) => ({ ma, ten, chuDauTu, dsXa, ...(ghiChu ? { ghiChu } : {}) }))))));
 export const thuHoiXa = (c: CauHinhCong, ma: string) => json<{ ok: true }>(goi(c, "DELETE", `/api/xa/${encodeURIComponent(ma)}`));
 
 /** Mã đơn vị trên cổng: chữ thường không dấu, số, gạch ngang (vd. "chieng-mung"). */

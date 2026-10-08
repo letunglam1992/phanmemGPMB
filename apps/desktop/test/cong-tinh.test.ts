@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 // @ts-expect-error tệp JS của Worker (không có khai báo kiểu)
 import worker from "../../../tools/cong-tinh/worker.js";
-import { capMaXa, chuanDiaChi, dsGoiTrenCong, dsXaTrenCong, guiGoiLenCong, kiemTraCong, maTuTen, taiGoiTuCong, thuHoiXa, type CauHinhCong } from "../src/tong-hop-tinh/cong-tinh";
+import { capMaXa, chuanDiaChi, dsGoiTrenCong, dsXaTrenCong, guiGoiLenCong, kiemTraCong, maTuTen, taiGoiTuCong, thuHoiXa, type CauHinhCong, dsTuyenTrenCong, guiTuyenLenCong } from "../src/tong-hop-tinh/cong-tinh";
 
 /** R2 tối giản: put/get/list/delete trong bộ nhớ. */
 function r2() {
@@ -91,6 +91,23 @@ describe("Kết nối cổng từ phần mềm", () => {
     await expect(dsGoiTrenCong(xa)).rejects.toThrow(/quản trị/);
     await thuHoiXa(tinh, "chieng-mung");
     await expect(guiGoiLenCong(xa, GOI())).rejects.toThrow(/thu hồi/);
+    vi.unstubAllGlobals();
+  });
+  it("1.0.5: tỉnh đưa danh sách dự án liên xã lên cổng, xã đọc; xã không ghi được; mã sai bị bỏ", async () => {
+    vi.stubGlobal("fetch", (url: string, init: RequestInit) => worker.fetch(new Request(url, init), env));
+    const tinh: CauHinhCong = { diaChi: chuanDiaChi("https://cong.test/"), ma: QT };
+    const { token } = await capMaXa(tinh, "muong-bu", "Xã Mường Bú");
+    const xa: CauHinhCong = { diaChi: tinh.diaChi, ma: token };
+    expect((await dsTuyenTrenCong(xa)).tuyen).toEqual([]);
+    const r = await guiTuyenLenCong(tinh, [
+      { ma: "LX-2026-001", ten: "Đường nối QL6", chuDauTu: "Ban QLDA", dsXa: ["Xã Mường Bú", "Xã Chiềng Mung"], taoLuc: "x" } as never,
+      { ma: "sai mã", ten: "x", chuDauTu: "", dsXa: [] },
+    ]);
+    expect(r.soTuyen).toBe(1);
+    const d = await dsTuyenTrenCong(xa);
+    expect(d.tuyen).toEqual([{ ma: "LX-2026-001", ten: "Đường nối QL6", chuDauTu: "Ban QLDA", dsXa: ["Xã Mường Bú", "Xã Chiềng Mung"] }]);
+    expect(d.luc).toBeTruthy();
+    await expect(guiTuyenLenCong(xa, [])).rejects.toThrow(/quản trị/);
     vi.unstubAllGlobals();
   });
   it("địa chỉ cổng phải https; mã xã từ tên", () => {

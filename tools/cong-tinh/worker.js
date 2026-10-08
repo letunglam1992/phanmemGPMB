@@ -14,6 +14,8 @@
  *   GET    /api/xa              (tỉnh)  → [{ ma, ten, taoLuc, thuHoi?, goiCuoi? }]
  *   POST   /api/xa              (tỉnh)  { ma, ten } → { ma, token } (cấp mới / cấp lại — mã cũ hết hiệu lực)
  *   DELETE /api/xa/:ma          (tỉnh)  thu hồi mã của xã
+ *   PUT    /api/tuyen          (tỉnh)  [{ ma, ten, chuDauTu, dsXa, ghiChu? }] → { soTuyen, luc }  (1.0.5: dự án liên xã)
+ *   GET    /api/tuyen          (tỉnh, xã) → { luc, tuyen: [...] } — danh sách dự án liên xã do tỉnh khai (không có hồ sơ)
  */
 const GIU_BAN = 5;
 const TOI_DA = 95 * 1024 * 1024;
@@ -81,6 +83,31 @@ export default {
     if (!ai) return loi(401, "Mã truy cập không đúng hoặc đã bị thu hồi");
 
     if (p === "/api/trang-thai" && req.method === "GET") return tl(ai);
+
+    // 1.0.5: danh sách dự án liên xã (mã dùng chung, tên, chủ đầu tư, xã dọc tuyến) — chỉ thông tin dự án, không có hồ sơ
+    if (p === "/api/tuyen" && req.method === "GET") {
+      const o = await env.KHO.get("tuyen.json");
+      return tl(o ? await o.json() : { luc: null, tuyen: [] });
+    }
+    if (p === "/api/tuyen" && req.method === "PUT") {
+      if (ai.vaiTro !== "TINH") return loi(403, "Chỉ quản trị cấp tỉnh");
+      const chu = await req.text();
+      if (chu.length > 1024 * 1024) return loi(413, "Danh sách quá lớn (tối đa 1 MB)");
+      let ds;
+      try {
+        ds = JSON.parse(chu);
+      } catch {
+        return loi(400, "Thân yêu cầu không phải JSON");
+      }
+      if (!Array.isArray(ds)) return loi(400, "Danh sách dự án liên xã phải là mảng");
+      const s = (v, n) => String(v ?? "").trim().slice(0, n);
+      const tuyen = ds
+        .filter((t) => t && /^[A-Z0-9][A-Z0-9._/-]{1,39}$/.test(String(t.ma ?? "")))
+        .map((t) => ({ ma: t.ma, ten: s(t.ten, 300), chuDauTu: s(t.chuDauTu, 200), dsXa: (Array.isArray(t.dsXa) ? t.dsXa : []).map((x) => s(x, 80)).filter(Boolean).slice(0, 200), ...(t.ghiChu ? { ghiChu: s(t.ghiChu, 500) } : {}) }));
+      const luc = new Date().toISOString();
+      await env.KHO.put("tuyen.json", JSON.stringify({ luc, tuyen }));
+      return tl({ soTuyen: tuyen.length, luc });
+    }
 
     if (p === "/api/goi" && req.method === "PUT") {
       if (ai.vaiTro !== "XA") return loi(403, "Chỉ đơn vị cấp xã gửi gói");

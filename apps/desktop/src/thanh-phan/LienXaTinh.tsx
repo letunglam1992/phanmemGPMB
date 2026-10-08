@@ -4,7 +4,11 @@ import { D, dinhDang } from "@gpmb/core";
 import { useUngDung } from "../ung-dung";
 import { HopThoai, O } from "./chung";
 import { chuanMa, gomLienXa, khoaDoan, loiTuyen, maTiepTheo, tachDsXa, type DoanTinh, type TongHopTuyen, type TuyenLienXa } from "../tong-hop-tinh/lien-xa";
-import { luuTuyen, xoaTuyen } from "../tong-hop-tinh/kho-tinh";
+import { dsTuyen as docDsTuyen, luuTuyen, xoaTuyen } from "../tong-hop-tinh/kho-tinh";
+import { docCauHinhCong, guiTuyenLenCong, LoiCong } from "../tong-hop-tinh/cong-tinh";
+
+const KHOA_LUC_CONG = "gpmb-tuyen-cong-luc";
+const docLuc = () => { try { return localStorage.getItem(KHOA_LUC_CONG); } catch { return null; } };
 
 const ptBanGiao = (bg: number, so: number) => (so ? `${dinhDang(D(bg).div(so).times(100), 0)}%` : "—");
 
@@ -17,6 +21,20 @@ export function TheLienXaTinh({ doan, dsTuyen, napLai, sua, xaGoiY }: { doan: Do
   const [hop, setHop] = useState<TuyenLienXa | "moi" | null>(null);
   const kq = useMemo(() => gomLienXa(doan, dsTuyen), [doan, dsTuyen]);
   const tuyenCua = (ma: string) => dsTuyen.find((t) => chuanMa(t.ma) === ma);
+  // 1.0.5: đưa danh sách lên cổng (nếu tỉnh đã cài cổng) để xã chọn mã — chỉ mã, tên, chủ đầu tư, xã dọc tuyến
+  const cong = docCauHinhCong("TINH");
+  const [lucCong, setLucCong] = useState(docLuc);
+  const dongBoCong = async (imLang = false) => {
+    if (!cong) return;
+    try {
+      const r = await guiTuyenLenCong(cong, await docDsTuyen());
+      try { localStorage.setItem(KHOA_LUC_CONG, r.luc); } catch { /* bỏ qua */ }
+      setLucCong(r.luc);
+      if (!imLang) bao(`Đã đưa ${r.soTuyen} dự án liên xã lên cổng — các xã chọn mã ở Thông tin dự án`);
+    } catch (e) {
+      bao(e instanceof LoiCong && e.ma === 404 ? "Cổng chưa có chức năng dự án liên xã — dán lại mã Worker mới (tools/cong-tinh/worker.js, docs/21 mục 4)" : `Chưa đưa được danh sách lên cổng: ${(e as Error).message}`, "loi");
+    }
+  };
   const ghep = async (d: DoanTinh, ma: string, bo = false) => {
     const t = tuyenCua(ma);
     if (!t) return;
@@ -31,13 +49,19 @@ export function TheLienXaTinh({ doan, dsTuyen, napLai, sua, xaGoiY }: { doan: Do
     await xoaTuyen(t.ma);
     await ghiNhatKy("Xóa khai báo dự án liên xã", `${t.ma} · ${t.ten}`);
     await napLai();
+    await dongBoCong(true);
   };
   return (
     <div className="the" aria-label="Dự án liên xã">
       <div className="the-dau">
         <h3>Dự án liên xã (tuyến qua nhiều xã, phường)</h3>
         <span className="mo chu-nho">{kq.tuyen.length} dự án · tỉnh cấp mã dùng chung, các xã điền mã vào dự án của mình</span>
-        {sua && <div className="phai"><button className="nut nut-nho nut-chinh" onClick={() => setHop("moi")}>+ Khai dự án liên xã</button></div>}
+        {sua && (
+          <div className="phai nhom-nut">
+            {cong && <button className="nut nut-nho" title={lucCong ? `Lần đưa gần nhất: ${new Date(lucCong).toLocaleString("vi-VN")}` : "Chưa đưa lần nào"} onClick={() => void dongBoCong()}>Đưa danh sách lên cổng{lucCong ? " ✓" : ""}</button>}
+            <button className="nut nut-nho nut-chinh" onClick={() => setHop("moi")}>+ Khai dự án liên xã</button>
+          </div>
+        )}
       </div>
       <div className="the-than luoi" style={{ gap: 12 }}>
         {!kq.tuyen.length && <div className="trong">Chưa khai dự án liên xã. Khai mã, tên, chủ đầu tư và các xã dọc tuyến; thông báo mã cho các xã điền ở Thông tin dự án → Dự án liên xã.</div>}
@@ -68,7 +92,8 @@ export function TheLienXaTinh({ doan, dsTuyen, napLai, sua, xaGoiY }: { doan: Do
             await ghiNhatKy(maCu ? "Sửa khai báo dự án liên xã" : "Khai dự án liên xã", `${chuanMa(t.ma)} · ${t.ten} · ${t.dsXa.join(", ")}`);
             await napLai();
             setHop(null);
-            bao(`Đã lưu dự án liên xã ${chuanMa(t.ma)} — thông báo mã cho ${t.dsXa.length} xã, phường`);
+            bao(`Đã lưu dự án liên xã ${chuanMa(t.ma)} — ${cong ? "đang đưa lên cổng để các xã chọn mã" : `thông báo mã cho ${t.dsXa.length} xã, phường`}`);
+            await dongBoCong(true);
           }}
         />
       )}

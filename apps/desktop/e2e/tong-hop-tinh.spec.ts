@@ -275,6 +275,29 @@ test("cổng Cloudflare: tỉnh cấp mã cho xã; xã gửi gói lên cổng; t
   await expect(p.getByRole("table", { name: "Đơn vị đã gửi" })).toContainText("Cổng");
   await p.getByRole("button", { name: "Tải gói mới từ cổng Cloudflare" }).click();
   await expect(p.getByLabel("Kết quả nhận gói")).toContainText("Không có gói mới trên cổng");
+  // 1.0.5: tỉnh khai dự án liên xã → tự đưa lên cổng; xã lấy danh sách, chọn mã
+  await p.getByLabel("Dự án liên xã", { exact: true }).getByRole("button", { name: "+ Khai dự án liên xã" }).click();
+  await p.getByLabel("Mã dự án liên xã").fill("LX-2026-007");
+  await p.getByLabel("Tên dự án liên xã").fill("Đường tránh thử");
+  await p.getByLabel("Chủ đầu tư dự án liên xã").fill("Ban QLDA thử");
+  await p.getByLabel("Xã dọc tuyến").fill("Xã Chiềng Mung\nXã Mường Bon");
+  await p.getByRole("button", { name: "Lưu", exact: true }).click();
+  await expect.poll(() => kho.has("tuyen.json")).toBe(true);
+  expect(new TextDecoder().decode(kho.get("tuyen.json")!)).toContain("LX-2026-007");
+  await expect(p.getByRole("button", { name: /Đưa danh sách lên cổng ✓/ })).toBeVisible();
+  await p.keyboard.press("Alt+3");
+  await p.locator("[role=tablist] button", { hasText: "Thông tin dự án" }).click();
+  await p.getByLabel("Là dự án liên xã").check();
+  await p.getByRole("button", { name: "Lấy danh sách dự án liên xã từ cổng tỉnh" }).click();
+  await expect(p.getByText("Đã lấy 1 dự án liên xã từ cổng tỉnh")).toBeVisible();
+  await p.getByLabel("Chọn dự án liên xã của tỉnh").selectOption("LX-2026-007");
+  await expect(p.getByLabel("Mã dự án dùng chung")).toHaveValue("LX-2026-007");
+  await expect(p.getByLabel("Tên dự án toàn tuyến")).toHaveValue("Đường tránh thử");
+  await expect(p.locator("[data-ds-tinh]").locator("..")).toContainText("xã dọc tuyến: Xã Chiềng Mung, Xã Mường Bon");
+  await p.getByLabel("Mã dự án dùng chung").fill("LX-2026-999");
+  await expect(p.getByText(/Mã LX-2026-999 chưa có trong danh sách tỉnh/)).toBeVisible();
+  await p.getByRole("button", { name: "Gửi tỉnh, tổng hợp tỉnh" }).click();
+  await p.getByRole("tab", { name: "Tổng hợp tỉnh (cấp tỉnh)" }).click();
   // thu hồi mã: xã không gửi được nữa
   await p.getByRole("button", { name: "Thu hồi" }).click();
   await expect(p.getByText(/Đã thu hồi/)).toBeVisible();
