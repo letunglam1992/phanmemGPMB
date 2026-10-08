@@ -114,9 +114,9 @@ export function dungBoCuc(tl: TaiLieu, doChu: DoChu, dpi = 150): BoCuc {
         const g = k === 1 ? gopO : 1;
         const ww = w.slice(i, i + g).reduce((s, z) => s + z, 0);
         const chu = (typeof v === "string" ? [{ t: v }] : v).map((c) => ({ ...c, dam: c.dam || dam }));
-        // ô hẹp: từ dài nhất (số tiền, chữ) không vừa thì giảm cỡ chữ của ô (tối thiểu 7,5 pt) thay vì ngắt giữa từ
+        // ô hẹp: từ dài nhất (số tiền, chữ) không vừa thì giảm cỡ chữ của ô (tối thiểu 6,5 pt) thay vì ngắt giữa từ
         const dai = Math.max(0, ...chu.flatMap((c) => c.t.split(/\s+/).map((tu) => doChu(tu, fontCua(c, px)))));
-        const pxO = dai > ww - 2 * dem ? Math.max(pt(7.5), (px * (ww - 2 * dem)) / dai) : px;
+        const pxO = dai > ww - 2 * dem ? Math.max(pt(6.5), (px * (ww - 2 * dem)) / dai) : px;
         ra.push({ x, w: ww, dong: ngatDong(chu, pxO, ww - 2 * dem, doChu), canh: laDau ? "giua" : g === 1 && b.cot[i]?.so ? "phai" : undefined, cd: pxO * 1.22 });
         x += ww;
         i += g;

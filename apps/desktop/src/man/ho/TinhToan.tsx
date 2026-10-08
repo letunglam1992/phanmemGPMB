@@ -11,6 +11,7 @@ import { useMauExcel } from "../../thanh-phan/MauExcel";
 import { taiLieuBangTinh } from "../../van-ban/bang-tinh-ho";
 import { inTaiLieu, taoDocx } from "../../van-ban/tai-lieu-don-gian";
 import { taoPdfTaiLieu } from "../../van-ban/pdf-tai-lieu";
+import { napPhong, taoPdfChu } from "../../van-ban/pdf-chu";
 import { taiXuong } from "../../tai-xuong";
 import { tenTep } from "../../ten-tep";
 import { useUngDung } from "../../ung-dung";
@@ -96,10 +97,12 @@ export function TabTinhToan({ h, duAn, kq }: { h: Ho; duAn: DuAn; kq: KetQuaHo }
               if (await taiXuong(taoDocx(tl), tenTep(`Bang-tinh-giai-trinh_${h.ma} ${h.ten}.docx`), "application/vnd.openxmlformats-officedocument.wordprocessingml.document")) bao("Đã xuất Word bảng tính, giải trình");
             }}>Xuất Word (kèm giải trình)</button>
             <button className="nut nut-nho" title="In bảng tính kèm giải trình; chọn máy in “Microsoft Print to PDF” để lưu PDF" onClick={() => inTaiLieu(taiLieuBangTinh(duAn, h, kq))}>In / PDF</button>
-            <button className="nut nut-nho" title="Tạo tệp PDF trực tiếp (không cần hộp in, máy in PDF) — chữ trong PDF ở dạng ảnh" onClick={async () => {
+            <button className="nut nut-nho" title="Tạo tệp PDF trực tiếp (không cần hộp in, máy in PDF) — chữ chọn, tìm được (phông Liberation Serif nhúng kèm)" onClick={async () => {
               try {
                 const tl = taiLieuBangTinh(duAn, h, kq);
-                if (await taiXuong(await taoPdfTaiLieu(tl), tenTep(`Bang-tinh-giai-trinh_${h.ma} ${h.ten}.pdf`), "application/pdf")) bao("Đã lưu PDF bảng tính, giải trình");
+                // 1.0.6: PDF có chữ (nhúng phông Liberation Serif); không nạp được phông thì tạo PDF dạng ảnh
+                const pdf = await napPhong().then((bo) => taoPdfChu(tl, bo)).catch(() => taoPdfTaiLieu(tl));
+                if (await taiXuong(pdf, tenTep(`Bang-tinh-giai-trinh_${h.ma} ${h.ten}.pdf`), "application/pdf")) bao("Đã lưu PDF bảng tính, giải trình");
               } catch (e) {
                 bao(`Không tạo được PDF: ${e instanceof Error ? e.message : String(e)}`);
               }

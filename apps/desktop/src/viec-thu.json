@@ -58,7 +58,11 @@
    "Hồ sơ hộ → Tiến độ → bước 7: ghi \"Không đồng ý\", ngày lấy ý kiến → thấy hạn đối thoại; \"Ghi ngày lấy ý kiến này cho … hồ sơ khác\"; ghi lần đối thoại; soạn T12. Mẫu 08 tự điền số ý kiến.",
    "Soát phương án: dòng \"Đối thoại\", \"Lựa chọn không thống nhất\" (khi hai hộ cùng vướng mắc chọn khác nhau), \"Tổng DT thu hồi lệch văn bản\".",
    "Tổng quan dự án → Đối chiếu diện tích → \"DT thu hồi theo văn bản…\" (dự án, từng đợt) → bảng tổng; Xuất Excel có trang \"Tổng DT thu hồi\".",
-   "Khai báo mốc thưởng, ghi bàn giao vài hộ → Văn bản mẫu 20, 21: danh sách, tổng tiền, bằng chữ đúng."
+   "Khai báo mốc thưởng, ghi bàn giao vài hộ → Văn bản mẫu 20, 21: danh sách, tổng tiền, bằng chữ đúng. Thử \"Tự điền số tiền thưởng\" (VM-16).",
+   "Hộ có TĐC bằng đất ở, tích hỗ trợ 20%: chưa nhập tiền SDĐ làm cơ sở và cách xác định → C11 \"Cần xác nhận\"; nhập xong → tạm tính (VM-28).",
+   "Thẻ Tính toán → \"Lưu PDF\" → mở bằng trình đọc PDF: chọn, tìm được chữ tiếng Việt (Ctrl+F); in ra đúng khổ.",
+   "Báo cáo Word cấp xã với dự án chia đợt: mục \"Kết quả theo đợt thu hồi\". Máy tỉnh (đã có số liệu hai tháng): báo cáo Word có mục \"Diễn biến theo tháng\" kèm biểu đồ.",
+   "Máy tỉnh: đặt ngưỡng chênh ở thẻ Dự án liên xã → khung \"Xã cần đôn đốc\"."
   ]
  }
 ]

@@ -193,6 +193,11 @@ Mỗi xã lập hồ sơ, phương án cho phần đất trên địa bàn mình
 - **Diễn biến theo tháng**: khung biểu đồ dưới bảng tổng hợp — phạm vi toàn tỉnh / một xã / một dự án liên xã; tỷ lệ hộ đã bàn giao, đã duyệt phương án và giá trị tạm tính. Mỗi tháng lấy bản gửi gần nhất của từng đơn vị đến cuối tháng; chỉ cộng số liệu đã gửi.
 - **Worker** thêm `GET /api/goi/:ma/ban` (danh sách bản: id, lúc lưu, kích thước) và `GET /api/goi/:ma/ban/:id` (tải một bản) — chỉ mã quản trị (tỉnh) gọi được; mã quản trị `MA_QUAN_TRI` tự bỏ khoảng trắng, xuống dòng thừa. **Phải dán lại mã Worker** (mục 4.2 hoặc 4.3); chưa dán thì nút báo lỗi, các chức năng khác vẫn chạy.
 
+### Bổ sung ở bản 1.0.6
+
+- **Báo cáo Word toàn tỉnh** có mục "4. Diễn biến theo tháng" khi đã có số liệu từ hai tháng trở lên (dùng cả các bản trước đã nhận, tải các bản cũ trên cổng nếu cần): câu so với tháng trước, bảng các tháng, ảnh biểu đồ; theo phạm vi đang lọc (toàn tỉnh hoặc một xã).
+- **Nhắc xã chậm trong dự án liên xã**: ô "Nhắc xã có tỷ lệ bàn giao thấp hơn toàn tuyến quá … điểm %" (tỉnh tự đặt, lưu trên máy) — dưới bảng từng tuyến hiện "Xã cần đôn đốc" kèm đoạn Km, đoạn còn vướng; số liệu cũ hơn ngưỡng "lâu chưa gửi" cũng được nêu.
+
 ## 4. Cổng Cloudflare (phương án 2 mức b)
 
 ### 4.1. Cổng làm gì

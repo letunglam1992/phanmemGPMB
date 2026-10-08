@@ -69,6 +69,9 @@ jobs:
       - name: Kiểm thử vỏ Rust (sao lưu tự động, máy chủ mạng nội bộ đầu–cuối)
         working-directory: apps/desktop/src-tauri
         run: cargo test
+      - name: Kiểm thử nối thật máy trạm ↔ máy chủ mạng nội bộ (HTTPS, vân tay chứng chỉ)
+        working-directory: apps/desktop
+        run: npm run test:mang-that
       - uses: actions/upload-artifact@v4
         with:
           name: gpmb-sonla-windows-setup

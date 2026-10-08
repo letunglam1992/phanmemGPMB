@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "tauri": "tauri",
     "lint": "eslint --max-warnings=3 src test e2e",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "test:mang-that": "node ../../tools/kiem-may-chu.mjs"
   },
   "dependencies": {
     "@gpmb/core": "*",

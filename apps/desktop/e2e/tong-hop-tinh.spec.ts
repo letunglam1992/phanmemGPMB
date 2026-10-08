@@ -102,6 +102,8 @@ test("tỉnh tạo khóa; xã xuất gói mã hóa; tỉnh nhận, tổng hợp 
   await expect(bang).toContainText("Dự án mẫu – Khu công nghiệp");
   await expect(bang).not.toContainText("Hộ mẫu 01");
   await expect(p.getByLabel("Chỉ số toàn tỉnh")).toContainText("2hộ, tổ chức");
+  // 1.0.5: khung diễn biến theo tháng — một lần gửi thì chưa vẽ
+  await expect(p.locator(".the", { hasText: "Diễn biến theo tháng" })).toContainText("Cần số liệu gửi từ ít nhất hai tháng");
   // Excel tổng hợp
   await p.getByRole("button", { name: "Xuất Excel" }).click();
   await tep(p, "Tong-hop-GPMB-toan-tinh_");
@@ -199,6 +201,9 @@ test("1.0.4: dự án liên xã — xã điền mã tỉnh cấp; tỉnh khai tu
   await expect(khoi.locator("tr", { hasText: "Xã Mường Bon" })).toContainText("Chưa có số liệu");
   await expect(khoi).toContainText("Toàn tuyến (1/2 xã có số liệu)");
   await expect(khoi.getByText("1 xã chưa có số liệu")).toBeVisible();
+  // 1.0.6: ngưỡng nhắc lệch tiến độ do tỉnh đặt; một xã có số liệu = toàn tuyến → không có xã cần đôn đốc
+  await p.getByLabel("Ngưỡng chênh tỷ lệ bàn giao liên xã").fill("10");
+  await expect(p.getByLabel("Nhắc tiến độ LX-2026-001")).toHaveCount(0);
   // Excel tổng hợp có trang Lien xa
   await p.getByRole("button", { name: "Xuất Excel" }).click();
   const ex = await tep(p, "Tong-hop-GPMB-toan-tinh_");
