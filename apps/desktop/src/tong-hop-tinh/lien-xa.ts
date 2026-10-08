@@ -10,6 +10,7 @@
  *   - Đoạn chưa ghi mã: phần mềm chỉ GỢI Ý ghép (cùng chủ đầu tư, tên gần giống) — cán bộ tỉnh xác nhận mới ghép.
  */
 import { D } from "@gpmb/core";
+import { hienDiem } from "../ly-trinh";
 import type Decimal from "decimal.js";
 import type { TomTatDuAn } from "./goi-tinh";
 
@@ -181,4 +182,59 @@ export function gomLienXa(doan: DoanTinh[], dsTuyen: TuyenLienXa[]) {
       if (giong >= 0.5 && (cungCdt || coXa)) goiY.push({ doan: d, ma: chuanMa(t.ma), lyDo: `tên giống ${Math.round(giong * 100)}%${cungCdt ? ", cùng chủ đầu tư" : ""}${coXa ? ", xã có trong danh sách dọc tuyến" : ""}` });
     }
   return { tuyen, le, goiY, soDuAn: le.length + tuyen.filter((t) => t.xa.some((x) => x.doan.length)).length };
+}
+
+/* ---------------- 1.0.6: cảnh báo lệch tiến độ giữa các xã của một dự án liên xã ---------------- */
+
+export const KHOA_NGUONG_LECH_LX = "gpmb-tinh-nguong-lech-lien-xa";
+/** Ngưỡng chênh (điểm %) giữa tỷ lệ bàn giao của một xã và toàn tuyến — tỉnh tự đặt; trống = không nhắc theo chênh lệch. */
+export function docNguongLechLx(): number | null {
+  try {
+    const n = Number(localStorage.getItem(KHOA_NGUONG_LECH_LX));
+    return Number.isFinite(n) && n > 0 ? n : null;
+  } catch {
+    return null;
+  }
+}
+export function ghiNguongLechLx(n: number | null) {
+  try {
+    if (n && n > 0) localStorage.setItem(KHOA_NGUONG_LECH_LX, String(n));
+    else localStorage.removeItem(KHOA_NGUONG_LECH_LX);
+  } catch {
+    /* bỏ qua */
+  }
+}
+
+export interface CanhBaoTuyen {
+  xa: string;
+  loai: "CHUA_GUI" | "CU" | "CHAM";
+  noiDung: string;
+}
+const tl = (a: number, b: number) => (b ? (a / b) * 100 : 0);
+const hienPt = (v: number) => `${v.toFixed(1).replace(".", ",").replace(/,0$/, "")}%`;
+const ngay = (iso: string) => iso.slice(0, 10).split("-").reverse().join("/");
+
+/**
+ * Nhắc xã chậm trong một tuyến: chưa có số liệu; số liệu cũ hơn ngưỡng "lâu chưa gửi" (tỉnh đã đặt); tỷ lệ bàn giao thấp hơn
+ * toàn tuyến quá ngưỡng chênh (tỉnh tự đặt). Nêu đoạn Km xã ghi và đoạn còn vướng theo lý trình nếu có. Không tự đặt ngưỡng.
+ */
+export function canhBaoTuyen(t: TongHopTuyen, o: { nguongNgay: number | null; nguongChenh: number | null; bayGio: Date }): CanhBaoTuyen[] {
+  const out: CanhBaoTuyen[] = [];
+  const tyLeTuyen = tl(t.tong.banGiao, t.tong.soHo);
+  for (const x of t.xa) {
+    if (!x.doan.length) {
+      out.push({ xa: x.xa, loai: "CHUA_GUI", noiDung: `chưa có số liệu dự án ghi mã ${t.ma}` });
+      continue;
+    }
+    const luc = x.doan.reduce((m, d) => (d.luc > m ? d.luc : m), "");
+    const n = Math.floor((o.bayGio.getTime() - new Date(luc).getTime()) / 86400000);
+    if (o.nguongNgay && n > o.nguongNgay) out.push({ xa: x.xa, loai: "CU", noiDung: `số liệu đến ngày ${ngay(luc)} (${n} ngày, quá ngưỡng ${o.nguongNgay} ngày)` });
+    const tyLe = tl(x.soLieu.banGiao, x.soLieu.soHo);
+    if (o.nguongChenh && x.soLieu.soHo > 0 && tyLeTuyen - tyLe > o.nguongChenh) {
+      const km = x.doan.map((d) => (d.lienXa?.kmDau || d.lienXa?.kmCuoi ? `${d.lienXa?.kmDau ?? "?"} – ${d.lienXa?.kmCuoi ?? "?"}` : "")).filter(Boolean);
+      const vuong = x.doan.flatMap((d) => d.lyTrinh?.chua ?? []).map(([a, b]) => `${hienDiem(a)} – ${hienDiem(b)}`);
+      out.push({ xa: x.xa, loai: "CHAM", noiDung: `bàn giao ${x.soLieu.banGiao}/${x.soLieu.soHo} hộ (${hienPt(tyLe)}), thấp hơn toàn tuyến (${hienPt(tyLeTuyen)}) ${hienPt(tyLeTuyen - tyLe).replace("%", "")} điểm %${km.length ? `; đoạn ${km.join(", ")}` : ""}${vuong.length ? `; còn vướng ${vuong.slice(0, 5).join("; ")}${vuong.length > 5 ? "…" : ""}` : ""}` });
+    }
+  }
+  return out;
 }

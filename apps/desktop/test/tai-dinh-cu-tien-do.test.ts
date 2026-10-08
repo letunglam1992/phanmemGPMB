@@ -28,7 +28,13 @@ describe("Tái định cư trong tính hộ", () => {
     const k = tinhHo(cs, duAn, voi({ hinhThuc: "DAT_O", donGia: "2000000", dienTichGiao: "100", nguonGia: "NQ 152", suatToiThieu: true, hoTroTienSdd: true, khoanKhac: [{ id: "a", noiDung: "San lấp", soTien: "5000000", canCu: "" }, { id: "b", noiDung: "Hỗ trợ di chuyển", soTien: "3000000", canCu: "QĐ 45/QĐ-UBND" }] }));
     const ds = k.nhom.find((x) => x.ma === "B.VI")!.dong.map((x) => x.dong);
     expect(ds.map((d) => d.ma)).toEqual(["C10", "C11", "C.TĐC", "C.TĐC"]);
-    expect(ds[1]!.thanhTien!.toString()).toBe("40000000"); // 20% × 2 tr × 100 m²
+    expect(ds[1]!.thanhTien!.toString()).toBe("40000000"); // 20% × 2 tr × 100 m² (tham khảo)
+    expect(ds[1]!.trangThai).toBe("CAN_XAC_NHAN"); // VM-28: chưa tự điền cơ sở, cách xác định
+    const k2 = tinhHo(cs, duAn, voi({ hinhThuc: "DAT_O", donGia: "2000000", dienTichGiao: "100", nguonGia: "NQ 152", hoTroTienSdd: true, tienSddPhaiNop: "150000000", canCuTienSdd: "Thông báo nộp tiền SDĐ số 5/TB-T, trước khi ghi nợ", khoanKhac: [] }));
+    const c11 = k2.nhom.find((x) => x.ma === "B.VI")!.dong.map((x) => x.dong).find((d) => d.ma === "C11")!;
+    expect(c11.trangThai).toBe("TAM_TINH");
+    expect(c11.thanhTien!.toString()).toBe("30000000");
+    expect(c11.canCu.map((c) => c.vanBan)).toContain("Thông báo nộp tiền SDĐ số 5/TB-T, trước khi ghi nợ");
     expect(ds[2]!.trangThai).toBe("THIEU_CAN_CU");
     expect(ds[3]!.thanhTien!.toString()).toBe("3000000");
     // hộ mẫu không có thửa đất ở bị thu hồi → cảnh báo điều kiện

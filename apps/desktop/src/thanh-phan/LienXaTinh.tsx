@@ -3,7 +3,8 @@ import { hienDiem } from "../ly-trinh";
 import { D, dinhDang } from "@gpmb/core";
 import { useUngDung } from "../ung-dung";
 import { HopThoai, O } from "./chung";
-import { chuanMa, gomLienXa, khoaDoan, loiTuyen, maTiepTheo, tachDsXa, type DoanTinh, type TongHopTuyen, type TuyenLienXa } from "../tong-hop-tinh/lien-xa";
+import { canhBaoTuyen, chuanMa, docNguongLechLx, ghiNguongLechLx, gomLienXa, khoaDoan, loiTuyen, maTiepTheo, tachDsXa, type CanhBaoTuyen, type DoanTinh, type TongHopTuyen, type TuyenLienXa } from "../tong-hop-tinh/lien-xa";
+import { docNguong } from "../tong-hop-tinh/canh-bao";
 import { dsTuyen as docDsTuyen, luuTuyen, xoaTuyen } from "../tong-hop-tinh/kho-tinh";
 import { docCauHinhCong, guiTuyenLenCong, LoiCong } from "../tong-hop-tinh/cong-tinh";
 
@@ -20,6 +21,8 @@ export function TheLienXaTinh({ doan, dsTuyen, napLai, sua, xaGoiY }: { doan: Do
   const { bao, ghiNhatKy, taiKhoan } = useUngDung();
   const [hop, setHop] = useState<TuyenLienXa | "moi" | null>(null);
   const kq = useMemo(() => gomLienXa(doan, dsTuyen), [doan, dsTuyen]);
+  const [nguongChenh, setNguongChenh] = useState<number | null>(docNguongLechLx);
+  const nguongNgay = docNguong();
   const tuyenCua = (ma: string) => dsTuyen.find((t) => chuanMa(t.ma) === ma);
   // 1.0.5: đưa danh sách lên cổng (nếu tỉnh đã cài cổng) để xã chọn mã — chỉ mã, tên, chủ đầu tư, xã dọc tuyến
   const cong = docCauHinhCong("TINH");
@@ -65,7 +68,14 @@ export function TheLienXaTinh({ doan, dsTuyen, napLai, sua, xaGoiY }: { doan: Do
       </div>
       <div className="the-than luoi" style={{ gap: 12 }}>
         {!kq.tuyen.length && <div className="trong">Chưa khai dự án liên xã. Khai mã, tên, chủ đầu tư và các xã dọc tuyến; thông báo mã cho các xã điền ở Thông tin dự án → Dự án liên xã.</div>}
-        {kq.tuyen.map((t) => <KhoiTuyen key={t.ma} t={t} sua={sua} suaTuyen={() => t.tuyen && setHop(t.tuyen)} xoa={() => t.tuyen && void xoa(t.tuyen)} boGhep={(d) => void ghep(d, t.ma, true)} />)}
+        {kq.tuyen.length > 0 && (
+          <label className="chu-nho mo" style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+            Nhắc xã có tỷ lệ bàn giao thấp hơn toàn tuyến quá
+            <input aria-label="Ngưỡng chênh tỷ lệ bàn giao liên xã" type="number" min={1} max={100} style={{ width: 70 }} value={nguongChenh ?? ""} disabled={!sua} onChange={(e) => { const n = Number(e.target.value) || null; setNguongChenh(n); ghiNguongLechLx(n); }} />
+            điểm % (tỉnh tự đặt; để trống = không nhắc theo chênh lệch){nguongNgay ? ` · số liệu cũ hơn ${nguongNgay} ngày theo ngưỡng "lâu chưa gửi"` : ""}
+          </label>
+        )}
+        {kq.tuyen.map((t) => <KhoiTuyen key={t.ma} canhBao={canhBaoTuyen(t, { nguongNgay, nguongChenh, bayGio: new Date() })} t={t} sua={sua} suaTuyen={() => t.tuyen && setHop(t.tuyen)} xoa={() => t.tuyen && void xoa(t.tuyen)} boGhep={(d) => void ghep(d, t.ma, true)} />)}
         {kq.goiY.length > 0 && (
           <div className="thong-bao thong-bao-vang" style={{ margin: 0 }} aria-label="Gợi ý ghép">
             <b>Gợi ý ghép ({kq.goiY.length})</b> — dự án các xã gửi chưa ghi mã nhưng có thể thuộc dự án liên xã. Kiểm tra rồi bấm Ghép (không tự gộp):
@@ -101,7 +111,7 @@ export function TheLienXaTinh({ doan, dsTuyen, napLai, sua, xaGoiY }: { doan: Do
   );
 }
 
-function KhoiTuyen({ t, sua, suaTuyen, xoa, boGhep }: { t: TongHopTuyen; sua: boolean; suaTuyen: () => void; xoa: () => void; boGhep: (d: DoanTinh) => void }) {
+function KhoiTuyen({ t, sua, suaTuyen, xoa, boGhep, canhBao }: { t: TongHopTuyen; sua: boolean; suaTuyen: () => void; xoa: () => void; boGhep: (d: DoanTinh) => void; canhBao: CanhBaoTuyen[] }) {
   const ghepTay = new Set(t.tuyen?.ghep ?? []);
   return (
     <div className="lx-khoi" aria-label={`Dự án liên xã ${t.ma}`}>
@@ -146,6 +156,14 @@ function KhoiTuyen({ t, sua, suaTuyen, xoa, boGhep }: { t: TongHopTuyen; sua: bo
           </tr>
         </tbody>
       </table>
+      {canhBao.some((c) => c.loai !== "CHUA_GUI") && (
+        <div className="thong-bao thong-bao-vang chu-nho" style={{ margin: "6px 0 0" }} aria-label={`Nhắc tiến độ ${t.ma}`}>
+          <b>Xã cần đôn đốc:</b>
+          <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>
+            {canhBao.filter((c) => c.loai !== "CHUA_GUI").map((c, i) => <li key={i}><b>{c.xa}</b>: {c.noiDung}</li>)}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

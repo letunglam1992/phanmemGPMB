@@ -51,3 +51,21 @@ describe("Dự án liên xã (1.0.4)", () => {
     expect(chuanXa("Phường Tô  Hiệu")).toBe(chuanXa("to hieu"));
   });
 });
+
+describe("Nhắc lệch tiến độ giữa các xã của dự án liên xã (1.0.6)", () => {
+  it("chưa gửi; số liệu cũ quá ngưỡng; tỷ lệ bàn giao thấp hơn toàn tuyến quá ngưỡng chênh (kèm Km, đoạn vướng); không đặt ngưỡng thì không nhắc", async () => {
+    const { canhBaoTuyen } = await import("../src/tong-hop-tinh/lien-xa");
+    const ds = [
+      doan({ id: "a", xa: "Xã Chiềng Mung", maGui: "g1", soHo: 20, theoTrangThai: { HOAN_THANH: 18 }, lienXa: { ma: "LX-2026-001" } }),
+      doan({ id: "b", xa: "Phường Tô Hiệu", maGui: "g2", soHo: 10, theoTrangThai: { HOAN_THANH: 2 }, luc: "2026-09-01T00:00:00Z", lienXa: { ma: "LX-2026-001", kmDau: "Km3+200", kmCuoi: "Km5+000" }, lyTrinh: { tongM: 1800, sachM: 600, chua: [[3500, 4700]] } }),
+    ];
+    const t = gomLienXa(ds, [tuyen]).tuyen[0]!;
+    const bayGio = new Date("2026-10-08T00:00:00Z");
+    expect(canhBaoTuyen(t, { nguongNgay: null, nguongChenh: null, bayGio }).map((c) => c.loai)).toEqual(["CHUA_GUI"]); // Xã Mường Bon
+    const c = canhBaoTuyen(t, { nguongNgay: 14, nguongChenh: 30, bayGio });
+    expect(c.map((x) => [x.xa, x.loai])).toEqual([["Phường Tô Hiệu", "CU"], ["Phường Tô Hiệu", "CHAM"], ["Xã Mường Bon", "CHUA_GUI"]]);
+    expect(c[0]!.noiDung).toContain("01/09/2026 (37 ngày");
+    expect(c[1]!.noiDung).toBe("bàn giao 2/10 hộ (20%), thấp hơn toàn tuyến (66,7%) 46,7 điểm %; đoạn Km3+200 – Km5+000; còn vướng Km3+500 – Km4+700");
+    expect(canhBaoTuyen(t, { nguongNgay: 14, nguongChenh: 50, bayGio }).some((x) => x.loai === "CHAM")).toBe(false);
+  });
+});

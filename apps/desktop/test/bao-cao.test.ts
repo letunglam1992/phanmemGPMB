@@ -148,11 +148,18 @@ describe("Báo cáo tổng hợp — mẫu Word", () => {
     const du = duLieuBaoCaoWord(bc, tt) as { du_an: { tt: number | string; ten: string; so_ho: number }[]; co_dot: boolean; theo_dot: { ten: string; du_an: string }[] };
     expect(du.du_an.map((x) => [x.tt, x.ten, x.so_ho])).toEqual([[1, `${da.ten} (${da.xa})`, 2], ["", "– Đợt 1", 1], ["", "– Chưa xếp đợt", 1], [2, "Dự án mẫu B (Xã Mai Sơn)", 2]]);
     expect(du.co_dot).toBe(true);
-    expect(du.theo_dot.map((x) => x.ten)).toEqual(["– Đợt 1", "– Chưa xếp đợt"]);
+    expect(du.theo_dot.map((x) => x.ten)).toEqual([`${da.ten} – Đợt 1`, `${da.ten} – Chưa xếp đợt`]);
     const mau = readFileSync(new URL("../public/mau-van-ban/bao-cao-tong-hop.docx", import.meta.url));
     const t = new PizZip(dienMau(mau, du)).file("word/document.xml")!.asText().replace(/<[^>]+>/g, "");
     expect(t).toContain("– Đợt 1");
     expect(t).toContain("Tổng số 2 dự án");
+    // 1.0.6: bảng riêng theo đợt thu hồi, đánh số, tỷ lệ hoàn thành
+    expect(t).toContain("3. Kết quả theo đợt thu hồi");
+    expect(t).toContain(`${da.ten} – Đợt 1`);
+    expect((du.theo_dot as unknown as { tt: number }[]).map((x) => x.tt)).toEqual([1, 2]);
+    // không có đợt: không có mục 3
+    const t0 = new PizZip(dienMau(mau, duLieuBaoCaoWord(lapBaoCao([duAnA, duAnB], duLieu, { denNgay: "2026-11-15" }), tt))).file("word/document.xml")!.asText().replace(/<[^>]+>/g, "");
+    expect(t0).not.toContain("Kết quả theo đợt thu hồi");
   });
 });
 

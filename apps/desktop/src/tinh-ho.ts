@@ -692,8 +692,14 @@ function dongTaiDinhCu(cs: BoChinhSach, duAn: DuAn, ho: Ho, t: TaiDinhCuHo, btDa
     if (!coCs) out.push(khongCs("C11", nd));
     else if (!sdd.tien) out.push(thieu("C11", nd, "Chưa có tiền SDĐ phải nộp (nhập đơn giá và DT lô giao, hoặc số tiền theo thông báo)"));
     else {
-      const d = hoTroTienSddTdc(cs, { tienSddPhaiNop: sdd.tien, moTa: sdd.moTa, giaoDatK4D111: t.giaoDatK4D111 });
+      let d = hoTroTienSddTdc(cs, { tienSddPhaiNop: sdd.tien, moTa: sdd.moTa, giaoDatK4D111: t.giaoDatK4D111 });
       if (!ho.thua.some((x) => laDatO(x.loaiDat))) d.canhBao.push("Khoản 11 Điều 6 QĐ 14/2026 áp dụng cho hộ bị thu hồi đất ở — hộ không có thửa ONT/ODT bị thu hồi, kiểm tra");
+      // VM-28 (QD-34): cơ sở "tiền sử dụng phải nộp" do người dùng tự điền kèm cách xác định, căn cứ
+      if (!(t.giaoDatK4D111 && cs.taiDinhCu?.hoTroTienSdd.ngoaiTruK4D111)) {
+        if (!t.tienSddPhaiNop?.trim() || !t.canCuTienSdd?.trim())
+          d = { ...d, trangThai: "CAN_XAC_NHAN", canhBao: [...d.canhBao, "VM-28: nhập tiền sử dụng đất phải nộp làm cơ sở tính 20% (trước hay sau ghi nợ, miễn, giảm) và ghi cách xác định, văn bản ở thẻ Hỗ trợ → Tái định cư"] };
+        else d = { ...d, thamSo: { ...d.thamSo, "Cách xác định (VM-28)": t.canCuTienSdd.trim() }, canCu: [...d.canCu, { vanBan: t.canCuTienSdd.trim(), viTri: "" }] };
+      }
       out.push(d);
     }
   }

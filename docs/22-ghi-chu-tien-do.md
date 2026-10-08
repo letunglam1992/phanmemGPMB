@@ -97,7 +97,7 @@ Gặp lỗi: bấm **"Chép chi tiết lỗi"** (nếu có), hoặc chụp màn 
 ### Chờ tài liệu từ anh Lâm
 
 - [x] **4.2 / VM-29**: đã có QĐ 64/2026/QĐ-UBND (bộ chính sách `sonla-2026-10-06`, 1.0.5). Rà các vướng mắc còn mở theo QĐ 64 và NĐ 226: docs/03 mục cuối (không vướng mắc nào được làm rõ thêm).
-- [ ] Ý kiến về VM-16 (cơ sở tính tiền thưởng, trần theo hộ hay theo người), VM-28 (20% tiền sử dụng đất trước hay sau ghi nợ, miễn giảm) — có ý kiến thì đổi mặc định.
+- [x] VM-16, VM-28: người dùng tự điền (QD-34, docs/06).
 
 ### B. Việc lập trình có thể làm tiếp (chờ anh Lâm chọn)
 

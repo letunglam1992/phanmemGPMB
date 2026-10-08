@@ -83,6 +83,14 @@ const bangDuAn = bangCo(
   null,
 );
 
+// Bảng 3 (1.0.6): diễn biến theo tháng
+const bangDienBien = bangCo(
+  ["TT", "Tháng", "Đơn vị có số liệu", "Số hộ", "Đã bàn giao MB (hộ, %)", "Đã duyệt PA (hộ, %)", "Giá trị tạm tính (đồng)"],
+  [500, 1171, 1000, 900, 1700, 1700, 2100],
+  ["{#dien_bien}{tt}", "{thang}", "{don_vi}", "{so_ho}", "{ban_giao}", "{duyet_pa}", "{tam_tinh}{/dien_bien}"],
+  null,
+);
+
 const muc = (text) => P([R(text, { bold: true })], { before: 120 });
 const kyTen = new Table({
   width: { size: RONG, type: WidthType.DXA },
@@ -133,6 +141,13 @@ const doc = new Document({
         P([R("3. Kết quả từng dự án", { bold: true, italics: true })], { before: 120 }),
         bangDuAn,
         P([R("(Giá trị tạm tính là tổng các khoản phần mềm tính theo hồ sơ, chưa phải số đã phê duyệt; chi tiết: Phụ lục Excel kèm theo)", { italics: true, size: 22 })], { indent: false, align: AlignmentType.LEFT, before: 60 }),
+        P("{#co_dien_bien}"),
+        P([R("4. Diễn biến theo tháng", { bold: true, italics: true })], { before: 120 }),
+        P("{cau_dien_bien}"),
+        bangDienBien,
+        P("[[BIEU_DO_DIEN_BIEN]]", { indent: false, align: AlignmentType.CENTER, before: 60 }),
+        P([R("(Mỗi tháng lấy lần gửi gần nhất đến cuối tháng của từng đơn vị; chỉ cộng số liệu các đơn vị đã gửi)", { italics: true, size: 22 })], { indent: false, align: AlignmentType.LEFT }),
+        P("{/co_dien_bien}"),
         muc("II. TÌNH HÌNH CẬP NHẬT SỐ LIỆU CỦA CÁC XÃ, PHƯỜNG"),
         P("{tinh_hinh_gui}"),
         P("{#cham_gui}"),

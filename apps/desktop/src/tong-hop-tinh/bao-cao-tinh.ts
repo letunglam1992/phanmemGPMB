@@ -8,6 +8,7 @@ import { D, dinhDang } from "@gpmb/core";
 import type { ThongTinBaoCao } from "../bao-cao-van-ban";
 import type { TomTatDuAn } from "./goi-tinh";
 import { moTaCham, type ChamGui } from "./canh-bao";
+import type { KyDienBien } from "./dien-bien";
 
 export type ThongTinBaoCaoTinh = ThongTinBaoCao;
 export interface DongBaoCao extends TomTatDuAn {
@@ -23,7 +24,7 @@ const pt = (a: number, b: number) => (b ? `${dinhDang((a / b) * 100, 1).replace(
 const ngayVN = (iso: string) => iso.slice(0, 10).split("-").reverse().join("/");
 const tenXa = (d: { xa: string }) => d.xa || "(Chưa ghi xã, phường)";
 
-export function duLieuBaoCaoTinh(dong: DongBaoCao[], t: ThongTinBaoCaoTinh, o: { phamVi: string; denNgay: string; soDonVi: number; cham: ChamGui[]; nguong: number | null; tuyen?: TuyenLienXa[] }): Record<string, unknown> {
+export function duLieuBaoCaoTinh(dong: DongBaoCao[], t: ThongTinBaoCaoTinh, o: { phamVi: string; denNgay: string; soDonVi: number; cham: ChamGui[]; nguong: number | null; tuyen?: TuyenLienXa[]; dienBien?: KyDienBien[] }): Record<string, unknown> {
   // 1.0.4: dự án liên xã — đếm một lần theo mã dùng chung; nêu từng tuyến (xã có số liệu, bàn giao, xã chưa gửi)
   const lx = gomLienXa(dong.map((d) => ({ ...d, maGui: d.maGui ?? d.donViGui })), o.tuyen ?? []);
   const tuyenCo = lx.tuyen.filter((x) => x.xa.some((y) => y.doan.length));
@@ -76,6 +77,7 @@ export function duLieuBaoCaoTinh(dong: DongBaoCao[], t: ThongTinBaoCaoTinh, o: {
       : o.cham.length
         ? `Có ${o.cham.length} đơn vị quá ${o.nguong} ngày chưa gửi số liệu mới:`
         : `Các đơn vị đều đã gửi số liệu trong vòng ${o.nguong} ngày.`,
+    ...duLieuDienBien(o.dienBien ?? []),
     cham_gui: o.cham.map((c) => ({ ten: c.ten, noi_dung: moTaCham(c) })),
     co_vuong_mac: vm.length > 0,
     tong_vuong_mac: cong((d) => d.soVuongMac),
@@ -88,5 +90,30 @@ export function duLieuBaoCaoTinh(dong: DongBaoCao[], t: ThongTinBaoCaoTinh, o: {
     noi_nhan_ds: noiNhan.map((x, i) => `- ${x.replace(/[;.]$/, "")}${i === noiNhan.length - 1 ? "." : ";"}`),
     quyen_han: t.quyenHan.toUpperCase(),
     nguoi_ky: t.nguoiKy,
+  };
+}
+
+const thang = (ky: string) => `${ky.slice(5)}/${ky.slice(0, 4)}`;
+const tyLe = (a: number, b: number) => (b ? (a / b) * 100 : 0);
+const soTyLe = (a: number, b: number) => `${a} (${pt(a, b)})`;
+const tang = (a: number, b: number, donVi: string) => (b > a ? `tăng ${b - a} ${donVi}` : b < a ? `giảm ${a - b} ${donVi}` : "không đổi");
+
+/** 1.0.6 — mục "Diễn biến theo tháng" của báo cáo Word cấp tỉnh: bảng các tháng và câu so sánh tháng hiện tại với tháng trước. */
+export function duLieuDienBien(ky: KyDienBien[]): Record<string, unknown> {
+  const co = ky.filter((k) => k.soDonVi > 0);
+  if (co.length < 2) return { co_dien_bien: false, dien_bien: [], cau_dien_bien: "" };
+  const a = co[co.length - 2]!, b = co[co.length - 1]!;
+  const ttTruoc = D(a.tamTinh), ttNay = D(b.tamTinh);
+  const cau = [
+    `So với tháng ${thang(a.ky)}, đến tháng ${thang(b.ky)}: số hộ đã bàn giao mặt bằng ${tang(a.banGiao, b.banGiao, "hộ")} (${pt(a.banGiao, a.soHo)} → ${pt(b.banGiao, b.soHo)})`,
+    `số hộ đã có phương án được phê duyệt ${tang(a.duyetPA, b.duyetPA, "hộ")} (${pt(a.duyetPA, a.soHo)} → ${pt(b.duyetPA, b.soHo)})`,
+    `giá trị tạm tính ${ttNay.gt(ttTruoc) ? `tăng ${tien(ttNay.minus(ttTruoc))}` : ttNay.lt(ttTruoc) ? `giảm ${tien(ttTruoc.minus(ttNay))}` : "không đổi"}${ttNay.eq(ttTruoc) ? "" : " đồng"}`,
+    a.soDonVi !== b.soDonVi ? `số đơn vị có số liệu ${a.soDonVi} → ${b.soDonVi} (số liệu chỉ cộng các đơn vị đã gửi)` : "",
+  ].filter(Boolean).join("; ") + ".";
+  return {
+    co_dien_bien: true,
+    cau_dien_bien: cau,
+    dien_bien: co.map((k, i) => ({ tt: i + 1, thang: thang(k.ky), don_vi: k.soDonVi, so_ho: k.soHo, ban_giao: soTyLe(k.banGiao, k.soHo), duyet_pa: soTyLe(k.duyetPA, k.soHo), tam_tinh: tien(D(k.tamTinh)) })),
+    dien_bien_ty_le: co.map((k) => ({ ky: k.ky, banGiao: tyLe(k.banGiao, k.soHo), duyetPA: tyLe(k.duyetPA, k.soHo) })),
   };
 }

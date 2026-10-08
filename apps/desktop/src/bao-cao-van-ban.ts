@@ -73,7 +73,7 @@ export function duLieuBaoCaoWord(bc: BaoCao, t: ThongTinBaoCao, ss?: SoSanhKy | 
     ]),
     co_doan: bc.dong.some((x) => x.theoDoan?.length),
     co_dot: bc.dong.some((x) => x.theoDot?.length),
-    theo_dot: bc.dong.flatMap((x) => (x.theoDot ?? []).map((d) => ({ ...dongDotWord(d), du_an: x.duAn.ten }))),
+    theo_dot: bc.dong.flatMap((x) => (x.theoDot ?? []).map((d) => ({ ...dongDotWord(d), du_an: x.duAn.ten, ten: `${x.duAn.ten} – ${d.ten}`, ty_le: d.soHo ? `${dinhDang((d.theoTrangThai.HOAN_THANH / d.soHo) * 100, 1).replace(/,0$/, "")}%` : "—" }))).map((d, i) => ({ ...d, tt: i + 1 })),
     so_ho: s.soHo,
     dt: dinhDang(s.dtThuHoi, 2),
     da_duyet: tien(s.daDuyet),

@@ -4,6 +4,10 @@
  * (src/bao-cao-van-ban.ts); cán bộ có thể thay mẫu riêng (giữ tên trường).
  *
  * Chạy: node tools/mau-van-ban/mau-bao-cao.cjs   (cần gói `docx`: npm i -g docx, hoặc NODE_PATH trỏ tới nơi cài)
+ *
+ * LƯU Ý: mẫu đang dùng đã được bổ sung trực tiếp mục "hộ vướng mắc" (§11.4, {#co_ho_vuong_mac}…) mà tệp này chưa dựng —
+ * chạy lại sẽ mất mục đó. Khi thêm mục mới (vd. 1.0.6 "Kết quả theo đợt thu hồi" {#co_dot}…), sinh ra tệp tạm rồi chép
+ * đoạn XML mới vào mẫu đang dùng; kiểm thử `bao-cao.test.ts` kiểm cả hai mục.
  */
 const fs = require("fs");
 const path = require("path");
@@ -68,6 +72,16 @@ const bang = new Table({
   ],
 });
 
+// 1.0.6: bảng tổng hợp theo đợt thu hồi (dự án có đợt)
+const bangDot = new Table({
+  width: { size: RONG, type: WidthType.DXA },
+  columnWidths: RONG_COT,
+  rows: [
+    new TableRow({ tableHeader: true, children: ["TT", "Dự án – đợt thu hồi", "Số hộ", "DT thu hồi (m²)", "Kinh phí đã duyệt (đồng)", "Đã chi trả (đồng)", "Hoàn thành GPMB (hộ)", "Tỷ lệ hoàn thành"].map((t, i) => oBang(t, i, { bold: true, dau: true })) }),
+    new TableRow({ children: ["{#theo_dot}{tt}", "{ten}", "{so_ho}", "{dt}", "{da_duyet}", "{da_chi}", "{hoan_thanh}", "{ty_le}{/theo_dot}"].map((t, i) => oBang(t, i)) }),
+  ],
+});
+
 const muc = (text) => P([R(text, { bold: true })], { before: 120 });
 const kyTen = new Table({
   width: { size: RONG, type: WidthType.DXA },
@@ -115,6 +129,10 @@ const doc = new Document({
         P([R("2. Kết quả từng dự án", { bold: true, italics: true })]),
         bang,
         P([R("(Chi tiết kinh phí tạm tính, còn phải chi, chặng thực hiện: Phụ lục Excel kèm theo)", { italics: true, size: 22 })], { indent: false, align: AlignmentType.LEFT, before: 60 }),
+        P("{#co_dot}"),
+        P([R("3. Kết quả theo đợt thu hồi", { bold: true, italics: true })], { before: 120 }),
+        bangDot,
+        P("{/co_dot}"),
         muc("II. KHÓ KHĂN, VƯỚNG MẮC"),
         // Thẻ vòng lặp/điều kiện đứng riêng một đoạn để docxtemplater (paragraphLoop) bỏ đoạn khi rỗng
         P("{#vuong_mac}"),

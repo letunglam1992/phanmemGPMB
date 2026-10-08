@@ -10,6 +10,9 @@ import { taiXuong } from "../tai-xuong";
 import { duLieuBaoCaoTinh, type DongBaoCao, type ThongTinBaoCaoTinh } from "../tong-hop-tinh/bao-cao-tinh";
 import type { ChamGui } from "../tong-hop-tinh/canh-bao";
 import { taoExcelTinh } from "../tong-hop-tinh/excel-tinh";
+import type { KyDienBien } from "../tong-hop-tinh/dien-bien";
+import { veBieuDoDienBien, type DiemDienBien } from "../tong-hop-tinh/ve-bieu-do";
+import { chenAnhDocx } from "../van-ban/chen-anh";
 
 const KHOA_TT = "gpmb-bao-cao-tinh-thong-tin";
 const macDinh = (coQuan: string): ThongTinBaoCaoTinh => ({
@@ -37,7 +40,7 @@ function docTt(coQuan: string): ThongTinBaoCaoTinh {
   }
 }
 
-export function HopBaoCaoTinh(p: { dong: () => void; tenCoQuan: string; dong_: DongBaoCao[]; phamVi: string; soDonVi: number; cham: ChamGui[]; nguong: number | null; tuyen?: TuyenLienXa[] }) {
+export function HopBaoCaoTinh(p: { dong: () => void; tenCoQuan: string; dong_: DongBaoCao[]; phamVi: string; soDonVi: number; cham: ChamGui[]; nguong: number | null; tuyen?: TuyenLienXa[]; dienBien?: KyDienBien[] }) {
   const { bao, ghiNhatKy } = useUngDung();
   const [t, setT] = useState<ThongTinBaoCaoTinh>(() => docTt(p.tenCoQuan));
   const [dang, setDang] = useState(false);
@@ -56,9 +59,11 @@ export function HopBaoCaoTinh(p: { dong: () => void; tenCoQuan: string; dong_: D
         /* bỏ qua */
       }
       const mau = await (await fetch("/mau-van-ban/bao-cao-tong-hop-tinh.docx")).arrayBuffer();
-      const duLieu = duLieuBaoCaoTinh(p.dong_, t, { phamVi: p.phamVi, denNgay: homNayIso(), soDonVi: p.soDonVi, cham: p.cham, nguong: p.nguong, tuyen: p.tuyen });
+      const duLieu = duLieuBaoCaoTinh(p.dong_, t, { phamVi: p.phamVi, denNgay: homNayIso(), soDonVi: p.soDonVi, cham: p.cham, nguong: p.nguong, tuyen: p.tuyen, dienBien: p.dienBien });
       const ten = `Bao-cao-tong-hop-GPMB-toan-tinh_${homNayIso()}.docx`;
-      if (!(await taiXuong(dienMau(mau, duLieu), ten, "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))) return;
+      // 1.0.6: biểu đồ diễn biến (ảnh PNG) chèn vào mục "Diễn biến theo tháng"; không vẽ được thì bỏ chỗ đặt ảnh, giữ bảng
+      const anh = duLieu.co_dien_bien ? await veBieuDoDienBien(duLieu.dien_bien_ty_le as DiemDienBien[]).catch(() => null) : null;
+      if (!(await taiXuong(chenAnhDocx(dienMau(mau, duLieu), "[[BIEU_DO_DIEN_BIEN]]", anh, 15, 6.5, "Biểu đồ diễn biến theo tháng"), ten, "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))) return;
       // Phụ lục Excel (báo cáo ghi "Phụ lục Excel kèm theo")
       const coExcel = kemExcel && !!(await taiXuong(await taoExcelTinh(p.dong_, t.coQuan || p.tenCoQuan, true, p.tuyen), `Phu-luc-bao-cao-tong-hop-GPMB-toan-tinh_${homNayIso()}.xlsx`, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
       await ghiNhatKy("Tạo báo cáo tổng hợp toàn tỉnh (Word)", `${p.dong_.length} dự án, ${p.soDonVi} đơn vị gửi${coExcel ? ", kèm phụ lục Excel" : ""}`);
@@ -73,7 +78,7 @@ export function HopBaoCaoTinh(p: { dong: () => void; tenCoQuan: string; dong_: D
   return (
     <HopThoai tieuDe="Soạn báo cáo tổng hợp toàn tỉnh (Word)" dong={p.dong} rong={860} chan={<><button className="nut" onClick={p.dong}>Hủy</button><button className="nut nut-chinh" disabled={dang} onClick={() => void tao()}>{dang ? "Đang tạo…" : "Tạo tệp Word"}</button></>}>
       <div className="mo chu-nho mb-10">
-        Phần số liệu phần mềm tự điền từ {p.dong_.length} dự án đang hiện ở bảng tổng hợp ({p.phamVi === "tỉnh" ? "toàn tỉnh" : p.phamVi}): kết quả chung, bảng theo xã, phường, bảng từng dự án, tình hình gửi số liệu{p.nguong ? ` (ngưỡng ${p.nguong} ngày)` : ""}, số hộ vướng mắc. Các ô dưới đây cán bộ nhập; thông tin cơ quan, người ký được nhớ cho lần sau trên máy này.
+        Phần số liệu phần mềm tự điền từ {p.dong_.length} dự án đang hiện ở bảng tổng hợp ({p.phamVi === "tỉnh" ? "toàn tỉnh" : p.phamVi}): kết quả chung, bảng theo xã, phường, bảng từng dự án, diễn biến theo tháng (khi có số liệu từ hai tháng trở lên — bảng, biểu đồ, so với tháng trước), tình hình gửi số liệu{p.nguong ? ` (ngưỡng ${p.nguong} ngày)` : ""}, số hộ vướng mắc. Các ô dưới đây cán bộ nhập; thông tin cơ quan, người ký được nhớ cho lần sau trên máy này.
       </div>
       <label className="chu-nho mb-10" style={{ display: "flex", gap: 6, alignItems: "center" }}><input type="checkbox" aria-label="Kèm phụ lục Excel" checked={kemExcel} onChange={(e) => setKemExcel(e.target.checked)} /> Kèm phụ lục Excel (theo xã, phường và chi tiết từng dự án) — lưu thành tệp thứ hai</label>
       <div className="luoi luoi-2">

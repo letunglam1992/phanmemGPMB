@@ -339,6 +339,11 @@ export interface TaiDinhCuHo {
   giaoDatK4D111?: boolean;
   /** Tiền SDĐ phải nộp theo thông báo (nếu có); trống = đơn giá × DT lô giao. */
   tienSddPhaiNop?: string;
+  /**
+   * 1.0.6 (VM-28, QD-34): cách xác định "tiền sử dụng phải nộp" làm cơ sở 20% (trước hay sau ghi nợ, miễn giảm) và văn bản —
+   * người dùng tự điền; chưa điền thì khoản C11 "Cần xác nhận".
+   */
+  canCuTienSdd?: string;
   /** Khoản hỗ trợ khác do UBND xã quyết định cho dự án (k13 Đ6 QĐ 14/2026) hoặc chính sách chưa có sẵn — cán bộ nhập, bắt buộc căn cứ. */
   khoanKhac: { id: string; noiDung: string; soTien: string; canCu: string }[];
   ghiChu?: string;

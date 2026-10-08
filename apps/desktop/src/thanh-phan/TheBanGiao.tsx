@@ -7,6 +7,9 @@ import type { KetQuaHo } from "../tinh-ho";
 import { dtDaBanGiao, dtThuHoiHo, tinhThuong } from "../ban-giao";
 import { hienSo } from "../so";
 import { O } from "./chung";
+
+/** Mốc ghi khi cán bộ tự điền số tiền thưởng (VM-16). */
+export const TU_DIEN = "Tự điền (VM-16)";
 import { OSo } from "./OSo";
 
 /**
@@ -20,6 +23,17 @@ export function TheBanGiao({ h, duAn, kq, luuNgay, moThongTinDuAn }: { h: Ho; du
   const [bienBan, setBienBan] = useState(bg?.bienBan ?? "");
   const [dienTich, setDienTich] = useState(bg?.dienTich ?? "");
   const [ghiChu, setGhiChu] = useState(bg?.ghiChu ?? "");
+  // VM-16 (QD-34): cơ sở tính, trần thưởng do người dùng tự điền — nhập tay số tiền thưởng kèm cách tính, căn cứ
+  const tuDienCu = bg?.thuong?.moc === TU_DIEN ? bg.thuong : undefined;
+  const [tuDien, setTuDien] = useState(!!tuDienCu);
+  const [tienTay, setTienTay] = useState(tuDienCu?.soTien ?? "");
+  const [canCuTay, setCanCuTay] = useState(tuDienCu?.canCu ?? "");
+  useEffect(() => {
+    const c = bg?.thuong?.moc === TU_DIEN ? bg.thuong : undefined;
+    setTuDien(!!c);
+    setTienTay(c?.soTien ?? "");
+    setCanCuTay(c?.canCu ?? "");
+  }, [bg]);
   useEffect(() => {
     setNgay(bg?.ngay ?? "");
     setBienBan(bg?.bienBan ?? "");
@@ -33,6 +47,8 @@ export function TheBanGiao({ h, duAn, kq, luuNgay, moThongTinDuAn }: { h: Ho; du
   const luu = async () => {
     if (!ngay || !bienBan.trim()) return bao("Nhập ngày bàn giao và số, ngày biên bản bàn giao mặt bằng", "loi");
     if (dienTich && dtTh.gt(0) && Number(dienTich) > dtTh.toNumber() + 0.01) return bao(`Diện tích bàn giao lớn hơn diện tích thu hồi (${hienSo(dtTh.toString())} m²)`, "loi");
+    if (tuDien && (!tienTay || !canCuTay.trim())) return bao("Tự điền thưởng: nhập số tiền và cách tính, căn cứ (VM-16)", "loi");
+    const ghiThuong = tuDien ? { moc: TU_DIEN, soTien: tienTay, canCu: canCuTay.trim() } : thuong.loai === "CO" ? { moc: thuong.moc.ten, soTien: thuong.soTien.toFixed(0), canCu: thuong.canCu } : undefined;
     const moi: Ho = {
       ...h,
       banGiao: {
@@ -41,10 +57,10 @@ export function TheBanGiao({ h, duAn, kq, luuNgay, moThongTinDuAn }: { h: Ho; du
         ...(dienTich ? { dienTich } : {}),
         ...(ghiChu.trim() ? { ghiChu: ghiChu.trim() } : {}),
         nguoiGhi: nguoiDung,
-        ...(thuong.loai === "CO" ? { thuong: { moc: thuong.moc.ten, soTien: thuong.soTien.toFixed(0), canCu: thuong.canCu } } : {}),
+        ...(ghiThuong ? { thuong: ghiThuong } : {}),
       },
     };
-    await luuNgay(moi, `Ghi bàn giao mặt bằng ngày ${ngay.split("-").reverse().join("/")}, biên bản ${bienBan.trim()}${dienTich ? `, ${hienSo(dienTich)} m²` : ""}${thuong.loai === "CO" ? `; thưởng ${thuong.moc.ten}: ${dinhDang(thuong.soTien, 0)} đ` : ""}`);
+    await luuNgay(moi, `Ghi bàn giao mặt bằng ngày ${ngay.split("-").reverse().join("/")}, biên bản ${bienBan.trim()}${dienTich ? `, ${hienSo(dienTich)} m²` : ""}${ghiThuong ? `; thưởng ${ghiThuong.moc}: ${hienSo(ghiThuong.soTien)} đ` : ""}`);
   };
   const huy = async () => {
     if (!quyen("DUYET_BUOC")) return bao("Cần quyền xác nhận bước để hủy ghi bàn giao", "loi");
@@ -79,6 +95,15 @@ export function TheBanGiao({ h, duAn, kq, luuNgay, moThongTinDuAn }: { h: Ho; du
             <>{thuong.lyDo}.</>
           )}
         </div>
+        <fieldset className="khung-quyen" disabled={!choSua} style={{ marginBottom: 8 }}>
+          <label className="chu-nho"><input type="checkbox" checked={tuDien} onChange={(e) => setTuDien(e.target.checked)} /> Tự điền số tiền thưởng (VM-16: cơ sở tính, mức tối đa theo hộ hay theo người do người dùng xác định)</label>
+          {tuDien && (
+            <div className="luoi luoi-2 mt-6" style={{ gap: 10 }}>
+              <O nhan="Số tiền thưởng (đ)"><OSo aria-label="Số tiền thưởng tự điền" value={tienTay} onChange={setTienTay} /></O>
+              <O nhan="Cách tính, căn cứ"><input aria-label="Cách tính thưởng, căn cứ" className={canCuTay.trim() ? "" : "loi-nhap"} placeholder="vd. 10% × (BT đất + tài sản) = …; tối đa 20 tr/hộ — Điều 15 PL II QĐ 106/2025" value={canCuTay} onChange={(e) => setCanCuTay(e.target.value)} /></O>
+            </div>
+          )}
+        </fieldset>
         <div className="nhom-nut" style={{ justifyContent: "flex-end" }}>
           {bg && <button className="nut" disabled={!quyen("DUYET_BUOC")} onClick={() => void huy()}>Hủy ghi bàn giao</button>}
           <button className="nut nut-chinh" disabled={!choSua || !ngay || !bienBan.trim()} onClick={() => void luu()}>{bg ? "Cập nhật bàn giao" : "Ghi bàn giao mặt bằng"}</button>

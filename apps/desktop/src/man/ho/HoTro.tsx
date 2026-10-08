@@ -139,7 +139,10 @@ export function TheTaiDinhCu({ h, doi, duAn, kq }: Tab & { duAn: DuAn; kq: KetQu
             </div>
           )}
           {t.hinhThuc === "DAT_O" && t.hoTroTienSdd && (
-            <O nhan="Tiền SDĐ phải nộp theo thông báo (đ)" goiY="Để trống: phần mềm tính = giá đất khu TĐC × DT lô giao"><OSo className="o-so" value={t.tienSddPhaiNop ?? ""} onChange={(v) => dat({ tienSddPhaiNop: v || undefined })} style={{ maxWidth: 280 }} /></O>
+            <div className="luoi luoi-2">
+              <O nhan="Tiền SDĐ phải nộp làm cơ sở 20% (đ)" goiY={`VM-28 — người dùng tự điền${sdd?.tien && !t.tienSddPhaiNop ? `; tham khảo: giá đất khu TĐC × DT lô giao = ${tien(sdd.tien)} đ` : ""}`}><OSo aria-label="Tiền SDĐ phải nộp làm cơ sở 20%" className={`o-so ${t.tienSddPhaiNop ? "" : "loi-nhap"}`} value={t.tienSddPhaiNop ?? ""} onChange={(v) => dat({ tienSddPhaiNop: v || undefined })} style={{ maxWidth: 280 }} /></O>
+              <O nhan="Cách xác định, văn bản" goiY="vd. Theo Thông báo nộp tiền SDĐ số …, trước khi ghi nợ / sau khi trừ miễn, giảm"><input aria-label="Cách xác định tiền SDĐ (VM-28)" className={t.canCuTienSdd?.trim() ? "" : "loi-nhap"} value={t.canCuTienSdd ?? ""} onChange={(e) => dat({ canCuTienSdd: e.target.value || undefined })} /></O>
+            </div>
           )}
           {giaoDat && (
             <div className="tdc-so">

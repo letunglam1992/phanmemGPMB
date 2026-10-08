@@ -7,6 +7,7 @@
  */
 import { TheLienXaTinh } from "../thanh-phan/LienXaTinh";
 import { TheDienBienTinh } from "../thanh-phan/DienBienTinh";
+import { dienBienTinh } from "../tong-hop-tinh/dien-bien";
 import { gomLienXa, type DoanTinh, type TuyenLienXa } from "../tong-hop-tinh/lien-xa";
 import { useEffect, useMemo, useState } from "react";
 import { ChonTep } from "../thanh-phan/ChonTep";
@@ -687,6 +688,7 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
           soDonVi={new Set(hien.map((d) => d.goi.maGui)).size}
           cham={cham}
           nguong={nguong}
+          dienBien={dienBienTinh([...ds, ...banCu].map((b) => ({ maGui: b.maGui, luc: b.thongTin.luc, tomTat: b.tomTat })), loc.xa ? { loai: "XA", xa: loc.xa } : { loai: "TINH" })}
         />
       )}
     </div>
