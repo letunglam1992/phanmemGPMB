@@ -103,7 +103,19 @@ export function matBangTheoLyTrinh(ds: DoanLyTrinh[]) {
 }
 
 /** Excel "Mặt bằng theo lý trình": bảng thửa theo Km, các đoạn sạch / còn vướng. */
-export async function excelLyTrinh(tenDuAn: string, ds: DoanLyTrinh[], dtThuHoi: (d: DoanLyTrinh) => string): Promise<Uint8Array> {
+/** Một dòng đoạn Km cho trang "Theo doan Km" (từ dongTheoDoan, bao-cao.ts). */
+export interface DongDoanExcel {
+  ten: string;
+  soHo: number;
+  banGiao: number;
+  dtThuHoi: string;
+  tamTinh: string;
+  daDuyet: string;
+  mCoGhi?: number;
+  mSach?: number;
+}
+
+export async function excelLyTrinh(tenDuAn: string, ds: DoanLyTrinh[], dtThuHoi: (d: DoanLyTrinh) => string, doan: DongDoanExcel[] = []): Promise<Uint8Array> {
   const { default: Excel } = await import("exceljs");
   const mb = matBangTheoLyTrinh(ds);
   const wb = new Excel.Workbook();
@@ -127,5 +139,30 @@ export async function excelLyTrinh(tenDuAn: string, ds: DoanLyTrinh[], dtThuHoi:
     r.getCell(7).numFmt = "#,##0.0";
     if (!d.daBanGiao) r.getCell(8).font = { color: { argb: "FFB03A2E" } };
   });
+  if (doan.length) {
+    const w2 = wb.addWorksheet("Theo doan Km", { views: [{ state: "frozen", ySplit: 3 }], pageSetup: { orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
+    w2.columns = [{ width: 6 }, { width: 28 }, { width: 10 }, { width: 12 }, { width: 14 }, { width: 14 }, { width: 14 }, { width: 18 }, { width: 18 }];
+    w2.mergeCells("A1:I1");
+    w2.getCell("A1").value = `TIẾN ĐỘ GPMB THEO ĐOẠN TUYẾN — ${tenDuAn.toUpperCase()}`;
+    w2.getCell("A1").font = { bold: true, size: 13 };
+    w2.getCell("A1").alignment = { horizontal: "center" };
+    const h = w2.getRow(3);
+    h.values = ["STT", "Đoạn", "Số hộ", "Đã bàn giao", "Có ghi lý trình (km)", "Mặt bằng sạch (km)", "DT thu hồi (m²)", "Tạm tính (đ)", "Đã duyệt (đ)"];
+    h.eachCell((c) => { c.font = { bold: true }; c.alignment = { horizontal: "center", vertical: "middle", wrapText: true }; c.border = vien; c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE8EEF6" } }; });
+    h.height = 32;
+    doan.forEach((d, i) => {
+      const r = w2.addRow([i + 1, d.ten, d.soHo, d.banGiao, d.mCoGhi !== undefined ? d.mCoGhi / 1000 : null, d.mSach !== undefined ? d.mSach / 1000 : null, Number(d.dtThuHoi) || 0, Number(d.tamTinh) || 0, Number(d.daDuyet) || 0]);
+      r.eachCell({ includeEmpty: true }, (c) => { c.border = vien; });
+      r.getCell(5).numFmt = r.getCell(6).numFmt = "#,##0.000";
+      r.getCell(7).numFmt = "#,##0.0";
+      r.getCell(8).numFmt = r.getCell(9).numFmt = "#,##0";
+    });
+    const n = w2.rowCount + 2;
+    w2.mergeCells(n, 1, n, 9);
+    w2.getCell(n, 1).value = "Hộ xếp vào đoạn chứa điểm đầu lý trình nhỏ nhất trong các thửa của hộ; số liệu tiền, diện tích của hộ tính trọn ở đoạn đó. Mặt bằng sạch: phần tuyến chỉ có thửa của hộ đã bàn giao.";
+    w2.getCell(n, 1).font = { italic: true, size: 10 };
+    w2.getCell(n, 1).alignment = { wrapText: true };
+    w2.getRow(n).height = 30;
+  }
   return new Uint8Array(await wb.xlsx.writeBuffer());
 }

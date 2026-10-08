@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import type { DuAn, Ho } from "../mo-hinh";
-import { docLyTrinh, dsDoan, excelLyTrinh, hienDiem, hienLyTrinh, hopDoan, matBangTheoLyTrinh, type DoanLyTrinh, type LyTrinh } from "../ly-trinh";
+import { docLyTrinh, dsDoan, excelLyTrinh, type DongDoanExcel, hienDiem, hienLyTrinh, hopDoan, matBangTheoLyTrinh, type DoanLyTrinh, type LyTrinh } from "../ly-trinh";
 import { HopThoai } from "./chung";
 import { useUngDung } from "../ung-dung";
 import { taiXuong } from "../tai-xuong";
@@ -86,7 +86,7 @@ export function HopGhiLyTrinh({ hos, dong }: { hos: Ho[]; dong: () => void }) {
 }
 
 /** Thẻ "Mặt bằng theo lý trình" ở Tổng quan dự án — chỉ hiện khi có thửa ghi lý trình. */
-export function TheLyTrinh({ duAn, hos, ghi }: { duAn: DuAn; hos: Ho[]; ghi?: () => void }) {
+export function TheLyTrinh({ duAn, hos, ghi, doan = [] }: { duAn: DuAn; hos: Ho[]; ghi?: () => void; doan?: DongDoanExcel[] }) {
   const { bao } = useUngDung();
   const ds = useMemo(() => dsDoan(hos, (h) => !!h.banGiao?.ngay), [hos]);
   const [mo, setMo] = useState(false);
@@ -95,7 +95,7 @@ export function TheLyTrinh({ duAn, hos, ghi }: { duAn: DuAn; hos: Ho[]; ghi?: ()
   const tongThua = hos.reduce((s, h) => s + h.thua.length, 0);
   const xuat = async () => {
     const dt = new Map(hos.flatMap((h) => h.thua.map((t) => [t.id, t.dienTichThuHoi])));
-    const b = await excelLyTrinh(duAn.ten, ds, (d) => dt.get(d.thuaId) ?? "");
+    const b = await excelLyTrinh(duAn.ten, ds, (d) => dt.get(d.thuaId) ?? "", doan);
     if (await taiXuong(b, `Mat-bang-theo-ly-trinh - ${duAn.ten}.xlsx`, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) bao("Đã xuất Excel mặt bằng theo lý trình");
   };
   return (

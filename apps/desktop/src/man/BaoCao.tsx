@@ -176,6 +176,15 @@ export function BaoCao() {
                       {dongSo(x)}
                       <td className="chu-nho">{x.changHienTai}</td>
                     </tr>
+                    {(x.theoDoan ?? []).map((d) => (
+                    <tr key={`${x.duAn.id}:${d.dotId}`} className="chu-nho" aria-label={`${x.duAn.ten} – đoạn ${d.ten}`}>
+                      <td style={{ paddingLeft: 24 }}>↳ Đoạn <b>{d.ten}</b>{d.mCoGhi !== undefined && <div className="can-cu">sạch {(d.mSach! / 1000).toLocaleString("vi-VN", { maximumFractionDigits: 3 })}/{(d.mCoGhi / 1000).toLocaleString("vi-VN", { maximumFractionDigits: 3 })} km có ghi lý trình</div>}</td>
+                      <td />
+                      <td><PhanBoTrangThaiGon dem={d.theoTrangThai} tong={d.soHo} /><div className="can-cu">{d.theoTrangThai.HOAN_THANH}/{d.soHo} hoàn thành</div></td>
+                      {dongSo(d)}
+                      <td>{d.changHienTai}</td>
+                    </tr>
+                    ))}
                     {(x.theoDot ?? []).map((d) => (
                     <tr key={`${x.duAn.id}:${d.dotId}`} className="chu-nho" aria-label={`${x.duAn.ten} – ${d.ten}`}>
                       <td style={{ paddingLeft: 24 }}>↳ {x.duAn.ten} – <b>{d.ten}</b></td>

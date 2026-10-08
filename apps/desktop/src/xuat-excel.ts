@@ -839,6 +839,14 @@ export async function taoWorkbookBaoCao(bc: BaoCao, coQuan: string, dsKy: KyBaoC
         dinhDang(rd);
         rd.font = { name: FONT, italic: true };
       }
+      // 1.0.5: dòng từng đoạn Km (hộ xếp theo điểm đầu lý trình; không cộng thêm vào tổng)
+      for (const x of d.theoDoan ?? []) {
+        const rd = ws.getRow(r++);
+        const km = x.mCoGhi !== undefined ? ` (sạch ${(x.mSach! / 1000).toLocaleString("vi-VN", { maximumFractionDigits: 3 })}/${(x.mCoGhi / 1000).toLocaleString("vi-VN", { maximumFractionDigits: 3 })} km)` : "";
+        rd.values = ["", `   – Đoạn ${x.ten}${km}`, "", ...soLieu(x), x.changHienTai, x.canhBaoCao];
+        dinhDang(rd);
+        rd.font = { name: FONT, italic: true };
+      }
     }
     if (bc.theoXa.length > 1) {
       const rc = ws.getRow(r++);

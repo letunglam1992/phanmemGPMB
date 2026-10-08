@@ -3,6 +3,7 @@
  * kinh phí tạm tính (bảng tính hiện tại), kinh phí đã duyệt (bản phương án đã phê duyệt), chi trả đã ghi,
  * hiện trạng GPMB từng hộ, cảnh báo tự động. Không ước tính, không nội suy.
  */
+import { dsDoan, hienDiem, hopDoan, matBangTheoLyTrinh } from "./ly-trinh";
 import { D } from "@gpmb/core";
 import type Decimal from "decimal.js";
 import type { DuAn, Ho } from "./mo-hinh";
@@ -53,6 +54,8 @@ export interface DongBaoCao extends SoLieu {
   vuongMac: CanhBao[];
   /** P3-1 (0.9.27): dự án có đợt thu hồi — số liệu tách theo từng đợt (hộ chưa xếp đợt gộp một dòng cuối). */
   theoDot?: DongDot[];
+  /** 1.0.5: dự án có ghi lý trình — số liệu tách theo đoạn Km (hộ xếp vào đoạn chứa điểm đầu lý trình nhỏ nhất của hộ). */
+  theoDoan?: DongDot[];
 }
 
 /** Một dòng đợt thu hồi trong báo cáo (không tính là một dự án: soDuAn = 0). */
@@ -61,6 +64,9 @@ export interface DongDot extends SoLieu {
   ten: string;
   tyLeHoanThanh: number;
   changHienTai: string;
+  /** Dòng đoạn Km (1.0.5): chiều dài có ghi lý trình, mặt bằng sạch trong đoạn (mét) */
+  mCoGhi?: number;
+  mSach?: number;
 }
 
 export interface LocBaoCao {
@@ -145,9 +151,37 @@ export function dongTheoDot(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], denNgay: s
     const con = ds.filter(({ h }) => (h.dotId && idDot.has(h.dotId) ? h.dotId : CHUA_XEP_DOT) === id);
     if (id === CHUA_XEP_DOT && !con.length) return [];
     const d = dongDuAn(duAnTheoDot(duAn, dot), con, denNgay, lich, tyLeCham);
-    const { duAn: _d, tinhTrang: _t, tienDoChung: _c, vuongMac: _v, theoDot: _x, ...so } = d;
+    const { duAn: _d, tinhTrang: _t, tienDoChung: _c, vuongMac: _v, theoDot: _x, theoDoan: _y, ...so } = d;
     return [{ ...so, soDuAn: 0, dotId: id, ten }];
   });
+}
+
+const giao = (ds: [number, number][], a: number, b: number) => ds.reduce((s, [x, y]) => s + Math.max(0, Math.min(y, b) - Math.max(x, a)), 0);
+
+/**
+ * 1.0.5 — tách số liệu dự án theo đoạn tuyến (mặc định mỗi 1 km tính từ Km0): hộ xếp vào đoạn chứa điểm đầu lý trình
+ * nhỏ nhất trong các thửa của hộ; số liệu tiền, DT của hộ tính trọn ở đoạn đó (không chia nhỏ). Kèm chiều dài có ghi
+ * lý trình, mặt bằng sạch trong đoạn (thửa của hộ đã bàn giao đến ngày báo cáo). Không có hộ nào ghi lý trình → undefined.
+ */
+export function dongTheoDoan(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], denNgay: string, lich?: LichLamViec, tyLeCham: GiaiDoanTyLe[] = [], buocM = 1000): DongDot[] | undefined {
+  const dau = (h: Ho) => h.thua.reduce<number | null>((m, t) => (t.lyTrinh && (m === null || t.lyTrinh.tu < m) ? t.lyTrinh.tu : m), null);
+  if (!ds.some(({ h }) => dau(h) !== null)) return undefined;
+  const mb = matBangTheoLyTrinh(dsDoan(ds.map((x) => x.h), (h) => !!h.banGiao?.ngay && h.banGiao.ngay <= denNgay));
+  const coGhi = hopDoan(ds.flatMap(({ h }) => h.thua.flatMap((t) => (t.lyTrinh ? [t.lyTrinh] : []))));
+  const nhom = new Map<number, { h: Ho; k: KetQuaHo }[]>();
+  const chua: { h: Ho; k: KetQuaHo }[] = [];
+  for (const x of ds) {
+    const m = dau(x.h);
+    if (m === null) chua.push(x);
+    else nhom.set(Math.floor(m / buocM), [...(nhom.get(Math.floor(m / buocM)) ?? []), x]);
+  }
+  const dong = (con: { h: Ho; k: KetQuaHo }[], id: string, ten: string, a?: number, b?: number): DongDot => {
+    const { duAn: _d, tinhTrang: _t, tienDoChung: _c, vuongMac: _v, theoDot: _x, theoDoan: _y, ...so } = dongDuAn(duAn, con, denNgay, lich, tyLeCham);
+    return { ...so, soDuAn: 0, dotId: id, ten, ...(a !== undefined && b !== undefined ? { mCoGhi: giao(coGhi, a, b), mSach: giao(mb.sach, a, b) } : {}) };
+  };
+  const out = [...nhom.keys()].sort((a, b) => a - b).map((i) => dong(nhom.get(i)!, `km:${i}`, `${hienDiem(i * buocM)} – ${hienDiem((i + 1) * buocM)}`, i * buocM, (i + 1) * buocM));
+  if (chua.length) out.push(dong(chua, "km:chua", "Chưa ghi lý trình"));
+  return out;
 }
 
 export function lapBaoCao(
@@ -163,7 +197,8 @@ export function lapBaoCao(
       const ds = duLieu(d);
       const dong = dongDuAn(d, ds, loc.denNgay, lich, tyLeCham);
       const theoDot = dongTheoDot(d, ds, loc.denNgay, lich, tyLeCham);
-      return theoDot ? { ...dong, theoDot } : dong;
+      const theoDoan = dongTheoDoan(d, ds, loc.denNgay, lich, tyLeCham);
+      return { ...dong, ...(theoDot ? { theoDot } : {}), ...(theoDoan ? { theoDoan } : {}) };
     })
     .filter((x) => !loc.tinhTrang || x.tinhTrang === loc.tinhTrang)
     .sort((a, b) => a.duAn.xa.localeCompare(b.duAn.xa, "vi") || a.duAn.ten.localeCompare(b.duAn.ten, "vi"));

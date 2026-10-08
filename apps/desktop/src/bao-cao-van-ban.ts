@@ -69,7 +69,9 @@ export function duLieuBaoCaoWord(bc: BaoCao, t: ThongTinBaoCao, ss?: SoSanhKy | 
         la_dot: false,
       },
       ...(x.theoDot ?? []).map((d) => dongDotWord(d)),
+      ...(x.theoDoan ?? []).map((d) => ({ ...dongDotWord(d), ten: `– Đoạn ${d.ten}${d.mCoGhi !== undefined ? ` (sạch ${km(d.mSach!)}/${km(d.mCoGhi)} km)` : ""}` })),
     ]),
+    co_doan: bc.dong.some((x) => x.theoDoan?.length),
     co_dot: bc.dong.some((x) => x.theoDot?.length),
     theo_dot: bc.dong.flatMap((x) => (x.theoDot ?? []).map((d) => ({ ...dongDotWord(d), du_an: x.duAn.ten }))),
     so_ho: s.soHo,
@@ -90,6 +92,8 @@ export function duLieuBaoCaoWord(bc: BaoCao, t: ThongTinBaoCao, ss?: SoSanhKy | 
     nguoi_ky: t.nguoiKy,
   };
 }
+
+const km = (m: number) => (m / 1000).toLocaleString("vi-VN", { maximumFractionDigits: 3 });
 
 /** Dòng một đợt thu hồi trong bảng Word (không đánh số thứ tự, không tính là một dự án). */
 function dongDotWord(d: DongDot) {

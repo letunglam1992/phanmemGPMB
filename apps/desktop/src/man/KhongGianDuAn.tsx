@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { dongTheoDoan } from "../bao-cao";
 import { HopChotPhuongAn } from "../thanh-phan/PhuongAn";
 import { TaiLieuDuAn } from "../thanh-phan/TaiLieuDuAn";
 import { TabCuon } from "../thanh-phan/TabCuon";
@@ -206,7 +207,8 @@ function TheTongQuan({ duAn, kq, moHo, moDot, capNhatTd, keHoach }: { duAn: DuAn
         </div>
       </div>
       {coDot(duAn) && <TheTongHopDot duAn={duAn} kq={kq} moDot={moDot} />}
-      <TheLyTrinh duAn={duAn} hos={kq.map((x) => x.h)} ghi={quyen("SUA_HO_SO") ? () => setGhiLt(true) : undefined} />
+      <TheLyTrinh duAn={duAn} hos={kq.map((x) => x.h)} ghi={quyen("SUA_HO_SO") ? () => setGhiLt(true) : undefined}
+        doan={(dongTheoDoan(duAn, kq, homNay) ?? []).map((d) => ({ ten: d.ten, soHo: d.soHo, banGiao: d.theoTrangThai.HOAN_THANH, dtThuHoi: d.dtThuHoi.toString(), tamTinh: d.tamTinh.toString(), daDuyet: d.daDuyet.toString(), mCoGhi: d.mCoGhi, mSach: d.mSach }))} />
       <ThePhuongAn duAn={duAn} kq={kq} />
       {ghiLt && <HopGhiLyTrinh hos={kq.map((x) => x.h)} dong={() => setGhiLt(false)} />}
     </>
