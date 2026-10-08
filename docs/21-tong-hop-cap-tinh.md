@@ -187,6 +187,12 @@ Mỗi xã lập hồ sơ, phương án cho phần đất trên địa bàn mình
 - Excel thêm **Phụ lục 03 — Dự án liên xã** (trang "Lien xa").
 - Đoạn gửi từ bản cũ (chưa có mã): phần mềm **gợi ý ghép** khi tên giống ≥ 50% và cùng chủ đầu tư hoặc xã nằm trong danh sách; cán bộ tỉnh bấm **Ghép** (có thể **Bỏ ghép**). Không tự ghép.
 
+### Bổ sung ở bản 1.0.5 — bản cũ trên cổng, diễn biến theo tháng
+
+- **Tải các bản cũ trên cổng** (màn Tổng hợp tỉnh, khung Cổng, khi khóa tỉnh đang mở): cổng giữ 5 bản gần nhất của mỗi xã; phần mềm tải các bản máy tỉnh chưa có vào "các bản trước" (giữ ≤ 20 bản/đơn vị như 0.9.25), bản đã tải không tải lại.
+- **Diễn biến theo tháng**: khung biểu đồ dưới bảng tổng hợp — phạm vi toàn tỉnh / một xã / một dự án liên xã; tỷ lệ hộ đã bàn giao, đã duyệt phương án và giá trị tạm tính. Mỗi tháng lấy bản gửi gần nhất của từng đơn vị đến cuối tháng; chỉ cộng số liệu đã gửi.
+- **Worker** thêm `GET /api/goi/:ma/ban` (danh sách bản: id, lúc lưu, kích thước) và `GET /api/goi/:ma/ban/:id` (tải một bản) — chỉ mã quản trị (tỉnh) gọi được; mã quản trị `MA_QUAN_TRI` tự bỏ khoảng trắng, xuống dòng thừa. **Phải dán lại mã Worker** (mục 4.2 hoặc 4.3); chưa dán thì nút báo lỗi, các chức năng khác vẫn chạy.
+
 ## 4. Cổng Cloudflare (phương án 2 mức b)
 
 ### 4.1. Cổng làm gì
@@ -246,6 +252,20 @@ Cần kiểm tra lại bảng giá Cloudflare tại thời điểm triển khai.
 - Gói gửi qua cổng đã mã hóa đầu-cuối; Cloudflare chỉ thấy phần ngoài (tên đơn vị, tên dự án, số lượng, cán bộ xuất). Dù vậy, việc dùng dịch vụ đám mây của doanh nghiệp nước ngoài để lưu, chuyển dữ liệu của cơ quan nhà nước cần ý kiến của cơ quan chủ quản, đơn vị chuyên trách công nghệ thông tin của tỉnh. Đồng thời cần đối chiếu quy định về bảo vệ dữ liệu cá nhân (Luật Bảo vệ dữ liệu cá nhân, Nghị định 13/2023/NĐ-CP) và về an toàn thông tin.
 - Khi chưa có ý kiến đó, dùng **phương án 1 (gửi tệp)** qua kênh công vụ.
 - Mã truy cập của xã, mã quản trị lưu trên máy (bản cài: mã hóa bằng tài khoản Windows — DPAPI). Lộ mã thì tỉnh thu hồi và cấp mã mới; đổi mã quản trị bằng cách đặt lại `MA_QUAN_TRI`.
+
+### 4.6. Cập nhật mã Worker khi phần mềm có bản mới
+
+Khi ghi chú phát hành ghi "cần dán lại Worker" (vd. 1.0.5), chỉ thay **mã** của Worker; bucket R2, binding `KHO`, bí mật `MA_QUAN_TRI`, địa chỉ cổng và mã các xã **giữ nguyên** (xã không phải làm gì).
+
+Cách 1 — trên trang Cloudflare:
+1. Lấy mã mới: tệp `tools/cong-tinh/worker.js` của đúng bản phát hành (trên GitHub mở tệp ở nhãn `vX.Y.Z` → nút "Copy raw file"; hoặc trong thư mục mã nguồn).
+2. `https://dash.cloudflare.com` → **Workers & Pages** → bấm Worker `gpmb-cong-tinh`.
+3. **Edit code** (biểu tượng `</>` góc trên phải) → bấm vào khung mã → Ctrl+A → Delete → dán (Ctrl+V) toàn bộ mã mới → **Deploy** → xác nhận.
+4. Không vào **Settings → Variables and Secrets** / **Bindings** để sửa gì: hai mục đó vẫn còn sau khi Deploy. Có thể mở xem lại để chắc chắn còn `KHO` (R2) và `MA_QUAN_TRI` (Secret).
+
+Cách 2 — dòng lệnh (máy đã `npx wrangler login`): `cd tools/cong-tinh && npx wrangler deploy` (tên Worker trong `wrangler.toml` phải trùng tên Worker đang chạy, nếu không wrangler tạo Worker mới).
+
+Kiểm tra: máy tỉnh → Tổng hợp tỉnh → Cổng Cloudflare → **Kiểm tra lại** → thông báo "Kết nối tốt (quản trị, mã Worker bản X.Y.Z)". Từ 1.0.5, nếu cổng còn chạy mã cũ, khung Cổng hiện dòng vàng "Cổng đang chạy mã Worker … cần dán lại". Mã cũ vẫn nhận gói của xã bình thường — chỉ các chức năng mới cần mã mới.
 
 ## 5. Còn hạn chế
 

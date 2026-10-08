@@ -91,6 +91,17 @@ export interface TrangThaiCong {
   vaiTro: VaiTroCong;
   ma?: string;
   ten?: string;
+  /** Có từ Worker 1.0.5 */
+  phienBanCong?: string;
+}
+/** Phiên bản mã Worker phần mềm cần (tools/cong-tinh/worker.js). */
+export const PHIEN_BAN_CONG_CAN = "1.0.5";
+const soPb = (v: string) => v.split(".").map((x) => Number(x) || 0);
+/** Cổng chạy mã Worker cũ hơn bản phần mềm cần → câu nhắc dán lại Worker; đủ mới → null. */
+export function nhacCapNhatCong(tt: TrangThaiCong): string | null {
+  const a = soPb(tt.phienBanCong ?? "0"), b = soPb(PHIEN_BAN_CONG_CAN);
+  for (let i = 0; i < 3; i++) if ((a[i] ?? 0) !== (b[i] ?? 0)) return (a[i] ?? 0) > (b[i] ?? 0) ? null : `Cổng đang chạy mã Worker ${tt.phienBanCong ? `bản ${tt.phienBanCong}` : "cũ"} — cần dán lại tools/cong-tinh/worker.js bản ${PHIEN_BAN_CONG_CAN} lên Cloudflare (docs/21 mục 4.6) để dùng: danh sách dự án liên xã qua cổng, tải các bản cũ.`;
+  return null;
 }
 export interface GoiTrenCong {
   ma: string;

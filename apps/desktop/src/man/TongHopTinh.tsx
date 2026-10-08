@@ -27,7 +27,7 @@ import {
 } from "../tong-hop-tinh/goi-tinh";
 import { LoiDoiKhoaKy, type KetQuaNhap, type BanCu, docBanCu, dsBanCuTatCa, GIU_BAN_CU, docKhoaTinh, dsGoi, dsNhanGoi, dsTuyen, luuKhoaTinh, moGoiDaLuu, nhapGoi, xoaGoi, type BanGhiGoi, type DongNhanGoi } from "../tong-hop-tinh/kho-tinh";
 import {
-  capMaXa, chuanDiaChi, docCauHinhCong, dsGoiTrenCong, dsXaTrenCong, guiGoiLenCong, kiemTraCong, luuCauHinhCong, maTuTen, thuHoiXa, xoaCauHinhCong,
+  capMaXa, chuanDiaChi, docCauHinhCong, dsGoiTrenCong, dsXaTrenCong, guiGoiLenCong, kiemTraCong, luuCauHinhCong, nhacCapNhatCong, maTuTen, thuHoiXa, xoaCauHinhCong,
   type CauHinhCong, type GoiTrenCong, type VaiTroCong, type XaTrenCong,
 } from "../tong-hop-tinh/cong-tinh";
 import { moPhienXem, taoKhoXem } from "../tong-hop-tinh/xem-xa";
@@ -263,7 +263,8 @@ function CaiDatCong({ vaiTro, cong, datCong }: { vaiTro: VaiTroCong; cong: CauHi
       }
       datCong(c);
       setMa("");
-      bao(vaiTro === "XA" ? `Đã kết nối cổng — mã của ${tt.ten ?? tt.ma}` : "Đã kết nối cổng với quyền quản trị");
+      const nhac = nhacCapNhatCong(tt);
+      bao(`${vaiTro === "XA" ? `Đã kết nối cổng — mã của ${tt.ten ?? tt.ma}` : "Đã kết nối cổng với quyền quản trị"}${nhac ? `. ${nhac}` : ""}`, nhac ? "loi" : undefined);
     } catch (e) {
       bao(loiChu(e), "loi");
     }
@@ -283,7 +284,7 @@ function CaiDatCong({ vaiTro, cong, datCong }: { vaiTro: VaiTroCong; cong: CauHi
           <label className="chu-nho tht-o">{vaiTro === "XA" ? "Mã truy cập của xã" : "Mã quản trị"}<input type="password" autoComplete="off" aria-label={`Mã truy cập cổng ${vaiTro}`} value={ma} placeholder={cong ? "•••••• (đã lưu — dán mã mới để thay)" : ""} onChange={(e) => setMa(e.target.value)} /></label>
           <div className="nhom-nut">
             <button className="nut nut-chinh nut-nho" disabled={!diaChi.trim() || !ma.trim()} onClick={() => void luu()}>Lưu và kiểm tra kết nối</button>
-            {cong && <button className="nut nut-nho" onClick={() => void kiemTraCong(cong).then((t) => bao(`Kết nối tốt (${t.vaiTro === "TINH" ? "quản trị" : t.ten ?? t.ma})`), (e) => bao(loiChu(e), "loi"))}>Kiểm tra lại</button>}
+            {cong && <button className="nut nut-nho" onClick={() => void kiemTraCong(cong).then((t) => { const nhac = nhacCapNhatCong(t); bao(`Kết nối tốt (${t.vaiTro === "TINH" ? "quản trị" : t.ten ?? t.ma}${t.phienBanCong ? `, mã Worker bản ${t.phienBanCong}` : ""})${nhac ? `. ${nhac}` : ""}`, nhac ? "loi" : undefined); }, (e) => bao(loiChu(e), "loi"))}>Kiểm tra lại</button>}
             {cong && <button className="nut nut-nguy nut-nho" onClick={() => { if (confirm("Xóa cài đặt cổng khỏi máy này?")) { xoaCauHinhCong(vaiTro); datCong(null); } }}>Xóa cài đặt cổng</button>}
             {vaiTro === "TINH" && <button className="nut nut-nho" onClick={() => { const u = crypto.getRandomValues(new Uint8Array(32)); setMaMoi(btoa(String.fromCharCode(...u)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "")); }}>Tạo mã quản trị ngẫu nhiên</button>}
           </div>
@@ -318,10 +319,13 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
   const [nguong, setNguong] = useState<number | null>(docNguong);
   const [xaCong, setXaCong] = useState<XaTrenCong[]>([]);
   const [hopBc, setHopBc] = useState(false);
+  const [nhacCong, setNhacCong] = useState<string | null>(null);
   useEffect(() => {
+    setNhacCong(null);
     if (!cong) return setXaCong([]);
     let bo = false;
     dsXaTrenCong(cong).then((x) => { if (!bo) setXaCong(x); }, () => undefined);
+    kiemTraCong(cong).then((t) => { if (!bo) setNhacCong(nhacCapNhatCong(t)); }, () => undefined);
     return () => { bo = true; };
   }, [cong]);
   /** Gói trên cổng chưa tải về máy này (hiện nhắc khi đang khóa). */
@@ -535,6 +539,7 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
           <div className="the-dau"><h3>Cổng Cloudflare (tùy chọn)</h3></div>
           <div className="the-than luoi" style={{ gap: 10 }}>
             <div className="mo chu-nho">Các xã gửi gói (đã mã hóa) lên cổng của tỉnh thay cho gửi tệp. Cách triển khai: docs/21, mục 4 (một lần, miễn phí trong hạn mức của Cloudflare).</div>
+            {nhacCong && <div className="thong-bao-vang chu-nho" role="status" style={{ padding: "6px 10px" }}>{nhacCong}</div>}
             <RaoLoi ten="phần cổng Cloudflare">
               <CaiDatCong vaiTro="TINH" cong={cong} datCong={setCong} />
               {cong && <MaXa cong={cong} />}

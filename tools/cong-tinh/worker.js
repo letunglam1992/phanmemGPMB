@@ -7,7 +7,7 @@
  * Ràng buộc R2: binding tên KHO.
  *
  * API (JSON, lỗi: { loi }):
- *   GET    /api/trang-thai      → { vaiTro: "TINH" | "XA", ma?, ten? }
+ *   GET    /api/trang-thai      → { vaiTro: "TINH" | "XA", ma?, ten?, phienBanCong }
  *   PUT    /api/goi             (xã)    thân = gói → { luc, kichThuoc }  (giữ 5 bản gần nhất mỗi xã)
  *   GET    /api/goi             (tỉnh)  → [{ ma, ten, luc, kichThuoc }]
  *   GET    /api/goi/:ma         (tỉnh)  → gói mới nhất của xã
@@ -23,6 +23,8 @@ const GIU_BAN = 5;
 const TOI_DA = 95 * 1024 * 1024;
 const MA_HOP_LE = /^[a-z0-9][a-z0-9-]{1,39}$/;
 
+/** Phiên bản mã Worker — phần mềm so với bản nó cần để nhắc dán lại Worker (1.0.5). */
+const PHIEN_BAN_CONG = "1.0.5";
 const tl = (du, ma = 200) =>
   new Response(JSON.stringify(du), { status: ma, headers: { "content-type": "application/json; charset=utf-8", ...CORS } });
 const loi = (ma, thongBao) => tl({ loi: thongBao }, ma);
@@ -48,7 +50,9 @@ async function xacThuc(req, env) {
   const m = /^Bearer\s+(\S+)$/.exec(req.headers.get("authorization") ?? "");
   if (!m) return null;
   const token = m[1];
-  if (env.MA_QUAN_TRI && env.MA_QUAN_TRI.length >= 24 && bang(await bam(token), await bam(env.MA_QUAN_TRI))) return { vaiTro: "TINH" };
+  // bỏ khoảng trắng, xuống dòng thừa khi dán mã quản trị vào Cloudflare (1.0.5)
+  const maQt = (env.MA_QUAN_TRI ?? "").trim();
+  if (maQt.length >= 24 && bang(await bam(token), await bam(maQt))) return { vaiTro: "TINH" };
   const i = token.indexOf(".");
   if (i < 0) return null;
   const ma = token.slice(0, i);
@@ -84,7 +88,7 @@ export default {
     const ai = await xacThuc(req, env);
     if (!ai) return loi(401, "Mã truy cập không đúng hoặc đã bị thu hồi");
 
-    if (p === "/api/trang-thai" && req.method === "GET") return tl(ai);
+    if (p === "/api/trang-thai" && req.method === "GET") return tl({ ...ai, phienBanCong: PHIEN_BAN_CONG });
 
     // 1.0.5: danh sách dự án liên xã (mã dùng chung, tên, chủ đầu tư, xã dọc tuyến) — chỉ thông tin dự án, không có hồ sơ
     if (p === "/api/tuyen" && req.method === "GET") {

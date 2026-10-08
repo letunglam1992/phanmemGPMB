@@ -86,9 +86,11 @@ test("T5 phê duyệt PA 01 hộ ghi số vào hộ → T7 thu hồi nhiều h�
   expect(t7).toMatch(/Căn cứ Quyết định số 31\/QĐ-UBND ngày\s*\S*\s*của Chủ tịch Ủy ban nhân dân xã Chiềng Mung về việc phê duyệt phương án bồi thường, hỗ trợ, tái định cư đối với hộ Hộ mẫu 01;/);
   expect(t7).toContain("(Kèm theo Quyết định số 40/QĐ-UBND");
 
-  // Chọn căn cứ: NQ 254/2025/QH15 mặc định bỏ chọn (chưa có nguyên văn)
+  // Chọn căn cứ: NQ 254/2025/QH15 và NĐ 49/2026 (hướng dẫn NQ 254) mặc định bỏ chọn (chưa có nguyên văn)
   await p.getByRole("button", { name: /Sửa thông tin chung/ }).click();
-  await expect(p.getByLabel(/In căn cứ: .*254\/2025\/QH15/)).not.toBeChecked();
+  await expect(p.getByLabel(/In căn cứ: Căn cứ Nghị quyết số 254\/2025\/QH15/)).not.toBeChecked();
+  await expect(p.getByLabel(/In căn cứ: .*49\/2026\/NĐ-CP/)).not.toBeChecked();
+  await expect(p.getByLabel(/In căn cứ: .*64\/2026\/QĐ-UBND/)).toBeChecked();
   await expect(p.getByLabel(/In căn cứ: .*88\/2024\/NĐ-CP/)).toBeChecked();
   await p.screenshot({ path: "test-results/van-ban-thuc-te.png", fullPage: false });
 });

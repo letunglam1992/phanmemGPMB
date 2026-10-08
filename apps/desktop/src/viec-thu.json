@@ -1,0 +1,55 @@
+[
+ {
+  "ten": "A2. Thử bản 0.9.26 trên máy thật",
+  "viec": [
+   "Máy tỉnh: mở khóa cấp tỉnh, để phần mềm mở; xã gửi gói → trong ≤ 30 phút gói tự về (thông báo \"Đã tự nhận…\"). Khi chưa mở khóa: chuông có dòng \"Có n gói mới trên cổng chờ nhận\".",
+   "Báo cáo Word toàn tỉnh: tích \"Kèm phụ lục Excel\" → có 2 tệp.",
+   "Hồ sơ hộ → Tiến độ: thêm khoảng không tính (có lý do) → hạn chót lùi; để trống ngày kết thúc → Tạm dừng.",
+   "Thửa đất: chọn trường hợp Điều 14/17 PL I, ghi căn cứ → cảnh báo phần còn lại thay đổi.",
+   "Xóa một tệp đính kèm → \"Tệp đã xóa\" → Khôi phục.",
+   "Trợ lý AI: hỏi \"Điều 95 Luật Đất đai\" → trích nguyên văn VBHN 44."
+  ]
+ },
+ {
+  "ten": "A3. Thử bản 0.9.27 / 1.0.1 trên máy thật",
+  "viec": [
+   "1.0.2: xuất một biểu Excel → danh sách \"Tệp đã xuất\" tự hiện; bấm tên tệp → Excel mở; \"Thư mục\" → Explorer chọn sẵn tệp.",
+   "1.0.1: xóa thử một ghi chú hiện trường, một hồ sơ (thùng rác) → phải hiện hộp hỏi \"OK / Cancel\" của Windows; bấm Cancel thì không xóa. Không còn thông báo lỗi \"plugin:dialog|confirm\". Xuất Excel → hộp \"Lưu thành\" vẫn mở bình thường.",
+   "Nạp một tệp DXF thật của địa phương (bản đồ địa chính / trích đo): thửa dựng đúng, chữ tiếng Việt đúng (TCVN3 hoặc Unicode). Nạp tệp DWG → phải thấy hướng dẫn lưu sang DXF.",
+   "Sau khi nạp: hộp \"Đã nạp bản đồ\" → thử \"Tự chọn lớp cho từng đối tượng\": tích lớp ở bảng, chốt cấu hình → thửa dựng lại đúng.",
+   "Bản đồ có nhãn kiểu \"CLN · 13/1310,0 · Lèo Văn Pản\" cùng một lớp: chọn lớp đó làm \"Nhãn thửa\" → loại đất, số thửa, diện tích, chủ đọc đúng. Bản đồ không có số tờ: nhập số tờ (hộp sau khi nạp, hoặc Tờ bản đồ → cột \"Số tờ (nhập tay)\") → số tờ hiện có dấu *.",
+   "Hồ sơ → Nhật ký → Lịch sử: khôi phục một bản Tiến độ / Chi trả (tài khoản Quản trị). Thông tin dự án → \"Lịch sử thay đổi thông tin dự án\" → khôi phục.",
+   "Sao lưu → khôi phục vào máy khác: lịch sử thay đổi còn nguyên.",
+   "Bước chung 1–4: xác nhận một bước → \"↶ Hoàn tác\". Thẻ Tiến độ hộ: gửi duyệt → hoàn tác.",
+   "Nhập Excel có cột \"Đợt thu hồi\"; Báo cáo tổng hợp: dòng từng đợt.",
+   "Ghi chú hiện trường: 📷 thêm ảnh chụp điện thoại."
+  ]
+ },
+ {
+  "ten": "A4. Thử bản 1.0.4 trên máy thật (khi phát hành)",
+  "viec": [
+   "Máy tỉnh: khai một dự án liên xã (mã, xã dọc tuyến); hai máy xã điền mã, gửi gói → tỉnh thấy bảng từng xã, xã chưa gửi hiện \"Chưa có số liệu\"; Excel có Phụ lục 03.",
+   "Ghi lý trình: chọn vài hộ → \"Ghi lý trình…\" → Tổng quan dự án có thẻ \"Mặt bằng theo lý trình\"; nhập Excel có cột Lý trình.",
+   "Cài đặt chung → Lịch ngày nghỉ → \"Đề xuất ngày nghỉ\" → đối chiếu thông báo năm nay rồi thêm, xác nhận.",
+   "Thẻ Tính toán → \"Xuất Word (kèm giải trình)\" mở được bằng Word; \"In / PDF\" → chọn \"Microsoft Print to PDF\" lưu được PDF (chưa thử trong .exe).",
+   "Ctrl+K gõ \"5/85\" → mở đúng thửa; Soát phương án → bấm dòng → mở đúng thẻ."
+  ]
+ },
+ {
+  "ten": "A5. Thử bản 1.0.5 trên máy thật (khi phát hành)",
+  "viec": [
+   "Dán lại mã Worker mới lên Cloudflare (tools/cong-tinh/worker.js); máy tỉnh lưu một dự án liên xã → nút \"Đưa danh sách lên cổng ✓\"; máy xã → Thông tin dự án → \"Lấy danh sách dự án liên xã từ cổng tỉnh\" → chọn mã.",
+   "Dự án ở phường (vd. Chiềng An): thửa đất NN chọn \"Bản Cá\" → chuyển đổi nghề 5 lần; \"Bản Tông Hụm\" → 4 lần; chưa chọn → \"Cần xác nhận\". Dự án cũ: Thông tin dự án thấy điều khoản chuyển tiếp QĐ 64.",
+   "Văn bản → T8 (dự kiến bố trí TĐC) với dự án đã khai Quỹ tái định cư: biểu lô, biểu hộ đúng.",
+   "Bản đồ → thẻ \"Theo lý trình\" → bấm đoạn vướng → thửa được tô, phóng tới. Báo cáo tổng hợp: dòng \"↳ Đoạn Km…\".",
+   "Máy tỉnh (sau khi dán Worker mới): \"Tải các bản cũ trên cổng\" → khung \"Diễn biến theo tháng\" có biểu đồ; đổi phạm vi xã / dự án liên xã.",
+   "Thẻ Tính toán → \"Lưu PDF\" → mở tệp bằng trình đọc PDF: đủ trang, bảng lặp tiêu đề, số trang. \"In / PDF\" → hộp in của Windows có mở không.",
+   "Văn bản → \"Cập nhật căn cứ mặc định\" ở dự án cũ; soạn T10, T11 (chi trả chậm) với hộ đã quá 30 ngày chưa chi trả.",
+   "Hồ sơ hộ → Chi trả: đợt \"Gửi ngân hàng\" → nhập ngân hàng; \"Ghi trả cho người có đất…\" (tiền lãi theo sao kê).",
+   "Kiểm tra phương án → chọn \"Dạng bảng: Ngang\" với một tệp PA mỗi hộ một dòng.",
+   "Bản đồ → thẻ \"Tim tuyến → lý trình\" → \"Tính lý trình từ tim tuyến…\": chọn lớp tim tuyến, Km đầu → bảng gợi ý lý trình từng thửa → Ghi.",
+   "Tổng quan → thẻ vàng \"Áp dụng QĐ 64/2026/QĐ-UBND\" (nếu hiện) → mở bảng rà soát, xuất Excel; Thửa đất → ô Tổ, thôn có gợi ý theo địa chỉ hộ.",
+   "Giới thiệu → \"Biểu ghi kết quả thử (Excel)\" → điền kết quả các mục trên rồi gửi lại."
+  ]
+ }
+]

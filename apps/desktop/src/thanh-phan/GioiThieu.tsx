@@ -2,11 +2,16 @@ import { HopThoai } from "./chung";
 import { BAN_QUYEN, MA_BUILD, NGAY_BUILD, PHIEN_BAN } from "../phien-ban";
 import { TheCapNhat } from "./CapNhat";
 import type { KetQuaKiemTra } from "../cap-nhat";
+import { taiXuong } from "../tai-xuong";
+import { taoBieuMauThu } from "../bieu-mau-thu";
 
 /** Giới thiệu phần mềm, phiên bản, bản quyền, liên hệ. */
 export function HopGioiThieu({ dong, kqCapNhat }: { dong: () => void; kqCapNhat?: KetQuaKiemTra | null }) {
   return (
-    <HopThoai tieuDe="Giới thiệu, bản quyền" rong={620} dong={dong} chan={<button className="nut nut-chinh" onClick={dong}>Đóng</button>}>
+    <HopThoai tieuDe="Giới thiệu, bản quyền" rong={620} dong={dong} chan={<>
+      <button className="nut" title="Danh sách việc cần thử trên máy thật (theo từng phiên bản) kèm cột Đạt / Không đạt / Ghi chú — điền rồi gửi lại tác giả" onClick={async () => void taiXuong(await taoBieuMauThu(), `Bieu-ghi-ket-qua-thu_${PHIEN_BAN}.xlsx`, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")}>Biểu ghi kết quả thử (Excel)</button>
+      <button className="nut nut-chinh" onClick={dong}>Đóng</button>
+    </>}>
       <div className="gt-dau">
         <span className="gt-logo" aria-hidden>
           <svg width="56" height="38" viewBox="0 0 44 30" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinejoin="round" strokeLinecap="round"><path d="M2 27L15 7l7 10 5-6 15 16z" /><path d="M11 27l7-9 5 6" /></svg>
@@ -21,7 +26,7 @@ export function HopGioiThieu({ dong, kqCapNhat }: { dong: () => void; kqCapNhat?
           <tr><th>Phiên bản</th><td><b>{PHIEN_BAN}</b>{NGAY_BUILD && <> · bản dựng ngày {NGAY_BUILD.split("-").reverse().join("/")}</>}{MA_BUILD && <span className="mo"> · mã {MA_BUILD}</span>}</td></tr>
           <tr><th>Tác giả, bản quyền</th><td><b>{BAN_QUYEN.tacGia}</b> – {BAN_QUYEN.donVi}</td></tr>
           <tr><th>Liên hệ</th><td>Điện thoại: <b>{BAN_QUYEN.dienThoai}</b></td></tr>
-          <tr><th>Bộ chính sách</th><td>Sơn La, hiệu lực 31/3/2026 (QĐ 106/2025, QĐ 14/2026, QĐ 32/2025, NQ 152/2025)</td></tr>
+          <tr><th>Bộ chính sách</th><td>Sơn La, hiệu lực 31/3/2026 (QĐ 106/2025, QĐ 14/2026, QĐ 32/2025, NQ 152/2025); từ 06/10/2026 theo QĐ 64/2026/QĐ-UBND sửa đổi QĐ 106/2025, QĐ 14/2026</td></tr>
         </tbody>
       </table>
       <TheCapNhat kqDau={kqCapNhat} />

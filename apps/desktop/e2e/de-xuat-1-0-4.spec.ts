@@ -85,6 +85,14 @@ test("Tính toán: Xuất Word bảng tính kèm giải trình; Ctrl+K tờ/th�
   await expect.poll(() => p.evaluate(() => Object.keys((window as unknown as { __tep: Record<string, string> }).__tep).find((k) => k.startsWith("Bang-tinh-giai-trinh")))).toBeTruthy();
   const ten = await p.evaluate(() => Object.keys((window as unknown as { __tep: Record<string, string> }).__tep).find((k) => k.startsWith("Bang-tinh-giai-trinh"))!);
   expect(ten).toMatch(/\.docx$/);
+  // 1.0.5: Lưu PDF trực tiếp (không qua hộp in)
+  await p.getByRole("button", { name: "Lưu PDF" }).click();
+  await expect.poll(() => p.evaluate(() => Object.keys((window as unknown as { __tep: Record<string, string> }).__tep).find((k) => /^Bang-tinh-giai-trinh.*\.pdf$/.test(k)))).toBeTruthy();
+  const pdf = await p.evaluate(() => { const t = (window as unknown as { __tep: Record<string, string> }).__tep; return atob(t[Object.keys(t).find((k) => k.endsWith(".pdf"))!]!); });
+  expect(pdf.startsWith("%PDF-1.4")).toBe(true);
+  const soTrang = Number(/\/Count (\d+)/.exec(pdf)![1]);
+  expect(soTrang).toBeGreaterThanOrEqual(2);
+  expect((pdf.match(/\/Subtype \/Image/g) ?? []).length).toBe(soTrang);
   // soát: đi tới đúng thẻ
   await p.keyboard.press("Alt+3");
   await p.getByRole("button", { name: "Soát phương án" }).click();

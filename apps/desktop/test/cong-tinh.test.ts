@@ -45,7 +45,7 @@ beforeEach(() => {
 describe("Worker cổng tỉnh", () => {
   it("cấp mã xã → xã gửi gói → tỉnh liệt kê, tải về; thu hồi → 401; chỉ lưu mã băm", async () => {
     expect((await goi("/api/trang-thai")).status).toBe(401);
-    expect(await (await goi("/api/trang-thai", { ma: QT })).json()).toEqual({ vaiTro: "TINH" });
+    expect(await (await goi("/api/trang-thai", { ma: QT })).json()).toEqual({ vaiTro: "TINH", phienBanCong: "1.0.5" });
     const cap = await (await goi("/api/xa", { ma: QT, method: "POST", body: JSON.stringify({ ma: "chieng-mung", ten: "Xã Chiềng Mung" }) })).json();
     expect(cap.token).toMatch(/^chieng-mung\.[\w-]{40,}$/);
     expect(new TextDecoder().decode(env.KHO.m.get("xa/chieng-mung.json")!.bytes)).not.toContain(cap.token);
@@ -70,6 +70,9 @@ describe("Worker cổng tỉnh", () => {
   it("mã quản trị ngắn bị bỏ qua; mã xã không hợp lệ bị từ chối", async () => {
     env.MA_QUAN_TRI = "ngan";
     expect((await goi("/api/trang-thai", { ma: "ngan" })).status).toBe(401);
+    // dán mã vào Cloudflare thừa khoảng trắng, xuống dòng → vẫn nhận
+    env.MA_QUAN_TRI = `  ${QT}\n`;
+    expect((await goi("/api/trang-thai", { ma: QT })).status).toBe(200);
     env.MA_QUAN_TRI = QT;
     expect((await goi("/api/xa", { ma: QT, method: "POST", body: JSON.stringify({ ma: "Chiềng Mung", ten: "x" }) })).status).toBe(400);
   });
@@ -129,5 +132,17 @@ describe("Kết nối cổng từ phần mềm", () => {
     expect(chuanDiaChi("http://127.0.0.1:8787/")).toBe("http://127.0.0.1:8787");
     expect(maTuTen("Phường Tô Hiệu")).toBe("to-hieu");
     expect(maTuTen("UBND xã Đồng Lạc")).toBe("dong-lac");
+  });
+});
+
+describe("Phiên bản mã Worker (1.0.5)", () => {
+  it("cổng trả phienBanCong; phần mềm nhắc dán lại khi cổng cũ", async () => {
+    const { nhacCapNhatCong, PHIEN_BAN_CONG_CAN } = await import("../src/tong-hop-tinh/cong-tinh");
+    expect(nhacCapNhatCong({ vaiTro: "TINH" })).toMatch(/dán lại/);
+    expect(nhacCapNhatCong({ vaiTro: "TINH", phienBanCong: "1.0.4" })).toMatch(/bản 1\.0\.4/);
+    expect(nhacCapNhatCong({ vaiTro: "TINH", phienBanCong: PHIEN_BAN_CONG_CAN })).toBeNull();
+    expect(nhacCapNhatCong({ vaiTro: "XA", phienBanCong: "1.1.0" })).toBeNull();
+    const nguon = (await import("node:fs")).readFileSync(new URL("../../../tools/cong-tinh/worker.js", import.meta.url), "utf8");
+    expect(nguon).toContain(`const PHIEN_BAN_CONG = "${PHIEN_BAN_CONG_CAN}"`);
   });
 });
