@@ -14,7 +14,7 @@ import { taiXuong } from "../tai-xuong";
 import { tenTep } from "../ten-tep";
 import { giaTriNhapThem } from "../van-ban/tao-nhanh";
 import { kiemTraThongNhat } from "../van-ban/thuc-te";
-import { CAN_CU_MAC_DINH } from "../van-ban/du-lieu";
+import { CAN_CU_DA_THAY, CAN_CU_MAC_DINH, capNhatCanCu } from "../van-ban/du-lieu";
 import { Chon } from "../thanh-phan/Chon";
 import { chungTheoDot, coDot, dotCuaHo, dsDot, duAnTheoDot, khopDot, tenDot, timDot } from "../dot-thu-hoi";
 
@@ -444,16 +444,18 @@ function ChonCanCu({ chung, setChung }: { chung: Record<string, string>; setChun
   const ds = [...new Set([...dong(chung.can_cu_chung), ...dong(chung.can_cu_du_an)])];
   const bo = new Set(dong(chung.can_cu_bo));
   const chuaCo = CAN_CU_MAC_DINH.filter((c) => !ds.includes(c));
+  const cu = ds.filter((c) => CAN_CU_DA_THAY[c]);
   return (
     <div style={{ gridColumn: "1/-1" }}>
-      <div className="chu-nho mo" style={{ marginBottom: 4 }}>Chọn căn cứ in vào văn bản của dự án (bỏ tích = không in). NQ 254/2025/QH15, NĐ 49/2026/NĐ-CP, NĐ 151/2025/NĐ-CP, QĐ 426/QĐ-UBND, QĐ 48/QĐ-UBND: phần mềm chưa có nguyên văn — mặc định không in; dự án áp dụng thì tích chọn hoặc nhập vào “Căn cứ riêng của dự án” đúng số, ngày, trích yếu.</div>
+      <div className="chu-nho mo" style={{ marginBottom: 4 }}>Chọn căn cứ in vào văn bản của dự án (bỏ tích = không in). NQ 254/2025/QH15, NĐ 49/2026/NĐ-CP (trích yếu theo phần căn cứ QĐ 64/2026): mặc định không in — dự án thuộc trường hợp áp dụng thì tích chọn. NĐ 151/2025/NĐ-CP, QĐ 426/QĐ-UBND, QĐ 48/QĐ-UBND: phần mềm chưa có nguyên văn — nhập vào “Căn cứ riêng của dự án” đúng số, ngày, trích yếu.</div>
       {ds.map((c) => (
         <label key={c} className="chu-nho" style={{ display: "flex", gap: 6, alignItems: "flex-start", marginBottom: 2 }}>
           <input type="checkbox" aria-label={`In căn cứ: ${c}`} checked={!bo.has(c)} onChange={(e) => { const b = new Set(bo); if (e.target.checked) b.delete(c); else b.add(c); setChung({ ...chung, can_cu_bo: [...b].join("\n") }); }} />
           <span>{c}</span>
         </label>
       ))}
-      {chuaCo.length > 0 && <button className="nut nut-nho" onClick={() => setChung({ ...chung, can_cu_chung: [...dong(chung.can_cu_chung), ...chuaCo].join("\n") })}>Thêm lại căn cứ mặc định đã xóa ({chuaCo.length})</button>}
+      {cu.length > 0 && <div className="thong-bao thong-bao-vang chu-nho mt-4">Căn cứ “Luật Đất đai … sửa đổi, bổ sung bởi các Luật …” đang dùng danh sách cũ — QĐ 64/2026 dẫn thêm Luật số 130/2025/QH15 và số 116/2025/QH15.</div>}
+      {(chuaCo.length > 0 || cu.length > 0) && <button className="nut nut-nho" onClick={() => setChung({ ...chung, can_cu_chung: capNhatCanCu(chung.can_cu_chung ?? "").chu })}>Cập nhật căn cứ mặc định ({chuaCo.length + cu.length - Math.min(cu.length, chuaCo.filter((c) => Object.values(CAN_CU_DA_THAY).includes(c)).length)})</button>}
     </div>
   );
 }

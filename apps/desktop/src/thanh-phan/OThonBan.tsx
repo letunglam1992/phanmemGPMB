@@ -4,12 +4,13 @@ import type { DuAn, Ho } from "../mo-hinh";
 import { HopThoai } from "./chung";
 import { useUngDung } from "../ung-dung";
 import { laDatNN } from "../tinh-ho";
+import { goiYThon } from "../qd64";
 
 /**
  * Tổ, thôn, bản, tiểu khu nơi có thửa đất (QĐ 64/2026): chọn từ danh sách Phụ lục của xã (kèm hệ số) hoặc ghi tay;
  * nhiều tổ, thôn → phần mềm lấy mức cao nhất (k4 Điều 14 PL II QĐ 106/2025 sửa đổi).
  */
-export function OThonBan({ cs, xa, value, onChange, nhan }: { cs: BoChinhSach; xa: string; value: string[] | undefined; onChange: (v: string[] | undefined) => void; nhan: string }) {
+export function OThonBan({ cs, xa, value, onChange, nhan, goiY = [] }: { cs: BoChinhSach; xa: string; value: string[] | undefined; onChange: (v: string[] | undefined) => void; nhan: string; goiY?: { thon: string; heSo: string }[] }) {
   const ds = thonCoHeSo(cs, xa);
   const [tay, setTay] = useState("");
   const [moTay, setMoTay] = useState(false);
@@ -23,6 +24,9 @@ export function OThonBan({ cs, xa, value, onChange, nhan }: { cs: BoChinhSach; x
         <span key={t} className="nhan nhan-xam" style={{ marginRight: 4 }}>
           {t}{heSo(t) ? ` · ${heSo(t)} lần` : ""} <button className="nut-chu" aria-label={`Bỏ ${t}`} onClick={() => bo(t)}>×</button>
         </span>
+      ))}
+      {!gt.length && goiY.map((g) => (
+        <button key={g.thon} className="nut nut-nho" style={{ marginRight: 4 }} title="Gợi ý theo địa chỉ hộ — bấm để xác nhận (thửa có thể ở tổ, thôn khác nơi hộ cư trú)" onClick={() => them(g.thon)}>Gợi ý: {g.thon} · {g.heSo} lần ✓</button>
       ))}
       {!moTay ? (
         <select aria-label={nhan} value="" className={ds.length && !gt.length ? "nhac-nhap" : ""} title="Tổ, thôn, bản, tiểu khu nơi có thửa đất — xác định hệ số hỗ trợ chuyển đổi nghề (QĐ 64/2026)"
@@ -55,6 +59,9 @@ export function HopGhiThonBan({ hos, duAn, cs, dong }: { hos: Ho[]; duAn: DuAn; 
   const tach = (s: string) => s.split(/[;\n]+/).map((x) => x.trim()).filter(Boolean);
   const thayDoi = dongs.filter(({ t }) => tach(gt[t.id] ?? "").join("; ") !== (t.thonBan ?? []).join("; "));
   const ap = (chiTrong: boolean) => setGt((g) => Object.fromEntries(Object.entries(g).map(([id, v]) => [id, chiTrong && v.trim() ? v : chung])));
+  const goiYCua = new Map(dongs.map(({ h, t }) => [t.id, goiYThon(cs, duAn.xa, h.diaChi, t.nguonGoc, t.ghiChu)]));
+  const soGoiY = dongs.filter(({ t }) => !(gt[t.id] ?? "").trim() && goiYCua.get(t.id)!.length === 1).length;
+  const apGoiY = () => setGt((g) => Object.fromEntries(Object.entries(g).map(([id, v]) => { const x = goiYCua.get(id) ?? []; return [id, !v.trim() && x.length === 1 ? x[0]!.thon : v]; })));
   const luu = async () => {
     const theoHo = new Map<string, { h: Ho; doi: string[] }>();
     for (const { h, t } of thayDoi) {
@@ -95,6 +102,7 @@ export function HopGhiThonBan({ hos, duAn, cs, dong }: { hos: Ho[]; duAn: DuAn; 
         </label>
         <button className="nut" disabled={!chung.trim()} onClick={() => ap(true)}>Áp cho thửa còn trống</button>
         <button className="nut" disabled={!chung.trim()} onClick={() => ap(false)}>Áp cho mọi thửa</button>
+        {soGoiY > 0 && <button className="nut" title="Tên tổ, thôn trong Phụ lục có trong địa chỉ hộ / ghi chú thửa — kiểm tra lại trước khi lưu" onClick={apGoiY}>Điền gợi ý theo địa chỉ hộ ({soGoiY} thửa)</button>}
       </div>
       <div className="bang-cuon" style={{ maxHeight: 420 }}>
         <table className="bang">

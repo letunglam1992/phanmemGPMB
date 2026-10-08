@@ -16,6 +16,7 @@ import { Chon } from "../../thanh-phan/Chon";
 import { hienSo, soD } from "../../so";
 import { OLyTrinh } from "../../thanh-phan/OLyTrinh";
 import { OThonBan } from "../../thanh-phan/OThonBan";
+import { goiYThon } from "../../qd64";
 import { OSo } from "../../thanh-phan/OSo";
 import { NHOM_PHAP_LY, THU_TU_PHAP_LY, goiYPhapLy, type NhomPhapLy } from "../../nguon-goc";
 
@@ -82,7 +83,7 @@ export function TabThua({ h, duAn, doi, noiBat }: { h: Ho; duAn: DuAn; doi: (h: 
                       </div>
                       {(cs.chuyenDoiNghe.theoThon || t.thonBan) && laDatNN(t.loaiDat) && (
                         <div className="mt-4" data-lich-su={`thua:${t.id}.thonBan`} data-lich-su-ten={`Tổ, thôn thửa ${t.soThua} tờ ${t.soTo}`}>
-                          <OThonBan cs={cs} xa={duAn.xa} value={t.thonBan} nhan={`Tổ, thôn, bản thửa ${t.soThua} tờ ${t.soTo}`} onChange={(v) => sua(t.id, { thonBan: v })} />
+                          <OThonBan cs={cs} xa={duAn.xa} goiY={goiYThon(cs, duAn.xa, h.diaChi, t.nguonGoc, t.ghiChu)} value={t.thonBan} nhan={`Tổ, thôn, bản thửa ${t.soThua} tờ ${t.soTo}`} onChange={(v) => sua(t.id, { thonBan: v })} />
                         </div>
                       )}
                     </td>

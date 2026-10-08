@@ -256,3 +256,20 @@ describe("Mẫu theo văn bản thực tế (T1–T7, docs/19)", () => {
     expect(tinhHo(cs, duAn, h1).tatCa.find((x) => x.taiSanId === ts0.id)!.dong.trangThai).toBe("CAN_XAC_NHAN");
   });
 });
+
+import { CAN_CU_DA_THAY, capNhatCanCu } from "../src/van-ban/du-lieu";
+describe("1.0.5: căn cứ mặc định theo QĐ 64/2026", () => {
+  it("có QĐ 64/2026, NĐ 49/2026 (mặc định không in vì dẫn NQ 254), Luật sửa đổi 130/2025, 116/2025; cập nhật dòng cũ", () => {
+    expect(CAN_CU_MAC_DINH.some((c) => c.includes("Quyết định số 64/2026/QĐ-UBND ngày 06 tháng 10 năm 2026"))).toBe(true);
+    expect(CAN_CU_MAC_DINH[1]).toContain("số 130/2025/QH15, số 146/2025/QH15, số 147/2025/QH15 và số 116/2025/QH15");
+    const c0 = thongTinChungMacDinh(duAn);
+    expect(c0.can_cu_bo).toContain("49/2026/NĐ-CP");
+    const cu = Object.keys(CAN_CU_DA_THAY)[0]!;
+    const r = capNhatCanCu([cu, CAN_CU_MAC_DINH[0]!, "Căn cứ riêng X;"].join("\n"));
+    expect(r.chu.split("\n")).not.toContain(cu);
+    expect(r.chu.split("\n")).toContain(CAN_CU_MAC_DINH[1]);
+    expect(r.chu).toContain("Căn cứ riêng X;");
+    expect(r.chu.split("\n").filter((x) => x === CAN_CU_MAC_DINH[1]).length).toBe(1);
+    expect(capNhatCanCu(CAN_CU_MAC_DINH.join("\n")).soDoi).toBe(0);
+  });
+});
