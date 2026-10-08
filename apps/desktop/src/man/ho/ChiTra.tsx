@@ -25,7 +25,8 @@ export function TabChiTra({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) =>
   };
   const r = tinhChiTra(h, duAn.phuongAn ?? [], tyLeCham, homNayIso());
   const ct = h.chiTra ?? { dot: [] };
-  const [moi, setMoi] = useState<{ ngay: string; soTien: string; hinhThuc: HinhThucChi; chungTu: string; ghiChu: string }>({ ngay: homNayIso(), soTien: "", hinhThuc: "CHUYEN_KHOAN", chungTu: "", ghiChu: "" });
+  const [moi, setMoi] = useState<{ ngay: string; soTien: string; hinhThuc: HinhThucChi; chungTu: string; ghiChu: string; nganHang: string }>({ ngay: homNayIso(), soTien: "", hinhThuc: "CHUYEN_KHOAN", chungTu: "", ghiChu: "", nganHang: "" });
+  const [traLai, setTraLai] = useState<{ id: string; ngay: string; tienLai: string; chungTu: string } | null>(null);
   const [loi, setLoi] = useState("");
   const datCt = (p: Partial<typeof ct>) => doi({ ...h, chiTra: { ...ct, ...p } });
 
@@ -34,7 +35,8 @@ export function TabChiTra({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) =>
     const so = moi.soTien.trim(); // ô số trả chuẩn máy (P0-2)
     if (!moi.ngay || !/^\d+(\.\d+)?$/.test(so) || Number(so) <= 0) return setLoi("Nhập ngày chi và số tiền (đồng)");
     if (!moi.chungTu.trim()) return setLoi("Ghi số chứng từ (phiếu chi, ủy nhiệm chi, biên bản…)");
-    const d: DotChi = { id: taoId(), ngay: moi.ngay, soTien: so, hinhThuc: moi.hinhThuc, chungTu: moi.chungTu.trim(), ghiChu: moi.ghiChu.trim() || undefined, nguoiGhi: nguoiDung };
+    if (moi.hinhThuc === "GUI_NGAN_HANG" && !moi.nganHang.trim()) return setLoi("Gửi ngân hàng: ghi ngân hàng thương mại, số tài khoản tiền gửi của đơn vị (k4 Đ94)");
+    const d: DotChi = { id: taoId(), ngay: moi.ngay, soTien: so, hinhThuc: moi.hinhThuc, chungTu: moi.chungTu.trim(), ghiChu: moi.ghiChu.trim() || undefined, nguoiGhi: nguoiDung, ...(moi.hinhThuc === "GUI_NGAN_HANG" ? { guiNH: { nganHang: moi.nganHang.trim() } } : {}) };
     datCt({ dot: [...ct.dot, d] });
     setMoi({ ...moi, soTien: "", chungTu: "", ghiChu: "" });
   };
@@ -78,7 +80,14 @@ export function TabChiTra({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) =>
             {[...ct.dot].sort((a, b) => a.ngay.localeCompare(b.ngay)).map((d) => (
               <tr key={d.id} style={d.huy ? { textDecoration: "line-through", opacity: 0.6 } : undefined} title={d.huy ? `Đã hủy lúc ${new Date(d.huy.luc).toLocaleString("vi-VN")} bởi ${d.huy.nguoi}: ${d.huy.lyDo}` : undefined}>
                 <td>{ngayVN(d.ngay)}{r.hanChi && d.ngay > r.hanChi && <span className="nhan nhan-do" style={{ marginLeft: 4 }}>sau hạn</span>}</td>
-                <td className="so">{dinhDang(D(d.soTien), 0)}</td><td>{TEN_HINH_THUC[d.hinhThuc]}</td><td>{d.chungTu}</td><td className="chu-nho">{d.ghiChu}</td><td className="chu-nho">{d.nguoiGhi}</td>
+                <td className="so">{dinhDang(D(d.soTien), 0)}</td><td>{TEN_HINH_THUC[d.hinhThuc]}{d.guiNH && (
+                  <div className="chu-nho">
+                    {d.guiNH.nganHang}
+                    {d.guiNH.traLai
+                      ? <div className="mo">Đã trả người có đất ngày {ngayVN(d.guiNH.traLai.ngay)}; tiền lãi {dinhDang(D(d.guiNH.traLai.tienLai || "0"), 0)} đ ({d.guiNH.traLai.chungTu})</div>
+                      : !d.huy && <div><span className="nhan nhan-vang">đang gửi {Math.max(0, Math.round((Date.parse(homNayIso()) - Date.parse(d.ngay)) / 86400000))} ngày</span> <button className="nut nut-chu nut-nho" onClick={() => setTraLai({ id: d.id, ngay: homNayIso(), tienLai: "", chungTu: "" })}>Ghi trả cho người có đất…</button></div>}
+                  </div>
+                )}</td><td>{d.chungTu}</td><td className="chu-nho">{d.ghiChu}</td><td className="chu-nho">{d.nguoiGhi}</td>
                 <td>
                   {d.huy ? (
                     <span className="nhan nhan-xam" style={{ textDecoration: "none" }}>Đã hủy</span>
@@ -104,10 +113,24 @@ export function TabChiTra({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) =>
             </Chon>
           </O>
           <O nhan="Chứng từ"><input value={moi.chungTu} placeholder="Số phiếu chi / UNC / biên bản" onChange={(e) => setMoi({ ...moi, chungTu: e.target.value })} /></O>
+          {moi.hinhThuc === "GUI_NGAN_HANG" && <O nhan="Ngân hàng, tài khoản tiền gửi"><input aria-label="Ngân hàng, tài khoản tiền gửi" value={moi.nganHang} placeholder="NH thương mại nhà nước chi phối, số TK của đơn vị" onChange={(e) => setMoi({ ...moi, nganHang: e.target.value })} /></O>}
           <O nhan="Ghi chú" style={{ flex: 1, minWidth: 180 }}><input value={moi.ghiChu} onChange={(e) => setMoi({ ...moi, ghiChu: e.target.value })} /></O>
           <button className="nut" onClick={them}>Thêm đợt chi</button>
         </div>
         {loi && <div className="thong-bao thong-bao-do" style={{ margin: "0 12px 12px" }}>{loi}</div>}
+        {traLai && (
+          <div className="the-than" style={{ display: "flex", gap: 8, alignItems: "end", flexWrap: "wrap", borderTop: "1px solid var(--vien)" }} aria-label="Ghi trả tiền gửi ngân hàng">
+            <span className="chu-nho" style={{ flexBasis: "100%" }}>Trả tiền gửi ngân hàng cho người có đất (k4 Đ94): tiền lãi không kỳ hạn theo sao kê ngân hàng được trả cho người có đất — phần mềm không tự tính lãi.</span>
+            <O nhan="Ngày trả"><ONgay value={traLai.ngay} onChange={(e) => setTraLai({ ...traLai, ngay: e.target.value })} /></O>
+            <O nhan="Tiền lãi theo sao kê (đ)"><OSo className="o-so" aria-label="Tiền lãi theo sao kê" value={traLai.tienLai} onChange={(v) => setTraLai({ ...traLai, tienLai: v })} /></O>
+            <O nhan="Chứng từ"><input aria-label="Chứng từ trả tiền gửi" value={traLai.chungTu} onChange={(e) => setTraLai({ ...traLai, chungTu: e.target.value })} /></O>
+            <button className="nut nut-chinh" disabled={!traLai.ngay || !traLai.chungTu.trim() || !/^\d+(\.\d+)?$/.test(traLai.tienLai)} onClick={() => {
+              datCt({ dot: ct.dot.map((x) => (x.id === traLai.id && x.guiNH ? { ...x, guiNH: { ...x.guiNH, traLai: { ngay: traLai.ngay, tienLai: traLai.tienLai, chungTu: traLai.chungTu.trim(), nguoi: nguoiDung } } } : x)) });
+              setTraLai(null);
+            }}>Ghi nhận</button>
+            <button className="nut" onClick={() => setTraLai(null)}>Hủy</button>
+          </div>
+        )}
       </div>
 
       {r.chamTra.length > 0 && (

@@ -398,7 +398,55 @@ MAU.T9 = () => [
   ],
 ];
 
-const DANH_SACH = { T1: "tt-ke-hoach", T8: "tt-tb-du-kien-tdc", T9: "tt-tb-cong-bo-tdc", T2: "tt-to-trinh-tb", T3: "tt-thong-bao", T4: "tt-to-trinh-pa-ho", T5: "tt-qd-pa-ho", T6: "tt-to-trinh-thu-hoi", T7: "tt-qd-thu-hoi" };
+const BIEU_CHAM = () =>
+  bieu("ds_cham_tra", [
+    { tieuDe: "STT", truong: "{stt}", rong: 5 },
+    { tieuDe: "Họ và tên", truong: "{ho_ten}", rong: 16, canh: AlignmentType.LEFT },
+    { tieuDe: "Địa chỉ", truong: "{dia_chi}", rong: 13, canh: AlignmentType.LEFT },
+    { tieuDe: "Số tiền theo phương án (đồng)", truong: "{phai_tra}", rong: 11, canh: AlignmentType.RIGHT },
+    { tieuDe: "Hạn chi trả", truong: "{han_chi}", rong: 8 },
+    { tieuDe: "Số tiền chậm trả × số ngày chậm", truong: "{khoan}", rong: 18, canh: AlignmentType.LEFT },
+    { tieuDe: "Mức tiền chậm nộp áp dụng", truong: "{dien_giai}", rong: 18, canh: AlignmentType.LEFT },
+    { tieuDe: "Tiền chậm trả (đồng)", truong: "{tien_cham}", rong: 11, canh: AlignmentType.RIGHT, tong: "tong_cham_tra" },
+  ], true);
+
+MAU.T10 = () => [
+  [
+    dauVanBan({ coQuan: DON_VI_BT, so: "Số: {so}/TTr-{ky_hieu_don_vi}" }),
+    ...tenVanBan("TỜ TRÌNH", "Đề nghị phê duyệt phương án chi trả bồi thường chậm\ndự án {ten_du_an}"),
+    giua("Kính gửi: {kinh_gui}.", { truoc: 120 }),
+    P("Căn cứ điểm b khoản 3 Điều 94 Luật Đất đai năm 2024;", { nghieng: true }),
+    ...CAN_CU(),
+    P("{ten_don_vi_bt} kính trình phê duyệt phương án chi trả bồi thường chậm cho người có đất thu hồi, chủ sở hữu tài sản thuộc dự án {ten_du_an}, như sau:"),
+    P("**1. Lý do chậm chi trả:** {ly_do_cham}"),
+    P("**2. Số hộ gia đình, cá nhân được thanh toán tiền chậm trả:** {so_ho_cham_chu} hộ (chi tiết tại biểu kèm theo)."),
+    P("**3. Cách tính:** khoản tiền bằng mức tiền chậm nộp theo quy định của Luật Quản lý thuế tính trên số tiền chậm trả và thời gian chậm trả (điểm b khoản 3 Điều 94 Luật Đất đai năm 2024); thời gian chậm trả tính từ ngày liền sau hạn 30 ngày kể từ ngày quyết định phê duyệt phương án có hiệu lực đến ngày chi trả (khoản chưa chi: tạm tính đến ngày {tinh_den_ngay}). Mức tiền chậm nộp áp dụng: {can_cu_ty_le}."),
+    P("**4. Tổng kinh phí chi trả bồi thường chậm:** **{tong_cham_tra}** đồng."),
+    P("__(Bằng chữ: {tong_cham_tra_chu})__"),
+    P("**5. Nguồn kinh phí:** {nguon_kinh_phi}."),
+    P("{ten_don_vi_bt} kính trình xem xét, phê duyệt./."),
+    kyVanBan(),
+  ],
+  [...TIEU_DE_BIEU("DANH SÁCH CHI TRẢ BỒI THƯỜNG CHẬM", "Tờ trình số {so}/TTr-{ky_hieu_don_vi} ngày {ngay_ky_ngan} của {ten_don_vi_bt}"), BIEU_CHAM()],
+];
+MAU.T11 = () => [
+  [
+    dauVanBan({ coQuan: UBND_XA, so: "Số: {so}/QĐ-UBND" }),
+    ...tenVanBan("QUYẾT ĐỊNH", "Phê duyệt phương án chi trả bồi thường chậm\ndự án {ten_du_an}"),
+    giua("CHỦ TỊCH ỦY BAN NHÂN DÂN {TEN_XA}", { dam: true, truoc: 120 }),
+    P("Căn cứ điểm b khoản 3 Điều 94 Luật Đất đai năm 2024;", { nghieng: true }),
+    ...CAN_CU(),
+    P("Theo đề nghị của {ten_don_vi_bt} tại Tờ trình số {tt_cham_tra_so} ngày {tt_cham_tra_ngay}.", { nghieng: true }),
+    giua("QUYẾT ĐỊNH:", { dam: true, truoc: 120 }),
+    P("**Điều 1.** Phê duyệt phương án chi trả bồi thường chậm cho {so_ho_cham_chu} hộ gia đình, cá nhân có đất thu hồi thuộc dự án {ten_du_an}, tổng kinh phí **{tong_cham_tra}** đồng __(Bằng chữ: {tong_cham_tra_chu})__; chi tiết tại biểu kèm theo."),
+    P("**Điều 2.** Nguồn kinh phí: {nguon_kinh_phi}. {ten_don_vi_bt} có trách nhiệm chi trả cho các hộ gia đình, cá nhân có tên tại biểu kèm theo cùng với tiền bồi thường, hỗ trợ theo phương án đã phê duyệt."),
+    P("**Điều 3.** Quyết định này có hiệu lực kể từ ngày {ngay_hieu_luc}. {ten_don_vi_bt}, các cơ quan, đơn vị và hộ gia đình, cá nhân có tên tại biểu kèm theo chịu trách nhiệm thi hành Quyết định này./."),
+    kyVanBan({ quyenHan: "{quyen_han}" }),
+  ],
+  [...TIEU_DE_BIEU("DANH SÁCH CHI TRẢ BỒI THƯỜNG CHẬM", KT.QD), BIEU_CHAM()],
+];
+
+const DANH_SACH = { T1: "tt-ke-hoach", T8: "tt-tb-du-kien-tdc", T9: "tt-tb-cong-bo-tdc", T10: "tt-to-trinh-cham-tra", T11: "tt-qd-cham-tra", T2: "tt-to-trinh-tb", T3: "tt-thong-bao", T4: "tt-to-trinh-pa-ho", T5: "tt-qd-pa-ho", T6: "tt-to-trinh-thu-hoi", T7: "tt-qd-thu-hoi" };
 for (const [ma, tep] of Object.entries(DANH_SACH)) {
   const [chinh, phu] = MAU[ma]();
   const buf = await Packer.toBuffer(taoDoc(chinh, phu));

@@ -67,7 +67,7 @@ const tenAnToan = (s: string) => tenTep(s, 70);
  * tính toán hiện tại để tự điền; hồ sơ đang sửa chưa lưu thì chặn tạo văn bản (tránh ghi số liệu chưa lưu vào văn bản).
  */
 export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: string; maDau?: string; hoIdDau?: string; nhung?: { ho: Ho; kq: KetQuaHo; daSua: boolean }; chiDuAn?: boolean }) {
-  const { dsDuAn, hoCua, chinhSach, luuDuAn: luuDuAnGoc, luuHo: luuHoGoc, kho, di, quyen, nguoiDung, dsDonVi } = useUngDung();
+  const { dsDuAn, hoCua, chinhSach, luuDuAn: luuDuAnGoc, luuHo: luuHoGoc, kho, di, quyen, nguoiDung, dsDonVi, tyLeCham } = useUngDung();
   // Tài khoản chỉ xem vẫn tạo được bản dự thảo nhưng không ghi số, ngày, nhật ký vào hồ sơ.
   const coGhi = quyen("SOAN_VAN_BAN");
   const luuDuAn: typeof luuDuAnGoc = coGhi ? luuDuAnGoc : async () => undefined;
@@ -150,8 +150,8 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
   const soChuaChot = canChot ? dsDot_.filter(({ h }) => !hoDaChot.has(h.id)).length : 0;
   const hoXemTruoc = mau.phamVi === "HO" ? dsHoChon[0] : undefined;
   const duLieuXem = hoXemTruoc
-    ? ghepDuLieu({ mau, ...choHo(hoXemTruoc.h), ds, ho: hoXemTruoc, rieng, so, ngayKy })
-    : ghepDuLieu({ mau, duAn: duAnVb, ds: mau.phamVi === "DOT" ? dsHoChon : dsDot_, chung: chungVb, rieng, so, ngayKy });
+    ? ghepDuLieu({ mau, ...choHo(hoXemTruoc.h), ds, ho: hoXemTruoc, rieng, so, ngayKy, tyLeCham })
+    : ghepDuLieu({ mau, duAn: duAnVb, ds: mau.phamVi === "DOT" ? dsHoChon : dsDot_, chung: chungVb, rieng, so, ngayKy, tyLeCham });
 
   // Kiểm tra thống nhất trước khi tạo (docs/19 §5.4): cơ quan ban hành, số trong "(Kèm theo …)", bằng chữ, diện tích
   const canhBaoTN = (() => {
@@ -174,7 +174,7 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
       const kyHieu = (mau.ghiLai?.kyHieu ?? "").replace("{ky_hieu_phong}", chung.ky_hieu_phong || "");
       if (mau.phamVi === "DOT") {
         if (!dsHoChon.length) throw new Error("Chọn các hộ, tổ chức trong đợt.");
-        const out = dienMau(mauBytes, ghepDuLieu({ mau, duAn: duAnVb, ds: dsHoChon, chung: chungVb, rieng, so, ngayKy }));
+        const out = dienMau(mauBytes, ghepDuLieu({ mau, duAn: duAnVb, ds: dsHoChon, chung: chungVb, rieng, so, ngayKy, tyLeCham }));
         if (!(await taiXuong(out, `Mau-${ma}_${tenAnToan(mau.ten)}_${dsHoChon.length}-ho.docx`, DOCX))) return setThongBao({ loai: "vang", noiDung: "Đã hủy lưu tệp — chưa ghi số, ngày văn bản và nhật ký hồ sơ." });
         const vbMoi: Record<string, string> = { ...luuRieng };
         if (mau.ghiLai?.capDo === "DU_AN" && so.trim()) Object.assign(vbMoi, { [`${mau.ghiLai.khoa}_so`]: `${so.trim()}/${kyHieu}`, [`${mau.ghiLai.khoa}_ngay`]: ngayChu(ngayKy) });
@@ -186,7 +186,7 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
         }
         setThongBao({ loai: "xanh", noiDung: `Đã tạo ${mau.ten} cho ${dsHoChon.length} hộ, tổ chức.` });
       } else if (mau.phamVi === "DU_AN") {
-        const out = dienMau(mauBytes, ghepDuLieu({ mau, duAn: duAnVb, ds: dsDot_, chung: chungVb, rieng, so, ngayKy }));
+        const out = dienMau(mauBytes, ghepDuLieu({ mau, duAn: duAnVb, ds: dsDot_, chung: chungVb, rieng, so, ngayKy, tyLeCham }));
         if (!(await taiXuong(out, `Mau-${ma}_${tenAnToan(mau.ten)}_${tenAnToan(duAn.ten)}${dotChon ? `_${tenAnToan(tenDot(dotChon))}` : ""}.docx`, DOCX))) return setThongBao({ loai: "vang", noiDung: "Đã hủy lưu tệp — chưa ghi số, ngày văn bản." });
         if (mau.ghiLai && so.trim()) await luuDuAn(vanBanGhi({ [`${mau.ghiLai.khoa}_so`]: `${so.trim()}/${kyHieu}`, [`${mau.ghiLai.khoa}_ngay`]: ngayChu(ngayKy) }));
         setThongBao({ loai: "xanh", noiDung: `Đã tạo Mẫu ${ma} cho dự án.` });
@@ -196,7 +196,7 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
         const ghiHo: Ho[] = [];
         for (const [i, x] of dsHoChon.entries()) {
           const soHo = soSo !== null ? String(soSo + i) : so;
-          const noiDung = dienMau(mauBytes, ghepDuLieu({ mau, ...choHo(x.h), ds, ho: x, rieng, so: soHo, ngayKy }));
+          const noiDung = dienMau(mauBytes, ghepDuLieu({ mau, ...choHo(x.h), ds, ho: x, rieng, so: soHo, ngayKy, tyLeCham }));
           tep.push({ ten: `Mau-${ma}_${tenAnToan(x.h.ma + " " + x.h.ten)}.docx`, noiDung });
           const ghi: Partial<Ho> = { nhatKy: [...x.h.nhatKy, { luc: new Date().toISOString(), nguoi: nguoiDung, noiDung: `Tạo văn bản Mẫu ${ma} – ${mau.ten}${soHo.trim() ? ` số ${soHo}` : ""}` }] };
           if (mau.ghiLai && soHo.trim()) ghi.vanBan = { ...(x.h.vanBan ?? {}), [`${mau.ghiLai.khoa}_so`]: `${soHo.trim()}/${kyHieu}`, [`${mau.ghiLai.khoa}_ngay`]: ngayChu(ngayKy) };

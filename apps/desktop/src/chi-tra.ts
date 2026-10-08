@@ -29,7 +29,15 @@ export interface DotChi {
   nguoiGhi: string;
   /** Đợt chi đã hủy (P0-4): giữ lại để truy vết chứng từ, không tính vào số đã chi. */
   huy?: { luc: string; nguoi: string; lyDo: string };
+  /**
+   * 1.0.5 — gửi ngân hàng (k4 Đ94): tài khoản tiền gửi của đơn vị thực hiện bồi thường (lãi không kỳ hạn); khi người có
+   * đất nhận tiền thì ghi ngày trả, tiền lãi theo sao kê ngân hàng (trả cho người có đất, không cộng vào số phải trả).
+   */
+  guiNH?: { nganHang: string; traLai?: { ngay: string; tienLai: string; chungTu: string; nguoi: string } };
 }
+
+/** Các khoản đang gửi ngân hàng chưa trả cho người có đất (k4 Đ94). */
+export const dangGuiNH = (ct: Pick<ChiTraHo, "dot"> | undefined | null) => dotHieuLuc(ct).filter((d) => d.hinhThuc === "GUI_NGAN_HANG" && !d.guiNH?.traLai);
 
 /** Các đợt chi còn hiệu lực (bỏ đợt đã hủy). */
 export const dotHieuLuc = (ct: Pick<ChiTraHo, "dot"> | undefined | null) => (ct?.dot ?? []).filter((d) => !d.huy);

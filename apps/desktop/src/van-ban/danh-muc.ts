@@ -276,6 +276,27 @@ DANH_MUC_MAU.push(
       NOI_NHAN("UBND xã, phường (để công bố)\nBan điều hành tổ dân phố/bản\nCác hộ gia đình, cá nhân có tên tại biểu kèm theo\nLưu: VT"),
     ],
   },
+  {
+    ma: "T10", ten: "Tờ trình đề nghị phê duyệt phương án chi trả bồi thường chậm", buoc: "12", phamVi: "DOT", coQuan: "DON_VI_BT", nguon: "THUC_TE", tep: "tt-to-trinh-cham-tra.docx",
+    moTa: "Điểm b khoản 3 Điều 94 Luật Đất đai 2024: đơn vị thực hiện bồi thường chậm chi trả thì người có đất được thanh toán thêm khoản tiền bằng mức tiền chậm nộp theo Luật Quản lý thuế; cơ quan có thẩm quyền phê duyệt phương án BT, HT, TĐC phê duyệt phương án chi trả bồi thường chậm. Biểu lấy từ thẻ Chi trả của các hộ được chọn (bỏ hộ xác nhận chậm do người có đất).",
+    ghiLai: { khoa: "tt_cham_tra", capDo: "DU_AN", kyHieu: "TTr-{ky_hieu_don_vi}" },
+    nhapThem: [
+      { truong: "kinh_gui", nhan: "Kính gửi", goiY: "Để trống = Chủ tịch Ủy ban nhân dân xã, phường của dự án (cơ quan phê duyệt phương án BT, HT, TĐC)" },
+      { truong: "ly_do_cham", nhan: "Lý do chậm chi trả", nhieuDong: true, goiY: "Nêu rõ nguyên nhân thuộc trách nhiệm cơ quan, đơn vị thực hiện bồi thường (vd. chậm bố trí vốn)" },
+      { truong: "nguon_kinh_phi", nhan: "Nguồn kinh phí chi trả bồi thường chậm", macDinh: "Ngân sách của cấp phê duyệt phương án bồi thường, hỗ trợ, tái định cư (điểm b khoản 3 Điều 94 Luật Đất đai 2024)" },
+      NOI_NHAN("Như trên\nLưu: VT"),
+    ],
+  },
+  {
+    ma: "T11", ten: "Quyết định phê duyệt phương án chi trả bồi thường chậm", buoc: "12", phamVi: "DOT", coQuan: "UBND", nguon: "THUC_TE", tep: "tt-qd-cham-tra.docx",
+    moTa: "Phê duyệt phương án chi trả bồi thường chậm (điểm b khoản 3 Điều 94 LĐĐ 2024) theo Tờ trình T10; biểu từng hộ, tổng tiền bằng số và bằng chữ.",
+    ghiLai: { khoa: "qd_cham_tra", capDo: "DU_AN", kyHieu: "QĐ-UBND" },
+    nhapThem: [
+      { truong: "nguon_kinh_phi", nhan: "Nguồn kinh phí", macDinh: "Ngân sách của cấp phê duyệt phương án bồi thường, hỗ trợ, tái định cư (điểm b khoản 3 Điều 94 Luật Đất đai 2024)" },
+      HIEU_LUC,
+      NOI_NHAN("Như Điều 3\nLưu: VT"),
+    ],
+  },
 );
 
 export const mauTheoMa = (ma: string) => DANH_MUC_MAU.find((m) => m.ma === ma)!;

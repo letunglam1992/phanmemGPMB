@@ -1,3 +1,4 @@
+import { chotPhuongAn, pheDuyet } from "../src/phuong-an";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import PizZip from "pizzip";
@@ -19,7 +20,7 @@ const vanBan = (u8: Uint8Array) => new PizZip(u8).file("word/document.xml")!.asT
 describe("22 mẫu văn bản QĐ 1966/QĐ-UBND", () => {
   it("đủ 22 mẫu Sổ tay + 5 mẫu riêng, mỗi mẫu có tệp và trường hợp lệ", () => {
     expect(DANH_MUC_MAU.filter((m) => !m.nguon).map((m) => m.ma)).toEqual(Array.from({ length: 22 }, (_, i) => String(i + 1).padStart(2, "0")));
-    expect(DANH_MUC_MAU.filter((m) => m.nguon === "THUC_TE").map((m) => m.ma)).toEqual(["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9"]);
+    expect(DANH_MUC_MAU.filter((m) => m.nguon === "THUC_TE").map((m) => m.ma)).toEqual(["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11"]);
     expect(DANH_MUC_MAU.filter((m) => m.nguon === "RIENG").map((m) => m.ma)).toEqual(["R1", "R2", "R3", "R4", "R5"]);
     for (const m of DANH_MUC_MAU) expect(truongTrongMau(docMau(m.ma)).length).toBeGreaterThan(3);
   });
@@ -183,6 +184,32 @@ describe("Mẫu theo văn bản thực tế (T1–T7, docs/19)", () => {
     expect(t).toMatch(/TỔNG CỘNG\s*10\.415,80/);
     expect(kiemTraThongNhat("T7", duAn, du)).toEqual(["1 hộ chưa có số, ngày QĐ phê duyệt phương án (ghi khi tạo mẫu T5 có số, hoặc nhập ở hồ sơ hộ) — căn cứ in \"…\"."]);
     expect(tao("T6", ds2).t).toContain("(Kèm theo Tờ trình số 25/TTr-KT ngày 27/09/2026 của Phòng Kinh tế)");
+  });
+
+  it("1.0.5 T10/T11 chi trả bồi thường chậm (điểm b k3 Đ94): hộ chậm do cơ quan, tiền chậm trả theo tỷ lệ cán bộ nhập, bằng chữ", async () => {
+    const hB = { ...ho[0]!, id: "ho-b", ma: "H99", ten: "Hộ thử chậm do người dân" };
+    const pa = await chotPhuongAn(cs, duAn, [ho[0]!, hB], { ten: "B1", lyDo: "", nguoi: "x" });
+    const daDuyet = pheDuyet(pa, { so: "5/QĐ-UBND", ngay: "2026-08-01", coQuan: "UBND xã" }, "x");
+    const duAnPa = { ...duAn, phuongAn: [daDuyet] };
+    const h0 = { ...ho[0]!, chiTra: { dot: [], nguyenNhanCham: "DO_CO_QUAN" as const } };
+    const h1 = { ...hB, chiTra: { dot: [], nguyenNhanCham: "DO_NGUOI_DAN" as const } };
+    const dsC = [{ h: h0, k: ds[0]!.k }, { h: h1, k: ds[0]!.k }];
+    const m = DANH_MUC_MAU.find((x) => x.ma === "T10")!;
+    const rieng = { ...Object.fromEntries(m.nhapThem.map((t) => [t.truong, t.macDinh ?? ""])), ly_do_cham: "Chậm bố trí vốn" };
+    const du = ghepDuLieu({ mau: m, duAn: duAnPa, ds: dsC, chung, rieng, so: "3", ngayKy: "2026-10-01", tyLeCham: [{ tuNgay: "2026-01-01", tyLe: "0.03", canCu: "khoản 2 Điều 59 Luật Quản lý thuế" }] });
+    expect(du.so_ho_cham).toBe(1); // hộ chậm do người có đất bị loại
+    const t = vanBan(dienMau(docMau("T10"), du));
+    expect(t).toContain("Căn cứ điểm b khoản 3 Điều 94 Luật Đất đai năm 2024");
+    expect(t).toContain("Kính gửi: Chủ tịch Ủy ban nhân dân");
+    expect(t).toContain("khoản 2 Điều 59 Luật Quản lý thuế");
+    expect(t).toContain(ho[0]!.ten);
+    expect(t).not.toContain("Hộ thử chậm do người dân");
+    // hạn 31/08/2026; tạm tính đến 01/10/2026 = 31 ngày × 0,03%
+    const phaiTra = Number(String(du.ds_cham_tra && (du.ds_cham_tra as { phai_tra: string }[])[0]!.phai_tra).replace(/\./g, ""));
+    expect((du.ds_cham_tra as { tien_cham: string }[])[0]!.tien_cham).toBe(Math.round(phaiTra * 0.0003 * 31).toLocaleString("vi-VN"));
+    expect(String(du.tong_cham_tra_chu)).toMatch(/đồng/);
+    const k = kiemTraThongNhat("T10", duAnPa, du);
+    expect(k.some((x) => /chưa xác nhận nguyên nhân/.test(x))).toBe(false);
   });
 
   it("1.0.5 T8/T9 bố trí tái định cư (Điều 111): quỹ lô, giá, dự kiến bố trí từng hộ, niêm yết 15 ngày; công bố có số QĐ", () => {

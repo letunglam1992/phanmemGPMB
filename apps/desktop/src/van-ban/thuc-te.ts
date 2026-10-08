@@ -11,6 +11,7 @@ import { docSoTien } from "./doc-so";
 import { tenDayDu } from "./loai-dat";
 import { laSoMay, soD } from "../so";
 import { quyCua } from "../quy-tdc";
+import { tinhChiTra, type GiaiDoanTyLe } from "../chi-tra";
 
 const soM2 = (v: Decimal) => dinhDang(v, 2);
 const tien = (v: Decimal) => dinhDang(v.toDecimalPlaces(0), 0);
@@ -198,7 +199,7 @@ export function duLieuKeHoach(duAn: DuAn): Record<string, unknown> {
 }
 
 /** Mẫu có biểu kèm theo dòng "(Kèm theo … số …)" — dòng này dùng chung trường {so} của văn bản. */
-const MAU_CO_BIEU = new Set(["T3", "T4", "T5", "T6", "T7", "T8", "T9"]);
+const MAU_CO_BIEU = new Set(["T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11"]);
 
 const soTu = (s: unknown) => (typeof s === "string" && /^[\d.]+(,\d+)?$/.test(s.trim()) ? D(s.trim().replace(/\./g, "").replace(",", ".")) : null);
 
@@ -239,6 +240,9 @@ export function kiemTraThongNhat(ma: string, duAn: DuAn, du: Record<string, unkn
   }
   if ((ma === "T6" || ma === "T7") && Number(du.so_ho_thieu_qd_pa) > 0) out.push(`${String(du.so_ho_thieu_qd_pa)} hộ chưa có số, ngày QĐ phê duyệt phương án (ghi khi tạo mẫu T5 có số, hoặc nhập ở hồ sơ hộ) — căn cứ in "…".`);
   if ((ma === "T4" || ma === "T5") && Number(du.pa_chua_du) > 0) out.push(`Hộ còn ${String(du.pa_chua_du)} khoản chưa đủ căn cứ/cần xác nhận — không cộng vào tổng kinh phí.`);
+  if ((ma === "T10" || ma === "T11") && !Number(du.so_ho_cham)) out.push("Các hộ được chọn không có khoản chi trả chậm (hoặc đã xác nhận chậm do người có đất) — biểu trống.");
+  if ((ma === "T10" || ma === "T11") && Number(du.so_ho_chua_xac_nhan) > 0) out.push(`${String(du.so_ho_chua_xac_nhan)} hộ chưa xác nhận nguyên nhân chậm (thẻ Chi trả) — xác nhận trước khi trình.`);
+  if ((ma === "T10" || ma === "T11") && Number(du.so_ho_thieu_ty_le) > 0) out.push(`${String(du.so_ho_thieu_ty_le)} hộ thiếu tỷ lệ tiền chậm nộp cho giai đoạn chậm — nhập ở Cài đặt chung → Tiền chậm trả; khoản này ghi "Thiếu căn cứ", không cộng vào tổng.`);
   if ((ma === "T8" || ma === "T9") && !Number(du.so_ho_tdc)) out.push("Các hộ được chọn chưa có thông tin tái định cư (Hồ sơ hộ → Hỗ trợ → Tái định cư) — biểu dự kiến bố trí trống.");
   if ((ma === "T8" || ma === "T9") && !Number(du.so_lo)) out.push("Dự án chưa khai quỹ tái định cư (Tổng quan dự án → Quỹ tái định cư) — biểu lô đất, căn nhà trống.");
   if (ma === "T1" && !Number(du.so_moc)) out.push("Dự án chưa lập kế hoạch từng bước (Dự án → Lập kế hoạch): các mốc thời gian trong Kế hoạch để trống.");
@@ -297,5 +301,38 @@ export function duLieuBoTriTdc(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[]): Record
     }),
     so_ho_tdc: hoTdc.length,
     so_ho_tdc_chu: soChu(hoTdc.length).toLowerCase(),
+  };
+}
+
+/**
+ * 1.0.5 — phương án chi trả bồi thường chậm (điểm b khoản 3 Điều 94 LĐĐ 2024): các hộ có khoản chi sau hạn 30 ngày
+ * hoặc còn nợ quá hạn, trừ hộ được xác nhận chậm do người có đất. Tiền chậm trả = mức tiền chậm nộp theo Luật Quản lý
+ * thuế do cán bộ nhập (Cài đặt chung → Tiền chậm trả); thiếu tỷ lệ → "Thiếu căn cứ", không cộng.
+ */
+export function duLieuChamTra(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], tyLe: GiaiDoanTyLe[], denNgay: string): Record<string, unknown> {
+  const dong = ds
+    .map(({ h }) => ({ h, r: tinhChiTra(h, duAn.phuongAn ?? [], tyLe, denNgay) }))
+    .filter(({ h, r }) => r.chamTra.length && h.chiTra?.nguyenNhanCham !== "DO_NGUOI_DAN");
+  const tong = dong.reduce((s, x) => (x.r.tienChamTra ? s.plus(x.r.tienChamTra) : s), D(0));
+  return {
+    ds_cham_tra: dong.map(({ h, r }, i) => ({
+      stt: i + 1,
+      ho_ten: h.ten,
+      dia_chi: h.diaChi,
+      phai_tra: r.phaiTra ? dinhDang(r.phaiTra, 0) : "",
+      han_chi: r.hanChi ? r.hanChi.split("-").reverse().join("/") : "",
+      khoan: r.chamTra.map((c) => `${dinhDang(c.soTien, 0)} đ × ${c.soNgay} ngày${c.dotId ? ` (chi ngày ${c.ngay.split("-").reverse().join("/")})` : " (chưa chi)"}`).join("; "),
+      dien_giai: r.chamTra.map((c) => c.dienGiai).filter(Boolean).join("; "),
+      tien_cham: r.tienChamTra ? dinhDang(r.tienChamTra, 0) : "Thiếu căn cứ",
+      nguyen_nhan: h.chiTra?.nguyenNhanCham === "DO_CO_QUAN" ? "Do cơ quan, đơn vị thực hiện bồi thường" : "Chưa xác nhận",
+    })),
+    so_ho_cham: dong.length,
+    so_ho_cham_chu: soChu(dong.length).toLowerCase(),
+    so_ho_chua_xac_nhan: dong.filter(({ h }) => h.chiTra?.nguyenNhanCham !== "DO_CO_QUAN").length,
+    so_ho_thieu_ty_le: dong.filter(({ r }) => !r.tienChamTra).length,
+    tong_cham_tra: dinhDang(tong, 0),
+    tong_cham_tra_chu: docSoTien(tong.toFixed(0)),
+    tinh_den_ngay: denNgay.split("-").reverse().join("/"),
+    can_cu_ty_le: [...new Set(tyLe.map((g) => g.canCu).filter(Boolean))].join("; ") || "…………",
   };
 }

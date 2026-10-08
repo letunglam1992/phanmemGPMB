@@ -10,7 +10,7 @@ import { docSoTien } from "./doc-so";
 import type { MauVanBan } from "./danh-muc";
 import { tenDayDu, tenLoaiDat } from "./loai-dat";
 import { soD } from "../so";
-import { duLieuBoTriTdc, duLieuKeHoach, duLieuNhieuHo, duLieuPhuongAnHo } from "./thuc-te";
+import { duLieuBoTriTdc, duLieuChamTra, duLieuKeHoach, duLieuNhieuHo, duLieuPhuongAnHo } from "./thuc-te";
 
 export const CHAM = "…………";
 
@@ -289,6 +289,8 @@ export function ghepDuLieu(p: {
   rieng: Record<string, string>;
   so: string;
   ngayKy: string;
+  /** 1.0.5: tỷ lệ tiền chậm nộp (Cài đặt chung) — mẫu phương án chi trả bồi thường chậm (T10, T11) */
+  tyLeCham?: import("../chi-tra").GiaiDoanTyLe[];
 }): Record<string, unknown> {
   const du = duLieuDuAn(p.duAn, p.ds);
   const vbDuAn = p.duAn.vanBan ?? {};
@@ -365,12 +367,14 @@ export function ghepDuLieu(p: {
 }
 
 /** Trường riêng của mẫu dựng theo văn bản thực tế (T1–T7, docs/19). */
-function duLieuThucTe(p: { mau: MauVanBan; duAn: DuAn; ds: { h: Ho; k: KetQuaHo }[]; ho?: { h: Ho; k: KetQuaHo }; chung: Record<string, string> }): Record<string, unknown> {
+function duLieuThucTe(p: { mau: MauVanBan; duAn: DuAn; ds: { h: Ho; k: KetQuaHo }[]; ho?: { h: Ho; k: KetQuaHo }; chung: Record<string, string>; ngayKy: string; tyLeCham?: import("../chi-tra").GiaiDoanTyLe[] }): Record<string, unknown> {
   const khuDat = (p.chung.ban_khu_dan_cu || p.chung.dia_diem_du_an || p.duAn.xa).trim();
   return {
     ...duLieuKeHoach(p.duAn),
     ...duLieuNhieuHo(p.duAn, p.ds, khuDat, lower1(p.duAn.xa)),
     ...(p.ho ? duLieuPhuongAnHo(p.ho.h, p.ho.k) : {}),
     ...(p.mau.ma === "T8" || p.mau.ma === "T9" ? duLieuBoTriTdc(p.duAn, p.ds) : {}),
+    ...(p.mau.ma === "T10" ? { kinh_gui: `Chủ tịch Ủy ban nhân dân ${lower1(p.duAn.xa)}` } : {}),
+    ...(p.mau.ma === "T10" || p.mau.ma === "T11" ? duLieuChamTra(p.duAn, p.ds, p.tyLeCham ?? [], p.ngayKy || new Date().toISOString().slice(0, 10)) : {}),
   };
 }
