@@ -16,7 +16,7 @@ export function taoDuAnMau(): { duAn: DuAn; ho: Ho[] } {
     chuDauTu: "Chủ đầu tư mẫu",
     canCuThuHoi: "Thông báo thu hồi đất số …/TB-UBND (mẫu)",
     ngayThongBao: "2026-04-15",
-    boChinhSach: "sonla-2026-03-31",
+    boChinhSach: "sonla-2026-10-06",
     giaGao: null,
     hanMucNN: { m2: "30000", canCu: "Hạn mức mẫu – cần nhập theo PL I QĐ 106/2025" },
     heSoGiaDat: null,

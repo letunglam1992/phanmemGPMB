@@ -6,6 +6,7 @@
  * Mô-đun thuần (không phụ thuộc giao diện). Không tự đặt ra mức giá: chỉ so với dữ liệu nguồn đã nạp;
  * không tìm thấy thì báo "Không kiểm được" để cán bộ kiểm thủ công.
  */
+import { heSoChuyenDoiNghe as heSoCdnTheoThon, thonCoHeSo } from "@gpmb/core";
 import type ExcelJS from "exceljs";
 import type Decimal from "decimal.js";
 import { D, type BoChinhSach } from "@gpmb/core";
@@ -458,9 +459,15 @@ function kiemGiaDat(d: DongPA, dl: DuLieuKiemTra): void {
   });
 }
 
-function heSoChuyenDoiNghe(cs: BoChinhSach, xa: string): { heSo: string; canCu: string } | null {
-  const c = (cs as unknown as { chuyenDoiNghe?: { heSoMacDinh: string; heSoTheoNhom: Record<string, string>; phanNhom: Record<string, string[]>; canCu: { vanBan: string; viTri: string }[] } }).chuyenDoiNghe;
+function heSoChuyenDoiNghe(cs: BoChinhSach, xa: string): { heSo: string; canCu: string; khac?: string[] } | null {
+  const c = (cs as unknown as { chuyenDoiNghe?: { heSoMacDinh: string; heSoTheoNhom: Record<string, string>; phanNhom: Record<string, string[]>; canCu: { vanBan: string; viTri: string }[]; theoThon?: unknown } }).chuyenDoiNghe;
   if (!c) return null;
+  if (c.theoThon) {
+    // QĐ 64/2026: hệ số theo tổ, thôn của thửa — tệp Excel không có tổ, thôn → chấp nhận các mức có thể có của xã
+    const q = heSoCdnTheoThon(cs, xa);
+    const ds = [...new Set(thonCoHeSo(cs, xa).map((x) => x.heSo))];
+    return { heSo: q.heSo, canCu: c.canCu.map((x) => `${x.viTri} ${x.vanBan}`).join("; "), ...(ds.length && !q.moTa.startsWith("Toàn bộ") ? { khac: ds } : {}) };
+  }
   const nhom = Object.entries(c.phanNhom).find(([, ds]) => ds.some((x) => khongDau(x) === khongDau(xa)))?.[0];
   return { heSo: (nhom && c.heSoTheoNhom[nhom]) || c.heSoMacDinh, canCu: c.canCu.map((x) => `${x.viTri} ${x.vanBan}`).join("; ") };
 }
@@ -473,7 +480,9 @@ function kiemChuyenDoiNghe(d: DongPA, dl: DuLieuKiemTra): void {
   let hs = d.heSo;
   if (!hs && d.kl && d.dg && d.tt && !d.kl.mul(d.dg).isZero()) hs = d.tt.div(d.kl.mul(d.dg)).toDecimalPlaces(4);
   if (!hs) return void d.phatHien.push({ mucDo: "KHONG_KIEM", loai: "HE_SO", noiDung: "Không xác định được hệ số hỗ trợ chuyển đổi nghề trên dòng" });
-  if (hs.eq(q.heSo)) d.phatHien.push({ mucDo: "DUNG", loai: "HE_SO", noiDung: `Hệ số ${soVN(hs)} lần giá đất nông nghiệp đúng mức áp dụng cho ${dl.xa}`, canCu: q.canCu });
+  if (q.khac && !hs.eq(q.heSo) && q.khac.some((x) => hs!.eq(x)))
+    d.phatHien.push({ mucDo: "CANH_BAO", loai: "HE_SO", noiDung: `Hệ số ${soVN(hs)} chỉ đúng khi thửa thuộc tổ, thôn, bản hưởng mức ${soVN(hs)} lần của ${dl.xa} (Phụ lục QĐ 64/2026) — đối chiếu địa bàn thửa`, canCu: q.canCu });
+  else if (hs.eq(q.heSo)) d.phatHien.push({ mucDo: "DUNG", loai: "HE_SO", noiDung: `Hệ số ${soVN(hs)} lần giá đất nông nghiệp đúng mức áp dụng cho ${dl.xa}`, canCu: q.canCu });
   else d.phatHien.push({ mucDo: "LOI", loai: "HE_SO", noiDung: `Hệ số ${soVN(hs)} khác mức ${q.heSo} lần áp dụng cho ${dl.xa}`, canCu: q.canCu });
   // Đơn giá phải là giá đất nông nghiệp của xã
   if (d.dg && dl.bangGia) {

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { GOI_CO_SAN, GOI_MOI_NHAT, tenBoChinhSach } from "../goi-chinh-sach";
 import { BO_CHINH_SACH, DANH_MUC_XA, DON_GIA, napBangGiaDat, type BangGiaDat } from "../du-lieu";
 import {
   TEN_LOAI_KIEM,
@@ -41,6 +42,8 @@ export function KiemTraPhuongAn() {
   const [tep, setTep] = useState<{ ten: string; trang: TrangBang[] } | null>(null);
   const [soTrang, setSoTrang] = useState(0);
   const [xa, setXa] = useState("");
+  // Bộ chính sách đối chiếu: phương án duyệt trước 06/10/2026 theo QĐ 106/2025 gốc; sau đó theo QĐ 64/2026 (k2 Điều 3)
+  const [bo, setBo] = useState(GOI_MOI_NHAT);
   const [cotTay, setCotTay] = useState<AnhXaCot>({});
   const [loc, setLoc] = useState<"LOI_CB" | "TAT_CA">("LOI_CB");
   const [dangDoc, setDangDoc] = useState(false);
@@ -56,8 +59,8 @@ export function KiemTraPhuongAn() {
   const tuDong = useMemo(() => (trang ? nhanDienCot(trang.o) : null), [trang]);
   const kq = useMemo(() => {
     if (!trang) return null;
-    return kiemTraBang(trang, { donGia: DON_GIA, bangGia, chinhSach: BO_CHINH_SACH["sonla-2026-03-31"], xa: xa || undefined }, Object.keys(cotTay).length ? cotTay : undefined);
-  }, [trang, bangGia, xa, cotTay]);
+    return kiemTraBang(trang, { donGia: DON_GIA, bangGia, chinhSach: BO_CHINH_SACH[bo], xa: xa || undefined }, Object.keys(cotTay).length ? cotTay : undefined);
+  }, [trang, bangGia, xa, cotTay, bo]);
 
   const napTep = async (f: File) => {
     setDangDoc(true);
@@ -141,6 +144,11 @@ export function KiemTraPhuongAn() {
               <Chon value={xa} onChange={(e) => setXa(e.target.value)}>
                 <option value="">— Chọn xã/phường —</option>
                 {(DANH_MUC_XA as string[]).map((x) => <option key={x} value={x}>{x}</option>)}
+              </Chon>
+            </O>
+            <O nhan="Đối chiếu theo bộ chính sách" goiY="Phương án duyệt trước 06/10/2026: bộ cũ; sau đó: QĐ 64/2026">
+              <Chon value={bo} onChange={(e) => setBo(e.target.value)} aria-label="Bộ chính sách đối chiếu">
+                {GOI_CO_SAN.map((k) => <option key={k} value={k}>{tenBoChinhSach(k)}</option>)}
               </Chon>
             </O>
           </div>

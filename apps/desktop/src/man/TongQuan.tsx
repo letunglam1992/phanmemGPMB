@@ -1,4 +1,5 @@
 import { ONgay } from "../thanh-phan/ONgay";
+import { GOI_MOI_NHAT } from "../goi-chinh-sach";
 import { TheBatDau } from "../thanh-phan/BatDau";
 import { useRef, useState } from "react";
 import { D } from "@gpmb/core";
@@ -210,7 +211,7 @@ export function HopTaoDuAn({ dong, duAn }: { dong: () => void; duAn?: DuAn }) {
   const { luuDuAn, di } = useUngDung();
   const [d, setD] = useState<DuAn>(
     duAn ?? {
-      id: taoId(), ten: "", xa: "", chuDauTu: "", canCuThuHoi: "", ngayThongBao: "", boChinhSach: "sonla-2026-03-31",
+      id: taoId(), ten: "", xa: "", chuDauTu: "", canCuThuHoi: "", ngayThongBao: "", boChinhSach: GOI_MOI_NHAT,
       giaGao: null, hanMucNN: null, heSoGiaDat: null, banDo: null, taoLuc: new Date().toISOString(),
     },
   );

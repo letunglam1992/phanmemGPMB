@@ -86,7 +86,7 @@ export interface BoChinhSach {
     ghiChu: string;
     tuLoChoO: { canCu: CanCu[]; mucTheoNhom: Record<string, string>; phanNhom: Record<string, string[]>; ghiChuPhanNhom: string };
     suatToiThieu: { canCu: CanCu[]; datOPhuongM2: string; datOXaM2: string; nhaOM2: string };
-    hoTroTienSdd: { canCu: CanCu[]; tyLe: string; ghiChu: string };
+    hoTroTienSdd: { canCu: CanCu[]; tyLe: string; ghiChu: string; /** QĐ 64/2026: không áp dụng khi giao đất có thu tiền theo k4 Đ111 LĐĐ */ ngoaiTruK4D111?: boolean; ghiChuNgoaiTru?: string };
   };
   /** Tham số Phụ lục II QĐ 106/2025 còn hiệu lực (Điều 3, 7, 11, 13) — xem phu-luc-ii.ts. */
   phuLucII?: {
@@ -134,7 +134,16 @@ export interface BoChinhSach {
     heSoMacDinh: string;
     heSoTheoNhom: Record<string, string>;
     phanNhom: Record<string, string[]>;
+    /**
+     * QĐ 64/2026 (sửa Điều 14 PL II QĐ 106/2025): hệ số theo tổ, thôn, bản, tiểu khu nơi có thửa đất; không thuộc danh
+     * sách → heSoMacDinh. Có trường này thì phanNhom/heSoTheoNhom không dùng.
+     */
+    theoThon?: { heSo: string; canCu: string; ds: { xa: string; toanBo?: boolean; thon: string[] }[] }[];
+    canCuMacDinh?: string;
+    ghiChu?: string;
   };
+  /** Điều khoản chuyển tiếp của văn bản sửa đổi (hiện ở màn dự án). */
+  chuyenTiep?: { canCu: CanCu[]; noiDung: string; boCu: string };
 }
 
 export interface BangMoc {
@@ -164,4 +173,36 @@ export function nhomDiaBan(phanNhom: Record<string, string[]>, xa: string, macDi
   // Mẫu kết thúc bằng "*" (vd. "Phường *" — văn bản ghi "các phường") khớp theo tiền tố, sau khi không khớp tên cụ thể.
   for (const [nhom, ds] of Object.entries(phanNhom)) if (ds.some((m) => m.endsWith("*") && xa.startsWith(m.slice(0, -1)))) return nhom;
   return macDinh;
+}
+
+const chuanTen = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/gi, "d").toLowerCase().replace(/\s+/g, " ").trim();
+
+/** Tổ, thôn, bản, tiểu khu của một xã có trong danh sách hệ số chuyển đổi nghề (QĐ 64/2026), kèm hệ số. */
+export function thonCoHeSo(cs: BoChinhSach, xa: string): { thon: string; heSo: string; canCu: string }[] {
+  const out: { thon: string; heSo: string; canCu: string }[] = [];
+  for (const m of cs.chuyenDoiNghe.theoThon ?? []) for (const x of m.ds) if (chuanTen(x.xa) === chuanTen(xa)) for (const t of x.thon) out.push({ thon: t, heSo: m.heSo, canCu: m.canCu });
+  return out;
+}
+
+/**
+ * Hệ số chuyển đổi nghề của thửa theo địa bàn (QĐ 64/2026): xã thuộc diện "toàn bộ" → hệ số đó; thửa ghi tổ/thôn có
+ * trong danh sách → hệ số cao nhất trong các tổ/thôn đã ghi (k4); xã có tổ/thôn trong danh sách mà thửa chưa ghi → cần
+ * xác nhận. Bộ chính sách cũ (không có theoThon) → theo nhóm xã như trước.
+ */
+export function heSoChuyenDoiNghe(cs: BoChinhSach, xa: string, thon: string[] = []): { heSo: string; moTa: string; canCu: string; canXacNhan?: string } {
+  const k = cs.chuyenDoiNghe;
+  if (!k.theoThon) {
+    const nhom = nhomDiaBan(k.phanNhom, xa, "CON_LAI");
+    return { heSo: k.heSoTheoNhom[nhom] ?? k.heSoMacDinh, moTa: `${xa} → nhóm ${nhom}`, canCu: "" };
+  }
+  for (const m of k.theoThon) if (m.ds.some((x) => x.toanBo && chuanTen(x.xa) === chuanTen(xa))) return { heSo: m.heSo, moTa: `Toàn bộ ${xa}`, canCu: m.canCu };
+  const dsXa = thonCoHeSo(cs, xa);
+  const macDinh = { heSo: k.heSoMacDinh, canCu: k.canCuMacDinh ?? "" };
+  if (!dsXa.length) return { ...macDinh, moTa: `${xa} không có tổ, thôn, bản trong Phụ lục → mức chung` };
+  const ghi = thon.map((t) => t.trim()).filter(Boolean);
+  if (!ghi.length) return { ...macDinh, moTa: `${xa}: chưa ghi tổ, thôn, bản của thửa`, canXacNhan: `${xa} có tổ, thôn, bản hưởng ${[...new Set(dsXa.map((x) => x.heSo))].sort().reverse().join("/")} lần — chọn tổ, thôn, bản nơi có thửa đất (ở thẻ Thửa đất) để xác định hệ số` };
+  const khop = ghi.map((t) => dsXa.find((x) => chuanTen(x.thon) === chuanTen(t))).filter((x): x is NonNullable<typeof x> => !!x);
+  if (!khop.length) return { ...macDinh, moTa: `${ghi.join(", ")} (${xa}) không thuộc danh sách → mức chung` };
+  const cao = khop.reduce((a, b) => (Number(b.heSo) > Number(a.heSo) ? b : a));
+  return { heSo: cao.heSo, moTa: `${ghi.join(", ")} (${xa})${ghi.length > 1 ? " → mức cao nhất (k4)" : ""}`, canCu: cao.canCu };
 }

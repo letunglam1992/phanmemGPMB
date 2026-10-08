@@ -1,12 +1,15 @@
 /** Dữ liệu chính sách, đơn giá (đọc từ policy/ — đã trích xuất và đối chiếu, docs/07). */
 import type { BoChinhSach } from "@gpmb/core";
 import goi from "../../../policy/goi/sonla-2026-03-31.json";
+import goi64 from "../../../policy/goi/sonla-2026-10-06.json";
 import qd32 from "../../../policy/nguon/qd32-2025-don-gia-nha-cong-trinh.json";
 import pl8 from "../../../policy/nguon/qd106-2025-pl8-cay-trong-thuy-san.json";
 import pl5 from "../../../policy/nguon/qd106-2025-pl5-di-doi-vat-nuoi.json";
 
 export const BO_CHINH_SACH: Record<string, BoChinhSach> = {
   "sonla-2026-03-31": goi as unknown as BoChinhSach,
+  /** QĐ 64/2026/QĐ-UBND (hiệu lực 06/10/2026): hệ số chuyển đổi nghề theo tổ, thôn; k11 Đ6 QĐ 14/2026 sửa đổi */
+  "sonla-2026-10-06": goi64 as unknown as BoChinhSach,
 };
 
 export interface DongDonGia {

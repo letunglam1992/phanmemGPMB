@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { GOI_MOI_NHAT } from "../goi-chinh-sach";
 import { BO_CHINH_SACH, DON_GIA, napBangGiaDat, type BangGiaDat, type DongDonGia } from "../du-lieu";
 import { khongDau } from "../tim-kiem";
 import { tenLoaiDat } from "../van-ban/loai-dat";
@@ -383,7 +384,7 @@ export function TraCuu({ timDau }: { timDau?: string } = {}) {
 }
 
 function BoChinhSach() {
-  const cs = BO_CHINH_SACH["sonla-2026-03-31"]!;
+  const cs = BO_CHINH_SACH[GOI_MOI_NHAT]!;
   return (
     <div className="luoi luoi-2">
       <div className="the the-than">
@@ -395,7 +396,9 @@ function BoChinhSach() {
             <tr><td>Nhà, công trình</td><td>min(max((1 + {Number(cs.nhaCongTrinh.tyLeCongThem) * 100}%) × Tgt; {Number(cs.nhaCongTrinh.san) * 100}% G1); {Number(cs.nhaCongTrinh.tran) * 100}% G1)</td></tr>
             <tr><td>Cây trồng</td><td>≤ {Number(cs.cayTrong.tyLeVuotMatDo) * 100}% mật độ hưởng 100%; phần vượt {Number(cs.cayTrong.tyLePhanVuot) * 100}%</td></tr>
             <tr><td>Ổn định đời sống</td><td>{cs.onDinhDoiSong.kgGaoNhanKhauThang} kg gạo/khẩu/tháng; {cs.onDinhDoiSong.nhom.length} nhóm tỷ lệ</td></tr>
-            <tr><td>Chuyển đổi nghề</td><td>Hệ số mặc định {cs.chuyenDoiNghe.heSoMacDinh}; {Object.entries(cs.chuyenDoiNghe.heSoTheoNhom).map(([k, v]) => `${k}: ${v}`).join("; ")}</td></tr>
+            <tr><td>Chuyển đổi nghề</td><td>Hệ số mặc định {cs.chuyenDoiNghe.heSoMacDinh}; {cs.chuyenDoiNghe.theoThon
+              ? cs.chuyenDoiNghe.theoThon.map((m) => <div key={m.heSo} className="mt-4"><b>{m.heSo} lần</b> ({m.canCu}): {m.ds.map((x) => (x.toanBo ? `${x.xa} (toàn bộ)` : `${x.xa}: ${x.thon.join(", ")}`)).join("; ")}</div>)
+              : Object.entries(cs.chuyenDoiNghe.heSoTheoNhom).map(([k, v]) => `${k}: ${v}`).join("; ")}</td></tr>
             <tr><td>Mồ mả</td><td>Mộ xây {Number(cs.moMa.mucXay).toLocaleString("vi-VN")} đ; không xây {Number(cs.moMa.mucKhongXay).toLocaleString("vi-VN")} đ</td></tr>
           </tbody>
         </table>

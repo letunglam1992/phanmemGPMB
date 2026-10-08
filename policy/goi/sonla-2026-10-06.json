@@ -1,8 +1,8 @@
 {
-  "ma": "SONLA-BTHTTDC-2026-03-31",
-  "ten": "Bộ chính sách BT-HT-TĐC tỉnh Sơn La áp dụng từ 31/3/2026",
-  "hieuLucTu": "2026-03-31",
-  "hieuLucDen": "2026-10-05",
+  "ma": "SONLA-BTHTTDC-2026-10-06",
+  "ten": "Bộ chính sách BT-HT-TĐC tỉnh Sơn La áp dụng từ 06/10/2026 (QĐ 64/2026/QĐ-UBND)",
+  "hieuLucTu": "2026-10-06",
+  "hieuLucDen": null,
   "trangThai": "CHO_DUYET",
   "vanBan": [
     "Luật Đất đai 2024",
@@ -10,7 +10,8 @@
     "QĐ 106/2025/QĐ-UBND (PL I, II, V, VIII)",
     "QĐ 14/2026/QĐ-UBND",
     "QĐ 32/2025/QĐ-UBND",
-    "NQ 152/2025/NQ-HĐND"
+    "NQ 152/2025/NQ-HĐND",
+    "QĐ 64/2026/QĐ-UBND (sửa Điều 13 PL I, Điều 14 PL II QĐ 106/2025; khoản 11 Điều 6 QĐ 14/2026)"
   ],
   "lamTron": {
     "dienTichSoLe": 2,
@@ -525,45 +526,287 @@
     "canCu": [
       {
         "vanBan": "NĐ 88/2024/NĐ-CP",
-        "viTri": "Điều 22"
+        "viTri": "khoản 3 Điều 22"
       },
       {
         "vanBan": "QĐ 106/2025/QĐ-UBND",
-        "viTri": "Điều 14 Phụ lục II"
+        "viTri": "Điều 14 Phụ lục II (sửa đổi bởi khoản 2 Điều 1 QĐ 64/2026/QĐ-UBND)"
       }
     ],
     "heSoMacDinh": "3",
-    "heSoTheoNhom": {
-      "PHUONG": "5",
-      "XA_NHOM_DIEU_14": "4"
-    },
-    "phanNhom": {
-      "PHUONG": [
-        "Phường Tô Hiệu",
-        "Phường Chiềng An",
-        "Phường Chiềng Cơi",
-        "Phường Chiềng Sinh",
-        "Phường Mộc Châu",
-        "Phường Mộc Sơn",
-        "Phường Vân Sơn",
-        "Phường Thảo Nguyên",
-        "Phường *"
-      ],
-      "XA_NHOM_DIEU_14": [
-        "Xã Lóng Sập",
-        "Xã Chiềng Sơn",
-        "Xã Tân Yên",
-        "Xã Quỳnh Nhai",
-        "Xã Thuận Châu",
-        "Xã Mường La",
-        "Xã Bắc Yên",
-        "Xã Phù Yên",
-        "Xã Yên Châu",
-        "Xã Mai Sơn",
-        "Xã Sông Mã",
-        "Xã Sốp Cộp"
-      ]
-    }
+    "heSoTheoNhom": {},
+    "phanNhom": {},
+    "canCuMacDinh": "khoản 1 Điều 14 Phụ lục II QĐ 106/2025 (sửa đổi bởi QĐ 64/2026)",
+    "theoThon": [
+      {
+        "heSo": "5",
+        "canCu": "khoản 2 Điều 14 Phụ lục II QĐ 106/2025 (sửa đổi bởi QĐ 64/2026); mục 1 Phụ lục QĐ 64/2026",
+        "ds": [
+          {
+            "xa": "Phường Tô Hiệu",
+            "toanBo": true,
+            "thon": []
+          },
+          {
+            "xa": "Phường Chiềng An",
+            "thon": [
+              "Tổ dân phố 1",
+              "Tổ dân phố 2",
+              "Tổ dân phố 4",
+              "Bản Cá",
+              "Tổ dân phố 3",
+              "Bản Hài",
+              "Bản Cọ",
+              "Bản Phiêng Panh"
+            ]
+          },
+          {
+            "xa": "Phường Chiềng Cơi",
+            "thon": [
+              "Tổ 1",
+              "Tổ 2",
+              "Tổ 3",
+              "Tổ 4 Chậu Cọ",
+              "Tổ 5 Mé Ban"
+            ]
+          },
+          {
+            "xa": "Phường Chiềng Sinh",
+            "thon": [
+              "Tổ 1",
+              "Tổ 2",
+              "Tổ 3",
+              "Tổ 4",
+              "Tổ 5",
+              "Tổ 6",
+              "Tổ 7",
+              "Tổ 8",
+              "Tổ 10",
+              "Tổ 11"
+            ]
+          },
+          {
+            "xa": "Phường Mộc Châu",
+            "thon": [
+              "Tổ dân phố Hòa Bình",
+              "Tổ dân phố Mộc Lỵ",
+              "Tổ dân phố Tây Tiến",
+              "Tổ dân phố Hữu Nghị",
+              "Tổ dân phố Tâm Châu"
+            ]
+          },
+          {
+            "xa": "Phường Vân Sơn",
+            "thon": [
+              "Tổ dân phố 68",
+              "Tổ dân phố Chiềng Đi",
+              "Tổ dân phố Thảo Nguyên",
+              "Tổ dân phố Tiền Tiến",
+              "Tổ dân phố 1/5",
+              "Tổ dân phố Bó Bun",
+              "Tổ dân phố Hoa Đào",
+              "Tổ dân phố 70",
+              "Tổ dân phố 66",
+              "Tổ dân phố Hoa Ban",
+              "Tổ dân phố Đoàn Kết",
+              "Tổ dân phố Piềng Sàng"
+            ]
+          },
+          {
+            "xa": "Phường Thảo Nguyên",
+            "thon": [
+              "Tổ dân phố Nhà Nghỉ",
+              "Tổ dân phố 3/2",
+              "Tổ dân phố Bình Nguyên",
+              "Tổ dân phố 40",
+              "Tổ dân phố Khí Tượng",
+              "Tổ dân phố Minh Châu",
+              "Tổ dân phố 19/8",
+              "Tổ dân phố Chè Đen",
+              "Tổ dân phố Trung Nguyên",
+              "Tổ dân phố 19/5",
+              "Tổ dân phố 26/7",
+              "Tổ dân phố Cờ Đỏ",
+              "Tổ dân phố Chờ Lồng",
+              "Tổ dân phố Pa Khen III",
+              "Tổ dân phố Pa Khen",
+              "Tổ dân phố Tà Loọng",
+              "Tổ dân phố Thái Hòa"
+            ]
+          },
+          {
+            "xa": "Phường Mộc Sơn",
+            "thon": [
+              "Tổ dân phố 3",
+              "Tổ dân phố 5",
+              "Tổ dân phố 2",
+              "Tổ dân phố 4",
+              "Tổ dân phố 1",
+              "Tổ dân phố 6",
+              "Tổ dân phố 7",
+              "Bản Áng",
+              "Bản Cóc",
+              "Bản Co Sung",
+              "Bản Pa Phách"
+            ]
+          }
+        ]
+      },
+      {
+        "heSo": "4",
+        "canCu": "khoản 3 Điều 14 Phụ lục II QĐ 106/2025 (sửa đổi bởi QĐ 64/2026); mục 2 Phụ lục QĐ 64/2026",
+        "ds": [
+          {
+            "xa": "Phường Chiềng An",
+            "thon": [
+              "Bản Tông Hụm"
+            ]
+          },
+          {
+            "xa": "Xã Sông Mã",
+            "thon": [
+              "Tổ dân phố 2",
+              "Tổ dân phố 3",
+              "Tổ dân phố 4",
+              "Tổ dân phố 5",
+              "Tổ dân phố 1",
+              "Tổ dân phố 6",
+              "Tổ dân phố 7",
+              "Tổ dân phố 8",
+              "Tổ dân phố 9"
+            ]
+          },
+          {
+            "xa": "Xã Sốp Cộp",
+            "thon": [
+              "Bản Sốp Cộp",
+              "Bản Nậm Ban",
+              "Bản Sốp Nặm",
+              "Bản Nậm Công"
+            ]
+          },
+          {
+            "xa": "Xã Mai Sơn",
+            "thon": [
+              "Tiểu khu 1",
+              "Tiểu khu 9",
+              "Tiểu khu 15",
+              "Tiểu khu 6",
+              "Tiểu khu 21",
+              "Tiểu khu 10",
+              "Tiểu khu 14",
+              "Tiểu khu 2",
+              "Tiểu khu 4",
+              "Tiểu khu 17",
+              "Tiểu khu 18",
+              "Tiểu khu 19",
+              "Tiểu khu 20",
+              "Tiểu khu 8",
+              "Bản Nặm Ban",
+              "Thôn Hát Lót",
+              "Thôn Tiền Phong",
+              "Bản Nà Sy",
+              "Tiểu khu 19/5",
+              "Bản Lếch",
+              "Tiểu khu 3 Cò Nòi",
+              "Tiểu khu Cò Nòi",
+              "Bản Cò Nòi",
+              "Tiểu khu 26/3",
+              "Tiểu khu 3/2"
+            ]
+          },
+          {
+            "xa": "Xã Bắc Yên",
+            "thon": [
+              "Bản Bắc Đa",
+              "Bản Bắc Sơn",
+              "Bản Bắc Ban",
+              "Bản Phiêng Ban 1",
+              "Bản Phiêng Ban 2"
+            ]
+          },
+          {
+            "xa": "Xã Thuận Châu",
+            "thon": [
+              "Thôn 2",
+              "Thôn 3",
+              "Thôn 4",
+              "Thôn 5",
+              "Bản Huông",
+              "Bản Pán",
+              "Bản Chiềng Ly",
+              "Bản Bó",
+              "Bản Phiêng Còng",
+              "Bản Bó Lanh",
+              "Bản Bỉa",
+              "Bản Dửn",
+              "Thôn 1",
+              "Bản Mòn"
+            ]
+          },
+          {
+            "xa": "Xã Quỳnh Nhai",
+            "thon": [
+              "Bản Khiêu Ban",
+              "Bản Mường Giàng",
+              "Tiểu khu Gia Lan",
+              "Tiểu khu Phiêng Nèn",
+              "Tiểu khu 1",
+              "Tiểu khu 2",
+              "Tiểu khu 3",
+              "Bản Bung Lanh",
+              "Bản Pá Uôn"
+            ]
+          },
+          {
+            "xa": "Xã Mường La",
+            "thon": [
+              "Tiểu khu Nà Lốc",
+              "Tiểu khu Chiềng Tè",
+              "Tiểu khu Nà Tòng",
+              "Tiểu khu Nà Nong",
+              "Tiểu khu 1",
+              "Tiểu khu 2",
+              "Tiểu khu Mé Lìu",
+              "Tiểu khu Hua Ít",
+              "Tiểu khu Phiêng Tìn"
+            ]
+          },
+          {
+            "xa": "Xã Yên Châu",
+            "thon": [
+              "Tiểu khu 03/2",
+              "Tiểu khu Mường Vạt",
+              "Tiểu khu 02/9",
+              "Tiểu khu 19/5",
+              "Tiểu khu Chiềng An",
+              "Bản Vang Qua"
+            ]
+          },
+          {
+            "xa": "Xã Phù Yên",
+            "thon": [
+              "Tiểu khu 1",
+              "Tiểu khu 2",
+              "Tiểu khu 3",
+              "Tiểu khu 4",
+              "Tiểu khu 5",
+              "Tiểu khu 6",
+              "Tiểu khu 7",
+              "Tiểu khu 8",
+              "Bản Mo Nghè",
+              "Bản Cang",
+              "Bản Búc Mo",
+              "Bản Mo",
+              "Bản Chiềng Thượng",
+              "Bản Chiềng Trung",
+              "Bản Nà Phái"
+            ]
+          }
+        ]
+      }
+    ],
+    "ghiChu": "Thửa nằm trên địa bàn nhiều tổ, thôn, bản, tiểu khu: áp dụng mức cao nhất (khoản 4). Áp dụng cho toàn bộ DT đất NN thu hồi nhưng không vượt hạn mức giao đất NN tại địa phương theo Điều 176 Luật Đất đai (khoản 5)."
   },
   "giaDat": {
     "canCu": [
@@ -763,11 +1006,13 @@
       "canCu": [
         {
           "vanBan": "QĐ 14/2026/QĐ-UBND",
-          "viTri": "khoản 11 Điều 6"
+          "viTri": "khoản 11 Điều 6 (sửa đổi bởi Điều 2 QĐ 64/2026/QĐ-UBND)"
         }
       ],
       "tyLe": "0.2",
-      "ghiChu": "VM-28: chưa rõ tính trên tiền SDĐ trước hay sau khi trừ ghi nợ, miễn giảm — mặc định trên tiền SDĐ phải nộp do cán bộ nhập (QD-19)"
+      "ghiChu": "VM-28: chưa rõ tính trên tiền SDĐ trước hay sau khi trừ ghi nợ, miễn giảm — mặc định trên tiền SDĐ phải nộp do cán bộ nhập (QD-19)",
+      "ngoaiTruK4D111": true,
+      "ghiChuNgoaiTru": "Không áp dụng khi Nhà nước hỗ trợ bằng việc giao đất có thu tiền sử dụng đất cho hộ có nhiều thế hệ, nhiều cặp vợ chồng cùng chung sống trên một thửa đất ở bị thu hồi đủ điều kiện tách hộ, hoặc nhiều hộ chung quyền sử dụng một thửa đất ở (khoản 4 Điều 111 Luật Đất đai)"
     }
   },
   "phuLucII": {
@@ -957,7 +1202,7 @@
     }
   },
   "tachThuaToiThieu": {
-    "ghiChu": "Điều 12–16 Phụ lục I QĐ 106/2025/QĐ-UBND ngày 06/10/2025 (nguyên văn: policy/nguon/qd106-2025-phu-luc-1.md). Diện tích, kích thước tối thiểu không tính phần thuộc quy hoạch hành lang bảo vệ an toàn công trình (khoản 1 Điều 12). Thửa có đất ở và đất nông nghiệp trong cùng thửa theo Điều 14 — phần mềm chưa tách. Dùng để cảnh báo phần đất còn lại sau thu hồi; không kết luận thu hồi.",
+    "ghiChu": "Điều 12–16 Phụ lục I QĐ 106/2025/QĐ-UBND ngày 06/10/2025 (Điều 13 sửa đổi bởi khoản 1 Điều 1 QĐ 64/2026/QĐ-UBND, mức không đổi) (nguyên văn: policy/nguon/qd106-2025-phu-luc-1.md). Diện tích, kích thước tối thiểu không tính phần thuộc quy hoạch hành lang bảo vệ an toàn công trình (khoản 1 Điều 12). Thửa có đất ở và đất nông nghiệp trong cùng thửa theo Điều 14 — phần mềm chưa tách. Dùng để cảnh báo phần đất còn lại sau thu hồi; không kết luận thu hồi.",
     "muc": [
       {
         "ma": "D13_K1",
@@ -972,7 +1217,7 @@
         "canCu": [
           {
             "vanBan": "QĐ 106/2025/QĐ-UBND",
-            "viTri": "khoản 1 Điều 13 Phụ lục I"
+            "viTri": "khoản 1 Điều 13 Phụ lục I (sửa đổi bởi QĐ 64/2026/QĐ-UBND)"
           }
         ]
       },
@@ -992,7 +1237,7 @@
         "canCu": [
           {
             "vanBan": "QĐ 106/2025/QĐ-UBND",
-            "viTri": "điểm a khoản 2 Điều 13 Phụ lục I"
+            "viTri": "điểm a khoản 2 Điều 13 Phụ lục I (sửa đổi bởi QĐ 64/2026/QĐ-UBND)"
           }
         ]
       },
@@ -1013,7 +1258,7 @@
         "canCu": [
           {
             "vanBan": "QĐ 106/2025/QĐ-UBND",
-            "viTri": "điểm b khoản 2 Điều 13 Phụ lục I"
+            "viTri": "điểm b khoản 2 Điều 13 Phụ lục I (sửa đổi bởi QĐ 64/2026/QĐ-UBND)"
           }
         ]
       },
@@ -1158,5 +1403,15 @@
         ]
       }
     ]
+  },
+  "chuyenTiep": {
+    "canCu": [
+      {
+        "vanBan": "QĐ 64/2026/QĐ-UBND",
+        "viTri": "khoản 2 Điều 3"
+      }
+    ],
+    "noiDung": "Phương án đã được phê duyệt trước 06/10/2026 tiếp tục thực hiện theo phương án đã duyệt; phương án chưa được phê duyệt áp dụng Quyết định 64/2026, trừ trường hợp văn bản QPPL cấp trên quy định khác hoặc cho phép lựa chọn. Chuyển tiếp thu hồi đất theo khoản 13 Điều 3 NQ 254/2025/QH15 và Điều 19 NĐ 49/2026/NĐ-CP (khoản 1 Điều 3).",
+    "boCu": "sonla-2026-03-31"
   }
 }

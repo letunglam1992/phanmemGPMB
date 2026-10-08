@@ -1,4 +1,4 @@
-import { nhomDiaBan, type BoChinhSach, type DiChuyen } from "./chinh-sach";
+import { heSoChuyenDoiNghe, nhomDiaBan, type BoChinhSach, type DiChuyen } from "./chinh-sach";
 import { dong } from "./dong";
 import { D, dinhDang, lamTronDienTich, type SoVao } from "./so";
 import type { DongTinh, LuaChon } from "./types";
@@ -69,11 +69,11 @@ export function onDinhDoiSong(
 /** C06 – hỗ trợ đào tạo, chuyển đổi nghề: hệ số theo nhóm địa bàn × giá đất NN × min(DT thu hồi, hạn mức). */
 export function chuyenDoiNghe(
   cs: BoChinhSach,
-  p: { xa: string; loaiDat: string; dienTichThuHoiM2: SoVao; hanMucM2: SoVao; canCuHanMuc: string; giaDatNNNghinDong: SoVao },
+  p: { xa: string; loaiDat: string; dienTichThuHoiM2: SoVao; hanMucM2: SoVao; canCuHanMuc: string; giaDatNNNghinDong: SoVao; thon?: string[] },
 ): DongTinh {
   const k = cs.chuyenDoiNghe;
-  const nhom = nhomDiaBan(k.phanNhom, p.xa, "CON_LAI");
-  const heSo = D(k.heSoTheoNhom[nhom] ?? k.heSoMacDinh);
+  const hs = heSoChuyenDoiNghe(cs, p.xa, p.thon);
+  const heSo = D(hs.heSo);
   const dt = lamTronDienTich(p.dienTichThuHoiM2);
   const dtTinh = dt.lt(p.hanMucM2) ? dt : D(p.hanMucM2);
   const gia = D(p.giaDatNNNghinDong).mul(1000);
@@ -81,7 +81,7 @@ export function chuyenDoiNghe(
     ma: "C06",
     noiDung: `Hỗ trợ đào tạo, chuyển đổi nghề – ${p.loaiDat}`,
     thamSo: {
-      "Địa bàn": `${p.xa} → nhóm ${nhom}, hệ số ${heSo}`,
+      "Địa bàn": `${hs.moTa}, hệ số ${heSo}${hs.canCu ? ` (${hs.canCu})` : ""}`,
       "Diện tích thu hồi": `${dinhDang(dt, 2)} m²`,
       "Hạn mức": `${dinhDang(p.hanMucM2, 2)} m² (${p.canCuHanMuc})`,
       "Diện tích tính": `${dinhDang(dtTinh, 2)} m²`,
@@ -90,6 +90,7 @@ export function chuyenDoiNghe(
     congThuc: "Hệ số × Giá đất NN × min(DT thu hồi; hạn mức)",
     thanhTien: heSo.mul(gia).mul(dtTinh),
     canCu: k.canCu,
+    ...(hs.canXacNhan ? { trangThai: "CAN_XAC_NHAN" as const, canhBao: [hs.canXacNhan] } : {}),
   });
 }
 
@@ -191,9 +192,19 @@ export function hoTroSuatToiThieu(
 }
 
 /** C11 – hỗ trợ 20% tiền sử dụng đất phải nộp của thửa đất được giao tái định cư (k11 Đ6 QĐ 14/2026; VM-28). */
-export function hoTroTienSddTdc(cs: BoChinhSach, p: { tienSddPhaiNop: SoVao; moTa: string }): DongTinh {
+export function hoTroTienSddTdc(cs: BoChinhSach, p: { tienSddPhaiNop: SoVao; moTa: string; giaoDatK4D111?: boolean }): DongTinh {
   const k = tdc(cs).hoTroTienSdd;
   const tien = D(p.tienSddPhaiNop);
+  if (p.giaoDatK4D111 && k.ngoaiTruK4D111)
+    return dong({
+      ma: "C11",
+      noiDung: "Hỗ trợ tiền sử dụng đất thửa đất được giao tái định cư",
+      thamSo: { "Trường hợp": "Giao đất có thu tiền SDĐ theo khoản 4 Điều 111 Luật Đất đai" },
+      congThuc: "Không áp dụng",
+      thanhTien: D(0),
+      canCu: k.canCu,
+      canhBao: [k.ghiChuNgoaiTru ?? "Không áp dụng"],
+    });
   return dong({
     ma: "C11",
     noiDung: "Hỗ trợ tiền sử dụng đất thửa đất được giao tái định cư",

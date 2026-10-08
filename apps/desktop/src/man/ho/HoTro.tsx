@@ -127,7 +127,13 @@ export function TheTaiDinhCu({ h, doi, duAn, kq }: Tab & { duAn: DuAn; kq: KetQu
               {t.hinhThuc === "DAT_O" && (
                 <label className="o-chon-kem">
                   <input type="checkbox" checked={!!t.hoTroTienSdd} onChange={(e) => dat({ hoTroTienSdd: e.target.checked || undefined })} />
-                  <span><b>Hỗ trợ 20% tiền sử dụng đất phải nộp</b> của thửa đất được giao TĐC (k11 Đ6 QĐ 14/2026; VM-28).</span>
+                  <span><b>Hỗ trợ 20% tiền sử dụng đất phải nộp</b> của thửa đất được giao TĐC (k11 Đ6 QĐ 14/2026{cs.taiDinhCu?.hoTroTienSdd.ngoaiTruK4D111 ? ", sửa đổi bởi Điều 2 QĐ 64/2026" : ""}; VM-28).</span>
+                </label>
+              )}
+              {t.hinhThuc === "DAT_O" && t.hoTroTienSdd && cs.taiDinhCu?.hoTroTienSdd.ngoaiTruK4D111 && (
+                <label className="o-chon-kem">
+                  <input type="checkbox" checked={!!t.giaoDatK4D111} aria-label="Giao đất theo khoản 4 Điều 111" onChange={(e) => dat({ giaoDatK4D111: e.target.checked || undefined })} />
+                  <span><b>Lô giao theo khoản 4 Điều 111 Luật Đất đai</b> (giao đất có thu tiền SDĐ cho hộ nhiều thế hệ, nhiều cặp vợ chồng đủ điều kiện tách hộ, hoặc nhiều hộ chung một thửa đất ở) — <b>không hỗ trợ 20%</b> (Điều 2 QĐ 64/2026).</span>
                 </label>
               )}
             </div>

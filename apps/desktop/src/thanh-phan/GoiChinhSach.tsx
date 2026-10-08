@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { D, dinhDang } from "@gpmb/core";
 import { useUngDung } from "../ung-dung";
 import { BO_CHINH_SACH } from "../du-lieu";
-import { GOI_GOC, docGoi, tenBoChinhSach, coBoChinhSach, type KetQuaDocGoi } from "../goi-chinh-sach";
+import { GOI_CO_SAN, GOI_GOC, docGoi, tenBoChinhSach, coBoChinhSach, type KetQuaDocGoi } from "../goi-chinh-sach";
 import { tinhHoMoi } from "../tinh-ho";
 import type { DuAn } from "../mo-hinh";
 import { HopThoai } from "./chung";
@@ -23,7 +23,7 @@ export function TheGoiChinhSach() {
       <table className="bang">
         <thead><tr><th>Khóa</th><th>Tên, mã</th><th>Hiệu lực</th><th>Nguồn</th><th>SHA-256</th></tr></thead>
         <tbody>
-          <tr><td>{GOI_GOC}</td><td className="chu-nho">{tenBoChinhSach(GOI_GOC)}</td><td className="chu-nho">từ {BO_CHINH_SACH[GOI_GOC]!.hieuLucTu}</td><td className="chu-nho">Có sẵn trong phần mềm</td><td>—</td></tr>
+          {GOI_CO_SAN.map((k) => <tr key={k}><td>{k}</td><td className="chu-nho">{tenBoChinhSach(k)}</td><td className="chu-nho">từ {BO_CHINH_SACH[k]!.hieuLucTu}{BO_CHINH_SACH[k]!.hieuLucDen ? ` đến ${BO_CHINH_SACH[k]!.hieuLucDen}` : ""}</td><td className="chu-nho">Có sẵn trong phần mềm</td><td>—</td></tr>)}
           {goiDaNap.map((g) => (
             <tr key={g.khoa}>
               <td>{g.khoa}</td><td className="chu-nho">{g.ten}<div className="mo">{g.ma}</div></td><td className="chu-nho">từ {g.hieuLucTu}{g.hieuLucDen ? ` đến ${g.hieuLucDen}` : ""}</td>
@@ -80,6 +80,24 @@ export function TheBoChinhSachDuAn({ duAn }: { duAn: DuAn }) {
           </Chon>
         )}
       </div>
+      {(() => {
+        // Chuyển tiếp (khoản 2 Điều 3 QĐ 64/2026): bộ mới có sẵn thay bộ đang dùng
+        const thay = Object.entries(BO_CHINH_SACH).find(([, cs]) => cs.chuyenTiep?.boCu === duAn.boChinhSach);
+        if (!thay) return null;
+        const [khoa, cs] = thay;
+        const daDuyet = (duAn.phuongAn ?? []).some((p) => p.trangThai === "DA_PHE_DUYET");
+        return (
+          <div className="thong-bao thong-bao-vang" style={{ margin: "0 16px 12px" }} data-chuyen-tiep>
+            <b>{cs.ten}</b> có hiệu lực từ {cs.hieuLucTu.split("-").reverse().join("/")}. {cs.chuyenTiep!.noiDung} <span className="mo chu-nho">({cs.chuyenTiep!.canCu.map((c) => `${c.viTri} ${c.vanBan}`).join("; ")})</span>
+            <div className="mt-6">
+              {daDuyet
+                ? <>Dự án đã có bản phương án được phê duyệt — các bản đó giữ nguyên. Hộ, đợt chưa phê duyệt: cán bộ xem chênh lệch rồi quyết định chuyển.</>
+                : <>Dự án chưa có phương án được phê duyệt → thuộc trường hợp áp dụng bộ mới.</>}
+              {quyen("CAI_DAT") && <button className="nut nut-nho nut-chinh" style={{ marginLeft: 8 }} onClick={() => setMoi(khoa)}>Xem chênh lệch, chuyển sang bộ mới…</button>}
+            </div>
+          </div>
+        );
+      })()}
       {moi && <HopChuyenBo duAn={duAn} moi={moi} hos={hoCua(duAn.id)} dong={() => setMoi(null)} apDung={async (tomTat) => { if (await chuyenBoChinhSach(duAn.id, moi, tomTat)) { bao(`Đã chuyển dự án sang bộ chính sách ${moi}`); setMoi(null); } }} />}
     </div>
   );

@@ -565,6 +565,7 @@ function tinhHoGoc(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
           hanMucM2: duAn.hanMucNN.m2,
           canCuHanMuc: duAn.hanMucNN.canCu,
           giaDatNNNghinDong: t.gia.giaNghinDong,
+          thon: t.thonBan,
         });
       let bieu: DongBieu[] | undefined;
       if (d.thanhTien && duAn.hanMucNN && t.gia) {
@@ -691,7 +692,7 @@ function dongTaiDinhCu(cs: BoChinhSach, duAn: DuAn, ho: Ho, t: TaiDinhCuHo, btDa
     if (!coCs) out.push(khongCs("C11", nd));
     else if (!sdd.tien) out.push(thieu("C11", nd, "Chưa có tiền SDĐ phải nộp (nhập đơn giá và DT lô giao, hoặc số tiền theo thông báo)"));
     else {
-      const d = hoTroTienSddTdc(cs, { tienSddPhaiNop: sdd.tien, moTa: sdd.moTa });
+      const d = hoTroTienSddTdc(cs, { tienSddPhaiNop: sdd.tien, moTa: sdd.moTa, giaoDatK4D111: t.giaoDatK4D111 });
       if (!ho.thua.some((x) => laDatO(x.loaiDat))) d.canhBao.push("Khoản 11 Điều 6 QĐ 14/2026 áp dụng cho hộ bị thu hồi đất ở — hộ không có thửa ONT/ODT bị thu hồi, kiểm tra");
       out.push(d);
     }
@@ -995,7 +996,7 @@ function dongChenhLech(cs: BoChinhSach, duAn: DuAn, ho: Ho, t: Thua): { nhom: "B
     else if (!han) d = thieu("B14.CĐN", ndCdn, "Chưa có hạn mức công nhận quyền sử dụng đất NN cùng loại", cvb);
     else if (giaHT.lte(giaGcn)) d = dong({ ma: "B14.CĐN", noiDung: ndCdn, congThuc: "Chênh lệch giá ≤ 0", thanhTien: D(0), canCu, canhBao: ["Giá đất NN hiện trạng không cao hơn giá theo GCN — không có chênh lệch"] });
     else {
-      const x = chuyenDoiNghe(cs, { xa: duAn.xa, loaiDat: ten, dienTichThuHoiM2: t.dienTichThuHoi, hanMucM2: han.toString(), canCuHanMuc: canCuHan, giaDatNNNghinDong: giaHT.minus(giaGcn).toString() });
+      const x = chuyenDoiNghe(cs, { xa: duAn.xa, loaiDat: ten, dienTichThuHoiM2: t.dienTichThuHoi, hanMucM2: han.toString(), canCuHanMuc: canCuHan, giaDatNNNghinDong: giaHT.minus(giaGcn).toString(), thon: t.thonBan });
       d = { ...x, ma: "B14.CĐN", noiDung: ndCdn, thamSo: { ...x.thamSo, "Giá đất NN cùng loại (hiện trạng)": `${dinhDang(giaHT.mul(1000))} đ/m²`, "Giá theo GCN": `${dinhDang(giaGcn.mul(1000))} đ/m²` }, congThuc: `${x.congThuc} (giá = chênh lệch hiện trạng − GCN)`, canCu: [...canCu, ...x.canCu] };
     }
     out.push({ nhom: "B.IV", kq: { dong: d, cot: "HT_CDN", thuaId: t.id } });

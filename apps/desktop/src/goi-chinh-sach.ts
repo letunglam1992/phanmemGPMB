@@ -11,6 +11,10 @@ import { BO_CHINH_SACH } from "./du-lieu";
 export const KHOA_GOI = "goiChinhSach";
 export const DINH_DANG_GOI = "gpmb-goi-chinh-sach";
 export const GOI_GOC = "sonla-2026-03-31";
+/** Bộ chính sách mới nhất có sẵn — mặc định cho dự án mới (QĐ 64/2026, hiệu lực 06/10/2026). */
+export const GOI_MOI_NHAT = "sonla-2026-10-06";
+/** Các bộ có sẵn trong phần mềm (không phải nạp). */
+export const GOI_CO_SAN = [GOI_GOC, GOI_MOI_NHAT];
 
 export interface GoiDaNap {
   /** Khóa gói — dự án tham chiếu bằng khóa này (DuAn.boChinhSach) */

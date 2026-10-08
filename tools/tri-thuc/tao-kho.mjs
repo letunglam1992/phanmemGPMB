@@ -15,6 +15,7 @@ export const NGUON = [
   ["policy/nguon/qd106-2025-phu-luc-1.md", "QĐ 106/2025/QĐ-UBND – Phụ lục I", "VAN_BAN"],
   ["policy/nguon/qd106-2025-phu-luc-2.md", "QĐ 106/2025/QĐ-UBND – Phụ lục II", "VAN_BAN"],
   ["policy/nguon/qd14-2026-dieu-3-7.md", "QĐ 14/2026/QĐ-UBND (Điều 3–7)", "VAN_BAN"],
+  ["policy/nguon/qd64-2026-sua-qd106-qd14.md", "QĐ 64/2026/QĐ-UBND (sửa QĐ 106/2025, QĐ 14/2026)", "VAN_BAN"],
   ["policy/nguon/nq152-can-doi-chieu.md", "NQ 152/2025 – bảng giá đất (dòng cần đối chiếu)", "VAN_BAN"],
   ["docs/05-quy-trinh-thoi-han.md", "Quy trình, thời hạn (tài liệu phần mềm)", "NGHIEP_VU"],
   ["docs/06-quyet-dinh-nghiep-vu.md", "Quyết định nghiệp vụ đã xác nhận (QD-xx)", "NGHIEP_VU"],

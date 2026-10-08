@@ -48,6 +48,11 @@ export interface Thua {
   phapLy?: import("./nguon-goc").NhomPhapLy;
   gia: GiaThua | null;
   phanLop?: PhanLopThua;
+  /**
+   * Tổ, thôn, bản, tiểu khu nơi có thửa đất (QĐ 64/2026: hệ số hỗ trợ chuyển đổi nghề theo địa bàn này; thửa trên nhiều
+   * tổ, thôn → ghi đủ, phần mềm lấy mức cao nhất — k4 Điều 14 PL II QĐ 106/2025 sửa đổi).
+   */
+  thonBan?: string[];
   /** Lý trình trên tuyến (mét từ Km0+000; không bắt buộc — 1.0.4, ly-trinh.ts). */
   lyTrinh?: import("./ly-trinh").LyTrinh;
   /** Thông tin Giấy chứng nhận (dùng cho danh sách thu hồi đất theo mẫu của xã). */
@@ -327,6 +332,11 @@ export interface TaiDinhCuHo {
   suatToiThieu?: boolean;
   /** Hỗ trợ 20% tiền SDĐ phải nộp của thửa TĐC (k11 Đ6 QĐ 14/2026). */
   hoTroTienSdd?: boolean;
+  /**
+   * QĐ 64/2026 (sửa k11 Đ6 QĐ 14/2026): lô được giao theo khoản 4 Điều 111 LĐĐ (giao đất có thu tiền SDĐ cho hộ nhiều
+   * thế hệ, nhiều cặp vợ chồng đủ điều kiện tách hộ, hoặc nhiều hộ chung một thửa đất ở) → không hỗ trợ 20%.
+   */
+  giaoDatK4D111?: boolean;
   /** Tiền SDĐ phải nộp theo thông báo (nếu có); trống = đơn giá × DT lô giao. */
   tienSddPhaiNop?: string;
   /** Khoản hỗ trợ khác do UBND xã quyết định cho dự án (k13 Đ6 QĐ 14/2026) hoặc chính sách chưa có sẵn — cán bộ nhập, bắt buộc căn cứ. */
