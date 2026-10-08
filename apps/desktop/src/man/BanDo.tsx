@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { TheLyTrinhBanDo } from "../thanh-phan/LyTrinh";
 import { hienSo } from "../so";
 import { CAU_HINH_MAC_DINH, loaiHienTrangBanDo, goiYCauHinh, tinhDienTichThuHoi, type CauHinhLop, type DienTichThuHoi, type ThuaBanDo } from "@gpmb/gis";
 import { useUngDung } from "../ung-dung";
@@ -361,6 +362,15 @@ export function BanDo({ duAnId }: { duAnId: string }) {
             <div className="nhom-nut"><TimThua dl={dl} daLienKet={daLienKet} chon={(t) => { setChon(t); setPhongToi({ vong: t.vong, n: Date.now() }); }} /></div>
             {quet.size > 0 && <TheVungChon xoa={quyen("SUA_HO_SO") ? (ds) => void xoaThua(ds) : undefined} duAn={duAn} dl={dl} chon={quet} boChon={() => setQuet(new Set())} thuHoi={thuHoi} khoaThua={khoaThua} daLienKet={daLienKet} ttThua={ttThua} />}
             {(duAn.banDo?.thuaXoa?.length ?? 0) > 0 && <TheThuaXoa ds={duAn.banDo!.thuaXoa!} sua={quyen("SUA_HO_SO")} khoiPhuc={(id) => void khoiPhucThua(id === null ? () => false : (x) => x.ma + x.ngay !== id)} />}
+            <TheLyTrinhBanDo hos={hos} chonThuaBanDo={(dsHs) => {
+              const so = (x: string | null | undefined) => (x ?? "").trim().replace(/^0+(?=\d)/, "");
+              const theoMa = new Set(dsHs.map((x) => x.maBanDo).filter(Boolean));
+              const theoSo = new Set(dsHs.filter((x) => !x.maBanDo).map((x) => `${so(x.soTo)}/${so(x.soThua)}`));
+              const ds = dl.kq.thua.filter((t) => theoMa.has(t.ma) || theoSo.has(`${so(t.soTo)}/${so(t.soThua)}`));
+              setQuet(new Set(ds.map(khoaThua)));
+              if (ds.length) setPhongToi({ vong: ds.flatMap((t) => t.vong), n: Date.now() });
+              return ds.length;
+            }} />
             <KiemTraBanDo dl={dl} coPhamVi={coPhamVi} soVung={dl.kq.vungGpmb.length} moCauHinh={() => setMoCauHinh(true)} ttThua={ttThua} />
             <div className="the co-dinh">
               <div className="the-dau"><h3>Phạm vi thu hồi</h3><span className="mo chu-nho">{vungDs.length} vùng · {ranhNhap.length} ranh nhập · {thuaChon.size} thửa chọn tay</span></div>

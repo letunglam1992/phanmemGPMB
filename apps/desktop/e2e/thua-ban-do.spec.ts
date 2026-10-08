@@ -117,3 +117,31 @@ test("xóa thửa khỏi bản đồ (lý do, giữ khi mở lại), khôi phụ
   await p.locator(".the.gian select").selectOption("TAT_CA");
   await expect(p.locator(".the.gian tbody tr")).toHaveCount(4);
 });
+
+test("1.0.5: lý trình trên bản đồ — dải Km, bấm đoạn còn vướng chọn đúng thửa đã gắn", async ({ page: p }) => {
+  await vao(p);
+  await p.keyboard.press("Alt+3");
+  await p.locator("[role=tablist] button", { hasText: "Bản đồ" }).click();
+  await p.locator('input[type=file][accept=".dgn,.dxf,.dwg"]').first().setInputFiles({ name: "thu.dgn", mimeType: "application/octet-stream", buffer: banDo() });
+  await expect(p.getByText("thu.dgn ·")).toBeVisible();
+  await p.getByRole("button", { name: "Để sau" }).click();
+  await p.locator("[role=tablist] button", { hasText: "Hộ, cá nhân" }).click();
+  await p.locator("tr[data-ho-id]").first().click();
+  await p.locator("[role=tablist] button", { hasText: "Thửa đất" }).click();
+  const dong = p.locator(".trang-ho table.bang tbody tr").first();
+  await dong.locator("td").nth(0).locator("input").fill("7");
+  await dong.locator("td").nth(1).locator("input").fill("2");
+  await p.getByRole("button", { name: "Xem thửa 2 tờ 7 trên bản đồ" }).click();
+  await expect(p.getByRole("status", { name: "Kết quả tìm thửa trên bản đồ" })).toContainText("Thửa bản đồ 7/2");
+  await p.locator(".hop-thoai .chan-hop").getByRole("button", { name: "Đóng" }).click();
+  await p.getByLabel("Lý trình thửa 2 tờ 7").fill("Km0+100 – Km0+300");
+  await p.getByLabel("Lý trình thửa 2 tờ 7").press("Tab");
+  await p.getByRole("button", { name: "Lưu hồ sơ" }).click();
+  await expect(p.getByRole("button", { name: "Lưu hồ sơ" })).toBeDisabled();
+  await p.keyboard.press("Alt+3");
+  await p.locator("[role=tablist] button", { hasText: "Bản đồ" }).click();
+  const the = p.getByLabel("Lý trình trên bản đồ");
+  await expect(the.locator("[data-dai-km]")).toBeVisible();
+  await the.getByRole("button", { name: "Km0+100 – Km0+300" }).click();
+  await expect(the.getByRole("status")).toContainText("Đã chọn 1 thửa trên bản đồ");
+});

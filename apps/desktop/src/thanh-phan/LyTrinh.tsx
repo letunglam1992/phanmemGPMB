@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import type { DuAn, Ho } from "../mo-hinh";
-import { docLyTrinh, dsDoan, excelLyTrinh, hienDiem, hienLyTrinh, matBangTheoLyTrinh, type LyTrinh } from "../ly-trinh";
+import { docLyTrinh, dsDoan, excelLyTrinh, hienDiem, hienLyTrinh, hopDoan, matBangTheoLyTrinh, type DoanLyTrinh, type LyTrinh } from "../ly-trinh";
 import { HopThoai } from "./chung";
 import { useUngDung } from "../ung-dung";
 import { taiXuong } from "../tai-xuong";
@@ -114,6 +114,7 @@ export function TheLyTrinh({ duAn, hos, ghi }: { duAn: DuAn; hos: Ho[]; ghi?: ()
           <div><div className="mo chu-nho">Mặt bằng sạch (thửa đã bàn giao)</div><b style={{ color: "var(--xanh, #44872a)" }}>{km(mb.sachM)} km</b>{mb.tongM > 0 && <span className="mo chu-nho"> · {Math.round((mb.sachM / mb.tongM) * 100)}%</span>}</div>
           <div><div className="mo chu-nho">Đoạn còn vướng</div><b className={mb.chua.length ? "chu-do" : ""}>{mb.chua.length ? mb.chua.map(([a, b]) => `${hienDiem(a)} – ${hienDiem(b)}`).join("; ") : "Không"}</b></div>
         </div>
+        <div className="mt-8"><DaiKm ds={ds} /></div>
         {mb.soThuaDiem > 0 && <div className="mo chu-nho mt-4">{mb.soThuaDiem} thửa chỉ ghi một điểm — không tính vào chiều dài.</div>}
         <button className="nut nut-nho mt-8" onClick={() => setMo(!mo)} aria-expanded={mo}>{mo ? "Thu gọn" : "Xem bảng thửa theo Km"}</button>
         {mo && (
@@ -124,6 +125,77 @@ export function TheLyTrinh({ duAn, hos, ghi }: { duAn: DuAn; hos: Ho[]; ghi?: ()
             </table>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+/** Dải Km: các đoạn đã ghi lý trình từ đầu đến cuối — xanh: sạch (đã bàn giao), đỏ: còn vướng, xám: chưa có thửa ghi. */
+export function DaiKm({ ds, bam }: { ds: DoanLyTrinh[]; bam?: (doan: [number, number]) => void }) {
+  const mb = matBangTheoLyTrinh(ds);
+  const tatCa = hopDoan(ds.map((x) => x.ly));
+  if (!tatCa.length) return null;
+  const dau = tatCa[0]![0], cuoi = tatCa.at(-1)![1];
+  const dai = Math.max(cuoi - dau, 1);
+  const x = (m: number) => ((m - dau) / dai) * 1000;
+  const vach: number[] = [];
+  const buoc = dai > 20000 ? 5000 : dai > 5000 ? 1000 : dai > 1000 ? 500 : 100;
+  for (let m = Math.ceil(dau / buoc) * buoc; m <= cuoi; m += buoc) vach.push(m);
+  const doan = (ds2: [number, number][], mau: string, ten: string) =>
+    ds2.map(([a, b]) => (
+      <rect key={`${ten}${a}`} x={x(a)} y={6} width={Math.max(x(b) - x(a), 2)} height={18} fill={mau} style={{ cursor: bam ? "pointer" : undefined }} onClick={() => bam?.([a, b])}>
+        <title>{`${ten}: ${hienDiem(a)} – ${hienDiem(b)} (${km(b - a)} km)`}</title>
+      </rect>
+    ));
+  return (
+    <svg viewBox="-10 0 1020 46" role="img" aria-label={`Dải lý trình ${hienDiem(dau)} – ${hienDiem(cuoi)}: sạch ${km(mb.sachM)} km, vướng ${mb.chua.length} đoạn`} style={{ width: "100%", height: 54, display: "block" }} data-dai-km>
+      <rect x={0} y={6} width={1000} height={18} fill="var(--be-mat-2)" stroke="var(--vien)" />
+      {doan(tatCa, "var(--xam-nen)", "Có ghi lý trình")}
+      {doan(mb.sach, "var(--xanh-to)", "Mặt bằng sạch")}
+      {doan(mb.chua, "var(--do-to)", "Còn vướng")}
+      {vach.map((m) => (
+        <g key={m}>
+          <line x1={x(m)} x2={x(m)} y1={24} y2={30} stroke="var(--chu-mo)" />
+          <text x={x(m)} y={42} fontSize={10} textAnchor="middle" fill="var(--chu-mo)">{hienDiem(m).replace(/\+000$/, "")}</text>
+        </g>
+      ))}
+    </svg>
+  );
+}
+
+/**
+ * Màn Bản đồ — "Theo lý trình": chọn (tô, phóng tới) các thửa trên bản đồ theo đoạn Km, hoặc bấm đoạn còn vướng.
+ * Thửa hồ sơ khớp thửa bản đồ theo liên kết đã gắn (maBanDo), chưa gắn thì theo số tờ, số thửa (bỏ số 0 đầu).
+ */
+export function TheLyTrinhBanDo({ hos, chonThuaBanDo }: { hos: Ho[]; chonThuaBanDo: (ds: { maBanDo?: string; soTo: string; soThua: string }[]) => number }) {
+  const ds = useMemo(() => dsDoan(hos, (h) => !!h.banGiao?.ngay), [hos]);
+  const [chu, setChu] = useState("");
+  const [tb, setTb] = useState<string | null>(null);
+  if (!ds.length) return null;
+  const mb = matBangTheoLyTrinh(ds);
+  const thuaCua = new Map(hos.flatMap((h) => h.thua.map((t) => [t.id, t] as const)));
+  const chon = (a: number, b: number) => {
+    const ma = ds.filter((d) => d.ly.tu <= b && (d.ly.den ?? d.ly.tu) >= a).map((d) => thuaCua.get(d.thuaId)!).map((t) => ({ maBanDo: t.maBanDo, soTo: t.soTo, soThua: t.soThua }));
+    const n = chonThuaBanDo(ma);
+    setTb(n ? `Đã chọn ${n} thửa trên bản đồ (${hienDiem(a)} – ${hienDiem(b)})` : `Đoạn ${hienDiem(a)} – ${hienDiem(b)}: không có thửa đã gắn bản đồ`);
+  };
+  const r = docLyTrinh(chu);
+  return (
+    <div className="the co-dinh" aria-label="Lý trình trên bản đồ">
+      <div className="the-dau"><h3>Theo lý trình</h3><span className="mo chu-nho">sạch {km(mb.sachM)}/{km(mb.tongM)} km</span></div>
+      <div className="the-than" style={{ display: "grid", gap: 6 }}>
+        <DaiKm ds={ds} bam={([a, b]) => chon(a, b)} />
+        <div className="nhom-nut">
+          <input aria-label="Đoạn lý trình cần xem" placeholder="Km1+000 – Km1+500" value={chu} onChange={(e) => setChu(e.target.value)} className={"loi" in r ? "loi-nhap" : ""} style={{ flex: 1 }} />
+          <button className="nut nut-nho" disabled={!("ly" in r) || !r.ly} onClick={() => "ly" in r && r.ly && chon(r.ly.tu, r.ly.den ?? r.ly.tu)}>Chọn trên bản đồ</button>
+        </div>
+        {mb.chua.length > 0 && (
+          <div className="chu-nho">
+            Còn vướng:{" "}
+            {mb.chua.map(([a, b]) => <button key={a} className="nut nut-chu nut-nho" onClick={() => chon(a, b)}>{hienDiem(a)} – {hienDiem(b)}</button>)}
+          </div>
+        )}
+        {tb && <div className="mo chu-nho" role="status">{tb}</div>}
       </div>
     </div>
   );
