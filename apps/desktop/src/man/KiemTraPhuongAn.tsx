@@ -8,6 +8,8 @@ import {
   chonTrang,
   docTepPhuongAn,
   kiemTraBang,
+  kiemTraBangNgang,
+  nhanDienBangNgang,
   nhanDienCot,
   xuatBaoCaoKiemTra,
   type AnhXaCot,
@@ -57,10 +59,14 @@ export function KiemTraPhuongAn() {
 
   const trang = tep?.trang[soTrang];
   const tuDong = useMemo(() => (trang ? nhanDienCot(trang.o) : null), [trang]);
+  // 1.0.5: dạng bảng — dọc (mỗi khoản một dòng) hoặc ngang (mỗi hộ một dòng, khoản theo cột); tự nhận khi chưa chọn
+  const [dang, setDang_] = useState<"" | "DOC" | "NGANG">("");
+  const dangDung = dang || (trang && !nhanDienCot(trang.o) && nhanDienBangNgang(trang.o) ? "NGANG" : "DOC");
   const kq = useMemo(() => {
     if (!trang) return null;
+    if (dangDung === "NGANG") return kiemTraBangNgang(trang);
     return kiemTraBang(trang, { donGia: DON_GIA, bangGia, chinhSach: BO_CHINH_SACH[bo], xa: xa || undefined }, Object.keys(cotTay).length ? cotTay : undefined);
-  }, [trang, bangGia, xa, cotTay, bo]);
+  }, [trang, bangGia, xa, cotTay, bo, dangDung]);
 
   const napTep = async (f: File) => {
     setDangDoc(true);
@@ -144,6 +150,13 @@ export function KiemTraPhuongAn() {
               <Chon value={xa} onChange={(e) => setXa(e.target.value)}>
                 <option value="">— Chọn xã/phường —</option>
                 {(DANH_MUC_XA as string[]).map((x) => <option key={x} value={x}>{x}</option>)}
+              </Chon>
+            </O>
+            <O nhan="Dạng bảng" goiY="Ngang: mỗi hộ một dòng, các khoản theo cột (chỉ kiểm số học, tổng)">
+              <Chon value={dang} onChange={(e) => setDang_(e.target.value as "" | "DOC" | "NGANG")} aria-label="Dạng bảng">
+                <option value="">Tự nhận ({dangDung === "NGANG" ? "ngang" : "dọc"})</option>
+                <option value="DOC">Dọc — mỗi khoản một dòng</option>
+                <option value="NGANG">Ngang — mỗi hộ một dòng</option>
               </Chon>
             </O>
             <O nhan="Đối chiếu theo bộ chính sách" goiY="Phương án duyệt trước 06/10/2026: bộ cũ; sau đó: QĐ 64/2026">

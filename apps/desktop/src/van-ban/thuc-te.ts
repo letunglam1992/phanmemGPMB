@@ -12,6 +12,7 @@ import { tenDayDu } from "./loai-dat";
 import { laSoMay, soD } from "../so";
 import { quyCua } from "../quy-tdc";
 import { tinhChiTra, type GiaiDoanTyLe } from "../chi-tra";
+import { canhBaoCanCu } from "../van-ban-can-cu";
 
 const soM2 = (v: Decimal) => dinhDang(v, 2);
 const tien = (v: Decimal) => dinhDang(v.toDecimalPlaces(0), 0);
@@ -223,6 +224,12 @@ export function kiemTraThongNhat(ma: string, duAn: DuAn, du: Record<string, unkn
     } else if (Array.isArray(v)) v.forEach((x) => (x && typeof x === "object" ? Object.entries(x).forEach(([k, y]) => quet(y, `${khoa}.${k}`)) : quet(x, khoa)));
   };
   for (const [k, v] of Object.entries(du)) if (!k.startsWith("ds_thua") && k !== "bang_thua") quet(v, k);
+  // 1.0.5: căn cứ dẫn văn bản đã được sửa đổi mà chưa dẫn văn bản sửa đổi
+  if (Array.isArray(du.can_cu)) {
+    const nam = String(du.nam ?? ""), thang = String(du.thang ?? ""), ngay = String(du.ngay ?? "");
+    const iso = /^\d{4}$/.test(nam) && thang && ngay ? `${nam}-${thang.padStart(2, "0")}-${ngay.padStart(2, "0")}` : undefined;
+    out.push(...canhBaoCanCu(du.can_cu as string[], iso));
+  }
   if (MAU_CO_BIEU.has(ma) && !String(du.so ?? "").trim()) out.push("Chưa nhập số văn bản: dòng \"(Kèm theo … số …)\" của biểu kèm theo sẽ để trống cùng chỗ số văn bản — văn thư ghi tay cả hai chỗ khi ký.");
   for (const [k, v] of Object.entries(du)) {
     if (!k.endsWith("_chu") || typeof v !== "string" || !v.endsWith("đồng")) continue;

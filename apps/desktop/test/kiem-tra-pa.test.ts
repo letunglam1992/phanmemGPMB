@@ -214,3 +214,33 @@ describe("Kiểm tra phương án từ tệp Word (.docx)", () => {
     await expect(docTepWord(z.generate({ type: "uint8array" }))).rejects.toThrow(/không có bảng/);
   });
 });
+
+import { kiemTraBangNgang, nhanDienBangNgang } from "../src/kiem-tra-pa";
+describe("1.0.5: bảng ngang (mỗi hộ một dòng)", () => {
+  const o = [
+    ["BẢNG TỔNG HỢP GIÁ TRỊ BỒI THƯỜNG", null, null, null, null, null, null],
+    ["STT", "Họ và tên", "Địa chỉ", "Bồi thường đất", "Bồi thường cây", "Hỗ trợ chuyển đổi nghề", "Tổng cộng"],
+    ["(1)", "(2)", "(3)", "(4)", "(5)", "(6)", "(7)"],
+    [1, "Hộ A", "Bản X", 1000000, 200000, 300000, 1500000],
+    [2, "Hộ B", "Bản Y", 500000, 0, 100000, 600001],
+    ["", "Tổng cộng", "", 1500000, 200000, 400000, 2100002],
+  ];
+  it("nhận cột tên, tổng, 3 cột khoản; bỏ cột địa chỉ", () => {
+    const nd = nhanDienBangNgang(o)!;
+    expect(nd.cotTen).toBe(1);
+    expect(nd.cotTong).toBe(6);
+    expect(nd.cotKhoan.map((k) => k.c)).toEqual([3, 4, 5]);
+  });
+  it("tổng hộ sai 1 đồng → lỗi; dòng tổng cộng lệch cột tổng → lỗi; cột khoản khớp", () => {
+    const kq = kiemTraBangNgang({ ten: "TH", o }) as Exclude<ReturnType<typeof kiemTraBangNgang>, { loi: string }>;
+    expect(kq.dong).toHaveLength(3);
+    expect(kq.dong[0]!.phatHien[0]!.mucDo).toBe("DUNG");
+    expect(kq.dong[1]!.phatHien[0]!.noiDung).toMatch(/lệch 1 đ/);
+    expect(kq.dong[2]!.loai).toBe("TONG");
+    expect(kq.dong[2]!.phatHien.map((p) => p.mucDo)).toEqual(["LOI"]); // 2.100.002 ≠ 2.100.001
+    expect(kq.dem.LOI).toBe(2);
+  });
+  it("không phải bảng ngang → báo lỗi nhận diện", () => {
+    expect(kiemTraBangNgang({ ten: "x", o: [["a", "b"], [1, 2]] })).toHaveProperty("loi");
+  });
+});

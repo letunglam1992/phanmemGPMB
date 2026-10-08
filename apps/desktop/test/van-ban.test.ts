@@ -300,3 +300,14 @@ describe("1.0.5: căn cứ mặc định theo QĐ 64/2026", () => {
     expect(capNhatCanCu(CAN_CU_MAC_DINH.join("\n")).soDoi).toBe(0);
   });
 });
+
+import { canhBaoCanCu } from "../src/van-ban-can-cu";
+describe("1.0.5: hiệu lực văn bản căn cứ", () => {
+  it("dẫn QĐ 106/2025 mà thiếu QĐ 64/2026 sau 06/10/2026 → nhắc; trước ngày hiệu lực → không; căn cứ mặc định → không nhắc", () => {
+    const cc = ["Căn cứ Quyết định số 106/2025/QĐ-UBND ngày 06 tháng 10 năm 2025;"];
+    expect(canhBaoCanCu(cc, "2026-10-08").join(" ")).toMatch(/64\/2026\/QĐ-UBND/);
+    expect(canhBaoCanCu(cc, "2026-10-01")).toEqual([]);
+    expect(canhBaoCanCu(CAN_CU_MAC_DINH, "2026-10-08")).toEqual([]);
+    expect(canhBaoCanCu(["Căn cứ Nghị định số 88/2024/NĐ-CP;"]).join(" ")).toMatch(/226\/2025/);
+  });
+});

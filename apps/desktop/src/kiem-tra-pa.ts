@@ -659,3 +659,83 @@ export async function xuatBaoCaoKiemTra(kq: KetQuaKiemTra, tenTep: string, xa: s
   ws.getColumn(12).alignment = { wrapText: true, vertical: "top" };
   return new Uint8Array(await wb.xlsx.writeBuffer());
 }
+
+/* ============================ 1.0.5: bảng ngang (mỗi hộ một dòng) ============================ */
+
+/**
+ * Nhận bảng ngang: dòng tiêu đề có cột tên chủ (họ tên, tên chủ sử dụng, hộ gia đình) và cột tổng (tổng cộng, tổng số
+ * tiền, tổng giá trị); các cột tiền nằm giữa (hoặc trước) cột tổng có số liệu là các khoản. Tiêu đề 2 tầng ghép như dạng dọc.
+ */
+export function nhanDienBangNgang(o: O[][]): { dongTieuDe: number; batDau: number; cotTen: number; cotTong: number; cotKhoan: { c: number; ten: string }[] } | null {
+  for (let r = 0; r < Math.min(o.length, 40); r++) {
+    const d = o[r] ?? [];
+    const duoi = o[r + 1] ?? [];
+    const ghep = !laDongDanhSo(duoi) && duoi.some((x) => typeof x === "string" && x.trim()) && !duoi.some((x) => typeof x === "number" && x > 100);
+    const soCot = Math.max(d.length, duoi.length);
+    let truoc = "";
+    const tieuDe = Array.from({ length: soCot }, (_, c) => {
+      const tren = chu(d[c] ?? null) || (ghep ? truoc : "");
+      if (chu(d[c] ?? null)) truoc = chu(d[c] ?? null);
+      return [tren, ghep ? chu(duoi[c] ?? null) : ""].filter(Boolean).join(" ");
+    });
+    const cotTen = tieuDe.findIndex((t) => /ho (va )?ten|ten chu|chu su dung|ho gia dinh|ten ho/.test(t));
+    const cotTong = tieuDe.findIndex((t, c) => c > cotTen && /tong (cong|so tien|gia tri|kinh phi)|tong so|cong \(/.test(t));
+    if (cotTen < 0 || cotTong < 0) continue;
+    let batDau = r + (ghep ? 2 : 1);
+    while (batDau < o.length && laDongDanhSo(o[batDau] ?? [])) batDau++;
+    const duLieu = o.slice(batDau);
+    const cotKhoan = tieuDe
+      .map((t, c) => ({ c, ten: t }))
+      .filter(({ c, ten }) => c !== cotTen && c !== cotTong && c > cotTen && !/stt|dia chi|ghi chu|so to|so thua|to ban do|dien tich|m2|ky nhan|cccd|so dinh danh/.test(ten))
+      .filter(({ c }) => duLieu.filter((x) => typeof x[c] === "number").length >= Math.max(1, Math.floor(duLieu.filter((x) => typeof x[cotTong] === "number").length / 3)));
+    if (!cotKhoan.length) continue;
+    return { dongTieuDe: r, batDau, cotTen, cotTong, cotKhoan };
+  }
+  return null;
+}
+
+/** Kiểm số học bảng ngang: tổng từng hộ = cộng các khoản; dòng tổng cộng = cộng các hộ (từng cột). Sai lệch ≥ 1 đồng là lỗi. */
+export function kiemTraBangNgang(trang: TrangBang): KetQuaKiemTra | { loi: string } {
+  const nd = nhanDienBangNgang(trang.o);
+  if (!nd) return { loi: `Trang "${trang.ten}": không nhận ra bảng ngang (cần dòng tiêu đề có cột Họ tên / Tên chủ sử dụng và cột Tổng cộng, các cột khoản có số)` };
+  const dong: DongPA[] = [];
+  const cong = new Map<number, Decimal>();
+  for (let r = nd.batDau; r < trang.o.length; r++) {
+    const d = trang.o[r] ?? [];
+    const ten = String(d[nd.cotTen] ?? "").trim();
+    const tt = so(d[nd.cotTong] ?? null).gt;
+    const stt = String(d[0] ?? "").trim();
+    if (!ten && !tt) continue;
+    const laTong = /tong cong|^cong\b|tong so/.test(chu(ten) || chu(stt));
+    const x: DongPA = { dong: r + 1, viTri: trang.viTri?.[r] ?? `Dòng ${r + 1}`, loai: laTong ? "TONG" : "CHI_TIET", capNhom: 3, stt, ten: ten || stt, dvt: "", kl: null, dg: null, heSo: null, tt, canCu: "", phatHien: [] };
+    if (laTong) {
+      for (const k of [...nd.cotKhoan.map((k) => k.c), nd.cotTong]) {
+        const v = so(d[k] ?? null).gt;
+        const tong = cong.get(k) ?? D(0);
+        const tenCot = k === nd.cotTong ? "Tổng" : nd.cotKhoan.find((y) => y.c === k)!.ten;
+        if (v === null) continue;
+        if (v.minus(tong).abs().gte(1)) x.phatHien.push({ mucDo: "LOI", loai: "TONG", noiDung: `Cột "${tenCot}": dòng tổng ${dongTien(v)} khác cộng các hộ ${dongTien(tong)} (lệch ${dongTien(v.minus(tong))} đ)` });
+      }
+      if (!x.phatHien.length) x.phatHien.push({ mucDo: "DUNG", loai: "TONG", noiDung: "Dòng tổng khớp cộng các hộ ở mọi cột" });
+    } else {
+      const khoan = nd.cotKhoan.map((k) => so(d[k.c] ?? null).gt);
+      const tong = khoan.reduce<Decimal>((s, v) => (v ? s.plus(v) : s), D(0));
+      nd.cotKhoan.forEach((k, i) => { if (khoan[i]) cong.set(k.c, (cong.get(k.c) ?? D(0)).plus(khoan[i]!)); });
+      if (tt) cong.set(nd.cotTong, (cong.get(nd.cotTong) ?? D(0)).plus(tt));
+      if (!tt) x.phatHien.push({ mucDo: "KHONG_KIEM", loai: "SO_HOC", noiDung: "Không có số ở cột tổng" });
+      else if (tt.minus(tong).abs().gte(1)) x.phatHien.push({ mucDo: "LOI", loai: "SO_HOC", noiDung: `Tổng ${dongTien(tt)} khác cộng các khoản ${dongTien(tong)} (lệch ${dongTien(tt.minus(tong))} đ)` });
+      else x.phatHien.push({ mucDo: "DUNG", loai: "SO_HOC", noiDung: `Tổng = cộng ${khoan.filter(Boolean).length} khoản` });
+    }
+    dong.push(x);
+  }
+  const dem = { LOI: 0, CANH_BAO: 0, DUNG: 0, KHONG_KIEM: 0, THONG_TIN: 1 } as Record<MucDo, number>;
+  for (const x of dong) for (const p of x.phatHien) dem[p.mucDo]++;
+  return {
+    trang: trang.ten,
+    dongTieuDe: nd.dongTieuDe + 1,
+    anhXa: { ten: nd.cotTen, tt: nd.cotTong },
+    dong,
+    chung: [{ mucDo: "THONG_TIN", loai: "DU_LIEU", noiDung: `Bảng ngang: cột tên ${nd.cotTen + 1}, cột tổng ${nd.cotTong + 1}, ${nd.cotKhoan.length} cột khoản (${nd.cotKhoan.map((k) => k.ten).join("; ")}). Chỉ kiểm số học, tổng; đơn giá, giá đất, hệ số kiểm ở bảng chi tiết (dạng dọc) của từng hộ.` }],
+    dem,
+  };
+}

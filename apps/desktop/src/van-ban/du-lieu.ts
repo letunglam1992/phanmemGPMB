@@ -20,6 +20,7 @@ export const CAN_CU_MAC_DINH = [
   "Căn cứ Luật Đất đai số 31/2024/QH15 được sửa đổi, bổ sung một số điều bởi các Luật số 43/2024/QH15, số 47/2024/QH15, số 58/2024/QH15, số 71/2025/QH15, số 84/2025/QH15, số 93/2025/QH15, số 95/2025/QH15, số 130/2025/QH15, số 146/2025/QH15, số 147/2025/QH15 và số 116/2025/QH15;",
   "Căn cứ Nghị quyết số 254/2025/QH15 của Quốc hội quy định một số cơ chế, chính sách tháo gỡ khó khăn, vướng mắc trong tổ chức thi hành Luật Đất đai;",
   "Căn cứ Nghị định số 88/2024/NĐ-CP ngày 15 tháng 7 năm 2024 của Chính phủ quy định về bồi thường, hỗ trợ, tái định cư khi Nhà nước thu hồi đất;",
+  "Căn cứ Nghị định số 226/2025/NĐ-CP của Chính phủ Sửa đổi, bổ sung một số điều của các nghị định quy định chi tiết thi hành Luật Đất đai;",
   "Căn cứ Nghị định số 49/2026/NĐ-CP của Chính phủ Quy định chi tiết và hướng dẫn một số điều của Nghị quyết số 254/2025/QH15 của Quốc hội quy định một số cơ chế, chính sách tháo gỡ khó khăn, vướng mắc trong tổ chức thi hành Luật Đất đai;",
   "Căn cứ Quyết định số 106/2025/QĐ-UBND ngày 06 tháng 10 năm 2025 của Ủy ban nhân dân tỉnh Sơn La;",
   "Căn cứ Quyết định số 14/2026/QĐ-UBND ngày 31 tháng 3 năm 2026 của Ủy ban nhân dân tỉnh Sơn La;",

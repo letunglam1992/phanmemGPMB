@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { VAN_BAN_CAN_CU } from "../van-ban-can-cu";
 import { GOI_MOI_NHAT } from "../goi-chinh-sach";
 import { BO_CHINH_SACH, DON_GIA, napBangGiaDat, type BangGiaDat, type DongDonGia } from "../du-lieu";
 import { khongDau } from "../tim-kiem";
@@ -385,6 +386,7 @@ export function TraCuu({ timDau }: { timDau?: string } = {}) {
 
 function BoChinhSach() {
   const cs = BO_CHINH_SACH[GOI_MOI_NHAT]!;
+  const vn = (iso?: string) => (iso ? iso.split("-").reverse().join("/") : "");
   return (
     <div className="luoi luoi-2">
       <div className="the the-than">
@@ -410,6 +412,22 @@ function BoChinhSach() {
             <li key={i}><b>{c.vanBan}</b> – {c.viTri}</li>
           ))}
         </ul>
+      </div>
+      <div className="the the-than" style={{ gridColumn: "1 / -1" }} aria-label="Văn bản căn cứ">
+        <h3>Văn bản căn cứ và văn bản sửa đổi</h3>
+        <p className="mo chu-nho">Chỉ ghi ngày, quan hệ sửa đổi đã có trong văn bản gốc lưu ở phần mềm. Khi soạn văn bản, căn cứ dẫn văn bản đã được sửa đổi mà chưa dẫn văn bản sửa đổi sẽ được nhắc ở phần kiểm tra thống nhất.</p>
+        <table className="bang">
+          <thead><tr><th>Số hiệu</th><th>Tên</th><th>Ngày</th><th>Sửa đổi, bổ sung bởi</th><th>Nguồn trong phần mềm</th></tr></thead>
+          <tbody>
+            {VAN_BAN_CAN_CU.map((v) => (
+              <tr key={v.so}>
+                <td><b>{v.so}</b></td><td className="chu-nho">{v.ten}</td><td className="chu-nho">{vn(v.ngay)}{v.hieuLucTu ? <div className="mo">hiệu lực {vn(v.hieuLucTu)}</div> : null}</td>
+                <td className="chu-nho">{(v.suaDoiBoi ?? []).map((s) => <div key={s.so}><b>{s.so}</b>{s.hieuLucTu ? ` (hiệu lực ${vn(s.hieuLucTu)})` : ""}: {s.noiDung}</div>)}{!v.suaDoiBoi?.length && "—"}</td>
+                <td className="chu-nho mo">{v.nguon}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
