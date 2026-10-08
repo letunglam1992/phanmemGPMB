@@ -5,11 +5,12 @@
  */
 import { D, dinhDang } from "@gpmb/core";
 import type Decimal from "decimal.js";
-import { CAC_BUOC, type DuAn, type Ho } from "../mo-hinh";
-import type { KetQuaHo } from "../tinh-ho";
+import { CAC_BUOC, TEN_HINH_THUC_TDC, type DuAn, type Ho } from "../mo-hinh";
+import { tienSddTdc, type KetQuaHo } from "../tinh-ho";
 import { docSoTien } from "./doc-so";
 import { tenDayDu } from "./loai-dat";
-import { soD } from "../so";
+import { laSoMay, soD } from "../so";
+import { quyCua } from "../quy-tdc";
 
 const soM2 = (v: Decimal) => dinhDang(v, 2);
 const tien = (v: Decimal) => dinhDang(v.toDecimalPlaces(0), 0);
@@ -197,7 +198,7 @@ export function duLieuKeHoach(duAn: DuAn): Record<string, unknown> {
 }
 
 /** Mẫu có biểu kèm theo dòng "(Kèm theo … số …)" — dòng này dùng chung trường {so} của văn bản. */
-const MAU_CO_BIEU = new Set(["T3", "T4", "T5", "T6", "T7"]);
+const MAU_CO_BIEU = new Set(["T3", "T4", "T5", "T6", "T7", "T8", "T9"]);
 
 const soTu = (s: unknown) => (typeof s === "string" && /^[\d.]+(,\d+)?$/.test(s.trim()) ? D(s.trim().replace(/\./g, "").replace(",", ".")) : null);
 
@@ -238,6 +239,63 @@ export function kiemTraThongNhat(ma: string, duAn: DuAn, du: Record<string, unkn
   }
   if ((ma === "T6" || ma === "T7") && Number(du.so_ho_thieu_qd_pa) > 0) out.push(`${String(du.so_ho_thieu_qd_pa)} hộ chưa có số, ngày QĐ phê duyệt phương án (ghi khi tạo mẫu T5 có số, hoặc nhập ở hồ sơ hộ) — căn cứ in "…".`);
   if ((ma === "T4" || ma === "T5") && Number(du.pa_chua_du) > 0) out.push(`Hộ còn ${String(du.pa_chua_du)} khoản chưa đủ căn cứ/cần xác nhận — không cộng vào tổng kinh phí.`);
+  if ((ma === "T8" || ma === "T9") && !Number(du.so_ho_tdc)) out.push("Các hộ được chọn chưa có thông tin tái định cư (Hồ sơ hộ → Hỗ trợ → Tái định cư) — biểu dự kiến bố trí trống.");
+  if ((ma === "T8" || ma === "T9") && !Number(du.so_lo)) out.push("Dự án chưa khai quỹ tái định cư (Tổng quan dự án → Quỹ tái định cư) — biểu lô đất, căn nhà trống.");
   if (ma === "T1" && !Number(du.so_moc)) out.push("Dự án chưa lập kế hoạch từng bước (Dự án → Lập kế hoạch): các mốc thời gian trong Kế hoạch để trống.");
   return out;
+}
+
+/**
+ * 1.0.5 — Thông báo dự kiến phương án bố trí tái định cư (k1 Điều 111 LĐĐ 2024) và thông báo công bố phương án bố trí
+ * TĐC đã phê duyệt (k2 Điều 111): địa điểm, quy mô quỹ đất, quỹ nhà TĐC; diện tích từng lô, căn; giá đất, giá nhà TĐC
+ * (Quỹ tái định cư của dự án); dự kiến bố trí cho từng hộ được chọn (thẻ Hỗ trợ → Tái định cư). Không tự xếp lô.
+ */
+export function duLieuBoTriTdc(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[]): Record<string, unknown> {
+  const quy = quyCua(duAn);
+  const loCua = new Map(quy.lo.map((l) => [l.id, l]));
+  const hoCua = new Map(ds.map(({ h }) => [h.id, h]));
+  const tien0 = (v?: string) => (v?.trim() && laSoMay(v.trim()) ? dinhDang(D(v.trim()), 0) : "");
+  const khu = [...new Set(quy.lo.map((l) => l.khu.trim()).filter(Boolean))];
+  const nhom = (loai: "DAT_O" | "NHA_O") => {
+    const x = quy.lo.filter((l) => l.loai === loai);
+    return x.length ? `${x.length} ${loai === "DAT_O" ? "lô đất ở" : "căn nhà ở"}, tổng diện tích ${soM2(x.reduce((s, l) => s.plus(soD(l.dienTich)), D(0)))} m²` : "";
+  };
+  const hoTdc = ds.filter(({ h }) => h.hoTro.taiDinhCu);
+  return {
+    tdc_khu: khu.join("; ") || "…………",
+    tdc_quy_mo: [nhom("DAT_O"), nhom("NHA_O")].filter(Boolean).join("; ") || "…………",
+    ds_lo: quy.lo.map((l, i) => {
+      const h = l.giao ? hoCua.get(l.giao.hoId) : undefined;
+      const duKien = ds.find(({ h: x }) => x.hoTro.taiDinhCu?.loId === l.id)?.h;
+      return {
+        stt: i + 1,
+        khu: l.khu,
+        so_lo: l.soLo,
+        loai: l.loai === "DAT_O" ? "Đất ở" : "Nhà ở",
+        dien_tich: soM2(soD(l.dienTich)),
+        gia: tien0(l.gia),
+        can_cu_gia: l.canCuGia ?? "",
+        ghi_chu: h ? `Đã giao: ${h.ten}` : duKien ? `Dự kiến: ${duKien.ten}` : l.giuLai !== undefined ? "Tạm giữ" : "",
+      };
+    }),
+    so_lo: quy.lo.length,
+    ds_ho_tdc: hoTdc.map(({ h }, i) => {
+      const t = h.hoTro.taiDinhCu!;
+      const l = t.loId ? loCua.get(t.loId) : undefined;
+      const sdd = t.hinhThuc === "DAT_O" ? tienSddTdc(t).tien : null;
+      return {
+        stt: i + 1,
+        ho_ten: h.ten,
+        dia_chi: h.diaChi,
+        hinh_thuc: TEN_HINH_THUC_TDC[t.hinhThuc],
+        vi_tri: l ? `${l.khu} – lô ${l.soLo}` : [t.khuTdc, t.viTriLo].filter(Boolean).join(" – ") || (t.hinhThuc === "TU_LO" || t.hinhThuc === "TAI_CHO" ? "" : "Chưa xác định"),
+        dien_tich: t.dienTichGiao ? soM2(soD(t.dienTichGiao)) : l ? soM2(soD(l.dienTich)) : "",
+        gia: tien0(t.donGia) || tien0(l?.gia),
+        tien_sdd: sdd ? dinhDang(sdd, 0) : "",
+        ghi_chu: t.ghiChu ?? "",
+      };
+    }),
+    so_ho_tdc: hoTdc.length,
+    so_ho_tdc_chu: soChu(hoTdc.length).toLowerCase(),
+  };
 }

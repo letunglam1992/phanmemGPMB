@@ -10,7 +10,7 @@ import { docSoTien } from "./doc-so";
 import type { MauVanBan } from "./danh-muc";
 import { tenDayDu, tenLoaiDat } from "./loai-dat";
 import { soD } from "../so";
-import { duLieuKeHoach, duLieuNhieuHo, duLieuPhuongAnHo } from "./thuc-te";
+import { duLieuBoTriTdc, duLieuKeHoach, duLieuNhieuHo, duLieuPhuongAnHo } from "./thuc-te";
 
 export const CHAM = "…………";
 
@@ -351,5 +351,6 @@ function duLieuThucTe(p: { mau: MauVanBan; duAn: DuAn; ds: { h: Ho; k: KetQuaHo 
     ...duLieuKeHoach(p.duAn),
     ...duLieuNhieuHo(p.duAn, p.ds, khuDat, lower1(p.duAn.xa)),
     ...(p.ho ? duLieuPhuongAnHo(p.ho.h, p.ho.k) : {}),
+    ...(p.mau.ma === "T8" || p.mau.ma === "T9" ? duLieuBoTriTdc(p.duAn, p.ds) : {}),
   };
 }

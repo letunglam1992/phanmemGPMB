@@ -328,7 +328,77 @@ function NOI_DUNG_THU_HOI(laQd = false) {
   ];
 }
 
-const DANH_SACH = { T1: "tt-ke-hoach", T2: "tt-to-trinh-tb", T3: "tt-thong-bao", T4: "tt-to-trinh-pa-ho", T5: "tt-qd-pa-ho", T6: "tt-to-trinh-thu-hoi", T7: "tt-qd-thu-hoi" };
+/** 1.0.5 — biểu quỹ đất, quỹ nhà TĐC và biểu dự kiến bố trí TĐC (k1 Điều 111 LĐĐ 2024). */
+const DON_VI_BT = ["{CO_QUAN_CAP_TREN_BT}", "{TEN_DON_VI_BT}"];
+const BIEU_LO = () =>
+  bieu("ds_lo", [
+    { tieuDe: "STT", truong: "{stt}", rong: 5 },
+    { tieuDe: "Khu, điểm tái định cư", truong: "{khu}", rong: 20, canh: AlignmentType.LEFT },
+    { tieuDe: "Lô / căn số", truong: "{so_lo}", rong: 9 },
+    { tieuDe: "Loại", truong: "{loai}", rong: 8 },
+    { tieuDe: "Diện tích (m²)", truong: "{dien_tich}", rong: 10, canh: AlignmentType.RIGHT },
+    { tieuDe: "Giá đất / giá nhà TĐC (đồng/m²)", truong: "{gia}", rong: 13, canh: AlignmentType.RIGHT },
+    { tieuDe: "Căn cứ giá", truong: "{can_cu_gia}", rong: 18, canh: AlignmentType.LEFT },
+    { tieuDe: "Ghi chú", truong: "{ghi_chu}", rong: 17, canh: AlignmentType.LEFT },
+  ]);
+const BIEU_HO_TDC = () =>
+  bieu("ds_ho_tdc", [
+    { tieuDe: "STT", truong: "{stt}", rong: 5 },
+    { tieuDe: "Họ và tên", truong: "{ho_ten}", rong: 18, canh: AlignmentType.LEFT },
+    { tieuDe: "Địa chỉ", truong: "{dia_chi}", rong: 15, canh: AlignmentType.LEFT },
+    { tieuDe: "Hình thức bố trí", truong: "{hinh_thuc}", rong: 17, canh: AlignmentType.LEFT },
+    { tieuDe: "Vị trí (khu – lô, căn)", truong: "{vi_tri}", rong: 15, canh: AlignmentType.LEFT },
+    { tieuDe: "Diện tích (m²)", truong: "{dien_tich}", rong: 9, canh: AlignmentType.RIGHT },
+    { tieuDe: "Giá (đồng/m²)", truong: "{gia}", rong: 10, canh: AlignmentType.RIGHT },
+    { tieuDe: "Tiền SDĐ phải nộp (đồng)", truong: "{tien_sdd}", rong: 11, canh: AlignmentType.RIGHT },
+    { tieuDe: "Ghi chú", truong: "{ghi_chu}", rong: 10, canh: AlignmentType.LEFT },
+  ]);
+const KT_TB_BT = "Thông báo số {so}/TB-{ky_hieu_don_vi} ngày {ngay_ky_ngan} của {ten_don_vi_bt}";
+
+MAU.T8 = () => [
+  [
+    dauVanBan({ coQuan: DON_VI_BT, so: "Số: {so}/TB-{ky_hieu_don_vi}" }),
+    ...tenVanBan("THÔNG BÁO", "Dự kiến phương án bố trí tái định cư\ndự án {ten_du_an}"),
+    P("Căn cứ khoản 1 Điều 111 Luật Đất đai năm 2024;", { nghieng: true }),
+    ...CAN_CU(),
+    P("{ten_don_vi_bt} thông báo dự kiến phương án bố trí tái định cư đối với người có đất ở bị thu hồi, chủ sở hữu nhà ở thuộc đối tượng phải di chuyển chỗ ở để thực hiện dự án {ten_du_an} như sau:"),
+    P("**1. Địa điểm khu, điểm tái định cư:** {#tdc_dia_diem}{tdc_dia_diem}{/tdc_dia_diem}{^tdc_dia_diem}{tdc_khu}{/tdc_dia_diem}."),
+    P("**2. Quy mô quỹ đất, quỹ nhà tái định cư:** {tdc_quy_mo}."),
+    P("**3. Thiết kế:** {tdc_thiet_ke}"),
+    P("**4. Diện tích từng lô đất, căn hộ; giá đất, giá nhà tái định cư:** chi tiết tại Biểu số 01 kèm theo. Giá đất tính tiền sử dụng đất tại nơi tái định cư được xác định theo bảng giá đất tại thời điểm phê duyệt phương án bồi thường, hỗ trợ, tái định cư (khoản 3 Điều 111 Luật Đất đai)."),
+    P("**5. Dự kiến bố trí tái định cư cho người có đất thu hồi:** {so_ho_tdc_chu} hộ gia đình, cá nhân; chi tiết tại Biểu số 02 kèm theo."),
+    P("**6. Niêm yết công khai:** Thông báo này được niêm yết công khai ít nhất 15 ngày, từ ngày {niem_yet_tu} đến ngày {niem_yet_den}, tại trụ sở Ủy ban nhân dân {ten_xa}; {noi_niem_yet}{#noi_tdc_niem_yet}; {noi_tdc_niem_yet}{/noi_tdc_niem_yet}."),
+    P("**7.** Hộ gia đình, cá nhân có ý kiến về dự kiến phương án bố trí tái định cư gửi về {ten_don_vi_bt} trước ngày {han_y_kien} để tổng hợp, báo cáo cơ quan có thẩm quyền xem xét trước khi phê duyệt phương án bố trí tái định cư./."),
+    kyVanBan(),
+  ],
+  [
+    ...TIEU_DE_BIEU("Biểu số 01. QUỸ ĐẤT, QUỸ NHÀ TÁI ĐỊNH CƯ", KT_TB_BT), BIEU_LO(),
+    new Paragraph({ children: [], pageBreakBefore: true }),
+    ...TIEU_DE_BIEU("Biểu số 02. DỰ KIẾN BỐ TRÍ TÁI ĐỊNH CƯ", KT_TB_BT), BIEU_HO_TDC(),
+  ],
+];
+MAU.T9 = () => [
+  [
+    dauVanBan({ coQuan: DON_VI_BT, so: "Số: {so}/TB-{ky_hieu_don_vi}" }),
+    ...tenVanBan("THÔNG BÁO", "Công bố công khai phương án bố trí tái định cư\ndự án {ten_du_an}"),
+    P("Căn cứ khoản 2 Điều 111 Luật Đất đai năm 2024;", { nghieng: true }),
+    ...CAN_CU(),
+    P("Căn cứ Quyết định số {qd_tdc_so} ngày {qd_tdc_ngay} của {qd_tdc_co_quan} phê duyệt phương án bố trí tái định cư dự án {ten_du_an};", { nghieng: true }),
+    P("{ten_don_vi_bt} công bố công khai phương án bố trí tái định cư đã được phê duyệt như sau:"),
+    P("**1. Khu, điểm tái định cư:** {tdc_khu}; quy mô: {tdc_quy_mo}."),
+    P("**2. Kết quả bố trí tái định cư:** {so_ho_tdc_chu} hộ gia đình, cá nhân; chi tiết tại Biểu số 01 (lô đất, căn nhà) và Biểu số 02 (bố trí cho từng hộ) kèm theo."),
+    P("**3. Địa điểm công bố công khai:** trụ sở Ủy ban nhân dân {ten_xa}; {noi_niem_yet}; {noi_tdc_niem_yet}."),
+    P("Đề nghị các hộ gia đình, cá nhân có tên tại Biểu số 02 theo dõi, thực hiện./."),
+    kyVanBan(),
+  ],
+  [
+    ...TIEU_DE_BIEU("Biểu số 01. QUỸ ĐẤT, QUỸ NHÀ TÁI ĐỊNH CƯ", KT_TB_BT), BIEU_LO(),
+    new Paragraph({ children: [], pageBreakBefore: true }),
+    ...TIEU_DE_BIEU("Biểu số 02. BỐ TRÍ TÁI ĐỊNH CƯ", KT_TB_BT), BIEU_HO_TDC(),
+  ],
+];
+
+const DANH_SACH = { T1: "tt-ke-hoach", T8: "tt-tb-du-kien-tdc", T9: "tt-tb-cong-bo-tdc", T2: "tt-to-trinh-tb", T3: "tt-thong-bao", T4: "tt-to-trinh-pa-ho", T5: "tt-qd-pa-ho", T6: "tt-to-trinh-thu-hoi", T7: "tt-qd-thu-hoi" };
 for (const [ma, tep] of Object.entries(DANH_SACH)) {
   const [chinh, phu] = MAU[ma]();
   const buf = await Packer.toBuffer(taoDoc(chinh, phu));

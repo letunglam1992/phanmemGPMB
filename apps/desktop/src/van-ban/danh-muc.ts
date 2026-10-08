@@ -251,6 +251,31 @@ DANH_MUC_MAU.push(
       NOI_NHAN("Thường trực Đảng ủy\nThường trực HĐND\nVăn phòng Đăng ký đất đai tỉnh\nNhư Điều 3\nLưu: VT"),
     ],
   },
+  {
+    ma: "T8", ten: "Thông báo dự kiến phương án bố trí tái định cư", buoc: "6", phamVi: "DOT", coQuan: "DON_VI_BT", nguon: "THUC_TE", tep: "tt-tb-du-kien-tdc.docx",
+    moTa: "Khoản 1 Điều 111 Luật Đất đai 2024: đơn vị thực hiện bồi thường thông báo dự kiến phương án bố trí TĐC cho người có đất ở bị thu hồi, chủ sở hữu nhà ở phải di chuyển; niêm yết ít nhất 15 ngày tại trụ sở UBND cấp xã, địa điểm sinh hoạt chung khu dân cư nơi có đất thu hồi và nơi tái định cư đã có người dân sinh sống. Biểu lô đất, căn nhà lấy từ Quỹ tái định cư; biểu dự kiến bố trí lấy từ thông tin TĐC của các hộ được chọn.",
+    ghiLai: { khoa: "tb_du_kien_tdc", capDo: "DU_AN", kyHieu: "TB-{ky_hieu_don_vi}" },
+    nhapThem: [
+      { truong: "tdc_dia_diem", nhan: "Địa điểm khu, điểm tái định cư", goiY: "Để trống = tên các khu trong Quỹ tái định cư" },
+      { truong: "tdc_thiet_ke", nhan: "Thiết kế (quy hoạch chi tiết, mẫu nhà, hạ tầng…)", nhieuDong: true, goiY: "vd. Theo quy hoạch chi tiết khu TĐC được phê duyệt tại Quyết định số …; hạ tầng giao thông, điện, nước đã hoàn thành" },
+      { truong: "noi_niem_yet", nhan: "Địa điểm sinh hoạt chung của khu dân cư nơi có đất thu hồi", goiY: "vd. Nhà văn hóa bản …" },
+      { truong: "noi_tdc_niem_yet", nhan: "Nơi tái định cư đã có người dân sinh sống (nếu có)", goiY: "Để trống nếu khu TĐC chưa có người dân sinh sống" },
+      { truong: "niem_yet_tu", nhan: "Niêm yết từ ngày" }, { truong: "niem_yet_den", nhan: "đến ngày", goiY: "Ít nhất 15 ngày (k1 Đ111)" },
+      { truong: "han_y_kien", nhan: "Hạn gửi ý kiến", goiY: "Thường là ngày kết thúc niêm yết" },
+      NOI_NHAN("UBND xã, phường (để niêm yết)\nBan điều hành tổ dân phố/bản\nCác hộ gia đình, cá nhân có tên tại biểu kèm theo\nLưu: VT"),
+    ],
+  },
+  {
+    ma: "T9", ten: "Thông báo công bố công khai phương án bố trí tái định cư đã phê duyệt", buoc: "9", phamVi: "DOT", coQuan: "DON_VI_BT", nguon: "THUC_TE", tep: "tt-tb-cong-bo-tdc.docx",
+    moTa: "Khoản 2 Điều 111 Luật Đất đai 2024: phương án bố trí TĐC đã được cơ quan có thẩm quyền phê duyệt phải được công bố công khai tại trụ sở UBND cấp xã, địa điểm sinh hoạt chung của khu dân cư nơi có đất thu hồi và tại nơi tái định cư. Ghi số, ngày quyết định phê duyệt; biểu bố trí lấy từ hồ sơ.",
+    nhapThem: [
+      { truong: "qd_tdc_so", nhan: "Quyết định phê duyệt phương án bố trí TĐC số" }, { truong: "qd_tdc_ngay", nhan: "ngày" },
+      { truong: "qd_tdc_co_quan", nhan: "Cơ quan phê duyệt", goiY: "vd. Chủ tịch Ủy ban nhân dân xã …" },
+      { truong: "noi_niem_yet", nhan: "Địa điểm sinh hoạt chung của khu dân cư nơi có đất thu hồi" },
+      { truong: "noi_tdc_niem_yet", nhan: "Nơi tái định cư" },
+      NOI_NHAN("UBND xã, phường (để công bố)\nBan điều hành tổ dân phố/bản\nCác hộ gia đình, cá nhân có tên tại biểu kèm theo\nLưu: VT"),
+    ],
+  },
 );
 
 export const mauTheoMa = (ma: string) => DANH_MUC_MAU.find((m) => m.ma === ma)!;

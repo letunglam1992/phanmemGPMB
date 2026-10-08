@@ -19,7 +19,7 @@ const vanBan = (u8: Uint8Array) => new PizZip(u8).file("word/document.xml")!.asT
 describe("22 mẫu văn bản QĐ 1966/QĐ-UBND", () => {
   it("đủ 22 mẫu Sổ tay + 5 mẫu riêng, mỗi mẫu có tệp và trường hợp lệ", () => {
     expect(DANH_MUC_MAU.filter((m) => !m.nguon).map((m) => m.ma)).toEqual(Array.from({ length: 22 }, (_, i) => String(i + 1).padStart(2, "0")));
-    expect(DANH_MUC_MAU.filter((m) => m.nguon === "THUC_TE").map((m) => m.ma)).toEqual(["T1", "T2", "T3", "T4", "T5", "T6", "T7"]);
+    expect(DANH_MUC_MAU.filter((m) => m.nguon === "THUC_TE").map((m) => m.ma)).toEqual(["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9"]);
     expect(DANH_MUC_MAU.filter((m) => m.nguon === "RIENG").map((m) => m.ma)).toEqual(["R1", "R2", "R3", "R4", "R5"]);
     for (const m of DANH_MUC_MAU) expect(truongTrongMau(docMau(m.ma)).length).toBeGreaterThan(3);
   });
@@ -183,6 +183,25 @@ describe("Mẫu theo văn bản thực tế (T1–T7, docs/19)", () => {
     expect(t).toMatch(/TỔNG CỘNG\s*10\.415,80/);
     expect(kiemTraThongNhat("T7", duAn, du)).toEqual(["1 hộ chưa có số, ngày QĐ phê duyệt phương án (ghi khi tạo mẫu T5 có số, hoặc nhập ở hồ sơ hộ) — căn cứ in \"…\"."]);
     expect(tao("T6", ds2).t).toContain("(Kèm theo Tờ trình số 25/TTr-KT ngày 27/09/2026 của Phòng Kinh tế)");
+  });
+
+  it("1.0.5 T8/T9 bố trí tái định cư (Điều 111): quỹ lô, giá, dự kiến bố trí từng hộ, niêm yết 15 ngày; công bố có số QĐ", () => {
+    const duAnTdc = { ...duAn, quyTdc: { lo: [{ id: "l1", khu: "Khu TĐC Bản Mẫu", soLo: "A-01", loai: "DAT_O" as const, dienTich: "120", gia: "1500000", canCuGia: "NQ 152/2025, Bảng 05" }, { id: "l2", khu: "Khu TĐC Bản Mẫu", soLo: "A-02", loai: "DAT_O" as const, dienTich: "100" }] } };
+    const h0 = { ...ho[0]!, hoTro: { ...ho[0]!.hoTro, taiDinhCu: { hinhThuc: "DAT_O" as const, loId: "l1", dienTichGiao: "120", donGia: "1500000", khoanKhac: [] } } };
+    const ds3 = [{ h: h0, k: tinhHo(cs, duAnTdc, h0) }];
+    const { t, du } = tao("T8", ds3, undefined, { niem_yet_tu: "01/10/2026", niem_yet_den: "16/10/2026", han_y_kien: "16/10/2026", noi_niem_yet: "nhà văn hóa bản Mẫu" }, duAnTdc);
+    expect(t).toContain("Căn cứ khoản 1 Điều 111 Luật Đất đai năm 2024");
+    expect(t).toContain("Khu TĐC Bản Mẫu");
+    expect(t).toContain("2 lô đất ở, tổng diện tích 220,00 m²");
+    expect(t).toContain("ít nhất 15 ngày, từ ngày 01/10/2026 đến ngày 16/10/2026");
+    expect(t).toContain("Dự kiến: Hộ mẫu 01");
+    expect(t).toContain("Khu TĐC Bản Mẫu – lô A-01");
+    expect(t).toContain("180.000.000"); // tiền SDĐ = 1.500.000 × 120
+    expect(t).toContain("1.500.000");
+    expect(du.so_ho_tdc).toBe(1);
+    const c = tao("T9", ds3, undefined, { qd_tdc_so: "88/QĐ-UBND", qd_tdc_ngay: "20/10/2026", qd_tdc_co_quan: "Chủ tịch Ủy ban nhân dân xã Mẫu" }, duAnTdc).t;
+    expect(c).toContain("Căn cứ Quyết định số 88/QĐ-UBND ngày 20/10/2026 của Chủ tịch Ủy ban nhân dân xã Mẫu");
+    expect(c).toContain("khoản 2 Điều 111");
   });
 
   it("T3 Thông báo kèm danh sách: mỗi thửa một dòng, vợ/chồng dòng 2, ký hiệu loại đất", () => {
