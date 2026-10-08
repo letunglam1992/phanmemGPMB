@@ -55,7 +55,7 @@ const hex16 = (s: string) => "FEFF" + [...s].map((c) => c.charCodeAt(0).toString
 export async function taoPdfChu(tl: TaiLieu, bo: BoPhong): Promise<Uint8Array> {
   const bc = dungBoCuc(tl, doChuPhong(bo), 72);
   const H = bc.cao;
-  const dung = new Map<KieuChu, Map<number, string>>(); // glyph → ký tự (ToUnicode)
+  const dung: DaDung = new Map();
   const noiDung: string[] = bc.trang.map((ds: Lenh[]) => {
     const r: string[] = [];
     for (const l of ds) {
@@ -63,16 +63,34 @@ export async function taoPdfChu(tl: TaiLieu, bo: BoPhong): Promise<Uint8Array> {
       else if (l.k === "khung") r.push(`0.5 0.5 0.5 RG 0.5 w ${so(l.x)} ${so(H - l.y - l.h)} ${so(l.w)} ${so(l.h)} re S`);
       else {
         const k = kieuCua(l.font), p = bo[k], co = coCua(l.font);
-        const g = glyph(p, l.t);
-        const m = dung.get(k) ?? new Map<number, string>();
-        [...l.t].forEach((c, i) => m.set(g[i]!, c));
-        dung.set(k, m);
-        r.push(`BT /${k} ${so(co)} Tf ${mau(l.mau)} rg ${so(l.x)} ${so(H - l.y - (p.ascender / p.upm) * co)} Td <${g.map((x) => x.toString(16).padStart(4, "0")).join("")}> Tj ET`);
+        r.push(`BT /${k} ${so(co)} Tf ${mau(l.mau)} rg ${so(l.x)} ${so(H - l.y - (p.ascender / p.upm) * co)} Td <${viChu(bo, dung, k, l.t)}> Tj ET`);
       }
     }
     return r.join("\n");
   });
+  return dongGoiPdf({ trang: noiDung, dung, bo, rong: bc.rong, cao: H, tieuDe: tl.tieuDe });
+}
 
+/** Glyph đã dùng theo kiểu chữ (glyph → ký tự, cho bảng ToUnicode). */
+export type DaDung = Map<KieuChu, Map<number, string>>;
+/** Chuỗi hex mã glyph của đoạn chữ (Identity-H), đồng thời ghi lại glyph đã dùng. */
+export function viChu(bo: BoPhong, dung: DaDung, k: KieuChu, t: string): string {
+  const p = bo[k];
+  const g = glyph(p, t);
+  const m = dung.get(k) ?? new Map<number, string>();
+  [...t].forEach((c, i) => m.set(g[i]!, c));
+  dung.set(k, m);
+  return g.map((x) => x.toString(16).padStart(4, "0")).join("");
+}
+export { kieuCua, coCua, mau as mauPdf, so as soPdf };
+
+/** Đóng gói PDF: các luồng nội dung trang, phông đã dùng (tập con), độ trong suốt (ExtGState /a{n}). */
+export async function dongGoiPdf(o: { trang: string[]; dung: DaDung; bo: BoPhong; rong: number; cao: number; tieuDe: string; doTrong?: Map<string, { ca?: number; CA?: number }> }): Promise<Uint8Array> {
+  const { dung, bo } = o;
+  const H = o.cao;
+  const noiDung = o.trang;
+  const bc = { rong: o.rong };
+  const tl = { tieuDe: o.tieuDe };
   // ---- đối tượng PDF
   const enc = new TextEncoder();
   const obj: (string | Uint8Array)[][] = [];
@@ -103,10 +121,11 @@ export async function taoPdfChu(tl: TaiLieu, bo: BoPhong): Promise<Uint8Array> {
     const sType0 = them(`<< /Type /Font /Subtype /Type0 /BaseFont /${ps} /Encoding /Identity-H /DescendantFonts [${sCid} 0 R] /ToUnicode ${sUni} 0 R >>`);
     font.push(`/${k} ${sType0} 0 R`);
   }
+  const gs = o.doTrong?.size ? ` /ExtGState << ${[...o.doTrong].map(([ten, v]) => `/${ten} << ${v.ca !== undefined ? `/ca ${so(v.ca)}` : ""} ${v.CA !== undefined ? `/CA ${so(v.CA)}` : ""} >>`).join(" ")} >>` : "";
   const trang: number[] = [];
   for (const nd of noiDung) {
     const sNd = await luong("", enc.encode(nd));
-    trang.push(them(`<< /Type /Page /Parent ${soPages} 0 R /MediaBox [0 0 ${so(bc.rong)} ${so(H)}] /Resources << /Font << ${font.join(" ")} >> >> /Contents ${sNd} 0 R >>`));
+    trang.push(them(`<< /Type /Page /Parent ${soPages} 0 R /MediaBox [0 0 ${so(bc.rong)} ${so(H)}] /Resources << /Font << ${font.join(" ")} >>${gs} >> /Contents ${sNd} 0 R >>`));
   }
   obj[soCatalog - 1] = ["<< /Type /Catalog /Pages 2 0 R >>"];
   obj[soPages - 1] = [`<< /Type /Pages /Kids [${trang.map((t) => `${t} 0 R`).join(" ")}] /Count ${trang.length} >>`];

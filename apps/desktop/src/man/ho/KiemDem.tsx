@@ -1,5 +1,6 @@
 import { hienSo } from "../../so";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useCuaSo } from "../../thanh-phan/cua-so";
 import { tenDayDu } from "../../van-ban/loai-dat";
 import type { LoaiDuong, LoaiVatNuoi } from "@gpmb/core";
 import { thuTinh } from "../../bieu-thuc";
@@ -108,6 +109,9 @@ function TheThua(p: {
   nhaThua: TaiSan[];
 }) {
   const { t, ds, sua } = p;
+  // 1.0.6: thửa nhiều tài sản — chỉ dựng các dòng đang nhìn thấy
+  const khoa = useMemo(() => ds.map((x) => x.id), [ds]);
+  const cuaSo = useCuaSo(khoa, 80, 10);
   return (
     <div className="the">
       <div className="the-dau the-dau-kd">
@@ -129,16 +133,18 @@ function TheThua(p: {
         </div>
       </div>
       <div className="bang-cuon">
-        <table className="bang">
+        <table className="bang" ref={(e) => void (cuaSo.bang.current = e)}>
           <thead>
             <tr><th style={{ width: 54 }}>TT</th><th style={{ width: 84 }}>Loại</th><th style={{ minWidth: 220 }}>Tài sản</th><th style={{ width: 70 }}>ĐVT</th><th style={{ width: 150 }}>Khối lượng / số lượng</th><th className="so" style={{ width: 120 }}>Đơn giá (đ)</th><th style={{ width: 330 }}>Tham số tính</th><th style={{ width: 50 }}>Đợt</th><th style={{ width: 30 }} /></tr>
           </thead>
           <tbody>
-            {ds.map((x, i) => {
+            {cuaSo.dem_tren > 0 && <tr aria-hidden style={{ height: cuaSo.dem_tren }}><td colSpan={9} /></tr>}
+            {ds.slice(cuaSo.dau, cuaSo.cuoi).map((x, j0) => {
+              const i = cuaSo.dau + j0;
               const klVao = x.loai === "CAY" ? x.soLuong : x.loai === "SUA_CHUA" ? "" : x.khoiLuong;
               const kl = klVao ? thuTinh(klVao) : { giaTri: null, loi: "Chưa nhập" };
               return (
-                <tr key={x.id}>
+                <tr key={x.id} ref={cuaSo.bat ? cuaSo.do_(x.id) : undefined}>
                   <td className="khong-xuong-dong">
                     {i + 1}
                     <button className="nut nut-chu nut-nho" title="Lên" onClick={() => p.doiCho(x.id, -1)}>↑</button>
@@ -180,6 +186,7 @@ function TheThua(p: {
                 </tr>
               );
             })}
+            {cuaSo.dem_duoi > 0 && <tr aria-hidden style={{ height: cuaSo.dem_duoi }}><td colSpan={9} /></tr>}
             {ds.length === 0 && <tr><td colSpan={9} className="trong">Chưa có tài sản trong đợt này.</td></tr>}
           </tbody>
         </table>

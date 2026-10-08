@@ -83,6 +83,13 @@ const bangDuAn = bangCo(
   null,
 );
 
+// 1.0.6: dự án liên xã (đếm một lần theo mã dùng chung)
+const bangLienXa = bangCo(
+  ["TT", "Dự án liên xã (mã)", "Xã có số liệu", "Số hộ", "Đã bàn giao MB (hộ, %)", "Xã chưa có số liệu"],
+  [500, 3171, 1100, 900, 1600, 1800],
+  ["{#lien_xa}{tt}", "{ten} ({ma})", "{so_xa}", "{so_ho}", "{ban_giao}", "{xa_thieu}{/lien_xa}"],
+  null,
+);
 // Bảng 3 (1.0.6): diễn biến theo tháng
 const bangDienBien = bangCo(
   ["TT", "Tháng", "Đơn vị có số liệu", "Số hộ", "Đã bàn giao MB (hộ, %)", "Đã duyệt PA (hộ, %)", "Giá trị tạm tính (đồng)"],
@@ -141,6 +148,10 @@ const doc = new Document({
         P([R("3. Kết quả từng dự án", { bold: true, italics: true })], { before: 120 }),
         bangDuAn,
         P([R("(Giá trị tạm tính là tổng các khoản phần mềm tính theo hồ sơ, chưa phải số đã phê duyệt; chi tiết: Phụ lục Excel kèm theo)", { italics: true, size: 22 })], { indent: false, align: AlignmentType.LEFT, before: 60 }),
+        P("{#co_lien_xa}"),
+        P([R("Trong đó, dự án liên xã (tuyến qua nhiều xã, phường — mỗi tuyến tính là một dự án):", { italics: true })], { before: 120 }),
+        bangLienXa,
+        P("{/co_lien_xa}"),
         P("{#co_dien_bien}"),
         P([R("4. Diễn biến theo tháng", { bold: true, italics: true })], { before: 120 }),
         P("{cau_dien_bien}"),

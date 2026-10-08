@@ -5,7 +5,8 @@ import { TuDongGuiTinh } from "./thanh-phan/TuDongGuiTinh";
 import { TheoDoiGoiTinh } from "./thanh-phan/TheoDoiGoiTinh";
 import { TongHopTinh } from "./man/TongHopTinh";
 import { NguoiCoDat } from "./man/NguoiCoDat";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { SU_KIEN_DA_XEM_VIEC, hoMoiGiao } from "./phan-cong";
 import { useUngDung } from "./ung-dung";
 import { TongQuan } from "./man/TongQuan";
 import { ManDuAn } from "./man/DuAn";
@@ -76,6 +77,19 @@ export function UngDung() {
       .then((kq) => { if (kq.ban_moi && kq.ban_moi.phien_ban !== docCaiDat().boQua) setBanMoi(kq); })
       .catch(() => undefined);
   }, [taiKhoan, chiXem]);
+  // 1.0.6: hồ sơ mới được giao cho tài khoản (thông báo một lần, nhãn ở thanh bên đến khi mở Việc của tôi)
+  const [lanXem, setLanXem] = useState(0);
+  useEffect(() => {
+    const f = () => setLanXem((n) => n + 1);
+    window.addEventListener(SU_KIEN_DA_XEM_VIEC, f);
+    return () => window.removeEventListener(SU_KIEN_DA_XEM_VIEC, f);
+  }, []);
+  const viecMoi = useMemo(() => (taiKhoan && !chiXem ? hoMoiGiao(taiKhoan.ten, dsDuAn, hoCua) : []), [taiKhoan, chiXem, dsDuAn, hoCua, lanXem]); // eslint-disable-line react-hooks/exhaustive-deps
+  const daBaoViec = useRef(0);
+  useEffect(() => {
+    if (viecMoi.length > daBaoViec.current) bao(`Anh/chị được giao ${viecMoi.length} hồ sơ mới: ${viecMoi.slice(0, 3).map((x) => `${x.h.ma} ${x.h.ten}`).join("; ")}${viecMoi.length > 3 ? "…" : ""} — xem ở "Việc của tôi"`);
+    daBaoViec.current = viecMoi.length;
+  }, [viecMoi, bao]);
   if (!taiKhoan) return (<><ManDangNhap /><ThongBaoNhanh /></>);
 
   const duAnId = ("duAnId" in man && man.duAnId) || (duAnGanNhat && dsDuAn.some((d) => d.id === duAnGanNhat) ? duAnGanNhat : dsDuAn[0]?.id);
@@ -83,6 +97,7 @@ export function UngDung() {
   const cao = canhBao.filter((c) => c.muc === "CAO");
   const vietTat = taiKhoan ? taiKhoan.hoTen.trim().split(/\s+/).slice(-2).map((x) => x[0]).join("").toUpperCase() : "";
   const soRaSoat = raSoat(dsDuAn, (id) => hoCua(id)).filter((m) => m.loai !== "HOP_LY").length; // sau lệnh return sớm: không dùng hook
+  const soViecMoi = viecMoi.length;
   // Alt + 1…6: chuyển màn bằng bàn phím
   const diMuc: MucPhim[] = [
     { phim: "1", ten: "Tổng quan", bam: () => di({ ten: "tong-quan" }) },
@@ -97,7 +112,7 @@ export function UngDung() {
       nhan: "Theo dõi",
       muc: [
         { ten: "Tổng quan", bt: "tongQuan", chon: man.ten === "tong-quan", bam: () => di({ ten: "tong-quan" }) },
-        { ten: "Việc của tôi", bt: "nguoi", chon: man.ten === "viec-cua-toi", bam: () => di({ ten: "viec-cua-toi" }) },
+        { ten: `Việc của tôi${soViecMoi ? ` (${soViecMoi} mới)` : ""}`, bt: "nguoi", chon: man.ten === "viec-cua-toi", bam: () => di({ ten: "viec-cua-toi" }) },
         { ten: "Dự án", bt: "danhSach", chon: man.ten === "du-an" && !man.duAnId, bam: () => di({ ten: "du-an" }) },
         { ten: "Hồ sơ", bt: "hoSo", chon: (man.ten === "du-an" && !!man.duAnId && man.tab !== "ban-do") || man.ten === "ho" || man.ten === "ds-ho" || man.ten === "van-ban", bam: () => duAnId && di({ ten: "du-an", duAnId }), tat: !duAnId },
         { ten: "Bản đồ", bt: "thua", chon: man.ten === "ban-do" || (man.ten === "du-an" && !!man.duAnId && man.tab === "ban-do"), bam: () => duAnId && di({ ten: "du-an", duAnId, tab: "ban-do" }), tat: !duAnId },

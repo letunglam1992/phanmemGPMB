@@ -1,5 +1,6 @@
 import { TRUONG_HOP_TACH_THUA } from "../ban-do/ranh";
-import { Fragment, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useCuaSo } from "../../thanh-phan/cua-so";
 import { HopXemThuaBanDo } from "./XemThuaBanDo";
 import { taoId, type DuAn, type Ho, type Thua } from "../../mo-hinh";
 import { ChonGiaDat } from "../../thanh-phan/ChonGiaDat";
@@ -45,6 +46,9 @@ export function TabThua({ h, duAn, doi, noiBat }: { h: Ho; duAn: DuAn; doi: (h: 
   const { chinhSach } = useUngDung();
   const cs = chinhSach(duAn);
   const sua = (id: string, p: Partial<Thua>) => doi({ ...h, thua: h.thua.map((t) => (t.id === id ? { ...t, ...p } : t)) });
+  // 1.0.6: hồ sơ nhiều thửa — chỉ dựng các thửa đang nhìn thấy (mỗi thửa một tbody để đo đúng chiều cao)
+  const khoaThua = useMemo(() => h.thua.map((t) => t.id), [h.thua]);
+  const cuaSo = useCuaSo(khoaThua, 80, 8);
   const them = () =>
     doi({ ...h, thua: [...h.thua, { id: taoId(), soTo: "", soThua: "", loaiDat: "CLN", dienTich: "", dienTichThuHoi: "", nguonGoc: "", gia: null }] });
   const thuaChon = h.thua.find((t) => t.id === chonGia);
@@ -56,7 +60,7 @@ export function TabThua({ h, duAn, doi, noiBat }: { h: Ho; duAn: DuAn; doi: (h: 
         <div className="phai"><button className="nut nut-nho" onClick={them}>+ Thêm thửa</button></div>
       </div>
       <div className="bang-cuon">
-        <table className="bang">
+        <table className="bang" ref={(e) => void (cuaSo.bang.current = e)}>
           <thead>
             <tr>
               <th style={{ width: 70 }}>Tờ</th><th style={{ width: 80 }}>Thửa</th><th style={{ width: 250 }}>Loại đất</th>
@@ -64,12 +68,12 @@ export function TabThua({ h, duAn, doi, noiBat }: { h: Ho; duAn: DuAn; doi: (h: 
               <th>Nguồn gốc sử dụng</th><th>Giá đất (bảng giá)</th><th style={{ width: 80 }} />
             </tr>
           </thead>
-          <tbody>
-            {h.thua.map((t) => {
+          {cuaSo.dem_tren > 0 && <tbody aria-hidden><tr style={{ height: cuaSo.dem_tren }}><td colSpan={8} /></tr></tbody>}
+            {h.thua.slice(cuaSo.dau, cuaSo.cuoi).map((t) => {
               const loiDt = t.dienTich && t.dienTichThuHoi && !isNaN(Number(t.dienTich)) && soD(t.dienTichThuHoi).gt(soD(t.dienTich));
               const lechBanDo = t.dienTichBanDo !== undefined && t.dienTichThuHoi && Math.abs(Number(t.dienTichThuHoi) - t.dienTichBanDo) > 0.05;
               return (
-                <Fragment key={t.id}>
+                <tbody key={t.id} ref={cuaSo.bat ? cuaSo.do_(t.id) : undefined}>
                   <tr data-thua-id={t.id}>
                     <td data-lich-su={`thua:${t.id}.soTo`} data-lich-su-ten={`Tờ bản đồ (thửa ${t.soThua})`}><input value={t.soTo} onChange={(e) => sua(t.id, { soTo: e.target.value })} /></td>
                     <td data-lich-su={`thua:${t.id}.soThua`} data-lich-su-ten={`Số thửa (tờ ${t.soTo})`}><input value={t.soThua} onChange={(e) => sua(t.id, { soThua: e.target.value })} /></td>
@@ -296,11 +300,11 @@ export function TabThua({ h, duAn, doi, noiBat }: { h: Ho; duAn: DuAn; doi: (h: 
                       </td>
                     </tr>
                   )}
-                </Fragment>
+                </tbody>
               );
             })}
-            {h.thua.length === 0 && <tr><td colSpan={8} className="trong">Chưa có thửa. Thêm thửa hoặc tạo từ bản đồ.</td></tr>}
-          </tbody>
+          {cuaSo.dem_duoi > 0 && <tbody aria-hidden><tr style={{ height: cuaSo.dem_duoi }}><td colSpan={8} /></tr></tbody>}
+          {h.thua.length === 0 && <tbody><tr><td colSpan={8} className="trong">Chưa có thửa. Thêm thửa hoặc tạo từ bản đồ.</td></tr></tbody>}
         </table>
       </div>
       {chonTuyen && (() => {

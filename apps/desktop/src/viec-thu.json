@@ -62,7 +62,12 @@
    "Hộ có TĐC bằng đất ở, tích hỗ trợ 20%: chưa nhập tiền SDĐ làm cơ sở và cách xác định → C11 \"Cần xác nhận\"; nhập xong → tạm tính (VM-28).",
    "Thẻ Tính toán → \"Lưu PDF\" → mở bằng trình đọc PDF: chọn, tìm được chữ tiếng Việt (Ctrl+F); in ra đúng khổ.",
    "Báo cáo Word cấp xã với dự án chia đợt: mục \"Kết quả theo đợt thu hồi\". Máy tỉnh (đã có số liệu hai tháng): báo cáo Word có mục \"Diễn biến theo tháng\" kèm biểu đồ.",
-   "Máy tỉnh: đặt ngưỡng chênh ở thẻ Dự án liên xã → khung \"Xã cần đôn đốc\"."
+   "Máy tỉnh: đặt ngưỡng chênh ở thẻ Dự án liên xã → khung \"Xã cần đôn đốc\".",
+   "Máy tỉnh: báo cáo Word có bảng \"Trong đó, dự án liên xã\".",
+   "Soát phương án: dòng \"Cây vượt mật độ quy định\" ở hộ có cây trồng xen dày.",
+   "Bản đồ → \"Xuất PDF tiến độ\": mở PDF, phóng to vẫn nét, chọn được chữ, có lưới tọa độ X/Y.",
+   "Hai tài khoản: tài khoản A phân công hồ sơ cho B → B đăng nhập thấy thông báo, \"Việc của tôi (1 mới)\".",
+   "Hồ sơ nhiều thửa, nhiều tài sản: cuộn bảng mượt."
   ]
  }
 ]

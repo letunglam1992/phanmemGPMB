@@ -1,8 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useUngDung } from "../ung-dung";
 import { tinhHo } from "../tinh-ho";
 import { homNayIso, TT_GPMB } from "../trang-thai";
-import { viecCuaToi } from "../phan-cong";
+import { danhDauDaXem, hoMoiGiao, viecCuaToi } from "../phan-cong";
 import { tien } from "../thanh-phan/chung";
 
 /** P3-4: hồ sơ được phân công cho tài khoản đang đăng nhập — ưu tiên hồ sơ có cảnh báo thời hạn, vướng mắc. */
@@ -11,6 +11,11 @@ export function ViecCuaToi() {
   const [chiCanhBao, setChiCanhBao] = useState(false);
   const homNay = homNayIso();
   const ds = useMemo(() => viecCuaToi(taiKhoan?.ten ?? "", dsDuAn, hoCua, (d, h) => tinhHo(chinhSach(d), d, h), homNay, lich, tyLeCham), [taiKhoan?.ten, dsDuAn, hoCua, chinhSach, homNay, lich, tyLeCham]);
+  // 1.0.6: hồ sơ mới được giao — gắn nhãn "Mới" trong lần mở này, rồi đánh dấu đã xem
+  const [moi] = useState(() => new Set(hoMoiGiao(taiKhoan?.ten ?? "", dsDuAn, hoCua).map((x) => x.h.id)));
+  useEffect(() => {
+    if (taiKhoan?.ten && ds.length) danhDauDaXem(taiKhoan.ten, ds.map((x) => x.h.id));
+  }, [taiKhoan?.ten, ds]);
   const hien = chiCanhBao ? ds.filter((x) => x.canhBao.length || x.vuongMac.length) : ds;
   return (
     <div className="trang">
@@ -33,7 +38,7 @@ export function ViecCuaToi() {
                 {hien.map((x) => (
                   <tr key={x.h.id} className="co-the-chon" data-viec={x.h.ma} onClick={() => di({ ten: "ho", duAnId: x.duAn.id, hoId: x.h.id })}>
                     <td className="chu-nho">{x.duAn.ten}</td>
-                    <td><b>{x.h.ten}</b><div className="mo chu-nho">{x.h.ma}</div></td>
+                    <td><b>{x.h.ten}</b>{moi.has(x.h.id) && <span className="nhan nhan-xanh" style={{ marginLeft: 6 }}>Mới</span>}<div className="mo chu-nho">{x.h.ma}</div></td>
                     <td className="chu-nho">{x.buoc ? `Bước ${x.buoc.ma}. ${x.buoc.ten}` : "Đã hoàn thành"}</td>
                     <td><span className="nhan" style={{ background: TT_GPMB[x.tt].nen, color: "var(--chu)" }}>{TT_GPMB[x.tt].ten}</span></td>
                     <td className="so">{tien(x.k.tong.tongLamTron)}</td>

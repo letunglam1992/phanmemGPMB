@@ -6,6 +6,8 @@
 import type { DienTichThuHoi, Diem, ThuaBanDo } from "@gpmb/gis";
 import { THU_TU_TRANG_THAI, TT_GPMB, type TrangThaiGpmb } from "../../trang-thai";
 import type { DuLieuBanDo } from "./du-lieu";
+import { NguCanhPdf } from "../../van-ban/ngu-canh-pdf";
+import { dongGoiPdf, napPhong, type BoPhong } from "../../van-ban/pdf-chu";
 
 export const KHO_GIAY = { A4: { w: 297, h: 210 }, A3: { w: 420, h: 297 } } as const;
 export type KhoGiay = keyof typeof KHO_GIAY;
@@ -103,6 +105,12 @@ export function veTrangBanDo(ctx: CanvasRenderingContext2D, pxMm: number, kho: {
   ctx.rect(khung.x, khung.y, khung.w, khung.h);
   ctx.clip();
   const duong = (v: Diem[]) => v.forEach((d, i) => (i ? ctx.lineTo(sx(d.x), sy(d.y)) : ctx.moveTo(sx(d.x), sy(d.y))));
+  // 1.0.6: lưới tọa độ VN-2000 (dưới lớp thửa) — đường dọc theo tọa độ Y (Đông), đường ngang theo tọa độ X (Bắc)
+  const buocLuoi = doDaiThuoc(Math.max(maxX - minX, maxY - minY) / 5);
+  ctx.strokeStyle = "rgba(60,90,140,0.35)";
+  ctx.lineWidth = Math.max(0.5, mm(0.1));
+  for (let gx = Math.ceil(minX / buocLuoi) * buocLuoi; gx <= maxX; gx += buocLuoi) { ctx.beginPath(); ctx.moveTo(sx(gx), khung.y); ctx.lineTo(sx(gx), khung.y + khung.h); ctx.stroke(); }
+  for (let gy = Math.ceil(minY / buocLuoi) * buocLuoi; gy <= maxY; gy += buocLuoi) { ctx.beginPath(); ctx.moveTo(khung.x, sy(gy)); ctx.lineTo(khung.x + khung.w, sy(gy)); ctx.stroke(); }
   const dem = Object.fromEntries(THU_TU_TRANG_THAI.map((t) => [t, 0])) as Record<TrangThaiGpmb, number>;
   let chuaHoSo = 0;
   for (const t of n.dl.kq.thua) {
@@ -134,6 +142,13 @@ export function veTrangBanDo(ctx: CanvasRenderingContext2D, pxMm: number, kho: {
     if (Math.sqrt(t.dienTichHinhHoc) * tyLe < mm(6)) continue;
     ctx.fillText(`${t.soThua ?? "?"}`, sx(t.tamNhan.x), sy(t.tamNhan.y));
   }
+  // nhãn lưới (trong khung, sát mép trên và mép trái)
+  ctx.fillStyle = "rgba(40,70,120,0.9)";
+  ctx.font = `${mm(2.2)}px "Times New Roman", serif`;
+  ctx.textAlign = "center";
+  for (let gx = Math.ceil(minX / buocLuoi) * buocLuoi; gx <= maxX; gx += buocLuoi) if (sx(gx) > khung.x + mm(12)) ctx.fillText(`Y ${Math.round(gx).toLocaleString("vi-VN")}`, sx(gx), khung.y + mm(3));
+  ctx.textAlign = "left";
+  for (let gy = Math.ceil(minY / buocLuoi) * buocLuoi; gy <= maxY; gy += buocLuoi) if (sy(gy) > khung.y + mm(6)) ctx.fillText(`X ${Math.round(gy).toLocaleString("vi-VN")}`, khung.x + mm(1), sy(gy) - mm(0.8));
   ctx.restore();
   ctx.strokeStyle = "#000";
   ctx.lineWidth = mm(0.2);
@@ -197,11 +212,28 @@ export function veTrangBanDo(ctx: CanvasRenderingContext2D, pxMm: number, kho: {
   // Chân trang
   ctx.textAlign = "left";
   ctx.font = `italic ${mm(2.8)}px "Times New Roman", serif`;
-  ctx.fillText(`Bản đồ tiến độ GPMB phục vụ báo cáo, họp — không phải trích lục, trích đo thửa đất. Hệ tọa độ VN-2000. Xuất ngày ${n.ngay}.`, mm(14), H - mm(15));
+  ctx.fillText(`Bản đồ tiến độ GPMB phục vụ báo cáo, họp — không phải trích lục, trích đo thửa đất. Hệ tọa độ VN-2000, lưới ${buocLuoi.toLocaleString("vi-VN")} m (X: Bắc, Y: Đông). Xuất ngày ${n.ngay}.`, mm(14), H - mm(15));
+}
+
+/**
+ * 1.0.6: PDF vector — nét, vùng tô, chữ thật (phông Liberation Serif nhúng tập con), phóng to không vỡ; không nạp được
+ * phông thì dựng PDF ảnh như trước.
+ */
+export async function xuatPdfBanDo(n: NoiDungIn, kho: KhoGiay, bo?: BoPhong): Promise<Uint8Array> {
+  const k = KHO_GIAY[kho];
+  try {
+    const phong = bo ?? (await napPhong());
+    const pt = 72 / 25.4;
+    const ctx = new NguCanhPdf(phong, k.w * pt, k.h * pt);
+    veTrangBanDo(ctx as unknown as CanvasRenderingContext2D, pt, k, n);
+    return await dongGoiPdf({ trang: [ctx.noiDung], dung: ctx.dung, bo: phong, rong: ctx.rong, cao: ctx.cao, tieuDe: n.tieuDe, doTrong: ctx.doTrong });
+  } catch {
+    return xuatPdfBanDoAnh(n, kho);
+  }
 }
 
 /** Dựng trang (canvas trong trình duyệt), nén JPEG, đóng gói PDF. 150 dpi. */
-export async function xuatPdfBanDo(n: NoiDungIn, kho: KhoGiay): Promise<Uint8Array> {
+export async function xuatPdfBanDoAnh(n: NoiDungIn, kho: KhoGiay): Promise<Uint8Array> {
   const k = KHO_GIAY[kho];
   const pxMm = 150 / 25.4;
   const cv = document.createElement("canvas");

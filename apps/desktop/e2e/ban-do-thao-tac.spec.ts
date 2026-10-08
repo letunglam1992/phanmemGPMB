@@ -109,13 +109,10 @@ test("quét khung chọn nhiều thửa, mở danh sách hộ đã lọc; tìm t
   const teps = await p.evaluate(() => (window as unknown as { __tep: Record<string, string> }).__tep);
   const ten = Object.keys(teps).find((k) => k.startsWith("Ban-do-tien-do_") && k.endsWith("_A4.pdf"))!;
   const pdf = Buffer.from(teps[ten]!, "base64");
-  expect(pdf.subarray(0, 8).toString("latin1")).toBe("%PDF-1.4");
+  // 1.0.6: PDF vector, chữ thật (phông nhúng), lưới tọa độ
+  expect(pdf.subarray(0, 8).toString("latin1")).toBe("%PDF-1.7");
   expect(pdf.toString("latin1")).toContain("/MediaBox [0 0 841.89 595.28]");
-  // Lấy ảnh JPEG trong PDF để xem (test-results)
-  const s = pdf.toString("latin1");
-  const dau = s.indexOf("stream\n", s.indexOf("/DCTDecode")) + 7;
-  const dai = Number(/\/DCTDecode \/Length (\d+)/.exec(s)![1]);
-  writeFileSync("test-results/ban-do-tien-do.jpg", pdf.subarray(dau, dau + dai));
-  expect(pdf[dau]).toBe(0xff);
-  expect(pdf[dau + 1]).toBe(0xd8);
+  expect(pdf.toString("latin1")).toContain("/FontFile2");
+  expect(pdf.toString("latin1")).not.toContain("/DCTDecode");
+  writeFileSync("test-results/ban-do-tien-do.pdf", pdf);
 });

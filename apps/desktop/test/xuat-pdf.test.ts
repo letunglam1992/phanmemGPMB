@@ -22,3 +22,45 @@ describe("PDF bản đồ tiến độ", () => {
     expect([0.8, 3, 7, 18, 45, 120, 260].map(doDaiThuoc)).toEqual([0.5, 2, 5, 10, 20, 100, 200]);
   });
 });
+
+describe("PDF vector từ lệnh vẽ canvas (1.0.6)", () => {
+  it("màu kèm độ trong suốt, đường, vùng evenodd, cắt vùng, chữ căn giữa → lệnh PDF; đóng gói có phông, ExtGState", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { inflateSync } = await import("node:zlib");
+    const { NguCanhPdf, docMau } = await import("../src/van-ban/ngu-canh-pdf");
+    const { napPhong, dongGoiPdf } = await import("../src/van-ban/pdf-chu");
+    expect(docMau("rgba(255,0,0,0.5)")).toEqual(["1 0 0", 0.5]);
+    expect(docMau("#000")).toEqual(["0 0 0", 1]);
+    const bo = await napPhong(async (t) => new Uint8Array(readFileSync(new URL(`../public/phong/${t}`, import.meta.url))));
+    const c = new NguCanhPdf(bo, 200, 100);
+    c.save();
+    c.beginPath();
+    c.rect(10, 10, 50, 50);
+    c.clip();
+    c.fillStyle = "rgba(0,128,0,0.55)";
+    c.beginPath();
+    c.moveTo(10, 10);
+    c.lineTo(60, 10);
+    c.lineTo(60, 60);
+    c.closePath();
+    c.fill("evenodd");
+    c.strokeStyle = "#d0021b";
+    c.lineWidth = 2;
+    c.stroke();
+    c.restore();
+    c.font = 'bold 12px "Times New Roman", serif';
+    c.textAlign = "center";
+    c.fillText("Thửa 85", 100, 50);
+    const nd = c.noiDung;
+    expect(nd).toContain("10 40 50 50 re W n");
+    expect(nd).toMatch(/\/aca55 gs 0 0\.5 0 rg 10 90 m 60 90 l 60 40 l h f\*/);
+    expect(nd).toMatch(/\/aCA100 gs 0\.82 0\.01 0\.11 RG 2 w \[\] 0 d 10 90 m/);
+    expect(nd).toMatch(/BT .* \/dam 12 Tf [\d.]+ 50 Td <[0-9a-f]+> Tj ET/);
+    const pdf = await dongGoiPdf({ trang: [nd], dung: c.dung, bo, rong: 200, cao: 100, tieuDe: "Thử", doTrong: c.doTrong });
+    const s = Buffer.from(pdf).toString("latin1");
+    expect(s).toContain("/ExtGState << /aca55 <<");
+    expect(s).toContain("/FontFile2");
+    const luong = [...s.matchAll(/\/FlateDecode \/Length (\d+) >>\nstream\n/g)].map((m) => inflateSync(Buffer.from(s.substr(m.index! + m[0].length, Number(m[1])), "latin1")).toString("latin1"));
+    expect(luong.some((x) => x.includes("beginbfchar") && /<1eed>/i.test(x))).toBe(true); // "ử"
+  });
+});

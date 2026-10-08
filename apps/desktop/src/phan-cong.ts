@@ -62,3 +62,45 @@ export function demPhanCong(hos: Ho[]): Map<string, number> {
   for (const h of hos) if (!h.daXoa) m.set(h.phuTrach ?? "", (m.get(h.phuTrach ?? "") ?? 0) + 1);
   return m;
 }
+
+/* ---------------- 1.0.6: thông báo hồ sơ mới được giao ---------------- */
+
+export const SU_KIEN_DA_XEM_VIEC = "gpmb-viec-da-xem";
+const khoaDaXem = (ten: string) => `gpmb-viec-da-xem:${ten}`;
+
+/** Hồ sơ đã biết là được giao (đã thông báo / đã xem) — lưu theo tài khoản trên máy này. null = chưa có dữ liệu. */
+function docDaXem(ten: string): Set<string> | null {
+  try {
+    const v = localStorage.getItem(khoaDaXem(ten));
+    return v === null ? null : new Set(JSON.parse(v) as string[]);
+  } catch {
+    return null;
+  }
+}
+export function ghiDaXem(ten: string, ids: Iterable<string>) {
+  try {
+    localStorage.setItem(khoaDaXem(ten), JSON.stringify([...ids]));
+    window.dispatchEvent(new Event(SU_KIEN_DA_XEM_VIEC));
+  } catch {
+    /* bỏ qua */
+  }
+}
+
+/**
+ * Hồ sơ đang giao cho tài khoản mà chưa xem ở "Việc của tôi". Lần đầu dùng trên máy: coi mọi hồ sơ đang giao là đã biết
+ * (chỉ báo những hồ sơ giao sau đó).
+ */
+export function hoMoiGiao(ten: string, dsDuAn: DuAn[], hoCua: (duAnId: string) => Ho[]): { duAn: DuAn; h: Ho }[] {
+  if (!ten) return [];
+  const dang = dsDuAn.flatMap((duAn) => hoCua(duAn.id).filter((h) => h.phuTrach === ten && !h.daXoa).map((h) => ({ duAn, h })));
+  const daXem = docDaXem(ten);
+  if (daXem === null) {
+    ghiDaXem(ten, dang.map((x) => x.h.id));
+    return [];
+  }
+  return dang.filter((x) => !daXem.has(x.h.id));
+}
+/** Đánh dấu đã xem toàn bộ hồ sơ đang giao (giữ cả hồ sơ cũ để không báo lại khi được giao lại). */
+export function danhDauDaXem(ten: string, ids: string[]) {
+  ghiDaXem(ten, new Set([...(docDaXem(ten) ?? []), ...ids]));
+}

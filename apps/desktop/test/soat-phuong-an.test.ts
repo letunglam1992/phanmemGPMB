@@ -117,3 +117,12 @@ describe("Đối chiếu tổng DT thu hồi (1.0.6)", () => {
     expect(s[0]!.noiDung).toMatch(/^Toàn dự án: .* lớn hơn DT theo văn bản 100 m²/);
   });
 });
+
+describe("Soát mật độ cây trồng (1.0.6)", () => {
+  it("hộ mẫu 01 có cây trồng xen vượt quỹ mật độ → cần kiểm tra, nêu loài, thửa, số cây vượt; mở thẻ Kiểm đếm", () => {
+    const r = soat(ho).filter((x) => x.quyTac === "MAT_DO" && x.doiTuong.startsWith("H01"));
+    const cb = r.find((x) => x.muc === "CANH_BAO")!;
+    expect(cb.noiDung).toMatch(/Xoài ĐK >20–25 cm \(thửa 85 tờ 5\): vượt 67/);
+    expect(cb.tab).toBe("kiem-dem");
+  });
+});

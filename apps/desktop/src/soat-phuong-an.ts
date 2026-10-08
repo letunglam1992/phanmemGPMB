@@ -51,10 +51,11 @@ export const QUY_TAC_SOAT: { ma: string; ten: string; canCu: string }[] = [
   { ma: "HO_TRO_TRUNG", ten: "Cùng số định danh có hồ sơ khác (dự án này hoặc dự án khác) đã ghi khoản hỗ trợ cùng loại (P3-2)", canCu: "Điều 108, 109, 111 Luật Đất đai 2024 (cán bộ kiểm tra điều kiện)" },
   { ma: "LUA_CHON_KHAC", ten: "Cùng một vướng mắc (VM-xx, điều khoản chưa rõ) mà các hộ trong dự án được chọn cách xử lý khác nhau", canCu: "QD-19 (docs/06): xử lý linh động, người dùng chọn kèm lý do — cùng trường hợp thì áp dụng thống nhất" },
   { ma: "DOI_THOAI", ten: "Hộ không đồng ý phương án mà chưa tổ chức đối thoại (quá 60 ngày kể từ ngày lấy ý kiến là lỗi); đã đối thoại còn ý kiến", canCu: "điểm a khoản 3 Điều 87 Luật Đất đai 2024" },
+  { ma: "MAT_DO", ten: "Cây trồng vượt mật độ quy định (phần vượt hưởng 30%) hoặc loài không có mật độ quy định — kiểm tra số liệu kiểm đếm, diện tích trồng", canCu: "khoản 4, khoản 5 Điều 5 Phụ lục VIII QĐ 106/2025/QĐ-UBND; VM-10" },
   { ma: "NIEM_YET", ten: "Chưa ghi hoàn thành niêm yết công khai phương án", canCu: "điểm a khoản 3 Điều 87 Luật Đất đai 2024" },
 ];
 /** Thẻ hồ sơ chứa ô cần sửa theo từng quy tắc. */
-const TAB_QUY_TAC: Record<string, string> = { DT_VUOT: "thua", DT_TRONG: "thua", PHAP_LY: "thua", DT_LECH: "thua", KHOAN_CHUA_DU: "tinh", DAT_O_HET: "ho-tro", NN_ON_DINH: "ho-tro", TAM_CU_NK: "nhan-khau", TDC_LO: "ho-tro", HO_TRO_TRUNG: "ho-tro", NIEM_YET: "tien-do", DOI_THOAI: "tien-do" };
+const TAB_QUY_TAC: Record<string, string> = { DT_VUOT: "thua", DT_TRONG: "thua", PHAP_LY: "thua", DT_LECH: "thua", KHOAN_CHUA_DU: "tinh", DAT_O_HET: "ho-tro", NN_ON_DINH: "ho-tro", TAM_CU_NK: "nhan-khau", TDC_LO: "ho-tro", HO_TRO_TRUNG: "ho-tro", NIEM_YET: "tien-do", DOI_THOAI: "tien-do", MAT_DO: "kiem-dem" };
 const canCu = (ma: string) => QUY_TAC_SOAT.find((q) => q.ma === ma)!.canCu;
 
 const so = (v: string | undefined) => (v && laSoMay(v) ? D(v) : null);
@@ -115,6 +116,19 @@ export function soatPhuongAn(duAn: DuAn, kq: { h: Ho; k: KetQuaHo }[], nguong?: 
         bao("TAM_CU_NK", "CANH_BAO", h, "Hỗ trợ tạm cư tính theo nhân khẩu nhưng hồ sơ chưa có nhân khẩu (đang tạm tính 1 nhân khẩu) — nhập danh sách nhân khẩu");
     }
 
+    // 1.0.6: mật độ cây trồng — dòng có cây vượt mật độ; loài không có mật độ quy định
+    const vuot: string[] = [], khongMd: string[] = [];
+    for (const x of k.tatCa) {
+      const d = x.dong;
+      if (!d.ma.startsWith("A14")) continue;
+      const t = x.thuaId ? h.thua.find((y) => y.id === x.thuaId) : undefined;
+      const noi = `${d.noiDung.replace(/^Cây trồng( xen)? – /, "")}${t ? ` (thửa ${t.soThua} tờ ${t.soTo})` : ""}`;
+      const kv = Object.keys(d.thamSo).find((y) => /^(Số cây vượt|Vượt \()/.test(y));
+      if (kv && d.thamSo[kv] !== "0") vuot.push(`${noi}: vượt ${d.thamSo[kv]}`);
+      if (d.canhBao.some((c) => /không (có )?(quy định )?mật độ|không quy định mật độ/i.test(c))) khongMd.push(noi);
+    }
+    if (vuot.length) bao("MAT_DO", "CANH_BAO", h, `Cây vượt mật độ quy định (phần vượt hưởng 30%): ${vuot.join("; ")} — đối chiếu biên bản kiểm đếm, diện tích trồng`);
+    if (khongMd.length) bao("MAT_DO", "THONG_TIN", h, `Loài không có mật độ quy định, tính theo số cây thực tế: ${khongMd.join("; ")}`);
     const dt = trangThaiDoiThoai(h.yKienPA, homNay, lich);
     if (dt.tt === "CAN_DOI_THOAI" || dt.tt === "QUA_HAN")
       bao("DOI_THOAI", dt.tt === "QUA_HAN" ? "LOI" : "CANH_BAO", h, `Không đồng ý phương án${h.yKienPA?.noiDung ? ` (${h.yKienPA.noiDung})` : ""}, chưa ghi đối thoại${dt.han ? ` — hạn ${dt.han.split("-").reverse().join("/")}${dt.tt === "QUA_HAN" ? " đã qua" : ""}` : " — chưa ghi ngày lấy ý kiến để tính hạn 60 ngày"}`);

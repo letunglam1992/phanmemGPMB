@@ -69,3 +69,40 @@ test("Đối chiếu diện tích: nhập DT thu hồi theo văn bản (bắt bu
   await expect(dc).toContainText("10.000,00");
   await expect(dc).toContainText("Thông báo thu hồi đất số 1/TB-UBND (thử)");
 });
+
+test("Việc của tôi: hồ sơ mới được giao có thông báo, nhãn ở thanh bên; mở danh sách thì hết nhãn", async ({ page: p }) => {
+  await vao(p);
+  await p.keyboard.press("Alt+3");
+  await p.locator("[role=tablist] button", { hasText: "Hộ, cá nhân" }).click();
+  await p.locator("tr[data-ho-id]").nth(0).click();
+  await p.getByLabel("Cán bộ phụ trách").selectOption({ index: 1 });
+  await p.getByRole("button", { name: "Lưu hồ sơ" }).click();
+  await expect(p.getByText(/được giao 1 hồ sơ mới/)).toBeVisible();
+  const muc = p.getByRole("button", { name: "Việc của tôi (1 mới)" });
+  await expect(muc).toBeVisible();
+  await muc.click();
+  await expect(p.locator("[data-viec]").first()).toContainText("Mới");
+  await expect(p.getByRole("button", { name: "Việc của tôi", exact: true })).toBeVisible();
+});
+
+test("Hồ sơ nhiều thửa (90): bảng thửa chỉ dựng phần đang nhìn thấy, cuộn xuống thấy thửa cuối", async ({ page: p }) => {
+  await vao(p);
+  await p.keyboard.press("Alt+3");
+  await p.locator("[role=tablist] button", { hasText: "Hộ, cá nhân" }).click();
+  await p.locator("tr[data-ho-id]").nth(0).click();
+  await p.locator("[role=tab]", { hasText: "Thửa đất" }).click();
+  const them = p.getByRole("button", { name: "+ Thêm thửa" });
+  for (let i = 0; i < 88; i++) await them.click();
+  await expect.poll(() => p.locator("tr[data-thua-id]").count()).toBeLessThan(60);
+  const bang = p.locator("table", { has: p.locator("tr[data-thua-id]") });
+  await expect(bang.locator("tbody[aria-hidden]")).toHaveCount(1); // chỉ đệm dưới
+  // cuộn tới cuối: hết đệm dưới, có đệm trên, vẫn dựng ít dòng
+  for (let i = 0; i < 40; i++) {
+    await p.evaluate(() => { for (const e of [document.scrollingElement, ...document.querySelectorAll("*")]) if (e && e.scrollHeight > e.clientHeight + 5) e.scrollTop = e.scrollHeight; });
+    if ((await bang.locator("tbody[aria-hidden]").count()) === 1 && (await bang.locator("tbody").last().getAttribute("aria-hidden")) === null) break;
+    await p.waitForTimeout(100);
+  }
+  expect(await bang.locator("tbody").last().getAttribute("aria-hidden")).toBeNull();
+  await expect(bang.locator("tbody").first()).toHaveAttribute("aria-hidden", "true");
+  await expect.poll(() => p.locator("tr[data-thua-id]").count()).toBeLessThan(60);
+});

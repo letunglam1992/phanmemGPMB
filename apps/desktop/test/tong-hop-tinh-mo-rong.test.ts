@@ -137,6 +137,11 @@ describe("Báo cáo Word toàn tỉnh", () => {
     const dl2 = duLieuBaoCaoTinh(dong2, tt, { phamVi: "tỉnh", denNgay: "2026-10-20", soDonVi: 2, cham: [], nguong: null, tuyen });
     expect(dl2.so_du_an).toBe(2);
     expect(String(dl2.tong_quat)).toContain("2 dự án; 18 hộ");
+    const xml2 = new PizZip(dienMau(mau, dl2)).file("word/document.xml")!.asText().replace(/<[^>]+>/g, "");
+    expect(xml2).toContain("Trong đó, dự án liên xã");
+    expect(xml2).toContain("Đường nối QL6 (LX-2026-001)");
+    expect(xml2).toContain("Xã Mường Bon");
+    expect(xml).not.toContain("Trong đó, dự án liên xã");
     expect(String(dl2.tong_quat)).toContain("Trong đó có 1 dự án liên xã (tuyến qua nhiều xã, phường): Đường nối QL6 (mã LX-2026-001) — 2/3 xã có số liệu, đã bàn giao 4/13 hộ, chưa có số liệu: Xã Mường Bon.");
   });
 });

@@ -56,6 +56,9 @@ Quá hạn kế hoạch; bước quá hạn theo luật (thẩm định 30 ngày
 - **Thưởng bàn giao sớm:** khai báo mốc thưởng ở Thông tin dự án, ghi bàn giao ở Tiến độ hộ (hoặc tích "Tự điền số tiền thưởng" và ghi cách tính, căn cứ — VM-16) → Văn bản → mẫu 20, 21 tự điền danh sách, tổng tiền thưởng.
 - **Hỗ trợ 20% tiền sử dụng đất (VM-28):** thẻ Hỗ trợ → Tái định cư → nhập "Tiền SDĐ phải nộp làm cơ sở 20%" và "Cách xác định, văn bản" (trước hay sau ghi nợ, miễn, giảm); chưa nhập thì khoản "Cần xác nhận".
 - **Báo cáo theo đợt:** báo cáo Word tổng hợp có mục "Kết quả theo đợt thu hồi" khi dự án chia đợt. **Cấp tỉnh:** báo cáo Word có mục "Diễn biến theo tháng" (bảng, biểu đồ, so với tháng trước) khi đã có số liệu từ hai tháng; thẻ Dự án liên xã có ô ngưỡng chênh tỷ lệ bàn giao để nhắc xã chậm.
+- **Việc được giao:** khi được phân công hồ sơ mới, phần mềm báo khi mở và thanh bên hiện "Việc của tôi (n mới)"; mở Việc của tôi để xem (hồ sơ mới có nhãn "Mới").
+- **Soát mật độ cây trồng:** Soát phương án nêu cây vượt mật độ quy định (phần vượt hưởng 30%) và loài không có mật độ quy định — đối chiếu lại biên bản kiểm đếm, diện tích trồng.
+- **PDF bản đồ tiến độ:** dạng vector, chữ chọn được, có lưới tọa độ VN-2000 (X: Bắc, Y: Đông).
 - **Thử phần mềm trên máy thật:** Giới thiệu → **Biểu ghi kết quả thử (Excel)** → điền Đạt / Không đạt / Ghi chú từng việc rồi gửi lại tác giả.
 - **Tìm nhanh (Ctrl + K):** gõ tên, mã hộ, tờ/thửa (5/85 — đúng số tờ, số thửa), 4 số cuối số định danh, hoặc lý trình (Km1+300); Enter mở thẳng thửa tìm được.
 - **Soát phương án** (trước khi chốt): hàng tóm tắt theo quy tắc cho biết bao nhiêu hồ sơ còn vướng từng điều kiện; bấm một dòng để mở đúng thẻ, đúng thửa cần sửa.
