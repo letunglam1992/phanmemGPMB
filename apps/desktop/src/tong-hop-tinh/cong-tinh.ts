@@ -113,6 +113,9 @@ export async function guiGoiLenCong(c: CauHinhCong, bytes: Uint8Array): Promise<
 }
 export const dsGoiTrenCong = (c: CauHinhCong) => json<GoiTrenCong[]>(goi(c, "GET", "/api/goi"));
 export const taiGoiTuCong = async (c: CauHinhCong, ma: string) => (await goi(c, "GET", `/api/goi/${encodeURIComponent(ma)}`)).than;
+/** 1.0.5: các bản cổng đang giữ của một xã (tối đa 5, cũ → mới). Cổng bản cũ → LoiCong 404. */
+export const dsBanTrenCong = (c: CauHinhCong, ma: string) => json<{ id: string; luc: string; kichThuoc: number }[]>(goi(c, "GET", `/api/goi/${encodeURIComponent(ma)}/ban`));
+export const taiBanTuCong = async (c: CauHinhCong, ma: string, id: string) => (await goi(c, "GET", `/api/goi/${encodeURIComponent(ma)}/ban/${encodeURIComponent(id)}`)).than;
 export const dsXaTrenCong = (c: CauHinhCong) => json<XaTrenCong[]>(goi(c, "GET", "/api/xa"));
 export const capMaXa = (c: CauHinhCong, ma: string, ten: string) => json<{ ma: string; token: string }>(goi(c, "POST", "/api/xa", new TextEncoder().encode(JSON.stringify({ ma, ten }))));
 /** 1.0.5: danh sách dự án liên xã trên cổng (tỉnh đưa lên, xã đọc). Cổng bản cũ (chưa có API) → LoiCong 404. */

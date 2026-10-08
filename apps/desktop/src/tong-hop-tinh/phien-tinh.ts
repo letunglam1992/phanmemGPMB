@@ -109,3 +109,44 @@ export async function taiGoiMoi(
   datChoNhan(chuaTai(tren));
   return { ketQua, soNhan, tongTrenCong: tren.length };
 }
+
+const KHOA_BAN_DA_TAI = "gpmb-cong-tinh-ban-da-tai";
+const docBanDaTai = (): Set<string> => { try { return new Set(JSON.parse(localStorage.getItem(KHOA_BAN_DA_TAI) ?? "[]") as string[]); } catch { return new Set(); } };
+const ghiBanDaTai = (s: Set<string>) => { try { localStorage.setItem(KHOA_BAN_DA_TAI, JSON.stringify([...s].slice(-500))); } catch { /* bỏ qua */ } };
+
+/**
+ * 1.0.5 — tải các bản cũ cổng còn giữ (tối đa 5 bản/xã) chưa có trên máy này: bản cũ hơn gói đang có vào "các bản trước"
+ * (xem lại diễn biến), bản mới hơn thì nhận như thường. Khóa ký đổi → bỏ qua (cần xác nhận bằng "Tải gói mới từ cổng").
+ */
+export async function taiBanCu(cong: CauHinhCong, khoa: { tinh: KhoaTinh; biMat: CryptoKey }, o: { homNay: string; tienDo?: (ten: string) => void }): Promise<{ ketQua: string[]; soBan: number }> {
+  const { dsBanTrenCong, taiBanTuCong } = await import("./cong-tinh");
+  const daTai = docBanDaTai();
+  const ketQua: string[] = [];
+  let soBan = 0;
+  for (const g of await dsGoiTrenCong(cong)) {
+    o.tienDo?.(g.ten);
+    let ds: { id: string; luc: string }[];
+    try {
+      ds = await dsBanTrenCong(cong, g.ma);
+    } catch (e) {
+      ketQua.push(`${g.ten}: ${(e as Error).message}`);
+      continue;
+    }
+    for (const b of ds) {
+      const k = `${g.ma}|${b.id}`;
+      if (daTai.has(k)) continue;
+      try {
+        const r = await nhapGoi(await taiBanTuCong(cong, g.ma, b.id), khoa, "CONG", { homNay: o.homNay });
+        if ("banGhi" in r) ketQua.push(`${g.ten} (${b.luc.slice(0, 10)}): ${r.loai === "MOI" ? "nhận mới" : "cập nhật"}`);
+        else if (r.loai !== "TRUNG") ketQua.push(`${g.ten} (${b.luc.slice(0, 10)}): lưu vào các bản trước`);
+        if ("banGhi" in r || r.loai !== "TRUNG") soBan++;
+        daTai.add(k);
+      } catch (e) {
+        if (e instanceof LoiDoiKhoaKy) ketQua.push(`${g.ten} (${b.luc.slice(0, 10)}): khóa ký đổi — bỏ qua`);
+        else ketQua.push(`${g.ten} (${b.luc.slice(0, 10)}): ${(e as Error).message}`);
+      }
+    }
+  }
+  ghiBanDaTai(daTai);
+  return { ketQua, soBan };
+}

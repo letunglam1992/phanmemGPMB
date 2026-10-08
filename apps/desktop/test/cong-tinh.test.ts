@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 // @ts-expect-error tệp JS của Worker (không có khai báo kiểu)
 import worker from "../../../tools/cong-tinh/worker.js";
-import { capMaXa, chuanDiaChi, dsGoiTrenCong, dsXaTrenCong, guiGoiLenCong, kiemTraCong, maTuTen, taiGoiTuCong, thuHoiXa, type CauHinhCong, dsTuyenTrenCong, guiTuyenLenCong } from "../src/tong-hop-tinh/cong-tinh";
+import { capMaXa, chuanDiaChi, dsGoiTrenCong, dsXaTrenCong, guiGoiLenCong, kiemTraCong, maTuTen, taiGoiTuCong, thuHoiXa, type CauHinhCong, dsTuyenTrenCong, guiTuyenLenCong, dsBanTrenCong, taiBanTuCong } from "../src/tong-hop-tinh/cong-tinh";
 
 /** R2 tối giản: put/get/list/delete trong bộ nhớ. */
 function r2() {
@@ -108,6 +108,20 @@ describe("Kết nối cổng từ phần mềm", () => {
     expect(d.tuyen).toEqual([{ ma: "LX-2026-001", ten: "Đường nối QL6", chuDauTu: "Ban QLDA", dsXa: ["Xã Mường Bú", "Xã Chiềng Mung"] }]);
     expect(d.luc).toBeTruthy();
     await expect(guiTuyenLenCong(xa, [])).rejects.toThrow(/quản trị/);
+    vi.unstubAllGlobals();
+  });
+  it("1.0.5: tỉnh liệt kê, tải từng bản cổng còn giữ của xã (≤ 5)", async () => {
+    vi.stubGlobal("fetch", (url: string, init: RequestInit) => worker.fetch(new Request(url, init), env));
+    const tinh: CauHinhCong = { diaChi: chuanDiaChi("https://cong.test/"), ma: QT };
+    const { token } = await capMaXa(tinh, "ban-cu", "Xã Bản Cũ");
+    const xa: CauHinhCong = { diaChi: tinh.diaChi, ma: token };
+    for (let i = 0; i < 7; i++) { await guiGoiLenCong(xa, GOI()); await new Promise((r) => setTimeout(r, 3)); }
+    const ds = await dsBanTrenCong(tinh, "ban-cu");
+    expect(ds).toHaveLength(5);
+    expect(ds[0]!.luc < ds[4]!.luc).toBe(true);
+    expect(ds[0]!.luc).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+    expect((await taiBanTuCong(tinh, "ban-cu", ds[0]!.id)).length).toBe(500);
+    await expect(dsBanTrenCong(xa, "ban-cu")).rejects.toThrow(/quản trị/);
     vi.unstubAllGlobals();
   });
   it("địa chỉ cổng phải https; mã xã từ tên", () => {

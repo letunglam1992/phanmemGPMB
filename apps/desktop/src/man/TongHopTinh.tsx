@@ -6,6 +6,7 @@
  *   xem chi tiết từng dự án như cấp xã (chỉ xem), xuất Excel; quản lý mã truy cập cổng của các xã.
  */
 import { TheLienXaTinh } from "../thanh-phan/LienXaTinh";
+import { TheDienBienTinh } from "../thanh-phan/DienBienTinh";
 import { gomLienXa, type DoanTinh, type TuyenLienXa } from "../tong-hop-tinh/lien-xa";
 import { useEffect, useMemo, useState } from "react";
 import { ChonTep } from "../thanh-phan/ChonTep";
@@ -35,7 +36,7 @@ import { docNguong, dsChamGui, ghiNguong, moTaCham, soNgayTu } from "../tong-hop
 import { HopBaoCaoTinh } from "../thanh-phan/HopBaoCaoTinh";
 import { taoExcelTinh } from "../tong-hop-tinh/excel-tinh";
 import { RaoLoi } from "../thanh-phan/RaoLoi";
-import { SU_KIEN_GOI_MOI, chuaTai, datChoNhan, datKhoaMo, layKhoaMo, taiGoiMoi } from "../tong-hop-tinh/phien-tinh";
+import { SU_KIEN_GOI_MOI, chuaTai, datChoNhan, datKhoaMo, layKhoaMo, taiGoiMoi, taiBanCu } from "../tong-hop-tinh/phien-tinh";
 
 const ngayGio = (iso: string) => {
   if (!iso) return "";
@@ -451,6 +452,23 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
     setDang("");
     await napLai();
   };
+  /** 1.0.5: tải các bản cũ cổng còn giữ (tối đa 5 bản/xã) → các bản trước để xem diễn biến. */
+  const taiBanCuTuCong = async () => {
+    const k = cong ? canMo() : null;
+    if (!cong || !k) return;
+    setDang("Đang tải các bản trên cổng…");
+    let kq: string[] = [];
+    try {
+      const r = await taiBanCu(cong, k, { homNay: homNay(), tienDo: (ten) => setDang(`Đang tải các bản của ${ten}…`) });
+      kq = r.ketQua.length ? r.ketQua : ["Không có bản nào mới so với dữ liệu trên máy."];
+      if (r.soBan) await ghiNhatKy("Tải các bản cũ từ cổng", `${r.soBan} bản`);
+    } catch (e) {
+      kq.push(loiChu(e).replace("Không tìm thấy (kiểm tra địa chỉ cổng)", "Cổng chưa có chức năng tải bản cũ — dán lại mã Worker mới (docs/21 mục 4)"));
+    }
+    setKetQua(kq);
+    setDang("");
+    await napLai();
+  };
   const xem = async (g: BanGhiGoi, duAnId?: string, cu = false) => {
     const k = canMo();
     if (!k || !taiKhoan) return;
@@ -506,6 +524,7 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
               <ChonTep multiple accept={DUOI_GOI} aria-label="Chọn gói dữ liệu của xã" disabled={!moKhoa || !!dang} onChange={(e) => { void nhapTep(e.target.files); e.target.value = ""; }} />
             </div>
             {cong && <button className="nut" disabled={!moKhoa || !!dang} onClick={() => void taiTuCong()}>Tải gói mới từ cổng Cloudflare</button>}
+            {cong && <button className="nut" disabled={!moKhoa || !!dang} title="Cổng giữ 5 bản gần nhất của mỗi xã — tải các bản máy này chưa có vào “các bản trước” để xem diễn biến" onClick={() => void taiBanCuTuCong()}>Tải các bản cũ trên cổng</button>}
             {!moKhoa && !choNhan.length && <div className="mo chu-nho">Mở khóa cấp tỉnh trước khi nhận gói.</div>}
             {dang && <div className="mo" role="status">{dang}</div>}
             {ketQua.length > 0 && <ul className="chu-nho" aria-label="Kết quả nhận gói" style={{ margin: 0, paddingLeft: 18 }}>{ketQua.map((k, i) => <li key={i}>{k}</li>)}</ul>}
@@ -597,6 +616,10 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
           <div className="mo chu-nho" style={{ marginTop: 8 }}>Hiện trạng tính theo cùng quy tắc như cấp xã (tại ngày nhận gói); giá trị "tạm tính" là tổng các khoản phần mềm tính, chưa phải số đã phê duyệt. Bấm tên dự án để xem chi tiết (hồ sơ hộ, kiểm đếm, phương án, bản đồ, văn bản, tệp đính kèm) — chỉ xem.</div>
         </div>
       </div>
+
+      <RaoLoi ten="khung Diễn biến theo tháng">
+        <TheDienBienTinh ds={ds} banCu={banCu} />
+      </RaoLoi>
 
       <RaoLoi ten="khung Dự án liên xã">
         <TheLienXaTinh doan={doanTinh(dong)} dsTuyen={tuyen} napLai={napLai} sua={quyen("CAI_DAT")} xaGoiY={dsXa} />

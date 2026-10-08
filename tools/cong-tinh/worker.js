@@ -16,6 +16,8 @@
  *   DELETE /api/xa/:ma          (tỉnh)  thu hồi mã của xã
  *   PUT    /api/tuyen          (tỉnh)  [{ ma, ten, chuDauTu, dsXa, ghiChu? }] → { soTuyen, luc }  (1.0.5: dự án liên xã)
  *   GET    /api/tuyen          (tỉnh, xã) → { luc, tuyen: [...] } — danh sách dự án liên xã do tỉnh khai (không có hồ sơ)
+ *   GET    /api/goi/:ma/ban    (tỉnh)  → [{ id, luc, kichThuoc }] — các bản cổng đang giữ của xã (tối đa 5, cũ → mới) (1.0.5)
+ *   GET    /api/goi/:ma/ban/:id (tỉnh) → gói của bản đó
  */
 const GIU_BAN = 5;
 const TOI_DA = 95 * 1024 * 1024;
@@ -134,6 +136,14 @@ export default {
         if (cuoi) out.push({ ma: x.ma, ten: x.ten, luc: x.goiCuoi, kichThuoc: cuoi.size });
       }
       return tl(out);
+    }
+    const mb = /^\/api\/goi\/([a-z0-9-]+)\/ban(?:\/([0-9TZ-]+))?$/.exec(p);
+    if (mb && req.method === "GET") {
+      const ds = (await env.KHO.list({ prefix: `goi/${mb[1]}/` })).objects.sort((a, b) => a.key.localeCompare(b.key));
+      if (!mb[2]) return tl(ds.map((o) => { const id = o.key.slice(`goi/${mb[1]}/`.length).replace(/\.gpmbtinh$/, ""); return { id, luc: id.replace(/^(\d{4}-\d{2}-\d{2}T\d{2})-(\d{2})-(\d{2})-(\d{3})Z$/, "$1:$2:$3.$4Z"), kichThuoc: o.size }; }));
+      const o = await env.KHO.get(`goi/${mb[1]}/${mb[2]}.gpmbtinh`);
+      if (!o) return loi(404, "Không còn bản này trên cổng");
+      return new Response(o.body, { headers: { "content-type": "application/octet-stream", ...CORS } });
     }
     const mg = /^\/api\/goi\/([a-z0-9-]+)$/.exec(p);
     if (mg && req.method === "GET") {
