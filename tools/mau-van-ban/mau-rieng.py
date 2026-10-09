@@ -30,7 +30,7 @@ from docx import Document
 from docx.oxml.ns import qn
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from tien_ich_mau import dat_doan, dong_goi_lai, lam_sach, lap, noi_nhan_va_ky, t_elems, than, thay_chu, xoa  # noqa: E402
+from tien_ich_mau import dat_doan, dong_goi_lai, khoi_phap_ly, lam_sach, lap, noi_nhan_va_ky, t_elems, than, thay_chu, xoa  # noqa: E402
 
 NGUON = Path(sys.argv[1])
 RA = Path(__file__).resolve().parents[2] / "apps/desktop/public/mau-van-ban"
@@ -38,8 +38,9 @@ TT = json.loads((NGUON / "thay-the.json").read_text(encoding="utf8"))
 PV = "{#co_pham_vi} ({pham_vi_dot}){/co_pham_vi}"
 
 
-def khoi_dien_tich(ds):
-    """ds: 10 đoạn của khối diện tích (1. Tổng … đến + Đất đồi…). Dựng lại theo trường."""
+def khoi_dien_tich(ds, phap_ly=False):
+    """ds: 10 đoạn của khối diện tích (1. Tổng … đến + Đất đồi…). Dựng lại theo trường; phap_ly: thêm khối theo
+    tình trạng pháp lý nguồn gốc đất (tờ trình, báo cáo thẩm định — không đưa vào quyết định)."""
     p_tong, p_duoc, p_ho, p_ho_l1, p_ho_l2, p_tc, p_khong, p_k1, p_k2, p_k3 = ds
     dat_doan(p_tong, [("1. Tổng diện tích đất thu hồi: {tong_dt_thu_hoi} m2, trong đó:", False)])
     dat_doan(p_duoc, [("* Diện tích đất được bồi thường, hỗ trợ: {dt_duoc_bt} m2.", False)])
@@ -53,6 +54,8 @@ def khoi_dien_tich(ds):
     dat_doan(p_khong, [("* Tổng diện tích đất không được bồi thường, hỗ trợ: {dt_khong_bt} m2{gom_khong}", False)])
     lap(p_k1, "dt_khong_bt_loai", [("+ {ten}: {dien_tich} m2.", False)])
     xoa(p_ho_l2, p_k2, p_k3)
+    if phap_ly:
+        khoi_phap_ly(p_k1.getnext())
 
 
 def bang_danh_sach(tbl):
@@ -95,7 +98,7 @@ def to_trinh(src):
     dat_doan(b[19], [("Thực hiện Thông báo số {tb_thu_hoi_so} ngày {tb_thu_hoi_ngay} của UBND {ten_xa} về việc thông báo thu hồi đất dự án {ten_du_an}" + PV + ";", False)])
     dat_doan(b[20], [("Theo đề nghị của {ten_don_vi_bt} tại Tờ trình số {tt_don_vi_so} ngày {tt_don_vi_ngay} về việc đề nghị thu hồi đất để thực hiện dự án: {ten_du_an}" + PV + ";", False)])
     dat_doan(b[21], [("{ten_phong} kính đề nghị Chủ tịch UBND {ten_xa} thu hồi đất của {so_doi_tuong_mo_ta} để thực hiện dự án: {ten_du_an}" + PV + ", với các nội dung như sau:", False)])
-    khoi_dien_tich(b[22:32])
+    khoi_dien_tich(b[22:32], phap_ly=True)
     dat_doan(b[32], [("2. Địa điểm:", True), (" {dia_diem_du_an}.", False)])
     dat_doan(b[33], [("3. Lý do thu hồi đất:", True), (" {ly_do_thu_hoi}.", False)])
     dat_doan(b[35], [("{ten_phong} kính trình Chủ tịch UBND {ten_xa} xem xét, quyết định./.", False)])
@@ -123,7 +126,7 @@ def bao_cao(src):
     lap(b[11], "can_cu_gach", [("- {.}", False)])
     xoa(*b[12:23])
     dat_doan(b[25], [("- Tờ trình số {tt_don_vi_so} ngày {tt_don_vi_ngay} của {ten_don_vi_bt} về việc đề nghị thu hồi đất để thực hiện dự án: {ten_du_an}" + PV + ".", False)])
-    khoi_dien_tich(b[28:38])
+    khoi_dien_tich(b[28:38], phap_ly=True)
     dat_doan(b[39], [("Nhất trí theo Tờ trình số {tt_don_vi_so} ngày {tt_don_vi_ngay} của {ten_don_vi_bt}, cụ thể như sau:", False)])
     khoi_dien_tich(b[40:50])
     dat_doan(b[50], [("3. Địa điểm:", True), (" {dia_diem_du_an}.", False)])

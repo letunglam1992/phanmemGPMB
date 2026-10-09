@@ -14,7 +14,7 @@ Tác giả, bản quyền: Lê Tùng Lâm – Sở Nông nghiệp và Môi trư�
 - `packages/core`: tính toán thuần (decimal.js), có căn cứ từng dòng. `packages/gis`: đọc DGN V7/V8, dựng thửa.
 - `apps/desktop/src`: React; `tinh-ho.ts` ghép tính toán hộ; `ung-dung.tsx` trạng thái chung; `kho.ts` (IndexedDB) / `kho-mang.ts` (máy chủ).
 - `apps/desktop/src-tauri`: vỏ Rust, máy chủ mạng nội bộ `may_chu.rs` (axum + SQLite).
-- `policy/goi/*.json`: bộ chính sách có căn cứ; `apps/desktop/public/mau-van-ban`: 27 mẫu .docx.
+- `policy/goi/*.json`: bộ chính sách có căn cứ; `apps/desktop/public/mau-van-ban`: 42 tệp .docx (22 mẫu Sổ tay, 13 mẫu theo văn bản thực tế T1–T13, 5 mẫu riêng R1–R5, 2 mẫu báo cáo).
 
 ## Lệnh
 - `npm run typecheck` · `npm test` (gốc kho) · `cd apps/desktop/src-tauri && cargo test`

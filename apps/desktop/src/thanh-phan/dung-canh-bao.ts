@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import type { BoChinhSach } from "@gpmb/core";
 import type { DuAn, Ho } from "../mo-hinh";
 import type { LichLamViec } from "../lich-lam-viec";
@@ -9,6 +9,7 @@ import { tinhHo } from "../tinh-ho";
 import { canhBaoSaoLuu } from "../sao-luu";
 import { canhBaoChung, canhBaoDuAn, homNayIso, thongKe } from "../trang-thai";
 import { useChoNhan } from "../tong-hop-tinh/phien-tinh";
+import { layTienDoNen, ngheTinhNen, tinhNen, type ViecTinh } from "../tinh-nen";
 
 export interface MucCanhBao {
   muc: "CAO" | "TRUNG_BINH" | "THONG_TIN";
@@ -42,7 +43,20 @@ function tongHopNho(...vao: ThamSo) {
 export function useTongHop() {
   const { dsDuAn, hoCua, chinhSach, lich, tyLeCham, lanSaoLuu, quyen, di, moCaiDat, moSaoLuu, khoaKhoiPhuc } = useUngDung();
   const homNay = homNayIso();
-  const duLieu = useMemo(() => tongHopNho(dsDuAn, hoCua, chinhSach, homNay, lich, tyLeCham), [dsDuAn, hoCua, chinhSach, homNay, lich, tyLeCham]);
+  // 1.0.7: nhiều hộ chưa tính (lần mở đầu với dữ liệu lớn) → tính nền từng lát, tổng hợp khi xong (`lan` tăng)
+  const lanNen = useSyncExternalStore(ngheTinhNen, () => layTienDoNen().lan);
+  const tinh = useMemo(() => {
+    const vao: ThamSo = [dsDuAn, hoCua, chinhSach, homNay, lich, tyLeCham];
+    if (lanCuoi && lanCuoi.vao.every((x, i) => x === vao[i])) return lanCuoi.ra;
+    const viec = dsDuAn.flatMap((d) => {
+      const cs = chinhSach(d);
+      return hoCua(d.id).map((h): ViecTinh => [cs, d, h]);
+    });
+    if (tinhNen(viec)) return null;
+    return tongHopNho(...vao);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- lanNen: tính lại khi tính nền xong
+  }, [dsDuAn, hoCua, chinhSach, homNay, lich, tyLeCham, lanNen]);
+  const duLieu = tinh ?? [];
   const choNhan = useChoNhan();
   const nhacSaoLuu = quyen("SAO_LUU") ? canhBaoSaoLuu(lanSaoLuu, homNay, dsDuAn.length > 0) : null;
   const canhBao: MucCanhBao[] = [
@@ -53,5 +67,5 @@ export function useTongHop() {
   ];
   const mo = (c: MucCanhBao) =>
     c.tinh ? di({ ten: "tong-hop-tinh", tab: "tinh" }) : c.caiDat ? moCaiDat(true) : c.saoLuu ? moSaoLuu(true) : c.duAnId && (c.hoId ? di({ ten: "ho", duAnId: c.duAnId, hoId: c.hoId, tab: "tien-do" }) : di({ ten: "du-an", duAnId: c.duAnId }));
-  return { duLieu, canhBao, mo, homNay };
+  return { duLieu, canhBao, mo, homNay, dangTinh: tinh === null };
 }

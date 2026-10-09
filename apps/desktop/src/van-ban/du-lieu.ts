@@ -3,6 +3,7 @@
  * dấu chấm "…………" để cán bộ viết tay/bổ sung.
  */
 import { demYKien } from "../doi-thoai";
+import { NHOM_PHAP_LY, thongKePhapLy } from "../nguon-goc";
 import { D, dinhDang } from "@gpmb/core";
 import type Decimal from "decimal.js";
 import { TEN_DOI_TUONG, type DuAn, type Ho } from "../mo-hinh";
@@ -11,7 +12,7 @@ import { docSoTien } from "./doc-so";
 import type { MauVanBan } from "./danh-muc";
 import { tenDayDu, tenLoaiDat } from "./loai-dat";
 import { soD } from "../so";
-import { duLieuBoTriTdc, duLieuChamTra, duLieuDoiThoai, duLieuThuong, duLieuKeHoach, duLieuNhieuHo, duLieuPhuongAnHo } from "./thuc-te";
+import { duLieuBocTham, duLieuBoTriTdc, duLieuChamTra, duLieuDoiThoai, duLieuThuong, duLieuKeHoach, duLieuNhieuHo, duLieuPhuongAnHo } from "./thuc-te";
 
 export const CHAM = "…………";
 
@@ -205,10 +206,15 @@ export function duLieuDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[]): Record<str
           dt_khong_gcn: khongGcn.gt(0) ? soM2(khongGcn) : "",
           loai_dat_khong_gcn: khongGcn.gt(0) ? tenDayDu(t.loaiDat) : "",
           nguon_goc: t.nguonGoc,
+          phap_ly: t.phapLy ? NHOM_PHAP_LY[t.phapLy].ngan : "",
           ghi_chu: t.ghiChu ?? "",
         });
       }),
   );
+  // 1.0.7 — Diện tích thu hồi theo tình trạng pháp lý nguồn gốc đất (dữ kiện cán bộ ghi ở thửa; không suy ra quyền được
+  // bồi thường — Điều 95 LĐĐ 2024 do cán bộ xác định). Chỉ in khi có thửa đã phân loại; thửa chưa phân loại ghi riêng.
+  const phapLy = thongKePhapLy(ds.map(({ h }) => h));
+  const coPhapLy = phapLy.some((x) => x.nhom !== "CHUA");
   const btDat = cong((k) => k.theoCot.BT_DAT);
   const btTaiSan = cong((k) => k.theoCot.BT_CAY.plus(k.theoCot.BT_TAI_SAN));
   const hoTro = cong((k) => k.tongHoTro);
@@ -275,6 +281,9 @@ export function duLieuDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[]): Record<str
     ds_thua_thu_hoi: dsThua,
     tong_dt_co_gcn: soM2(dtCoGcn),
     tong_dt_khong_gcn: soM2(dtKhongGcn),
+    co_phap_ly: coPhapLy,
+    dt_theo_phap_ly: coPhapLy ? phapLy.map((x) => ({ ten: x.nhom === "CHUA" ? "Chưa ghi tình trạng pháp lý" : NHOM_PHAP_LY[x.nhom].ten, so_thua: x.soThua, dien_tich: soM2(x.dt) })) : [],
+    so_thua_chua_phap_ly: phapLy.find((x) => x.nhom === "CHUA")?.soThua ?? 0,
     so_ho_thuong: "",
     tong_tien_thuong: "",
     tong_tien_thuong_chu: "",
@@ -386,6 +395,7 @@ function duLieuThucTe(p: { mau: MauVanBan; duAn: DuAn; ds: { h: Ho; k: KetQuaHo 
     ...(p.ho ? duLieuPhuongAnHo(p.ho.h, p.ho.k) : {}),
     ...(p.mau.ma === "T8" || p.mau.ma === "T9" ? duLieuBoTriTdc(p.duAn, p.ds) : {}),
     ...(p.mau.ma === "T12" && p.ho ? duLieuDoiThoai(p.ho.h) : {}),
+    ...(p.mau.ma === "T13" ? duLieuBocTham(p.duAn, p.ds) : {}),
     ...(p.mau.ma === "T10" ? { kinh_gui: `Chủ tịch Ủy ban nhân dân ${lower1(p.duAn.xa)}` } : {}),
     ...(p.mau.ma === "T10" || p.mau.ma === "T11" ? duLieuChamTra(p.duAn, p.ds, p.tyLeCham ?? [], p.ngayKy || new Date().toISOString().slice(0, 10)) : {}),
   };

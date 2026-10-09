@@ -156,7 +156,7 @@ export function TheQuyTdc({ duAn, hos }: { duAn: DuAn; hos: Ho[] }) {
           <div className="the-dau">
             <h3>Kết quả bốc thăm</h3>
             <span className="mo chu-nho">Ghi nhận theo biên bản bốc thăm; lô giao theo kết quả được ghi vào hồ sơ từng hộ</span>
-            <div className="phai">{choSua && q.bocTham && <button className="nut nut-chinh" disabled={!tk.trong || !tk.hoChoLo} title={!tk.trong ? "Không còn lô trống" : !tk.hoChoLo ? "Không có hộ chờ bố trí lô" : undefined} onClick={() => setHop({ loai: "boc-tham" })}>Ghi nhận kết quả bốc thăm…</button>}</div>
+            <div className="phai nhom-nut"><button className="nut" onClick={() => di({ ten: "van-ban", duAnId: duAn.id, ma: "T13" })}>Soạn biên bản bốc thăm (T13)</button>{choSua && q.bocTham && <button className="nut nut-chinh" disabled={!tk.trong || !tk.hoChoLo} title={!tk.trong ? "Không còn lô trống" : !tk.hoChoLo ? "Không có hộ chờ bố trí lô" : undefined} onClick={() => setHop({ loai: "boc-tham" })}>Ghi nhận kết quả bốc thăm…</button>}</div>
           </div>
           {(q.ketQuaBocTham ?? []).length === 0 ? (
             <div className="trong chu-nho">Chưa ghi nhận lần bốc thăm nào. Xuất Excel (trang “Hộ chờ bố trí”, “Lô trống”) để chuẩn bị danh sách bốc thăm.</div>

@@ -105,4 +105,40 @@ describe("Quỹ tái định cư (P3-3)", () => {
     expect(wb.getWorksheet("Hộ chờ bố trí")!.getRow(4).getCell(2).value).toBe(hos[1]!.ma);
     expect(wb.getWorksheet("Lô trống")!.getRow(4).getCell(3).value).toBe("A2");
   });
+
+  it("1.0.7 — biên bản bốc thăm (T13): lô trống đưa vào bốc thăm, hộ cần bố trí; điền kết quả khi đã ghi nhận", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { DANH_MUC_MAU } = await import("../src/van-ban/danh-muc");
+    const { ghepDuLieu, thongTinChungMacDinh } = await import("../src/van-ban/du-lieu");
+    const { kiemTraThongNhat } = await import("../src/van-ban/thuc-te");
+    const { dienMau } = await import("../src/van-ban/dien-mau");
+    const PizZip = (await import("pizzip")).default;
+    const { da, hos } = mau();
+    const m = DANH_MUC_MAU.find((x) => x.ma === "T13")!;
+    const tep = readFileSync(new URL("../public/mau-van-ban/tt-bb-boc-tham-tdc.docx", import.meta.url));
+    const chu = (u8: Uint8Array) => new PizZip(u8).file("word/document.xml")!.asText().replace(/<w:p[ >]/g, "\n<w:p ").replace(/<[^>]+>/g, "");
+    const tao = (duAn: DuAn, hs: Ho[]) => ghepDuLieu({ mau: m, duAn, ds: hs.map((h) => ({ h, k: tinhHo(cs, duAn, h) })), chung: thongTinChungMacDinh(duAn), rieng: { quy_che_boc_tham: "Quy chế bốc thăm số 1", nguyen_tac_boc_tham: "Bốc số thứ tự rồi bốc lô" }, so: "", ngayKy: "2026-10-05" });
+    // trước bốc thăm: 2 lô trống (A3 tạm giữ bị bỏ), 2 hộ, cột kết quả trống
+    const du = tao(da, hos);
+    expect((du.ds_lo_boc as { so_lo: string }[]).map((x) => x.so_lo)).toEqual(["A1", "A2"]);
+    expect((du.ds_ket_qua_boc as { thu_tu: string; lo: string }[]).map((x) => [x.thu_tu, x.lo])).toEqual([["", ""], ["", ""]]);
+    expect(du.so_ho_boc_chu).toBe("hai (02)");
+    expect(kiemTraThongNhat("T13", da, du).some((c) => c.includes("Chưa ghi nhận kết quả bốc thăm"))).toBe(true);
+    const t = chu(dienMau(tep, du));
+    expect(t).toContain("BIÊN BẢN");
+    expect(t).toContain("Căn cứ Quy chế bốc thăm số 1;");
+    expect(t).toContain("2. Nguyên tắc, trình tự bốc thăm: Bốc số thứ tự rồi bốc lô");
+    expect(t).toContain("1. Quỹ lô đất ở, căn nhà ở đưa vào bốc thăm: 2 lô/căn tại Khu TĐC bản Mé");
+    expect(t).toContain("NQ 152/2025, Bảng 05, VT1");
+    expect(t).not.toContain("{");
+    // sau khi ghi nhận: thứ tự, lô theo biên bản; lô đã giao theo lần này vẫn ở Biểu 01
+    const r = ghiKetQuaBocTham(da, hos, { ngay: "2026-10-05", bienBan: "05/BB-HĐ", ketQua: [{ stt: 1, hoId: hos[1]!.id, loId: "l2" }, { stt: 2, hoId: hos[0]!.id, loId: "l1" }] }, "A", "2026-10-05T09:00:00Z");
+    const du2 = tao(r.duAn, r.ho);
+    expect((du2.ds_lo_boc as unknown[]).length).toBe(2);
+    expect((du2.ds_ket_qua_boc as { ho_ten: string; thu_tu: string; lo: string }[]).map((x) => [x.ho_ten, x.thu_tu, x.lo])).toEqual([[hos[1]!.ten, "1", "Khu TĐC bản Mé – lô A2"], [hos[0]!.ten, "2", "Khu TĐC bản Mé – lô A1"]]);
+    expect(kiemTraThongNhat("T13", r.duAn, du2).filter((c) => c.includes("bốc thăm"))).toEqual([]);
+    // dự án không chọn bốc thăm → cảnh báo
+    const du3 = tao({ ...da, quyTdc: { lo: da.quyTdc!.lo } }, hos);
+    expect(kiemTraThongNhat("T13", da, du3).some((c) => c.includes("chưa chọn giao lô bằng hình thức bốc thăm"))).toBe(true);
+  });
 });

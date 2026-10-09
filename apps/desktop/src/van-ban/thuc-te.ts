@@ -10,7 +10,7 @@ import { tienSddTdc, type KetQuaHo } from "../tinh-ho";
 import { docSoTien } from "./doc-so";
 import { tenDayDu } from "./loai-dat";
 import { laSoMay, soD } from "../so";
-import { quyCua } from "../quy-tdc";
+import { canBoTriLo, quyCua, tenLo, trangThaiLo } from "../quy-tdc";
 import { tinhChiTra, type GiaiDoanTyLe } from "../chi-tra";
 import { canhBaoCanCu } from "../van-ban-can-cu";
 import { tinhThuong } from "../ban-giao";
@@ -257,6 +257,11 @@ export function kiemTraThongNhat(ma: string, duAn: DuAn, du: Record<string, unkn
   if ((ma === "20" || ma === "21") && Number(du.thuong_thieu_khai_bao) > 0) out.push(`${String(du.thuong_thieu_khai_bao)} hộ đã bàn giao nhưng chưa tính được thưởng: dự án chưa khai báo đủ mốc, tỷ lệ, cơ sở, căn cứ thưởng (Thông tin dự án → Thưởng bàn giao trước hạn — Điều 15 Phụ lục II QĐ 106/2025).`);
   if ((ma === "20" || ma === "21") && !(Array.isArray(du.ds_thuong) && du.ds_thuong.length)) out.push("Không có hộ đã bàn giao mặt bằng được thưởng trong các hộ được chọn — danh sách để trống.");
   else if ((ma === "20" || ma === "21") && Number(du.thuong_chua_ban_giao) > 0) out.push(`${String(du.thuong_chua_ban_giao)} hộ được chọn chưa ghi bàn giao mặt bằng — không có trong danh sách thưởng.`);
+  if ((ma === "R1" || ma === "R2") && du.co_phap_ly && Number(du.so_thua_chua_phap_ly) > 0) out.push(`${String(du.so_thua_chua_phap_ly)} thửa có diện tích thu hồi chưa ghi tình trạng pháp lý nguồn gốc đất (Hồ sơ hộ → Thửa đất) — mục "Phân theo tình trạng pháp lý" có dòng "Chưa ghi".`);
+  if (ma === "T13" && !du.boc_tham_chon) out.push("Dự án chưa chọn giao lô bằng hình thức bốc thăm (Tổng quan dự án → Quỹ tái định cư) — kiểm tra lại hình thức giao lô theo phương án bố trí TĐC được duyệt.");
+  if (ma === "T13" && !Number(du.so_ho_boc)) out.push("Các hộ được chọn không có hộ cần bố trí lô đất ở/căn nhà ở (Hồ sơ hộ → Hỗ trợ → Tái định cư) — Biểu 02 trống.");
+  if (ma === "T13" && Number(du.so_ho_boc) > 0 && Number(du.so_lo_boc) < Number(du.so_ho_boc)) out.push(`Số lô, căn đưa vào bốc thăm (${String(du.so_lo_boc)}) ít hơn số hộ cần bố trí (${String(du.so_ho_boc)}).`);
+  if (ma === "T13" && Number(du.so_ho_boc) > 0 && Number(du.boc_tham_thieu_kq) > 0) out.push(du.boc_tham_bien_ban ? `${String(du.boc_tham_thieu_kq)} hộ chưa có trong kết quả bốc thăm đã ghi nhận (${String(du.boc_tham_bien_ban)}) — cột thứ tự, lô để trống.` : "Chưa ghi nhận kết quả bốc thăm cho các hộ được chọn — cột thứ tự, lô bốc được để trống, ghi tay tại buổi bốc thăm rồi ghi nhận lại ở Quỹ tái định cư.");
   if (ma === "T1" && !Number(du.so_moc)) out.push("Dự án chưa lập kế hoạch từng bước (Dự án → Lập kế hoạch): các mốc thời gian trong Kế hoạch để trống.");
   return out;
 }
@@ -313,6 +318,40 @@ export function duLieuBoTriTdc(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[]): Record
     }),
     so_ho_tdc: hoTdc.length,
     so_ho_tdc_chu: soChu(hoTdc.length).toLowerCase(),
+  };
+}
+
+/**
+ * 1.0.7 — Biên bản bốc thăm lô TĐC (T13): lô, căn còn trống đưa vào bốc thăm (bỏ tạm giữ, đã giao ngoài lần bốc thăm này)
+ * và hộ được chọn cần bố trí lô. Có lần bốc thăm đã ghi nhận gồm hộ được chọn (lần gần nhất) → điền thứ tự, lô bốc được;
+ * không thì để trống cột để ghi tay tại buổi bốc thăm. Không tự xếp lô.
+ */
+export function duLieuBocTham(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[]): Record<string, unknown> {
+  const quy = quyCua(duAn);
+  const hoBoc = ds.filter(({ h }) => canBoTriLo(h)).map(({ h }) => h);
+  const coHo = new Set(hoBoc.map((h) => h.id));
+  const kq = [...(quy.ketQuaBocTham ?? [])].sort((a, b) => b.ngay.localeCompare(a.ngay) || b.luc.localeCompare(a.luc)).find((b) => b.ketQua.some((x) => coHo.has(x.hoId)));
+  const loKq = new Set(kq?.ketQua.map((x) => x.loId));
+  const loBoc = quy.lo.filter((l) => trangThaiLo(l) === "TRONG" || loKq.has(l.id));
+  const loCua = new Map(quy.lo.map((l) => [l.id, l]));
+  const tien0 = (v?: string) => (v?.trim() && laSoMay(v.trim()) ? dinhDang(D(v.trim()), 0) : "");
+  const dongKq = new Map(kq?.ketQua.filter((x) => coHo.has(x.hoId)).map((x) => [x.hoId, x]));
+  const thuTu = [...hoBoc].sort((a, b) => (dongKq.get(a.id)?.stt ?? Infinity) - (dongKq.get(b.id)?.stt ?? Infinity));
+  const khu = [...new Set(loBoc.map((l) => l.khu.trim()).filter(Boolean))];
+  return {
+    ds_lo_boc: loBoc.map((l, i) => ({ stt: i + 1, khu: l.khu, so_lo: l.soLo, loai: l.loai === "DAT_O" ? "Đất ở" : "Nhà ở", dien_tich: l.dienTich.trim() ? soM2(soD(l.dienTich)) : "", gia: tien0(l.gia), can_cu_gia: l.canCuGia ?? "" })),
+    ds_ket_qua_boc: thuTu.map((h, i) => {
+      const x = dongKq.get(h.id);
+      const l = x ? loCua.get(x.loId) : undefined;
+      return { stt: i + 1, ho_ten: h.ten, dia_chi: h.diaChi, hinh_thuc: h.hoTro.taiDinhCu?.hinhThuc === "NHA_O" ? "Nhà ở" : "Đất ở", thu_tu: x ? String(x.stt) : "", lo: l ? tenLo(l) : "", dien_tich: l?.dienTich.trim() ? soM2(soD(l.dienTich)) : "" };
+    }),
+    so_ho_boc: hoBoc.length,
+    so_ho_boc_chu: soChu(hoBoc.length).toLowerCase(),
+    so_lo_boc: loBoc.length,
+    tdc_khu_boc: khu.join("; ") || "…………",
+    boc_tham_chon: !!quy.bocTham,
+    boc_tham_bien_ban: kq?.bienBan ?? "",
+    boc_tham_thieu_kq: kq ? thuTu.filter((h) => !dongKq.has(h.id)).length : hoBoc.length,
   };
 }
 

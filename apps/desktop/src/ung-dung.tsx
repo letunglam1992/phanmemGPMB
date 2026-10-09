@@ -20,6 +20,9 @@ import { KHOA_GOI, coBoChinhSach, dangKyGoi, type GoiDaNap } from "./goi-chinh-s
 import { KHOA_LICH } from "./sao-luu";
 import { coQuyen, dungMatKhau, taoTaiKhoan, tenHienThi, type NguoiDung, type Quyen, type VaiTro } from "./tai-khoan";
 
+/** 1.0.7: một bộ so sánh dùng chung (localeCompare có tùy chọn tạo bộ so sánh mới mỗi lần — chậm với hàng chục nghìn hộ). */
+const SO_MA = new Intl.Collator("vi", { numeric: true });
+
 export type Man =
   | { ten: "tong-quan" }
   | { ten: "du-an"; duAnId?: string; tab?: string; ma?: string; hoId?: string }
@@ -274,7 +277,7 @@ export function NhaCungCap({ children, kho: khoVao, chiXem, phienDau }: { childr
     const da = await kho.dsDuAn();
     const hos = (await Promise.all(da.map((d) => kho.dsHo(d.id)))).flat();
     setDsDuAn(da.sort((a, b) => b.taoLuc.localeCompare(a.taoLuc)));
-    setDsHo(hos.sort((a, b) => a.ma.localeCompare(b.ma, "vi", { numeric: true })));
+    setDsHo(hos.sort((a, b) => SO_MA.compare(a.ma, b.ma)));
     setDangTai(false);
   }, [kho]);
 
@@ -300,7 +303,7 @@ export function NhaCungCap({ children, kho: khoVao, chiXem, phienDau }: { childr
         const out = ds.filter((h) => !bo.has(h.id) && !boDa.has(h.duAnId)).map((h) => moi.get(h.id) ?? h);
         let them = false;
         for (const h of moi.values()) if (!ds.some((y) => y.id === h.id)) (out.push(h), (them = true));
-        return them ? out.sort((a, b) => a.ma.localeCompare(b.ma, "vi", { numeric: true })) : out;
+        return them ? out.sort((a, b) => SO_MA.compare(a.ma, b.ma)) : out;
       });
     }
   }, []);

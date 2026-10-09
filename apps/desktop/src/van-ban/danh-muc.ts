@@ -312,6 +312,22 @@ DANH_MUC_MAU.push(
       GIO_KT,
     ],
   },
+  {
+    ma: "T13", ten: "Biên bản bốc thăm vị trí lô đất ở, căn nhà ở tái định cư", buoc: "9", phamVi: "DOT", coQuan: "BIEN_BAN", nguon: "THUC_TE", tep: "tt-bb-boc-tham-tdc.docx",
+    moTa: "Dùng khi dự án giao lô tái định cư bằng hình thức bốc thăm (Quỹ tái định cư → tích \"Giao lô bằng bốc thăm\"). Luật Đất đai 2024 và nghị định hướng dẫn không ban hành mẫu — bố cục theo biên bản của Sổ tay; nguyên tắc, trình tự bốc thăm ghi theo quy chế/phương án bố trí TĐC được duyệt. Biểu 01: lô, căn còn trống (bỏ lô tạm giữ, đã giao); Biểu 02: hộ được chọn cần bố trí lô — đã ghi nhận kết quả bốc thăm thì điền thứ tự, lô bốc được; chưa thì để trống ghi tay. Phần mềm không bốc thăm thay.",
+    nhapThem: [
+      { truong: "qd_tdc_so", nhan: "Quyết định phê duyệt phương án bố trí TĐC số" }, { truong: "qd_tdc_ngay", nhan: "ngày" },
+      { truong: "qd_tdc_co_quan", nhan: "Cơ quan phê duyệt", goiY: "vd. Chủ tịch Ủy ban nhân dân xã …" },
+      { truong: "quy_che_boc_tham", nhan: "Căn cứ tổ chức bốc thăm", goiY: "vd. Quy chế bốc thăm … ban hành kèm theo Quyết định số … ngày … của …" },
+      THOI_DIEM, DIA_DIEM,
+      { truong: "tp_don_vi_bt", nhan: "Đại diện đơn vị thực hiện bồi thường", nhieuDong: true },
+      { truong: "tp_ubnd", nhan: "Đại diện UBND xã, phường", nhieuDong: true },
+      { truong: "tp_khac", nhan: "Thành phần khác (nếu có)", nhieuDong: true, goiY: "vd. đại diện Ủy ban Mặt trận Tổ quốc, trưởng bản, tổ dân phố" },
+      { truong: "nguyen_tac_boc_tham", nhan: "Nguyên tắc, trình tự bốc thăm", nhieuDong: true, goiY: "Ghi theo quy chế/phương án được duyệt (bốc số thứ tự, bốc lô; ưu tiên nếu có…)" },
+      { truong: "y_kien", nhan: "Ý kiến của các hộ tham gia bốc thăm", nhieuDong: true, goiY: "Để trống nếu không có ý kiến; hộ vắng mặt, ủy quyền… ghi rõ" },
+      GIO_KT,
+    ],
+  },
 );
 
 export const mauTheoMa = (ma: string) => DANH_MUC_MAU.find((m) => m.ma === ma)!;

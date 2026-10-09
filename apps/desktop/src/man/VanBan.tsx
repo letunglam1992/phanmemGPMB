@@ -240,7 +240,7 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
   const xem: [string, unknown][] = [
     ["ten_du_an", duLieuXem.ten_du_an],
     ...(mau.phamVi === "HO" ? ([["ho_ten", duLieuXem.ho_ten], ["dia_chi", duLieuXem.dia_chi], ["dt_thu_hoi", dv(duLieuXem.dt_thu_hoi, "m²")], ["thua_mo_ta", duLieuXem.thua_mo_ta], ["tong_tien", dv(duLieuXem.tong_tien, "đ")], ["tong_tien_chu", duLieuXem.tong_tien_chu]] as [string, unknown][]) : ([["tong_dt_thu_hoi", dv(duLieuXem.tong_dt_thu_hoi, "m²")], ["so_doi_tuong", duLieuXem.so_doi_tuong], ["tong_gia_tri", dv(duLieuXem.tong_gia_tri, "đ")], ["tong_gia_tri_chu", duLieuXem.tong_gia_tri_chu]] as [string, unknown][])),
-    ...(mau.phamVi === "DOT" ? ([["so_doi_tuong_mo_ta", duLieuXem.so_doi_tuong_mo_ta], ["dt_duoc_bt", dv(duLieuXem.dt_duoc_bt, "m²")], ["dt_khong_bt", dv(duLieuXem.dt_khong_bt, "m²")], ["ds_thua_thu_hoi", dv((duLieuXem.ds_thua_thu_hoi as unknown[] | undefined)?.length, "dòng")], ["tong_dt_co_gcn", dv(duLieuXem.tong_dt_co_gcn, "m²")]] as [string, unknown][]) : []),
+    ...(mau.phamVi === "DOT" ? ([["so_doi_tuong_mo_ta", duLieuXem.so_doi_tuong_mo_ta], ["dt_duoc_bt", dv(duLieuXem.dt_duoc_bt, "m²")], ["dt_khong_bt", dv(duLieuXem.dt_khong_bt, "m²")], ["ds_thua_thu_hoi", dv((duLieuXem.ds_thua_thu_hoi as unknown[] | undefined)?.length, "dòng")], ["tong_dt_co_gcn", dv(duLieuXem.tong_dt_co_gcn, "m²")], ["dt_theo_phap_ly", duLieuXem.co_phap_ly ? dv((duLieuXem.dt_theo_phap_ly as unknown[] | undefined)?.length, "nhóm pháp lý") : "chưa phân loại thửa nào (không in)"]] as [string, unknown][]) : []),
     ["tb_thu_hoi_so", duLieuXem.tb_thu_hoi_so],
     ["tb_thu_hoi_ngay", duLieuXem.tb_thu_hoi_ngay],
     ["can_cu", dv((duLieuXem.can_cu as string[] | undefined)?.length, "căn cứ")],

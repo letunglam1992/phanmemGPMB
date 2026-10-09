@@ -363,6 +363,9 @@ export function tinhHo(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
   return k;
 }
 
+/** 1.0.7 — Đã có kết quả trong bộ nhớ đệm chưa (để tính nền phần còn thiếu, tinh-nen.ts). */
+export const daTinh = (cs: BoChinhSach, duAn: DuAn, ho: Ho): boolean => !!DEM.get(ho)?.get(duAn)?.has(cs);
+
 /** Tính không qua bộ nhớ đệm. */
 export function tinhHoMoi(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
   const loiHo = truongLoi(truongSoHo(ho));

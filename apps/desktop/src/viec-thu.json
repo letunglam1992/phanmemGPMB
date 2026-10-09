@@ -69,5 +69,13 @@
    "Hai tài khoản: tài khoản A phân công hồ sơ cho B → B đăng nhập thấy thông báo, \"Việc của tôi (1 mới)\".",
    "Hồ sơ nhiều thửa, nhiều tài sản: cuộn bảng mượt."
   ]
+ },
+ {
+  "ten": "A7. Thử bản 1.0.7 trên máy thật (khi phát hành)",
+  "viec": [
+   "Dự án có Quỹ TĐC, tích \"Giao lô bằng bốc thăm\" → thẻ Kết quả bốc thăm → \"Soạn biên bản bốc thăm (T13)\": Biểu 01 đúng lô còn trống, Biểu 02 đúng hộ; sau khi ghi nhận kết quả, soạn lại thấy thứ tự, lô.",
+   "Ghi Tình trạng pháp lý cho vài thửa → Văn bản R1, R2: mục \"Phân theo tình trạng pháp lý nguồn gốc đất\"; dòng \"Chưa ghi…\" và cảnh báo khi còn thửa chưa ghi.",
+   "Máy có dữ liệu lớn (hàng nghìn hộ): đăng nhập → Tổng quan hiện nhanh với thanh \"Đang tính phương án các hộ lần đầu\"; bấm được menu trong lúc tính; tính xong có đủ số liệu."
+  ]
  }
 ]

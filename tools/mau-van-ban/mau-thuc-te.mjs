@@ -477,7 +477,66 @@ MAU.T12 = () => [
   ],
 ];
 
-const DANH_SACH = { T1: "tt-ke-hoach", T8: "tt-tb-du-kien-tdc", T9: "tt-tb-cong-bo-tdc", T10: "tt-to-trinh-cham-tra", T11: "tt-qd-cham-tra", T12: "tt-bb-doi-thoai", T2: "tt-to-trinh-tb", T3: "tt-thong-bao", T4: "tt-to-trinh-pa-ho", T5: "tt-qd-pa-ho", T6: "tt-to-trinh-thu-hoi", T7: "tt-qd-thu-hoi" };
+/**
+ * 1.0.7 — Biên bản bốc thăm lô đất ở, căn nhà ở tái định cư: Luật Đất đai 2024 và các nghị định hướng dẫn không ban hành
+ * mẫu; bố cục theo các biên bản của Sổ tay. Nguyên tắc, trình tự bốc thăm do người dùng ghi theo quy chế/phương án được
+ * duyệt. Biểu 01 (lô, căn đưa vào bốc thăm) và Biểu 02 (kết quả) lấy từ Quỹ tái định cư; chưa ghi kết quả thì để trống
+ * cột thứ tự, lô bốc được để ghi tay tại buổi bốc thăm.
+ */
+MAU.T13 = () => [
+  [
+    ...quocHieu({ ngay: true }),
+    ...tenVanBan("BIÊN BẢN", "Bốc thăm vị trí lô đất ở, căn nhà ở tái định cư\ndự án {ten_du_an}"),
+    P("Căn cứ Quyết định số {qd_tdc_so} ngày {qd_tdc_ngay} của {qd_tdc_co_quan} phê duyệt phương án bố trí tái định cư dự án {ten_du_an};", { nghieng: true, truoc: 120 }),
+    P("Căn cứ {quy_che_boc_tham};", { nghieng: true }),
+    P("Hôm nay, vào hồi {thoi_diem}, tại {dia_diem_lam_viec}, {ten_don_vi_bt} phối hợp với Ủy ban nhân dân {ten_xa} tổ chức bốc thăm vị trí lô đất ở, căn nhà ở tái định cư cho hộ gia đình, cá nhân được bố trí tái định cư, gồm:"),
+    P("**I. THÀNH PHẦN THAM GIA**"),
+    ...thanhPhan([
+      ["Đại diện đơn vị, tổ chức thực hiện nhiệm vụ bồi thường, hỗ trợ, tái định cư:", "tp_don_vi_bt"],
+      ["Đại diện Ủy ban nhân dân {ten_xa}:", "tp_ubnd"],
+      ["Các thành phần khác có liên quan (nếu có):", "tp_khac"],
+    ]),
+    P("**4. Hộ gia đình, cá nhân được bố trí tái định cư:** {so_ho_boc_chu} hộ, danh sách tại Biểu số 02 kèm theo.", { dam: false }),
+    P("**II. NỘI DUNG**"),
+    P("1. Quỹ lô đất ở, căn nhà ở đưa vào bốc thăm: {so_lo_boc} lô/căn tại {tdc_khu_boc}; chi tiết tại Biểu số 01 kèm theo."),
+    P("2. Nguyên tắc, trình tự bốc thăm: {nguyen_tac_boc_tham}"),
+    P("3. Kết quả bốc thăm: chi tiết tại Biểu số 02 kèm theo (thứ tự bốc thăm, lô/căn bốc được); người bốc thăm ký xác nhận vào biểu."),
+    P("4. Ý kiến của các hộ gia đình, cá nhân tham gia bốc thăm: {y_kien}"),
+    P("Biên bản kết thúc vào hồi {gio_ket_thuc} cùng ngày, các thành phần tham gia đã đọc, nhất trí với các nội dung trên đây và ký tên dưới đây./."),
+    kyBienBan([
+      "ĐƠN VỊ, TỔ CHỨC THỰC HIỆN NHIỆM VỤ\nBỒI THƯỜNG, HỖ TRỢ, TÁI ĐỊNH CƯ",
+      "ĐẠI DIỆN UBND {TEN_XA}",
+      "CÁC THÀNH PHẦN KHÁC (NẾU CÓ)",
+      "ĐẠI DIỆN CÁC HỘ THAM GIA\n(có danh sách ký tại Biểu số 02)",
+    ]),
+  ],
+  [
+    ...TIEU_DE_BIEU("Biểu số 01. LÔ ĐẤT Ở, CĂN NHÀ Ở ĐƯA VÀO BỐC THĂM", "Biên bản bốc thăm ngày {ngay_ky_ngan}"),
+    bieu("ds_lo_boc", [
+      { tieuDe: "STT", truong: "{stt}", rong: 5 },
+      { tieuDe: "Khu, điểm tái định cư", truong: "{khu}", rong: 24, canh: AlignmentType.LEFT },
+      { tieuDe: "Lô / căn số", truong: "{so_lo}", rong: 10 },
+      { tieuDe: "Loại", truong: "{loai}", rong: 9 },
+      { tieuDe: "Diện tích (m²)", truong: "{dien_tich}", rong: 11, canh: AlignmentType.RIGHT },
+      { tieuDe: "Giá đất / giá nhà TĐC (đồng/m²)", truong: "{gia}", rong: 14, canh: AlignmentType.RIGHT },
+      { tieuDe: "Căn cứ giá", truong: "{can_cu_gia}", rong: 27, canh: AlignmentType.LEFT },
+    ]),
+    new Paragraph({ children: [], pageBreakBefore: true }),
+    ...TIEU_DE_BIEU("Biểu số 02. KẾT QUẢ BỐC THĂM", "Biên bản bốc thăm ngày {ngay_ky_ngan}"),
+    bieu("ds_ket_qua_boc", [
+      { tieuDe: "STT", truong: "{stt}", rong: 5 },
+      { tieuDe: "Họ và tên", truong: "{ho_ten}", rong: 18, canh: AlignmentType.LEFT },
+      { tieuDe: "Địa chỉ", truong: "{dia_chi}", rong: 16, canh: AlignmentType.LEFT },
+      { tieuDe: "Hình thức bố trí", truong: "{hinh_thuc}", rong: 10 },
+      { tieuDe: "Thứ tự bốc thăm", truong: "{thu_tu}", rong: 8 },
+      { tieuDe: "Lô / căn bốc được (khu – lô)", truong: "{lo}", rong: 18, canh: AlignmentType.LEFT },
+      { tieuDe: "Diện tích (m²)", truong: "{dien_tich}", rong: 9, canh: AlignmentType.RIGHT },
+      { tieuDe: "Người bốc thăm ký, ghi rõ họ tên", truong: "", rong: 16 },
+    ]),
+  ],
+];
+
+const DANH_SACH = { T1: "tt-ke-hoach", T8: "tt-tb-du-kien-tdc", T9: "tt-tb-cong-bo-tdc", T10: "tt-to-trinh-cham-tra", T11: "tt-qd-cham-tra", T12: "tt-bb-doi-thoai", T13: "tt-bb-boc-tham-tdc", T2: "tt-to-trinh-tb", T3: "tt-thong-bao", T4: "tt-to-trinh-pa-ho", T5: "tt-qd-pa-ho", T6: "tt-to-trinh-thu-hoi", T7: "tt-qd-thu-hoi" };
 for (const [ma, tep] of Object.entries(DANH_SACH)) {
   const [chinh, phu] = MAU[ma]();
   const buf = await Packer.toBuffer(taoDoc(chinh, phu));

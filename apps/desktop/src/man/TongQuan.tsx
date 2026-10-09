@@ -2,7 +2,8 @@ import { ONgay } from "../thanh-phan/ONgay";
 import { TheQd64 } from "../thanh-phan/Qd64";
 import { GOI_MOI_NHAT } from "../goi-chinh-sach";
 import { TheBatDau } from "../thanh-phan/BatDau";
-import { useRef, useState } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
+import { layTienDoNen, ngheTinhNen } from "../tinh-nen";
 import { D } from "@gpmb/core";
 import { useUngDung } from "../ung-dung";
 import { TEN_CACH_LAM_TRON } from "../tinh-ho";
@@ -31,10 +32,23 @@ function TheKpi(p: { bt: string; nhan: string; gt: number; ms: number; tong: Ton
   );
 }
 
+/** 1.0.7 — Thanh tiến độ tính nền lần mở đầu (dữ liệu lớn); chỉ thẻ này vẽ lại theo tiến độ. */
+function TienDoTinhNen() {
+  const t = useSyncExternalStore(ngheTinhNen, layTienDoNen);
+  const pt = t.tong ? Math.floor((t.xong / t.tong) * 100) : 0;
+  return (
+    <div className="thong-bao thong-bao-xanh" role="status" aria-label="Đang tính số liệu tổng hợp">
+      <b>Đang tính phương án các hộ lần đầu{t.tong ? `: ${t.xong.toLocaleString("vi-VN")}/${t.tong.toLocaleString("vi-VN")} hộ (${pt}%)` : "…"}</b>
+      <div className="chu-nho">Giao diện vẫn dùng được trong lúc tính; số liệu, cảnh báo của Tổng quan hiện khi tính xong. Các lần mở sau trong phiên dùng kết quả đã tính.</div>
+      <progress max={100} value={pt} style={{ width: "100%" }} />
+    </div>
+  );
+}
+
 export function TongQuan() {
   const { dsDuAn, di, taiLai, kho, dangTai, quyen } = useUngDung();
   const [taoMoi, setTaoMoi] = useState(false);
-  const { duLieu, canhBao, mo } = useTongHop();
+  const { duLieu, canhBao, mo, dangTinh } = useTongHop();
   const dsRef = useRef<HTMLDivElement>(null);
 
   const napMau = async () => {
@@ -90,6 +104,7 @@ export function TongQuan() {
         </div>
       </div>
 
+      {dangTinh && <TienDoTinhNen />}
       <TheBatDau taoDuAn={() => setTaoMoi(true)} />
       <TheQd64 />
       <section className="the tq-tinh-trang" aria-label="Tình trạng chung">
@@ -180,7 +195,7 @@ export function TongQuan() {
         <div className="the" style={{ alignSelf: "start" }}>
           <div className="the-dau"><h2>Dự án</h2><span className="mo chu-nho">{dsDuAn.length}</span><div className="phai"><button className="nut nut-nho" onClick={() => di({ ten: "du-an" })}>Mở danh sách dự án</button></div></div>
           <div className="the-than luoi" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))" }}>
-            {duLieu.length === 0 && <div className="trong">{dangTai ? "Đang tải…" : "Chưa có dự án. Tạo dự án mới hoặc nạp dữ liệu mẫu để xem thử."}</div>}
+            {duLieu.length === 0 && <div className="trong">{dangTai ? "Đang tải…" : dangTinh ? "Đang tính số liệu các dự án…" : "Chưa có dự án. Tạo dự án mới hoặc nạp dữ liệu mẫu để xem thử."}</div>}
             {duLieu.map(({ d, tk, tong, cb }) => (
               <div key={d.id} className="the the-du-an" data-du-an-id={d.id} onClick={() => di({ ten: "du-an", duAnId: d.id })}>
                 <div className="bang-dk-dau">

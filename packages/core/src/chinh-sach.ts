@@ -177,11 +177,20 @@ export function nhomDiaBan(phanNhom: Record<string, string[]>, xa: string, macDi
 
 const chuanTen = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/gi, "d").toLowerCase().replace(/\s+/g, " ").trim();
 
+/** Ghi nhớ theo (bộ chính sách, tên xã) — gọi cho từng hộ khi tính, rà soát (1.0.7: tránh chuẩn hóa chuỗi lặp lại). */
+const DEM_THON = new WeakMap<BoChinhSach, Map<string, readonly { thon: string; heSo: string; canCu: string }[]>>();
+
 /** Tổ, thôn, bản, tiểu khu của một xã có trong danh sách hệ số chuyển đổi nghề (QĐ 64/2026), kèm hệ số. */
-export function thonCoHeSo(cs: BoChinhSach, xa: string): { thon: string; heSo: string; canCu: string }[] {
+export function thonCoHeSo(cs: BoChinhSach, xa: string): readonly { thon: string; heSo: string; canCu: string }[] {
+  let m0 = DEM_THON.get(cs);
+  if (!m0) DEM_THON.set(cs, (m0 = new Map()));
+  const co = m0.get(xa);
+  if (co) return co;
   const out: { thon: string; heSo: string; canCu: string }[] = [];
-  for (const m of cs.chuyenDoiNghe.theoThon ?? []) for (const x of m.ds) if (chuanTen(x.xa) === chuanTen(xa)) for (const t of x.thon) out.push({ thon: t, heSo: m.heSo, canCu: m.canCu });
-  return out;
+  const k = chuanTen(xa);
+  for (const m of cs.chuyenDoiNghe.theoThon ?? []) for (const x of m.ds) if (chuanTen(x.xa) === k) for (const t of x.thon) out.push({ thon: t, heSo: m.heSo, canCu: m.canCu });
+  m0.set(xa, Object.freeze(out));
+  return m0.get(xa)!;
 }
 
 /**

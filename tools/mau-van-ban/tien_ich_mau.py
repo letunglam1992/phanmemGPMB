@@ -120,3 +120,23 @@ def dong_goi_lai(path):
     with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
         for ten, (info, du) in muc.items():
             z.writestr(ten, du)
+
+
+def khoi_phap_ly(p_sau):
+    """1.0.7 — Sau đoạn p_sau (thường là {/dt_khong_bt_loai}): khối tùy chọn diện tích thu hồi theo tình trạng pháp lý
+    nguồn gốc đất (dữ kiện cán bộ ghi ở từng thửa). Chỉ hiện khi có thửa đã phân loại ({#co_phap_ly})."""
+    mau = copy.deepcopy(p_sau)
+    doan = [
+        ("{#co_phap_ly}", False),
+        ("* Phân theo tình trạng pháp lý nguồn gốc đất (theo hồ sơ thửa đất):", False),
+        ("{#dt_theo_phap_ly}", False),
+        ("+ {ten}: {so_thua} thửa, {dien_tich} m2.", False),
+        ("{/dt_theo_phap_ly}", False),
+        ("{/co_phap_ly}", False),
+    ]
+    truoc = p_sau
+    for chu, dam in doan:
+        p = copy.deepcopy(mau)
+        dat_doan(p, [(chu, dam)])
+        truoc.addnext(p)
+        truoc = p

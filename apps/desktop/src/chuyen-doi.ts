@@ -21,7 +21,17 @@ export interface BuocChuyenDoi {
   luonChay?: boolean;
   ho?: (h: Ho) => DoiTuDong[];
   duAn?: (d: DuAn) => DoiTuDong[];
+  /** 1.0.7: kiểm tra nhanh, không sửa — false thì bỏ qua bước mà không cần sao chép bản ghi (dữ liệu lớn mở nhanh). */
+  canHo?: (h: Ho) => boolean;
+  canDuAn?: (d: DuAn) => boolean;
 }
+
+/** Có giá trị số một nghĩa chưa ở chuẩn máy (cùng điều kiện với chuanHoaSo, không sửa). */
+const canChuanHoa = (ds: TruongSo[]) =>
+  ds.some((x) => {
+    const v = x.gt.trim();
+    return !!v && !laSoMay(v) && docSoNhap(v).so !== null;
+  });
 
 /** Đổi giá trị số một nghĩa sang chuẩn máy ("9222,1" → 9222.1); giá trị mơ hồ ("20.000") để cán bộ chọn (ra-soat-so.ts). */
 function chuanHoaSo(ds: TruongSo[]): DoiTuDong[] {
@@ -38,14 +48,17 @@ function chuanHoaSo(ds: TruongSo[]): DoiTuDong[] {
 }
 
 export const CAC_BUOC_CHUYEN_DOI: BuocChuyenDoi[] = [
-  { den: 2, ten: "Chuẩn hóa định dạng số (P0-2)", luonChay: true, ho: (h) => chuanHoaSo(truongSoHo(h)), duAn: (d) => chuanHoaSo(truongSoDuAn(d)) },
+  { den: 2, ten: "Chuẩn hóa định dạng số (P0-2)", luonChay: true, ho: (h) => chuanHoaSo(truongSoHo(h)), duAn: (d) => chuanHoaSo(truongSoDuAn(d)), canHo: (h) => canChuanHoa(truongSoHo(h)), canDuAn: (d) => canChuanHoa(truongSoDuAn(d)) },
 ];
 
 export const PHIEN_BAN_CAU_TRUC = Math.max(1, ...CAC_BUOC_CHUYEN_DOI.map((b) => b.den));
 
-function chay<T extends { phienBanCauTruc?: number }>(goc: T, lay: (b: BuocChuyenDoi) => ((x: T) => DoiTuDong[]) | undefined): { ban: T; doi: DoiTuDong[]; buoc: string[] } | null {
-  const ban = structuredClone(goc);
+function chay<T extends { phienBanCauTruc?: number }>(goc: T, lay: (b: BuocChuyenDoi) => ((x: T) => DoiTuDong[]) | undefined, can: (b: BuocChuyenDoi) => ((x: T) => boolean) | undefined): { ban: T; doi: DoiTuDong[]; buoc: string[] } | null {
   const pb = goc.phienBanCauTruc ?? 1;
+  // không bước nào cần chạy → không sao chép (bước không có hàm kiểm tra nhanh thì coi như cần chạy)
+  const canChay = CAC_BUOC_CHUYEN_DOI.some((b) => lay(b) && (b.luonChay || pb < b.den) && (can(b)?.(goc) ?? true));
+  if (!canChay) return null;
+  const ban = structuredClone(goc);
   const doi: DoiTuDong[] = [];
   const buoc: string[] = [];
   for (const b of CAC_BUOC_CHUYEN_DOI) {
@@ -61,13 +74,13 @@ function chay<T extends { phienBanCauTruc?: number }>(goc: T, lay: (b: BuocChuye
 
 /** Chuyển đổi hồ sơ trên bản sao; ghi nhật ký hồ sơ. Trả null nếu không có gì đổi. */
 export function chuyenDoiHo(h: Ho): { h: Ho; doi: DoiTuDong[] } | null {
-  const r = chay(h, (b) => b.ho);
+  const r = chay(h, (b) => b.ho, (b) => b.canHo);
   if (!r) return null;
   r.ban.nhatKy = [...r.ban.nhatKy, { luc: new Date().toISOString(), nguoi: `Phần mềm (chuyển đổi dữ liệu: ${r.buoc.join("; ")})`, noiDung: `Đổi: ${r.doi.map((d) => `${d.nhan}: "${d.tu}" → ${d.thanh}`).join("; ")}` }];
   return { h: r.ban, doi: r.doi };
 }
 
 export function chuyenDoiDuAn(d: DuAn): { d: DuAn; doi: DoiTuDong[] } | null {
-  const r = chay(d, (b) => b.duAn);
+  const r = chay(d, (b) => b.duAn, (b) => b.canDuAn);
   return r && { d: r.ban, doi: r.doi };
 }

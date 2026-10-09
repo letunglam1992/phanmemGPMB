@@ -20,7 +20,7 @@ const vanBan = (u8: Uint8Array) => new PizZip(u8).file("word/document.xml")!.asT
 describe("22 mẫu văn bản QĐ 1966/QĐ-UBND", () => {
   it("đủ 22 mẫu Sổ tay + 5 mẫu riêng, mỗi mẫu có tệp và trường hợp lệ", () => {
     expect(DANH_MUC_MAU.filter((m) => !m.nguon).map((m) => m.ma)).toEqual(Array.from({ length: 22 }, (_, i) => String(i + 1).padStart(2, "0")));
-    expect(DANH_MUC_MAU.filter((m) => m.nguon === "THUC_TE").map((m) => m.ma)).toEqual(["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"]);
+    expect(DANH_MUC_MAU.filter((m) => m.nguon === "THUC_TE").map((m) => m.ma)).toEqual(["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12", "T13"]);
     expect(DANH_MUC_MAU.filter((m) => m.nguon === "RIENG").map((m) => m.ma)).toEqual(["R1", "R2", "R3", "R4", "R5"]);
     for (const m of DANH_MUC_MAU) expect(truongTrongMau(docMau(m.ma)).length).toBeGreaterThan(3);
   });
@@ -92,6 +92,34 @@ describe("22 mẫu văn bản QĐ 1966/QĐ-UBND", () => {
       }
       if (ma === "R2") expect(t).toContain("- Luật Tổ chức chính quyền địa phương số 72/2025/QH15;");
       else expect(t).toContain("Căn cứ Luật Tổ chức chính quyền địa phương số 72/2025/QH15;");
+    }
+  });
+
+  it("1.0.7 — mẫu riêng R1, R2: diện tích theo tình trạng pháp lý nguồn gốc đất (chỉ khi đã phân loại); R3 không in", () => {
+    const chung = { ...thongTinChungMacDinh(duAn), ten_don_vi_bt: "Ban Quản lý dự án mẫu" };
+    // chưa phân loại thửa nào → không in khối
+    for (const ma of ["R1", "R2"]) {
+      const du = ghepDuLieu({ mau: DANH_MUC_MAU.find((x) => x.ma === ma)!, duAn, ds, chung, rieng: {}, so: "", ngayKy: "" });
+      expect(du.co_phap_ly).toBe(false);
+      expect(vanBan(dienMau(docMau(ma), du))).not.toContain("tình trạng pháp lý");
+    }
+    const h0 = ds[0]!.h;
+    const hPl = { ...h0, thua: h0.thua.map((t, i) => ({ ...t, phapLy: i === 0 ? ("GCN" as const) : undefined })) };
+    const ds2 = [{ h: hPl, k: tinhHo(cs, duAn, hPl) }, ...ds.slice(1)];
+    const soThuaCon = ds2.flatMap((x) => x.h.thua).filter((t) => Number(t.dienTichThuHoi) > 0).length - 1;
+    for (const ma of ["R1", "R2", "R3"]) {
+      const du = ghepDuLieu({ mau: DANH_MUC_MAU.find((x) => x.ma === ma)!, duAn, ds: ds2, chung, rieng: {}, so: "", ngayKy: "" });
+      const t = vanBan(dienMau(docMau(ma), du));
+      if (ma === "R3") {
+        expect(t).not.toContain("tình trạng pháp lý");
+        continue;
+      }
+      expect(t).toContain("* Phân theo tình trạng pháp lý nguồn gốc đất (theo hồ sơ thửa đất):");
+      expect(t).toMatch(/\+ Đã được cấp Giấy chứng nhận: 1 thửa, [\d.]+,\d\d m2\./);
+      expect(t).toContain(`+ Chưa ghi tình trạng pháp lý: ${soThuaCon} thửa`);
+      expect(t).not.toContain("{");
+      expect(kiemTraThongNhat(ma, duAn, du).some((c) => c.includes(`${soThuaCon} thửa có diện tích thu hồi chưa ghi tình trạng pháp lý`))).toBe(true);
+      expect((du.ds_thua_thu_hoi as { phap_ly: string }[])[0]!.phap_ly).toBe("Có GCN");
     }
   });
 
