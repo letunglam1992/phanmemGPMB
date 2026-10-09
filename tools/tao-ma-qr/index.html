@@ -2607,11 +2607,16 @@ var qrcode = function() {
     return t || 'ma-qr';
   }
 
+  // Trên trang Claude: qua capability downloads (người xem xác nhận); chạy tệp cục bộ: liên kết tải thông thường.
+  var DL = null;
+  if (window.claude && window.claude.use) window.claude.use('downloads').then(function (d) { DL = d; }, function () {});
   function save(blob, name) {
+    if (DL) return DL.save({ filename: name, data: blob }).then(function () { return true; }, function () { return false; });
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob); a.download = name;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+    return Promise.resolve(true);
   }
 
   function toast(id, msg) { var t = $(id); t.textContent = msg; clearTimeout(t._h); t._h = setTimeout(function () { t.textContent = ''; }, 3500); }
@@ -2736,9 +2741,13 @@ var qrcode = function() {
     toast('bToast', list.length ? 'Đã tạo ' + ok + '/' + list.length + ' mã.' : 'Danh sách trống.');
     persist();
   };
-  $('bAll').onclick = function () {
-    items.forEach(function (it, i) { setTimeout(function () { it.cv.toBlob(function (b) { save(b, it.name); }, 'image/png'); }, i * 350); });
+  $('bAll').onclick = async function () {
     toast('bToast', 'Đang tải ' + items.length + ' tệp. Nếu trình duyệt hỏi, chọn "Cho phép tải nhiều tệp".');
+    for (const it of items) {
+      const b = await new Promise(function (r) { it.cv.toBlob(r, 'image/png'); });
+      await save(b, it.name);
+      if (!DL) await new Promise(function (r) { setTimeout(r, 350); });
+    }
   };
 
   // ===== Thẻ =====
