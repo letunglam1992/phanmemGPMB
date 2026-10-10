@@ -19,7 +19,7 @@ export interface TienDoNen {
 export const NGUONG_NEN = 800;
 
 let tienDo: TienDoNen = { xong: 0, tong: 0, lan: 0 };
-let dang: { huy: boolean } | null = null;
+let dang: { huy: boolean; con: ViecTinh[]; i: number } | null = null;
 const nghe = new Set<() => void>();
 const phat = (t: TienDoNen) => {
   tienDo = t;
@@ -31,20 +31,22 @@ export const dangTinhNen = () => dang !== null;
 
 /**
  * Bắt đầu tính nền các việc chưa có kết quả. Trả true nếu đang/đã bắt đầu tính nền (nơi gọi chưa nên tính tổng hợp),
- * false nếu số việc chưa tính ≤ nguong (tính ngay được). Gọi lại với danh sách mới thì hủy lần cũ (kết quả đã tính vẫn
- * giữ trong bộ nhớ đệm) và chỉ tính phần còn thiếu.
+ * false nếu số việc chưa tính ≤ nguong (tính ngay được; lần tính nền khác đang chạy không bị ảnh hưởng). Gọi với danh
+ * sách mới khi đang chạy: phần mới được tính trước, phần còn lại của lần cũ nối sau (kết quả đã tính giữ trong bộ nhớ đệm).
  */
 export function tinhNen(viec: Iterable<ViecTinh>, o: { nguong?: number; lat?: number; hen?: (f: () => void) => void; dongHo?: () => number } = {}): boolean {
   const { nguong = NGUONG_NEN, lat = 12, hen = (f) => void setTimeout(f, 0), dongHo = () => performance.now() } = o;
   const con: ViecTinh[] = [];
   for (const v of viec) if (!daTinh(v[0], v[1], v[2])) con.push(v);
-  if (dang) dang.huy = true;
-  dang = null;
-  if (con.length <= nguong) {
-    if (tienDo.tong) phat({ xong: 0, tong: 0, lan: tienDo.lan });
-    return false;
+  // Phần của nơi gọi đã đủ (hoặc ít) → tính ngay ở nơi gọi; KHÔNG hủy lần tính nền của nơi khác đang chạy.
+  if (con.length <= nguong) return false;
+  // Đang có lần khác chạy: tính phần của nơi gọi trước, rồi tiếp phần còn lại của lần cũ (mục đã tính được bỏ qua nhanh).
+  if (dang) {
+    dang.huy = true;
+    const co = new Set(con.map((v) => v[2]));
+    for (const v of dang.con.slice(dang.i)) if (!co.has(v[2]) && !daTinh(v[0], v[1], v[2])) con.push(v);
   }
-  const ban = { huy: false };
+  const ban = { huy: false, con, i: 0 };
   dang = ban;
   let i = 0, baoLuc = 0;
   phat({ xong: 0, tong: con.length, lan: tienDo.lan });
@@ -55,6 +57,7 @@ export function tinhNen(viec: Iterable<ViecTinh>, o: { nguong?: number; lat?: nu
       const [cs, d, h] = con[i++]!;
       tinhHo(cs, d, h);
     } while (i < con.length && dongHo() < het);
+    ban.i = i;
     if (i >= con.length) {
       dang = null;
       phat({ xong: 0, tong: 0, lan: tienDo.lan + 1 });

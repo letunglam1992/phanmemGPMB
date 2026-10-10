@@ -58,10 +58,17 @@ test(`mở lần đầu ${SO_HO} hộ: tính nền có tiến độ, không đ�
   await expect(p.getByRole("dialog")).toBeVisible();
   const tBam = Date.now() - tb;
   await p.keyboard.press("Escape");
+  // 1.0.7: mở màn dự án (Alt+3) trong lúc tính nền → cổng hiện tiến độ, tính xong tự mở màn
+  await p.keyboard.press("Alt+3");
+  await expect(p.getByRole("status", { name: "Đang tính số liệu tổng hợp" })).toBeVisible();
+  await expect(p.getByText("Màn hình này cần kết quả tính của các hộ")).toBeVisible();
+  await expect(p.locator("[role=tablist] button", { hasText: "Hộ, cá nhân" })).toBeVisible({ timeout: 180_000 });
+  const tDuAn = Date.now() - t0;
+  await p.keyboard.press("Alt+1");
   await expect(p.getByText(new RegExp(`Đang theo dõi 1 dự án với ${SO_HO.toLocaleString("vi-VN").replace(/\./g, "\\.?")} hồ sơ|Đang theo dõi 1 dự án với ${SO_HO} hồ sơ`))).toBeVisible({ timeout: 180_000 });
   const tXong = Date.now() - t0;
   await expect(p.getByRole("status", { name: "Đang tính số liệu tổng hợp" })).toHaveCount(0);
-  console.log(`[đo] ${SO_HO} hộ: Tổng quan hiện sau ${tHien} ms; bấm "Dự án mới" phản hồi ${tBam} ms; tính xong sau ${tXong} ms`);
+  console.log(`[đo] ${SO_HO} hộ: Tổng quan hiện sau ${tHien} ms; bấm "Dự án mới" phản hồi ${tBam} ms; màn dự án mở sau ${tDuAn} ms; tính xong sau ${tXong} ms`);
   expect(tBam).toBeLessThan(3000);
   expect(loi).toEqual([]);
 });

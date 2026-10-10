@@ -389,6 +389,26 @@ async fn may_chu_lich_su_luoc_do() {
     let (ma, v) = m.goi("PUT", "/api/ho/h1", Some(&cb), json!({ "duLieu": h7, "phienBanTruoc": 2 })).await;
     assert_eq!(ma, 400, "{v}");
     assert!(v["loi"].as_str().unwrap().contains("thua[0].khongGiayTo.dtXayDung"), "{v}");
+    // 1.0.7: trường con của hỗ trợ, tiến độ, chi trả — cả khi quản trị ghi đè (khôi phục sao lưu)
+    let mut h8 = h2.clone();
+    h8["hoTro"]["taiDinhCu"] = json!({ "hinhThuc": "LO_DAT", "khoanKhac": [] });
+    let (ma, v) = m.goi("POST", "/api/lo", Some(&qt), json!({ "ghiDe": true, "ghi": [{ "loai": "ho", "duLieu": h8 }] })).await;
+    assert_eq!(ma, 400, "{v}");
+    assert!(v["loi"].as_str().unwrap().contains("hình thức"), "{v}");
+    let mut h9 = h2.clone();
+    h9["hoTro"]["chuyenDoiNghe"] = json!("co");
+    assert_eq!(m.goi("PUT", "/api/ho/h1", Some(&cb), json!({ "duLieu": h9, "phienBanTruoc": 2 })).await.0, 400);
+    let (ma, v) = m.goi("POST", "/api/lo", Some(&qt), json!({ "ghiDe": true, "ghi": [{ "loai": "td", "duLieu": { "id": "h1", "duAnId": "da1", "tienDo": { "5": { "trangThai": "HOAN_THANH" } }, "nhatKy": [] } }] })).await;
+    assert_eq!(ma, 400, "{v}");
+    assert!(v["loi"].as_str().unwrap().contains("bước 5"), "{v}");
+    assert_eq!(m.goi("POST", "/api/lo", Some(&qt), json!({ "ghiDe": true, "ghi": [{ "loai": "td", "duLieu": { "id": "h1", "duAnId": "da1", "tienDo": { "8": { "trangThai": "DANG", "khongTinh": [{ "tu": "2026-09-01" }] } }, "nhatKy": [] } }] })).await.0, 400);
+    assert_eq!(m.goi("POST", "/api/lo", Some(&qt), json!({ "ghiDe": true, "ghi": [{ "loai": "ct", "duLieu": { "id": "h1", "duAnId": "da1", "chiTra": { "dot": {} }, "nhatKy": [] } }] })).await.0, 400);
+    assert_eq!(m.goi("POST", "/api/lo", Some(&qt), json!({ "ghiDe": true, "ghi": [{ "loai": "ct", "duLieu": { "id": "h1", "duAnId": "da1", "chiTra": { "dot": [{ "id": "d1", "ngay": "2026-09-01", "soTien": "1000", "hinhThuc": "TIEN_MAT", "chungTu": "PC 1", "nguoiGhi": "a" }], "nguyenNhanCham": "KHAC" }, "nhatKy": [] } }] })).await.0, 400);
+    assert_eq!(m.goi("POST", "/api/lo", Some(&qt), json!({ "ghiDe": true, "ghi": [{ "loai": "ct", "duLieu": { "id": "h1", "duAnId": "da1", "chiTra": { "dot": [{ "id": "d1", "huy": "có" }] }, "nhatKy": [] } }] })).await.0, 400);
+    // đúng cấu trúc thì ghi được
+    let (ma, v) = m.goi("POST", "/api/lo", Some(&qt), json!({ "ghiDe": true, "ghi": [{ "loai": "td", "duLieu": { "id": "h1", "duAnId": "da1", "tienDo": { "8": { "trangThai": "DANG", "ngay": "2026-09-01", "khongTinh": [{ "tu": "2026-09-01", "lyDo": "Bổ sung hồ sơ" }] } }, "nhatKy": [] } }] })).await;
+    assert_eq!(ma, 200, "{v}");
+    assert_eq!(m.goi("PUT", "/api/du-an/da1", Some(&cb), json!({ "duLieu": { "id": "da1", "ten": "Dự án", "giaGao": { "dongKg": "15000" }, "tienDoChung": { "1": { "trangThai": "XONG_ROI" } } }, "phienBanTruoc": 1 })).await.0, 400);
     let mut h4 = h2.clone();
     h4["thua"][0]["dienTich"] = json!("1000.5");
     assert_eq!(m.goi("PUT", "/api/ho/h1", Some(&cb), json!({ "duLieu": h4, "phienBanTruoc": 2 })).await.0, 200);

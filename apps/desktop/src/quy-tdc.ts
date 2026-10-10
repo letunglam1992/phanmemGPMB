@@ -155,6 +155,29 @@ export function giaoLo(duAn: DuAn, h: Ho, loId: string, g: Omit<GiaoLo, "hoId" |
   return { duAn: { ...duAn, quyTdc: moi }, ho: { ...h, hoTro: { ...h.hoTro, taiDinhCu: tdcTheoLo(h.hoTro.taiDinhCu, l) } } };
 }
 
+/**
+ * 1.0.7 — Lô đã giao bị sửa diện tích, giá, căn cứ giá trong quỹ: ghi lại khu, lô, DT, đơn giá, căn cứ giá của lô vào hồ sơ
+ * hộ được giao (giữ hình thức, các khoản khác). Chỉ chép số liệu đơn vị đã nhập ở lô — không tự đặt giá. Trả hồ sơ mới
+ * và mô tả thay đổi để ghi nhật ký; null nếu không có gì khác.
+ */
+export function capNhatHoTheoLo(duAn: DuAn, h: Ho, loId: string): { ho: Ho; doi: string[] } | null {
+  const l = quyCua(duAn).lo.find((x) => x.id === loId);
+  if (!l) throw new LoiQuyTdc("Không tìm thấy lô");
+  if (l.giao?.hoId !== h.id || h.hoTro.taiDinhCu?.loId !== loId) throw new LoiQuyTdc(`${tenLo(l)} không giao cho hồ sơ ${h.ma}`);
+  const loi = loiLo(l, quyCua(duAn).lo);
+  if (loi) throw new LoiQuyTdc(`${tenLo(l)}: ${loi}`);
+  const cu = h.hoTro.taiDinhCu;
+  const moi = tdcTheoLo(cu, l);
+  const doi: string[] = [];
+  const so = (a?: string, b?: string) => (a ?? "") === (b ?? "") || (!!a && !!b && laSoMay(a) && laSoMay(b) && D(a).eq(b));
+  if (!so(cu.dienTichGiao, moi.dienTichGiao)) doi.push(`DT ${cu.dienTichGiao ?? "—"} → ${moi.dienTichGiao ?? "—"} m²`);
+  if (!so(cu.donGia, moi.donGia)) doi.push(`đơn giá ${cu.donGia ?? "—"} → ${moi.donGia ?? "—"} đ/m²`);
+  if ((cu.nguonGia ?? "") !== (moi.nguonGia ?? "")) doi.push(`căn cứ giá "${cu.nguonGia ?? ""}" → "${moi.nguonGia ?? ""}"`);
+  if ((cu.khuTdc ?? "") !== (moi.khuTdc ?? "") || (cu.viTriLo ?? "") !== (moi.viTriLo ?? "")) doi.push(`vị trí → ${tenLo(l)}`);
+  if (!doi.length) return null;
+  return { ho: { ...h, hoTro: { ...h.hoTro, taiDinhCu: moi } }, doi };
+}
+
 /** Thu hồi giao lô (giao nhầm, hộ đổi lô…): bắt buộc lý do; lưu vết vào `huyGiao`. */
 export function thuHoiGiao(duAn: DuAn, h: Ho | undefined, loId: string, lyDo: string, nguoi: string, luc = new Date().toISOString()): { duAn: DuAn; ho?: Ho } {
   const q = quyCua(duAn);
@@ -251,6 +274,8 @@ export interface CanhBaoTdc {
   loId?: string;
   noiDung: string;
   canCu?: string;
+  /** 1.0.7: hồ sơ khác lô đã giao (DT, đơn giá, căn cứ giá) — có thể cập nhật hồ sơ theo lô (capNhatHoTheoLo). */
+  lechLo?: boolean;
 }
 
 /**
@@ -285,7 +310,8 @@ export function soatQuyTdc(duAn: DuAn, hos: Ho[]): CanhBaoTdc[] {
       const lech: string[] = [];
       if ((t.dienTichGiao ?? "") !== (l.dienTich.trim() || "") && !(t.dienTichGiao && l.dienTich && D(t.dienTichGiao).eq(l.dienTich))) lech.push(`DT ${t.dienTichGiao ?? "—"} ≠ ${l.dienTich || "—"} m²`);
       if ((t.donGia ?? "") !== (l.gia?.trim() ?? "") && !(t.donGia && l.gia && D(t.donGia).eq(l.gia))) lech.push(`đơn giá ${t.donGia ?? "—"} ≠ ${l.gia ?? "—"} đ/m²`);
-      if (lech.length) out.push({ muc: "CANH_BAO", hoId: h.id, loId: l.id, noiDung: `${h.ma} · ${h.ten}: thông tin tái định cư khác lô đã giao (${lech.join("; ")}) — kiểm tra, cập nhật` });
+      if (l.gia?.trim() && (t.nguonGia ?? "") !== (l.canCuGia?.trim() ?? "")) lech.push("căn cứ giá khác");
+      if (lech.length) out.push({ muc: "CANH_BAO", hoId: h.id, loId: l.id, lechLo: true, noiDung: `${h.ma} · ${h.ten}: thông tin tái định cư khác lô đã giao (${lech.join("; ")}) — kiểm tra; bấm "Cập nhật hồ sơ theo lô" nếu thông tin lô là đúng` });
     }
   }
   const soLo = new Map<string, LoTdc[]>();

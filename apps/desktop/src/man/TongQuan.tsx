@@ -2,8 +2,8 @@ import { ONgay } from "../thanh-phan/ONgay";
 import { TheQd64 } from "../thanh-phan/Qd64";
 import { GOI_MOI_NHAT } from "../goi-chinh-sach";
 import { TheBatDau } from "../thanh-phan/BatDau";
-import { useRef, useState, useSyncExternalStore } from "react";
-import { layTienDoNen, ngheTinhNen } from "../tinh-nen";
+import { useRef, useState } from "react";
+import { TienDoTinhNen } from "../thanh-phan/CongTinhNen";
 import { D } from "@gpmb/core";
 import { useUngDung } from "../ung-dung";
 import { TEN_CACH_LAM_TRON } from "../tinh-ho";
@@ -29,19 +29,6 @@ function TheKpi(p: { bt: string; nhan: string; gt: number; ms: number; tong: Ton
       <div className="tq-kpi-thanh"><div className="thanh"><span style={{ width: `${pt}%` }} /></div><span>{pt}%</span></div>
       <div className="chu-nho mo">{p.phu}</div>
     </button>
-  );
-}
-
-/** 1.0.7 — Thanh tiến độ tính nền lần mở đầu (dữ liệu lớn); chỉ thẻ này vẽ lại theo tiến độ. */
-function TienDoTinhNen() {
-  const t = useSyncExternalStore(ngheTinhNen, layTienDoNen);
-  const pt = t.tong ? Math.floor((t.xong / t.tong) * 100) : 0;
-  return (
-    <div className="thong-bao thong-bao-xanh" role="status" aria-label="Đang tính số liệu tổng hợp">
-      <b>Đang tính phương án các hộ lần đầu{t.tong ? `: ${t.xong.toLocaleString("vi-VN")}/${t.tong.toLocaleString("vi-VN")} hộ (${pt}%)` : "…"}</b>
-      <div className="chu-nho">Giao diện vẫn dùng được trong lúc tính; số liệu, cảnh báo của Tổng quan hiện khi tính xong. Các lần mở sau trong phiên dùng kết quả đã tính.</div>
-      <progress max={100} value={pt} style={{ width: "100%" }} />
-    </div>
   );
 }
 

@@ -3,7 +3,7 @@ import cs0 from "../../../policy/goi/sonla-2026-03-31.json";
 import type { BoChinhSach } from "@gpmb/core";
 import { taoDuAnMau } from "../src/du-lieu-mau";
 import type { DuAn, Ho } from "../src/mo-hinh";
-import { ghiKetQuaBocTham, giaoLo, loMoi, loiLo, soatQuyTdc, thongKeQuy, thuHoiGiao, type LoTdc } from "../src/quy-tdc";
+import { capNhatHoTheoLo, ghiKetQuaBocTham, giaoLo, loMoi, loiLo, soatQuyTdc, thongKeQuy, thuHoiGiao, type LoTdc } from "../src/quy-tdc";
 import { soatPhuongAn } from "../src/soat-phuong-an";
 import { tinhHo } from "../src/tinh-ho";
 import { taoWorkbookQuyTdc } from "../src/xuat-excel";
@@ -140,5 +140,24 @@ describe("Quỹ tái định cư (P3-3)", () => {
     // dự án không chọn bốc thăm → cảnh báo
     const du3 = tao({ ...da, quyTdc: { lo: da.quyTdc!.lo } }, hos);
     expect(kiemTraThongNhat("T13", da, du3).some((c) => c.includes("chưa chọn giao lô bằng hình thức bốc thăm"))).toBe(true);
+  });
+
+  it("1.0.7 — lô đã giao bị sửa DT, giá, căn cứ: soát nhắc; cập nhật hồ sơ theo lô (chép đúng số liệu lô, giữ khoản khác)", () => {
+    const { da, hos } = mau();
+    const g = giaoLo(da, hos[0]!, "l1", G);
+    const sua = { ...g.duAn, quyTdc: { ...g.duAn.quyTdc!, lo: g.duAn.quyTdc!.lo.map((l) => (l.id === "l1" ? { ...l, dienTich: "152.5", gia: "2600000", canCuGia: "QĐ điều chỉnh giá số 9" } : l)) } };
+    const cb = soatQuyTdc(sua, [g.ho, hos[1]!]).find((c) => c.lechLo);
+    expect(cb).toMatchObject({ hoId: hos[0]!.id, loId: "l1", muc: "CANH_BAO" });
+    expect(cb!.noiDung).toContain("căn cứ giá khác");
+    const r = capNhatHoTheoLo(sua, g.ho, "l1")!;
+    expect(r.doi).toEqual(["DT 150 → 152.5 m²", "đơn giá 2500000 → 2600000 đ/m²", 'căn cứ giá "NQ 152/2025, Bảng 05, VT1" → "QĐ điều chỉnh giá số 9"']);
+    expect(r.ho.hoTro.taiDinhCu).toMatchObject({ dienTichGiao: "152.5", donGia: "2600000", nguonGia: "QĐ điều chỉnh giá số 9", suatToiThieu: true, loId: "l1" });
+    expect(r.ho.hoTro.taiDinhCu!.khoanKhac).toHaveLength(1);
+    expect(soatQuyTdc(sua, [r.ho, hos[1]!]).some((c) => c.lechLo)).toBe(false);
+    expect(capNhatHoTheoLo(sua, r.ho, "l1")).toBeNull();
+    // lô không giao cho hộ này → chặn; lô có giá mà thiếu căn cứ → chặn
+    expect(() => capNhatHoTheoLo(sua, hos[1]!, "l1")).toThrow(/không giao cho hồ sơ/);
+    const thieu = { ...sua, quyTdc: { ...sua.quyTdc!, lo: sua.quyTdc!.lo.map((l) => (l.id === "l1" ? { ...l, canCuGia: "" } : l)) } };
+    expect(() => capNhatHoTheoLo(thieu, g.ho, "l1")).toThrow(/căn cứ/);
   });
 });

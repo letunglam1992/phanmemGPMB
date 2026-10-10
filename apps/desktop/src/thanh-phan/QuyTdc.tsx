@@ -14,6 +14,7 @@ import {
   loiLo,
   quyCua,
   soatQuyTdc,
+  capNhatHoTheoLo,
   tenLo,
   thongKeQuy,
   thuHoiGiao,
@@ -39,7 +40,7 @@ const MUC: Record<string, string> = { LOI: "thong-bao-do", CANH_BAO: "thong-bao-
  * hộ), thu hồi giao có lý do, ghi nhận kết quả bốc thăm khi dự án chọn hình thức bốc thăm.
  */
 export function TheQuyTdc({ duAn, hos }: { duAn: DuAn; hos: Ho[] }) {
-  const { luuDuAn, quyen, ghiNhatKy, di } = useUngDung();
+  const { luuDuAn, quyen, ghiNhatKy, di, luuHo, bao } = useUngDung();
   const q = quyCua(duAn);
   const tk = thongKeQuy(duAn, hos);
   const canhBao = useMemo(() => soatQuyTdc(duAn, hos), [duAn, hos]);
@@ -60,6 +61,20 @@ export function TheQuyTdc({ duAn, hos }: { duAn: DuAn; hos: Ho[] }) {
     if (!confirm(`Xóa ${tenLo(l)} khỏi quỹ tái định cư?`)) return;
     await luuDuAn({ ...duAn, quyTdc: { ...q, lo: q.lo.filter((x) => x.id !== l.id) } });
     await ghiNhatKy("Xóa lô tái định cư", `${duAn.ten}: ${tenLo(l)}`);
+  };
+  // 1.0.7: lô đã giao bị sửa DT, giá, căn cứ giá → chép thông tin lô vào hồ sơ hộ (ghi nhật ký hồ sơ)
+  const capNhatTheoLo = async (hoId: string, loId: string) => {
+    const h = hos.find((x) => x.id === hoId);
+    if (!h) return;
+    try {
+      const r = capNhatHoTheoLo(duAn, h, loId);
+      if (!r) return bao("Hồ sơ đã khớp với lô", "ok");
+      if (!confirm(`Cập nhật hồ sơ ${h.ma} · ${h.ten} theo lô đã giao:\n- ${r.doi.join("\n- ")}\n\nKết quả tính tiền sử dụng đất của hộ sẽ thay đổi theo.`)) return;
+      await luuHo(r.ho, `Cập nhật tái định cư theo lô đã giao: ${r.doi.join("; ")}`);
+      bao(`Đã cập nhật hồ sơ ${h.ma}`, "ok");
+    } catch (e) {
+      bao(e instanceof LoiQuyTdc ? e.message : String(e), "loi");
+    }
   };
   const datBocTham = async (bat: boolean) => {
     await luuDuAn({ ...duAn, quyTdc: { ...q, bocTham: bat || undefined } });
@@ -95,6 +110,7 @@ export function TheQuyTdc({ duAn, hos }: { duAn: DuAn; hos: Ho[] }) {
             <div key={i} className={`thong-bao ${MUC[c.muc]} chu-nho`} style={{ margin: "8px 0 0" }}>
               {c.noiDung}{c.canCu ? <span className="mo"> ({c.canCu})</span> : null}
               {c.hoId && <button className="nut nut-chu nut-nho" onClick={() => di({ ten: "ho", duAnId: duAn.id, hoId: c.hoId!, tab: "ho-tro" })}>Mở hồ sơ</button>}
+              {c.lechLo && choSua && <button className="nut nut-nho" onClick={() => void capNhatTheoLo(c.hoId!, c.loId!)}>Cập nhật hồ sơ theo lô</button>}
             </div>
           ))}
         </div>

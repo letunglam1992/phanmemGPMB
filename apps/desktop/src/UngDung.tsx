@@ -1,4 +1,5 @@
 import { NutTepDaXuat } from "./thanh-phan/TepDaXuat";
+import { CongTinhNen } from "./thanh-phan/CongTinhNen";
 import { ViecCuaToi } from "./man/ViecCuaToi";
 import { TroLyAi, moTroLy } from "./man/HoiDap";
 import { TuDongGuiTinh } from "./thanh-phan/TuDongGuiTinh";
@@ -264,26 +265,26 @@ export function UngDung() {
       <main className="noi-dung">
         <RaoLoi ten="màn hình này" khoa={JSON.stringify(man)} khiLoi={(m) => void ghiNhatKy("Lỗi giao diện", m).catch(() => undefined)}>
         {man.ten === "tong-quan" && <TongQuan />}
-        {man.ten === "du-an" && !man.duAnId && <ManDuAn />}
-        {man.ten === "du-an" && man.duAnId && <KhongGianDuAn duAnId={man.duAnId} tab={man.tab} ma={man.ma} hoId={man.hoId} />}
-        {man.ten === "ds-ho" && <DanhSachHo key={JSON.stringify(man)} duAnId={man.duAnId} trangThai={man.trangThai} chang={man.chang} tim={man.tim} />}
+        {man.ten === "du-an" && !man.duAnId && <CongTinhNen><ManDuAn /></CongTinhNen>}
+        {man.ten === "du-an" && man.duAnId && <CongTinhNen duAnId={man.duAnId}><KhongGianDuAn duAnId={man.duAnId} tab={man.tab} ma={man.ma} hoId={man.hoId} /></CongTinhNen>}
+        {man.ten === "ds-ho" && <CongTinhNen><DanhSachHo key={JSON.stringify(man)} duAnId={man.duAnId} trangThai={man.trangThai} chang={man.chang} tim={man.tim} /></CongTinhNen>}
         {man.ten === "don-vi" && <ThietLapDonVi />}
         {man.ten === "huong-dan" && <HuongDan />}
-        {man.ten === "viec-cua-toi" && <ViecCuaToi />}
+        {man.ten === "viec-cua-toi" && <CongTinhNen><ViecCuaToi /></CongTinhNen>}
         {man.ten === "nguoi-co-dat" && <NguoiCoDat />}
         {man.ten === "ho" && <HoSo key={man.hoId} duAnId={man.duAnId} hoId={man.hoId} tabDau={man.tab} thuaDau={man.thuaId} />}
-        {man.ten === "ban-do" && <KhongGianDuAn duAnId={man.duAnId} tab="ban-do" />}
+        {man.ten === "ban-do" && <CongTinhNen duAnId={man.duAnId}><KhongGianDuAn duAnId={man.duAnId} tab="ban-do" /></CongTinhNen>}
         {man.ten === "tong-hop-tinh" && <TongHopTinh />}
         {man.ten === "tra-cuu" && <TraCuu key={man.tim ?? ""} timDau={man.tim} />}
         {man.ten === "doc-scan" && <DocScan />}
         {man.ten === "kiem-tra-pa" && <KiemTraPhuongAn />}
         {man.ten === "thung-rac" && <ThungRac />}
         {man.ten === "ra-soat-so" && <RaSoatSo />}
-        {man.ten === "bao-cao" && <BaoCao />}
+        {man.ten === "bao-cao" && <CongTinhNen><BaoCao /></CongTinhNen>}
         {man.ten === "van-ban" && (() => {
           // Có hộ → thẻ "Văn bản" trong hồ sơ hộ (sau "Tính toán, giải trình"); không có hộ → văn bản cấp dự án, theo đợt.
           const hoVb = man.hoId && hoCua(man.duAnId).some((h) => h.id === man.hoId) ? man.hoId : undefined;
-          return hoVb ? <HoSo key={`${hoVb}-${man.ma ?? ""}`} duAnId={man.duAnId} hoId={hoVb} tabDau="van-ban" maVbDau={man.ma} /> : <KhongGianDuAn duAnId={man.duAnId} tab="van-ban" ma={man.ma} />;
+          return hoVb ? <HoSo key={`${hoVb}-${man.ma ?? ""}`} duAnId={man.duAnId} hoId={hoVb} tabDau="van-ban" maVbDau={man.ma} /> : <CongTinhNen duAnId={man.duAnId}><KhongGianDuAn duAnId={man.duAnId} tab="van-ban" ma={man.ma} /></CongTinhNen>;
         })()}
         </RaoLoi>
       </main>

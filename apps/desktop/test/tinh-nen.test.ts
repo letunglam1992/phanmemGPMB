@@ -62,4 +62,23 @@ describe("1.0.7 — tính nền lần mở đầu", () => {
     while (hang.length) hang.shift()!();
     expect(hs.every((h) => daTinh(cs, duAn, h))).toBe(true);
   });
+
+  it("nơi gọi khác có ít việc → tính ngay, không hủy lần tính nền đang chạy; nơi gọi khác nhiều việc → tính phần mới trước, nối phần cũ", () => {
+    const a = tao(30), b = tao(30);
+    const hang: (() => void)[] = [];
+    let gio = 0;
+    const o = { nguong: 5, lat: 3, hen: (f: () => void) => hang.push(f), dongHo: () => (gio += 1) };
+    expect(tinhNen(a.viec, o)).toBe(true);
+    hang.shift()!();
+    // danh sách nhỏ (≤ ngưỡng) → false; lần của a vẫn chạy tiếp
+    expect(tinhNen(b.viec.slice(0, 3), o)).toBe(false);
+    expect(hang).toHaveLength(1);
+    // danh sách lớn khác → lần mới gồm b trước rồi phần còn lại của a, không trùng
+    const conA = a.hs.filter((h) => !daTinh(cs, a.duAn, h)).length;
+    expect(tinhNen(b.viec, o)).toBe(true);
+    expect(layTienDoNen().tong).toBe(30 + conA);
+    hang.splice(0, 1)[0]!(); // lát của lần cũ: đã hủy
+    while (hang.length) hang.shift()!();
+    expect(a.hs.every((h) => daTinh(cs, a.duAn, h)) && b.hs.every((h) => daTinh(cs, b.duAn, h))).toBe(true);
+  });
 });

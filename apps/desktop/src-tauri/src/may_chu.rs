@@ -402,6 +402,95 @@ fn o_so(loai: &str, v: &Value) -> Vec<(String, Value)> {
     out
 }
 
+/// 1.0.7 — Trường con của tiến độ (bản đồ mã bước → bước), chi trả, hỗ trợ: đúng kiểu, giá trị liệt kê hợp lệ. Áp dụng cả
+/// khi khôi phục từ sao lưu (chỉ kiểm cấu trúc, không kiểm giá trị số). Trường vắng/null được bỏ qua (dữ liệu cũ).
+fn kiem_tien_do(td: &Value, ten: &str) -> Result<(), String> {
+    let Some(o) = td.as_object() else { return Err(format!("Trường \"{ten}\" phải là đối tượng")) };
+    for (ma, b) in o {
+        let Some(b) = b.as_object() else { return Err(format!("{ten}: bước {ma} phải là đối tượng")) };
+        match b.get("trangThai") {
+            None | Some(Value::Null) => {}
+            Some(Value::String(t)) if matches!(t.as_str(), "CHUA" | "DANG" | "XONG" | "CHO_DUYET" | "KHONG_AP_DUNG") => {}
+            Some(x) => return Err(format!("{ten}: bước {ma} có trạng thái không hợp lệ ({x})")),
+        }
+        for k in ["ngay", "ghiChu", "guiBoi", "duyetBoi", "mocHan", "vuongMac", "vuongMacNgay"] {
+            if b.get(k).is_some_and(|x| !x.is_null() && !x.is_string()) {
+                return Err(format!("{ten}: bước {ma}, trường \"{k}\" phải là chuỗi"));
+            }
+        }
+        if b.get("rieng").is_some_and(|x| !x.is_null() && !x.is_boolean()) {
+            return Err(format!("{ten}: bước {ma}, trường \"rieng\" phải là đúng/sai"));
+        }
+        match b.get("khongTinh") {
+            None | Some(Value::Null) => {}
+            Some(Value::Array(ds)) => {
+                for (i, k) in ds.iter().enumerate() {
+                    if !k.is_object() || !k["tu"].is_string() || !k["lyDo"].is_string() || !(k["den"].is_null() || k["den"].is_string()) {
+                        return Err(format!("{ten}: bước {ma}, khoảng không tính thứ {} không đúng cấu trúc", i + 1));
+                    }
+                }
+            }
+            Some(_) => return Err(format!("{ten}: bước {ma}, trường \"khongTinh\" phải là danh sách")),
+        }
+    }
+    Ok(())
+}
+
+fn kiem_chi_tra(ct: &Value) -> Result<(), String> {
+    let o = ct.as_object().ok_or("Trường \"chiTra\" phải là đối tượng")?;
+    match o.get("dot") {
+        None | Some(Value::Null) => {}
+        Some(Value::Array(ds)) => {
+            for (i, d) in ds.iter().enumerate() {
+                let chuoi_hoac_trong = |k: &str| d[k].is_null() || d[k].is_string();
+                let dung = d.is_object() && d["id"].is_string() && chuoi_hoac_trong("ngay") && chuoi_hoac_trong("hinhThuc") && chuoi_hoac_trong("chungTu") && (chuoi_hoac_trong("soTien") || d["soTien"].is_number()) && (d["huy"].is_null() || d["huy"].is_object());
+                if !dung {
+                    return Err(format!("Chi trả: đợt chi thứ {} không đúng cấu trúc", i + 1));
+                }
+            }
+        }
+        Some(_) => return Err("Chi trả: trường \"dot\" phải là danh sách".into()),
+    }
+    if let Some(n) = o.get("nguyenNhanCham").filter(|x| !x.is_null()) {
+        if !matches!(n.as_str(), Some("DO_CO_QUAN" | "DO_NGUOI_DAN" | "")) {
+            return Err("Chi trả: nguyên nhân chậm không hợp lệ".into());
+        }
+    }
+    Ok(())
+}
+
+fn kiem_ho_tro(ht: &Value) -> Result<(), String> {
+    let o = ht.as_object().ok_or("Trường \"hoTro\" phải là đối tượng")?;
+    if o.get("chuyenDoiNghe").is_some_and(|x| !x.is_null() && !x.is_boolean()) {
+        return Err("Hỗ trợ: \"chuyenDoiNghe\" phải là đúng/sai".into());
+    }
+    for k in ["onDinh", "tamCu", "moMa", "taiDinhCu", "khac"] {
+        if o.get(k).is_some_and(|x| !x.is_null() && !x.is_object()) {
+            return Err(format!("Hỗ trợ: \"{k}\" phải là đối tượng"));
+        }
+    }
+    let tdc = &ht["taiDinhCu"];
+    if tdc.is_object() {
+        if !matches!(tdc["hinhThuc"].as_str(), Some("DAT_O" | "NHA_O" | "TU_LO" | "TAI_CHO")) {
+            return Err("Hỗ trợ tái định cư: hình thức không hợp lệ".into());
+        }
+        if !(tdc["khoanKhac"].is_null() || tdc["khoanKhac"].is_array()) {
+            return Err("Hỗ trợ tái định cư: \"khoanKhac\" phải là danh sách".into());
+        }
+    }
+    let tc = &ht["tamCu"];
+    if tc.is_object() && !(tc["soThang"].is_null() || tc["soThang"].is_number()) {
+        return Err("Hỗ trợ tạm cư: số tháng phải là số".into());
+    }
+    let khac = &ht["khac"];
+    for k in ["doiTuongCs", "khoan"] {
+        if khac.is_object() && !(khac[k].is_null() || khac[k].is_array()) {
+            return Err(format!("Hỗ trợ khác: \"{k}\" phải là danh sách"));
+        }
+    }
+    Ok(())
+}
+
 /// Kiểm tra cấu trúc trước khi ghi: kiểu dữ liệu, trường bắt buộc, ô số đúng chuẩn máy ("1234.5").
 /// Giá trị số sai đã có sẵn trong bản cũ (dữ liệu trước P0-2) không chặn việc lưu thay đổi khác — chỉ chặn giá trị sai mới.
 /// `kiem_so` = false (khôi phục từ tệp sao lưu): chỉ kiểm cấu trúc, giữ nguyên giá trị như bản sao lưu.
@@ -430,6 +519,7 @@ pub fn kiem_luoc_do(loai: &str, cu: Option<&Value>, v: &Value, kiem_so: bool) ->
                 mang(k)?;
             }
             doi_tuong("hoTro")?;
+            kiem_ho_tro(&v["hoTro"])?;
             if o.get("tienDo").is_some_and(|x| !x.is_null()) || o.get("chiTra").is_some_and(|x| !x.is_null()) {
                 return Err("Bản ghi hồ sơ không chứa tiến độ, chi trả (từ phiên bản 0.7.0 là bản ghi con riêng) — cập nhật phần mềm trên máy này".into());
             }
@@ -446,6 +536,14 @@ pub fn kiem_luoc_do(loai: &str, cu: Option<&Value>, v: &Value, kiem_so: bool) ->
         }
         "duAn" => {
             chuoi("ten", false)?;
+            if o.get("tienDoChung").is_some_and(|x| !x.is_null()) {
+                kiem_tien_do(&v["tienDoChung"], "Tiến độ chung")?;
+            }
+            for (i, d) in v["dotThuHoi"].as_array().into_iter().flatten().enumerate() {
+                if d.get("tienDoChung").is_some_and(|x| !x.is_null()) {
+                    kiem_tien_do(&d["tienDoChung"], &format!("Tiến độ chung đợt {}", i + 1))?;
+                }
+            }
             if o.get("phuongAn").is_some_and(|x| !x.is_null()) {
                 return Err("Bản ghi dự án không chứa phương án (từ phiên bản 0.6.0 mỗi bản phương án là một bản ghi riêng) — cập nhật phần mềm trên máy này".into());
             }
@@ -453,6 +551,11 @@ pub fn kiem_luoc_do(loai: &str, cu: Option<&Value>, v: &Value, kiem_so: bool) ->
         "td" | "ct" => {
             chuoi("duAnId", true)?;
             doi_tuong(if loai == "td" { "tienDo" } else { "chiTra" })?;
+            if loai == "td" {
+                kiem_tien_do(&v["tienDo"], "Tiến độ")?;
+            } else {
+                kiem_chi_tra(&v["chiTra"])?;
+            }
             if o.get("nhatKy").is_some_and(|x| !x.is_array()) {
                 return Err("Trường \"nhatKy\" phải là danh sách".into());
             }
