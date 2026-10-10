@@ -96,3 +96,58 @@ export function nguoiNhieuHoSo(chiMuc: Map<string, HoSoNguoi[]>): { khoa: string
     })
     .sort((a, b) => b.hoTroTrung.length - a.hoTroTrung.length || b.ds.length - a.ds.length);
 }
+
+/** 1.0.7 — Chỉ mục số định danh của nhân khẩu → (hồ sơ, nhân khẩu). Bỏ hồ sơ, dự án trong thùng rác. */
+export interface NhanKhauNguoi extends HoSoNguoi {
+  nk: { hoTen: string; quanHe: string };
+}
+export function chiMucNhanKhau(dsDuAn: DuAn[], hos: Ho[]): Map<string, NhanKhauNguoi[]> {
+  const da = new Map(dsDuAn.filter((d) => !d.daXoa).map((d) => [d.id, d]));
+  const m = new Map<string, NhanKhauNguoi[]>();
+  for (const h of hos) {
+    const d = da.get(h.duAnId);
+    if (h.daXoa || !d) continue;
+    for (const n of h.nhanKhau) {
+      const x = chuanDinhDanh(n.soDinhDanh);
+      if (!x) continue;
+      const k = `CN:${x}`;
+      m.set(k, [...(m.get(k) ?? []), { h, duAn: d, nk: { hoTen: n.hoTen, quanHe: n.quanHe } }]);
+    }
+  }
+  return m;
+}
+
+export interface LienQuanNhanKhau {
+  /** Người được đối chiếu (chủ hồ sơ này hoặc nhân khẩu của hồ sơ này). */
+  nguoi: string;
+  /** Vai trò ở hồ sơ khác. */
+  vaiTro: "CHU" | "NHAN_KHAU";
+  khac: HoSoNguoi;
+  moTa: string;
+}
+
+/**
+ * Người của hồ sơ này xuất hiện ở hồ sơ khác qua nhân khẩu: chủ hồ sơ này là nhân khẩu ở hồ sơ khác; nhân khẩu của hồ sơ
+ * này là chủ hoặc nhân khẩu ở hồ sơ khác. Chỉ liệt kê để cán bộ kiểm tra (vd. tách hộ, hỗ trợ theo nhân khẩu trùng) —
+ * phần mềm không kết luận.
+ */
+export function lienQuanNhanKhau(chiMuc: Map<string, HoSoNguoi[]>, chiMucNk: Map<string, NhanKhauNguoi[]>, h: Ho): LienQuanNhanKhau[] {
+  const out: LienQuanNhanKhau[] = [];
+  const daCo = new Set<string>();
+  const them = (x: LienQuanNhanKhau) => {
+    const k = `${x.nguoi}|${x.khac.h.id}|${x.vaiTro}`;
+    if (!daCo.has(k)) (daCo.add(k), out.push(x));
+  };
+  const kChu = h.loai !== "TO_CHUC" ? khoaNguoi(h) : null;
+  if (kChu)
+    for (const x of chiMucNk.get(kChu) ?? [])
+      if (x.h.id !== h.id) them({ nguoi: h.ten, vaiTro: "NHAN_KHAU", khac: x, moTa: `${h.ten} (chủ hồ sơ này) là nhân khẩu “${x.nk.quanHe || "—"}” của hồ sơ ${x.h.ma} · ${x.h.ten} (${x.duAn.ten})` });
+  for (const n of h.nhanKhau) {
+    const s = chuanDinhDanh(n.soDinhDanh);
+    if (!s) continue;
+    const k = `CN:${s}`;
+    for (const x of chiMuc.get(k) ?? []) if (x.h.id !== h.id) them({ nguoi: n.hoTen, vaiTro: "CHU", khac: x, moTa: `Nhân khẩu ${n.hoTen} là chủ hồ sơ ${x.h.ma} · ${x.h.ten} (${x.duAn.ten})` });
+    for (const x of chiMucNk.get(k) ?? []) if (x.h.id !== h.id) them({ nguoi: n.hoTen, vaiTro: "NHAN_KHAU", khac: x, moTa: `Nhân khẩu ${n.hoTen} cũng là nhân khẩu “${x.nk.quanHe || "—"}” của hồ sơ ${x.h.ma} · ${x.h.ten} (${x.duAn.ten})` });
+  }
+  return out;
+}

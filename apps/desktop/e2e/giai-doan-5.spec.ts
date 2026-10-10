@@ -122,3 +122,20 @@ test("P3-2, P3-4: hồ sơ cùng số định danh; phân công cán bộ → Vi
   await expect(p.locator("[data-viec]")).toHaveCount(1);
   await expect(p.locator("[data-viec='H01']")).toBeVisible();
 });
+
+test("1.0.7 — nhân khẩu có số định danh trùng chủ hồ sơ khác → thẻ Thông tin báo, nút Mở", async ({ page: p }) => {
+  await vao(p);
+  await moHo(p, 0);
+  await oNhap(p, "Số định danh cá nhân").fill("111 111 111 111");
+  await luuHo(p);
+  await moHo(p, 1);
+  await p.getByRole("tab", { name: /^Nhân khẩu/ }).click();
+  await p.getByRole("button", { name: "Thêm nhân khẩu" }).first().click();
+  await p.getByLabel(/^Số định danh nhân khẩu/).last().fill("111111111111");
+  await luuHo(p);
+  await p.getByRole("tab", { name: "Thông tin", exact: true }).click();
+  const the = p.locator("[data-nhan-khau-trung]");
+  await expect(the).toContainText("H01");
+  await the.getByRole("button", { name: "Mở" }).first().click();
+  await expect(p.locator(".trang-ho h1")).toContainText("H01");
+});

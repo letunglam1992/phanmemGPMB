@@ -310,7 +310,7 @@ export function TabThua({ h, duAn, doi, noiBat }: { h: Ho; duAn: DuAn; doi: (h: 
       {chonTuyen && (() => {
         const t = h.thua.find((x) => x.id === chonTuyen)!;
         return (
-          <ChonGiaDat xa={duAn.xa} loaiDat={t.loaiDat} dong={() => setChonTuyen(null)} chon={() => undefined}
+          <ChonGiaDat bo={duAn.boChinhSach} xa={duAn.xa} loaiDat={t.loaiDat} dong={() => setChonTuyen(null)} chon={() => undefined}
             chonTuyen={(r) => {
               sua(t.id, { phanLop: { tuyen: { bang: r.bang, stt: r.stt, xa: r.xa, tuyen: r.tuyen, vt: r.vt }, lop: t.phanLop?.lop ?? [{ id: taoId(), lop: 1, viTri: Math.max(1, r.vt.findIndex((g) => g !== null) + 1), dienTich: "" }] } });
               setChonTuyen(null);
@@ -321,17 +321,17 @@ export function TabThua({ h, duAn, doi, noiBat }: { h: Ho; duAn: DuAn; doi: (h: 
       {(() => {
         const t = h.thua.find((x) => x.id === chonGiaHT);
         if (!t?.chenhLech) return null;
-        return <ChonGiaDat xa={duAn.xa} loaiDat={t.chenhLech.loaiHienTrang} dong={() => setChonGiaHT(null)} chon={(g) => { sua(t.id, { chenhLech: { ...t.chenhLech!, giaHienTrang: g.giaNghinDong, nguonGia: g.nguon } }); setChonGiaHT(null); }} />;
+        return <ChonGiaDat bo={duAn.boChinhSach} xa={duAn.xa} loaiDat={t.chenhLech.loaiHienTrang} dong={() => setChonGiaHT(null)} chon={(g) => { sua(t.id, { chenhLech: { ...t.chenhLech!, giaHienTrang: g.giaNghinDong, nguonGia: g.nguon } }); setChonGiaHT(null); }} />;
       })()}
       {(() => {
         const t = h.thua.find((x) => x.id === chonGiaKgt?.id);
         if (!t?.khongGiayTo || !chonGiaKgt) return null;
         const k = t.khongGiayTo;
-        return <ChonGiaDat xa={duAn.xa} loaiDat={chonGiaKgt.loaiDat} dong={() => setChonGiaKgt(null)} chon={(g) => { sua(t.id, { khongGiayTo: chonGiaKgt.loai === "KD" ? { ...k, giaSxkd: g } : { ...k, giaConLai: { ...g, loaiDat: chonGiaKgt.loaiDat } } }); setChonGiaKgt(null); }} />;
+        return <ChonGiaDat bo={duAn.boChinhSach} xa={duAn.xa} loaiDat={chonGiaKgt.loaiDat} dong={() => setChonGiaKgt(null)} chon={(g) => { sua(t.id, { khongGiayTo: chonGiaKgt.loai === "KD" ? { ...k, giaSxkd: g } : { ...k, giaConLai: { ...g, loaiDat: chonGiaKgt.loaiDat } } }); setChonGiaKgt(null); }} />;
       })()}
       {xemBanDo && h.thua.some((t) => t.id === xemBanDo) && <HopXemThuaBanDo duAn={duAn} h={h} thua={h.thua.find((t) => t.id === xemBanDo)!} doi={doi} dong={() => setXemBanDo(null)} />}
       {thuaChon && (
-        <ChonGiaDat xa={duAn.xa} loaiDat={thuaChon.loaiDat} dong={() => setChonGia(null)} chon={(g) => { sua(thuaChon.id, { gia: g }); setChonGia(null); }} />
+        <ChonGiaDat bo={duAn.boChinhSach} xa={duAn.xa} loaiDat={thuaChon.loaiDat} dong={() => setChonGia(null)} chon={(g) => { sua(thuaChon.id, { gia: g }); setChonGia(null); }} />
       )}
     </div>
   );

@@ -68,3 +68,25 @@ describe("Phân công, việc của tôi (P3-4)", () => {
     expect(Object.fromEntries(demPhanCong([x, y, z, a]))).toEqual({ canbo1: 2, canbo2: 1, "": 1 });
   });
 });
+
+describe("1.0.7 — đối chiếu qua nhân khẩu", () => {
+  it("chủ hồ sơ là nhân khẩu ở hồ sơ khác; nhân khẩu là chủ / nhân khẩu ở hồ sơ khác; bỏ hồ sơ trong thùng rác", async () => {
+    const { chiMucNguoi, chiMucNhanKhau, lienQuanNhanKhau } = await import("../src/nguoi-co-dat");
+    const { taoDuAnMau } = await import("../src/du-lieu-mau");
+    const { duAn, ho } = taoDuAnMau();
+    const [a0, b0] = ho as [typeof ho[number], typeof ho[number]];
+    const a = { ...a0, soDinhDanh: "011 222 333 444", nhanKhau: [{ id: "n1", hoTen: "Con A", quanHe: "Con", soDinhDanh: "099888777666" }] };
+    const b = { ...b0, soDinhDanh: "099.888.777.666", nhanKhau: [{ id: "n2", hoTen: a0.ten, quanHe: "Bố", soDinhDanh: "011222333444" }] };
+    const c = { ...b0, id: "c", ma: "H09", ten: "Hộ C", soDinhDanh: "", nhanKhau: [{ id: "n3", hoTen: "Con A", quanHe: "Cháu", soDinhDanh: "099888777666" }] };
+    const hos = [a, b, c];
+    const cm = chiMucNguoi([duAn], hos), cmNk = chiMucNhanKhau([duAn], hos);
+    const lq = lienQuanNhanKhau(cm, cmNk, a);
+    expect(lq.map((x) => [x.vaiTro, x.khac.h.id]).sort()).toEqual([["CHU", b.id], ["NHAN_KHAU", b.id], ["NHAN_KHAU", "c"]].sort());
+    expect(lq.find((x) => x.vaiTro === "CHU")!.moTa).toContain("Nhân khẩu Con A là chủ hồ sơ");
+    // hồ sơ C trong thùng rác → không còn
+    const cm2 = chiMucNhanKhau([duAn], [a, b, { ...c, daXoa: { luc: "x", nguoi: "y", lyDo: "z" } }]);
+    expect(lienQuanNhanKhau(cm, cm2, a).some((x) => x.khac.h.id === "c")).toBe(false);
+    // số quá ngắn không dùng để khớp
+    expect(chiMucNhanKhau([duAn], [{ ...a, nhanKhau: [{ id: "x", hoTen: "X", quanHe: "", soDinhDanh: "123" }] }]).size).toBe(0);
+  });
+});

@@ -27,6 +27,8 @@ export interface ChuVe {
   chu: string;
   cao: number;
   xoay: number;
+  /** Chỉ số màu gốc trong tệp (0 = theo lớp/không có) — 1.0.7 */
+  mau?: number;
   nguon?: string;
 }
 export interface LopDgn {
@@ -48,7 +50,7 @@ export function chuanBiVe(ban: KetQuaDocDgn): { hinh: HinhVe[]; chu: ChuVe[]; lo
   const dem = new Map<number, LopDgn>();
   const lay = (lop: number) => {
     let x = dem.get(lop);
-    if (!x) dem.set(lop, (x = { lop, ten: tenLopPl21(lop), soHinh: 0, soChu: 0 }));
+    if (!x) dem.set(lop, (x = { lop, ten: ban.tenLop?.[lop] ?? tenLopPl21(lop), soHinh: 0, soChu: 0 }));
     return x;
   };
   const nguonCua = (e: PhanTu) => (e.oDungChung !== undefined ? `Ô dùng chung ${e.oDungChung}` : e.kichThuoc !== undefined ? "Kích thước" : undefined);
@@ -56,7 +58,7 @@ export function chuanBiVe(ban: KetQuaDocDgn): { hinh: HinhVe[]; chu: ChuVe[]; lo
     if (e.loai === "CHU") {
       const s = giaiMaNhan(e);
       if (!s) continue;
-      chu.push({ stt: e.stt, lop: e.lop, x: e.goc.x, y: e.goc.y, chu: s, cao: e.chieuCao, xoay: e.gocXoay, nguon: nguonCua(e) });
+      chu.push({ stt: e.stt, lop: e.lop, x: e.goc.x, y: e.goc.y, chu: s, cao: e.chieuCao, xoay: e.gocXoay, nguon: nguonCua(e), ...(e.mau ? { mau: e.mau } : {}) });
       lay(e.lop).soChu++;
       continue;
     }

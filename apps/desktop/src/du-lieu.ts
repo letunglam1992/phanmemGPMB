@@ -21,6 +21,8 @@ export interface DongDonGia {
   donGia: number;
   matDo: number | null;
   trang: number;
+  /** Văn bản ban hành đơn giá — dòng nạp theo gói chính sách (gói thay bảng có sẵn); trống = bảng có sẵn trong phần mềm */
+  canCu?: string;
 }
 
 type Qd32 = { phu_luc: string; tt: string; stt_trong_o: number; nhom: string; nhom_con?: string; ten: string; don_vi: string; don_gia: number; trang: number };
@@ -84,6 +86,27 @@ let bangGia: Promise<BangGiaDat> | null = null;
 export function napBangGiaDat(): Promise<BangGiaDat> {
   bangGia ??= import("../../../policy/nguon/nq152-2025-bang-gia-dat.json").then((m) => (m.default ?? m) as unknown as BangGiaDat);
   return bangGia;
+}
+
+/** Bảng đơn giá, bảng giá đất nạp kèm gói chính sách (goi-chinh-sach.ts dangKyGoi), theo khóa bộ chính sách. */
+export const DON_GIA_GOI: Record<string, DongDonGia[]> = {};
+export const BANG_GIA_GOI: Record<string, BangGiaDat> = {};
+
+/**
+ * Bảng đơn giá dùng cho dự án theo bộ chính sách: gói có bảng đơn giá thì thay các nhóm (QĐ32 — nhà, công trình; PL VIII —
+ * cây trồng, thủy sản; PL V — di chuyển vật nuôi) có trong gói; nhóm gói không có giữ bảng có sẵn.
+ */
+export function donGiaTheoBo(khoa?: string): DongDonGia[] {
+  const g = khoa ? DON_GIA_GOI[khoa] : undefined;
+  if (!g?.length) return DON_GIA;
+  const thay = new Set(g.map((r) => r.nguon));
+  return [...DON_GIA.filter((r) => !thay.has(r.nguon)), ...g];
+}
+
+/** Bảng giá đất theo bộ chính sách: gói có bảng giá đất thì dùng bảng của gói, không thì bảng NQ 152 có sẵn. */
+export function napBangGiaDatTheoBo(khoa?: string): Promise<BangGiaDat> {
+  const g = khoa ? BANG_GIA_GOI[khoa] : undefined;
+  return g ? Promise.resolve(g) : napBangGiaDat();
 }
 
 /** Danh mục 75 xã, phường (NQ 152) — bản rút gọn nạp sẵn để chọn địa bàn. */

@@ -327,3 +327,30 @@ export function vietDgnV8(khoi: Uint8Array[][], phiMoHinh: Uint8Array[][] = []):
   phiMoHinh.forEach((ds, i) => (luong[`Dgn^Nm/$${i}`] = khoiPhanTu(ds)));
   return vietCfb(luong);
 }
+
+/** 1.0.7 — Màu phần tử (@52, chỉ số bảng màu) ghi sau khi tạo phần tử. */
+export function datMau(pt: Uint8Array, mau: number): Uint8Array {
+  new DataView(pt.buffer, pt.byteOffset, pt.byteLength).setUint32(52, mau >>> 0, true);
+  return pt;
+}
+
+/** 1.0.7 — Bảng màu (kiểu 5, kho phi mô hình): nền @34, 256 bộ RGB từ @37. */
+export function ptBangMau(mau: [number, number, number][]): Uint8Array {
+  const cuoi = 37 + 768 + 3;
+  const { b } = khung(5, cuoi + 8, cuoi, { lop: 1 });
+  mau.forEach(([r, g, x], i) => b.set([r, g, x], 37 + 3 * i));
+  return b;
+}
+
+/** 1.0.7 — Mục bảng lớp (kiểu 95, mã bảng @12 = 1): mã lớp @32, tên ở liên kết 0x56D2 (UTF-16 có dấu FF FD nếu `unicode`). */
+export function ptMucLop(ma: number, ten: string, unicode = false): Uint8Array {
+  const tenB = unicode ? [0xff, 0xfd, ...[...ten].flatMap((c) => [c.charCodeAt(0) & 255, c.charCodeAt(0) >> 8])] : [...ten].map((c) => c.charCodeAt(0));
+  const dai = chan(252 + 12 + tenB.length + 8);
+  const { b, dv } = khung(95, dai, 252, { lop: 1 });
+  dv.setUint32(32, ma, true);
+  b.set([0x0b, 0x10, 0xd2, 0x56], 252);
+  dv.setUint32(256, 1, true);
+  dv.setUint32(260, tenB.length, true);
+  b.set(tenB, 264);
+  return b;
+}

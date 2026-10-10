@@ -24,6 +24,7 @@ import { TabHoTroKhac } from "./ho/HoTroKhac";
 import { TabTienDo } from "./ho/TienDo";
 import { TabVanBanHo } from "./ho/VanBanHo";
 import { VanBan } from "./VanBan";
+import { CongTinhNen } from "../thanh-phan/CongTinhNen";
 import { ghiNhoDsHo, hoKeBen } from "../nho-ds-ho";
 import { HopThoai } from "../thanh-phan/chung";
 const CAC_TAB = [
@@ -238,13 +239,14 @@ export function HoSo({ duAnId, hoId, tabDau, maVbDau, thuaDau }: { duAnId: strin
           )}
           {tab === "dinh-kem" && <DinhKemHo h={h} duAn={duAn} />}
           {tab === "van-ban" && kq && (
-            <>
+            // Văn bản của hộ điền cả danh sách hộ của dự án (biểu kèm, tổng hợp) → dự án lớn: tính nền trước, không đứng giao diện
+            <CongTinhNen duAnId={duAnId}>
               <VanBan key={`${h.id}-${maVb ?? ""}`} duAnId={duAnId} maDau={maVb} nhung={{ ho: h, kq, daSua }} />
               <details className="mt-10">
                 <summary className="chu-nho" style={{ fontWeight: 600, cursor: "pointer" }}>Tạo nhanh các mẫu của hộ theo bước (không cần nhập số, ngày)</summary>
                 <TabVanBanHo h={h} duAn={duAn} kq={kq} hieuLuc={hieuLuc} soan={(ma) => { setMaVb(ma); window.scrollTo({ top: 0, behavior: "smooth" }); }} />
               </details>
-            </>
+            </CongTinhNen>
           )}
           {tab === "nhat-ky" && (
             <div className="the">

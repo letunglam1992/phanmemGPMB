@@ -21,6 +21,14 @@
  *  - Kích thước (kiểu 33): điểm định vị là các bản ghi 48 byte từ @304 (x, y, z …) đến vùng thuộc tính. MicroStation tự dựng
  *    đường kích thước, mũi tên, giá trị khi hiển thị (không lưu trong tệp) → vẽ đoạn nối các điểm định vị và ghi chiều dài
  *    đo được (m, 2 chữ số thập phân). Vị trí đường kích thước (độ lệch so với điểm định vị) chưa đọc.
+ *
+ * Bổ sung 1.0.7 (kiểm chứng trên tệp TD70-2026.dgn người dùng cung cấp, đọc tại chỗ, không lưu vào kho):
+ *  - Ký hiệu phần tử (sau 16 byte đầu, mã số, thời điểm sửa): @44 kiểu nét, @48 độ dày nét, @52 màu (chỉ số bảng màu 0–255;
+ *    0x7FFFFFFF / 0xFFFFFFFF = theo lớp — chưa đọc màu của lớp nên dùng màu theo lớp của phần mềm).
+ *  - Bảng màu: phần tử kiểu 5 trong kho phi mô hình, 256 bộ RGB từ @37 (trước đó @34 là màu nền).
+ *  - Bảng lớp: phần tử bảng (kiểu 95) có mã bảng @12 = 1; mã lớp @32 (trùng mã lớp @12 của phần tử đồ họa), tên ở liên kết
+ *    0x56D2 như tên ô dùng chung (chữ 8 bit, hoặc UTF-16 khi mở đầu bằng FF FD). Tên mặc định "Level n", "Default" bỏ qua.
+ *  - Kích thước hiển thị kiểu MicroStation: mỗi đoạn có mũi tên hai đầu và giá trị đặt giữa, phía trên đường kích thước.
  */
 import { unzlibSync } from "fflate";
 import { docCfb } from "./cfb.js";
@@ -63,14 +71,54 @@ interface NguCanh {
   xoayDo: number;
 }
 
-/** Tên ô dùng chung trong vùng thuộc tính (liên kết mã 0x56D2). */
+/** Tên ô dùng chung, tên lớp trong vùng thuộc tính (liên kết mã 0x56D2): chữ 8 bit, hoặc UTF-16 khi mở đầu bằng FF FD. */
 function tenO(z: Uint8Array, dv: DataView, p: number, dai: number): string | null {
   for (let q = p + Math.min(2 * dv.getUint32(p + 8, true), dai); q + 12 <= p + dai; q += 2)
     if (z[q + 1] === 0x10 && z[q + 2] === 0xd2 && z[q + 3] === 0x56) {
       const n = dv.getUint32(q + 8, true);
-      if (n > 0 && n < 256 && q + 12 + n <= p + dai) return String.fromCharCode(...z.subarray(q + 12, q + 12 + n));
+      if (!(n > 0 && n < 512 && q + 12 + n <= p + dai)) continue;
+      const b = z.subarray(q + 12, q + 12 + n);
+      if (b[0] === 0xff && b[1] === 0xfd) {
+        let x = "";
+        for (let k = 2; k + 1 < b.length; k += 2) {
+          const c = b[k]! | (b[k + 1]! << 8);
+          if (!c) break;
+          x += String.fromCharCode(c);
+        }
+        return x;
+      }
+      const ket = b.indexOf(0);
+      return String.fromCharCode(...(ket >= 0 ? b.subarray(0, ket) : b));
     }
   return null;
+}
+
+/** Ký hiệu phần tử: màu (chỉ số bảng màu; theo lớp, màu thật 24 bit → 0 = dùng màu theo lớp của phần mềm), độ dày, kiểu nét. */
+function kyHieu(dv: DataView, p: number, dai: number): { mau: number; netDay: number; kieuNet: number } {
+  if (dai < 56) return { mau: 0, netDay: 0, kieuNet: 0 };
+  const mau = dv.getUint32(p + 52, true), w = dv.getUint32(p + 48, true), k = dv.getUint32(p + 44, true);
+  return { mau: mau < 256 ? mau : 0, netDay: w < 32 ? w : 0, kieuNet: k < 8 ? k : 0 };
+}
+
+/** Bảng màu (kiểu 5) và tên lớp (bảng mã 1) trong kho phi mô hình. */
+function docBangPhiMoHinh(tep: ReturnType<typeof docCfb>): { bangMau: string[] | null; tenLop: Record<number, string> } {
+  let bangMau: string[] | null = null;
+  const tenLop: Record<number, string> = {};
+  for (const { z, dv } of khoiCua(tep, "Dgn^Nm/$")) {
+    for (const { p, dai } of phanTuTrong(z, 4)) {
+      const kieu = z[p]! & 0x7f;
+      if (kieu === 5 && !bangMau && dai >= 37 + 768 && 2 * dv.getUint32(p + 8, true) >= 37 + 768) {
+        const hex = (v: number) => v.toString(16).padStart(2, "0");
+        bangMau = [];
+        for (let i = 0; i < 256; i++) bangMau.push(`#${hex(z[p + 37 + 3 * i]!)}${hex(z[p + 38 + 3 * i]!)}${hex(z[p + 39 + 3 * i]!)}`);
+      } else if (kieu === 95 && dai >= 40 && dv.getUint32(p + 12, true) === 1) {
+        const ma = dv.getUint32(p + 32, true);
+        const ten = tenO(z, dv, p, dai)?.trim();
+        if (ten && ma < 1e6 && !/^(Level \d+|Default)$/i.test(ten)) tenLop[ma] = ten;
+      }
+    }
+  }
+  return { bangMau, tenLop };
 }
 
 /** Đọc một phần tử hình học (dùng chung cho mô hình và định nghĩa ô dùng chung). */
@@ -290,7 +338,7 @@ export function docDgnV8(u8: Uint8Array): KetQuaDocDgn {
         continue;
       }
       // Thành phần của định nghĩa đều mang cờ 0x40; chỉ phần tử con của chuỗi/vùng phức lồng trong định nghĩa được gộp
-      const pt = docHinh(dn.z, dn.dv, p, dai, { stt: stt++, kieu, lop, mau: 0, netDay: 0, kieuNet: 0, laThanhPhan: true, oDungChung: ten }, nc, dem3d);
+      const pt = docHinh(dn.z, dn.dv, p, dai, { stt: stt++, kieu, lop, ...kyHieu(dn.dv, p, dai), laThanhPhan: true, oDungChung: ten }, nc, dem3d);
       const kq = gom(pt);
       if (kq && kq.loai !== "KHAC") ra.push(kq);
     }
@@ -305,7 +353,7 @@ export function docDgnV8(u8: Uint8Array): KetQuaDocDgn {
       const kieu = z[p]! & 0x7f;
       const laThanhPhan = (z[p + 3]! & 0x40) !== 0;
       const lop = dai >= 16 ? dv.getUint32(p + 12, true) : 0;
-      const coSo = { stt: stt++, kieu, lop, mau: 0, netDay: 0, kieuNet: 0, laThanhPhan };
+      const coSo = { stt: stt++, kieu, lop, ...kyHieu(dv, p, dai), laThanhPhan };
 
       if (kieu === 35 && dai >= 256) {
         // Bản sao ô dùng chung: ma trận 3×3 theo hàng @160, gốc @232
@@ -346,15 +394,9 @@ export function docDgnV8(u8: Uint8Array): KetQuaDocDgn {
         if (diem.length >= 2 && !hopLe) ktLech++;
         if (hopLe) {
           soKichThuoc++;
-          let dai2 = 0;
-          for (let i = 1; i < diem.length; i++) dai2 += Math.hypot(diem[i]!.x - diem[i - 1]!.x, diem[i]!.y - diem[i - 1]!.y);
-          phanTu.push({ ...coSo, loai: diem.length === 2 ? "DUONG" : "DUONG_GAP", diem, kichThuoc: dai2 } as PhanTuHinh);
-          const [d0, d1] = [diem[0]!, diem[diem.length - 1]!];
-          let goc = (Math.atan2(d1.y - d0.y, d1.x - d0.x) * 180) / Math.PI;
-          if (goc > 90) goc -= 180;
-          if (goc < -90) goc += 180;
-          const cao = cuoi >= 200 ? dv.getFloat64(p + 192, true) * heSo : 0;
-          phanTu.push({ ...coSo, stt: stt++, loai: "CHU", goc: { x: (d0.x + d1.x) / 2, y: (d0.y + d1.y) / 2 }, byteChu: new Uint8Array(0), chuUnicode: dai2.toFixed(2).replace(".", ","), chieuCao: cao > 0 && cao < 50 ? cao : 1, gocXoay: goc, font: 0, kichThuoc: dai2 } as PhanTuChu);
+          const c0 = cuoi >= 200 ? dv.getFloat64(p + 192, true) * heSo : 0;
+          const cao = c0 > 0 && c0 < 50 ? c0 : 1;
+          phanTu.push(...dungKichThuoc(diem, cao, coSo, () => stt++));
         } else phanTu.push({ ...coSo, loai: "KHAC" });
         nut = null;
         continue;
@@ -376,13 +418,53 @@ export function docDgnV8(u8: Uint8Array): KetQuaDocDgn {
   if (soO) canhBao.push(`Đã dựng ${soO - oThieu}/${soO} ô dùng chung (ký hiệu) từ ${dinhNghia.size} định nghĩa trong tệp${tenThieu.size ? `; thiếu định nghĩa: ${[...tenThieu].slice(0, 5).join(", ")}` : ""}.`);
   if (oLech) canhBao.push(`${oLech} ô dùng chung có thành phần nằm ngoài phạm vi của ô (cấu trúc chưa kiểm chứng) — bỏ các thành phần đó để tránh vẽ sai (đường kéo dài).`);
   if (ktLech) canhBao.push(`${ktLech} kích thước có điểm định vị cách điểm đầu hơn ${KT_TOI_DA} m (cấu trúc chưa kiểm chứng) — không vẽ.`);
-  if (soKichThuoc) canhBao.push(`${soKichThuoc} kích thước: vẽ đoạn nối các điểm định vị kèm chiều dài đo được (m); vị trí đường kích thước, mũi tên theo kiểu kích thước của MicroStation không được dựng lại.`);
+  if (soKichThuoc) canhBao.push(`${soKichThuoc} kích thước: vẽ theo kiểu MicroStation (mũi tên hai đầu, chiều dài từng đoạn — m) đặt trên đoạn nối các điểm định vị; độ lệch đường kích thước, kiểu mũi tên riêng của kiểu kích thước chưa đọc.`);
   canhBao.push("Tệp DGN V8 (MicroStation V8/V8i): đọc mô hình mặc định; tham chiếu ngoài (reference) không được đọc.");
 
+  let bang: ReturnType<typeof docBangPhiMoHinh> = { bangMau: null, tenLop: {} };
+  try {
+    bang = docBangPhiMoHinh(tep);
+  } catch {
+    canhBao.push("Không đọc được bảng màu, bảng lớp (kho phi mô hình) — hiển thị theo màu lớp của phần mềm.");
+  }
   return {
     tcb: { soChieu: 2, suTrenMu: 1, uorTrenSu: uor, donViChinh: "m", donViPhu: "", gocX: gocX * heSo, gocY: gocY * heSo, heSo },
     phanTu,
-    bangMau: null,
+    bangMau: bang.bangMau,
     canhBao,
+    ...(Object.keys(bang.tenLop).length ? { tenLop: bang.tenLop } : {}),
   };
+}
+
+/**
+ * Kích thước hiển thị kiểu MicroStation (chỉ để xem, không dùng dựng thửa): mỗi đoạn giữa hai điểm định vị là một đường
+ * kích thước có mũi tên hai đầu (dài 1 × chiều cao chữ, mở 15°) và giá trị chiều dài (m) đặt giữa, phía trên đường, xoay theo
+ * đoạn (luôn đọc được từ trái sang phải). Chữ neo góc trái chân chữ nên lùi nửa bề rộng ước tính (0,6 × cao mỗi ký tự).
+ */
+export function dungKichThuoc(diem: Diem[], cao: number, coSo: Omit<PhanTuHinh, "loai" | "diem">, sttMoi: () => number): PhanTu[] {
+  const out: PhanTu[] = [];
+  for (let i = 1; i < diem.length; i++) {
+    const a = diem[i - 1]!, b = diem[i]!;
+    const L = Math.hypot(b.x - a.x, b.y - a.y);
+    if (!(L > 0)) continue;
+    const ux = (b.x - a.x) / L, uy = (b.y - a.y) / L;
+    out.push({ ...coSo, ...(i > 1 ? { stt: sttMoi() } : {}), loai: "DUONG", diem: [a, b], kichThuoc: L } as PhanTuHinh);
+    const mt = Math.min(cao, L / 3);
+    const muiTen = (d: Diem, hx: number, hy: number) => {
+      // hai cánh lùi về phía trong đoạn, lệch ±15°
+      const c = Math.cos(Math.PI / 12), s = Math.sin(Math.PI / 12);
+      const canh = (dau: number) => ({ x: d.x + mt * (hx * c - dau * hy * s), y: d.y + mt * (hy * c + dau * hx * s) });
+      out.push({ ...coSo, stt: sttMoi(), loai: "DUONG_GAP", diem: [canh(1), d, canh(-1)], kichThuoc: L } as PhanTuHinh);
+    };
+    muiTen(a, ux, uy);
+    muiTen(b, -ux, -uy);
+    // hướng đọc: trái → phải; pháp tuyến "phía trên" theo hướng đọc
+    const [dx, dy] = ux < -1e-9 || (Math.abs(ux) <= 1e-9 && uy < 0) ? [-ux, -uy] : [ux, uy];
+    const chu = L.toFixed(2).replace(".", ",");
+    const nuaRong = (chu.length * 0.6 * cao) / 2;
+    const m = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    const goc = { x: m.x - dx * nuaRong - dy * 0.3 * cao, y: m.y - dy * nuaRong + dx * 0.3 * cao };
+    out.push({ ...coSo, stt: sttMoi(), loai: "CHU", goc, byteChu: new Uint8Array(0), chuUnicode: chu, chieuCao: cao, gocXoay: (Math.atan2(dy, dx) * 180) / Math.PI, font: 0, kichThuoc: L } as PhanTuChu);
+  }
+  return out;
 }

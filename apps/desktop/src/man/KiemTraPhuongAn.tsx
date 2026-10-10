@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { GOI_CO_SAN, GOI_MOI_NHAT, tenBoChinhSach } from "../goi-chinh-sach";
-import { BO_CHINH_SACH, DANH_MUC_XA, DON_GIA, napBangGiaDat, type BangGiaDat } from "../du-lieu";
+import { BO_CHINH_SACH, DANH_MUC_XA, donGiaTheoBo, napBangGiaDatTheoBo, type BangGiaDat } from "../du-lieu";
 import {
   TEN_LOAI_KIEM,
   TEN_MUC_DO,
@@ -54,8 +54,9 @@ export function KiemTraPhuongAn() {
   const inputTep = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    void napBangGiaDat().then(setBangGia);
-  }, []);
+    // Gói chính sách kèm bảng giá đất → đối chiếu theo bảng của gói
+    void napBangGiaDatTheoBo(bo).then(setBangGia);
+  }, [bo]);
 
   const trang = tep?.trang[soTrang];
   const tuDong = useMemo(() => (trang ? nhanDienCot(trang.o) : null), [trang]);
@@ -65,7 +66,7 @@ export function KiemTraPhuongAn() {
   const kq = useMemo(() => {
     if (!trang) return null;
     if (dangDung === "NGANG") return kiemTraBangNgang(trang);
-    return kiemTraBang(trang, { donGia: DON_GIA, bangGia, chinhSach: BO_CHINH_SACH[bo], xa: xa || undefined }, Object.keys(cotTay).length ? cotTay : undefined);
+    return kiemTraBang(trang, { donGia: donGiaTheoBo(bo), bangGia, chinhSach: BO_CHINH_SACH[bo], xa: xa || undefined }, Object.keys(cotTay).length ? cotTay : undefined);
   }, [trang, bangGia, xa, cotTay, bo, dangDung]);
 
   const napTep = async (f: File) => {

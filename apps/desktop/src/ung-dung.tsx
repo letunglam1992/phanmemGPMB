@@ -3,7 +3,7 @@ import { KHOA_KHOI_PHUC, KHOA_TU_DONG, MAC_DINH_TU_DONG, cachTuDong, coVoWindows
 import type { BoChinhSach } from "@gpmb/core";
 import { BO_CHINH_SACH } from "./du-lieu";
 import { taoKhoIndexedDb, type CanBo, type Kho } from "./kho";
-import { chiMucNguoi, type HoSoNguoi } from "./nguoi-co-dat";
+import { chiMucNguoi, chiMucNhanKhau, type HoSoNguoi, type NhanKhauNguoi } from "./nguoi-co-dat";
 import { LoiMayChu, docCheDo, laKhoMang } from "./kho-mang";
 import type { DuAn, Ho } from "./mo-hinh";
 import { docLanSaoLuu, ghiLanSaoLuu, maHoaBanSaoLuu, taoBanSaoLuu, tenTepSaoLuu } from "./sao-luu";
@@ -148,6 +148,8 @@ interface NguCanh {
   luuNguongLechDt: (n: NguongLechDt | null) => Promise<void>;
   /** P3-2: chỉ mục số định danh → hồ sơ ở mọi dự án (người có đất dùng chung). */
   nguoiCoDat: Map<string, HoSoNguoi[]>;
+  /** 1.0.7: chỉ mục số định danh của nhân khẩu. */
+  nhanKhauCoDinhDanh: Map<string, NhanKhauNguoi[]>;
   /** P3-4: cán bộ để phân công phụ trách hồ sơ. */
   dsCanBo: CanBo[];
   /** P2-1: gói chính sách đã nạp (ngoài bộ có sẵn). */
@@ -442,10 +444,12 @@ export function NhaCungCap({ children, kho: khoVao, chiXem, phienDau }: { childr
   const hoCua = useCallback((id: string, kemDaXoa?: boolean) => (kemDaXoa ? hoTheoDuAn.get(id)?.tat : hoTheoDuAn.get(id)?.con) ?? KHONG_CO_HO, [hoTheoDuAn]);
   const thungRac = useMemo(() => ({ duAn: dsDuAn.filter((d) => d.daXoa), ho: dsHo.filter((h) => h.daXoa && !dsDuAn.find((d) => d.id === h.duAnId)?.daXoa) }), [dsDuAn, dsHo]);
   const nguoiCoDat = useMemo(() => chiMucNguoi(dsDuAn, dsHo), [dsDuAn, dsHo]);
+  const nhanKhauCoDinhDanh = useMemo(() => chiMucNhanKhau(dsDuAn, dsHo), [dsDuAn, dsHo]);
   const giaTri: NguCanh = {
     kho,
     chiXem: chiXem ? { nhan: chiXem.nhan, thoat: chiXem.thoat } : undefined,
     nguoiCoDat,
+    nhanKhauCoDinhDanh,
     dsCanBo,
     dsDuAn: dsDuAnCon,
     hoCua,

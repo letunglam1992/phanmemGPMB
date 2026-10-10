@@ -65,3 +65,17 @@ describe("Lịch sử thay đổi hồ sơ (P1-5)", () => {
     expect((await kho.lichSu("duAn", duAn.id)).ds[0]!.lyDo).toMatch(/^Trước khi khôi phục/);
   });
 });
+
+describe("1.0.7 — lịch sử ô thẻ Hỗ trợ, Tái định cư", () => {
+  it("khóa ô hỗ trợ ổn định đời sống, TĐC khớp với khác biệt", async () => {
+    const { khacBiet, thuocO } = await import("../src/lich-su");
+    const { taoDuAnMau } = await import("../src/du-lieu-mau");
+    const h = taoDuAnMau().ho[0]!;
+    const a = { ...h, hoTro: { ...h.hoTro, onDinh: { dienTichNNDangSuDung: "1000", diChuyen: "KHONG" as never }, taiDinhCu: { hinhThuc: "DAT_O" as const, khoanKhac: [], donGia: "2000000" } } };
+    const b = { ...a, hoTro: { ...a.hoTro, onDinh: { ...a.hoTro.onDinh!, dienTichNNDangSuDung: "1200" }, taiDinhCu: { ...a.hoTro.taiDinhCu!, donGia: "2500000" } } };
+    const k = khacBiet(a, b);
+    expect(k.filter((x) => thuocO(x, "hoTro.taiDinhCu.donGia")).map((x) => [x.tu, x.thanh])).toEqual([["2.000.000", "2.500.000"]]);
+    expect(k.filter((x) => thuocO(x, "hoTro.onDinh.dienTichNNDangSuDung"))).toHaveLength(1);
+    expect(k.filter((x) => thuocO(x, "hoTro.taiDinhCu.khuTdc"))).toHaveLength(0);
+  });
+});

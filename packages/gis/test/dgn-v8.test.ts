@@ -18,7 +18,7 @@ import {
   CAU_HINH_MAC_DINH,
   type PhanTuChu,
 } from "../src/index.js";
-import { datPhamViO, ptBanSaoO, ptChu, ptChuKhongDau, ptCung, ptDinhNghiaO, ptDuong, ptKichThuoc, ptKieu, ptNutChu, ptPhuc, vietCfb, vietDgnV8 } from "./viet-dgn-v8.js";
+import { datMau, datPhamViO, ptBangMau, ptMucLop, ptBanSaoO, ptChu, ptChuKhongDau, ptCung, ptDinhNghiaO, ptDuong, ptKichThuoc, ptKieu, ptNutChu, ptPhuc, vietCfb, vietDgnV8 } from "./viet-dgn-v8.js";
 
 describe("Tệp ghép CFB", () => {
   test("đọc lại luồng nhỏ (mini stream) và luồng lớn (FAT), kho lồng nhau", () => {
@@ -212,7 +212,7 @@ describe("DGN V8 — cung tròn, ô dùng chung, kích thước (0.9.0)", () => 
     const o = b.phanTu.filter((p) => p.oDungChung === "MOC");
     expect(o).toHaveLength(1);
     expect(o[0]!.loai).toBe("VUNG");
-    expect(b.phanTu.filter((p) => p.kichThuoc !== undefined && p.loai !== "CHU").map((p) => p.kichThuoc)).toEqual([10]);
+    expect(b.phanTu.filter((p) => p.kichThuoc !== undefined && p.loai === "DUONG").map((p) => p.kichThuoc)).toEqual([10]);
     const ys = b.phanTu.flatMap((p) => ("diem" in p ? p.diem.map((d) => d.y) : []));
     expect(Math.min(...ys)).toBeGreaterThan(Y0 - 1);
     expect(b.canhBao.join(" ")).toMatch(/1 ô dùng chung có thành phần nằm ngoài phạm vi/);
@@ -227,13 +227,22 @@ describe("DGN V8 — cung tròn, ô dùng chung, kích thước (0.9.0)", () => 
     expect(b.canhBao.join(" ")).not.toMatch(/cách điểm đầu hơn/);
   });
 
-  test("kích thước: đoạn nối điểm định vị và nhãn chiều dài (m) theo hướng đoạn", () => {
+  test("kích thước kiểu MicroStation: đường, mũi tên hai đầu, giá trị giữa đoạn phía trên đường (1.0.7)", () => {
     const b = docDgn(vietDgnV8([[ptKichThuoc([[X0, Y0], [X0 + 3, Y0 + 4]], { lop: 9, caoM: 1.5 })]]));
     const d = b.phanTu.find((p) => p.loai === "DUONG")!;
     const c = b.phanTu.find((p): p is PhanTuChu => p.loai === "CHU")!;
     expect(d.kichThuoc).toBeCloseTo(5, 9);
     expect(giaiMaNhan(c)).toBe("5,00");
-    gan(c.goc, X0 + 1.5, Y0 + 2);
+    // chữ: tâm dải chữ ở giữa đoạn, lệch 0,3 × cao về phía trên; neo trái chân chữ lùi nửa bề rộng (4 ký tự × 0,6 × cao / 2)
+    const [ux, uy] = [0.6, 0.8];
+    gan(c.goc, X0 + 1.5 - ux * 1.8 - uy * 0.45, Y0 + 2 - uy * 1.8 + ux * 0.45);
+    const mui = b.phanTu.filter((p) => p.loai === "DUONG_GAP" && p.kichThuoc !== undefined) as { diem: { x: number; y: number }[] }[];
+    expect(mui).toHaveLength(2);
+    gan(mui[0]!.diem[1]!, X0, Y0);
+    gan(mui[1]!.diem[1]!, X0 + 3, Y0 + 4);
+    // cánh mũi tên dài 1 × cao chữ, hướng vào trong đoạn
+    expect(Math.hypot(mui[0]!.diem[0]!.x - X0, mui[0]!.diem[0]!.y - Y0)).toBeCloseTo(1.5, 6);
+    expect((mui[0]!.diem[0]!.x - X0) * ux + (mui[0]!.diem[0]!.y - Y0) * uy).toBeGreaterThan(1.4);
     expect(c.gocXoay).toBeCloseTo((Math.atan2(4, 3) * 180) / Math.PI, 6);
     expect(c.chieuCao).toBeCloseTo(1.5, 6);
     expect(b.canhBao.join(" ")).toMatch(/1 kích thước/);
@@ -266,3 +275,19 @@ describe.skipIf(!tep || !existsSync(tep))("Tệp DGN V8i thật (GPMB_DGN_V8)", 
     expect(kq.thua.filter((t) => t.hienTrangBanDo).length).toBeGreaterThan(40);
   });
 });
+
+describe("DGN V8 — màu gốc, tên lớp (1.0.7)", () => {
+  test("màu phần tử @52 theo bảng màu kiểu 5; theo lớp → 0; tên lớp từ bảng lớp (8 bit, UTF-16), bỏ tên mặc định", () => {
+    const mau: [number, number, number][] = Array.from({ length: 256 }, (_, i) => [i, 255 - i, 7]);
+    const b = docDgn(vietDgnV8(
+      [[datMau(ptDuong(3, [[X0, Y0], [X0 + 5, Y0]], { lop: 10 }), 3), datMau(ptDuong(3, [[X0, Y0], [X0, Y0 + 5]], { lop: 20 }), 0xffffffff)]],
+      [[ptBangMau(mau), ptMucLop(10, "Ranh thua"), ptMucLop(20, "Cọc tiêu", true), ptMucLop(5, "Level 5"), ptMucLop(64, "Default")]],
+    ));
+    const [a, c] = b.phanTu.filter((p) => p.loai === "DUONG");
+    expect(a!.mau).toBe(3);
+    expect(c!.mau).toBe(0);
+    expect(b.bangMau?.[3]).toBe("#03fc07");
+    expect(b.tenLop).toEqual({ 10: "Ranh thua", 20: "Cọc tiêu" });
+  });
+});
+

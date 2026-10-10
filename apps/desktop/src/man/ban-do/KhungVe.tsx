@@ -492,7 +492,7 @@ export function KhungVe(p: {
           ctx.translate(sx(c.x), sy(c.y));
           if (c.xoay) ctx.rotate((-c.xoay * Math.PI) / 180);
           ctx.font = `${Math.min(px, 40)}px Segoe UI, sans-serif`;
-          ctx.fillStyle = mauTheoLop ? mauLop(c.lop, nenToi) : chuMau;
+          ctx.fillStyle = mauTheoLop ? mauLop(c.lop, nenToi) : (c.mau && p.dl.ban.bangMau?.[c.mau]) || chuMau;
           ctx.fillText(c.chu, 0, 0);
           ctx.restore();
         }
@@ -864,7 +864,7 @@ export function KhungVe(p: {
               <button className="nut nut-nho" onClick={() => setLopAn(new Set([...lopAn].filter((l) => !dsLopLoc.some((x) => x.lop === l))))}>Bật {timLop ? "lớp lọc" : "tất cả"}</button>
               <button className="nut nut-nho" onClick={() => setLopAn(new Set([...lopAn, ...dsLopLoc.map((x) => x.lop)]))}>Tắt {timLop ? "lớp lọc" : "tất cả"}</button>
             </div>
-            <label className="chu-nho"><input type="checkbox" checked={mauTheoLop} onChange={(e) => setMauTheoLop(e.target.checked)} /> Màu theo lớp{p.dl.ban.bangMau ? "" : " (tệp V8: luôn theo lớp)"}</label>
+            <label className="chu-nho"><input type="checkbox" checked={mauTheoLop} onChange={(e) => setMauTheoLop(e.target.checked)} /> Màu theo lớp{p.dl.ban.bangMau ? "" : " (tệp không có bảng màu: luôn theo lớp)"}</label>
             <div className="bd-ds-lop">
               {dsLopLoc.map((l) => (
                 <label key={l.lop} title={l.ten ?? "Lớp không có trong Phụ lục 21 TT 26/2024 (địa phương tận dụng)"} data-lop={l.lop}>

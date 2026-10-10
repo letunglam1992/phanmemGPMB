@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { napBangGiaDat, type BangGiaDat, type DongGiaTuyen } from "../du-lieu";
+import { BANG_GIA_GOI, napBangGiaDatTheoBo, type BangGiaDat, type DongGiaTuyen } from "../du-lieu";
 import type { GiaThua } from "../mo-hinh";
 import { HopThoai, O } from "./chung";
 import { Chon } from "./Chon";
@@ -26,15 +26,17 @@ function bangTheoLoai(loai: string): Bang {
  * Chọn giá đất từ bảng giá NQ 152/2025 (QD-02). Các điều chỉnh (phân lớp, mặt tiếp giáp, chênh cao…)
  * theo docs/07 được nhập thành "giá sau điều chỉnh" với ghi chú căn cứ.
  */
-export function ChonGiaDat(p: { xa: string; loaiDat: string; dong: () => void; chon: (g: GiaThua) => void; chonTuyen?: (r: DongGiaTuyen) => void }) {
+export function ChonGiaDat(p: { xa: string; loaiDat: string; dong: () => void; chon: (g: GiaThua) => void; chonTuyen?: (r: DongGiaTuyen) => void; bo?: string }) {
   const [bg, setBg] = useState<BangGiaDat | null>(null);
   const [bang, setBang] = useState<Bang>(p.chonTuyen && bangTheoLoai(p.loaiDat) === "NN" ? "DAT_O" : bangTheoLoai(p.loaiDat));
   const [xa, setXa] = useState(p.xa);
   const [loc, setLoc] = useState("");
   const [tay, setTay] = useState({ gia: "", nguon: "" });
+  // Bảng giá đất kèm gói chính sách: ghi tên văn bản vào nguồn giá (bảng có sẵn ngầm hiểu NQ 152/2025)
+  const ghiNguon = (s: string) => (p.bo && BANG_GIA_GOI[p.bo] && bg ? `${s} — ${bg.van_ban}` : s);
   useEffect(() => {
-    void napBangGiaDat().then(setBg);
-  }, []);
+    void napBangGiaDatTheoBo(p.bo).then(setBg);
+  }, [p.bo]);
 
   const tuyen: DongGiaTuyen[] = useMemo(() => {
     if (!bg) return [];
@@ -44,7 +46,7 @@ export function ChonGiaDat(p: { xa: string; loaiDat: string; dong: () => void; c
   }, [bg, bang, xa, loc]);
 
   return (
-    <HopThoai tieuDe={`Chọn giá đất – NQ 152/2025/NQ-HĐND`} dong={p.dong} rong={1100}>
+    <HopThoai tieuDe={`Chọn giá đất – ${bg?.van_ban ?? "NQ 152/2025/NQ-HĐND"}`} dong={p.dong} rong={1100}>
       {!bg ? (
         <div className="trong">Đang nạp bảng giá đất…</div>
       ) : (
@@ -70,7 +72,7 @@ export function ChonGiaDat(p: { xa: string; loaiDat: string; dong: () => void; c
                   {bg.dat_nong_nghiep.filter((r) => r.xa === xa).map((r, i) => (
                     <tr key={i} className={r.loai_dat === p.loaiDat.toUpperCase() ? "dang-chon" : ""}>
                       <td>{r.bang}</td><td>{r.stt}</td><td>{tenDayDu(r.loai_dat)}</td><td className="so">{r.gia}</td>
-                      <td><button className="nut nut-nho" onClick={() => p.chon({ giaNghinDong: String(r.gia), nguon: `Bảng ${r.bang}, STT ${r.stt}, ${r.xa}, ${tenDayDu(r.loai_dat)}` })}>Chọn</button></td>
+                      <td><button className="nut nut-nho" onClick={() => p.chon({ giaNghinDong: String(r.gia), nguon: ghiNguon(`Bảng ${r.bang}, STT ${r.stt}, ${r.xa}, ${tenDayDu(r.loai_dat)}`) })}>Chọn</button></td>
                     </tr>
                   ))}
                 </tbody>
@@ -82,7 +84,7 @@ export function ChonGiaDat(p: { xa: string; loaiDat: string; dong: () => void; c
                 <tbody>
                   {bg.dat_kcn_ccn.map((r, i) => (
                     <tr key={i}><td>{r.ten}</td><td>{r.xa}</td><td className="so">{r.gia}</td>
-                      <td><button className="nut nut-nho" onClick={() => p.chon({ giaNghinDong: String(r.gia), nguon: `Bảng 08, ${r.ten}` })}>Chọn</button></td></tr>
+                      <td><button className="nut nut-nho" onClick={() => p.chon({ giaNghinDong: String(r.gia), nguon: ghiNguon(`Bảng 08, ${r.ten}`) })}>Chọn</button></td></tr>
                   ))}
                 </tbody>
               </table>
@@ -98,7 +100,7 @@ export function ChonGiaDat(p: { xa: string; loaiDat: string; dong: () => void; c
                       {r.vt.map((g, v) => (
                         <td key={v} className="so">
                           {g === null ? <span className="mo">—</span> : p.chonTuyen ? g : (
-                            <button className="nut nut-nho" title={`Chọn vị trí ${v + 1}`} onClick={() => p.chon({ giaNghinDong: String(g), nguon: `Bảng ${r.bang}, ${r.xa}, STT ${r.stt} (${r.tuyen}), VT${v + 1}` })}>{g}</button>
+                            <button className="nut nut-nho" title={`Chọn vị trí ${v + 1}`} onClick={() => p.chon({ giaNghinDong: String(g), nguon: ghiNguon(`Bảng ${r.bang}, ${r.xa}, STT ${r.stt} (${r.tuyen}), VT${v + 1}`) })}>{g}</button>
                           )}
                         </td>
                       ))}

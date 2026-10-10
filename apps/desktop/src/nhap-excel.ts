@@ -11,7 +11,7 @@
 import { docLyTrinh } from "./ly-trinh";
 import type ExcelJS from "exceljs";
 import { D } from "@gpmb/core";
-import { DON_GIA } from "./du-lieu";
+import { DON_GIA, donGiaTheoBo } from "./du-lieu";
 import { maHoTiepTheo, mauMaCua } from "./ma-ho";
 import { thuTinh } from "./bieu-thuc";
 import { TEN_LOAI_DAT } from "./van-ban/loai-dat";
@@ -613,7 +613,7 @@ export function kiemTraNhap(tep: TepExcel, ax: AnhXa, duAn: DuAn, hienCoTatCa: H
   }
   if (soMaTuDong) loi.push({ trang: "", dong: 0, cot: "", noiDung: `${soMaTuDong} hồ sơ được tự đánh mã (H001…) vì tệp không có mã hộ; các thửa cùng tên chủ${co("Thua", "diaChiChu") ? " và địa chỉ" : ""} gộp một hồ sơ — trùng tên có thể là người khác, kiểm tra trước khi nhập`, muc: "CANH_BAO" });
 
-  const donGia = new Map(DON_GIA.filter((r) => r.nguon !== "PL V").map((r) => [r.ma, r]));
+  const donGia = new Map(donGiaTheoBo(duAn.boChinhSach).filter((r) => r.nguon !== "PL V").map((r) => [r.ma, r]));
   const tatCaHo = () => [...moi.values(), ...hienCo.map((h) => boSung.get(h.id) ?? h)];
   for (const { dong, o } of doc("KiemDem")) {
     const loiTruoc = soLoi();

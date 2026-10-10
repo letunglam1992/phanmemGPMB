@@ -25,7 +25,25 @@ Giá gạo, hạn mức giao đất NN, hệ số giá đất (theo dự án); l
 | 4 | Lập trình | Phát hành bộ cài mới (GitHub Actions) |
 | 5 | Người dùng | Cài bản mới; dự án mới chọn bộ chính sách mới; dự án đang làm: quyết định có chuyển sang bộ mới hay không theo quy định chuyển tiếp của văn bản |
 
-Hiện việc thêm bộ chính sách **cần bản cài mới** (chưa có chức năng nhập bộ chính sách trong phần mềm) — tránh để dữ liệu mức, giá bị sửa tùy tiện ngoài quy trình kiểm tra.
+Từ 0.7.0 có thể **nạp gói chính sách** không cần bản cài mới (Cài đặt chung → Gói chính sách, Quản trị; chưa ký số — đối chiếu mã SHA-256 với đơn vị phát hành). Từ 1.0.7 gói dạng bọc kèm được bảng đơn giá, bảng giá đất:
+
+```json
+{
+  "dinhDang": "gpmb-goi-chinh-sach",
+  "khoa": "sonla-2027-01-01",
+  "chinhSach": { "...": "cùng cấu trúc policy/goi/*.json" },
+  "donGia": {
+    "canCu": "Quyết định số …/…/QĐ-UBND ngày … của UBND tỉnh",
+    "dong": [{ "nguon": "QĐ32 | PL VIII | PL V", "ma": "…", "nhom": "…", "ten": "…", "donVi": "m2", "donGia": 1234000, "matDo": null, "trang": 5 }]
+  },
+  "bangGiaDat": { "van_ban": "Nghị quyết số …", "danh_muc_xa": [], "dat_nong_nghiep": [], "dat_o": [], "dat_tmdv": [], "dat_skc": [], "dat_kcn_ccn": [] }
+}
+```
+
+- `donGia`: bắt buộc văn bản căn cứ; mỗi dòng đơn giá là số dương — phần mềm **không tự điền giá thiếu**. Nhóm (`nguon`) có trong gói thay toàn bộ nhóm đó của bảng có sẵn; nhóm không có giữ bảng có sẵn. Tên nhóm giữ nhãn cũ (QĐ32 = nhà, công trình; PL VIII = cây trồng, thủy sản; PL V = vật nuôi) kể cả khi văn bản mới thay văn bản cũ.
+- `bangGiaDat`: cùng cấu trúc `policy/nguon/nq152-2025-bang-gia-dat.json`; xã trong bảng phải có trong `danh_muc_xa`.
+- Mã SHA-256 tính trên cả bộ chính sách và các bảng kèm (đổi một đơn giá là đổi mã).
+- Việc trích xuất, đối chiếu số liệu với văn bản (bước 2, 3 ở trên) vẫn bắt buộc trước khi phát hành gói.
 
 ## 4. Văn bản đang chờ (theo sổ vướng mắc)
 

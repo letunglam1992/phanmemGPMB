@@ -118,3 +118,62 @@ describe("Ghép nhiều tệp, so sánh hai bản đồ, bảng điểm đo (doc
     expect(kq.diem).toHaveLength(2);
   });
 });
+
+describe("Bảng tọa độ mốc có cung tròn", () => {
+  // Hình chữ nhật 20 × 10 m, cạnh trên thay bằng nửa đường tròn bán kính 10 m lồi lên trên: DT = 200 + π·100/2
+  const DT = 200 + (Math.PI * 100) / 2;
+  test("cột R (bán kính) trên mốc đầu cung; dấu theo chiều đi; đổi trục X/Y", () => {
+    // Đi ngược chiều kim đồng hồ: M1 (0,0) → M2 (20,0) → M3 (20,10) → cung → M4 (0,10). Cung đi từ đông sang tây, lồi lên Bắc
+    // = lồi sang phải chiều đi → R > 0.
+    const kq = docToaDoMoc([
+      ["Tên mốc", "X (m)", "Y (m)", "R (m)"],
+      ["M1", Y0, X0, ""],
+      ["M2", Y0, X0 + 20, ""],
+      ["M3", Y0 + 10, X0 + 20, 10],
+      ["M4", Y0 + 10, X0, ""],
+    ]);
+    expect(kq.doiTruc).toBe(true);
+    const v = kq.vung[0]!;
+    expect(v.soMoc).toBe(4);
+    expect(v.soCung).toBe(1);
+    const k = kiemTraVung(v.diem);
+    expect(k.hopLe).toBe(true);
+    expect(Math.abs(k.dienTich - DT) / DT).toBeLessThan(1e-3);
+    // đỉnh cung cách cạnh dưới 20 m
+    expect(Math.max(...v.diem.map((d) => d.y))).toBeCloseTo(Y0 + 20, 2);
+    // R âm: cung lồi vào trong → DT = 200 − π·100/2
+    const am = docToaDoMoc([
+      ["Tên mốc", "X", "Y", "Bán kính"],
+      ["M1", Y0, X0, ""],
+      ["M2", Y0, X0 + 20, ""],
+      ["M3", Y0 + 20, X0 + 20, -10],
+      ["M4", Y0 + 20, X0, ""],
+    ]);
+    const k2 = kiemTraVung(am.vung[0]!.diem);
+    expect(k2.hopLe).toBe(true);
+    expect(k2.dienTich).toBeCloseTo(400 - (Math.PI * 100) / 2, 0);
+  });
+
+  test("điểm giữa cung (cột Loại); bán kính quá nhỏ → cảnh báo, nối thẳng", () => {
+    const kq = docToaDoMoc([
+      ["Tên mốc", "X", "Y", "Loại"],
+      ["M1", Y0, X0, ""],
+      ["M2", Y0, X0 + 20, ""],
+      ["M3", Y0 + 10, X0 + 20, ""],
+      ["C1", Y0 + 20, X0 + 10, "Điểm giữa cung"],
+      ["M4", Y0 + 10, X0, ""],
+    ]);
+    const v = kq.vung[0]!;
+    expect(v.soMoc).toBe(4);
+    expect(v.soCung).toBe(1);
+    expect(Math.abs(kiemTraVung(v.diem).dienTich - DT) / DT).toBeLessThan(1e-3);
+    const nho = docToaDoMoc([
+      ["Tên mốc", "X", "Y", "R"],
+      ["M1", Y0, X0, 3],
+      ["M2", Y0, X0 + 20, ""],
+      ["M3", Y0 + 10, X0 + 20, ""],
+    ]);
+    expect(nho.vung[0]!.soCung).toBe(0);
+    expect(nho.canhBao.join(" ")).toMatch(/nhỏ hơn nửa khoảng cách/);
+  });
+});

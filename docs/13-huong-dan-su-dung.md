@@ -67,6 +67,11 @@ Quá hạn kế hoạch; bước quá hạn theo luật (thẩm định 30 ngày
 - **Việc được giao:** khi được phân công hồ sơ mới, phần mềm báo khi mở và thanh bên hiện "Việc của tôi (n mới)"; mở Việc của tôi để xem (hồ sơ mới có nhãn "Mới").
 - **Soát mật độ cây trồng:** Soát phương án nêu cây vượt mật độ quy định (phần vượt hưởng 30%) và loài không có mật độ quy định — đối chiếu lại biên bản kiểm đếm, diện tích trồng.
 - **PDF bản đồ tiến độ:** dạng vector, chữ chọn được, có lưới tọa độ VN-2000 (X: Bắc, Y: Đông).
+- **Lịch sử ô ở thẻ Hỗ trợ:** chuột phải vào ô (số tháng tạm cư, đơn giá lô TĐC, tiền SDĐ phải nộp…) → **Lịch sử ô** để xem ai sửa, lúc nào, giá trị cũ.
+- **Người có đất ở nhiều hồ sơ (qua nhân khẩu):** nhập **Số định danh** cho nhân khẩu → thẻ Thông tin của hồ sơ hiện người đó ở hồ sơ khác (chủ hộ hoặc nhân khẩu) — bấm Mở để đối chiếu, tránh hỗ trợ trùng.
+- **Ranh GPMB có đoạn cong:** bảng tọa độ mốc thêm cột **R** (bán kính, m) ở mốc đầu cung — R dương khi cung lồi sang phải theo chiều đi tới mốc sau (bản đồ hướng Bắc lên trên), âm khi lồi sang trái; hoặc thêm dòng điểm trên cung với cột **Loại** ghi "giữa cung". Bảng kiểm tra hiện "n mốc (k cung)".
+- **Gói chính sách kèm bảng đơn giá, giá đất:** gói do đơn vị có thẩm quyền phát hành có thể kèm bảng đơn giá (ghi văn bản căn cứ) và bảng giá đất; khi nạp, hộp kiểm tra cho biết gói có kèm bảng hay không. Dự án dùng bộ chính sách đó thì hộp chọn đơn giá, chọn giá đất, nhập Excel, Kiểm tra phương án dùng bảng của gói.
+- **Bản đồ DGN V8:** bảng lớp hiện tên lớp đặt trong MicroStation (nếu tệp có); bỏ tích "Màu theo lớp" để xem màu gốc của bản vẽ; kích thước hiện mũi tên hai đầu và chiều dài từng đoạn.
 - **Thử phần mềm trên máy thật:** Giới thiệu → **Biểu ghi kết quả thử (Excel)** → điền Đạt / Không đạt / Ghi chú từng việc rồi gửi lại tác giả.
 - **Tìm nhanh (Ctrl + K):** gõ tên, mã hộ, tờ/thửa (5/85 — đúng số tờ, số thửa), 4 số cuối số định danh, hoặc lý trình (Km1+300); Enter mở thẳng thửa tìm được.
 - **Soát phương án** (trước khi chốt): hàng tóm tắt theo quy tắc cho biết bao nhiêu hồ sơ còn vướng từng điều kiện; bấm một dòng để mở đúng thẻ, đúng thửa cần sửa.

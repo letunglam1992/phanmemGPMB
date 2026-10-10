@@ -76,7 +76,7 @@ export function TheRanhNhap(p: { duAn: DuAn; dl: DuLieuBanDo; veRanh: boolean; b
   );
 }
 
-function XemVung({ ds, pham }: { ds: { ten: string; diem: Diem[] }[]; pham: DuLieuBanDo["pham"] }) {
+function XemVung({ ds, pham }: { ds: { ten: string; diem: Diem[]; soMoc?: number; soCung?: number }[]; pham: DuLieuBanDo["pham"] }) {
   return (
     <table className="bang">
       <thead><tr><th>Ranh</th><th className="so">Số mốc</th><th className="so">Diện tích (m²)</th><th>Kiểm tra</th></tr></thead>
@@ -87,7 +87,7 @@ function XemVung({ ds, pham }: { ds: { ten: string; diem: Diem[] }[]; pham: DuLi
           return (
             <tr key={i}>
               <td>{v.ten}</td>
-              <td className="so">{k.vong.length > 0 ? Math.max(k.vong.length - (k.hopLe ? 1 : 0), 0) : v.diem.length}</td>
+              <td className="so">{v.soMoc ?? (k.vong.length > 0 ? Math.max(k.vong.length - (k.hopLe ? 1 : 0), 0) : v.diem.length)}{v.soCung ? ` (${v.soCung} cung)` : ""}</td>
               <td className="so">{k.hopLe ? so(k.dienTich) : "—"}</td>
               <td className="chu-nho" style={{ color: k.loi || ngoai ? "var(--do)" : undefined }}>{k.loi ?? (ngoai ? "Nằm ngoài phạm vi bản đồ — kiểm tra hệ tọa độ, thứ tự X/Y" : "Hợp lệ")}</td>
             </tr>
@@ -99,12 +99,12 @@ function XemVung({ ds, pham }: { ds: { ten: string; diem: Diem[] }[]; pham: DuLi
 }
 
 function HopNapMoc(p: { dl: DuLieuBanDo; dong: () => void; them: (x: Omit<RanhNhap, "id" | "ngay" | "nguoi">[]) => Promise<void> }) {
-  const [kq, setKq] = useState<{ tep: string; vung: { ten: string; diem: Diem[] }[]; doiTruc: boolean; canhBao: string[] } | null>(null);
+  const [kq, setKq] = useState<{ tep: string; vung: { ten: string; diem: Diem[]; soMoc?: number; soCung?: number }[]; doiTruc: boolean; canhBao: string[] } | null>(null);
   const [loi, setLoi] = useState<string | null>(null);
   const hopLe = (kq?.vung ?? []).map((v) => ({ v, k: kiemTraVung(v.diem) })).filter(({ k }) => k.hopLe && trongPhamVi(k.vong, p.dl.pham));
   return (
     <HopThoai tieuDe="Nạp tọa độ mốc ranh GPMB" dong={p.dong} rong={720} chan={<><button className="nut" onClick={p.dong}>Hủy</button><button className="nut nut-chinh" disabled={!hopLe.length} onClick={() => void p.them(hopLe.map(({ v, k }) => ({ ten: v.ten, nguon: "EXCEL", tep: kq!.tep, vong: [k.vong], dienTich: k.dienTich })))}>Thêm {hopLe.length} ranh hợp lệ</button></>}>
-      <p className="mt-0 chu-nho">Tệp Excel (.xlsx) hoặc CSV/TXT: các cột <b>Tên mốc · X · Y</b> (tọa độ VN-2000, mét), cột <b>Vùng</b> nếu có nhiều ranh; hoặc để một dòng trống giữa các ranh. Theo quy ước trắc địa, X là tọa độ Bắc — phần mềm tự nhận và đổi trục cho khớp bản đồ. Mốc theo thứ tự đi vòng quanh ranh.</p>
+      <p className="mt-0 chu-nho">Tệp Excel (.xlsx) hoặc CSV/TXT: các cột <b>Tên mốc · X · Y</b> (tọa độ VN-2000, mét), cột <b>Vùng</b> nếu có nhiều ranh; hoặc để một dòng trống giữa các ranh. Theo quy ước trắc địa, X là tọa độ Bắc — phần mềm tự nhận và đổi trục cho khớp bản đồ. Mốc theo thứ tự đi vòng quanh ranh. Đoạn ranh là cung tròn: ghi cột <b>R</b> (bán kính, m) ở mốc đầu cung — R dương khi cung lồi sang phải theo chiều đi tới mốc sau (nhìn bản đồ hướng Bắc lên trên), R âm khi lồi sang trái; hoặc thêm một dòng điểm trên cung giữa hai mốc với cột <b>Loại</b> ghi "giữa cung". Cung được chia thành đoạn thẳng với sai số dây cung không quá 2 mm.</p>
       <ChonTep aria-label="Tệp tọa độ mốc" accept=".xlsx,.csv,.txt" onChange={async (e) => {
         const f = e.target.files?.[0];
         if (!f) return;

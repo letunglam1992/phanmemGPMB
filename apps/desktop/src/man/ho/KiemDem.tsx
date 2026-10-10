@@ -75,6 +75,7 @@ export function TabKiemDem({ h, doi, duAn }: { h: Ho; doi: (h: Ho) => void; duAn
       ))}
       {them && (
         <ChonDonGia
+          bo={duAn.boChinhSach}
           tieuDe={them.nguon === "QĐ32" ? "Đơn giá nhà, công trình – QĐ 32/2025/QĐ-UBND" : "Đơn giá cây trồng – PL VIII QĐ 106/2025/QĐ-UBND"}
           nguon={[them.nguon]}
           dong={() => setThem(null)}

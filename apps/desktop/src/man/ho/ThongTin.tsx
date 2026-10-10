@@ -3,7 +3,7 @@ import { TEN_DOI_TUONG, type DuAn, type Ho, type LoaiDoiTuong } from "../../mo-h
 import { O } from "../../thanh-phan/chung";
 import { Chon } from "../../thanh-phan/Chon";
 import { hoTrungMa } from "../../ma-ho";
-import { HO_TRO_THEO_DOI, canhBaoHoTroTrung, hoSoKhac, hoTroDaGhi } from "../../nguoi-co-dat";
+import { HO_TRO_THEO_DOI, canhBaoHoTroTrung, hoSoKhac, hoTroDaGhi, lienQuanNhanKhau } from "../../nguoi-co-dat";
 import { coDot, dsDot, lyDoKhongDoiDot, tenDot, timDot } from "../../dot-thu-hoi";
 import type { Tab } from "./kieu";
 
@@ -15,8 +15,9 @@ export const VB_DA_BAN_HANH = [
 ] as const;
 
 export function TabThongTin({ h, doi, duAn, goc }: Tab & { duAn: DuAn; goc?: Ho }) {
-  const { hoCua, nguoiCoDat, dsCanBo, di } = useUngDung();
+  const { hoCua, nguoiCoDat, nhanKhauCoDinhDanh, dsCanBo, di } = useUngDung();
   const khac = hoSoKhac(nguoiCoDat, h);
+  const lqNk = lienQuanNhanKhau(nguoiCoDat, nhanKhauCoDinhDanh, h);
   const trungHt = canhBaoHoTroTrung(nguoiCoDat, h);
   const trung = hoTrungMa(hoCua(h.duAnId, true), h.ma, h.id);
   const chanDot = goc ? lyDoKhongDoiDot(duAn, goc, h.dotId) : null;
@@ -64,6 +65,19 @@ export function TabThongTin({ h, doi, duAn, goc }: Tab & { duAn: DuAn; goc?: Ho 
         </O>
       </div>
     </div>
+    {lqNk.length > 0 && (
+      <div className="the" data-nhan-khau-trung>
+        <div className="the-dau"><h3>Người của hồ sơ này ở hồ sơ khác (qua nhân khẩu)</h3><span className="mo chu-nho">Khớp số định danh của chủ hồ sơ và nhân khẩu — phần mềm không kết luận; cán bộ kiểm tra tách hộ, hỗ trợ theo nhân khẩu</span></div>
+        <div className="the-than chu-nho" style={{ display: "grid", gap: 4 }}>
+          {lqNk.map((x, i) => (
+            <div key={i} className="nhom-nut giua-doc">
+              <span style={{ flex: 1 }}>{x.moTa}</span>
+              <button className="nut nut-nho" onClick={() => di({ ten: "ho", duAnId: x.khac.duAn.id, hoId: x.khac.h.id })}>Mở</button>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
     {khac.length > 0 && (
       <div className="the" data-nguoi-co-dat>
         <div className="the-dau"><h3>Hồ sơ khác cùng số định danh</h3><span className="mo chu-nho">Khớp theo số định danh trên dữ liệu trong máy/mạng nội bộ — phần mềm không kết luận, cán bộ kiểm tra</span></div>

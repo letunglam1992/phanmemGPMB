@@ -20,6 +20,8 @@ export interface NhanKhau {
   namSinh?: string;
   quanHe: string;
   ghiChu?: string;
+  /** 1.0.7: số định danh cá nhân của nhân khẩu (không bắt buộc) — đối chiếu người có đất giữa các hồ sơ. */
+  soDinhDanh?: string;
 }
 
 /** Giá đất đã chọn từ bảng giá (NQ 152) cho thửa: lưu cả nguồn để truy vết. */

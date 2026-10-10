@@ -155,7 +155,7 @@ export function HopCauHinhLop(p: { dl: DuLieuBanDo; sua: boolean; apDung: (ch: C
         </div>
         <div className="bang-cuon" style={{ maxHeight: 360 }}>
           <table className="bang">
-            <thead><tr><th className="so">Lớp</th><th>{p.dl.ban.tenLop ? "Tên lớp (DXF) / PL 21 TT 26/2024" : "Theo PL 21 TT 26/2024"}</th><th className="so">Đường</th><th className="so">Vùng</th><th className="so">Chữ</th><th className="so">Nút</th><th>Chữ mẫu</th>{DOI_TUONG.map((d) => <th key={d.k} className="giua chu-nho" title={d.ten} style={{ writingMode: "vertical-rl", transform: "rotate(180deg)", padding: "4px 2px" }}>{d.ngan}</th>)}</tr></thead>
+            <thead><tr><th className="so">Lớp</th><th>{p.dl.ban.tenLop ? "Tên lớp (trong tệp) / PL 21 TT 26/2024" : "Theo PL 21 TT 26/2024"}</th><th className="so">Đường</th><th className="so">Vùng</th><th className="so">Chữ</th><th className="so">Nút</th><th>Chữ mẫu</th>{DOI_TUONG.map((d) => <th key={d.k} className="giua chu-nho" title={d.ten} style={{ writingMode: "vertical-rl", transform: "rotate(180deg)", padding: "4px 2px" }}>{d.ngan}</th>)}</tr></thead>
             <tbody>
               {tk.map((x) => (
                 <tr key={x.lop}>

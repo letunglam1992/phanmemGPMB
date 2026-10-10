@@ -56,7 +56,8 @@ const soO = (v: unknown): number | null => {
 const khongDau = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/gi, "d").toLowerCase().trim();
 
 export interface KetQuaDocMoc {
-  vung: { ten: string; diem: Diem[] }[];
+  /** diem: mốc và các điểm chia trên cung tròn (đã chia nhỏ), soMoc: số mốc trong bảng, soCung: số đoạn cung */
+  vung: { ten: string; diem: Diem[]; soMoc?: number; soCung?: number }[];
   /** true: cột X của bảng là tọa độ Bắc (quy ước trắc địa VN-2000) → đã đổi sang x = Đông (Y), y = Bắc (X) như bản đồ. */
   doiTruc: boolean;
   canhBao: string[];
@@ -71,7 +72,7 @@ export interface KetQuaDocMoc {
 export function docToaDoMoc(bang: unknown[][]): KetQuaDocMoc {
   const canhBao: string[] = [];
   let dau = -1;
-  let cX = -1, cY = -1, cTen = -1, cVung = -1;
+  let cX = -1, cY = -1, cTen = -1, cVung = -1, cR = -1, cLoai = -1;
   for (let r = 0; r < Math.min(bang.length, 15) && dau < 0; r++) {
     const hang = bang[r] ?? [];
     hang.forEach((o, c) => {
@@ -81,9 +82,11 @@ export function docToaDoMoc(bang: unknown[][]): KetQuaDocMoc {
       else if (cY < 0 && /^(toa do )?y( \(m\))?$|^y \(|^y$/.test(t)) cY = c;
       else if (cTen < 0 && /^(ten moc|moc|ten diem|diem|so hieu|stt|tt)\b/.test(t)) cTen = c;
       else if (cVung < 0 && /^(vung|khu|ranh|thua)\b/.test(t)) cVung = c;
+      else if (cR < 0 && /^(r|ban kinh)( \(m\))?$|^ban kinh\b/.test(t)) cR = c;
+      else if (cLoai < 0 && /^(loai|loai diem|kieu|ghi chu)\b/.test(t)) cLoai = c;
     });
     if (cX >= 0 && cY >= 0) dau = r;
-    else (cX = -1), (cY = -1), (cTen = -1), (cVung = -1);
+    else (cX = -1), (cY = -1), (cTen = -1), (cVung = -1), (cR = -1), (cLoai = -1);
   }
   if (dau < 0) {
     // Không có tiêu đề X, Y: lấy hai cột số đầu tiên của dòng có ít nhất hai số
@@ -98,8 +101,8 @@ export function docToaDoMoc(bang: unknown[][]): KetQuaDocMoc {
     if (cX < 0) return { vung: [], doiTruc: false, canhBao: ["Không tìm thấy cột tọa độ X, Y trong bảng"] };
     canhBao.push(`Không có tiêu đề X, Y — dùng cột ${cX + 1}, ${cY + 1} làm X, Y`);
   }
-  const vung: { ten: string; diem: Diem[]; x: number[] }[] = [];
-  let hienTai: { ten: string; diem: Diem[]; x: number[] } | null = null;
+  const vung: { ten: string; diem: MocBang[]; x: number[] }[] = [];
+  let hienTai: { ten: string; diem: MocBang[]; x: number[] } | null = null;
   let tenVungTruoc = "";
   for (let r = dau + 1; r < bang.length; r++) {
     const hang = bang[r] ?? [];
@@ -118,17 +121,112 @@ export function docToaDoMoc(bang: unknown[][]): KetQuaDocMoc {
       vung.push(hienTai);
     }
     if (tenVung) tenVungTruoc = tenVung;
-    hienTai.diem.push({ x, y });
+    const r0 = cR >= 0 ? soO(hang[cR]) : null;
+    const loai = cLoai >= 0 ? khongDau(String(hang[cLoai] ?? "")) : "";
+    const giuaCung = /giua cung|diem cung|tren cung|^cung$/.test(loai);
+    if (r0 !== null && r0 !== 0 && giuaCung) canhBao.push(`Dòng ${r + 1}: vừa ghi bán kính vừa ghi điểm giữa cung — dùng điểm giữa cung`);
+    hienTai.diem.push({ x, y, ...(giuaCung ? { giuaCung: true } : r0 !== null && r0 !== 0 ? { r: r0 } : {}) });
     hienTai.x.push(x);
   }
   const tatCa = vung.flatMap((v) => v.diem);
   const tb = (f: (d: Diem) => number) => tatCa.reduce((s, d) => s + f(d), 0) / Math.max(tatCa.length, 1);
   const doiTruc = tatCa.length > 0 && tb((d) => d.x) > tb((d) => d.y);
   return {
-    vung: vung.map((v) => ({ ten: v.ten, diem: doiTruc ? v.diem.map((d) => ({ x: d.y, y: d.x })) : v.diem })),
+    vung: vung.map((v) => {
+      const moc = doiTruc ? v.diem.map((d) => ({ ...d, x: d.y, y: d.x })) : v.diem;
+      if (!moc.some((d) => d.r !== undefined || d.giuaCung)) return { ten: v.ten, diem: moc.map(({ x, y }) => ({ x, y })) };
+      const c = chiaCungMoc(moc);
+      for (const l of c.loi) canhBao.push(`${v.ten}: ${l}`);
+      return { ten: v.ten, diem: c.diem, soMoc: moc.filter((d) => !d.giuaCung).length, soCung: c.soCung };
+    }),
     doiTruc,
     canhBao,
   };
+}
+
+/** Mốc trong bảng: r — bán kính cung từ mốc này tới mốc kế tiếp; giuaCung — điểm nằm trên cung giữa mốc trước và mốc sau. */
+export interface MocBang extends Diem {
+  r?: number;
+  giuaCung?: boolean;
+}
+
+/** Sai số dây cung tối đa khi chia cung thành đoạn thẳng (m) — diện tích lệch so với cung thật dưới 0,1% với bán kính ≥ 5 m. */
+const SAI_SO_DAY_CUNG = 0.002;
+
+/** Các điểm chia trên cung tâm o, bán kính r, từ góc a0 quét góc quet (rad, dương = ngược chiều kim đồng hồ); không gồm hai đầu. */
+function diemTrenCung(o: Diem, r: number, a0: number, quet: number): Diem[] {
+  const buocToiDa = 2 * Math.acos(Math.max(-1, Math.min(1, 1 - SAI_SO_DAY_CUNG / r)));
+  const n = Math.min(720, Math.max(2, Math.ceil(Math.abs(quet) / Math.min(buocToiDa, Math.PI / 36))));
+  const out: Diem[] = [];
+  for (let i = 1; i < n; i++) out.push({ x: o.x + r * Math.cos(a0 + (quet * i) / n), y: o.y + r * Math.sin(a0 + (quet * i) / n) });
+  return out;
+}
+
+/** Cung qua ba điểm a → m → b. null nếu thẳng hàng. */
+export function cungBaDiem(a: Diem, m: Diem, b: Diem): Diem[] | null {
+  const d = 2 * (a.x * (m.y - b.y) + m.x * (b.y - a.y) + b.x * (a.y - m.y));
+  if (Math.abs(d) < 1e-9) return null;
+  const a2 = a.x * a.x + a.y * a.y, m2 = m.x * m.x + m.y * m.y, b2 = b.x * b.x + b.y * b.y;
+  const o = { x: (a2 * (m.y - b.y) + m2 * (b.y - a.y) + b2 * (a.y - m.y)) / d, y: (a2 * (b.x - m.x) + m2 * (a.x - b.x) + b2 * (m.x - a.x)) / d };
+  const r = Math.hypot(a.x - o.x, a.y - o.y);
+  const goc = (p: Diem) => Math.atan2(p.y - o.y, p.x - o.x);
+  const chuan = (g: number) => ((g % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+  const ga = goc(a), qm = chuan(goc(m) - ga), qb = chuan(goc(b) - ga);
+  // Ngược chiều kim đồng hồ nếu m nằm giữa a và b theo chiều đó; không thì đi theo chiều kim đồng hồ
+  const quet = qm < qb ? qb : qb - 2 * Math.PI;
+  return diemTrenCung(o, r, ga, quet);
+}
+
+/**
+ * Cung bán kính |r| nối a → b, lấy cung nhỏ (≤ 180°). Quy ước dấu (trên bản đồ, hướng Bắc lên trên): r > 0 — cung lồi sang
+ * phải theo chiều đi từ a tới b (tâm bên trái); r < 0 — cung lồi sang trái (tâm bên phải). null nếu |r| < nửa dây cung.
+ */
+export function cungBanKinh(a: Diem, b: Diem, r: number): Diem[] | null {
+  const R = Math.abs(r);
+  const c = Math.hypot(b.x - a.x, b.y - a.y);
+  if (c < 1e-9 || R < c / 2 - 1e-6) return null;
+  const h = Math.sqrt(Math.max(0, R * R - (c * c) / 4));
+  const ux = (b.x - a.x) / c, uy = (b.y - a.y) / c;
+  // pháp tuyến trái của chiều đi a → b
+  const tamTrai = r > 0;
+  const o = { x: (a.x + b.x) / 2 + (tamTrai ? -uy : uy) * h, y: (a.y + b.y) / 2 + (tamTrai ? ux : -ux) * h };
+  const ga = Math.atan2(a.y - o.y, a.x - o.x);
+  const nua = Math.asin(Math.min(1, c / 2 / R));
+  // Tâm bên trái → cung nằm bên phải tâm theo chiều đi → quét ngược chiều kim đồng hồ quanh tâm
+  return diemTrenCung(o, R, ga, (tamTrai ? 1 : -1) * 2 * nua);
+}
+
+/** Thay các đoạn có bán kính / điểm giữa cung bằng chuỗi điểm chia trên cung (vòng khép: mốc cuối nối về mốc đầu). */
+export function chiaCungMoc(moc: MocBang[]): { diem: Diem[]; soCung: number; loi: string[] } {
+  const loi: string[] = [];
+  const chinh: { d: Diem; r?: number; giua?: Diem }[] = [];
+  moc.forEach((m, i) => {
+    if (m.giuaCung) {
+      const truoc = chinh[chinh.length - 1];
+      if (!truoc || truoc.giua) loi.push(`điểm giữa cung thứ ${i + 1} không nằm giữa hai mốc — bỏ qua`);
+      else truoc.giua = { x: m.x, y: m.y };
+    } else chinh.push({ d: { x: m.x, y: m.y }, ...(m.r !== undefined ? { r: m.r } : {}) });
+  });
+  const diem: Diem[] = [];
+  let soCung = 0;
+  chinh.forEach((m, i) => {
+    diem.push(m.d);
+    const sau = chinh[(i + 1) % chinh.length]!;
+    if (chinh.length < 2 || sau === m) return;
+    let cung: Diem[] | null = null;
+    if (m.giua) {
+      cung = cungBaDiem(m.d, m.giua, sau.d);
+      if (!cung) loi.push(`cung sau mốc thứ ${i + 1}: ba điểm thẳng hàng — nối thẳng`);
+    } else if (m.r !== undefined) {
+      cung = cungBanKinh(m.d, sau.d, m.r);
+      if (!cung) loi.push(`cung sau mốc thứ ${i + 1}: bán kính ${Math.abs(m.r)} m nhỏ hơn nửa khoảng cách hai mốc — nối thẳng`);
+    }
+    if (cung) {
+      soCung++;
+      diem.push(...cung);
+    }
+  });
+  return { diem, soCung, loi };
 }
 
 /** Vùng khép kín (vùng, vùng phức hoặc khép từ đường) trên một lớp của tệp DGN khác — làm ranh GPMB. */

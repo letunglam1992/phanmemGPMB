@@ -61,6 +61,7 @@ export function TabNhanKhau({ h, doi }: Tab) {
               {tieuDe("hoTen", "Họ tên")}
               {tieuDe("namSinh", "Năm sinh", 130)}
               {tieuDe("quanHe", "Quan hệ với chủ hộ", 200)}
+              <th style={{ width: 150 }}>Số định danh</th>
               {tieuDe("ghiChu", "Ghi chú")}
               <th style={{ width: 44 }} />
             </tr>
@@ -72,6 +73,7 @@ export function TabNhanKhau({ h, doi }: Tab) {
                 <td><input value={n.hoTen} onChange={(e) => sua(n.id, "hoTen", e.target.value)} aria-label={`Họ tên nhân khẩu ${tt}`} /></td>
                 <td><input value={n.namSinh ?? ""} inputMode="numeric" onChange={(e) => sua(n.id, "namSinh", e.target.value)} aria-label={`Năm sinh nhân khẩu ${tt}`} /></td>
                 <td><input value={n.quanHe} list="ds-quan-he" onChange={(e) => sua(n.id, "quanHe", e.target.value)} aria-label={`Quan hệ nhân khẩu ${tt}`} /></td>
+                <td><input value={n.soDinhDanh ?? ""} inputMode="numeric" onChange={(e) => sua(n.id, "soDinhDanh", e.target.value)} aria-label={`Số định danh nhân khẩu ${tt}`} placeholder="không bắt buộc" /></td>
                 <td><input value={n.ghiChu ?? ""} onChange={(e) => sua(n.id, "ghiChu", e.target.value)} aria-label={`Ghi chú nhân khẩu ${tt}`} /></td>
                 <td><button className="nut nut-chu nut-nguy nut-nho" aria-label={`Xóa nhân khẩu ${tt}`} onClick={() => doi({ ...h, nhanKhau: h.nhanKhau.filter((x) => x.id !== n.id) })}><BieuTuong ten="thungRac" co={16} /></button></td>
               </tr>

@@ -9,6 +9,22 @@ import { HopThoai } from "./chung";
 import { Chon } from "./Chon";
 import { taiXuong } from "../tai-xuong";
 
+const tomTatDonGia = (s: string) => {
+  try {
+    const ds = JSON.parse(s) as { nguon: string; canCu?: string }[];
+    return `${ds.length} dòng${ds[0]?.canCu ? ` — ${ds[0].canCu}` : ""}`;
+  } catch {
+    return "hỏng";
+  }
+};
+const vanBanBg = (s: string) => {
+  try {
+    return (JSON.parse(s) as { van_ban: string }).van_ban;
+  } catch {
+    return "hỏng";
+  }
+};
+
 /** P2-1: Cài đặt chung → Gói chính sách: danh mục bộ chính sách, nạp gói mới (Quản trị). */
 export function TheGoiChinhSach() {
   const { goiDaNap, napGoi, quyen, bao } = useUngDung();
@@ -18,15 +34,15 @@ export function TheGoiChinhSach() {
     <div>
       <p className="mo mt-0">
         Bộ chính sách (mức hỗ trợ, tỷ lệ, cách tính có căn cứ) nạp bằng tệp JSON do đơn vị có thẩm quyền phát hành, không cần cài lại phần mềm. <b>Gói chưa có chữ ký số</b>:
-        đối chiếu mã SHA-256 với đơn vị phát hành trước khi dùng. Bảng đơn giá, bảng giá đất chưa nằm trong gói. Dự án chuyển sang bộ mới ở Thông tin dự án (xem chênh lệch từng hộ trước khi áp dụng).
+        đối chiếu mã SHA-256 với đơn vị phát hành trước khi dùng. Gói dạng bọc có thể kèm <b>bảng đơn giá</b> (mục <code>donGia</code>: văn bản căn cứ và các dòng theo nhóm QĐ32 — nhà, công trình; PL VIII — cây trồng, thủy sản; PL V — vật nuôi; nhóm có trong gói thay bảng có sẵn) và <b>bảng giá đất</b> (mục <code>bangGiaDat</code>, cùng cấu trúc bảng NQ 152) — dự án dùng bộ chính sách của gói thì chọn đơn giá, giá đất theo bảng của gói. Dự án chuyển sang bộ mới ở Thông tin dự án (xem chênh lệch từng hộ trước khi áp dụng).
       </p>
       <table className="bang">
         <thead><tr><th>Khóa</th><th>Tên, mã</th><th>Hiệu lực</th><th>Nguồn</th><th>SHA-256</th></tr></thead>
         <tbody>
-          {GOI_CO_SAN.map((k) => <tr key={k}><td>{k}</td><td className="chu-nho">{tenBoChinhSach(k)}</td><td className="chu-nho">từ {BO_CHINH_SACH[k]!.hieuLucTu}{BO_CHINH_SACH[k]!.hieuLucDen ? ` đến ${BO_CHINH_SACH[k]!.hieuLucDen}` : ""}</td><td className="chu-nho">Có sẵn trong phần mềm</td><td>—</td></tr>)}
+          {GOI_CO_SAN.map((k) => <tr key={k}><td>{k}</td><td className="chu-nho">{tenBoChinhSach(k)}<div className="mo">Đơn giá QĐ 32/2025, PL V, PL VIII QĐ 106/2025; giá đất NQ 152/2025</div></td><td className="chu-nho">từ {BO_CHINH_SACH[k]!.hieuLucTu}{BO_CHINH_SACH[k]!.hieuLucDen ? ` đến ${BO_CHINH_SACH[k]!.hieuLucDen}` : ""}</td><td className="chu-nho">Có sẵn trong phần mềm</td><td>—</td></tr>)}
           {goiDaNap.map((g) => (
             <tr key={g.khoa}>
-              <td>{g.khoa}</td><td className="chu-nho">{g.ten}<div className="mo">{g.ma}</div></td><td className="chu-nho">từ {g.hieuLucTu}{g.hieuLucDen ? ` đến ${g.hieuLucDen}` : ""}</td>
+              <td>{g.khoa}</td><td className="chu-nho">{g.ten}<div className="mo">{g.ma}</div>{(g.donGia || g.bangGiaDat) && <div className="mo" data-goi-kem>Kèm {[g.donGia && `bảng đơn giá (${tomTatDonGia(g.donGia)})`, g.bangGiaDat && `bảng giá đất (${vanBanBg(g.bangGiaDat)})`].filter(Boolean).join(", ")}</div>}</td><td className="chu-nho">từ {g.hieuLucTu}{g.hieuLucDen ? ` đến ${g.hieuLucDen}` : ""}</td>
               <td className="chu-nho">Nạp {new Date(g.napLuc).toLocaleString("vi-VN")} · {g.napBoi}<div className="mo">{g.tenTep}</div></td>
               <td className="chu-nho" style={{ fontFamily: "monospace", wordBreak: "break-all" }}>{g.sha256}</td>
             </tr>
@@ -40,7 +56,7 @@ export function TheGoiChinhSach() {
         <HopThoai tieuDe={`Kiểm tra gói: ${xem.tenTep}`} dong={() => setXem(null)} rong={720} chan={<><button className="nut" onClick={() => setXem(null)}>Hủy</button><button className="nut nut-chinh" disabled={!xem.goi} onClick={async () => {
           const g = xem.goi!;
           const cs = g.cs as unknown as { ten?: string; ma: string; hieuLucTu: string; hieuLucDen?: string | null };
-          if (await napGoi({ khoa: g.khoa, ten: cs.ten ?? g.khoa, ma: cs.ma, hieuLucTu: cs.hieuLucTu, hieuLucDen: cs.hieuLucDen ?? null, sha256: g.sha256, tenTep: xem.tenTep, noiDung: g.noiDung, ...(g.ghiChu ? { ghiChu: g.ghiChu } : {}) })) {
+          if (await napGoi({ khoa: g.khoa, ten: cs.ten ?? g.khoa, ma: cs.ma, hieuLucTu: cs.hieuLucTu, hieuLucDen: cs.hieuLucDen ?? null, sha256: g.sha256, tenTep: xem.tenTep, noiDung: g.noiDung, ...(g.ghiChu ? { ghiChu: g.ghiChu } : {}), ...(g.donGia ? { donGia: g.donGia } : {}), ...(g.bangGiaDat ? { bangGiaDat: g.bangGiaDat } : {}) })) {
             bao(`Đã nạp gói "${g.khoa}"`);
             setXem(null);
           }
@@ -53,6 +69,10 @@ export function TheGoiChinhSach() {
               <p>Mã kiểm tra SHA-256 (đối chiếu với đơn vị phát hành gói — gói chưa có chữ ký số):</p>
               <p style={{ fontFamily: "monospace", wordBreak: "break-all" }}><b>{xem.goi!.sha256}</b></p>
               <p className="mo">Các mục khác bộ có sẵn: {xem.mucKhac.length ? xem.mucKhac.join(", ") : "không có"}.</p>
+              <p className="mo">
+                Bảng đơn giá: {xem.goi!.soDongDonGia ? `kèm gói, ${xem.goi!.soDongDonGia} dòng (thay nhóm tương ứng của bảng có sẵn)` : "không kèm — dùng bảng có sẵn"}. Bảng giá đất:{" "}
+                {xem.goi!.vanBanGiaDat ? `kèm gói — ${xem.goi!.vanBanGiaDat}` : "không kèm — dùng bảng NQ 152/2025 có sẵn"}.
+              </p>
             </>
           )}
         </HopThoai>

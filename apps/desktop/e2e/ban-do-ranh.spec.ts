@@ -106,3 +106,22 @@ test("ranh từ tọa độ mốc → DT thu hồi từng thửa; tạo hồ sơ
   await expect(ds).toContainText("Ranh vẽ 1");
   await p.screenshot({ path: "test-results/ban-do-ranh.png" });
 });
+
+test("1.0.7 — bảng mốc có cung tròn (cột R): kiểm tra hiện số cung, diện tích gồm phần cung", async ({ page: p }) => {
+  await vao(p);
+  await p.keyboard.press("Alt+3");
+  await p.locator("[role=tablist] button", { hasText: "Bản đồ" }).click();
+  await p.locator('input[type=file][accept=".dgn,.dxf,.dwg"]').first().setInputFiles({ name: "thu.dgn", mimeType: "application/octet-stream", buffer: banDo() });
+  await expect(p.getByText("thu.dgn ·")).toBeVisible();
+  await p.getByRole("button", { name: "Để sau" }).click();
+  // Chữ nhật 47 × 20 m, cạnh trên M3 → M4 (đi về Tây) là nửa đường tròn R = 23,5 m lồi lên Bắc (bên phải chiều đi → R > 0)
+  const csv = "Tên mốc,X,Y,R\nM1,1350000,500003,\nM2,1350000,500050,\nM3,1350020,500050,23.5\nM4,1350020,500003,\n";
+  await p.getByRole("button", { name: "Nạp tọa độ mốc…" }).click();
+  await p.getByLabel("Tệp tọa độ mốc").setInputFiles({ name: "moc-cung.csv", mimeType: "text/csv", buffer: Buffer.from(csv) });
+  const hop = p.locator(".hop-thoai");
+  await expect(hop.getByRole("cell", { name: "4 (1 cung)" })).toBeVisible();
+  // 940 + π × 23,5² / 2 = 1.807,47 m² (chia cung sai số dây ≤ 2 mm)
+  await expect(hop.getByRole("cell", { name: /^1\.807,[45]/ })).toBeVisible();
+  await hop.getByRole("button", { name: "Thêm 1 ranh hợp lệ" }).click();
+  await expect(p.getByLabel("Ranh GPMB đã nhập")).toContainText("moc-cung.csv");
+});
