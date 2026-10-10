@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useUngDung } from "../ung-dung";
 import { HopThoai, O } from "./chung";
 import {
@@ -192,8 +192,8 @@ export function HopQuanLyTaiKhoan({ dong }: { dong: () => void }) {
   const [v, setV] = useState({ ten: "", hoTen: "", chucVu: "", vaiTro: "CAN_BO" as VaiTro, matKhau: "" });
   const [loi, setLoi] = useState("");
   const [mkMoi, setMkMoi] = useState("");
-  const tai = async () => setDs((await kho.dsNguoiDung()).sort((a, b) => a.ten.localeCompare(b.ten)));
-  useEffect(() => void tai(), []);
+  const tai = useCallback(async () => setDs((await kho.dsNguoiDung()).sort((a, b) => a.ten.localeCompare(b.ten))), [kho]);
+  useEffect(() => void tai(), [tai]);
 
   const luu = async (u: NguoiDung, viec: string) => {
     const l = kiemTraThayDoi(ds, u);

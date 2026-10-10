@@ -15,6 +15,8 @@ import { type DuLieuBanDo, dsSoTo, khoaTepGhep, kiemTraViTriTo, thamChieuThieu }
 import { docBang } from "./RanhGpmb";
 import { doiChieuSoSanh } from "./ranh";
 import { hienSo } from "../../so";
+import { lechDiemDo } from "./lech-diem-do";
+import { OSo } from "../../thanh-phan/OSo";
 
 const so = (v: number, le = 2) => v.toLocaleString("vi-VN", { minimumFractionDigits: le, maximumFractionDigits: le });
 const ngayVn = (iso: string) => new Date(iso).toLocaleDateString("vi-VN");
@@ -208,6 +210,12 @@ export function TheDiemDo(p: { duAn: DuAn; dl: DuLieuBanDo; daLienKet: Map<strin
         </div>
       </div>
       <div className="the-than chu-nho" style={{ display: "grid", gap: 4, maxHeight: 300, overflow: "auto" }}>
+        {ds.length > 0 && (
+          <div className="nhom-nut giua-doc" style={{ gap: 6 }}>
+            <span className="mo">Ngưỡng lệch so với tọa độ biên bản (m):</span>
+            <OSo aria-label="Ngưỡng lệch điểm đo (m)" placeholder="trống = không cảnh báo" value={p.duAn.banDo?.nguongLechDiemDo ?? ""} disabled={!sua} onChange={(v) => void p.luu({ nguongLechDiemDo: v || undefined })} style={{ width: 150 }} />
+          </div>
+        )}
         {!ds.length && <div className="mo">Bảng Excel/CSV: Tên điểm · X · Y · Mô tả (VN-2000, m). Gắn từng điểm với tài sản kiểm đếm để đối chiếu vị trí thực địa.</div>}
         {ds.map((d) => {
           const t = thuaChua(p.dl, d);
@@ -229,6 +237,18 @@ export function TheDiemDo(p: { duAn: DuAn; dl: DuLieuBanDo; daLienKet: Map<strin
                   {ho.taiSan.map((x) => <option key={x.id} value={x.id}>{x.ten || "(chưa đặt tên)"}{(() => { const th = ho.thua.find((y) => y.id === x.thuaId); return th ? ` (thửa ${th.soThua}/${th.soTo})` : ""; })()}</option>)}
                 </Chon>
               )}
+              {ts && (() => {
+                const bb = d.toaDoBienBan ?? { x: "", y: "" };
+                const l = lechDiemDo(d, p.duAn.banDo?.nguongLechDiemDo);
+                return (
+                  <div className="nhom-nut giua-doc" style={{ gap: 4, flexWrap: "wrap" }}>
+                    <span className="mo">Tọa độ ghi trong biên bản:</span>
+                    <OSo aria-label={`X biên bản của điểm ${d.ten}`} placeholder="X (Bắc)" value={bb.x} disabled={!sua} onChange={(v) => doi(d.id, { toaDoBienBan: { ...bb, x: v } })} style={{ width: 110 }} />
+                    <OSo aria-label={`Y biên bản của điểm ${d.ten}`} placeholder="Y (Đông)" value={bb.y} disabled={!sua} onChange={(v) => doi(d.id, { toaDoBienBan: { ...bb, y: v } })} style={{ width: 110 }} />
+                    {l && <span style={l.vuot ? { color: "var(--do)" } : undefined}>{l.vuot ? "⚠ " : ""}cách vị trí biên bản {hienSo(l.kc.toFixed(2))} m{l.vuot ? ` — vượt ngưỡng ${hienSo(p.duAn.banDo!.nguongLechDiemDo!)} m, đối chiếu biên bản kiểm đếm` : ""}</span>}
+                  </div>
+                );
+              })()}
               {lech && <div style={{ color: "var(--do)" }}>Điểm đo nằm ngoài thửa của tài sản “{ts!.ten}” (kiểm đếm ở thửa {thuaTs!.soThua}/{thuaTs!.soTo}) — đối chiếu biên bản kiểm đếm.</div>}
               {ts && !lech && <div className="mo">Vị trí thực địa của tài sản “{ts.ten}”.</div>}
             </div>

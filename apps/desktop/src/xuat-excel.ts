@@ -990,3 +990,46 @@ export async function taoWorkbookQuyTdc(duAn: DuAn, hos: Ho[]): Promise<ExcelJS.
 export async function xuatExcelQuyTdc(duAn: DuAn, hos: Ho[]) {
   await taiVe(await taoWorkbookQuyTdc(duAn, hos), `Quy-TDC_${tenAnToan(duAn.ten)}.xlsx`);
 }
+
+/**
+ * 1.0.7 — Danh sách hồ sơ đã chọn ở màn "Danh sách hồ sơ" (có thể thuộc nhiều dự án): mỗi hồ sơ một dòng — mã, họ tên,
+ * dự án, xã, địa chỉ, tờ/thửa, DT thu hồi, bồi thường, hỗ trợ, tổng làm tròn (chỉ khoản Tạm tính), hiện trạng.
+ */
+export async function taoWorkbookDsHoChon(ds: { h: Ho; k: KetQuaHo; duAn: DuAn; hienTrang: string }[], tieuDe = "DANH SÁCH HỒ SƠ ĐÃ CHỌN"): Promise<ExcelJS.Workbook> {
+  const { default: Excel } = await import("exceljs");
+  const wb = new Excel.Workbook();
+  wb.creator = "GPMB Sơn La";
+  const ws = wb.addWorksheet("Ho so da chon", { pageSetup: { orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
+  const cot = [
+    { t: "STT", w: 5 }, { t: "Mã hồ sơ", w: 10 }, { t: "Họ và tên", w: 24 }, { t: "Dự án", w: 30 }, { t: "Xã, phường", w: 16 }, { t: "Địa chỉ", w: 22 },
+    { t: "Tờ/thửa", w: 16 }, { t: "DT thu hồi (m²)", w: 12, so: "#,##0.00" }, { t: "Bồi thường (đ)", w: 14, so: "#,##0" }, { t: "Hỗ trợ (đ)", w: 14, so: "#,##0" },
+    { t: "Tổng (làm tròn, đ)", w: 15, so: "#,##0" }, { t: "Hiện trạng", w: 18 },
+  ];
+  ws.mergeCells(1, 1, 1, cot.length);
+  ws.getCell(1, 1).value = tieuDe;
+  ws.getCell(1, 1).font = { bold: true, size: 13 };
+  ws.getCell(1, 1).alignment = { horizontal: "center" };
+  ws.getRow(3).values = cot.map((c) => c.t);
+  ws.getRow(3).font = { bold: true };
+  cot.forEach((c, i) => (ws.getColumn(i + 1).width = c.w));
+  let tongDt = D(0), tongBt = D(0), tongHt = D(0), tong = D(0);
+  ds.forEach(({ h, k, duAn, hienTrang }, i) => {
+    const dt = h.thua.reduce((s, t) => (/^-?\d+(\.\d+)?$/.test(t.dienTichThuHoi?.trim() ?? "") ? s.plus(t.dienTichThuHoi.trim()) : s), D(0));
+    tongDt = tongDt.plus(dt);
+    tongBt = tongBt.plus(k.tongBoiThuong);
+    tongHt = tongHt.plus(k.tongHoTro);
+    tong = tong.plus(k.tong.tongLamTron);
+    ws.getRow(4 + i).values = [i + 1, h.ma, h.ten, duAn.ten, duAn.xa, h.diaChi, h.thua.map((t) => `${t.soTo}/${t.soThua}`).join("; "), dt.toDecimalPlaces(2).toNumber(), so(k.tongBoiThuong), so(k.tongHoTro), so(k.tong.tongLamTron), hienTrang];
+  });
+  const r = ws.getRow(4 + ds.length);
+  r.values = ["", "", `Tổng cộng (${ds.length} hồ sơ)`, "", "", "", "", tongDt.toDecimalPlaces(2).toNumber(), so(tongBt), so(tongHt), so(tong), ""];
+  r.font = { bold: true };
+  cot.forEach((c, i) => c.so && (ws.getColumn(i + 1).numFmt = c.so));
+  ws.getCell(5 + ds.length, 1).value = "Tổng chỉ cộng các khoản \"Tạm tính\" (khoản Thiếu căn cứ, Cần xác nhận không cộng).";
+  ws.getCell(5 + ds.length, 1).font = { italic: true, size: 10 };
+  return wb;
+}
+export async function xuatExcelDsHoChon(ds: Parameters<typeof taoWorkbookDsHoChon>[0]) {
+  const buf = await (await taoWorkbookDsHoChon(ds)).xlsx.writeBuffer();
+  return taiXuong(new Uint8Array(buf as ArrayBuffer), `Ho-so-da-chon_${ds.length}-ho.xlsx`, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+}

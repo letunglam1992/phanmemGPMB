@@ -115,7 +115,9 @@ describe("1.0.7 — ranh thửa vẽ trên nhiều lớp", () => {
     const g = goiYCauHinh(ban);
     expect([...g.cauHinh.ranhThua].sort((a, b) => a - b)).toEqual([10, 20, 30]);
     expect(g.ghiChu.join(" ")).toMatch(/thêm lớp .*20.*vào lớp ranh thửa|thêm lớp .*30.*vào lớp ranh thửa/);
-    expect(g.ghiChu.join(" ")).toMatch(/Lớp 30 vừa là ranh thửa vừa đang được dùng làm lớp ranh GPMB/);
+    expect(g.ghiChu.join(" ")).toMatch(/Lớp 30 là ranh thửa nên không dùng làm lớp ranh GPMB/);
+    expect(g.cauHinh.ranhGpmb).not.toContain(30);
+    expect(g.ghiChu.join(" ")).toMatch(/chọn lớp ranh GPMB trong cấu hình lớp, hoặc chọn thửa thu hồi trực tiếp/);
     expect(dungThua(ban, g.cauHinh).thua.filter((t) => t.soThua)).toHaveLength(6);
     // cấu hình người dùng đã chọn (không phải mặc định) → không tự thêm
     expect(goiYCauHinh(ban, { ...g.cauHinh, ranhThua: [10] }).cauHinh.ranhThua).toEqual([10]);

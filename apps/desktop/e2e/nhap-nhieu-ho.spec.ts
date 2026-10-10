@@ -108,3 +108,25 @@ test("1.0.7 — xóa nhiều hồ sơ: hộ có trong bản phương án đã ch
   await expect(p.locator("tr[data-ho-id]")).toHaveCount(1);
   await expect(p.locator("tr[data-ho-id]")).toContainText("H01");
 });
+
+test("1.0.7 — Danh sách hồ sơ (toàn tỉnh): cột chọn, chỉ hiện đã chọn, xuất Excel, bỏ chọn", async ({ page: p }) => {
+  await p.addInitScript(() => {
+    const w = window as unknown as { __tep: string[]; showSaveFilePicker: unknown };
+    w.__tep = [];
+    w.showSaveFilePicker = async (o: { suggestedName: string }) => ({ name: o.suggestedName, createWritable: async () => ({ write: async () => void w.__tep.push(o.suggestedName), close: async () => undefined }) });
+  });
+  await vao(p);
+  await p.keyboard.press("Alt+1");
+  await p.locator("button.lien-ket", { hasText: "2 hồ sơ" }).click();
+  await expect(p.locator("tr[data-ho-id]")).toHaveCount(2);
+  await p.getByLabel(/^Chọn hồ sơ H02/).check();
+  const thanh = p.getByRole("toolbar", { name: "Thao tác với hồ sơ đã chọn" });
+  await expect(thanh).toContainText("Đã chọn 1 hồ sơ");
+  await thanh.getByLabel("Chỉ hiện hồ sơ đã chọn").check();
+  await expect(p.locator("tr[data-ho-id]")).toHaveCount(1);
+  await thanh.getByRole("button", { name: "Xuất Excel 1 hồ sơ" }).click();
+  await expect.poll(() => p.evaluate(() => (window as unknown as { __tep: string[] }).__tep)).toContain("Ho-so-da-chon_1-ho.xlsx");
+  await thanh.getByRole("button", { name: "Bỏ chọn" }).click();
+  await expect(thanh).toHaveCount(0);
+  await expect(p.locator("tr[data-ho-id]")).toHaveCount(2);
+});

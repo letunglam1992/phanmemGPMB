@@ -495,6 +495,8 @@ export interface BanDoDuAn {
   ghiChu?: GhiChuHienTruong[];
   /** Điểm đo hiện trạng (bảng tọa độ VN-2000) gắn vị trí tài sản kiểm đếm — docs/08 §9.7. */
   diemDo?: DiemDoHienTrang[];
+  /** 1.0.7: ngưỡng lệch (m) giữa điểm đo và tọa độ ghi trong biên bản kiểm đếm — do cán bộ đặt; trống = không cảnh báo. */
+  nguongLechDiemDo?: string;
   /** Kết quả đo đã lưu (chiều dài, diện tích) — docs/08 §9.10. */
   ketQuaDo?: KetQuaDoLuu[];
   /** Tệp DGN ghép thêm (tờ khác, mảnh trích đo khác) — lưu ở kho bản đồ với khóa "{duAnId}#{id}" — docs/08 §9.9. */
@@ -546,6 +548,8 @@ export interface DiemDoHienTrang {
   /** Tài sản kiểm đếm mà điểm này là vị trí đo thực địa (hộ, tài sản). */
   hoId?: string;
   taiSanId?: string;
+  /** 1.0.7: tọa độ vị trí tài sản ghi trong biên bản kiểm đếm (nếu biên bản có ghi) — X Bắc, Y Đông, chuẩn máy. */
+  toaDoBienBan?: { x: string; y: string };
 }
 export interface KetQuaDoLuu {
   id: string;

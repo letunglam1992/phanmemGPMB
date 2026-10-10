@@ -7,15 +7,21 @@ import { BangHo, type DongHo } from "../thanh-phan/BangHo";
 import { BieuTuong } from "../thanh-phan/BieuDo";
 import { timHo } from "../tim-kiem";
 import { Chon } from "../thanh-phan/Chon";
+import { xuatExcelDsHoChon } from "../xuat-excel";
 export { khongDau, khopTuKhoa } from "../tim-kiem";
 
 export function DanhSachHo(p: { duAnId?: string; trangThai?: string; chang?: string; tim?: string }) {
-  const { dsDuAn, hoCua, chinhSach, di } = useUngDung();
+  const { dsDuAn, hoCua, chinhSach, di, bao } = useUngDung();
   const homNay = homNayIso();
   const [duAnId, setDuAnId] = useState(p.duAnId ?? "");
   const [trangThai, setTrangThai] = useState<TrangThaiGpmb | "">((p.trangThai as TrangThaiGpmb) ?? "");
   const [chang, setChang] = useState(p.chang ?? "");
   const [tim, setTim] = useState(p.tim ?? "");
+  // 1.0.7: chọn nhiều hồ sơ (có thể nhiều dự án) → xuất Excel danh sách, lọc chỉ hồ sơ đã chọn
+  const [chon, setChon] = useState<Set<string>>(new Set());
+  const [chiChon, setChiChon] = useState(false);
+  const [dangXuat, setDangXuat] = useState(false);
+  const doiChon = (ids: string[], co: boolean) => setChon((c) => { const m = new Set(c); for (const id of ids) if (co) m.add(id); else m.delete(id); return m; });
   const tatCa = useMemo<DongHo[]>(
     () => dsDuAn.flatMap((duAn) => hoCua(duAn.id).map((h) => { const k = tinhHo(chinhSach(duAn), duAn, h); return { h, k, duAn, tt: trangThaiHo(duAn, h, k, homNay) }; })),
     [dsDuAn, hoCua, chinhSach, homNay],
@@ -24,7 +30,19 @@ export function DanhSachHo(p: { duAnId?: string; trangThai?: string; chang?: str
     .filter((x) => !duAnId || x.duAn.id === duAnId)
     .filter((x) => !trangThai || x.tt === trangThai)
     .filter((x) => !chang || daQuaChang(x.duAn, x.h, chang))
-    .filter((x) => timHo(x.h, tim, x.duAn.ten).khop);
+    .filter((x) => timHo(x.h, tim, x.duAn.ten).khop)
+    .filter((x) => !chiChon || chon.has(x.h.id));
+  const dsChon = tatCa.filter((x) => chon.has(x.h.id));
+  const xuat = async () => {
+    setDangXuat(true);
+    try {
+      if (await xuatExcelDsHoChon(dsChon.map((x) => ({ h: x.h, k: x.k, duAn: x.duAn, hienTrang: TT_GPMB[x.tt].ten })))) bao(`Đã xuất Excel ${dsChon.length} hồ sơ`);
+    } catch (e) {
+      bao((e as Error).message, "loi");
+    } finally {
+      setDangXuat(false);
+    }
+  };
   const tenChang = CAC_CHANG.find((c) => c.buoc === chang);
   const tieuDe = trangThai ? TT_GPMB[trangThai].ten : tenChang ? `Đã qua chặng: ${tenChang.ten}` : tim ? `Kết quả tìm “${tim}”` : "Tất cả hồ sơ";
   return (
@@ -57,8 +75,19 @@ export function DanhSachHo(p: { duAnId?: string; trangThai?: string; chang?: str
           {(duAnId || trangThai || chang || tim) && <button className="nut" onClick={() => { setDuAnId(""); setTrangThai(""); setChang(""); setTim(""); }}>Bỏ lọc</button>}
         </div>
       </div>
+      {dsChon.length > 0 && (
+        <div className="thanh-chon" role="toolbar" aria-label="Thao tác với hồ sơ đã chọn">
+          <b>Đã chọn {dsChon.length} hồ sơ</b>
+          {new Set(dsChon.map((x) => x.duAn.id)).size > 1 && <span className="mo chu-nho">({new Set(dsChon.map((x) => x.duAn.id)).size} dự án)</span>}
+          <div className="phai" style={{ display: "flex", gap: 8 }}>
+            <label className="chu-nho"><input type="checkbox" checked={chiChon} onChange={(e) => setChiChon(e.target.checked)} /> Chỉ hiện hồ sơ đã chọn</label>
+            <button className="nut nut-nho" disabled={dangXuat} onClick={() => void xuat()}>{dangXuat ? "Đang xuất…" : `Xuất Excel ${dsChon.length} hồ sơ`}</button>
+            <button className="nut nut-nho nut-chu" onClick={() => { setChon(new Set()); setChiChon(false); }}>Bỏ chọn</button>
+          </div>
+        </div>
+      )}
       <div className="the">
-        <BangHo ds={ds} homNay={homNay} coDuAn={!duAnId} mo={(x) => di({ ten: "ho", duAnId: x.duAn.id, hoId: x.h.id })} trong="Không có hồ sơ khớp điều kiện lọc." />
+        <BangHo ds={ds} homNay={homNay} coDuAn={!duAnId} chon={chon} doiChon={doiChon} mo={(x) => di({ ten: "ho", duAnId: x.duAn.id, hoId: x.h.id })} trong={chiChon ? "Không có hồ sơ đã chọn khớp điều kiện lọc." : "Không có hồ sơ khớp điều kiện lọc."} />
       </div>
     </div>
   );

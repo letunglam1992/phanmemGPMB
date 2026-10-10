@@ -153,6 +153,10 @@ describe("Báo cáo tổng hợp — mẫu Word", () => {
     const t = new PizZip(dienMau(mau, du)).file("word/document.xml")!.asText().replace(/<[^>]+>/g, "");
     expect(t).toContain("– Đợt 1");
     expect(t).toContain("Tổng số 2 dự án");
+    // 1.0.7: dòng đợt in nghiêng, dòng dự án không
+    const xml = new PizZip(dienMau(mau, du)).file("word/document.xml")!.asText();
+    expect(xml).toMatch(/<w:i\/>(?:(?!<\/w:r>).)*<w:t[^>]*>– Đợt 1<\/w:t>/);
+    expect(xml).not.toMatch(/<w:i\/>(?:(?!<\/w:r>).)*<w:t[^>]*>[^<]*\(Xã[^<]*<\/w:t>/);
     // 1.0.6: bảng riêng theo đợt thu hồi, đánh số, tỷ lệ hoàn thành
     expect(t).toContain("3. Kết quả theo đợt thu hồi");
     expect(t).toContain(`${da.ten} – Đợt 1`);

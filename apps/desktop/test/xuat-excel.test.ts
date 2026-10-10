@@ -84,3 +84,22 @@ describe("Xuất Excel theo cấu trúc biểu mẫu", () => {
     expect(danhMuc).toEqual((nq152 as { danh_muc_xa: string[] }).danh_muc_xa);
   });
 });
+
+describe("1.0.7 — Excel danh sách hồ sơ đã chọn (nhiều dự án)", () => {
+  it("mỗi hồ sơ một dòng, dòng tổng cộng đúng (Decimal)", async () => {
+    const { taoWorkbookDsHoChon } = await import("../src/xuat-excel");
+    const { taoDuAnMau } = await import("../src/du-lieu-mau");
+    const { tinhHo } = await import("../src/tinh-ho");
+    const cs1 = (await import("../../../policy/goi/sonla-2026-03-31.json")).default as unknown as import("@gpmb/core").BoChinhSach;
+    const { duAn, ho } = taoDuAnMau();
+    const ds = ho.map((h) => ({ h, k: tinhHo(cs1, duAn, h), duAn, hienTrang: "Đang xử lý" }));
+    const wb = await taoWorkbookDsHoChon(ds);
+    const ws = wb.getWorksheet("Ho so da chon")!;
+    expect(ws.getRow(3).getCell(3).value).toBe("Họ và tên");
+    expect(ws.getRow(4).getCell(2).value).toBe(ho[0]!.ma);
+    expect(ws.getRow(4).getCell(4).value).toBe(duAn.ten);
+    const tong = ds.reduce((s, x) => s + x.k.tong.tongLamTron.toNumber(), 0);
+    expect(ws.getRow(4 + ds.length).getCell(3).value).toBe(`Tổng cộng (${ds.length} hồ sơ)`);
+    expect(ws.getRow(4 + ds.length).getCell(11).value).toBe(tong);
+  });
+});

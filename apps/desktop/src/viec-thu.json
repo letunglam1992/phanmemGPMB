@@ -83,6 +83,8 @@
    "Nạp lại tệp TD70-2026.dgn: không còn dòng \"nhắc tới tệp chưa nạp 104000.dgn\"; ký hiệu (ô dùng chung) hiện đủ.",
    "Nạp lại TD70-2026.dgn (dự án mới, chưa chốt cấu hình lớp): hộp gợi ý ghi \"thêm lớp 30, 20, 23 vào lớp ranh thửa\"; bảng thửa có khoảng 100 thửa có số thửa.",
    "Bản đồ → ⎙ Vẽ khung in → kéo khung → Xuất PDF: đúng vùng khung.",
+   "Menu Hồ sơ (toàn tỉnh): tích chọn vài hộ của 2 dự án → \"Xuất Excel n hồ sơ\".",
+   "Bản đồ → Điểm đo hiện trạng: gắn tài sản, nhập tọa độ biên bản, đặt ngưỡng lệch → cảnh báo khi vượt.",
    "Máy có dữ liệu lớn: trong lúc thanh \"Đang tính…\" chạy, bấm sang Dự án / Danh sách hộ → thấy tiến độ, màn tự mở khi tính xong.",
    "Máy có dữ liệu lớn (hàng nghìn hộ): đăng nhập → Tổng quan hiện nhanh với thanh \"Đang tính phương án các hộ lần đầu\"; bấm được menu trong lúc tính; tính xong có đủ số liệu."
   ]

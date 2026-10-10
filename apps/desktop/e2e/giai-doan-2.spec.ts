@@ -88,3 +88,18 @@ test.describe("P1-7: laptop 1366×768", () => {
     await expect(p.locator(".menu-meta")).toContainText("Máy đơn");
   });
 });
+
+test("1.0.7 — hồ sơ hộ: dải bước dính trên cùng khi cuộn nội dung dài", async ({ page: p }) => {
+  await vao(p);
+  await p.keyboard.press("Alt+3");
+  await p.locator("[role=tablist] button", { hasText: "Hộ, cá nhân" }).click();
+  await p.locator("tr[data-ho-id]").nth(0).click();
+  await p.locator("[role=tab]", { hasText: "Tiến độ" }).click();
+  const main = p.locator("main.noi-dung");
+  const dai = p.locator(".the-buoc-tron");
+  await main.evaluate((e) => e.scrollTo(0, e.scrollHeight));
+  await expect.poll(() => main.evaluate((e) => e.scrollTop)).toBeGreaterThan(200);
+  const m = (await main.boundingBox())!, d = (await dai.boundingBox())!;
+  expect(Math.abs(d.y - m.y)).toBeLessThan(4);
+  await expect(dai.locator("li").first()).toBeVisible();
+});

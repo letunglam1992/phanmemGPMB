@@ -60,14 +60,15 @@ const oBang = (text, i, o = {}) =>
   new TableCell({
     width: { size: RONG_COT[i], type: WidthType.DXA }, borders: O_VIEN, verticalAlign: VerticalAlign.CENTER,
     margins: { top: 40, bottom: 40, left: 60, right: 60 },
-    children: [new Paragraph({ children: [R(text, { size: 22, bold: o.bold })], alignment: i === 1 ? AlignmentType.LEFT : i >= 2 && i <= 6 && !o.dau ? AlignmentType.RIGHT : AlignmentType.CENTER })],
+    children: [new Paragraph({ children: o.runs ?? [R(text, { size: 22, bold: o.bold })], alignment: i === 1 ? AlignmentType.LEFT : i >= 2 && i <= 6 && !o.dau ? AlignmentType.RIGHT : AlignmentType.CENTER })],
   });
 const bang = new Table({
   width: { size: RONG, type: WidthType.DXA },
   columnWidths: RONG_COT,
   rows: [
     new TableRow({ tableHeader: true, children: TIEU_DE_COT.map((t, i) => oBang(t, i, { bold: true, dau: true })) }),
-    new TableRow({ children: TRUONG_COT.map((t, i) => oBang(t, i)) }),
+    // 1.0.7: dòng đợt (la_dot) in nghiêng
+    new TableRow({ children: TRUONG_COT.map((t, i) => oBang(t, i, i === 1 ? { runs: [R("{^la_dot}{ten}{/la_dot}", { size: 22 }), R("{#la_dot}{ten}{/la_dot}", { size: 22, italics: true })] } : {})) }),
     new TableRow({ children: TONG_COT.map((t, i) => oBang(t, i, { bold: true })) }),
   ],
 });

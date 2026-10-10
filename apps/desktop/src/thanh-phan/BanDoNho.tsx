@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useUngDung } from "../ung-dung";
 import { napBanDoDuAn, type DuLieuBanDo } from "../man/BanDo";
 import type { DuAn } from "../mo-hinh";
@@ -9,12 +9,16 @@ export function BanDoNho({ duAn, ttThua }: { duAn: DuAn; ttThua: Map<string, Tra
   const { kho, di } = useUngDung();
   const [dl, setDl] = useState<DuLieuBanDo | null>(null);
   const [loi, setLoi] = useState<string | null>(null);
+  // nạp lại chỉ khi đổi dự án hoặc bản đồ (không theo mọi thay đổi khác của dự án)
+  const duAnRef = useRef(duAn);
+  duAnRef.current = duAn;
+  const banDo = duAn.banDo;
   useEffect(() => {
-    if (!duAn.banDo) return;
+    if (!banDo) return;
     let huy = false;
-    napBanDoDuAn(kho, duAn).then((d) => !huy && setDl(d)).catch((e) => setLoi(String(e.message ?? e)));
+    napBanDoDuAn(kho, duAnRef.current).then((d) => !huy && setDl(d)).catch((e) => setLoi(String(e.message ?? e)));
     return () => { huy = true; };
-  }, [duAn.id, duAn.banDo, kho]);
+  }, [duAn.id, banDo, kho]);
 
   const hinh = useMemo(() => {
     if (!dl) return null;

@@ -414,15 +414,16 @@ export function NhaCungCap({ children, kho: khoVao, chiXem, phienDau }: { childr
     },
     [kho, chiXem],
   );
+  const tenDangNhap = taiKhoan?.ten;
   useEffect(() => {
-    if (!taiKhoan || !coVoWindows() || chiXem) return;
+    if (!tenDangNhap || !coVoWindows() || chiXem) return;
     const t0 = setTimeout(() => void chayTuDong(false), 15_000);
     const t = setInterval(() => void chayTuDong(false), 30 * 60_000);
     return () => {
       clearTimeout(t0);
       clearInterval(t);
     };
-  }, [taiKhoan?.ten, chayTuDong, chiXem]);
+  }, [tenDangNhap, chayTuDong, chiXem]);
 
   const dauXoa = (lyDo: string) => ({ luc: new Date().toISOString(), nguoi: nguoiDung, lyDo: lyDo.trim() });
   // P1-1: danh sách dẫn xuất ghi nhớ theo dữ liệu gốc — màn hình dùng useMemo phụ thuộc các giá trị này không tính lại

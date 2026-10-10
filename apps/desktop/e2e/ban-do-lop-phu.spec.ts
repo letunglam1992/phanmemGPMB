@@ -204,6 +204,15 @@ test("1.0.7 — điểm đo gắn tài sản kiểm đếm: đúng thửa → v�
   const chon = dd.getByLabel("Tài sản của điểm P1");
   await chon.selectOption({ label: await chon.locator("option", { hasText: "Nhà thử A" }).textContent() ?? "" });
   await expect(dd).toContainText("Vị trí thực địa của tài sản “Nhà thử A”");
+  // 1.0.7: tọa độ ghi trong biên bản → khoảng cách; ngưỡng do cán bộ đặt → cảnh báo khi vượt
+  await dd.getByLabel("X biên bản của điểm P1").fill("1350013");
+  await dd.getByLabel("X biên bản của điểm P1").blur();
+  await dd.getByLabel("Y biên bản của điểm P1").fill("500034");
+  await dd.getByLabel("Y biên bản của điểm P1").blur();
+  await expect(dd).toContainText("cách vị trí biên bản 5,00 m");
+  await dd.getByLabel("Ngưỡng lệch điểm đo (m)").fill("3");
+  await dd.getByLabel("Ngưỡng lệch điểm đo (m)").blur();
+  await expect(dd).toContainText("vượt ngưỡng 3 m, đối chiếu biên bản kiểm đếm");
   await chon.selectOption({ label: await chon.locator("option", { hasText: "Nhà thử B" }).textContent() ?? "" });
   await expect(dd).toContainText("Điểm đo nằm ngoài thửa của tài sản “Nhà thử B”");
   await expect(dd).toContainText("đối chiếu biên bản kiểm đếm");

@@ -139,7 +139,11 @@ export function goiYCauHinh(ban: KetQuaDocDgn, goc: CauHinhLop = CAU_HINH_MAC_DI
       ghiChu.push(`Ranh thửa vẽ trên nhiều lớp: thêm lớp ${bs.them.join(", ")} vào lớp ranh thửa — dựng được ${bs.sau} thửa có số thửa, khớp diện tích ghi (trước: ${bs.truoc}). Cán bộ xem lại các lớp này đúng là ranh thửa.`);
       cauHinh.ranhThua = bs.ranhThua;
       const trung = bs.them.filter((l) => cauHinh.ranhGpmb.includes(l));
-      if (trung.length) ghiChu.push(`Lớp ${trung.join(", ")} vừa là ranh thửa vừa đang được dùng làm lớp ranh GPMB (mặc định) — kiểm tra lại lớp ranh GPMB trong cấu hình lớp.`);
+      if (trung.length) {
+        // lớp đã là ranh thửa thì không dùng làm ranh GPMB (vd. mép suối) — bỏ khỏi ranh GPMB, dò lớp vùng thu hồi bên dưới
+        cauHinh.ranhGpmb = cauHinh.ranhGpmb.filter((l) => !trung.includes(l));
+        ghiChu.push(`Lớp ${trung.join(", ")} là ranh thửa nên không dùng làm lớp ranh GPMB (mặc định) — đã bỏ khỏi lớp ranh GPMB.`);
+      }
     }
   }
   if (!co(cauHinh.ranhGpmb, (x) => x.soDuong + x.soVung)) {
@@ -147,7 +151,7 @@ export function goiYCauHinh(ban: KetQuaDocDgn, goc: CauHinhLop = CAU_HINH_MAC_DI
     if (vt) {
       cauHinh.ranhGpmb = [vt.lop];
       ghiChu.push(`Lớp ranh GPMB mặc định (${goc.ranhGpmb.join(", ")}) trống; lớp ${vt.lop} có ${vt.soVung} vùng khép kín trùng thửa đất (${vt.soTrung}/${vt.soVung}) — dùng làm phạm vi thu hồi (chọn các vùng cần tính ở mục Phạm vi thu hồi). Cán bộ xác nhận lớp này đúng là thửa thu hồi.`);
-    } else ghiChu.push(`Lớp ranh GPMB (${cauHinh.ranhGpmb.join(", ")}) không có đường nào — chọn lớp ranh GPMB trong cấu hình lớp, hoặc chọn thửa thu hồi trực tiếp trên bản đồ.`);
+    } else ghiChu.push(`${cauHinh.ranhGpmb.length ? `Lớp ranh GPMB (${cauHinh.ranhGpmb.join(", ")}) không có đường nào` : "Chưa xác định được lớp ranh GPMB"} — chọn lớp ranh GPMB trong cấu hình lớp, hoặc chọn thửa thu hồi trực tiếp trên bản đồ.`);
   }
   return { cauHinh, ghiChu };
 }
