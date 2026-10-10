@@ -77,6 +77,10 @@
    "Ghi Tình trạng pháp lý cho vài thửa → Văn bản R1, R2: mục \"Phân theo tình trạng pháp lý nguồn gốc đất\"; dòng \"Chưa ghi…\" và cảnh báo khi còn thửa chưa ghi.",
    "Quỹ TĐC: sửa DT hoặc giá của lô đã giao → dòng cảnh báo có nút \"Cập nhật hồ sơ theo lô\" → hồ sơ hộ có DT, đơn giá, căn cứ mới; nhật ký hồ sơ ghi thay đổi.",
    "Máy chủ mạng nội bộ: khôi phục một tệp sao lưu cũ → không bị từ chối vì cấu trúc (nếu bị, ghi lại thông báo lỗi gửi về).",
+   "Bản đồ: phóng tới một vùng → \"Phạm vi in: Khung đang xem\" → Xuất PDF tiến độ: đúng vùng đang xem, chú giải đếm thửa trong khung.",
+   "Bản đồ có cung tròn / đường tròn (cống, giếng, cột điện): Bắt → \"Tâm cung\", \"Trên cạnh\" → đo khoảng cách từ tâm.",
+   "Hồ sơ hộ → Đính kèm → \"Bản mới…\" cho một biên bản → \"1 bản trước\" → \"Dùng lại bản này\".",
+   "Nạp lại tệp TD70-2026.dgn: không còn dòng \"nhắc tới tệp chưa nạp 104000.dgn\"; ký hiệu (ô dùng chung) hiện đủ.",
    "Máy có dữ liệu lớn: trong lúc thanh \"Đang tính…\" chạy, bấm sang Dự án / Danh sách hộ → thấy tiến độ, màn tự mở khi tính xong.",
    "Máy có dữ liệu lớn (hàng nghìn hộ): đăng nhập → Tổng quan hiện nhanh với thanh \"Đang tính phương án các hộ lần đầu\"; bấm được menu trong lúc tính; tính xong có đủ số liệu."
   ]

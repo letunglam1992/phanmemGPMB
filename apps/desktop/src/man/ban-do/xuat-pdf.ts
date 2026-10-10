@@ -66,7 +66,17 @@ export interface NoiDungIn {
   khoaThua: (t: ThuaBanDo) => string;
   ranh: Diem[][][];
   ngay: string;
+  /** 1.0.7: in theo vùng chọn (khung đang xem trên bản đồ, tọa độ VN-2000) — không có: theo ranh thu hồi / cả bản đồ. */
+  phamVi?: { minX: number; minY: number; maxX: number; maxY: number };
 }
+
+/** Hộp bao vòng ngoài của thửa có giao với phạm vi in không. */
+const giaoPham = (vong: Diem[] | undefined, p: { minX: number; minY: number; maxX: number; maxY: number }) => {
+  if (!vong?.length) return false;
+  let a = Infinity, b = Infinity, c = -Infinity, d = -Infinity;
+  for (const q of vong) (a = Math.min(a, q.x)), (c = Math.max(c, q.x)), (b = Math.min(b, q.y)), (d = Math.max(d, q.y));
+  return a <= p.maxX && c >= p.minX && b <= p.maxY && d >= p.minY;
+};
 
 /** Vẽ trang bản đồ tiến độ lên canvas (px), 1 mm = pxMm px. Phạm vi: các thửa trong ranh (nếu có), không thì cả bản đồ. */
 export function veTrangBanDo(ctx: CanvasRenderingContext2D, pxMm: number, kho: { w: number; h: number }, n: NoiDungIn) {
@@ -97,6 +107,10 @@ export function veTrangBanDo(ctx: CanvasRenderingContext2D, pxMm: number, kho: {
   if (!Number.isFinite(minX)) ({ minX, minY, maxX, maxY } = n.dl.pham);
   const le = Math.max(maxX - minX, maxY - minY) * 0.06 + 5;
   minX -= le; maxX += le; minY -= le; maxY += le;
+  if (n.phamVi && n.phamVi.maxX > n.phamVi.minX && n.phamVi.maxY > n.phamVi.minY) ({ minX, minY, maxX, maxY } = n.phamVi);
+  const pv = { minX, minY, maxX, maxY };
+  // thửa có phần nằm trong phạm vi in (đếm chú giải, vẽ) — in theo vùng chọn thì chỉ đếm thửa trong khung
+  const thuaIn = n.dl.kq.thua.filter((t) => giaoPham(t.vong[0], pv));
   const tyLe = Math.min(khung.w / (maxX - minX), khung.h / (maxY - minY)); // px / m
   const ox = khung.x + (khung.w - (maxX - minX) * tyLe) / 2, oy = khung.y + (khung.h - (maxY - minY) * tyLe) / 2;
   const sx = (x: number) => ox + (x - minX) * tyLe, sy = (y: number) => oy + (maxY - y) * tyLe;
@@ -113,7 +127,7 @@ export function veTrangBanDo(ctx: CanvasRenderingContext2D, pxMm: number, kho: {
   for (let gy = Math.ceil(minY / buocLuoi) * buocLuoi; gy <= maxY; gy += buocLuoi) { ctx.beginPath(); ctx.moveTo(khung.x, sy(gy)); ctx.lineTo(khung.x + khung.w, sy(gy)); ctx.stroke(); }
   const dem = Object.fromEntries(THU_TU_TRANG_THAI.map((t) => [t, 0])) as Record<TrangThaiGpmb, number>;
   let chuaHoSo = 0;
-  for (const t of n.dl.kq.thua) {
+  for (const t of thuaIn) {
     const tt = n.ttThua.get(t.ma);
     const trongRanh = (n.thuHoi.get(n.khoaThua(t))?.phamVi ?? "NGOAI") !== "NGOAI";
     ctx.beginPath();
@@ -138,7 +152,7 @@ export function veTrangBanDo(ctx: CanvasRenderingContext2D, pxMm: number, kho: {
   ctx.fillStyle = "#111";
   ctx.textAlign = "center";
   ctx.font = `${mm(2.4)}px Arial, sans-serif`;
-  for (const t of n.dl.kq.thua) {
+  for (const t of thuaIn) {
     if (Math.sqrt(t.dienTichHinhHoc) * tyLe < mm(6)) continue;
     ctx.fillText(`${t.soThua ?? "?"}`, sx(t.tamNhan.x), sy(t.tamNhan.y));
   }
@@ -160,6 +174,11 @@ export function veTrangBanDo(ctx: CanvasRenderingContext2D, pxMm: number, kho: {
   ctx.font = `bold ${mm(4)}px "Times New Roman", serif`;
   ctx.fillText("CHÚ GIẢI", cx, y);
   y += mm(7);
+  if (n.phamVi) {
+    ctx.font = `italic ${mm(2.8)}px "Times New Roman", serif`;
+    ctx.fillText("(số thửa trong phạm vi in)", cx, y);
+    y += mm(5.5);
+  }
   ctx.font = `${mm(3.2)}px "Times New Roman", serif`;
   const muc = (mau: string, ten: string, vien = "#555") => {
     ctx.fillStyle = mau;
@@ -212,7 +231,7 @@ export function veTrangBanDo(ctx: CanvasRenderingContext2D, pxMm: number, kho: {
   // Chân trang
   ctx.textAlign = "left";
   ctx.font = `italic ${mm(2.8)}px "Times New Roman", serif`;
-  ctx.fillText(`Bản đồ tiến độ GPMB phục vụ báo cáo, họp — không phải trích lục, trích đo thửa đất. Hệ tọa độ VN-2000, lưới ${buocLuoi.toLocaleString("vi-VN")} m (X: Bắc, Y: Đông). Xuất ngày ${n.ngay}.`, mm(14), H - mm(15));
+  ctx.fillText(`Bản đồ tiến độ GPMB phục vụ báo cáo, họp — không phải trích lục, trích đo thửa đất. Hệ tọa độ VN-2000, lưới ${buocLuoi.toLocaleString("vi-VN")} m (X: Bắc, Y: Đông).${n.phamVi ? " In theo vùng chọn." : ""} Xuất ngày ${n.ngay}.`, mm(14), H - mm(15));
 }
 
 /**

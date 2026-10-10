@@ -88,7 +88,10 @@ describe("DGN V8", () => {
     expect(chu.map(giaiMaNhan)).toContain("Quàng Văn Chung");
     expect(chu.map(giaiMaNhan)).toContain("Suoi");
     expect(chu.filter((c) => c.nut !== undefined)).toHaveLength(30);
-    expect(ban.canhBao.join(" ")).toMatch(/1 phần tử 3D/);
+    // 1.0.7: đường 3D đọc X, Y (bỏ Z)
+    expect(ban.canhBao.join(" ")).toMatch(/1 đường, vùng 3D: lấy tọa độ X, Y/);
+    const d3 = ban.phanTu.find((p) => p.lop === 11 && p.loai === "DUONG");
+    expect(d3 && "diem" in d3 ? d3.diem.map((q) => [q.x, q.y]) : null).toEqual([[X0, Y0], [X0 + 1, Y0 + 1]]);
     expect(ban.canhBao.join(" ")).not.toMatch(/lệch/);
   });
 

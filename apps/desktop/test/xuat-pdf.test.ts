@@ -1,6 +1,6 @@
 /** PDF bản đồ tiến độ (docs/08 §9.5): cấu trúc tệp PDF một trang nhúng ảnh JPEG; thước tỷ lệ "đẹp". */
 import { describe, expect, it } from "vitest";
-import { doDaiThuoc, taoPdfAnh, KHO_GIAY } from "../src/man/ban-do/xuat-pdf";
+import { doDaiThuoc, taoPdfAnh, KHO_GIAY, veTrangBanDo, type NoiDungIn } from "../src/man/ban-do/xuat-pdf";
 
 describe("PDF bản đồ tiến độ", () => {
   it("một trang A3 ngang, ảnh DCTDecode đúng độ dài, bảng xref trỏ đúng vị trí đối tượng", () => {
@@ -62,5 +62,30 @@ describe("PDF vector từ lệnh vẽ canvas (1.0.6)", () => {
     expect(s).toContain("/FontFile2");
     const luong = [...s.matchAll(/\/FlateDecode \/Length (\d+) >>\nstream\n/g)].map((m) => inflateSync(Buffer.from(s.substr(m.index! + m[0].length, Number(m[1])), "latin1")).toString("latin1"));
     expect(luong.some((x) => x.includes("beginbfchar") && /<1eed>/i.test(x))).toBe(true); // "ử"
+  });
+
+  it("1.0.7 — in theo vùng chọn: chỉ vẽ, đếm thửa trong khung; ghi chú phạm vi; không chọn thì theo ranh thu hồi", () => {
+    const chu: string[] = [];
+    const ctx = new Proxy({} as Record<string, unknown>, {
+      get: (_, k) => (k === "fillText" ? (t: string) => void chu.push(t) : k === "measureText" ? () => ({ width: 10 }) : () => undefined),
+      set: () => true,
+    }) as unknown as CanvasRenderingContext2D;
+    const vuong = (x: number, y: number) => [[{ x, y }, { x: x + 20, y }, { x: x + 20, y: y + 20 }, { x, y: y + 20 }, { x, y }]];
+    const thua = (ma: string, x: number, y: number) => ({ ma, soTo: "1", soThua: ma, loaiDatBanDo: null, dienTichGhi: null, dienTichHinhHoc: 400, chuSuDung: null, vong: vuong(x, y), tamNhan: { x: x + 10, y: y + 10 }, nhan: [], co: [] });
+    const ds = [thua("1", 0, 0), thua("2", 1000, 1000)];
+    const n: NoiDungIn = {
+      dl: { kq: { thua: ds }, pham: { minX: 0, minY: 0, maxX: 1020, maxY: 1020 } } as unknown as NoiDungIn["dl"],
+      tieuDe: "T", phuDe: "P", ngay: "10/10/2026", ranh: [],
+      ttThua: new Map([["1", "HOAN_THANH"], ["2", "HOAN_THANH"]]),
+      thuHoi: new Map(), khoaThua: (t) => t.ma,
+    };
+    veTrangBanDo(ctx, 1, KHO_GIAY.A4, n);
+    expect(chu.some((t) => /\(2 thửa\)/.test(t))).toBe(true);
+    expect(chu.join(" ")).not.toContain("In theo vùng chọn");
+    chu.length = 0;
+    veTrangBanDo(ctx, 1, KHO_GIAY.A4, { ...n, phamVi: { minX: -5, minY: -5, maxX: 50, maxY: 50 } });
+    expect(chu.some((t) => /\(1 thửa\)/.test(t))).toBe(true);
+    expect(chu).toContain("(số thửa trong phạm vi in)");
+    expect(chu.join(" ")).toContain("In theo vùng chọn.");
   });
 });

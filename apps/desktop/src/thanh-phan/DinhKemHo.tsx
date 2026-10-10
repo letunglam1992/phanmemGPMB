@@ -1,5 +1,6 @@
-import { conDung, xoaMemTep } from "../dinh-kem-thung-rac";
+import { conDung, trongThungRac, xoaMemTep } from "../dinh-kem-thung-rac";
 import { ThungRacTep } from "./ThungRacTep";
+import { PhienBanTep } from "./PhienBanTep";
 import { useEffect, useState } from "react";
 import { useUngDung } from "../ung-dung";
 import { CAC_BUOC, taoId, type DuAn, type Ho } from "../mo-hinh";
@@ -92,14 +93,14 @@ export function DinhKemHo({ h, duAn }: { h: Ho; duAn: DuAn }) {
               <td className="so chu-nho">{kb(x.kichThuoc)}</td>
               <td className="chu-nho">{x.nguoi}<div className="mo">{new Date(x.luc).toLocaleString("vi-VN")}</div></td>
               <td className="chu-nho">{x.ghiChu ?? ""}</td>
-              <td>{sua && <button className="nut nut-nho nut-nguy" onClick={() => void xoa(x)}>Xóa</button>}</td>
+              <td><span className="nhom-nut" style={{ gap: 4 }}><PhienBanTep x={x} ds={ds ?? []} sua={sua} moTa={`${h.ma} · ${h.ten}`} kiemTep={loiTepDinhKem} xong={tai} />{sua && <button className="nut nut-nho nut-nguy" onClick={() => void xoa(x)}>Xóa</button>}</span></td>
             </tr>
           ))}
           {ds !== null && !hien.length && <tr><td colSpan={6} className="trong">Chưa có tệp đính kèm.</td></tr>}
           {ds === null && <tr><td colSpan={6} className="trong">Đang tải…</td></tr>}
         </tbody>
       </table>
-      <ThungRacTep ds={(ds ?? []).filter((x) => !conDung(x))} nhan={(x) => (x.buoc ? `bước ${x.buoc}` : "chung")} xong={tai} />
+      <ThungRacTep ds={(ds ?? []).filter(trongThungRac)} nhan={(x) => (x.buoc ? `bước ${x.buoc}` : "chung")} xong={tai} />
     </div>
   );
 }

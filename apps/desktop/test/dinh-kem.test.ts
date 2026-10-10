@@ -53,4 +53,32 @@ describe("Tệp đính kèm hồ sơ (P2-2)", () => {
     await xoaHanTep(k, a);
     expect(await k.docDinhKem("a")).toBeNull();
   });
+
+  it("1.0.7 — phiên bản tệp: bản mới thay bản cũ (giữ nội dung), xem bản trước, dùng lại bản cũ; thùng rác, gói tỉnh bỏ bản trước", async () => {
+    const { banTruoc, khoiPhucBan, thayTep } = await import("../src/dinh-kem-phien-ban");
+    const { trongThungRac } = await import("../src/dinh-kem-thung-rac");
+    const { duAn, ho } = taoDuAnMau();
+    const k = taoKhoBoNho();
+    await k.ghiLo({ duAn: [duAn], ho, dinhKem: [{ meta: { ...meta("a", ho[0]!.id, duAn.id, "4"), ghiChu: "Bản chưa ký", soHieu: "BB 01" }, bytes: new Uint8Array([1]) }] });
+    const v1 = (await k.dsDinhKem(duAn.id))[0]!;
+    const v2 = await thayTep(k, v1, { ten: "bb-da-ky.pdf", loai: "application/pdf", bytes: new Uint8Array([2, 2]) }, "cb2", "Bản đã ký");
+    let ds = await k.dsDinhKem(duAn.id);
+    expect(ds.filter(conDung).map((x) => x.id)).toEqual([v2.id]);
+    expect(ds.filter(trongThungRac)).toEqual([]);
+    expect(v2).toMatchObject({ buoc: "4", soHieu: "BB 01", ghiChu: "Bản đã ký", nhomPb: "a", kichThuoc: 2, nguoi: "cb2" });
+    expect(banTruoc(ds, v2).map((x) => x.id)).toEqual(["a"]);
+    expect([...(await k.docDinhKem("a"))!]).toEqual([1]);
+    // bản thứ ba, rồi dùng lại bản đầu
+    const v3 = await thayTep(k, v2, { ten: "bb-v3.pdf", loai: "application/pdf", bytes: new Uint8Array([3]) }, "cb", "");
+    ds = await k.dsDinhKem(duAn.id);
+    expect(v3.ghiChu).toBe("Bản đã ký");
+    expect(banTruoc(ds, v3).map((x) => x.id).sort()).toEqual(["a", v2.id].sort());
+    await khoiPhucBan(k, ds, ds.find((x) => x.id === "a")!, "cb");
+    ds = await k.dsDinhKem(duAn.id);
+    expect(ds.filter(conDung).map((x) => x.id)).toEqual(["a"]);
+    expect(banTruoc(ds, ds.find((x) => x.id === "a")!).map((x) => x.id).sort()).toEqual([v2.id, v3.id].sort());
+    // sao lưu giữ đủ 3 bản; gói gửi tỉnh (bỏ tệp đã xóa) chỉ kèm bản đang dùng
+    expect((await docBanSaoLuu((await taoBanSaoLuu(k)).bytes)).thongTin.soDinhKem).toBe(3);
+    expect((await docBanSaoLuu((await taoBanSaoLuu(k, "t", { boTepDaXoa: true })).bytes)).thongTin.soDinhKem).toBe(1);
+  });
 });

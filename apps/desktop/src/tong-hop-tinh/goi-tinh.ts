@@ -338,6 +338,6 @@ export async function giaiMaGoi(t: ThongTinGoi, du: Uint8Array, khoaBiMat: Crypt
 export function tomTatBan(ban: BanSaoLuu, homNay: string): TomTatDuAn[] {
   if (Array.isArray(ban.caiDat?.goiChinhSach)) dangKyGoi(ban.caiDat.goiChinhSach as GoiDaNap[]);
   const dem = new Map<string, number>();
-  for (const f of ban.dinhKem.filter((x) => !x.meta.daXoa)) dem.set(f.meta.duAnId, (dem.get(f.meta.duAnId) ?? 0) + 1);
+  for (const f of ban.dinhKem.filter((x) => !x.meta.daXoa && !x.meta.thayBoi)) dem.set(f.meta.duAnId, (dem.get(f.meta.duAnId) ?? 0) + 1);
   return tomTatDuAn(ban.duAn.filter((d) => !d.daXoa), ban.ho, (id) => dem.get(id) ?? 0, homNay);
 }

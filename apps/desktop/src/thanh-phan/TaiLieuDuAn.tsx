@@ -1,4 +1,5 @@
-import { conDung, xoaMemTep } from "../dinh-kem-thung-rac";
+import { conDung, trongThungRac, xoaMemTep } from "../dinh-kem-thung-rac";
+import { PhienBanTep } from "./PhienBanTep";
 import { ThungRacTep } from "./ThungRacTep";
 import { useEffect, useMemo, useState } from "react";
 import { useUngDung } from "../ung-dung";
@@ -191,7 +192,7 @@ export function TaiLieuDuAn({ duAn }: { duAn: DuAn }) {
                   <td className="so chu-nho">{kb(x.kichThuoc)}</td>
                   <td className="chu-nho">{x.nguoi}<div className="mo">{new Date(x.luc).toLocaleString("vi-VN")}</div></td>
                   <td className="chu-nho">{x.ghiChu ?? ""}</td>
-                  <td>{sua && <button className="nut nut-nho nut-nguy" aria-label={`Xóa tệp ${x.ten}`} onClick={() => void xoa(x)}>Xóa</button>}</td>
+                  <td><span className="nhom-nut" style={{ gap: 4 }}><PhienBanTep x={x} ds={ds ?? []} sua={sua} moTa={`${duAn.ten}${h ? ` · ${h.ma}` : ""}`} kiemTep={loiTepDinhKem} xong={tai} />{sua && <button className="nut nut-nho nut-nguy" aria-label={`Xóa tệp ${x.ten}`} onClick={() => void xoa(x)}>Xóa</button>}</span></td>
                 </tr>
               );
             })}
@@ -199,7 +200,7 @@ export function TaiLieuDuAn({ duAn }: { duAn: DuAn }) {
             {ds === null && <tr><td colSpan={8} className="trong">Đang tải…</td></tr>}
           </tbody>
         </table>
-        <ThungRacTep ds={(ds ?? []).filter((x) => !conDung(x))} nhan={(x) => (x.hoId ? `hồ sơ ${hoTheoId.get(x.hoId)?.ma ?? ""}` : "tài liệu dự án")} xong={tai} />
+        <ThungRacTep ds={(ds ?? []).filter(trongThungRac)} nhan={(x) => (x.hoId ? `hồ sơ ${hoTheoId.get(x.hoId)?.ma ?? ""}` : "tài liệu dự án")} xong={tai} />
       </div>
       {xem && (
         <HopThoai tieuDe={xem.ten} rong={1000} dong={() => setXem(null)} chan={<button className="nut" onClick={() => setXem(null)}>Đóng</button>}>

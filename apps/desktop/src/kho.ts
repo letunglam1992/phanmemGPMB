@@ -48,6 +48,10 @@ export interface DinhKem {
   soHieu?: string;
   /** Đã xóa (thùng rác tệp): giữ nội dung để khôi phục; xóa hẳn cần quyền Quản trị (dinh-kem-thung-rac.ts) */
   daXoa?: { luc: string; nguoi: string };
+  /** 1.0.7 — phiên bản tệp (dinh-kem-phien-ban.ts): mã nhóm phiên bản (= id bản đầu tiên). */
+  nhomPb?: string;
+  /** Bản này đã được thay bằng bản mới (id bản mới) — vẫn giữ nội dung để xem lại, khôi phục. */
+  thayBoi?: { id: string; luc: string; nguoi: string };
 }
 export const TOI_DA_DINH_KEM = 20 * 1024 * 1024;
 

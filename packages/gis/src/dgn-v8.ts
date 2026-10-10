@@ -9,7 +9,7 @@
  * tọa độ là số thực IEEE theo đơn vị UOR, tương đối với gốc toàn cục.
  *
  * Cấu trúc được xác định từ tệp mẫu gCadas (V8i SELECTseries 3) người dùng cung cấp và đối chiếu kết quả
- * (tọa độ VN-2000, số phần tử khớp số khai báo từng khối). Kiểu phần tử chưa kiểm chứng (3D, ...) được đọc là "KHAC"
+ * (tọa độ VN-2000, số phần tử khớp số khai báo từng khối). Kiểu phần tử chưa kiểm chứng được đọc là "KHAC"
  * kèm cảnh báo — không đoán.
  *
  * Bổ sung 0.9.0 (kiểm chứng trên 3 tệp bản đồ V8i người dùng cung cấp, đọc tại chỗ, không lưu vào kho):
@@ -87,7 +87,13 @@ function docHinh(z: Uint8Array, dv: DataView, p: number, dai: number, coSo: Omit
       for (let i = 0; i < n; i++) diem.push(dinh(dau + i * 16));
       return { ...coSo, loai: kieu === 3 ? "DUONG" : kieu === 4 ? "DUONG_GAP" : "VUNG", diem } as PhanTuHinh;
     }
-    if (buoc === 24) dem3d.n++;
+    if (buoc === 24) {
+      // 1.0.7: đường, vùng 3D (x, y, z mỗi đỉnh 24 byte) — lấy X, Y, bỏ cao độ Z (bản đồ địa chính dùng mặt phẳng)
+      dem3d.n++;
+      const diem: Diem[] = [];
+      for (let i = 0; i < n; i++) diem.push(dinh(dau + i * 24));
+      return { ...coSo, loai: kieu === 3 ? "DUONG" : kieu === 4 ? "DUONG_GAP" : "VUNG", diem } as PhanTuHinh;
+    }
     return { ...coSo, loai: "KHAC" };
   }
   if ((kieu === 12 || kieu === 14) && dai >= 108) {
@@ -366,7 +372,7 @@ export function docDgnV8(u8: Uint8Array): KetQuaDocDgn {
   }
 
   if (lechKhai) canhBao.push(`Số phần tử đọc được lệch ${lechKhai} so với số khai báo trong tệp — kiểm tra lại bản đồ.`);
-  if (dem3d.n) canhBao.push(`${dem3d.n} phần tử 3D chưa được hỗ trợ (bản đồ địa chính thường là 2D) — đã bỏ qua.`);
+  if (dem3d.n) canhBao.push(`${dem3d.n} đường, vùng 3D: lấy tọa độ X, Y, bỏ cao độ Z (bản đồ địa chính dùng mặt phẳng).`);
   if (soO) canhBao.push(`Đã dựng ${soO - oThieu}/${soO} ô dùng chung (ký hiệu) từ ${dinhNghia.size} định nghĩa trong tệp${tenThieu.size ? `; thiếu định nghĩa: ${[...tenThieu].slice(0, 5).join(", ")}` : ""}.`);
   if (oLech) canhBao.push(`${oLech} ô dùng chung có thành phần nằm ngoài phạm vi của ô (cấu trúc chưa kiểm chứng) — bỏ các thành phần đó để tránh vẽ sai (đường kéo dài).`);
   if (ktLech) canhBao.push(`${ktLech} kích thước có điểm định vị cách điểm đầu hơn ${KT_TOI_DA} m (cấu trúc chưa kiểm chứng) — không vẽ.`);

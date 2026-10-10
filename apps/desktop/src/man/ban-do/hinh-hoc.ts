@@ -16,6 +16,8 @@ export interface HinhVe {
   hop: { minX: number; minY: number; maxX: number; maxY: number };
   /** Phần tử dựng thêm từ tệp V8: "Ô dùng chung TÊN" hoặc "Kích thước". */
   nguon?: string;
+  /** 1.0.7: tâm của cung tròn / elip (để bắt tâm). */
+  tam?: Diem;
 }
 export interface ChuVe {
   stt: number;
@@ -80,10 +82,35 @@ export function chuanBiVe(ban: KetQuaDocDgn): { hinh: HinhVe[]; chu: ChuVe[]; lo
       }
     const phang = duong.flat();
     const kin = e.loai === "VUNG" || e.loai === "VUNG_PHUC" || e.loai === "ELIP" || (phang.length > 3 && trung(phang[0]!, phang[phang.length - 1]!));
-    hinh.push({ stt: e.stt, lop: e.lop, loai: e.loai, mau: e.mau, duong, kin, hop, nguon: nguonCua(e) });
+    const tam = e.loai === "ELIP" || e.loai === "CUNG" ? tamCung(phang, e.loai === "ELIP") : null;
+    hinh.push({ stt: e.stt, lop: e.lop, loai: e.loai, mau: e.mau, duong, kin, hop, nguon: nguonCua(e), ...(tam ? { tam } : {}) });
     lay(e.lop).soHinh++;
   }
   return { hinh, chu, lop: [...dem.values()].sort((a, b) => a.lop - b.lop) };
+}
+
+/**
+ * 1.0.7 — Tâm cung tròn / elip từ các điểm đã rời rạc hóa của bộ đọc: elip (khép kín) → trung bình các điểm (bỏ điểm
+ * cuối trùng điểm đầu); cung → tâm đường tròn qua điểm đầu, giữa, cuối. Thẳng hàng → null.
+ */
+export function tamCung(d: Diem[], kin: boolean): Diem | null {
+  if (d.length < 3) return null;
+  if (kin) {
+    const ds = trung(d[0]!, d[d.length - 1]!) ? d.slice(0, -1) : d;
+    return { x: ds.reduce((s, p) => s + p.x, 0) / ds.length, y: ds.reduce((s, p) => s + p.y, 0) / ds.length };
+  }
+  const a = d[0]!, b = d[Math.floor(d.length / 2)]!, c = d[d.length - 1]!;
+  const den = 2 * (a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y));
+  if (Math.abs(den) < 1e-12) return null;
+  const a2 = a.x * a.x + a.y * a.y, b2 = b.x * b.x + b.y * b.y, c2 = c.x * c.x + c.y * c.y;
+  return { x: (a2 * (b.y - c.y) + b2 * (c.y - a.y) + c2 * (a.y - b.y)) / den, y: (a2 * (c.x - b.x) + b2 * (a.x - c.x) + c2 * (b.x - a.x)) / den };
+}
+
+/** Điểm gần nhất trên đoạn ab tới p. */
+export function diemGanNhatDoan(p: Diem, a: Diem, b: Diem): Diem {
+  const dx = b.x - a.x, dy = b.y - a.y, l2 = dx * dx + dy * dy;
+  const t = l2 === 0 ? 0 : Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / l2));
+  return { x: a.x + t * dx, y: a.y + t * dy };
 }
 
 /** Hình vẽ từ các vòng của thửa đã dựng (để bắt điểm vào đỉnh thửa). */
@@ -205,8 +232,8 @@ export function mauLop(lop: number, nenToi: boolean): string {
   return nenToi ? `hsl(${h} 70% 62%)` : `hsl(${h} 60% 34%)`;
 }
 
-export type KieuBat = "DINH" | "TRUNG_DIEM" | "GIAO_DIEM" | "VUONG_GOC";
-export const TEN_KIEU_BAT: Record<KieuBat, string> = { DINH: "Đỉnh", TRUNG_DIEM: "Trung điểm", GIAO_DIEM: "Giao điểm", VUONG_GOC: "Vuông góc" };
+export type KieuBat = "DINH" | "TRUNG_DIEM" | "GIAO_DIEM" | "VUONG_GOC" | "TAM" | "GAN_NHAT";
+export const TEN_KIEU_BAT: Record<KieuBat, string> = { DINH: "Đỉnh", TRUNG_DIEM: "Trung điểm", GIAO_DIEM: "Giao điểm", VUONG_GOC: "Vuông góc", TAM: "Tâm cung", GAN_NHAT: "Trên cạnh" };
 
 /** Giao điểm hai đoạn thẳng (nếu có, kể cả đầu mút). */
 export function giaoDoan(a: Diem, b: Diem, c: Diem, d: Diem): Diem | null {
@@ -229,11 +256,20 @@ export function chanVuongGoc(p: Diem, a: Diem, b: Diem): Diem | null {
 
 /**
  * Bắt điểm nâng cao (docs/08 §9.10): đỉnh, trung điểm cạnh, giao điểm hai cạnh, chân vuông góc hạ từ điểm đo trước xuống cạnh
- * gần con trỏ. Lấy ứng viên gần con trỏ nhất trong bán kính r; đỉnh được ưu tiên khi trùng khoảng cách.
+ * gần con trỏ; 1.0.7: tâm cung tròn/elip (khi con trỏ ở gần cung hoặc gần tâm), điểm gần nhất trên cạnh (ưu tiên thấp nhất
+ * — các kiểu khác trong bán kính được chọn trước). Lấy ứng viên gần con trỏ nhất trong bán kính r; đỉnh được ưu tiên khi
+ * trùng khoảng cách.
  */
 export function batDiemNangCao(p: Diem, hinh: HinhVe[], r: number, kieu: Set<KieuBat>, diemTruoc?: Diem | null): { d: Diem; kieu: KieuBat } | null {
   const doan: [Diem, Diem][] = [];
+  const tam: { d: Diem; kc: number }[] = [];
   for (const h of hinh) {
+    if (kieu.has("TAM") && h.tam) {
+      // con trỏ gần tâm, hoặc gần chính cung (hộp bao chưa chắc chứa tâm của cung nhỏ)
+      let kc = khoangCach(p, h.tam);
+      if (kc > r) for (const dg of h.duong) for (let i = 1; i < dg.length; i++) kc = Math.min(kc, khoangCachDoan(p, dg[i - 1]!, dg[i]!));
+      if (kc <= r) tam.push({ d: h.tam, kc });
+    }
     if (p.x < h.hop.minX - r || p.x > h.hop.maxX + r || p.y < h.hop.minY - r || p.y > h.hop.maxY + r) continue;
     for (const dg of h.duong) for (let i = 1; i < dg.length; i++) if (khoangCachDoan(p, dg[i - 1]!, dg[i]!) <= r) doan.push([dg[i - 1]!, dg[i]!]);
     if (doan.length > 400) break;
@@ -250,5 +286,13 @@ export function batDiemNangCao(p: Diem, hinh: HinhVe[], r: number, kieu: Set<Kie
     if (kieu.has("VUONG_GOC") && diemTruoc) thu(chanVuongGoc(diemTruoc, a, b), "VUONG_GOC");
   }
   if (kieu.has("GIAO_DIEM")) for (let i = 0; i < doan.length; i++) for (let j = i + 1; j < doan.length; j++) thu(giaoDoan(doan[i]![0], doan[i]![1], doan[j]![0], doan[j]![1]), "GIAO_DIEM", r * 0.1);
+  for (const t of tam) if (t.kc - r * 0.1 < dTot) (dTot = t.kc - r * 0.1), (tot = { d: t.d, kieu: "TAM" });
+  if (!tot && kieu.has("GAN_NHAT")) {
+    let gTot = r;
+    for (const [a, b] of doan) {
+      const g = diemGanNhatDoan(p, a, b), kc = khoangCach(p, g);
+      if (kc < gTot) (gTot = kc), (tot = { d: g, kieu: "GAN_NHAT" });
+    }
+  }
   return tot;
 }

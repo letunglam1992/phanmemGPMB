@@ -100,7 +100,7 @@ export async function taoBanSaoLuu(kho: Kho, ungDung = "0.1", loc: LocSaoLuu = {
   const dsDk: DinhKem[] = [];
   for (const d of loc.boDinhKem ? [] : duAn)
     for (const m of await kho.dsDinhKem(d.id)) {
-      if (loc.boTepDaXoa && m.daXoa) continue;
+      if (loc.boTepDaXoa && (m.daXoa || m.thayBoi)) continue; // 1.0.7: gói tỉnh không kèm bản trước của tệp
       const b = await kho.docDinhKem(m.id);
       if (b) {
         zip.file(`dinh-kem/${m.id}.bin`, b);

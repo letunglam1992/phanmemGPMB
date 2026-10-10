@@ -90,7 +90,7 @@ function PhanGui() {
       const g = await kho.docCaiDat<CaiDatGui>(KHOA_CD_GUI);
       setGui(g ?? { maGui: taoId(), ten: donViSuDung(dsDonVi)?.ten ?? "" });
       const m = new Map<string, number>();
-      for (const d of dsDuAn) m.set(d.id, (await kho.dsDinhKem(d.id)).filter((x) => !x.daXoa).length);
+      for (const d of dsDuAn) m.set(d.id, (await kho.dsDinhKem(d.id)).filter((x) => !x.daXoa && !x.thayBoi).length);
       setSoTep(m);
     })();
   }, [kho, dsDuAn, dsDonVi]);

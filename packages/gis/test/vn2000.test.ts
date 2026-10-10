@@ -84,4 +84,18 @@ describe("Dò tên tệp tham chiếu", () => {
     expect(timThamChieu(b, "chinh.dgn")).toEqual(["To-12.dgn", "Tờ 13.DGN"]);
     expect(timThamChieu(new Uint8Array([1, 2, 3]))).toEqual([]);
   });
+  test("1.0.7 — V8 (tệp ghép OLE): tên tệp trong luồng thuộc tính tài liệu không tính; tên trong khối phần tử nén thì tính", async () => {
+    const { vietCfb, khoiPhanTu, dauMoHinh, ptKieu } = await import("./viet-dgn-v8.js");
+    const u16 = (x: string) => new Uint8Array([...x].flatMap((c) => [c.charCodeAt(0) & 255, c.charCodeAt(0) >> 8]));
+    const tt = new Uint8Array([0xfe, 0xff, 0, 0, ...u16("\u0000104000.dgn\u0000")]);
+    const ptTen = (ten: string) => {
+      const e = ptKieu(66, 24 + 2 * ten.length + 8, { lop: 0 });
+      e.set(u16(ten), 24);
+      return e;
+    };
+    const coThuocTinh = vietCfb({ "\u0005SebiesnrMkudrfcoIaamtykdDa": tt, "Dgn-Md/#000000/Dgn~Mh": dauMoHinh() });
+    expect(timThamChieu(coThuocTinh, "TD70.dgn")).toEqual([]);
+    const coThamChieu = vietCfb({ "\u0005SummaryInformation": tt, "Dgn-Md/#000000/Dgn~Mh": dauMoHinh(), "Dgn-Md/#000000/Dgn^C/$1": khoiPhanTu([ptTen("To-5.dgn")]) });
+    expect(timThamChieu(coThamChieu, "TD70.dgn")).toEqual(["To-5.dgn"]);
+  });
 });

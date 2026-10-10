@@ -115,4 +115,8 @@ test("quét khung chọn nhiều thửa, mở danh sách hộ đã lọc; tìm t
   expect(pdf.toString("latin1")).toContain("/FontFile2");
   expect(pdf.toString("latin1")).not.toContain("/DCTDecode");
   writeFileSync("test-results/ban-do-tien-do.pdf", pdf);
+  // 1.0.7: in theo khung đang xem → tên tệp có "_vung-chon"
+  await p.getByLabel("Phạm vi in").selectOption("KHUNG");
+  await p.getByRole("button", { name: "Xuất PDF tiến độ" }).click();
+  await expect.poll(async () => Object.keys(await p.evaluate(() => (window as unknown as { __tep: Record<string, string> }).__tep)).some((k) => k.endsWith("_A4_vung-chon.pdf"))).toBe(true);
 });

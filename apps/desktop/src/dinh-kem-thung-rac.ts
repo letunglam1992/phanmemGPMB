@@ -4,7 +4,10 @@
  */
 import type { DinhKem, Kho } from "./kho";
 
-export const conDung = (x: DinhKem) => !x.daXoa;
+/** Tệp đang dùng: chưa xóa và là bản hiện hành (bản cũ đã được thay — xem dinh-kem-phien-ban.ts). */
+export const conDung = (x: DinhKem) => !x.daXoa && !x.thayBoi;
+/** Tệp trong thùng rác. */
+export const trongThungRac = (x: DinhKem) => !!x.daXoa;
 
 export async function xoaMemTep(kho: Kho, x: DinhKem, nguoi: string): Promise<void> {
   const b = await kho.docDinhKem(x.id);

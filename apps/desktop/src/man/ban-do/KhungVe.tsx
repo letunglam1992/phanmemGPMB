@@ -99,6 +99,8 @@ export function KhungVe(p: {
   luuDo?: (loai: "DAI" | "DT", diem: Diem[], giaTri: number) => void;
   /** Xã, phường của dự án — tô đậm ranh xã này trên lớp ranh giới xã */
   xaDuAn?: string;
+  /** 1.0.7: ghi phạm vi đang nhìn (tọa độ bản đồ) mỗi lần vẽ — dùng cho "In theo khung đang xem". */
+  khungNhin?: { current: { minX: number; minY: number; maxX: number; maxY: number } | null };
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const khoa = `gpmb-ban-do-${p.khoaLuu ?? "chung"}`;
@@ -244,6 +246,7 @@ export function KhungVe(p: {
       const sy = (y: number) => H / 2 - (y - v.cy) * v.tyLe;
       // phạm vi đang nhìn (tọa độ bản đồ) để bỏ phần tử ngoài màn hình
       const nx0 = v.cx - W / 2 / v.tyLe, nx1 = v.cx + W / 2 / v.tyLe, ny0 = v.cy - H / 2 / v.tyLe, ny1 = v.cy + H / 2 / v.tyLe;
+      if (p.khungNhin) p.khungNhin.current = { minX: nx0, minY: ny0, maxX: nx1, maxY: ny1 };
       // 0. Ảnh vệ tinh (trực tuyến, khi bật): ô Web Mercator đặt theo VN-2000 bằng biến đổi affine từng ô
       const coAnh = anhNen.bat && (anhNen.nguon !== "TUY_CHINH" || mauUrlHopLe(anhNen.url));
       if (coAnh) {
@@ -582,6 +585,8 @@ export function KhungVe(p: {
         if (batHien.kieu === "TRUNG_DIEM") (ctx.moveTo(bx, by - 7), ctx.lineTo(bx + 7, by + 6), ctx.lineTo(bx - 7, by + 6), ctx.closePath());
         else if (batHien.kieu === "GIAO_DIEM") (ctx.moveTo(bx - 7, by - 7), ctx.lineTo(bx + 7, by + 7), ctx.moveTo(bx + 7, by - 7), ctx.lineTo(bx - 7, by + 7));
         else if (batHien.kieu === "VUONG_GOC") (ctx.moveTo(bx - 7, by + 6), ctx.lineTo(bx + 7, by + 6), ctx.moveTo(bx, by + 6), ctx.lineTo(bx, by - 7));
+        else if (batHien.kieu === "TAM") (ctx.arc(bx, by, 7, 0, Math.PI * 2), ctx.moveTo(bx - 3, by), ctx.lineTo(bx + 3, by), ctx.moveTo(bx, by - 3), ctx.lineTo(bx, by + 3));
+        else if (batHien.kieu === "GAN_NHAT") (ctx.moveTo(bx - 7, by - 7), ctx.lineTo(bx + 7, by - 7), ctx.lineTo(bx - 7, by + 7), ctx.lineTo(bx + 7, by + 7), ctx.closePath());
         else ctx.rect(bx - 6, by - 6, 12, 12);
         ctx.stroke();
       }
