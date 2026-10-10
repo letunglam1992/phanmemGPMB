@@ -200,7 +200,7 @@ export function TaiLieuDuAn({ duAn }: { duAn: DuAn }) {
             {ds === null && <tr><td colSpan={8} className="trong">Đang tải…</td></tr>}
           </tbody>
         </table>
-        <ThungRacTep ds={(ds ?? []).filter(trongThungRac)} nhan={(x) => (x.hoId ? `hồ sơ ${hoTheoId.get(x.hoId)?.ma ?? ""}` : "tài liệu dự án")} xong={tai} />
+        <ThungRacTep ds={(ds ?? []).filter(trongThungRac)} tatCa={ds ?? []} nhan={(x) => (x.hoId ? `hồ sơ ${hoTheoId.get(x.hoId)?.ma ?? ""}` : "tài liệu dự án")} xong={tai} />
       </div>
       {xem && (
         <HopThoai tieuDe={xem.ten} rong={1000} dong={() => setXem(null)} chan={<button className="nut" onClick={() => setXem(null)}>Đóng</button>}>

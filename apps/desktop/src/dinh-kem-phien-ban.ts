@@ -49,3 +49,21 @@ export async function khoiPhucBan(kho: Kho, ds: DinhKem[], ban: DinhKem, nguoi: 
   }
   await kho.ghiLo({ dinhKem: lo });
 }
+
+/**
+ * Xóa hẳn tệp đang dùng (đã ở thùng rác) mà còn bản trước: "DUA_LEN" — bản trước gần nhất thành bản đang dùng (các bản
+ * cũ hơn vẫn là bản trước của nó); "CA_NHOM" — xóa hẳn cả các bản trước. Không còn bản trước thì chỉ xóa tệp này.
+ */
+export async function xoaHanCoPhienBan(kho: Kho, ds: DinhKem[], x: DinhKem, cach: "DUA_LEN" | "CA_NHOM"): Promise<DinhKem | null> {
+  const truoc = banTruoc(ds, x);
+  if (cach === "CA_NHOM" || !truoc.length) {
+    await kho.ghiLo({ dinhKem: [x, ...truoc].map((m) => ({ meta: m, bytes: null })) });
+    return null;
+  }
+  const len = truoc[0]!;
+  const b = await kho.docDinhKem(len.id);
+  if (!b) throw new Error(`Không còn nội dung tệp "${len.ten}"`);
+  const { thayBoi: _t, ...moi } = len;
+  await kho.ghiLo({ dinhKem: [{ meta: x, bytes: null }, { meta: moi, bytes: b }] });
+  return moi;
+}

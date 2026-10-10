@@ -84,3 +84,27 @@ test("chọn tất cả theo bộ lọc, xóa nhiều hồ sơ vào thùng rác 
   await expect(p.locator("tr[data-ho-id]")).toHaveCount(0);
   await expect(thanh).toHaveCount(0);
 });
+
+test("1.0.7 — xóa nhiều hồ sơ: hộ có trong bản phương án đã chốt bị chặn, nêu lý do; hộ còn lại vào thùng rác", async ({ page: p }) => {
+  await vao(p);
+  // chốt phương án các hộ đủ điều kiện (H01)
+  await p.getByRole("button", { name: "Chốt phương án…" }).click();
+  const chot = p.locator("[role=dialog]", { hasText: "Chốt phương án" });
+  await chot.getByLabel("Chọn tất cả hộ đủ điều kiện").check();
+  await chot.getByRole("button", { name: "Chốt, đóng băng số liệu" }).click();
+  await expect(chot).toHaveCount(0);
+  await p.locator("[role=tablist] button", { hasText: "Hộ, cá nhân" }).click();
+  await p.getByLabel("Chọn tất cả hồ sơ theo bộ lọc").check();
+  const thanh = p.getByRole("toolbar", { name: "Thao tác với hồ sơ đã chọn" });
+  await thanh.getByRole("button", { name: "Xóa 2 hồ sơ" }).click();
+  const hop = p.locator("[role=dialog]", { hasText: "Xóa 2 hồ sơ đã chọn" });
+  const chan = hop.locator("[data-bi-chan] tbody tr");
+  await expect(chan).toHaveCount(1);
+  await expect(chan).toContainText("H01");
+  await expect(chan).toContainText("có trong bản phương án số 1 đã chốt");
+  await hop.getByLabel("Lý do xóa nhiều hồ sơ").fill("Nhập trùng (thử)");
+  await hop.getByRole("button", { name: "Xóa 1 hồ sơ vào thùng rác" }).click();
+  await expect(p.getByText("Đã đưa 1 hồ sơ vào thùng rác")).toBeVisible();
+  await expect(p.locator("tr[data-ho-id]")).toHaveCount(1);
+  await expect(p.locator("tr[data-ho-id]")).toContainText("H01");
+});

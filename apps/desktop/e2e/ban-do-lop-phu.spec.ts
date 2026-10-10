@@ -162,3 +162,49 @@ test("ghi chú hiện trường, điểm đo, bắt điểm và lưu kết quả
   await expect(p.locator(".the.gian tbody tr")).toHaveCount(6);
   await p.screenshot({ path: "test-results/ban-do-lop-phu.png" });
 });
+
+test("1.0.7 — điểm đo gắn tài sản kiểm đếm: đúng thửa → vị trí thực địa; tài sản ở thửa khác → cảnh báo đối chiếu biên bản", async ({ page: p }) => {
+  await vao(p);
+  await p.keyboard.press("Alt+3");
+  await p.locator("[role=tablist] button", { hasText: "Bản đồ" }).click();
+  await p.locator('input[type=file][accept=".dgn,.dxf,.dwg"]').first().setInputFiles({ name: "thu.dgn", mimeType: "application/octet-stream", buffer: banDo() });
+  await expect(p.getByText("thu.dgn ·")).toBeVisible();
+  // Gắn thửa hồ sơ H01 với thửa bản đồ 7-2, 7-3 và đặt 2 tài sản kiểm đếm vào hai thửa đó (ghi thẳng CSDL trình duyệt)
+  const ten = await p.evaluate(async () => {
+    const db = await new Promise<IDBDatabase>((ok) => { const r = indexedDB.open("gpmb-sonla"); r.onsuccess = () => ok(r.result); });
+    const ds = await new Promise<Record<string, any>[]>((ok) => { const r = db.transaction("ho").objectStore("ho").getAll(); r.onsuccess = () => ok(r.result); });
+    const h = ds.sort((a, b) => String(a.ma).localeCompare(String(b.ma)))[0]!;
+    if (h.thua.length < 2) h.thua.push({ ...h.thua[0], id: "thua-them", soThua: "999" });
+    h.thua[0].maBanDo = "T7-2";
+    h.thua[1].maBanDo = "T7-3";
+    while (h.taiSan.length < 2) h.taiSan.push({ ...h.taiSan[0], id: `ts-${h.taiSan.length}` });
+    h.taiSan[0].ten = "Nhà thử A";
+    h.taiSan[0].thuaId = h.thua[0].id;
+    h.taiSan[1].ten = "Nhà thử B";
+    h.taiSan[1].thuaId = h.thua[1].id;
+    const tx = db.transaction("ho", "readwrite");
+    tx.objectStore("ho").put(h);
+    await new Promise((ok) => (tx.oncomplete = ok));
+    db.close();
+    return h.ma as string;
+  });
+  await p.reload();
+  const o = p.locator("form input");
+  await o.nth(0).fill("quantri");
+  await p.locator("input[type=password]").nth(0).fill("matkhau123");
+  await p.click("button[type=submit]");
+  await expect(p.getByText(/Đang theo dõi 1 dự án/)).toBeVisible();
+  await p.keyboard.press("Alt+3");
+  await p.locator("[role=tablist] button", { hasText: "Bản đồ" }).click();
+  const hop = p.getByRole("button", { name: "Để sau" });
+  if (await hop.isVisible().catch(() => false)) await hop.click();
+  await p.getByLabel("Tệp điểm đo").setInputFiles({ name: "diem.csv", mimeType: "text/csv", buffer: Buffer.from("Tên điểm;X;Y;Mô tả\nP1;1350010;500030;Góc nhà\n") });
+  const dd = p.getByLabel("Điểm đo hiện trạng");
+  await expect(dd).toContainText(`Góc nhà · thửa 7-2 · ${ten}`);
+  const chon = dd.getByLabel("Tài sản của điểm P1");
+  await chon.selectOption({ label: await chon.locator("option", { hasText: "Nhà thử A" }).textContent() ?? "" });
+  await expect(dd).toContainText("Vị trí thực địa của tài sản “Nhà thử A”");
+  await chon.selectOption({ label: await chon.locator("option", { hasText: "Nhà thử B" }).textContent() ?? "" });
+  await expect(dd).toContainText("Điểm đo nằm ngoài thửa của tài sản “Nhà thử B”");
+  await expect(dd).toContainText("đối chiếu biên bản kiểm đếm");
+});

@@ -14,7 +14,7 @@ import { type DiemDoHienTrang, type GhiChuHienTruong, type KetQuaDoLuu, type Nho
  * kéo để di chuyển, phóng theo khung; bật/tắt từng lớp (level) của tệp DGN; công cụ thông tin phần tử, đo khoảng cách,
  * đo diện tích, lấy tọa độ; bắt điểm vào đỉnh; nền đen/sáng. Lớp phủ GPMB (thửa, ranh, tô màu) vẽ trên nền bản vẽ.
  */
-type CongCu = "CHON" | "KEO" | "PHONG_KHUNG" | "QUET" | "DO_DAI" | "DO_DT" | "TOA_DO" | "GHI_CHU";
+type CongCu = "CHON" | "KEO" | "PHONG_KHUNG" | "QUET" | "DO_DAI" | "DO_DT" | "TOA_DO" | "GHI_CHU" | "KHUNG_IN";
 const CONG_CU: { ma: CongCu; ten: string; ky: string; goiY: string }[] = [
   { ma: "CHON", ten: "Chọn, thông tin", ky: "⌖", goiY: "Bấm vào thửa / phần tử để xem thông tin (kéo để di chuyển)" },
   { ma: "KEO", ten: "Di chuyển", ky: "✋", goiY: "Kéo để di chuyển bản đồ" },
@@ -23,6 +23,7 @@ const CONG_CU: { ma: CongCu; ten: string; ky: string; goiY: string }[] = [
   { ma: "DO_DAI", ten: "Đo khoảng cách", ky: "📏", goiY: "Bấm các điểm; bấm đúp hoặc chuột phải để kết thúc; Esc để xóa" },
   { ma: "DO_DT", ten: "Đo diện tích", ky: "▱", goiY: "Bấm các đỉnh vùng; bấm đúp hoặc chuột phải để khép vùng; Esc để xóa" },
   { ma: "TOA_DO", ten: "Tọa độ điểm", ky: "⌗", goiY: "Bấm để lấy tọa độ VN-2000 của điểm (bắt đỉnh nếu bật)" },
+  { ma: "KHUNG_IN", ten: "Vẽ khung in", ky: "⎙", goiY: "Kéo khung chữ nhật quanh vùng cần in → Xuất PDF tiến độ với “Phạm vi in: Khung đã vẽ”" },
   { ma: "GHI_CHU", ten: "Ghi chú hiện trường", ky: "📌", goiY: "Bấm vị trí để thêm ghi chú (vướng mắc, mộ, công trình chưa kiểm đếm…); ghi chú dạng đường: đo khoảng cách rồi bấm “Lưu làm ghi chú”" },
 ];
 /** Màu ghi chú hiện trường theo nhóm (vẽ trên bản đồ, chú giải). */
@@ -101,6 +102,9 @@ export function KhungVe(p: {
   xaDuAn?: string;
   /** 1.0.7: ghi phạm vi đang nhìn (tọa độ bản đồ) mỗi lần vẽ — dùng cho "In theo khung đang xem". */
   khungNhin?: { current: { minX: number; minY: number; maxX: number; maxY: number } | null };
+  /** 1.0.7: khung in vẽ bằng chuột (công cụ "Vẽ khung in") — hiện nét đứt cam; null = chưa vẽ. */
+  khungIn?: { minX: number; minY: number; maxX: number; maxY: number } | null;
+  datKhungIn?: (r: { minX: number; minY: number; maxX: number; maxY: number } | null) => void;
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const khoa = `gpmb-ban-do-${p.khoaLuu ?? "chung"}`;
@@ -568,6 +572,19 @@ export function KhungVe(p: {
         ctx.lineTo(sx(d.x), sy(d.y) + 8);
         ctx.stroke();
       }
+      // 1.0.7: khung in đã vẽ
+      if (p.khungIn) {
+        const k = p.khungIn;
+        ctx.setLineDash([8, 4]);
+        ctx.strokeStyle = "#e07b00";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(sx(k.minX), sy(k.maxY), sx(k.maxX) - sx(k.minX), sy(k.minY) - sy(k.maxY));
+        ctx.setLineDash([]);
+        ctx.fillStyle = "#e07b00";
+        ctx.font = "12px sans-serif";
+        ctx.textAlign = "left";
+        ctx.fillText("Khung in", sx(k.minX) + 4, sy(k.maxY) + 14);
+      }
       // khung phóng
       if (khung) {
         ctx.setLineDash([4, 3]);
@@ -606,7 +623,7 @@ export function KhungVe(p: {
     const ro = new ResizeObserver(veLai);
     ro.observe(cv);
     return () => ro.disconnect();
-  }, [nhin, hinhHien, chuHien, p.dl, p.thuHoi, p.vungChon.join("|"), p.thuaChon, p.chon, p.ttThua, p.khoaThua, pham, lop, cheDo, nenToi, mauTheoLop, diemDo, troDo, xongDo, khung, batHien, thongTin, cong, p.thuaQuet, p.ranhThem, p.lopPhu, anhNen, taiO, ranhXa, p.xaDuAn]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [nhin, hinhHien, chuHien, p.dl, p.thuHoi, p.vungChon.join("|"), p.thuaChon, p.chon, p.ttThua, p.khoaThua, pham, lop, cheDo, nenToi, mauTheoLop, diemDo, troDo, xongDo, khung, batHien, thongTin, cong, p.thuaQuet, p.ranhThem, p.lopPhu, anhNen, taiO, ranhXa, p.xaDuAn, p.khungIn]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const doiToaDo = (e: { clientX: number; clientY: number }): Diem => {
     const cv = ref.current!;
@@ -665,7 +682,7 @@ export function KhungVe(p: {
           if (!nhin) return;
           const giua = e.button === 1;
           if (e.button === 2) return;
-          if ((cong === "PHONG_KHUNG" || cong === "QUET") && !giua) {
+          if ((cong === "PHONG_KHUNG" || cong === "QUET" || cong === "KHUNG_IN") && !giua) {
             const d = doiToaDo(e);
             setKhung({ a: d, b: d });
             return;
@@ -697,6 +714,10 @@ export function KhungVe(p: {
             const { a, b } = khung;
             setKhung(null);
             const r = { minX: Math.min(a.x, b.x), maxX: Math.max(a.x, b.x), minY: Math.min(a.y, b.y), maxY: Math.max(a.y, b.y) };
+            if (cong === "KHUNG_IN") {
+              if (Math.abs(a.x - b.x) * nhin.tyLe > 8 && Math.abs(a.y - b.y) * nhin.tyLe > 8) p.datKhungIn?.(r);
+              return;
+            }
             if (cong === "QUET") {
               if (!p.quet) return;
               const ds = p.dl.kq.thua.filter((t) => t.tamNhan.x >= r.minX && t.tamNhan.x <= r.maxX && t.tamNhan.y >= r.minY && t.tamNhan.y <= r.maxY);
@@ -756,7 +777,7 @@ export function KhungVe(p: {
         ) : (
         <>
         <button className="nut nut-nho bd-mo-thanh" aria-label="Thu gọn thanh công cụ" aria-expanded title="Thu gọn thanh công cụ về góc trái" onClick={() => setAnThanh(true)}>◂</button>
-        {CONG_CU.map((c) => (
+        {CONG_CU.filter((c) => c.ma !== "KHUNG_IN" || p.datKhungIn).map((c) => (
           <button key={c.ma} className={`nut nut-nho${cong === c.ma ? " chon" : ""}`} aria-pressed={cong === c.ma} title={`${c.ten} — ${c.goiY}`} aria-label={c.ten} onClick={() => doiCong(c.ma)}>
             <span aria-hidden>{c.ky}</span><span className="bd-chu">{c.ten}</span>
           </button>

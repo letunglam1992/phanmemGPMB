@@ -81,4 +81,32 @@ describe("Tệp đính kèm hồ sơ (P2-2)", () => {
     expect((await docBanSaoLuu((await taoBanSaoLuu(k)).bytes)).thongTin.soDinhKem).toBe(3);
     expect((await docBanSaoLuu((await taoBanSaoLuu(k, "t", { boTepDaXoa: true })).bytes)).thongTin.soDinhKem).toBe(1);
   });
+
+  it("1.0.7 — xóa hẳn tệp đang dùng còn bản trước: đưa bản gần nhất lên, hoặc xóa cả nhóm", async () => {
+    const { banTruoc, thayTep, xoaHanCoPhienBan } = await import("../src/dinh-kem-phien-ban");
+    const { duAn, ho } = taoDuAnMau();
+    for (const cach of ["DUA_LEN", "CA_NHOM"] as const) {
+      const k = taoKhoBoNho();
+      await k.ghiLo({ duAn: [duAn], ho, dinhKem: [{ meta: meta("a", ho[0]!.id, duAn.id), bytes: new Uint8Array([1]) }] });
+      const v1 = (await k.dsDinhKem(duAn.id))[0]!;
+      await new Promise((r) => setTimeout(r, 2));
+      const v2 = await thayTep(k, v1, { ten: "v2.pdf", loai: "application/pdf", bytes: new Uint8Array([2]) }, "cb");
+      await new Promise((r) => setTimeout(r, 2));
+      const v3 = await thayTep(k, v2, { ten: "v3.pdf", loai: "application/pdf", bytes: new Uint8Array([3]) }, "cb");
+      await xoaMemTep(k, v3, "cb");
+      const ds = await k.dsDinhKem(duAn.id);
+      const len = await xoaHanCoPhienBan(k, ds, ds.find((x) => x.id === v3.id)!, cach);
+      const sau = await k.dsDinhKem(duAn.id);
+      if (cach === "CA_NHOM") {
+        expect(len).toBeNull();
+        expect(sau).toEqual([]);
+      } else {
+        expect(len!.id).toBe(v2.id);
+        expect(sau.filter(conDung).map((x) => x.id)).toEqual([v2.id]);
+        expect(banTruoc(sau, sau.find((x) => x.id === v2.id)!).map((x) => x.id)).toEqual(["a"]);
+        expect(await k.docDinhKem(v3.id)).toBeNull();
+      }
+    }
+  });
 });
+

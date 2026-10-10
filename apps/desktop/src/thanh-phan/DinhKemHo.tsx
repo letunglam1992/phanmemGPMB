@@ -100,7 +100,7 @@ export function DinhKemHo({ h, duAn }: { h: Ho; duAn: DuAn }) {
           {ds === null && <tr><td colSpan={6} className="trong">Đang tải…</td></tr>}
         </tbody>
       </table>
-      <ThungRacTep ds={(ds ?? []).filter(trongThungRac)} nhan={(x) => (x.buoc ? `bước ${x.buoc}` : "chung")} xong={tai} />
+      <ThungRacTep ds={(ds ?? []).filter(trongThungRac)} tatCa={ds ?? []} nhan={(x) => (x.buoc ? `bước ${x.buoc}` : "chung")} xong={tai} />
     </div>
   );
 }

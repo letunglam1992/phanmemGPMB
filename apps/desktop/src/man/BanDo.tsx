@@ -65,7 +65,8 @@ export function BanDo({ duAnId }: { duAnId: string }) {
   const [hopPhu, setHopPhu] = useState<"GHEP" | "SO_SANH" | null>(null);
   const [soSanh, setSoSanh] = useState<{ tep: string; ds: SoSanhThua[] } | null>(null);
   const [khoGiay, setKhoGiay] = useState<KhoGiay>("A3");
-  const [phamViIn, setPhamViIn] = useState<"RANH" | "KHUNG">("RANH");
+  const [phamViIn, setPhamViIn] = useState<"RANH" | "KHUNG" | "VE">("RANH");
+  const [khungIn, setKhungIn] = useState<{ minX: number; minY: number; maxX: number; maxY: number } | null>(null);
   const khungNhin = useRef<{ minX: number; minY: number; maxX: number; maxY: number } | null>(null);
   const [dangPdf, setDangPdf] = useState(false);
   /** Thửa vừa xem chi tiết — khi quay lại danh sách thì cuộn tới, tô dòng */
@@ -319,12 +320,13 @@ export function BanDo({ duAnId }: { duAnId: string }) {
           {dl && (
             <span className="nhom-nut" style={{ gap: 4 }}>
               <Chon value={khoGiay} onChange={(e) => setKhoGiay(e.target.value as KhoGiay)} aria-label="Khổ giấy PDF"><option value="A3">A3 ngang</option><option value="A4">A4 ngang</option></Chon>
-              <Chon value={phamViIn} onChange={(e) => setPhamViIn(e.target.value as "RANH" | "KHUNG")} aria-label="Phạm vi in" title="Theo ranh thu hồi (mặc định) hoặc đúng khung đang xem trên bản đồ (phóng, kéo tới vùng cần in trước)"><option value="RANH">Theo ranh thu hồi</option><option value="KHUNG">Khung đang xem</option></Chon>
+              <Chon value={phamViIn} onChange={(e) => setPhamViIn(e.target.value as "RANH" | "KHUNG" | "VE")} aria-label="Phạm vi in" title="Theo ranh thu hồi (mặc định), đúng khung đang xem, hoặc khung vẽ bằng công cụ “Vẽ khung in” (⎙) trên thanh công cụ bản đồ"><option value="RANH">Theo ranh thu hồi</option><option value="KHUNG">Khung đang xem</option><option value="VE" disabled={!khungIn}>Khung đã vẽ{khungIn ? "" : " (chưa vẽ)"}</option></Chon>
+              {khungIn && <button className="nut nut-chu nut-nho" title="Bỏ khung in đã vẽ" onClick={() => { setKhungIn(null); if (phamViIn === "VE") setPhamViIn("RANH"); }}>Bỏ khung in</button>}
               <button className="nut" disabled={dangPdf} title="Bản đồ tiến độ GPMB tô màu theo hiện trạng hồ sơ, có khung, chú giải, tỷ lệ — dùng báo cáo, họp (không phải trích lục thửa)" onClick={async () => {
                 setDangPdf(true);
                 try {
-                  const pdf = await xuatPdfBanDo({ dl, tieuDe: "BẢN ĐỒ TIẾN ĐỘ BỒI THƯỜNG, GIẢI PHÓNG MẶT BẰNG", phuDe: `Dự án: ${duAn.ten} — ${duAn.xa}`, ttThua, thuHoi, khoaThua, ranh: [...vungDs.map((v) => v.vong), ...ranhVe], ngay: new Date().toLocaleDateString("vi-VN"), phamVi: phamViIn === "KHUNG" ? (khungNhin.current ?? undefined) : undefined }, khoGiay);
-                  if (await taiXuong(pdf, `Ban-do-tien-do_${tenTep(duAn.ten, 60)}_${khoGiay}${phamViIn === "KHUNG" ? "_vung-chon" : ""}.pdf`, "application/pdf")) bao("Đã xuất PDF bản đồ tiến độ");
+                  const pdf = await xuatPdfBanDo({ dl, tieuDe: "BẢN ĐỒ TIẾN ĐỘ BỒI THƯỜNG, GIẢI PHÓNG MẶT BẰNG", phuDe: `Dự án: ${duAn.ten} — ${duAn.xa}`, ttThua, thuHoi, khoaThua, ranh: [...vungDs.map((v) => v.vong), ...ranhVe], ngay: new Date().toLocaleDateString("vi-VN"), phamVi: phamViIn === "KHUNG" ? (khungNhin.current ?? undefined) : phamViIn === "VE" ? (khungIn ?? undefined) : undefined }, khoGiay);
+                  if (await taiXuong(pdf, `Ban-do-tien-do_${tenTep(duAn.ten, 60)}_${khoGiay}${phamViIn !== "RANH" ? "_vung-chon" : ""}.pdf`, "application/pdf")) bao("Đã xuất PDF bản đồ tiến độ");
                 } catch (e) {
                   bao((e as Error).message, "loi");
                 } finally {
@@ -360,7 +362,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
       )}
       {dl && (
         <div className="ban-do-khung">
-          <KhungVe key={khoaNap} khungNhin={khungNhin} xaDuAn={duAn.xa} dl={dl} vungChon={maVungChon} thuHoi={thuHoi} khoaThua={khoaThua} chon={chon} setChon={setChon} daLienKet={daLienKet} ttThua={ttThua} bamThua={cheDoChonThua && quyen("SUA_HO_SO") ? batTatThua : undefined} thuaChon={thuaChon} khoaLuu={duAnId} ranhThem={ranhVe} luuVung={quyen("SUA_HO_SO") ? luuRanhVe : undefined} batVeVung={veRanh} quet={(ds, them) => setQuet(new Set([...(them ? quet : []), ...ds.map(khoaThua)]))} thuaQuet={quet} phongToi={phongToi} lopPhu={lopPhu} batGhiChu={batGhiChu}
+          <KhungVe key={khoaNap} khungNhin={khungNhin} khungIn={khungIn} datKhungIn={(r) => { setKhungIn(r); if (r) setPhamViIn("VE"); }} xaDuAn={duAn.xa} dl={dl} vungChon={maVungChon} thuHoi={thuHoi} khoaThua={khoaThua} chon={chon} setChon={setChon} daLienKet={daLienKet} ttThua={ttThua} bamThua={cheDoChonThua && quyen("SUA_HO_SO") ? batTatThua : undefined} thuaChon={thuaChon} khoaLuu={duAnId} ranhThem={ranhVe} luuVung={quyen("SUA_HO_SO") ? luuRanhVe : undefined} batVeVung={veRanh} quet={(ds, them) => setQuet(new Set([...(them ? quet : []), ...ds.map(khoaThua)]))} thuaQuet={quet} phongToi={phongToi} lopPhu={lopPhu} batGhiChu={batGhiChu}
             themGhiChu={quyen("SUA_HO_SO") ? (loai, diem) => setGhiChuMoi({ loai, diem }) : undefined}
             luuDo={quyen("SUA_HO_SO") ? (loai, diem, giaTri) => void luuBanDoDa({ ketQuaDo: [...lopPhu.ketQuaDo, taoKetQuaDo(lopPhu.ketQuaDo, loai, diem, giaTri, nguoiDung)] }) : undefined} />
           <div className="ben-phai">

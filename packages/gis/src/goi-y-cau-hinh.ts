@@ -132,6 +132,16 @@ export function goiYCauHinh(ban: KetQuaDocDgn, goc: CauHinhLop = CAU_HINH_MAC_DI
     }
   }
   if (!co(cauHinh.ranhThua, (x) => x.soDuong + x.soVung)) ghiChu.push(`Lớp ranh thửa (${cauHinh.ranhThua.join(", ")}) không có đường nào.`);
+  // 1.0.7: ranh thửa vẽ trên nhiều lớp (phần giáp đường, suối… nằm ở lớp khác) → thử thêm lớp đường làm ranh thửa
+  if (goc.ranhThua === CAU_HINH_MAC_DINH.ranhThua && (cauHinh.nutThuocTinh || co(cauHinh.soThua, (x) => x.soChu))) {
+    const bs = boSungLopRanh(ban, cauHinh, [...tk.values()]);
+    if (bs) {
+      ghiChu.push(`Ranh thửa vẽ trên nhiều lớp: thêm lớp ${bs.them.join(", ")} vào lớp ranh thửa — dựng được ${bs.sau} thửa có số thửa, khớp diện tích ghi (trước: ${bs.truoc}). Cán bộ xem lại các lớp này đúng là ranh thửa.`);
+      cauHinh.ranhThua = bs.ranhThua;
+      const trung = bs.them.filter((l) => cauHinh.ranhGpmb.includes(l));
+      if (trung.length) ghiChu.push(`Lớp ${trung.join(", ")} vừa là ranh thửa vừa đang được dùng làm lớp ranh GPMB (mặc định) — kiểm tra lại lớp ranh GPMB trong cấu hình lớp.`);
+    }
+  }
   if (!co(cauHinh.ranhGpmb, (x) => x.soDuong + x.soVung)) {
     const vt = lopVungThuaThuHoi(ban, cauHinh);
     if (vt) {
@@ -140,6 +150,42 @@ export function goiYCauHinh(ban: KetQuaDocDgn, goc: CauHinhLop = CAU_HINH_MAC_DI
     } else ghiChu.push(`Lớp ranh GPMB (${cauHinh.ranhGpmb.join(", ")}) không có đường nào — chọn lớp ranh GPMB trong cấu hình lớp, hoặc chọn thửa thu hồi trực tiếp trên bản đồ.`);
   }
   return { cauHinh, ghiChu };
+}
+
+/** Số thửa dựng được có số thửa và diện tích ghi (nếu có) khớp diện tích hình học trong ngưỡng cho phép. */
+function soKhop(ban: KetQuaDocDgn, ch: CauHinhLop): number {
+  let n = 0;
+  for (const t of dungThua(ban, ch).thua) {
+    if (!t.soThua) continue;
+    if (t.dienTichGhi && Math.abs(t.dienTichGhi - t.dienTichHinhHoc) > t.dienTichGhi * ch.lechDienTichChoPhep) continue;
+    n++;
+  }
+  return n;
+}
+
+/**
+ * 1.0.7 — Kiểm trên tệp trích đo V8 người dùng cung cấp (đọc tại chỗ, không lưu vào kho): 106 nút thuộc tính thửa nhưng
+ * lớp 10 chỉ dựng được 5 thửa vì cạnh giáp đường, suối vẽ ở lớp 20, 30 (không đúng tên lớp chuẩn). Thử thêm từng lớp có
+ * đường (tối đa 16 lớp nhiều đường nhất, 2 vòng), giữ lớp làm TĂNG số thửa có số thửa và khớp diện tích ghi. Chỉ chạy khi
+ * cấu hình ranh thửa là mặc định và số thửa khớp < 80% số nhãn/nút thửa. Trả null nếu không cải thiện.
+ */
+function boSungLopRanh(ban: KetQuaDocDgn, ch: CauHinhLop, tk: ThongKeLop[]): { ranhThua: number[]; them: number[]; truoc: number; sau: number } | null {
+  const can = ch.nutThuocTinh ? tk.filter((x) => ch.nutThuocTinh!.lop.includes(x.lop)).reduce((s, x) => s + x.soNut, 0) : tk.filter((x) => ch.soThua.includes(x.lop)).reduce((s, x) => s + x.soChu, 0);
+  const truoc = soKhop(ban, ch);
+  if (!can || truoc >= can * 0.8) return null;
+  let ranh = [...ch.ranhThua], tot = truoc;
+  const ungVien = tk.filter((x) => x.soDuong + x.soVung > 0 && !ranh.includes(x.lop)).sort((a, b) => b.soDuong + b.soVung - (a.soDuong + a.soVung)).slice(0, 16).map((x) => x.lop);
+  for (let vong = 0; vong < 2; vong++) {
+    const loi = ungVien.filter((l) => !ranh.includes(l)).map((l) => ({ l, n: soKhop(ban, { ...ch, ranhThua: [...ranh, l] }) })).filter((x) => x.n > tot);
+    if (!loi.length) break;
+    const gop = [...ranh, ...loi.map((x) => x.l)];
+    const nGop = soKhop(ban, { ...ch, ranhThua: gop });
+    const motLop = loi.sort((a, b) => b.n - a.n)[0]!;
+    if (nGop >= motLop.n) [ranh, tot] = [gop, nGop];
+    else [ranh, tot] = [[...ranh, motLop.l], motLop.n];
+  }
+  if (tot <= truoc) return null;
+  return { ranhThua: ranh, them: ranh.filter((l) => !ch.ranhThua.includes(l)), truoc, sau: tot };
 }
 
 /** Lớp chữ ghi hiện trạng GPMB: ≥ 5 dòng chữ, ≥ 60% dạng "Đã GPMB", "Chưa GPMB", "NQH". */

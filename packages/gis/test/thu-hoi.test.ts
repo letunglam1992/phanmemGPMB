@@ -92,3 +92,33 @@ describe("Lớp vùng thửa đã thu hồi (không có ranh GPMB)", () => {
     expect(tenLopPl21(44)).toBeNull(); // bãi bỏ theo điểm b khoản 8 Điều 8 TT 23/2025
   });
 });
+
+describe("1.0.7 — ranh thửa vẽ trên nhiều lớp", () => {
+  test("cạnh ngoài ở lớp 20, 30 (giáp đường, suối): gợi ý thêm hai lớp vào ranh thửa, dựng đủ 6 thửa; không thêm lớp không cải thiện", () => {
+    const hinh: Uint8Array[] = [
+      ptDuong(3, [d(0, 20), d(30, 20)], { lop: 10 }),
+      ptDuong(3, [d(0, 0), d(0, 20)], { lop: 10 }),
+      ptDuong(3, [d(0, 0), d(30, 0)], { lop: 20 }), // mép đường
+      ptDuong(3, [d(30, 0), d(30, 20)], { lop: 30 }), // mép suối
+      ptDuong(3, [d(0, 10), d(30, 10)], { lop: 10 }),
+      ptDuong(3, [d(10, 0), d(10, 20)], { lop: 10 }),
+      ptDuong(3, [d(20, 0), d(20, 20)], { lop: 10 }),
+      ptDuong(3, [d(100, 100), d(140, 100)], { lop: 55 }), // đường xa, không liên quan
+    ];
+    const chu: Uint8Array[] = [];
+    for (let i = 0; i < 6; i++) {
+      const { x, y } = o(i);
+      chu.push(ptNutChu({ lop: 19 }));
+      ["7", String(i + 1), "Bản Mé", "CLN", `Chủ ${i + 1}`].forEach((c, k) => chu.push(ptChu(c, X0 + x + 3, Y0 + y + 8 - k, { lop: 19, thanhPhan: true, unicode: true })));
+    }
+    const ban = docDgn(vietDgnV8([hinh, chu]));
+    const g = goiYCauHinh(ban);
+    expect([...g.cauHinh.ranhThua].sort((a, b) => a - b)).toEqual([10, 20, 30]);
+    expect(g.ghiChu.join(" ")).toMatch(/thêm lớp .*20.*vào lớp ranh thửa|thêm lớp .*30.*vào lớp ranh thửa/);
+    expect(g.ghiChu.join(" ")).toMatch(/Lớp 30 vừa là ranh thửa vừa đang được dùng làm lớp ranh GPMB/);
+    expect(dungThua(ban, g.cauHinh).thua.filter((t) => t.soThua)).toHaveLength(6);
+    // cấu hình người dùng đã chọn (không phải mặc định) → không tự thêm
+    expect(goiYCauHinh(ban, { ...g.cauHinh, ranhThua: [10] }).cauHinh.ranhThua).toEqual([10]);
+  });
+});
+

@@ -183,3 +183,41 @@ test("1.0.5: tim tuyến → lý trình gợi ý cho thửa hồ sơ, ghi vào h
   await expect(p.getByText(/Đã ghi lý trình cho 1 thửa/)).toBeVisible();
   await expect(p.getByLabel("Lý trình trên bản đồ")).toBeVisible();
 });
+
+test("1.0.7 — quét khung chọn 2 thửa → xóa nhiều thửa khỏi bản đồ (một lý do), khôi phục", async ({ page: p }) => {
+  const hoi: string[] = [];
+  p.on("dialog", (d) => {
+    hoi.push(d.message());
+    void (d.type() === "prompt" ? d.accept("Dựng sai ranh") : d.accept());
+  });
+  await vao(p);
+  await p.keyboard.press("Alt+3");
+  await p.locator("[role=tablist] button", { hasText: "Bản đồ" }).click();
+  await p.locator('input[type=file][accept=".dgn,.dxf,.dwg"]').first().setInputFiles({ name: "thu.dgn", mimeType: "application/octet-stream", buffer: banDo() });
+  await expect(p.getByText("thu.dgn ·")).toBeVisible();
+  await p.getByRole("button", { name: "Để sau" }).click();
+  await p.getByRole("button", { name: "Thu gọn bảng lớp" }).click();
+  await p.getByRole("button", { name: "Chọn nhiều thửa (quét khung)" }).click();
+  const cv = p.locator(".ban-do canvas");
+  await cv.evaluate((e) => e.scrollIntoView({ block: "start" }));
+  const b = (await cv.boundingBox())!;
+  const tyLe = Math.min(b.width / 80, b.height / 20) * 0.92;
+  const cx = b.x + b.width / 2, cy = b.y + b.height / 2;
+  // khung bao tâm thửa 1, 2 (nửa trái)
+  await p.mouse.move(cx - 39 * tyLe, cy - 9 * tyLe);
+  await p.mouse.down();
+  await p.mouse.move(cx - 1 * tyLe, cy + 9 * tyLe, { steps: 5 });
+  await p.mouse.up();
+  const vc = p.getByLabel("Vùng thửa đang chọn");
+  await expect(vc).toContainText("Vùng chọn: 2 thửa");
+  await vc.getByRole("button", { name: "Xóa 2 thửa khỏi bản đồ…" }).click();
+  expect(hoi[0]).toContain("Xóa 2 thửa khỏi bản đồ (tờ/thửa: 7/1, 7/2)");
+  await p.locator(".the.gian select").selectOption("TAT_CA");
+  await expect(p.locator(".the.gian tbody tr")).toHaveCount(2);
+  const the = p.getByLabel("Thửa đã xóa khỏi bản đồ");
+  await the.getByRole("button", { name: "Xem" }).click();
+  await expect(the).toContainText("Lý do: Dựng sai ranh");
+  await p.getByRole("button", { name: "Khôi phục thửa 1 tờ 7" }).click();
+  await p.locator(".the.gian select").selectOption("TAT_CA");
+  await expect(p.locator(".the.gian tbody tr")).toHaveCount(3);
+});

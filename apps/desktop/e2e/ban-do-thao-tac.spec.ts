@@ -119,4 +119,16 @@ test("quét khung chọn nhiều thửa, mở danh sách hộ đã lọc; tìm t
   await p.getByLabel("Phạm vi in").selectOption("KHUNG");
   await p.getByRole("button", { name: "Xuất PDF tiến độ" }).click();
   await expect.poll(async () => Object.keys(await p.evaluate(() => (window as unknown as { __tep: Record<string, string> }).__tep)).some((k) => k.endsWith("_A4_vung-chon.pdf"))).toBe(true);
+  // 1.0.7: vẽ khung in bằng chuột → phạm vi "Khung đã vẽ"; bỏ khung → về theo ranh
+  await p.getByRole("button", { name: "Vẽ khung in" }).click();
+  const cv2 = p.locator(".ban-do canvas");
+  await cv2.evaluate((e) => e.scrollIntoView({ block: "start" }));
+  const b2 = (await cv2.boundingBox())!;
+  await p.mouse.move(b2.x + b2.width * 0.3, b2.y + b2.height * 0.3);
+  await p.mouse.down();
+  await p.mouse.move(b2.x + b2.width * 0.6, b2.y + b2.height * 0.6, { steps: 5 });
+  await p.mouse.up();
+  await expect(p.getByLabel("Phạm vi in")).toHaveValue("VE");
+  await p.getByRole("button", { name: "Bỏ khung in" }).click();
+  await expect(p.getByLabel("Phạm vi in")).toHaveValue("RANH");
 });

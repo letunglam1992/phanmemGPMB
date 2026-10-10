@@ -118,3 +118,24 @@ test("văn bản theo đợt từ bước 8 chỉ chọn hộ đã chốt; hộp
   await chot.getByLabel(/Hiện cả hộ đã phê duyệt/).check();
   await expect(chot.locator("tbody tr", { hasText: "H01" })).toHaveClass(/mo/);
 });
+
+test("1.0.7 — hộp Chốt phương án: mặc định chỉ hộ đã xác nhận bước 5, ghi số hộ ẩn; bỏ đánh dấu thì hiện đủ", async ({ page: p }) => {
+  await vao(p);
+  await p.keyboard.press("Alt+3");
+  await p.locator("[role=tablist] button", { hasText: "Hộ, cá nhân" }).click();
+  await p.locator("tr[data-ho-id]", { hasText: "H01" }).click();
+  await p.locator("[role=tab]", { hasText: "Tiến độ" }).click();
+  await p.locator("tr", { hasText: "Lập phương án" }).first().click();
+  await p.getByRole("button", { name: "Xác nhận hoàn thành" }).click();
+  await expect(p.locator("tr", { hasText: "Lập phương án" }).first()).toContainText("Hoàn thành");
+  await p.keyboard.press("Alt+3");
+  await p.getByRole("button", { name: "Chốt phương án…" }).click();
+  const chot = p.locator("[role=dialog]", { hasText: "Chốt phương án" });
+  const loc = chot.getByLabel(/Chỉ hộ đã xác nhận hoàn thành bước 5/);
+  await expect(loc).toBeChecked();
+  await expect(chot.getByText(/ẩn 1 hộ chưa xác nhận/)).toBeVisible();
+  await expect(chot.locator("tbody tr", { hasText: "H01" })).toHaveCount(1);
+  await expect(chot.locator("tbody tr", { hasText: "H02" })).toHaveCount(0);
+  await loc.uncheck();
+  await expect(chot.locator("tbody tr", { hasText: "H02" })).toHaveCount(1);
+});
