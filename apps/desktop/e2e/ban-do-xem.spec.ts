@@ -65,6 +65,9 @@ test("lăn chuột phóng bản đồ, không cuộn trang; bảng lớp giữ t
   await expect(bang.getByRole("button", { name: "Lớp bản vẽ DGN" })).toContainText("3/4");
 
   // đo khoảng cách: 2 điểm → có kết quả
+  // 1.0.7: thanh công cụ không bị quy tắc CSS trùng tên (.bd-thanh của thẻ Bắt đầu) ép cao 4 px
+  const thanh = await p.getByRole("toolbar", { name: "Công cụ bản đồ" }).boundingBox();
+  expect(thanh!.height).toBeGreaterThan(24);
   await p.getByRole("button", { name: "Đo khoảng cách" }).click();
   // bấm bên phải khung (bảng lớp nằm bên trái)
   await p.mouse.click(b.x + b.width * 0.62, b.y + b.height * 0.7);

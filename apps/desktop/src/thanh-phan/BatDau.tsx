@@ -36,12 +36,12 @@ export function TheBatDau({ taoDuAn }: { taoDuAn: () => void }) {
         <span className="mo chu-nho">Đã xong {soXong}/{buoc.length} bước</span>
         <div className="phai"><button className="nut nut-chu nut-nho" onClick={() => { try { localStorage.setItem(KHOA_AN, "1"); } catch { /* bỏ qua */ } setAn(true); }}>Ẩn hướng dẫn</button></div>
       </div>
-      <div className="bd-thanh" aria-hidden><span style={{ width: `${(soXong / buoc.length) * 100}%` }} /></div>
-      <ol className="bd-buoc">
+      <div className="batdau-thanh" aria-hidden><span style={{ width: `${(soXong / buoc.length) * 100}%` }} /></div>
+      <ol className="batdau-buoc">
         {buoc.map((b, i) => (
           <li key={b.ma} className={b.xong ? "xong" : b === tiep ? "tiep" : ""} data-buoc={b.ma}>
-            <span className="bd-so">{b.xong ? "✓" : i + 1}</span>
-            <div className="bd-nd"><b>{b.ten}</b>{b.xong ? <span className="nhan nhan-xanh">Đã xong</span> : null}<div className="mo chu-nho">{b.moTa}</div></div>
+            <span className="batdau-so">{b.xong ? "✓" : i + 1}</span>
+            <div className="batdau-nd"><b>{b.ten}</b>{b.xong ? <span className="nhan nhan-xanh">Đã xong</span> : null}<div className="mo chu-nho">{b.moTa}</div></div>
             {!b.xong && b.quyen !== false && <button className={`nut nut-nho ${b === tiep ? "nut-chinh" : ""}`} onClick={b.mo}>{b.nhan}</button>}
             {!b.xong && b.quyen === false && <span className="mo chu-nho">{b.ma === "ho-so" && !dsDuAn.length ? "Tạo dự án trước" : "Cần tài khoản Quản trị / Lãnh đạo"}</span>}
           </li>
