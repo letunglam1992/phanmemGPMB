@@ -1,6 +1,6 @@
 [package]
 name = "gpmb-sonla"
-version = "1.0.7"
+version = "1.0.8"
 description = "Phần mềm hỗ trợ bồi thường, hỗ trợ, tái định cư – Sơn La"
 edition = "2021"
 
