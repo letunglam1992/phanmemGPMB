@@ -186,6 +186,9 @@ Gặp lỗi: bấm **"Chép chi tiết lỗi"** (nếu có), hoặc chụp màn 
 - [ ] Nạp gói chính sách thử kèm bảng đơn giá (do tác giả chuẩn bị) → dự án dùng gói → Kiểm đếm → chọn đơn giá thấy dòng của gói, ghi tên văn bản.
 - [ ] Nạp lại TD70-2026.dgn: bỏ tích "Màu theo lớp" → màu như MicroStation; bảng Cấu hình lớp có tên lớp (nếu lớp có tên); kích thước có mũi tên, chiều dài từng đoạn.
 - [ ] Dự án lớn: mở hồ sơ hộ → thẻ Văn bản khi chưa tính xong → thấy tiến độ, tự mở khi xong.
+- [ ] Bản đồ: bật Ảnh vệ tinh → tích "Nền ảnh vệ tinh" → Xuất PDF tiến độ: ảnh phủ kín khung, thửa khớp ảnh, ghi nguồn ảnh ở chú giải.
+- [ ] Bấm nút Tệp đã xuất / chuông Thông báo rồi bấm ra chỗ khác: ô tự đóng.
+- [ ] Bản đồ → Đo khoảng cách → bấm vài điểm → chuột phải: kết thúc đo; chuột phải lần nữa: về công cụ Chọn, không hiện menu.
 - [ ] Máy có dữ liệu lớn (hàng nghìn hộ): đăng nhập → Tổng quan hiện nhanh với thanh "Đang tính phương án các hộ lần đầu"; bấm được menu trong lúc tính; tính xong có đủ số liệu.
 
 ## 3. Quy trình mỗi lần sửa (để phiên mới làm đúng ngay)

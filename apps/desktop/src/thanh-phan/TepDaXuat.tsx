@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useDongKhiBamNgoai } from "./dong-khi-bam-ngoai";
 import { useUngDung } from "../ung-dung";
 import { BieuTuong } from "./BieuDo";
 import { SU_KIEN, coDuongDan, dsTepDaXuat, laBanCai, moNoiLuu, moTep, thuMucCua, xoaDsTepDaXuat, type TepDaXuat } from "../tep-da-xuat";
@@ -33,13 +34,15 @@ export function NutTepDaXuat() {
       window.clearTimeout(hen.current);
     };
   }, []);
+  const vung = useRef<HTMLDivElement>(null);
+  useDongKhiBamNgoai(vung, mo, useCallback(() => { setMo(false); window.clearTimeout(hen.current); }, []));
   const banCai = laBanCai();
   const lam = (f: (x: TepDaXuat) => Promise<void>, x: TepDaXuat) => {
     window.clearTimeout(hen.current);
     void f(x).catch((e) => bao(String((e as Error)?.message ?? e), "loi"));
   };
   return (
-    <div className="menu-nguoi">
+    <div className="menu-nguoi" ref={vung}>
       <button className="nut-tren nut-tren-bt nut-chuong" title="Tệp đã xuất (Excel, Word…)" aria-label="Tệp đã xuất" aria-expanded={mo} onClick={() => { setMo(!mo); setMoi(0); window.clearTimeout(hen.current); }}>
         <BieuTuong ten="taiVe" co={17} />
         {moi > 0 && <span className="cham-chuong xanh">{moi > 9 ? "9+" : moi}</span>}

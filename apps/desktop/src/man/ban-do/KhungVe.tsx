@@ -16,12 +16,12 @@ import { type DiemDoHienTrang, type GhiChuHienTruong, type KetQuaDoLuu, type Nho
  */
 type CongCu = "CHON" | "KEO" | "PHONG_KHUNG" | "QUET" | "DO_DAI" | "DO_DT" | "TOA_DO" | "GHI_CHU" | "KHUNG_IN";
 const CONG_CU: { ma: CongCu; ten: string; ky: string; goiY: string }[] = [
-  { ma: "CHON", ten: "Chọn, thông tin", ky: "⌖", goiY: "Bấm vào thửa / phần tử để xem thông tin (kéo để di chuyển)" },
+  { ma: "CHON", ten: "Chọn, thông tin", ky: "⌖", goiY: "Bấm vào thửa / phần tử để xem thông tin (kéo để di chuyển). Ở công cụ khác: chuột phải để kết thúc lệnh, trở về Chọn" },
   { ma: "KEO", ten: "Di chuyển", ky: "✋", goiY: "Kéo để di chuyển bản đồ" },
   { ma: "PHONG_KHUNG", ten: "Phóng theo khung", ky: "⬚", goiY: "Kéo một khung chữ nhật để phóng tới vùng đó" },
   { ma: "QUET", ten: "Chọn nhiều thửa (quét khung)", ky: "▦", goiY: "Kéo khung để chọn các thửa có tâm nằm trong khung; giữ Shift để chọn thêm" },
-  { ma: "DO_DAI", ten: "Đo khoảng cách", ky: "📏", goiY: "Bấm các điểm; bấm đúp hoặc chuột phải để kết thúc; Esc để xóa" },
-  { ma: "DO_DT", ten: "Đo diện tích", ky: "▱", goiY: "Bấm các đỉnh vùng; bấm đúp hoặc chuột phải để khép vùng; Esc để xóa" },
+  { ma: "DO_DAI", ten: "Đo khoảng cách", ky: "📏", goiY: "Bấm các điểm; bấm đúp hoặc chuột phải để kết thúc (chuột phải lần nữa: thoát lệnh); Esc để xóa" },
+  { ma: "DO_DT", ten: "Đo diện tích", ky: "▱", goiY: "Bấm các đỉnh vùng; bấm đúp hoặc chuột phải để khép vùng (chuột phải lần nữa: thoát lệnh); Esc để xóa" },
   { ma: "TOA_DO", ten: "Tọa độ điểm", ky: "⌗", goiY: "Bấm để lấy tọa độ VN-2000 của điểm (bắt đỉnh nếu bật)" },
   { ma: "KHUNG_IN", ten: "Vẽ khung in", ky: "⎙", goiY: "Kéo khung chữ nhật quanh vùng cần in → Xuất PDF tiến độ với “Phạm vi in: Khung đã vẽ”" },
   { ma: "GHI_CHU", ten: "Ghi chú hiện trường", ky: "📌", goiY: "Bấm vị trí để thêm ghi chú (vướng mắc, mộ, công trình chưa kiểm đếm…); ghi chú dạng đường: đo khoảng cách rồi bấm “Lưu làm ghi chú”" },
@@ -64,6 +64,8 @@ export interface CaiDatAnhNen {
 }
 export const ANH_NEN_MAC_DINH: CaiDatAnhNen = { bat: false, nguon: "ESRI", url: "", doMo: 1, kt: 104, mui: 3, dx: 0, dy: 0, mucToiDa: 0 };
 const KHOA_DONG_Y_ANH = "gpmb-anh-nen-dong-y";
+/** 1.0.9: cài đặt ảnh nền đã lưu của bản đồ dự án (dùng khi xuất PDF có nền ảnh vệ tinh). */
+export const docCaiDatAnhNen = (khoaLuu?: string): CaiDatAnhNen => ({ ...ANH_NEN_MAC_DINH, ...docLuu<Partial<CaiDatAnhNen>>(`gpmb-ban-do-${khoaLuu ?? "chung"}-anh-nen`, {}) });
 export const nguonAnh = (c: CaiDatAnhNen) => (c.nguon === "TUY_CHINH" ? { ma: "TUY_CHINH", ten: "Tùy chỉnh", url: c.url.trim(), ghiNguon: `Ảnh: ${(() => { try { return new URL(c.url.trim().replace(/[{}]/g, "")).host; } catch { return "nguồn tùy chỉnh"; } })()}`, mucToiDa: 20 } : NGUON_ANH_NEN.find((n) => n.ma === c.nguon) ?? NGUON_ANH_NEN[0]!);
 
 export function KhungVe(p: {
@@ -676,7 +678,13 @@ export function KhungVe(p: {
         data-cong-cu={cong}
         onContextMenu={(e) => {
           e.preventDefault();
-          if ((cong === "DO_DAI" || cong === "DO_DT") && diemDo.length) setXongDo(true);
+          // 1.0.9 — chuột phải kiểu MicroStation khi đang dùng công cụ: kết thúc lệnh, không mở menu chung.
+          // Đang đo dở → kết thúc phép đo (giữ kết quả); đang kéo khung → bỏ khung; không còn gì dở → về công cụ Chọn.
+          if (cong === "CHON") return; // công cụ Chọn: để menu chuột phải chung hiện như cũ
+          e.stopPropagation();
+          if ((cong === "DO_DAI" || cong === "DO_DT") && diemDo.length && !xongDo) setXongDo(true);
+          else if (khung) setKhung(null);
+          else doiCong("CHON");
         }}
         onMouseDown={(e) => {
           if (!nhin) return;
@@ -912,7 +920,7 @@ export function KhungVe(p: {
               <div>{cong === "DO_DT" ? "Chu vi" : "Tổng chiều dài"}: <b>{so(ketQuaDo.dai)} m</b> · {diemDo.length} điểm</div>
               {cong === "DO_DAI" && diemDo.length > 1 && <div className="mo">Đoạn cuối: {so(khoangCach(diemDo[diemDo.length - 2]!, diemDo[diemDo.length - 1]!))} m</div>}
               {cong === "DO_DT" && diemDo.length > 2 && <div>Diện tích: <b>{so(ketQuaDo.dt)} m²</b> ({so(ketQuaDo.dt / 10000, 4)} ha)</div>}
-              <div className="mo">{xongDo ? "Đã kết thúc — bấm để đo lại, Esc để xóa" : "Bấm đúp / chuột phải để kết thúc"}</div>
+              <div className="mo">{xongDo ? "Đã kết thúc — bấm để đo lại, Esc để xóa, chuột phải để thoát lệnh" : "Bấm đúp / chuột phải để kết thúc"}</div>
               {xongDo && (
                 <div className="nhom-nut" style={{ marginTop: 4 }}>
                   {p.luuVung && cong === "DO_DT" && diemDo.length > 2 && <button className="nut nut-nho nut-chinh" onClick={() => { p.luuVung!(diemDo); doiCong("CHON"); }}>Dùng làm ranh GPMB</button>}

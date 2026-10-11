@@ -72,6 +72,8 @@ Quá hạn kế hoạch; bước quá hạn theo luật (thẩm định 30 ngày
 - **Ranh GPMB có đoạn cong:** bảng tọa độ mốc thêm cột **R** (bán kính, m) ở mốc đầu cung — R dương khi cung lồi sang phải theo chiều đi tới mốc sau (bản đồ hướng Bắc lên trên), âm khi lồi sang trái; hoặc thêm dòng điểm trên cung với cột **Loại** ghi "giữa cung". Bảng kiểm tra hiện "n mốc (k cung)".
 - **Gói chính sách kèm bảng đơn giá, giá đất:** gói do đơn vị có thẩm quyền phát hành có thể kèm bảng đơn giá (ghi văn bản căn cứ) và bảng giá đất; khi nạp, hộp kiểm tra cho biết gói có kèm bảng hay không. Dự án dùng bộ chính sách đó thì hộp chọn đơn giá, chọn giá đất, nhập Excel, Kiểm tra phương án dùng bảng của gói.
 - **Bản đồ DGN V8:** bảng lớp hiện tên lớp đặt trong MicroStation (nếu tệp có); bỏ tích "Màu theo lớp" để xem màu gốc của bản vẽ; kích thước hiện mũi tên hai đầu và chiều dài từng đoạn.
+- **PDF bản đồ có ảnh vệ tinh:** bật "Ảnh vệ tinh (trực tuyến)" trên bản đồ, kiểm tra ảnh khớp thửa (chỉnh dịch Đông/Bắc nếu lệch) → tích **Nền ảnh vệ tinh** cạnh nút Xuất PDF tiến độ. Ảnh chỉ để tham khảo.
+- **Kết thúc lệnh trên bản đồ:** đang đo, vẽ khung, ghi chú… bấm **chuột phải** để kết thúc phép đo; bấm chuột phải lần nữa để thoát lệnh về công cụ Chọn. Các ô Tệp đã xuất, Thông báo tự đóng khi bấm ra ngoài hoặc nhấn Esc.
 - **Thử phần mềm trên máy thật:** Giới thiệu → **Biểu ghi kết quả thử (Excel)** → điền Đạt / Không đạt / Ghi chú từng việc rồi gửi lại tác giả.
 - **Tìm nhanh (Ctrl + K):** gõ tên, mã hộ, tờ/thửa (5/85 — đúng số tờ, số thửa), 4 số cuối số định danh, hoặc lý trình (Km1+300); Enter mở thẳng thửa tìm được.
 - **Soát phương án** (trước khi chốt): hàng tóm tắt theo quy tắc cho biết bao nhiêu hồ sơ còn vướng từng điều kiện; bấm một dòng để mở đúng thẻ, đúng thửa cần sửa.

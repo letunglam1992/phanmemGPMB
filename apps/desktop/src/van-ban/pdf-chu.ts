@@ -85,7 +85,7 @@ export function viChu(bo: BoPhong, dung: DaDung, k: KieuChu, t: string): string 
 export { kieuCua, coCua, mau as mauPdf, so as soPdf };
 
 /** Đóng gói PDF: các luồng nội dung trang, phông đã dùng (tập con), độ trong suốt (ExtGState /a{n}). */
-export async function dongGoiPdf(o: { trang: string[]; dung: DaDung; bo: BoPhong; rong: number; cao: number; tieuDe: string; doTrong?: Map<string, { ca?: number; CA?: number }> }): Promise<Uint8Array> {
+export async function dongGoiPdf(o: { trang: string[]; dung: DaDung; bo: BoPhong; rong: number; cao: number; tieuDe: string; doTrong?: Map<string, { ca?: number; CA?: number }>; anh?: { jpeg: Uint8Array; rong: number; cao: number }[] }): Promise<Uint8Array> {
   const { dung, bo } = o;
   const H = o.cao;
   const noiDung = o.trang;
@@ -122,10 +122,13 @@ export async function dongGoiPdf(o: { trang: string[]; dung: DaDung; bo: BoPhong
     font.push(`/${k} ${sType0} 0 R`);
   }
   const gs = o.doTrong?.size ? ` /ExtGState << ${[...o.doTrong].map(([ten, v]) => `/${ten} << ${v.ca !== undefined ? `/ca ${so(v.ca)}` : ""} ${v.CA !== undefined ? `/CA ${so(v.CA)}` : ""} >>`).join(" ")} >>` : "";
+  // 1.0.9: ảnh JPEG (DCTDecode, không nén lại)
+  const xo = (o.anh ?? []).map((a, i) => `/Im${i} ${them(`<< /Type /XObject /Subtype /Image /Width ${a.rong} /Height ${a.cao} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${a.jpeg.length} >>\nstream\n`, a.jpeg, "\nendstream")} 0 R`);
+  const xObj = xo.length ? ` /XObject << ${xo.join(" ")} >>` : "";
   const trang: number[] = [];
   for (const nd of noiDung) {
     const sNd = await luong("", enc.encode(nd));
-    trang.push(them(`<< /Type /Page /Parent ${soPages} 0 R /MediaBox [0 0 ${so(bc.rong)} ${so(H)}] /Resources << /Font << ${font.join(" ")} >>${gs} >> /Contents ${sNd} 0 R >>`));
+    trang.push(them(`<< /Type /Page /Parent ${soPages} 0 R /MediaBox [0 0 ${so(bc.rong)} ${so(H)}] /Resources << /Font << ${font.join(" ")} >>${gs}${xObj} >> /Contents ${sNd} 0 R >>`));
   }
   obj[soCatalog - 1] = ["<< /Type /Catalog /Pages 2 0 R >>"];
   obj[soPages - 1] = [`<< /Type /Pages /Kids [${trang.map((t) => `${t} 0 R`).join(" ")}] /Count ${trang.length} >>`];

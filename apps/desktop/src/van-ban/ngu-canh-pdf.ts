@@ -22,6 +22,8 @@ export class NguCanhPdf {
   private s: TrangThai = { fillStyle: "#000", strokeStyle: "#000", lineWidth: 1, font: '10px "Times New Roman", serif', textAlign: "start", textBaseline: "alphabetic", dash: [] };
   readonly dung: DaDung = new Map();
   readonly doTrong = new Map<string, { ca?: number; CA?: number }>();
+  /** 1.0.9: ảnh JPEG nhúng (XObject /Im{i}) */
+  readonly anh: { jpeg: Uint8Array; rong: number; cao: number }[] = [];
   private doChu: (t: string, f: string) => number;
   constructor(private bo: BoPhong, readonly rong: number, readonly cao: number) {
     this.doChu = doChuPhong(bo);
@@ -92,6 +94,12 @@ export class NguCanhPdf {
   }
   fillRect(x: number, y: number, w: number, h: number) { this.ops.push(`${this.to()} ${so(x)} ${this.y(y + h)} ${so(w)} ${so(h)} re f`); }
   strokeRect(x: number, y: number, w: number, h: number) { this.ops.push(`${this.net()} ${so(x)} ${this.y(y + h)} ${so(w)} ${so(h)} re S`); }
+  /** Vẽ ảnh JPEG (DCTDecode) vào hình chữ nhật x, y, w, h (pt, gốc trên-trái). */
+  veAnhJpeg(jpeg: Uint8Array, rongPx: number, caoPx: number, x: number, y: number, w: number, h: number) {
+    this.anh.push({ jpeg, rong: rongPx, cao: caoPx });
+    this.ops.push(`q /a_ca100 gs ${so(w)} 0 0 ${so(h)} ${so(x)} ${this.y(y + h)} cm /Im${this.anh.length - 1} Do Q`);
+    if (!this.doTrong.has("a_ca100")) this.doTrong.set("a_ca100", { ca: 1 });
+  }
   // ---- chữ
   measureText(t: string) { return { width: this.doChu(t, this.s.font) } as TextMetrics; }
   fillText(t: string, x: number, y: number) {

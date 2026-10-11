@@ -14,11 +14,12 @@ import { type DuLieuBanDo, boNho, layDem, TEN_CO, phanTich, dungLai, khoaNapBanD
 import { TheThuaXoa } from "./ban-do/ThuaXoa";
 import { HopCachGanLop, HopCauHinhLop } from "./ban-do/CauHinhLop";
 import { TomTatThuHoi, KiemTraBanDo, ChiTietThua } from "./ban-do/KiemTra";
-import { KhungVe } from "./ban-do/KhungVe";
+import { KhungVe, docCaiDatAnhNen, nguonAnh } from "./ban-do/KhungVe";
+import { dungAnhNenIn } from "./ban-do/anh-nen-in";
 import { HopTaoHo } from "./ban-do/TaoHo";
 import { HopCapNhatDt, TheConLai, TheRanhNhap } from "./ban-do/RanhGpmb";
 import { TheVungChon, TimThua, TomTatHo } from "./ban-do/VungChon";
-import { xuatPdfBanDo, type KhoGiay } from "./ban-do/xuat-pdf";
+import { phamViKhung, xuatPdfBanDo, KHO_GIAY, type KhoGiay, type NoiDungIn } from "./ban-do/xuat-pdf";
 import { HopGhiChu, HopSoSanh, HopTepGhep, MAU_SO_SANH, TheDiemDo, TheGhiChu, TheKetQuaDo, taoKetQuaDo } from "./ban-do/LopPhu";
 import type { SoSanhThua } from "@gpmb/gis";
 import { taiXuong } from "../tai-xuong";
@@ -66,6 +67,8 @@ export function BanDo({ duAnId }: { duAnId: string }) {
   const [soSanh, setSoSanh] = useState<{ tep: string; ds: SoSanhThua[] } | null>(null);
   const [khoGiay, setKhoGiay] = useState<KhoGiay>("A3");
   const [phamViIn, setPhamViIn] = useState<"RANH" | "KHUNG" | "VE">("RANH");
+  // 1.0.9: PDF có nền ảnh vệ tinh (dùng nguồn ảnh, kinh tuyến trục, độ dịch đã chỉnh ở mục Ảnh vệ tinh của bản đồ)
+  const [nenVeTinh, setNenVeTinh] = useState(false);
   const [khungIn, setKhungIn] = useState<{ minX: number; minY: number; maxX: number; maxY: number } | null>(null);
   const khungNhin = useRef<{ minX: number; minY: number; maxX: number; maxY: number } | null>(null);
   const [dangPdf, setDangPdf] = useState(false);
@@ -322,11 +325,21 @@ export function BanDo({ duAnId }: { duAnId: string }) {
               <Chon value={khoGiay} onChange={(e) => setKhoGiay(e.target.value as KhoGiay)} aria-label="Khổ giấy PDF"><option value="A3">A3 ngang</option><option value="A4">A4 ngang</option></Chon>
               <Chon value={phamViIn} onChange={(e) => setPhamViIn(e.target.value as "RANH" | "KHUNG" | "VE")} aria-label="Phạm vi in" title="Theo ranh thu hồi (mặc định), đúng khung đang xem, hoặc khung vẽ bằng công cụ “Vẽ khung in” (⎙) trên thanh công cụ bản đồ"><option value="RANH">Theo ranh thu hồi</option><option value="KHUNG">Khung đang xem</option><option value="VE" disabled={!khungIn}>Khung đã vẽ{khungIn ? "" : " (chưa vẽ)"}</option></Chon>
               {khungIn && <button className="nut nut-chu nut-nho" title="Bỏ khung in đã vẽ" onClick={() => { setKhungIn(null); if (phamViIn === "VE") setPhamViIn("RANH"); }}>Bỏ khung in</button>}
+              <label className="chu-nho" title="Dùng ảnh vệ tinh trực tuyến làm nền bản in (nguồn, kinh tuyến trục, độ dịch theo mục “Ảnh vệ tinh” trong bảng lớp bản đồ) — cần Internet; chỉ gửi số hiệu ô ảnh"><input type="checkbox" aria-label="Nền ảnh vệ tinh khi xuất PDF" checked={nenVeTinh} onChange={(e) => setNenVeTinh(e.target.checked)} /> Nền ảnh vệ tinh</label>
               <button className="nut" disabled={dangPdf} title="Bản đồ tiến độ GPMB tô màu theo hiện trạng hồ sơ, có khung, chú giải, tỷ lệ — dùng báo cáo, họp (không phải trích lục thửa)" onClick={async () => {
                 setDangPdf(true);
                 try {
-                  const pdf = await xuatPdfBanDo({ dl, tieuDe: "BẢN ĐỒ TIẾN ĐỘ BỒI THƯỜNG, GIẢI PHÓNG MẶT BẰNG", phuDe: `Dự án: ${duAn.ten} — ${duAn.xa}`, ttThua, thuHoi, khoaThua, ranh: [...vungDs.map((v) => v.vong), ...ranhVe], ngay: new Date().toLocaleDateString("vi-VN"), phamVi: phamViIn === "KHUNG" ? (khungNhin.current ?? undefined) : phamViIn === "VE" ? (khungIn ?? undefined) : undefined }, khoGiay);
-                  if (await taiXuong(pdf, `Ban-do-tien-do_${tenTep(duAn.ten, 60)}_${khoGiay}${phamViIn !== "RANH" ? "_vung-chon" : ""}.pdf`, "application/pdf")) bao("Đã xuất PDF bản đồ tiến độ");
+                  const nd: NoiDungIn = { dl, tieuDe: "BẢN ĐỒ TIẾN ĐỘ BỒI THƯỜNG, GIẢI PHÓNG MẶT BẰNG", phuDe: `Dự án: ${duAn.ten} — ${duAn.xa}`, ttThua, thuHoi, khoaThua, ranh: [...vungDs.map((v) => v.vong), ...ranhVe], ngay: new Date().toLocaleDateString("vi-VN"), phamVi: phamViIn === "KHUNG" ? (khungNhin.current ?? undefined) : phamViIn === "VE" ? (khungIn ?? undefined) : undefined };
+                  if (nenVeTinh) {
+                    const c = docCaiDatAnhNen(duAnId);
+                    // Chỉ dùng khi đã bật ảnh vệ tinh trên bản đồ (đã đồng ý dùng ảnh trực tuyến, đã chỉnh khớp)
+                    if (!c.bat) throw new Error("Bật “Ảnh vệ tinh (trực tuyến)” trên bản đồ, kiểm tra ảnh khớp thửa, rồi xuất lại");
+                    const ng = nguonAnh(c);
+                    nd.anhNen = await dungAnhNenIn(phamViKhung(nd, KHO_GIAY[khoGiay]), { url: ng.url, ghiNguon: ng.ghiNguon, mucToiDa: c.mucToiDa ? Math.min(c.mucToiDa, ng.mucToiDa) : ng.mucToiDa, he: { kinhTuyenTruc: c.kt, mui: c.mui }, dx: c.dx, dy: c.dy, doMo: c.doMo });
+                    if (nd.anhNen.soThieu) bao(`${nd.anhNen.soThieu}/${nd.anhNen.soO} ô ảnh không tải được — để trắng`, "loi");
+                  }
+                  const pdf = await xuatPdfBanDo(nd, khoGiay);
+                  if (await taiXuong(pdf, `Ban-do-tien-do_${tenTep(duAn.ten, 60)}_${khoGiay}${phamViIn !== "RANH" ? "_vung-chon" : ""}${nd.anhNen ? "_ve-tinh" : ""}.pdf`, "application/pdf")) bao("Đã xuất PDF bản đồ tiến độ");
                 } catch (e) {
                   bao((e as Error).message, "loi");
                 } finally {

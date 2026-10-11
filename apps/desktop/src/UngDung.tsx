@@ -6,7 +6,8 @@ import { TuDongGuiTinh } from "./thanh-phan/TuDongGuiTinh";
 import { TheoDoiGoiTinh } from "./thanh-phan/TheoDoiGoiTinh";
 import { TongHopTinh } from "./man/TongHopTinh";
 import { NguoiCoDat } from "./man/NguoiCoDat";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useDongKhiBamNgoai } from "./thanh-phan/dong-khi-bam-ngoai";
 import { SU_KIEN_DA_XEM_VIEC, hoMoiGiao } from "./phan-cong";
 import { useUngDung } from "./ung-dung";
 import { TongQuan } from "./man/TongQuan";
@@ -47,6 +48,11 @@ export function UngDung() {
   const { chiXem, man, di, dsDuAn, hopSaoLuu, moSaoLuu, taiKhoan, quyen, dangXuat, hopCaiDat, moCaiDat, quayLai, coTheQuayLai, dsDonVi, anhNen, taiLai, bao, ghiNhatKy, thungRac, hoCua } = useUngDung();
   const [menu, setMenu] = useState(false);
   const [chuong, setChuong] = useState(false);
+  // 1.0.9: bấm ra ngoài, nhấn Esc thì đóng ô Thông báo, menu tài khoản
+  const vungChuong = useRef<HTMLDivElement>(null);
+  const vungMenu = useRef<HTMLDivElement>(null);
+  useDongKhiBamNgoai(vungChuong, chuong, useCallback(() => setChuong(false), []));
+  useDongKhiBamNgoai(vungMenu, menu, useCallback(() => setMenu(false), []));
   const [benGon, setBenGon] = useState(() => {
     try {
       return localStorage.getItem("gpmb-ben-gon") === "1";
@@ -219,7 +225,7 @@ export function UngDung() {
               <BieuTuong ten={giaoDien === "toi" ? "sang" : "toi"} co={17} />
             </button>
             <NutTepDaXuat />
-            <div className="menu-nguoi">
+            <div className="menu-nguoi" ref={vungChuong}>
               <button className="nut-tren nut-tren-bt nut-chuong" title={`${canhBao.length} cảnh báo, việc cần theo dõi`} aria-label="Thông báo" aria-expanded={chuong} onClick={() => setChuong(!chuong)}>
                 <BieuTuong ten="chuong" co={17} />
                 {canhBao.length > 0 && <span className={`cham-chuong ${cao.length ? "" : "vang"}`}>{canhBao.length > 99 ? "99+" : canhBao.length}</span>}
@@ -239,7 +245,7 @@ export function UngDung() {
                 </div>
               )}
             </div>
-            <div className="menu-nguoi">
+            <div className="menu-nguoi" ref={vungMenu}>
               <button className="nut-tren nut-nguoi" aria-haspopup="menu" aria-expanded={menu} title={`${taiKhoan.hoTen} · ${TEN_VAI_TRO[taiKhoan.vaiTro]}`} onClick={() => setMenu(!menu)}>
                 <span className="anh-dai-dien" aria-hidden>{vietTat || <BieuTuong ten="taiKhoan" co={15} />}</span> <span className="ten-nguoi">{taiKhoan.hoTen} · {TEN_VAI_TRO[taiKhoan.vaiTro]}</span> <BieuTuong ten="xuong" co={14} />
               </button>

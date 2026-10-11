@@ -7,6 +7,7 @@ import type { DienTichThuHoi, Diem, ThuaBanDo } from "@gpmb/gis";
 import { THU_TU_TRANG_THAI, TT_GPMB, type TrangThaiGpmb } from "../../trang-thai";
 import type { DuLieuBanDo } from "./du-lieu";
 import { NguCanhPdf } from "../../van-ban/ngu-canh-pdf";
+import type { AnhNenIn } from "./anh-nen-in";
 import { dongGoiPdf, napPhong, type BoPhong } from "../../van-ban/pdf-chu";
 
 export const KHO_GIAY = { A4: { w: 297, h: 210 }, A3: { w: 420, h: 297 } } as const;
@@ -68,6 +69,39 @@ export interface NoiDungIn {
   ngay: string;
   /** 1.0.7: in theo vùng chọn (khung đang xem trên bản đồ, tọa độ VN-2000) — không có: theo ranh thu hồi / cả bản đồ. */
   phamVi?: { minX: number; minY: number; maxX: number; maxY: number };
+  /** 1.0.9: ảnh vệ tinh làm nền (dựng bằng dungAnhNenIn cho đúng phamViTrang(n)) */
+  anhNen?: AnhNenIn;
+}
+
+/** Phạm vi bản đồ (VN-2000) của trang in: vùng chọn, không thì thửa trong ranh + ranh (nới 6%), không thì cả bản đồ. */
+export function phamViTrang(n: NoiDungIn): { minX: number; minY: number; maxX: number; maxY: number } {
+  if (n.phamVi && n.phamVi.maxX > n.phamVi.minX && n.phamVi.maxY > n.phamVi.minY) return { ...n.phamVi };
+  const trong = n.dl.kq.thua.filter((t) => (n.thuHoi.get(n.khoaThua(t))?.phamVi ?? "NGOAI") !== "NGOAI");
+  const dsPham = trong.length ? trong : n.dl.kq.thua;
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const t of dsPham) for (const d of t.vong[0] ?? []) (minX = Math.min(minX, d.x)), (maxX = Math.max(maxX, d.x)), (minY = Math.min(minY, d.y)), (maxY = Math.max(maxY, d.y));
+  for (const r of n.ranh) for (const d of r[0] ?? []) (minX = Math.min(minX, d.x)), (maxX = Math.max(maxX, d.x)), (minY = Math.min(minY, d.y)), (maxY = Math.max(maxY, d.y));
+  if (!Number.isFinite(minX)) ({ minX, minY, maxX, maxY } = n.dl.pham);
+  const le = Math.max(maxX - minX, maxY - minY) * 0.06 + 5;
+  return { minX: minX - le, minY: minY - le, maxX: maxX + le, maxY: maxY + le };
+}
+
+/** Khung bản đồ trên trang (mm): từ trái 14, trên 32; chừa cột chú giải 84 mm bên phải, 20 mm dưới. */
+const khungMm = (kho: { w: number; h: number }) => ({ x: 14, y: 32, w: kho.w - 14 - 84, h: kho.h - 32 - 20 });
+
+/** Phạm vi (VN-2000) phủ trọn khung bản đồ của trang — phamViTrang nới theo tỷ lệ khung (dựng ảnh nền phủ kín khung). */
+export function phamViKhung(n: NoiDungIn, kho: { w: number; h: number }) {
+  const pv = phamViTrang(n), k = khungMm(kho);
+  const tl = Math.min(k.w / (pv.maxX - pv.minX), k.h / (pv.maxY - pv.minY)); // mm / m
+  const cx = (pv.minX + pv.maxX) / 2, cy = (pv.minY + pv.maxY) / 2, nw = k.w / tl / 2, nh = k.h / tl / 2;
+  return { minX: cx - nw, maxX: cx + nw, minY: cy - nh, maxY: cy + nh };
+}
+
+/** Vẽ ảnh JPEG: bộ ghi PDF nhúng thẳng JPEG (veAnhJpeg), canvas trình duyệt vẽ từ canvas nguồn. */
+function veAnh(ctx: CanvasRenderingContext2D, a: AnhNenIn, x: number, y: number, w: number, h: number) {
+  const pdf = ctx as unknown as { veAnhJpeg?: (j: Uint8Array, rp: number, cp: number, x: number, y: number, w: number, h: number) => void };
+  if (pdf.veAnhJpeg) pdf.veAnhJpeg(a.jpeg, a.rongPx, a.caoPx, x, y, w, h);
+  else ctx.drawImage(a.canvas, x, y, w, h);
 }
 
 /** Hộp bao vòng ngoài của thửa có giao với phạm vi in không. */
@@ -98,17 +132,10 @@ export function veTrangBanDo(ctx: CanvasRenderingContext2D, pxMm: number, kho: {
   ctx.font = `${mm(4)}px "Times New Roman", serif`;
   ctx.fillText(n.phuDe, W / 2, mm(27));
   // Vùng bản đồ: từ y = 32 mm đến H − 14 mm; chú giải cột phải rộng 70 mm
-  const khung = { x: mm(14), y: mm(32), w: W - mm(14) - mm(84), h: H - mm(32) - mm(20) };
-  const trong = n.dl.kq.thua.filter((t) => (n.thuHoi.get(n.khoaThua(t))?.phamVi ?? "NGOAI") !== "NGOAI");
-  const dsPham = trong.length ? trong : n.dl.kq.thua;
-  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-  for (const t of dsPham) for (const d of t.vong[0] ?? []) (minX = Math.min(minX, d.x)), (maxX = Math.max(maxX, d.x)), (minY = Math.min(minY, d.y)), (maxY = Math.max(maxY, d.y));
-  for (const r of n.ranh) for (const d of r[0] ?? []) (minX = Math.min(minX, d.x)), (maxX = Math.max(maxX, d.x)), (minY = Math.min(minY, d.y)), (maxY = Math.max(maxY, d.y));
-  if (!Number.isFinite(minX)) ({ minX, minY, maxX, maxY } = n.dl.pham);
-  const le = Math.max(maxX - minX, maxY - minY) * 0.06 + 5;
-  minX -= le; maxX += le; minY -= le; maxY += le;
-  if (n.phamVi && n.phamVi.maxX > n.phamVi.minX && n.phamVi.maxY > n.phamVi.minY) ({ minX, minY, maxX, maxY } = n.phamVi);
-  const pv = { minX, minY, maxX, maxY };
+  const km = khungMm(kho);
+  const khung = { x: mm(km.x), y: mm(km.y), w: mm(km.w), h: mm(km.h) };
+  const pv = phamViTrang(n);
+  const { minX, minY, maxX, maxY } = pv;
   // thửa có phần nằm trong phạm vi in (đếm chú giải, vẽ) — in theo vùng chọn thì chỉ đếm thửa trong khung
   const thuaIn = n.dl.kq.thua.filter((t) => giaoPham(t.vong[0], pv));
   const tyLe = Math.min(khung.w / (maxX - minX), khung.h / (maxY - minY)); // px / m
@@ -119,9 +146,12 @@ export function veTrangBanDo(ctx: CanvasRenderingContext2D, pxMm: number, kho: {
   ctx.rect(khung.x, khung.y, khung.w, khung.h);
   ctx.clip();
   const duong = (v: Diem[]) => v.forEach((d, i) => (i ? ctx.lineTo(sx(d.x), sy(d.y)) : ctx.moveTo(sx(d.x), sy(d.y))));
+  // 1.0.9: ảnh vệ tinh dưới lưới và thửa (ảnh dựng cho đúng phạm vi in)
+  const a = n.anhNen;
+  if (a) veAnh(ctx, a, sx(a.phamVi.minX), sy(a.phamVi.maxY), (a.phamVi.maxX - a.phamVi.minX) * tyLe, (a.phamVi.maxY - a.phamVi.minY) * tyLe);
   // 1.0.6: lưới tọa độ VN-2000 (dưới lớp thửa) — đường dọc theo tọa độ Y (Đông), đường ngang theo tọa độ X (Bắc)
   const buocLuoi = doDaiThuoc(Math.max(maxX - minX, maxY - minY) / 5);
-  ctx.strokeStyle = "rgba(60,90,140,0.35)";
+  ctx.strokeStyle = a ? "rgba(255,255,255,0.55)" : "rgba(60,90,140,0.35)";
   ctx.lineWidth = Math.max(0.5, mm(0.1));
   for (let gx = Math.ceil(minX / buocLuoi) * buocLuoi; gx <= maxX; gx += buocLuoi) { ctx.beginPath(); ctx.moveTo(sx(gx), khung.y); ctx.lineTo(sx(gx), khung.y + khung.h); ctx.stroke(); }
   for (let gy = Math.ceil(minY / buocLuoi) * buocLuoi; gy <= maxY; gy += buocLuoi) { ctx.beginPath(); ctx.moveTo(khung.x, sy(gy)); ctx.lineTo(khung.x + khung.w, sy(gy)); ctx.stroke(); }
@@ -141,8 +171,8 @@ export function veTrangBanDo(ctx: CanvasRenderingContext2D, pxMm: number, kho: {
       ctx.fill("evenodd");
       chuaHoSo++;
     }
-    ctx.strokeStyle = "#555";
-    ctx.lineWidth = Math.max(1, mm(0.15));
+    ctx.strokeStyle = a ? "#ffe680" : "#555";
+    ctx.lineWidth = Math.max(1, mm(a ? 0.25 : 0.15));
     ctx.stroke();
   }
   ctx.strokeStyle = "#d0021b";
@@ -154,10 +184,18 @@ export function veTrangBanDo(ctx: CanvasRenderingContext2D, pxMm: number, kho: {
   ctx.font = `${mm(2.4)}px Arial, sans-serif`;
   for (const t of thuaIn) {
     if (Math.sqrt(t.dienTichHinhHoc) * tyLe < mm(6)) continue;
-    ctx.fillText(`${t.soThua ?? "?"}`, sx(t.tamNhan.x), sy(t.tamNhan.y));
+    const nhan = `${t.soThua ?? "?"}`;
+    if (a) {
+      // trên ảnh vệ tinh: nền trắng mờ sau số thửa để đọc được
+      const w = ctx.measureText(nhan).width + mm(1.2);
+      ctx.fillStyle = "rgba(255,255,255,0.8)";
+      ctx.fillRect(sx(t.tamNhan.x) - w / 2, sy(t.tamNhan.y) - mm(2.3), w, mm(3));
+      ctx.fillStyle = "#111";
+    }
+    ctx.fillText(nhan, sx(t.tamNhan.x), sy(t.tamNhan.y));
   }
   // nhãn lưới (trong khung, sát mép trên và mép trái)
-  ctx.fillStyle = "rgba(40,70,120,0.9)";
+  ctx.fillStyle = a ? "#ffffff" : "rgba(40,70,120,0.9)";
   ctx.font = `${mm(2.2)}px "Times New Roman", serif`;
   ctx.textAlign = "center";
   for (let gx = Math.ceil(minX / buocLuoi) * buocLuoi; gx <= maxX; gx += buocLuoi) if (sx(gx) > khung.x + mm(12)) ctx.fillText(`Y ${Math.round(gx).toLocaleString("vi-VN")}`, sx(gx), khung.y + mm(3));
@@ -228,6 +266,16 @@ export function veTrangBanDo(ctx: CanvasRenderingContext2D, pxMm: number, kho: {
   ctx.font = `bold ${mm(4)}px Arial, sans-serif`;
   ctx.textAlign = "center";
   ctx.fillText("B", ax, ay - mm(9.5));
+  if (a) {
+    // ghi nguồn ảnh nền (điều khoản sử dụng của nguồn ảnh)
+    ctx.textAlign = "left";
+    ctx.font = `italic ${mm(2.8)}px "Times New Roman", serif`;
+    let yy = ay + mm(12);
+    for (const dong of ["Nền ảnh vệ tinh — chỉ để tham khảo,", "có thể lệch so với bản đồ địa chính.", a.ghiNguon]) {
+      ctx.fillText(dong, cx, yy);
+      yy += mm(4);
+    }
+  }
   // Chân trang
   ctx.textAlign = "left";
   ctx.font = `italic ${mm(2.8)}px "Times New Roman", serif`;
@@ -245,7 +293,7 @@ export async function xuatPdfBanDo(n: NoiDungIn, kho: KhoGiay, bo?: BoPhong): Pr
     const pt = 72 / 25.4;
     const ctx = new NguCanhPdf(phong, k.w * pt, k.h * pt);
     veTrangBanDo(ctx as unknown as CanvasRenderingContext2D, pt, k, n);
-    return await dongGoiPdf({ trang: [ctx.noiDung], dung: ctx.dung, bo: phong, rong: ctx.rong, cao: ctx.cao, tieuDe: n.tieuDe, doTrong: ctx.doTrong });
+    return await dongGoiPdf({ trang: [ctx.noiDung], dung: ctx.dung, bo: phong, rong: ctx.rong, cao: ctx.cao, tieuDe: n.tieuDe, doTrong: ctx.doTrong, anh: ctx.anh });
   } catch {
     return xuatPdfBanDoAnh(n, kho);
   }
