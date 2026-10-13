@@ -23,6 +23,8 @@ test("cấp mã bằng trang công cụ: mã hợp lệ với khóa công khai t
   await p.locator("#soDuAn").fill("4");
   await p.locator("#hetHan").fill("2027-06-30");
   await p.locator("#cap").click();
+  // ký bất đồng bộ — chờ mã hiện ra rồi mới đọc
+  await expect(p.locator("#ketQua")).toHaveValue(/^GPMB1\./);
   const ma = await p.locator("#ketQua").inputValue();
   const nd = await docGiayPhep(ma, cong);
   expect(nd).toMatchObject({ v: 1, donVi: "UBND xã Thử", maCaiDat: "ABCD-EFGH-JKMN-PQRS", soDuAn: 4, hetHan: "2027-06-30" });
