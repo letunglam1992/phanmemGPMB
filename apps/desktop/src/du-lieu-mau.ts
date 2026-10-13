@@ -11,6 +11,7 @@ const cay = (thuaId: string, ten: string, soLuong: string, donGia: string, matDo
 export function taoDuAnMau(): { duAn: DuAn; ho: Ho[] } {
   const duAn: DuAn = {
     id: taoId(),
+    mau: true,
     ten: "Dự án mẫu – Khu công nghiệp (dữ liệu ẩn danh)",
     xa: "Xã Chiềng Mung",
     chuDauTu: "Chủ đầu tư mẫu",

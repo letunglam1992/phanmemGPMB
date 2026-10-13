@@ -58,3 +58,13 @@ Xem docs/11. Tóm tắt: máy chủ đặt IP tĩnh, bật phần mềm trong gi
   3. Khi đổi mật khẩu khôi phục hoặc thay đổi cán bộ quản trị: lập biên bản bàn giao; **giữ lại mật khẩu cũ** cùng các bản sao lưu cũ (bản cũ chỉ mở được bằng mật khẩu cũ).
   4. Quên cả mật khẩu sao lưu lẫn mật khẩu khôi phục thì **không mở được tệp** — không có cách phục hồi.
 - Tệp phiên bản cũ (không mã hóa) vẫn khôi phục được; sau khi khôi phục nên xóa tệp cũ và tạo lại bản sao lưu mã hóa.
+
+## Bản dùng thử, cấp mã kích hoạt (1.0.10)
+
+- Chưa kích hoạt: dùng đủ chức năng với **1 dự án** (dự án mẫu ẩn danh, dự án trong thùng rác không tính).
+- Mỗi máy (hoặc máy chủ mạng nội bộ) có **Mã cài đặt** (Giới thiệu, bản quyền → Bản quyền sử dụng). Mã này không đi theo bản sao lưu: chuyển sang máy mới thì máy mới có mã khác, cần cấp mã kích hoạt mới.
+- **Tác giả cấp mã:** mở `tools/giay-phep/cap-ma.html` bằng trình duyệt (chạy trên máy, không gửi gì ra ngoài) → chọn tệp khóa riêng `gpmb-khoa-cap-ma.json` → nhập tên đơn vị, mã cài đặt, số dự án (trống = không giới hạn), hạn dùng (trống = không thời hạn) → "Cấp mã kích hoạt" → gửi mã `GPMB1.…` cho đơn vị.
+- **Đơn vị kích hoạt:** tài khoản Quản trị dán mã vào ô "Mã kích hoạt" → Kích hoạt (ghi nhật ký hệ thống).
+- Hết hạn: dự án đã có vẫn xem, sửa, xuất; chỉ không thêm dự án vượt mức dùng thử. Gia hạn: cấp mã mới (cùng mã cài đặt), dán đè.
+- **Giữ bí mật tệp khóa riêng**; mất hoặc lộ: tạo cặp khóa mới ở trang công cụ, thay khóa công khai trong `apps/desktop/src/giay-phep-khoa.ts`, phát hành bản mới, cấp lại mã cho các đơn vị.
+

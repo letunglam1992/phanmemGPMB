@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cấp mã kích hoạt GPMB Sơn La</title>
+<style>
+  :root { --nen: #f6f7f6; --mat: #fff; --chu: #1d2622; --mo: #5b6a63; --chinh: #1f6b4f; --do: #b42318; --vien: #d7ddd9; }
+  body { margin: 0; background: var(--nen); color: var(--chu); font: 15px/1.5 "Segoe UI", system-ui, sans-serif; }
+  main { max-width: 720px; margin: 24px auto; padding: 0 16px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .the { background: var(--mat); border: 1px solid var(--vien); border-radius: 10px; padding: 16px; margin: 16px 0; }
+  label { display: block; font-weight: 600; margin: 10px 0 4px; }
+  input, textarea { width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid var(--vien); border-radius: 6px; font: inherit; }
+  textarea { font-family: Consolas, monospace; font-size: 13px; min-height: 90px; }
+  button { background: var(--chinh); color: #fff; border: 0; border-radius: 6px; padding: 9px 16px; font: inherit; font-weight: 600; cursor: pointer; margin-top: 12px; }
+  button.phu { background: #e8eeeb; color: var(--chu); }
+  .mo { color: var(--mo); font-size: 13px; }
+  .loi { color: var(--do); font-weight: 600; }
+  .hang { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 560px) { .hang { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Cấp mã kích hoạt — Phần mềm GPMB Sơn La</h1>
+  <div class="mo">Trang chạy hoàn toàn trên máy này (không gửi gì ra Internet). Giữ tệp khóa riêng bí mật; không gửi tệp khóa cho đơn vị.</div>
+
+  <div class="the">
+    <label for="tep">1. Tệp khóa riêng (gpmb-khoa-cap-ma.json)</label>
+    <input id="tep" type="file" accept=".json">
+    <div id="ttKhoa" class="mo">Chưa chọn tệp khóa.</div>
+  </div>
+
+  <div class="the">
+    <label for="donVi">2. Tên đơn vị được cấp</label>
+    <input id="donVi" placeholder="vd. Ban Quản lý dự án đầu tư xây dựng khu vực …">
+    <label for="maCaiDat">Mã cài đặt (đơn vị gửi — xem ở Giới thiệu, bản quyền)</label>
+    <input id="maCaiDat" placeholder="XXXX-XXXX-XXXX-XXXX">
+    <div class="hang">
+      <div>
+        <label for="soDuAn">Số dự án tối đa</label>
+        <input id="soDuAn" type="number" min="1" placeholder="để trống = không giới hạn">
+      </div>
+      <div>
+        <label for="hetHan">Hạn dùng</label>
+        <input id="hetHan" type="date">
+        <div class="mo">Để trống = không thời hạn</div>
+      </div>
+    </div>
+    <button id="cap">Cấp mã kích hoạt</button>
+    <div id="loi" class="loi"></div>
+  </div>
+
+  <div class="the">
+    <label for="ketQua">3. Mã kích hoạt — gửi cho đơn vị (dán vào ô "Mã kích hoạt" ở Giới thiệu, bản quyền)</label>
+    <textarea id="ketQua" readonly></textarea>
+    <button id="chep" class="phu">Chép mã</button>
+  </div>
+
+  <div class="the">
+    <b>Tạo cặp khóa mới</b> <span class="mo">(chỉ khi mất hoặc lộ khóa riêng — phải thay khóa công khai trong <code>apps/desktop/src/giay-phep-khoa.ts</code> và phát hành bản mới; mã đã cấp bằng khóa cũ hết hiệu lực)</span><br>
+    <button id="taoKhoa" class="phu">Tạo cặp khóa mới</button>
+    <textarea id="khoaCong" readonly placeholder="Khóa công khai sẽ hiện ở đây"></textarea>
+  </div>
+</main>
+<script>
+  // Cùng định dạng với apps/desktop/src/giay-phep.ts: GPMB1.<base64url(JSON)>.<base64url(chữ ký ECDSA P-256 SHA-256)>
+  const $ = (id) => document.getElementById(id);
+  const b64u = (b) => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  let khoa = null;
+  $("tep").onchange = async (e) => {
+    $("ttKhoa").textContent = "";
+    try {
+      const j = JSON.parse(await e.target.files[0].text());
+      const { ghiChu, ...jwk } = j;
+      khoa = await crypto.subtle.importKey("jwk", jwk, { name: "ECDSA", namedCurve: "P-256" }, false, ["sign"]);
+      $("ttKhoa").textContent = "Đã nạp khóa riêng.";
+    } catch (er) {
+      khoa = null;
+      $("ttKhoa").innerHTML = '<span class="loi">Tệp không phải khóa riêng hợp lệ.</span>';
+    }
+  };
+  $("cap").onclick = async () => {
+    $("loi").textContent = "";
+    $("ketQua").value = "";
+    const donVi = $("donVi").value.trim();
+    const maCaiDat = $("maCaiDat").value.trim().toUpperCase();
+    const so = $("soDuAn").value.trim();
+    if (!khoa) return ($("loi").textContent = "Chưa nạp tệp khóa riêng.");
+    if (!donVi) return ($("loi").textContent = "Chưa nhập tên đơn vị.");
+    if (!/^[A-Z0-9]{4}(-?[A-Z0-9]{4}){3}$/.test(maCaiDat)) return ($("loi").textContent = "Mã cài đặt phải có 16 ký tự (dạng XXXX-XXXX-XXXX-XXXX).");
+    if (so && !(Number.isInteger(Number(so)) && Number(so) >= 1)) return ($("loi").textContent = "Số dự án phải là số nguyên ≥ 1 (hoặc để trống).");
+    const nd = { v: 1, donVi, maCaiDat, soDuAn: so ? Number(so) : null, hetHan: $("hetHan").value || null, cap: new Date().toISOString().slice(0, 10) };
+    const than = new TextEncoder().encode(JSON.stringify(nd));
+    const ky = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, khoa, than);
+    $("ketQua").value = `GPMB1.${b64u(than)}.${b64u(ky)}`;
+  };
+  $("chep").onclick = () => navigator.clipboard.writeText($("ketQua").value);
+  $("taoKhoa").onclick = async () => {
+    if (!confirm("Tạo cặp khóa mới? Mã kích hoạt đã cấp bằng khóa cũ sẽ không dùng được với bản phần mềm dùng khóa mới.")) return;
+    const k = await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"]);
+    const rieng = await crypto.subtle.exportKey("jwk", k.privateKey);
+    const cong = await crypto.subtle.exportKey("jwk", k.publicKey);
+    const tep = new Blob([JSON.stringify({ ghiChu: "Khóa riêng cấp mã kích hoạt GPMB Sơn La — GIỮ BÍ MẬT", ...rieng }, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(tep);
+    a.download = "gpmb-khoa-cap-ma.json";
+    a.click();
+    $("khoaCong").value = JSON.stringify({ kty: cong.kty, crv: cong.crv, x: cong.x, y: cong.y }, null, 2);
+  };
+</script>
+</body>
+</html>

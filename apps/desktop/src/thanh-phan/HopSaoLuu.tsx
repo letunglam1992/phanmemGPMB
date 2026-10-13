@@ -13,7 +13,7 @@ const ngayGio = (iso: string) => new Date(iso).toLocaleString("vi-VN", { hour12:
 
 /** Hộp thoại sao lưu, khôi phục dữ liệu. Tệp chỉ tạo/đọc trên máy, không gửi ra ngoài. */
 export function HopSaoLuu() {
-  const { kho, moSaoLuu, lanSaoLuu, datLanSaoLuu, taiLai, di, dsDuAn, hoCua, quyen, ghiNhatKy } = useUngDung();
+  const { kho, moSaoLuu, lanSaoLuu, datLanSaoLuu, taiLai, di, dsDuAn, hoCua, quyen, ghiNhatKy, duocThemDuAn } = useUngDung();
   const [dangLam, setDangLam] = useState(false);
   const [thongBao, setThongBao] = useState<{ loai: "ok" | "loi"; noiDung: string } | null>(null);
   const [ban, setBan] = useState<{ ten: string; ban: BanSaoLuu; maHoa: boolean } | null>(null);
@@ -92,6 +92,9 @@ export function HopSaoLuu() {
 
   const khoiPhucNgay = async () => {
     if (!ban || !quyen("KHOI_PHUC")) return;
+    // 1.0.10: dự án sau khôi phục vượt mức bản dùng thử / mã kích hoạt → không khôi phục, mở hộp "Dùng thêm dự án"
+    const sau = cheDo === "THAY_THE" ? ban.ban.duAn : [...dsDuAn, ...ban.ban.duAn.filter((d) => !dsDuAn.some((x) => x.id === d.id))];
+    if (!duocThemDuAn(0, sau)) return;
     setDangLam(true);
     setThongBao(null);
     try {

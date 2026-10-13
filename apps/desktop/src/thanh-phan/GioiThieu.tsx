@@ -4,6 +4,7 @@ import { TheCapNhat } from "./CapNhat";
 import type { KetQuaKiemTra } from "../cap-nhat";
 import { taiXuong } from "../tai-xuong";
 import { taoBieuMauThu } from "../bieu-mau-thu";
+import { TheGiayPhep } from "./GiayPhep";
 
 /** Giới thiệu phần mềm, phiên bản, bản quyền, liên hệ. */
 export function HopGioiThieu({ dong, kqCapNhat }: { dong: () => void; kqCapNhat?: KetQuaKiemTra | null }) {
@@ -29,6 +30,7 @@ export function HopGioiThieu({ dong, kqCapNhat }: { dong: () => void; kqCapNhat?
           <tr><th>Bộ chính sách</th><td>Sơn La, hiệu lực 31/3/2026 (QĐ 106/2025, QĐ 14/2026, QĐ 32/2025, NQ 152/2025); từ 06/10/2026 theo QĐ 64/2026/QĐ-UBND sửa đổi QĐ 106/2025, QĐ 14/2026</td></tr>
         </tbody>
       </table>
+      <TheGiayPhep />
       <TheCapNhat kqDau={kqCapNhat} />
       <p className="chu-nho mb-0">
         <b>© {BAN_QUYEN.nam} {BAN_QUYEN.tacGia}. All rights reserved.</b>

@@ -28,3 +28,4 @@ Tác giả, bản quyền: Lê Tùng Lâm – Sở Nông nghiệp và Môi trư�
 - Mọi nút xuất tệp dùng `taiXuong` (`src/tai-xuong.ts`) — không tự tạo liên kết tải riêng.
 - Số tiền, diện tích dùng Decimal; phân biệt rõ trong báo cáo: đã chạy, đã kiểm thử, còn hạn chế.
 - Đổi phiên bản: `apps/desktop/package.json`, `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml` (kèm `Cargo.lock` mục `gpmb-sonla`, `package-lock.json`). Phát hành bản cập nhật trong phần mềm: push nhãn `vX.Y.Z` trùng phiên bản (docs/20) — không đưa khóa bí mật vào kho.
+- Bản dùng thử / mã kích hoạt (`giay-phep.ts`): khóa riêng cấp mã (`gpmb-khoa-cap-ma.json`) chỉ tác giả giữ — không đưa vào kho; kiểm thử dùng khóa sinh trong test.

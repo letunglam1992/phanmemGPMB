@@ -228,7 +228,7 @@ export function HopTaoDuAn({ dong, duAn }: { dong: () => void; duAn?: DuAn }) {
       chan={
         <>
           <button className="nut" onClick={dong}>Hủy</button>
-          <button className="nut nut-chinh" disabled={!hopLe || (!!heSoKhac1 && !d.heSoGiaDat?.vanBan) || thieuLyDoLamTron} onClick={async () => { await luuDuAn(d); dong(); if (!duAn) di({ ten: "du-an", duAnId: d.id, tab: "thong-tin" }); }}>Lưu</button>
+          <button className="nut nut-chinh" disabled={!hopLe || (!!heSoKhac1 && !d.heSoGiaDat?.vanBan) || thieuLyDoLamTron} onClick={async () => { if (!(await luuDuAn(d))) return; dong(); if (!duAn) di({ ten: "du-an", duAnId: d.id, tab: "thong-tin" }); }}>Lưu</button>
         </>
       }
     >

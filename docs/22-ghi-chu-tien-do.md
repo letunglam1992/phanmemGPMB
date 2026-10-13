@@ -189,6 +189,8 @@ Gặp lỗi: bấm **"Chép chi tiết lỗi"** (nếu có), hoặc chụp màn 
 - [ ] Bản đồ: bật Ảnh vệ tinh → tích "Nền ảnh vệ tinh" → Xuất PDF tiến độ: ảnh phủ kín khung, thửa khớp ảnh, ghi nguồn ảnh ở chú giải.
 - [ ] Bấm nút Tệp đã xuất / chuông Thông báo rồi bấm ra chỗ khác: ô tự đóng.
 - [ ] Bản đồ → Đo khoảng cách → bấm vài điểm → chuột phải: kết thúc đo; chuột phải lần nữa: về công cụ Chọn, không hiện menu.
+- [ ] Máy mới (chưa kích hoạt): tạo 1 dự án được; dự án thứ 2 hiện hộp "Dùng thêm dự án" có mã cài đặt, số điện thoại tác giả.
+- [ ] Tác giả: mở `tools/giay-phep/cap-ma.html`, nạp khóa riêng, nhập tên đơn vị + mã cài đặt + số dự án → dán mã vào Giới thiệu, bản quyền → "Đã kích hoạt", tạo thêm dự án được.
 - [ ] Máy có dữ liệu lớn (hàng nghìn hộ): đăng nhập → Tổng quan hiện nhanh với thanh "Đang tính phương án các hộ lần đầu"; bấm được menu trong lúc tính; tính xong có đủ số liệu.
 
 ## 3. Quy trình mỗi lần sửa (để phiên mới làm đúng ngay)
@@ -252,6 +254,7 @@ Gặp lỗi: bấm **"Chép chi tiết lỗi"** (nếu có), hoặc chụp màn 
 
 Anh Lâm tự giữ:
 - Khóa ký bản cập nhật `gpmb.key`. Đã đặt trong GitHub Secrets.
+- Khóa riêng cấp mã kích hoạt `gpmb-khoa-cap-ma.json` (1.0.10, ECDSA P-256) — tác giả giữ, dùng với `tools/giay-phep/cap-ma.html`; trong kho chỉ có khóa công khai (`apps/desktop/src/giay-phep-khoa.ts`).
 - Mã quản trị cổng `MA_QUAN_TRI`.
 - Mật khẩu khóa cấp tỉnh.
 - Mã truy cập của xã.

@@ -70,7 +70,7 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
   const { dsDuAn, hoCua, chinhSach, luuDuAn: luuDuAnGoc, luuHo: luuHoGoc, kho, di, quyen, nguoiDung, dsDonVi, tyLeCham } = useUngDung();
   // Tài khoản chỉ xem vẫn tạo được bản dự thảo nhưng không ghi số, ngày, nhật ký vào hồ sơ.
   const coGhi = quyen("SOAN_VAN_BAN");
-  const luuDuAn: typeof luuDuAnGoc = coGhi ? luuDuAnGoc : async () => undefined;
+  const luuDuAn: typeof luuDuAnGoc = coGhi ? luuDuAnGoc : async () => false;
   const luuHo: typeof luuHoGoc = coGhi ? luuHoGoc : async () => undefined;
   const duAn = dsDuAn.find((d) => d.id === duAnId);
   // chiDuAn: lối vào riêng từ Hồ sơ dự án — chỉ các mẫu cấp dự án, theo đợt (văn bản từng hộ soạn trong hồ sơ hộ)

@@ -1,4 +1,5 @@
 import { NutTepDaXuat } from "./thanh-phan/TepDaXuat";
+import { HopGioiHanDuAn } from "./thanh-phan/GiayPhep";
 import { CongTinhNen } from "./thanh-phan/CongTinhNen";
 import { ViecCuaToi } from "./man/ViecCuaToi";
 import { TroLyAi, moTroLy } from "./man/HoiDap";
@@ -294,6 +295,7 @@ export function UngDung() {
         })()}
         </RaoLoi>
       </main>
+      <HopGioiHanDuAn />
       <footer className="chan">
         <span>Bộ chính sách: Sơn La, hiệu lực 31/3/2026 (QĐ 106/2025, QĐ 14/2026, QĐ 32/2025, NQ 152/2025)</span>
         <span>Phần mềm hỗ trợ tính toán — cán bộ có thẩm quyền kiểm tra, phê duyệt</span>

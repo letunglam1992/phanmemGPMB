@@ -11,6 +11,7 @@ import { HopThoai, O, tien } from "../thanh-phan/chung";
 import { BieuTuong } from "../thanh-phan/BieuDo";
 import { khongDau } from "./DanhSachHo";
 import { taoDuAnMau } from "../du-lieu-mau";
+import { SO_DU_AN_DUNG_THU, baoGioiHan, demDuAnTinh } from "../giay-phep";
 import { homNayIso, thongKe } from "../trang-thai";
 import { HopTaoDuAn } from "./TongQuan";
 import { Chon } from "../thanh-phan/Chon";
@@ -26,7 +27,7 @@ type SapXep = "MOI" | "TEN" | "TIEN_DO" | "TIEN";
 
 /** Dự án & hồ sơ: danh sách dự án (thẻ hoặc bảng) + chi tiết dự án đang chọn và bảng hộ, cá nhân, tổ chức. */
 export function ManDuAn({ duAnId: idVao }: { duAnId?: string }) {
-  const { dsDuAn, hoCua, di, chinhSach, quyen, dangTai, kho, taiLai } = useUngDung();
+  const { dsDuAn, hoCua, di, chinhSach, quyen, dangTai, kho, taiLai, giayPhep } = useUngDung();
   const homNay = homNayIso();
   const [timDa, setTimDa] = useState("");
   const [locDa, setLocDa] = useState<TrangThaiDuAn | "">("");
@@ -69,6 +70,11 @@ export function ManDuAn({ duAnId: idVao }: { duAnId?: string }) {
         <div>
           <h1>Danh sách dự án</h1>
           <div className="mo-ta">Quản lý các dự án bồi thường, hỗ trợ, tái định cư trên địa bàn tỉnh Sơn La</div>
+          {giayPhep.loai !== "HOP_LE" && (
+            <button className="nut nut-chu nut-nho" data-dung-thu onClick={() => baoGioiHan(`Bản dùng thử dùng được ${SO_DU_AN_DUNG_THU} dự án (đang dùng ${demDuAnTinh(dsDuAn)}).`)}>
+              Bản dùng thử · {demDuAnTinh(dsDuAn)}/{SO_DU_AN_DUNG_THU} dự án — dùng thêm dự án…
+            </button>
+          )}
         </div>
         <div className="da-thong-ke">
           <ChiSoNho bt="hoSo" nhan="Tổng số dự án" gt={dsDuAn.length.toLocaleString("vi-VN")} phu={moiThangNay ? `+${moiThangNay} trong tháng này` : undefined} />

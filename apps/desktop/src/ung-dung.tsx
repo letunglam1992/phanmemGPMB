@@ -16,7 +16,9 @@ import { KHOA_TY_LE_CHAM, type GiaiDoanTyLe } from "./chi-tra";
 import { KHOA_KY_BAO_CAO, type KyBaoCao } from "./ky-bao-cao";
 import { KHOA_DON_VI, type DonVi } from "./don-vi";
 import { KHOA_NGUONG_LECH, loiNguong, type NguongLechDt } from "./doi-chieu-dt";
+import { homNayIso } from "./trang-thai";
 import { KHOA_GOI, coBoChinhSach, dangKyGoi, type GoiDaNap } from "./goi-chinh-sach";
+import { KHOA_GIAY_PHEP, KHOA_MA_CAI_DAT, SO_DU_AN_DUNG_THU, baoGioiHan, demDuAnTinh, kiemThemDuAn, laDuAnMau, moTaGiayPhep, taoMaCaiDat, trangThaiGiayPhep, type TrangThaiGiayPhep } from "./giay-phep";
 import { KHOA_LICH } from "./sao-luu";
 import { coQuyen, dungMatKhau, taoTaiKhoan, tenHienThi, type NguoiDung, type Quyen, type VaiTro } from "./tai-khoan";
 
@@ -81,7 +83,8 @@ interface NguCanh {
   luuAnhNen: (url: string | null) => Promise<void>;
   luuDonVi: (ds: DonVi[]) => Promise<void>;
   /** Lưu dự án; mặc định cần quyền SUA_HO_SO (chốt/duyệt phương án truyền quyền riêng). */
-  luuDuAn: (d: DuAn, quyen?: Quyen) => Promise<void>;
+  /** false: không lưu (thiếu quyền, vượt giới hạn dự án của bản dùng thử / mã kích hoạt) */
+  luuDuAn: (d: DuAn, quyen?: Quyen) => Promise<boolean>;
   luuHo: (h: Ho, nhatKy?: string) => Promise<void>;
   /** Lưu nhiều hồ sơ (cập nhật hàng loạt), tải lại một lần; trả về số hồ sơ lưu được và lỗi từng hồ sơ. */
   luuNhieuHo: (ds: { h: Ho; nhatKy: string }[]) => Promise<{ daLuu: number; loi: string[] }>;
@@ -157,6 +160,12 @@ interface NguCanh {
   napGoi: (g: Omit<GoiDaNap, "napLuc" | "napBoi">) => Promise<boolean>;
   /** Chuyển dự án sang bộ chính sách khác (bản phương án đã chốt/duyệt giữ bộ cũ). */
   chuyenBoChinhSach: (duAnId: string, khoa: string, tomTat: string) => Promise<boolean>;
+  /** 1.0.10: bản dùng thử / mã kích hoạt */
+  giayPhep: TrangThaiGiayPhep;
+  maCaiDat: string | null;
+  kichHoat: (ma: string) => Promise<boolean>;
+  /** Kiểm trước khi thêm `them` dự án (không phải mẫu); vượt mức thì mở hộp "Dùng thêm dự án" và trả false. */
+  duocThemDuAn: (them: number, dsSau?: DuAn[]) => boolean;
 }
 
 const Ctx = createContext<NguCanh | null>(null);
@@ -221,6 +230,8 @@ export function NhaCungCap({ children, kho: khoVao, chiXem, phienDau }: { childr
   const [giuLichSu, setGiuLichSu] = useState(0);
   const [nguongLechDt, setNguongLechDt] = useState<NguongLechDt | null>(null);
   const [goiDaNap, setGoiDaNap] = useState<GoiDaNap[]>([]);
+  const [giayPhep, setGiayPhep] = useState<TrangThaiGiayPhep>({ loai: "DUNG_THU", gioiHan: SO_DU_AN_DUNG_THU });
+  const [maCaiDat, setMaCaiDat] = useState<string | null>(null);
   const [dsCanBo, setDsCanBo] = useState<CanBo[]>([]);
   const dangTuDong = useRef(false);
   const [sai, setSai] = useState<{ lan: number; den: number }>({ lan: 0, den: 0 });
@@ -272,6 +283,14 @@ export function NhaCungCap({ children, kho: khoVao, chiXem, phienDau }: { childr
     setKhoaKhoiPhuc((await kho.docCaiDat<KhoaKhoiPhuc>(KHOA_KHOI_PHUC)) ?? null);
     setGiuLichSu((await kho.docCaiDat<{ soNam: number }>("giuLichSu"))?.soNam ?? 0);
     setNguongLechDt((await kho.docCaiDat<NguongLechDt>(KHOA_NGUONG_LECH)) ?? null);
+    // 1.0.10: mã cài đặt (tạo lần đầu nếu có quyền ghi cài đặt) và mã kích hoạt
+    let mc = (await kho.docCaiDat<string>(KHOA_MA_CAI_DAT)) ?? null;
+    if (!mc) {
+      const moi = taoMaCaiDat();
+      if (await kho.luuCaiDat(KHOA_MA_CAI_DAT, moi).then(() => true, () => false)) mc = moi;
+    }
+    setMaCaiDat(mc);
+    setGiayPhep(await trangThaiGiayPhep(await kho.docCaiDat<string>(KHOA_GIAY_PHEP), mc, homNayIso()));
     const goi = (await kho.docCaiDat<GoiDaNap[]>(KHOA_GOI)) ?? [];
     dangKyGoi(goi); // trước khi nạp dự án: tính toán dùng đúng bộ chính sách của dự án
     setGoiDaNap(goi);
@@ -480,8 +499,14 @@ export function NhaCungCap({ children, kho: khoVao, chiXem, phienDau }: { childr
       await ghiNhatKy("Cập nhật thiết lập đơn vị", ds.map((d) => `${d.ten}${d.suDung ? " (đơn vị sử dụng)" : ""}`).join("; "));
     },
     luuDuAn: async (d, q = "SUA_HO_SO") => {
-      if (chan(q)) return;
+      if (chan(q)) return false;
+      // 1.0.10: dự án mới (không phải mẫu) — kiểm giới hạn bản dùng thử / mã kích hoạt
+      if (!dsDuAn.some((x) => x.id === d.id) && !laDuAnMau(d) && !d.daXoa) {
+        const ly = kiemThemDuAn(dsDuAn, 1, giayPhep);
+        if (ly) return baoGioiHan(ly), false;
+      }
       capNhat({ duAn: [await ghi(() => kho.luuDuAn(d))] });
+      return true;
     },
     luuHo: async (h, nk) => {
       if (chan("SUA_HO_SO")) return;
@@ -586,6 +611,8 @@ export function NhaCungCap({ children, kho: khoVao, chiXem, phienDau }: { childr
       if (chan("XOA_DU_AN")) return;
       const d = dsDuAn.find((x) => x.id === id);
       if (!d?.daXoa) return;
+      const ly = laDuAnMau(d) ? null : kiemThemDuAn(dsDuAn, 1, giayPhep);
+      if (ly) return baoGioiHan(ly);
       const { daXoa: _bo, ...con } = d;
       capNhat({ duAn: [await ghi(() => kho.luuDuAn(con))] });
       await ghiNhatKy("Khôi phục dự án từ thùng rác", d.ten);
@@ -731,6 +758,34 @@ export function NhaCungCap({ children, kho: khoVao, chiXem, phienDau }: { childr
       if (!laKhoMang(kho)) await ghiNhatKy("Đặt thời hạn giữ lịch sử bản ghi", `${soNam} năm`);
     },
     goiDaNap,
+    giayPhep,
+    maCaiDat,
+    kichHoat: async (ma) => {
+      if (chan("CAI_DAT")) return false;
+      let mc = maCaiDat;
+      if (!mc) {
+        mc = taoMaCaiDat();
+        await ghi(() => kho.luuCaiDat(KHOA_MA_CAI_DAT, mc));
+        setMaCaiDat(mc);
+      }
+      const tt = await trangThaiGiayPhep(ma.trim(), mc, homNayIso());
+      if (tt.loai !== "HOP_LE") return bao(moTaGiayPhep(tt), "loi"), false;
+      try {
+        await ghi(() => kho.luuCaiDat(KHOA_GIAY_PHEP, ma.trim()));
+      } catch {
+        return false;
+      }
+      setGiayPhep(tt);
+      await ghiNhatKy("Kích hoạt phần mềm", moTaGiayPhep(tt));
+      return true;
+    },
+    duocThemDuAn: (them, dsSau) => {
+      // dsSau: toàn bộ dự án sau thao tác (khôi phục sao lưu) — chặn khi vượt mức và nhiều hơn hiện có
+      const sau = dsSau ? demDuAnTinh(dsSau) : 0;
+      const ly = dsSau ? (sau > giayPhep.gioiHan && sau > demDuAnTinh(dsDuAn) ? `${kiemThemDuAn([], sau, giayPhep)?.split(";")[0]}; bản sao lưu có ${sau} dự án.` : null) : kiemThemDuAn(dsDuAn, them, giayPhep);
+      if (ly) baoGioiHan(ly);
+      return !ly;
+    },
     napGoi: async (g) => {
       if (chan("NAP_CHINH_SACH")) return false;
       const cu = (await kho.docCaiDat<GoiDaNap[]>(KHOA_GOI)) ?? [];
