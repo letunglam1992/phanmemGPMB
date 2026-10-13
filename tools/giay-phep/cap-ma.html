@@ -59,6 +59,14 @@
   </div>
 
   <div class="the">
+    <b>Danh sách mã đã cấp</b> <span class="mo">(lưu trong trình duyệt trên máy này — nên xuất/sao lưu định kỳ)</span>
+    <div style="overflow-x:auto"><table id="bang" style="width:100%;border-collapse:collapse;font-size:13px;margin-top:8px"></table></div>
+    <button id="xuatCsv" class="phu">Xuất Excel (CSV)</button>
+    <button id="saoLuu" class="phu">Sao lưu danh sách (JSON)</button>
+    <label class="phu" style="display:inline-block;font-weight:600;margin-top:12px;cursor:pointer;background:#e8eeeb;padding:9px 16px;border-radius:6px">Nạp danh sách…<input id="napDs" type="file" accept=".json" style="display:none"></label>
+  </div>
+
+  <div class="the">
     <b>Tạo cặp khóa mới</b> <span class="mo">(chỉ khi mất hoặc lộ khóa riêng — phải thay khóa công khai trong <code>apps/desktop/src/giay-phep-khoa.ts</code> và phát hành bản mới; mã đã cấp bằng khóa cũ hết hiệu lực)</span><br>
     <button id="taoKhoa" class="phu">Tạo cặp khóa mới</button>
     <textarea id="khoaCong" readonly placeholder="Khóa công khai sẽ hiện ở đây"></textarea>
@@ -95,7 +103,53 @@
     const than = new TextEncoder().encode(JSON.stringify(nd));
     const ky = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, khoa, than);
     $("ketQua").value = `GPMB1.${b64u(than)}.${b64u(ky)}`;
+    ds.unshift({ ...nd, ma: $("ketQua").value });
+    luu();
   };
+  // ---- danh sách mã đã cấp (localStorage của trang này)
+  const KHOA_DS = "gpmb-ma-da-cap";
+  let ds = [];
+  try { ds = JSON.parse(localStorage.getItem(KHOA_DS) || "[]"); } catch { ds = []; }
+  const ngay = (s) => (s ? s.split("-").reverse().join("/") : "không thời hạn");
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  function ve() {
+    const hom = new Date().toISOString().slice(0, 10);
+    $("bang").innerHTML = ds.length
+      ? '<tr style="text-align:left;border-bottom:1px solid #d7ddd9"><th>Ngày cấp</th><th>Đơn vị</th><th>Mã cài đặt</th><th>Số dự án</th><th>Hạn</th><th></th></tr>' +
+        ds.map((x, i) => `<tr style="border-bottom:1px solid #eef1ef"><td>${ngay(x.cap)}</td><td>${esc(x.donVi)}</td><td style="font-family:monospace">${esc(x.maCaiDat)}</td><td>${x.soDuAn ?? "không giới hạn"}</td><td${x.hetHan && x.hetHan < hom ? ' style="color:#b42318"' : ""}>${ngay(x.hetHan)}</td><td><button class="phu" style="margin:2px;padding:3px 8px" data-chep="${i}">Chép mã</button><button class="phu" style="margin:2px;padding:3px 8px" data-xoa="${i}">Xóa</button></td></tr>`).join("")
+      : '<tr><td class="mo">Chưa cấp mã nào.</td></tr>';
+  }
+  function luu() {
+    try { localStorage.setItem(KHOA_DS, JSON.stringify(ds)); } catch {}
+    ve();
+  }
+  $("bang").onclick = (e) => {
+    const c = e.target.dataset.chep, x = e.target.dataset.xoa;
+    if (c !== undefined) navigator.clipboard.writeText(ds[c].ma);
+    if (x !== undefined && confirm(`Xóa dòng ${ds[x].donVi} khỏi danh sách? (mã đã cấp vẫn dùng được)`)) { ds.splice(x, 1); luu(); }
+  };
+  const tai = (ten, noiDung, loai) => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([noiDung], { type: loai }));
+    a.download = ten;
+    a.click();
+  };
+  $("xuatCsv").onclick = () => {
+    const o = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const dong = [["Ngày cấp", "Đơn vị", "Mã cài đặt", "Số dự án", "Hạn dùng", "Mã kích hoạt"], ...ds.map((x) => [ngay(x.cap), x.donVi, x.maCaiDat, x.soDuAn ?? "không giới hạn", ngay(x.hetHan), x.ma])];
+    tai(`Danh-sach-ma-kich-hoat_${new Date().toISOString().slice(0, 10)}.csv`, "\ufeff" + dong.map((d) => d.map(o).join(",")).join("\r\n"), "text/csv;charset=utf-8");
+  };
+  $("saoLuu").onclick = () => tai(`Danh-sach-ma-kich-hoat_${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(ds, null, 2), "application/json");
+  $("napDs").onchange = async (e) => {
+    try {
+      const moi = JSON.parse(await e.target.files[0].text());
+      if (!Array.isArray(moi)) throw new Error();
+      const co = new Set(ds.map((x) => x.ma));
+      ds = [...ds, ...moi.filter((x) => x && x.ma && !co.has(x.ma))].sort((a, b) => (b.cap || "").localeCompare(a.cap || ""));
+      luu();
+    } catch { alert("Tệp không phải danh sách mã đã cấp."); }
+  };
+  ve();
   $("chep").onclick = () => navigator.clipboard.writeText($("ketQua").value);
   $("taoKhoa").onclick = async () => {
     if (!confirm("Tạo cặp khóa mới? Mã kích hoạt đã cấp bằng khóa cũ sẽ không dùng được với bản phần mềm dùng khóa mới.")) return;

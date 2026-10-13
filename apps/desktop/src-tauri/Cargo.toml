@@ -1,6 +1,6 @@
 [package]
 name = "gpmb-sonla"
-version = "1.0.9"
+version = "1.0.10"
 description = "Phần mềm hỗ trợ bồi thường, hỗ trợ, tái định cư – Sơn La"
 edition = "2021"
 
@@ -29,6 +29,8 @@ rcgen = { version = "0.13", default-features = false, features = ["ring", "pem"]
 rusqlite = { version = "0.32", features = ["bundled"] }
 pbkdf2 = { version = "0.12", default-features = false, features = ["hmac"] }
 sha2 = "0.10"
+# 1.0.10: kiểm chữ ký mã kích hoạt (ECDSA P-256) — đã có sẵn trong bộ phụ thuộc qua rustls
+ring = "0.17"
 base64 = "0.22"
 getrandom = "0.2"
 ureq = { version = "2", default-features = false, features = ["tls"] }

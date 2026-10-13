@@ -72,6 +72,15 @@ describe("Gói chính sách nạp được (P2-1, chưa ký số)", () => {
     expect(donGiaTheoBo("sonla-2026-03-31")).toBe(DON_GIA);
     expect((await napBangGiaDatTheoBo("sonla-thu-2029")).van_ban).toMatch(/77\/2027/);
     expect(BANG_GIA_GOI["sonla-2026-03-31"]).toBeUndefined();
+    // 1.0.10: mẫu nhập Excel của dự án dùng gói: trang DanhMucDonGia lấy bảng của gói
+    const { taoMauNhap } = await import("../src/nhap-excel");
+    const { default: E } = await import("exceljs");
+    const wb = new E.Workbook();
+    await wb.xlsx.load((await taoMauNhap("sonla-thu-2029")).buffer as ArrayBuffer);
+    const ten: string[] = [];
+    wb.getWorksheet("DanhMucDonGia")!.eachRow((r, i) => i > 1 && ten.push(String(r.getCell(4).value)));
+    expect(ten).toEqual(expect.arrayContaining(["Cây thử A", "Cây thử B"]));
+    wb.getWorksheet("DanhMucDonGia")!.eachRow((r) => expect(String(r.getCell(4).value)).not.toBe("Cây Bưởi"));
   });
   it("1.0.7 — từ chối bảng kèm gói thiếu căn cứ, giá không hợp lệ, bảng giá đất thiếu mục", async () => {
     const c = { ...moi(), ma: "X-9" };

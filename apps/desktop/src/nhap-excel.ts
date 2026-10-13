@@ -11,7 +11,7 @@
 import { docLyTrinh } from "./ly-trinh";
 import type ExcelJS from "exceljs";
 import { D } from "@gpmb/core";
-import { DON_GIA, donGiaTheoBo } from "./du-lieu";
+import { donGiaTheoBo } from "./du-lieu";
 import { maHoTiepTheo, mauMaCua } from "./ma-ho";
 import { thuTinh } from "./bieu-thuc";
 import { TEN_LOAI_DAT } from "./van-ban/loai-dat";
@@ -85,7 +85,8 @@ async function excel() {
 }
 
 /** Tệp mẫu nhập liệu (kèm hướng dẫn, danh mục loại đất, danh mục mã đơn giá). */
-export async function taoMauNhap(): Promise<Uint8Array> {
+/** `bo`: khóa bộ chính sách của dự án — gói có bảng đơn giá kèm theo thì trang DanhMucDonGia lấy bảng của gói (1.0.10). */
+export async function taoMauNhap(bo?: string): Promise<Uint8Array> {
   const E = await excel();
   const wb = new E.Workbook();
   wb.creator = "GPMB Sơn La";
@@ -128,7 +129,7 @@ export async function taoMauNhap(): Promise<Uint8Array> {
     { header: "Đơn giá (đ)", key: "gia", width: 14 },
   ];
   dm.getRow(1).font = { bold: true };
-  for (const r of DON_GIA) if (r.nguon !== "PL V") dm.addRow({ ma: r.ma, nguon: r.nguon, nhom: r.nhom, ten: r.ten, dvt: r.donVi, gia: r.donGia });
+  for (const r of donGiaTheoBo(bo)) if (r.nguon !== "PL V") dm.addRow({ ma: r.ma, nguon: r.nguon, nhom: r.nhom, ten: r.ten, dvt: r.donVi, gia: r.donGia });
   dm.getColumn("gia").numFmt = "#,##0";
   return new Uint8Array(await wb.xlsx.writeBuffer());
 }

@@ -4,6 +4,8 @@ import { GOI_MOI_NHAT } from "../goi-chinh-sach";
 import { TheBatDau } from "../thanh-phan/BatDau";
 import { useRef, useState } from "react";
 import { TienDoTinhNen } from "../thanh-phan/CongTinhNen";
+import { homNayIso } from "../trang-thai";
+import { NhacGiayPhep } from "../thanh-phan/GiayPhep";
 import { D } from "@gpmb/core";
 import { useUngDung } from "../ung-dung";
 import { TEN_CACH_LAM_TRON } from "../tinh-ho";
@@ -91,6 +93,7 @@ export function TongQuan() {
         </div>
       </div>
 
+      <NhacGiayPhep homNay={homNayIso()} />
       {dangTinh && <TienDoTinhNen />}
       <TheBatDau taoDuAn={() => setTaoMoi(true)} />
       <TheQd64 />

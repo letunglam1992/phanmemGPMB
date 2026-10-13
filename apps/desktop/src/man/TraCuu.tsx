@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { VAN_BAN_CAN_CU } from "../van-ban-can-cu";
-import { GOI_MOI_NHAT } from "../goi-chinh-sach";
-import { BO_CHINH_SACH, DON_GIA, napBangGiaDat, type BangGiaDat, type DongDonGia } from "../du-lieu";
+import { GOI_MOI_NHAT, tenBoChinhSach } from "../goi-chinh-sach";
+import { BANG_GIA_GOI, BO_CHINH_SACH, DON_GIA_GOI, donGiaTheoBo, napBangGiaDatTheoBo, type BangGiaDat, type DongDonGia } from "../du-lieu";
 import { khongDau } from "../tim-kiem";
 import { tenLoaiDat } from "../van-ban/loai-dat";
 import { useUngDung } from "../ung-dung";
@@ -127,6 +127,10 @@ type SapXep = "MAC_DINH" | "GIA_TANG" | "GIA_GIAM" | "TEN";
 
 export function TraCuu({ timDau }: { timDau?: string } = {}) {
   const { bao } = useUngDung();
+  // 1.0.10: tra theo bảng đơn giá, giá đất kèm gói chính sách ("" = bảng có sẵn trong phần mềm)
+  const [bo, setBo] = useState("");
+  const dsBoCoBang = [...new Set([...Object.keys(DON_GIA_GOI), ...Object.keys(BANG_GIA_GOI)])];
+  const DON_GIA = useMemo(() => donGiaTheoBo(bo || undefined), [bo]);
   // Mở từ menu chuột phải với chữ đang chọn: chọn sẵn danh mục đơn giá có dòng khớp (QĐ 32 → PL VIII → PL V)
   const [tab, setTab] = useState<Tab>(() => {
     const tu = khongDau((timDau ?? "").trim()).split(/\s+/).filter(Boolean);
@@ -149,13 +153,14 @@ export function TraCuu({ timDau }: { timDau?: string } = {}) {
   const [chiGhim, setChiGhim] = useState(false);
   const [bg, setBg] = useState<BangGiaDat | null>(null);
   const canCuRef = useRef<HTMLDivElement>(null);
-  useEffect(() => { if (tab === "GIA_DAT" && !bg) void napBangGiaDat().then(setBg); }, [tab, bg]);
+  useEffect(() => { setBg(null); }, [bo]);
+  useEffect(() => { if (tab === "GIA_DAT" && !bg) void napBangGiaDatTheoBo(bo || undefined).then(setBg); }, [tab, bg, bo]);
 
   const tatCa = useMemo<Muc[]>(() => {
     if (tab === "CS") return [];
     if (tab === "GIA_DAT") return bg ? tuGiaDat(bg) : [];
     return DON_GIA.map((r, i) => ({ r, i })).filter(({ r }) => r.nguon === tab).map(({ r, i }) => tuDonGia(r, i));
-  }, [tab, bg]);
+  }, [tab, bg, DON_GIA]);
   const tu = khongDau(q.trim()).split(/\s+/).filter(Boolean);
   const khop = useMemo(() => tatCa.filter((m) => { const s = khongDau(`${m.ma} ${m.duong.join(" ")} ${m.ten}`); return tu.every((t) => s.includes(t)); }), [tatCa, q]); // eslint-disable-line react-hooks/exhaustive-deps
   const cay = useMemo(() => dungCay(khop, TAB.find((t) => t.ma === tab)!.ten + (tab === "QĐ32" ? " – QĐ 32/2025" : "")), [khop, tab]);
@@ -183,7 +188,9 @@ export function TraCuu({ timDau }: { timDau?: string } = {}) {
     setBoLoc(moi); ghi(KHOA_BO_LOC, moi);
   };
   const apBoLoc = (b: BoLoc) => { if (b.tab !== tab) doiTab(b.tab); setTimeout(() => { setQ(b.q); setNhom(b.nhom); setNhomMo(null); }, 0); };
-  const vb = tab !== "CS" ? VAN_BAN[tab] : null;
+  // bảng kèm gói chính sách: văn bản căn cứ theo gói (không phải văn bản của bảng có sẵn)
+  const vbGoi = !bo || tab === "CS" ? undefined : tab === "GIA_DAT" ? (BANG_GIA_GOI[bo] ? bg?.van_ban : undefined) : DON_GIA.find((r) => r.nguon === tab && r.canCu)?.canCu;
+  const vb = tab !== "CS" ? (vbGoi ? { ...VAN_BAN[tab], so: vbGoi, mo: "Bảng nạp kèm gói chính sách", hieuLuc: "theo văn bản", luuY: "Bảng nạp kèm gói chính sách — đối chiếu văn bản gốc trước khi dùng." } : VAN_BAN[tab]) : null;
   const chonDs = ketQua.filter((m) => daChon.has(m.id));
 
   const veNut = (n: Nut, cap: number): ReactNode => {
@@ -214,6 +221,15 @@ export function TraCuu({ timDau }: { timDau?: string } = {}) {
           <h1>Tra cứu đơn giá, giá đất, chính sách</h1>
           <div className="mo-ta">Dữ liệu trích xuất từ văn bản gốc, mỗi dòng giữ mã nguồn và số trang để đối chiếu (docs/07).</div>
         </div>
+        {dsBoCoBang.length > 0 && (
+          <label className="chu-nho" title="Gói chính sách nạp kèm bảng đơn giá, bảng giá đất — tra theo bảng của gói">
+            Bảng theo{" "}
+            <select aria-label="Tra theo bảng của bộ chính sách" value={bo} onChange={(e) => { setBo(e.target.value); setChon(null); }}>
+              <option value="">Bảng có sẵn (QĐ 32/2025, QĐ 106/2025, NQ 152/2025)</option>
+              {dsBoCoBang.map((k) => <option key={k} value={k}>Gói {tenBoChinhSach(k)} ({k})</option>)}
+            </select>
+          </label>
+        )}
       </div>
 
       <div className="tc-tab" role="tablist">

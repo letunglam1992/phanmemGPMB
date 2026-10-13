@@ -97,6 +97,10 @@
    "Bản đồ → Đo khoảng cách → bấm vài điểm → chuột phải: kết thúc đo; chuột phải lần nữa: về công cụ Chọn, không hiện menu.",
    "Máy mới (chưa kích hoạt): tạo 1 dự án được; dự án thứ 2 hiện hộp \"Dùng thêm dự án\" có mã cài đặt, số điện thoại tác giả.",
    "Tác giả: mở tools/giay-phep/cap-ma.html, nạp khóa riêng, nhập tên đơn vị + mã cài đặt + số dự án → dán mã vào Giới thiệu, bản quyền → \"Đã kích hoạt\", tạo thêm dự án được.",
+   "Máy chủ mạng nội bộ chưa kích hoạt: từ máy trạm tạo dự án thứ 2 → bị từ chối (thông báo bản dùng thử).",
+   "Mã kích hoạt có hạn ≤ 30 ngày: Tổng quan hiện nhắc gia hạn.",
+   "Trang cấp mã: danh sách mã đã cấp → Xuất Excel (CSV) mở được bằng Excel, đúng tiếng Việt.",
+   "Nạp gói có bảng đơn giá → Tra cứu → \"Bảng theo\" chọn gói: thấy dòng của gói, \"Thuộc văn bản\" ghi văn bản của gói.",
    "Máy có dữ liệu lớn (hàng nghìn hộ): đăng nhập → Tổng quan hiện nhanh với thanh \"Đang tính phương án các hộ lần đầu\"; bấm được menu trong lúc tính; tính xong có đủ số liệu."
   ]
  }

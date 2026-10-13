@@ -7,6 +7,7 @@ pub mod hoi_dap;
 pub mod cong_tinh;
 pub mod ket_noi;
 pub mod may_chu;
+pub mod giay_phep;
 
 use std::fs;
 use std::path::PathBuf;

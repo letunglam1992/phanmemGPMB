@@ -90,7 +90,7 @@ export function HopNhapExcel({ duAn, dong }: { duAn: DuAn; dong: () => void }) {
   const taiTepMau = async () => {
     setTaiMau(true);
     try {
-      await taiXuong(await taoMauNhap(), "Mau-nhap-ho-so-GPMB.xlsx", XLSX);
+      await taiXuong(await taoMauNhap(duAn.boChinhSach), "Mau-nhap-ho-so-GPMB.xlsx", XLSX);
     } finally {
       setTaiMau(false);
     }

@@ -47,6 +47,22 @@ fn loi_db(e: rusqlite::Error) -> Loi {
 }
 type Kq<T> = Result<T, Loi>;
 
+/// Ngày hôm nay theo giờ Việt Nam (UTC+7), dạng YYYY-MM-DD — so hạn mã kích hoạt.
+pub fn hom_nay_vn() -> String {
+    let d = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs() as i64 + 7 * 3600;
+    let ngay = d.div_euclid(86400);
+    let z = ngay + 719468;
+    let era = z.div_euclid(146097);
+    let doe = z - era * 146097;
+    let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let dd = doy - (153 * mp + 2) / 5 + 1;
+    let mm = if mp < 10 { mp + 3 } else { mp - 9 };
+    let yy = yoe + era * 400 + if mm <= 2 { 1 } else { 0 };
+    format!("{yy:04}-{mm:02}-{dd:02}")
+}
+
 /// Thời điểm dạng ISO như Date.toISOString() của giao diện.
 pub fn bay_gio() -> String {
     iso_truoc(0)
@@ -1127,6 +1143,10 @@ fn ghi_ban_ghi(c: &Connection, st: &MayChu, u: &NguoiGoi, loai: &str, id: &str, 
     }
     if !ghi_de && (loai == "ho" || loai == "duAn") {
         kiem_tra_xoa_mem(c, st, u, loai, id, cu_v.as_ref(), &mut moi)?;
+    }
+    if loai == "duAn" {
+        // 1.0.10: giới hạn dự án của bản dùng thử / mã kích hoạt (cùng quy tắc với giao diện)
+        crate::giay_phep::kiem_ghi_du_an(c, cu_v.as_ref(), &moi, &hom_nay_vn()).map_err(|e| loi(StatusCode::FORBIDDEN, e))?;
     }
     if cu_v.as_ref() == Some(&moi) {
         // không có gì thay đổi: không tăng phiên bản, không ghi lịch sử

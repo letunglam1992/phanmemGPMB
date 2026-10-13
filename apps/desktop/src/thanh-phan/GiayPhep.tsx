@@ -63,3 +63,29 @@ export function HopGioiHanDuAn() {
     </HopThoai>
   );
 }
+
+/** Số ngày còn lại đến hạn (YYYY-MM-DD) tính từ hôm nay; âm = đã quá hạn. */
+export const soNgayConLai = (han: string, homNay: string) => Math.round((Date.parse(`${han}T00:00:00Z`) - Date.parse(`${homNay}T00:00:00Z`)) / 86400000);
+
+/** 1.0.10 — Tổng quan: nhắc mã kích hoạt sắp hết hạn (≤ 30 ngày) hoặc đã hết hạn. */
+export function NhacGiayPhep({ homNay }: { homNay: string }) {
+  const { giayPhep } = useUngDung();
+  if (giayPhep.loai === "HET_HAN")
+    return (
+      <div className="thong-bao thong-bao-do" data-nhac-giay-phep="het">
+        {moTaGiayPhep(giayPhep)}. Dự án đã có vẫn dùng bình thường; liên hệ tác giả {BAN_QUYEN.tacGia} ({BAN_QUYEN.dienThoai}) để gia hạn.{" "}
+        <button className="nut nut-chu nut-nho" onClick={() => baoGioiHanThongTin()}>Nhập mã gia hạn…</button>
+      </div>
+    );
+  if (giayPhep.loai !== "HOP_LE" || !giayPhep.gp.hetHan) return null;
+  const con = soNgayConLai(giayPhep.gp.hetHan, homNay);
+  if (con > 30) return null;
+  return (
+    <div className="thong-bao thong-bao-vang" data-nhac-giay-phep="sap">
+      Mã kích hoạt hết hạn ngày {giayPhep.gp.hetHan.split("-").reverse().join("/")} (còn {con} ngày). Liên hệ tác giả {BAN_QUYEN.tacGia} ({BAN_QUYEN.dienThoai}) để gia hạn.{" "}
+      <button className="nut nut-chu nut-nho" onClick={() => baoGioiHanThongTin()}>Nhập mã gia hạn…</button>
+    </div>
+  );
+}
+
+const baoGioiHanThongTin = () => window.dispatchEvent(new CustomEvent(SU_KIEN_GIOI_HAN, { detail: "Gia hạn: dán mã kích hoạt mới (cùng mã cài đặt) rồi bấm Kích hoạt." }));
