@@ -14,7 +14,7 @@ test("cấp mã bằng trang công cụ: mã hợp lệ với khóa công khai t
   const tep = join(thuMuc, "khoa-thu.json");
   writeFileSync(tep, JSON.stringify({ ghiChu: "khóa thử", ...(await crypto.subtle.exportKey("jwk", k.privateKey)) }));
   const cong = await crypto.subtle.exportKey("jwk", k.publicKey);
-  p.on("dialog", (d) => void d.accept());
+  p.on("dialog", (d) => void (d.type() === "prompt" ? d.accept("wxyz-2345-6789-abcd") : d.accept()));
   await p.goto(`file://${resolve(process.cwd(), "../../tools/giay-phep/cap-ma.html")}`);
   await p.locator("#tep").setInputFiles(tep);
   await expect(p.locator("#ttKhoa")).toHaveText("Đã nạp khóa riêng.");
@@ -41,4 +41,20 @@ test("cấp mã bằng trang công cụ: mã hợp lệ với khóa công khai t
   expect(csv.charCodeAt(0)).toBe(0xfeff);
   expect(csv).toContain('"UBND xã Thử","ABCD-EFGH-JKMN-PQRS","4","30/06/2027"');
   expect(csv).toContain(ma);
+  // 1.0.11: phiếu cấp mã (Word) có đơn vị, mã cài đặt, hạn, mã kích hoạt
+  const tai2 = p.waitForEvent("download");
+  await p.locator("#phieu").click();
+  const dl = await tai2;
+  expect(dl.suggestedFilename()).toMatch(/^Phieu-cap-ma_UBND-xa-Thu_\d{4}-\d{2}-\d{2}\.doc$/);
+  const doc = readFileSync((await dl.path())!, "utf8");
+  for (const x of ["PHIẾU CẤP MÃ KÍCH HOẠT", "UBND xã Thử", "ABCD-EFGH-JKMN-PQRS", "đến hết ngày 30/06/2027", ma]) expect(doc).toContain(x);
+  // 1.0.11: cấp lại cho mã cài đặt mới (thay máy) giữ số dự án, hạn dùng
+  await p.locator("[data-cap-lai='0']").click();
+  await expect(p.locator("#bang")).toContainText("cấp lại, thay ABCD-EFGH-JKMN-PQRS");
+  const ma2 = await p.locator("#ketQua").inputValue();
+  expect(ma2).not.toBe(ma);
+  expect(await docGiayPhep(ma2, cong)).toMatchObject({ donVi: "UBND xã Thử", maCaiDat: "WXYZ-2345-6789-ABCD", soDuAn: 4, hetHan: "2027-06-30" });
+  const tai3 = p.waitForEvent("download");
+  await p.locator("[data-phieu='0']").click();
+  expect(readFileSync((await (await tai3).path())!, "utf8")).toContain("Cấp lại thay mã cài đặt ABCD-EFGH-JKMN-PQRS");
 });

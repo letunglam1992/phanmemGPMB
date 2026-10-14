@@ -56,6 +56,7 @@
     <label for="ketQua">3. Mã kích hoạt — gửi cho đơn vị (dán vào ô "Mã kích hoạt" ở Giới thiệu, bản quyền)</label>
     <textarea id="ketQua" readonly></textarea>
     <button id="chep" class="phu">Chép mã</button>
+    <button id="phieu" class="phu" disabled>Phiếu cấp mã (Word)</button>
   </div>
 
   <div class="the">
@@ -97,15 +98,45 @@
     const so = $("soDuAn").value.trim();
     if (!khoa) return ($("loi").textContent = "Chưa nạp tệp khóa riêng.");
     if (!donVi) return ($("loi").textContent = "Chưa nhập tên đơn vị.");
-    if (!/^[A-Z0-9]{4}(-?[A-Z0-9]{4}){3}$/.test(maCaiDat)) return ($("loi").textContent = "Mã cài đặt phải có 16 ký tự (dạng XXXX-XXXX-XXXX-XXXX).");
+    if (!MA_CAI_DAT.test(maCaiDat)) return ($("loi").textContent = "Mã cài đặt phải có 16 ký tự (dạng XXXX-XXXX-XXXX-XXXX).");
     if (so && !(Number.isInteger(Number(so)) && Number(so) >= 1)) return ($("loi").textContent = "Số dự án phải là số nguyên ≥ 1 (hoặc để trống).");
     const nd = { v: 1, donVi, maCaiDat, soDuAn: so ? Number(so) : null, hetHan: $("hetHan").value || null, cap: new Date().toISOString().slice(0, 10) };
-    const than = new TextEncoder().encode(JSON.stringify(nd));
-    const ky = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, khoa, than);
-    $("ketQua").value = `GPMB1.${b64u(than)}.${b64u(ky)}`;
+    $("ketQua").value = await kyNd(nd);
     ds.unshift({ ...nd, ma: $("ketQua").value });
+    $("phieu").disabled = false;
     luu();
   };
+  async function kyNd(nd) {
+    const than = new TextEncoder().encode(JSON.stringify(nd));
+    const ky = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, khoa, than);
+    return `GPMB1.${b64u(than)}.${b64u(ky)}`;
+  }
+  const MA_CAI_DAT = /^[A-Z0-9]{4}(-?[A-Z0-9]{4}){3}$/;
+  // Phiếu cấp mã: tài liệu HTML lưu đuôi .doc — Word mở, sửa, in được (không cần thư viện)
+  function phieu(x) {
+    const hang = (a, b) => `<tr><td style="width:32%;padding:6px;border:1px solid #888"><b>${a}</b></td><td style="padding:6px;border:1px solid #888">${b}</td></tr>`;
+    const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>Phiếu cấp mã kích hoạt</title>
+<style>body{font-family:"Times New Roman";font-size:13pt} td{font-size:13pt;vertical-align:top}</style></head><body>
+<p align="center"><b>PHIẾU CẤP MÃ KÍCH HOẠT</b><br><b>PHẦN MỀM HỖ TRỢ BỒI THƯỜNG, HỖ TRỢ, TÁI ĐỊNH CƯ TỈNH SƠN LA</b></p>
+<table style="border-collapse:collapse;width:100%">
+${hang("Đơn vị được cấp", esc(x.donVi))}
+${hang("Mã cài đặt", `<span style="font-family:Consolas,monospace">${esc(x.maCaiDat)}</span>`)}
+${hang("Số dự án tối đa", x.soDuAn ?? "Không giới hạn")}
+${hang("Hạn dùng", x.hetHan ? `đến hết ngày ${ngay(x.hetHan)}` : "Không thời hạn")}
+${hang("Ngày cấp", ngay(x.cap))}
+${x.thayCho ? hang("Ghi chú", `Cấp lại thay mã cài đặt ${esc(x.thayCho)} (đơn vị thay máy)`) : ""}
+</table>
+<p><b>Mã kích hoạt:</b></p>
+<p style="font-family:Consolas,monospace;font-size:10pt;word-break:break-all;border:1px solid #888;padding:6px">${esc(x.ma)}</p>
+<p><b>Cách nhập:</b> mở phần mềm → <i>Giới thiệu, bản quyền</i> → dán toàn bộ mã vào ô <i>Mã kích hoạt</i> → bấm <i>Kích hoạt</i>. Mã chỉ dùng được trên máy (hoặc máy chủ mạng nội bộ) có mã cài đặt ghi trên phiếu. Hết hạn thì phần mềm trở về mức dùng thử: dự án đã có vẫn xem, sửa, xuất được; chỉ không thêm dự án vượt mức.</p>
+<p>Đề nghị đơn vị lưu giữ phiếu này; khi thay máy, gửi mã cài đặt mới để được cấp lại.</p>
+<table style="width:100%;margin-top:24px"><tr><td style="width:50%;text-align:center"><b>ĐƠN VỊ NHẬN</b><br><i>(ký, ghi rõ họ tên)</i></td><td style="text-align:center"><b>NGƯỜI CẤP</b><br><i>(ký, ghi rõ họ tên)</i><br><br><br><br>Lê Tùng Lâm<br>Sở Nông nghiệp và Môi trường tỉnh Sơn La</td></tr></table>
+</body></html>`;
+    // tên tệp không dấu (trình duyệt có thể bỏ tên có dấu, khoảng trắng)
+    const ten = x.donVi.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
+    tai(`Phieu-cap-ma_${ten}_${x.cap}.doc`, "\ufeff" + html, "application/msword");
+  }
+  $("phieu").onclick = () => ds[0] && phieu(ds[0]);
   // ---- danh sách mã đã cấp (localStorage của trang này)
   const KHOA_DS = "gpmb-ma-da-cap";
   let ds = [];
@@ -116,27 +147,48 @@
     const hom = new Date().toISOString().slice(0, 10);
     $("bang").innerHTML = ds.length
       ? '<tr style="text-align:left;border-bottom:1px solid #d7ddd9"><th>Ngày cấp</th><th>Đơn vị</th><th>Mã cài đặt</th><th>Số dự án</th><th>Hạn</th><th></th></tr>' +
-        ds.map((x, i) => `<tr style="border-bottom:1px solid #eef1ef"><td>${ngay(x.cap)}</td><td>${esc(x.donVi)}</td><td style="font-family:monospace">${esc(x.maCaiDat)}</td><td>${x.soDuAn ?? "không giới hạn"}</td><td${x.hetHan && x.hetHan < hom ? ' style="color:#b42318"' : ""}>${ngay(x.hetHan)}</td><td><button class="phu" style="margin:2px;padding:3px 8px" data-chep="${i}">Chép mã</button><button class="phu" style="margin:2px;padding:3px 8px" data-xoa="${i}">Xóa</button></td></tr>`).join("")
+        ds.map((x, i) => `<tr style="border-bottom:1px solid #eef1ef"><td>${ngay(x.cap)}</td><td>${esc(x.donVi)}</td><td style="font-family:monospace">${esc(x.maCaiDat)}</td><td>${x.soDuAn ?? "không giới hạn"}</td><td${x.hetHan && x.hetHan < hom ? ' style="color:#b42318"' : ""}>${ngay(x.hetHan)}</td><td><button class="phu" style="margin:2px;padding:3px 8px" data-chep="${i}">Chép mã</button><button class="phu" style="margin:2px;padding:3px 8px" data-phieu="${i}">Phiếu</button><button class="phu" style="margin:2px;padding:3px 8px" data-cap-lai="${i}" title="Đơn vị thay máy: cấp mã mới cho mã cài đặt mới, giữ số dự án, hạn dùng">Cấp lại</button><button class="phu" style="margin:2px;padding:3px 8px" data-xoa="${i}">Xóa</button>${x.thayCho ? `<div class="mo">cấp lại, thay ${esc(x.thayCho)}</div>` : ""}</td></tr>`).join("")
       : '<tr><td class="mo">Chưa cấp mã nào.</td></tr>';
   }
   function luu() {
     try { localStorage.setItem(KHOA_DS, JSON.stringify(ds)); } catch {}
     ve();
   }
-  $("bang").onclick = (e) => {
-    const c = e.target.dataset.chep, x = e.target.dataset.xoa;
+  $("bang").onclick = async (e) => {
+    const c = e.target.dataset.chep, x = e.target.dataset.xoa, ph = e.target.dataset.phieu, cl = e.target.dataset.capLai;
     if (c !== undefined) navigator.clipboard.writeText(ds[c].ma);
+    if (ph !== undefined) phieu(ds[ph]);
+    if (cl !== undefined) {
+      const cu = ds[cl];
+      $("loi").textContent = "";
+      if (!khoa) return ($("loi").textContent = "Chưa nạp tệp khóa riêng — nạp khóa rồi bấm Cấp lại.");
+      const moi = (prompt(`Cấp lại cho ${cu.donVi} (giữ ${cu.soDuAn ?? "không giới hạn"} dự án, hạn ${ngay(cu.hetHan)}).\nNhập mã cài đặt MỚI của máy:`) || "").trim().toUpperCase();
+      if (!moi) return;
+      if (!MA_CAI_DAT.test(moi)) return ($("loi").textContent = "Mã cài đặt mới phải có 16 ký tự (dạng XXXX-XXXX-XXXX-XXXX).");
+      const chuan = (s) => s.replace(/-/g, "");
+      if (chuan(moi) === chuan(cu.maCaiDat)) return ($("loi").textContent = "Mã cài đặt mới trùng mã cũ.");
+      const maMoi = moi.includes("-") ? moi : moi.match(/.{4}/g).join("-");
+      const nd = { v: 1, donVi: cu.donVi, maCaiDat: maMoi, soDuAn: cu.soDuAn ?? null, hetHan: cu.hetHan ?? null, cap: new Date().toISOString().slice(0, 10) };
+      const ma = await kyNd(nd);
+      ds.unshift({ ...nd, ma, thayCho: cu.maCaiDat });
+      $("ketQua").value = ma;
+      $("phieu").disabled = false;
+      luu();
+    }
     if (x !== undefined && confirm(`Xóa dòng ${ds[x].donVi} khỏi danh sách? (mã đã cấp vẫn dùng được)`)) { ds.splice(x, 1); luu(); }
   };
   const tai = (ten, noiDung, loai) => {
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([noiDung], { type: loai }));
     a.download = ten;
+    document.body.append(a);
     a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 30000);
   };
   $("xuatCsv").onclick = () => {
     const o = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-    const dong = [["Ngày cấp", "Đơn vị", "Mã cài đặt", "Số dự án", "Hạn dùng", "Mã kích hoạt"], ...ds.map((x) => [ngay(x.cap), x.donVi, x.maCaiDat, x.soDuAn ?? "không giới hạn", ngay(x.hetHan), x.ma])];
+    const dong = [["Ngày cấp", "Đơn vị", "Mã cài đặt", "Số dự án", "Hạn dùng", "Mã kích hoạt", "Ghi chú"], ...ds.map((x) => [ngay(x.cap), x.donVi, x.maCaiDat, x.soDuAn ?? "không giới hạn", ngay(x.hetHan), x.ma, x.thayCho ? `cấp lại thay ${x.thayCho}` : ""])];
     tai(`Danh-sach-ma-kich-hoat_${new Date().toISOString().slice(0, 10)}.csv`, "\ufeff" + dong.map((d) => d.map(o).join(",")).join("\r\n"), "text/csv;charset=utf-8");
   };
   $("saoLuu").onclick = () => tai(`Danh-sach-ma-kich-hoat_${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(ds, null, 2), "application/json");
