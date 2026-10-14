@@ -21,6 +21,9 @@ export const dsDot = (duAn: Pick<DuAn, "dotThuHoi">): DotThuHoi[] => [...(duAn.d
 export const coDot = (duAn: Pick<DuAn, "dotThuHoi">) => (duAn.dotThuHoi?.length ?? 0) > 0;
 export const timDot = (duAn: Pick<DuAn, "dotThuHoi">, id: string | undefined) => (id ? duAn.dotThuHoi?.find((d) => d.id === id) : undefined);
 export const dotCuaHo = (duAn: Pick<DuAn, "dotThuHoi">, h: Pick<Ho, "dotId">) => timDot(duAn, h.dotId);
+/** 1.0.11: khóa bộ chính sách áp dụng cho hộ — bộ riêng của hộ, rồi của đợt, rồi của dự án. */
+export const boCuaHo = (duAn: Pick<DuAn, "dotThuHoi" | "boChinhSach">, h: Pick<Ho, "dotId" | "boChinhSach">): string =>
+  h.boChinhSach || dotCuaHo(duAn, h)?.boChinhSach || duAn.boChinhSach;
 export const tenDot = (d: DotThuHoi | undefined) => (d ? (d.ten.trim() || `Đợt ${d.so}`) : "Chưa xếp đợt");
 
 /**

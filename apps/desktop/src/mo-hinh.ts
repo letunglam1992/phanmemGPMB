@@ -445,6 +445,8 @@ export interface Ho {
   yKienPA?: import("./doi-thoai").YKienPA;
   /** P3-4: tài khoản cán bộ phụ trách hồ sơ (tên đăng nhập). */
   phuTrach?: string;
+  /** 1.0.11: bộ chính sách riêng của hộ (chuyển theo hộ, kèm giải trình — chuyen-bo.ts); trống = theo đợt / dự án. */
+  boChinhSach?: string;
 }
 
 /**
@@ -475,6 +477,8 @@ export interface DotThuHoi {
   /** Số, ngày văn bản cấp đợt (thông báo thu hồi, QĐ phê duyệt phương án đợt…) — ghi đè DuAn.vanBan khi soạn văn bản của đợt. */
   vanBan?: Record<string, string>;
   ghiChu?: string;
+  /** 1.0.11: bộ chính sách riêng của đợt (chuyển theo đợt — chuyen-bo.ts); trống = theo dự án. Hộ có bộ riêng thì theo hộ. */
+  boChinhSach?: string;
 }
 
 export interface BanDoDuAn {

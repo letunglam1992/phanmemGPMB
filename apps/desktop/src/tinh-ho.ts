@@ -48,7 +48,8 @@ import type Decimal from "decimal.js";
 import { thuTinh } from "./bieu-thuc";
 import type { DuAn, Ho, KhongGiayTo, TaiDinhCuHo, TaiSan, Thua } from "./mo-hinh";
 import { laSoMay, truongLoi, truongSoDuAn, truongSoHo } from "./so";
-import { duAnCuaHo } from "./dot-thu-hoi";
+import { boCuaHo, duAnCuaHo } from "./dot-thu-hoi";
+import { BO_CHINH_SACH } from "./du-lieu";
 import { tenDayDu } from "./van-ban/loai-dat";
 
 export const LOAI_DAT_NN = ["LUC", "LUK", "LUN", "BHK", "NHK", "HNK", "CLN", "RSX", "RPH", "RDD", "NTS", "NKH", "LNP"];
@@ -367,7 +368,12 @@ export function tinhHo(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
 export const daTinh = (cs: BoChinhSach, duAn: DuAn, ho: Ho): boolean => !!DEM.get(ho)?.get(duAn)?.has(cs);
 
 /** Tính không qua bộ nhớ đệm. */
-export function tinhHoMoi(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
+export function tinhHoMoi(cs0: BoChinhSach, duAn0: DuAn, ho: Ho): KetQuaHo {
+  // 1.0.11: hộ / đợt có bộ chính sách riêng (chuyen-bo.ts) → tính theo bộ đó; máy chưa có bộ đó thì giữ bộ được truyền vào
+  const khoa = boCuaHo(duAn0, ho);
+  const rieng = khoa !== duAn0.boChinhSach ? BO_CHINH_SACH[khoa] : undefined;
+  const cs = rieng ?? cs0;
+  const duAn = rieng ? { ...duAn0, boChinhSach: khoa } : duAn0;
   const loiHo = truongLoi(truongSoHo(ho));
   const loiDa = truongLoi(truongSoDuAn(duAn));
   let hoTinh = ho, daTinh = duAn;

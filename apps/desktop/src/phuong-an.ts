@@ -15,7 +15,7 @@ import type { BoChinhSach } from "@gpmb/core";
 import { tinhHo, TEN_COT, type CotTongHop, type KetQuaHo } from "./tinh-ho";
 import { taoId, type DuAn, type Ho } from "./mo-hinh";
 import { soD } from "./so";
-import { loiChotTheoDot, tenDot, timDot } from "./dot-thu-hoi";
+import { boCuaHo, loiChotTheoDot, tenDot, timDot } from "./dot-thu-hoi";
 
 export type TrangThaiPA = "DA_CHOT" | "DA_PHE_DUYET" | "DA_HUY";
 export const TEN_TT_PA: Record<TrangThaiPA, string> = { DA_CHOT: "Đã chốt, chờ phê duyệt", DA_PHE_DUYET: "Đã phê duyệt", DA_HUY: "Đã hủy" };
@@ -162,7 +162,11 @@ export async function chotPhuongAn(
   const dieuChinh = hos.filter((h) => hoDaPheDuyet(dsPA).has(h.id));
   if (dieuChinh.length && !o.lyDo.trim())
     throw new LoiPhuongAn(`Hộ ${dieuChinh.map((h) => h.ma).join(", ")} đã có trong phương án đã phê duyệt — phải ghi lý do điều chỉnh, bổ sung.`);
-  const ho = ds.map(({ h, k }) => chupHo(h, k));
+  // 1.0.11: hộ tính theo bộ của đợt → ghi rõ bộ vào dữ liệu đóng băng (đổi bộ của đợt sau khi chốt không làm lệch bản)
+  const ho = ds.map(({ h, k }) => {
+    const bo = boCuaHo(duAn, h);
+    return chupHo(bo !== duAn.boChinhSach && !h.boChinhSach ? { ...h, boChinhSach: bo } : h, k);
+  });
   const base = {
     boChinhSach: duAn.boChinhSach,
     thamSoDuAn: structuredClone({ xa: duAn.xa, giaGao: duAn.giaGao, hanMucNN: duAn.hanMucNN, heSoGiaDat: duAn.heSoGiaDat }),

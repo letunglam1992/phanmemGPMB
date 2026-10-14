@@ -447,6 +447,8 @@ function HopXem({ p, dong: dongHop }: { p: PhienBanPA; dong: () => void }) {
     <HopThoai tieuDe={`Bản ${p.so}: ${p.ten}`} dong={dongHop} rong={980}>
       <div className="mo mb-8">
         {tenTrangThai(p)} · chốt {new Date(p.luc).toLocaleString("vi-VN", { hour12: false })} ({p.nguoi}) · bộ chính sách {p.boChinhSach} · giá gạo {p.thamSoDuAn.giaGao?.dongKg ?? "—"} đ/kg · hệ số giá đất {p.thamSoDuAn.heSoGiaDat?.heSo ?? "1"}
+        {p.ho.some((h) => h.duLieu.boChinhSach && h.duLieu.boChinhSach !== p.boChinhSach) && <> · bộ riêng: {p.ho.filter((h) => h.duLieu.boChinhSach && h.duLieu.boChinhSach !== p.boChinhSach).map((h) => `${h.ma} (${h.duLieu.boChinhSach})`).join(", ")}</>}
+        {p.thamDinh && <div>Thẩm định: {TEN_Y_KIEN_TD[p.thamDinh.yKien]} — {moTaQd(p.thamDinh)}{p.thamDinh.coQuan ? ` của ${p.thamDinh.coQuan}` : ""}{p.thamDinh.noiDung ? `. ${p.thamDinh.noiDung}` : ""}</div>}
       </div>
       <table className="bang">
         <thead>

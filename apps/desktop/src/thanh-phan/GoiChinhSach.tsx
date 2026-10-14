@@ -8,6 +8,11 @@ import type { DuAn } from "../mo-hinh";
 import { HopThoai } from "./chung";
 import { Chon } from "./Chon";
 import { taiXuong } from "../tai-xuong";
+import { datBoDot, datBoHo, excelChuyenBo, moTaPhamVi, taiLieuGiaiTrinh, tinhChuyenBo, type PhamViChuyen } from "../chuyen-bo";
+import { boCuaHo, coDot, dsDot, tenDot, timDot } from "../dot-thu-hoi";
+import { inTaiLieu, taoDocx } from "../van-ban/tai-lieu-don-gian";
+import { tenTep } from "../ten-tep";
+import { homNayIso } from "../trang-thai";
 
 const tomTatDonGia = (s: string) => {
   try {
@@ -85,6 +90,9 @@ export function TheGoiChinhSach() {
 export function TheBoChinhSachDuAn({ duAn }: { duAn: DuAn }) {
   const { hoCua, quyen, chuyenBoChinhSach, bao } = useUngDung();
   const [moi, setMoi] = useState<string | null>(null);
+  const [phamVi, setPhamVi] = useState(false);
+  const hoRieng = hoCua(duAn.id).filter((h) => h.boChinhSach);
+  const dotRieng = (duAn.dotThuHoi ?? []).filter((d) => d.boChinhSach);
   const ds = Object.keys(BO_CHINH_SACH);
   const thieu = !coBoChinhSach(duAn.boChinhSach);
   return (
@@ -99,7 +107,15 @@ export function TheBoChinhSachDuAn({ duAn }: { duAn: DuAn }) {
             {ds.filter((k) => k !== duAn.boChinhSach).map((k) => <option key={k} value={k}>{tenBoChinhSach(k)} ({k})</option>)}
           </Chon>
         )}
+        {quyen("CAI_DAT") && ds.length > 1 && <button className="nut nut-nho" title="Hồ sơ đang lập dở khi có văn bản mới: chuyển bộ chính sách cho một số hộ hoặc một đợt, kèm giải trình chênh lệch" onClick={() => setPhamVi(true)}>Chuyển theo hộ, đợt…</button>}
       </div>
+      {(hoRieng.length > 0 || dotRieng.length > 0) && (
+        <div className="the-than mo chu-nho" style={{ paddingTop: 0 }} data-bo-rieng>
+          Bộ riêng:{" "}
+          {[...dotRieng.map((d) => `${tenDot(d)} → ${d.boChinhSach}`), ...(hoRieng.length ? [`${hoRieng.length} hộ (${hoRieng.slice(0, 8).map((h) => `${h.ma} → ${h.boChinhSach}`).join(", ")}${hoRieng.length > 8 ? ", …" : ""})`] : [])].join("; ")}
+        </div>
+      )}
+      {phamVi && <HopChuyenPhamVi duAn={duAn} dong={() => setPhamVi(false)} />}
       {(() => {
         // Chuyển tiếp (khoản 2 Điều 3 QĐ 64/2026): bộ mới có sẵn thay bộ đang dùng
         const thay = Object.entries(BO_CHINH_SACH).find(([, cs]) => cs.chuyenTiep?.boCu === duAn.boChinhSach);
@@ -120,6 +136,110 @@ export function TheBoChinhSachDuAn({ duAn }: { duAn: DuAn }) {
       })()}
       {moi && <HopChuyenBo duAn={duAn} moi={moi} hos={hoCua(duAn.id)} dong={() => setMoi(null)} apDung={async (tomTat) => { if (await chuyenBoChinhSach(duAn.id, moi, tomTat)) { bao(`Đã chuyển dự án sang bộ chính sách ${moi}`); setMoi(null); } }} />}
     </div>
+  );
+}
+
+/** 1.0.11: chuyển bộ chính sách theo hộ / đợt, xem chênh lệch từng hộ, từng khoản; xuất Excel, Word giải trình. */
+function HopChuyenPhamVi({ duAn, dong }: { duAn: DuAn; dong: () => void }) {
+  const { hoCua, luuNhieuHo, luuDuAn, ghiNhatKy, bao, nguoiDung } = useUngDung();
+  const hos = hoCua(duAn.id);
+  const coDotTH = coDot(duAn);
+  const [loai, setLoai] = useState<"ho" | "dot">(coDotTH ? "dot" : "ho");
+  const [dotId, setDotId] = useState(dsDot(duAn)[0]?.id ?? "");
+  const [chon, setChon] = useState<Set<string>>(new Set());
+  const [loc, setLoc] = useState("");
+  const [khoa, setKhoa] = useState(Object.keys(BO_CHINH_SACH).find((k) => k !== duAn.boChinhSach) ?? "");
+  const [lyDo, setLyDo] = useState("");
+  const pv: PhamViChuyen = loai === "dot" ? { loai, dotId, khoa } : { loai, hoIds: [...chon], khoa };
+  const kq = useMemo(() => tinhChuyenBo(duAn, hos, pv), [duAn, hos, loai, dotId, chon, khoa]); // eslint-disable-line react-hooks/exhaustive-deps
+  const tien = (x: string | null) => (x == null ? "—" : dinhDang(D(x), 0));
+  const dau = (x: string) => (D(x).gt(0) ? "+" : "") + dinhDang(D(x), 0);
+  const tl = () => taiLieuGiaiTrinh(duAn, pv, kq, { lyDo, nguoi: nguoiDung, ngay: homNayIso() });
+  const loiLuu = !kq.dong.length ? "Chưa có hộ nào trong phạm vi" : !lyDo.trim() ? "Ghi lý do, căn cứ chuyển (bắt buộc)" : loai === "dot" && (timDot(duAn, dotId)?.boChinhSach ?? "") === khoa ? "Đợt đã dùng bộ này" : "";
+  const apDung = async () => {
+    const mt = moTaPhamVi(duAn, pv, kq.dong.length);
+    if (!confirm(`Áp dụng: ${mt}? Tổng tạm tính ${tien(kq.tongTruoc)} → ${tien(kq.tongSau)} đ (chênh ${dau(kq.chenh)} đ).`)) return;
+    if (loai === "dot") {
+      if (!(await luuDuAn(datBoDot(duAn, dotId, khoa), "CAI_DAT"))) return;
+    } else {
+      const r = await luuNhieuHo(hos.filter((h) => chon.has(h.id)).map((h) => ({ h: datBoHo(h, khoa), nhatKy: `Chuyển bộ chính sách: ${boCuaHo(duAn, h)} → ${khoa || duAn.boChinhSach} (theo dự án/đợt). Lý do: ${lyDo.trim()}` })));
+      if (r.loi.length) return bao(r.loi.join("; "), "loi");
+    }
+    await ghiNhatKy("Chuyển bộ chính sách theo hộ/đợt", `${duAn.ten}: ${mt}. Tổng ${tien(kq.tongTruoc)} → ${tien(kq.tongSau)} đ (chênh ${dau(kq.chenh)} đ). Lý do: ${lyDo.trim()}`);
+    bao(`Đã chuyển: ${mt}`);
+    dong();
+  };
+  const hienHo = hos.filter((h) => !loc || `${h.ma} ${h.ten}`.toLowerCase().includes(loc.toLowerCase()));
+  return (
+    <HopThoai
+      tieuDe="Chuyển bộ chính sách theo hộ, đợt"
+      dong={dong}
+      rong={1000}
+      chan={
+        <>
+          <button className="nut" disabled={!kq.dong.length} onClick={async () => { if (await taiXuong(await excelChuyenBo(duAn, pv, kq, lyDo), tenTep(`Chenh-lech-chuyen-bo - ${duAn.ten}.xlsx`), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) bao("Đã xuất Excel chênh lệch"); }}>Xuất Excel</button>
+          <button className="nut" disabled={!kq.dong.length} onClick={async () => { if (await taiXuong(taoDocx(tl()), tenTep(`Giai-trinh-chuyen-bo - ${duAn.ten}.docx`), "application/vnd.openxmlformats-officedocument.wordprocessingml.document")) bao("Đã xuất Word giải trình"); }}>Giải trình (Word)</button>
+          <button className="nut" disabled={!kq.dong.length} onClick={() => inTaiLieu(tl())}>In / PDF</button>
+          <button className="nut" onClick={dong}>Đóng</button>
+          <button className="nut nut-chinh" disabled={!!loiLuu} title={loiLuu} onClick={() => void apDung()}>Áp dụng</button>
+        </>
+      }
+    >
+      <div className="thong-bao thong-bao-vang chu-nho">Dùng khi hồ sơ đang lập dở mà có văn bản mới: cán bộ chọn hộ/đợt thuộc trường hợp áp dụng (phần mềm không tự xác định). Bản phương án đã chốt, phê duyệt không đổi. Bộ áp dụng cho hộ: bộ riêng của hộ → của đợt → của dự án.</div>
+      <div className="luoi luoi-2 mt-8">
+        <label>Phạm vi{" "}
+          <Chon value={loai} onChange={(e) => setLoai(e.target.value as "ho" | "dot")} aria-label="Phạm vi chuyển">
+            {coDotTH && <option value="dot">Theo đợt thu hồi</option>}
+            <option value="ho">Theo hộ</option>
+          </Chon>
+        </label>
+        <label>Chuyển sang{" "}
+          <Chon value={khoa} onChange={(e) => setKhoa(e.target.value)} aria-label="Bộ chính sách đích">
+            {Object.keys(BO_CHINH_SACH).map((k) => <option key={k} value={k}>{tenBoChinhSach(k)} ({k})</option>)}
+            <option value="">Bỏ bộ riêng — theo {loai === "ho" ? "đợt / dự án" : "dự án"}</option>
+          </Chon>
+        </label>
+      </div>
+      {loai === "dot" ? (
+        <label className="mt-8" style={{ display: "block" }}>Đợt{" "}
+          <Chon value={dotId} onChange={(e) => setDotId(e.target.value)} aria-label="Đợt chuyển bộ">
+            {dsDot(duAn).map((d) => <option key={d.id} value={d.id}>{tenDot(d)}{d.boChinhSach ? ` (đang dùng ${d.boChinhSach})` : ""}</option>)}
+          </Chon>
+        </label>
+      ) : (
+        <div className="mt-8">
+          <input placeholder="Lọc theo mã, tên…" value={loc} onChange={(e) => setLoc(e.target.value)} style={{ width: 240 }} />{" "}
+          <button className="nut nut-nho" onClick={() => setChon(new Set([...chon, ...hienHo.map((h) => h.id)]))}>Chọn tất cả đang hiện</button>{" "}
+          <button className="nut nut-nho" onClick={() => setChon(new Set())}>Bỏ chọn</button>
+          <div style={{ maxHeight: 160, overflow: "auto", border: "1px solid var(--vien)", borderRadius: 6, padding: 6, marginTop: 6 }} data-chon-ho-bo>
+            {hienHo.map((h) => (
+              <label key={h.id} style={{ display: "block" }} className="chu-nho">
+                <input type="checkbox" checked={chon.has(h.id)} onChange={(e) => { const n = new Set(chon); if (e.target.checked) n.add(h.id); else n.delete(h.id); setChon(n); }} /> <b>{h.ma}</b> {h.ten} <span className="mo">· {boCuaHo(duAn, h)}{h.boChinhSach ? " (riêng)" : ""}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+      <label className="mt-8" style={{ display: "block" }}>Lý do, căn cứ chuyển (bắt buộc — in trên giải trình)
+        <textarea rows={2} value={lyDo} onChange={(e) => setLyDo(e.target.value)} style={{ width: "100%" }} aria-label="Lý do chuyển bộ" />
+      </label>
+      {kq.giuBoRieng.length > 0 && <div className="mo chu-nho mt-6">Hộ có bộ riêng, không đổi theo đợt: {kq.giuBoRieng.map((h) => h.ma).join(", ")}</div>}
+      <table className="bang mt-8" data-bang-chuyen-bo>
+        <thead><tr><th>Hồ sơ</th><th>Bộ trước → sau</th><th className="so">Trước (đ)</th><th className="so">Sau (đ)</th><th className="so">Chênh lệch (đ)</th><th>Khoản thay đổi</th></tr></thead>
+        <tbody>
+          {kq.dong.map((d) => (
+            <tr key={d.hoId}>
+              <td className="chu-nho"><b>{d.ma}</b> {d.ten}{d.daPheDuyet && <div className="mo">đã có trong PA đã phê duyệt</div>}</td>
+              <td className="chu-nho">{d.boTruoc} → {d.boSau}</td>
+              <td className="so">{tien(d.truoc)}</td><td className="so">{tien(d.sau)}</td>
+              <td className="so" style={D(d.chenh).isZero() ? undefined : { fontWeight: 700 }}>{dau(d.chenh)}</td>
+              <td className="chu-nho">{d.khoan.slice(0, 3).map((k) => `${k.ma} ${dau(k.chenh)}`).join("; ")}{d.khoan.length > 3 ? ` (+${d.khoan.length - 3})` : ""}{d.thieuSau ? <div className="nhan nhan-vang">{d.thieuSau} khoản thiếu căn cứ</div> : null}</td>
+            </tr>
+          ))}
+          {kq.dong.length > 0 && <tr className="tong"><td colSpan={2}>Tổng ({kq.dong.length} hộ)</td><td className="so">{tien(kq.tongTruoc)}</td><td className="so">{tien(kq.tongSau)}</td><td className="so">{dau(kq.chenh)}</td><td /></tr>}
+        </tbody>
+      </table>
+    </HopThoai>
   );
 }
 
