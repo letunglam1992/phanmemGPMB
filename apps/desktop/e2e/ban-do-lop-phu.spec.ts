@@ -77,8 +77,12 @@ test("ghi chú hiện trường, điểm đo, bắt điểm và lưu kết quả
   // Ghi chú hiện trường: nút + Ghi chú → bấm vị trí → nhóm, nội dung → danh sách; đánh dấu đã xử lý
   const gc = p.getByLabel("Danh sách ghi chú hiện trường");
   await gc.getByRole("button", { name: "+ Ghi chú" }).click();
-  await bam(0.3, 0.5);
   const hop = p.locator(".hop-thoai");
+  // CI chậm: bản đồ có thể chưa nhận lệnh ở lần bấm đầu — bấm lại đến khi hộp ghi chú mở
+  await expect(async () => {
+    if (!(await hop.getByLabel("Nhóm ghi chú").isVisible())) await bam(0.3, 0.5);
+    await expect(hop.getByLabel("Nhóm ghi chú")).toBeVisible({ timeout: 3000 });
+  }).toPass({ timeout: 30000 });
   await hop.getByLabel("Nhóm ghi chú").selectOption("MO");
   await hop.getByLabel("Nội dung ghi chú").fill("02 mộ đất chưa kiểm đếm");
   await hop.getByRole("button", { name: "Lưu ghi chú" }).click();
