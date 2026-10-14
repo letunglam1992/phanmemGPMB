@@ -20,7 +20,7 @@ Phần mềm đã cài tự tìm bản mới trên GitHub Releases của kho `le
 Mất khóa bí mật → các bản đã cài không nhận cập nhật nữa (phải cài tay bản ký bằng khóa mới). Không đưa khóa bí mật vào kho.
 
 ## Mỗi lần phát hành
-1. Tăng phiên bản ở 5 chỗ (CLAUDE.md), commit (thông điệp commit = nội dung bản mới hiện trong phần mềm), push.
+1. Ghi mục `## X.Y.Z` vào `docs/nhung-thay-doi.md` (từ 1.0.11: ghi chú phát hành = mục này + 5 mục cũ hơn, do `tools/ghi-chu-phat-hanh.mjs` lấy; thiếu mục thì job phát hành dừng). Tăng phiên bản ở 5 chỗ (CLAUDE.md), commit, push. Phần mềm (từ 1.0.11) hiện mọi mục mới hơn bản đang dùng; bản ≤ 1.0.10 hiện nguyên văn ghi chú.
 2. Phát hành — một trong hai cách:
    - **Bấm nút (khuyên dùng):** GitHub → Actions → "Kiểm thử và đóng gói Windows" → **Run workflow** → chọn nhánh → đánh dấu **"Phát hành bản cập nhật"** → Run. Nhãn `vX.Y.Z` lấy theo phiên bản trong `tauri.conf.json`, tạo tại commit đó.
    - Hoặc tạo nhãn trùng phiên bản và push: `git tag v0.9.16 && git push origin v0.9.16`.

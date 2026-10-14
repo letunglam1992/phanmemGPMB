@@ -66,5 +66,7 @@ Xem docs/11. Tóm tắt: máy chủ đặt IP tĩnh, bật phần mềm trong gi
 - **Tác giả cấp mã:** mở `tools/giay-phep/cap-ma.html` bằng trình duyệt (chạy trên máy, không gửi gì ra ngoài) → chọn tệp khóa riêng `gpmb-khoa-cap-ma.json` → nhập tên đơn vị, mã cài đặt, số dự án (trống = không giới hạn), hạn dùng (trống = không thời hạn) → "Cấp mã kích hoạt" → gửi mã `GPMB1.…` cho đơn vị.
 - **Đơn vị kích hoạt:** tài khoản Quản trị dán mã vào ô "Mã kích hoạt" → Kích hoạt (ghi nhật ký hệ thống).
 - Hết hạn: dự án đã có vẫn xem, sửa, xuất; chỉ không thêm dự án vượt mức dùng thử. Gia hạn: cấp mã mới (cùng mã cài đặt), dán đè.
+- **Phiếu cấp mã (1.0.11):** sau khi cấp, bấm "Phiếu cấp mã (Word)" (hoặc "Phiếu" ở dòng trong danh sách) → tệp `.doc` có đơn vị, mã cài đặt, số dự án, hạn, mã kích hoạt, cách nhập, chỗ ký — mở bằng Word để in, gửi đơn vị.
+- **Đơn vị thay máy (1.0.11):** ở dòng mã cũ trong danh sách bấm "Cấp lại" → nhập mã cài đặt mới → phần mềm cấp mã mới giữ đơn vị, số dự án, hạn dùng; danh sách ghi "cấp lại, thay …" (mã cũ vẫn hợp lệ trên máy cũ — không thu hồi được).
 - **Giữ bí mật tệp khóa riêng**; mất hoặc lộ: tạo cặp khóa mới ở trang công cụ, thay khóa công khai trong `apps/desktop/src/giay-phep-khoa.ts`, phát hành bản mới, cấp lại mã cho các đơn vị.
 
