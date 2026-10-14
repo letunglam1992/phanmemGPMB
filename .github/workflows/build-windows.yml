@@ -100,7 +100,8 @@ jobs:
           echo "NHAN=v$pb" >> "$GITHUB_ENV"
           [ -n "$TAURI_SIGNING_PRIVATE_KEY" ] || { echo "::error::Chưa có secret TAURI_SIGNING_PRIVATE_KEY"; exit 1; }
           [ -s apps/desktop/src-tauri/khoa-cap-nhat.pub ] || { echo "::error::Chưa có khóa công khai apps/desktop/src-tauri/khoa-cap-nhat.pub"; exit 1; }
-          { echo 'NOI_DUNG<<HET_NOI_DUNG'; git log -1 --format=%B | grep -v -E '^(Co-Authored-By|Claude-Session):'; echo 'HET_NOI_DUNG'; } >> "$GITHUB_ENV"
+          node tools/ghi-chu-phat-hanh.mjs "$pb" > ghi-chu.md || exit 1
+          { echo 'NOI_DUNG<<HET_NOI_DUNG'; cat ghi-chu.md; echo 'HET_NOI_DUNG'; } >> "$GITHUB_ENV"
       - uses: actions/setup-node@v4
         with:
           node-version: 22

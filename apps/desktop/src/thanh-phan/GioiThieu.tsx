@@ -5,6 +5,9 @@ import type { KetQuaKiemTra } from "../cap-nhat";
 import { taiXuong } from "../tai-xuong";
 import { taoBieuMauThu } from "../bieu-mau-thu";
 import { TheGiayPhep } from "./GiayPhep";
+import thayDoiMd from "../../../../docs/nhung-thay-doi.md?raw";
+import { tachThayDoi } from "../nhung-thay-doi";
+import { DsThayDoi } from "./NhungThayDoi";
 
 /** Giới thiệu phần mềm, phiên bản, bản quyền, liên hệ. */
 export function HopGioiThieu({ dong, kqCapNhat }: { dong: () => void; kqCapNhat?: KetQuaKiemTra | null }) {
@@ -32,6 +35,10 @@ export function HopGioiThieu({ dong, kqCapNhat }: { dong: () => void; kqCapNhat?
       </table>
       <TheGiayPhep />
       <TheCapNhat kqDau={kqCapNhat} />
+      <details className="mt-8">
+        <summary className="chu-nho">Những thay đổi của các phiên bản gần đây</summary>
+        <DsThayDoi muc={(tachThayDoi(thayDoiMd) ?? []).slice(0, 5)} />
+      </details>
       <p className="chu-nho mb-0">
         <b>© {BAN_QUYEN.nam} {BAN_QUYEN.tacGia}. All rights reserved.</b>
         <br />

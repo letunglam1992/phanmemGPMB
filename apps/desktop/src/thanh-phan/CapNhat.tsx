@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useUngDung } from "../ung-dung";
 import { caiDatCapNhat, coCapNhat, docCaiDat, ghiCaiDat, kiemTraCapNhat, type KetQuaKiemTra } from "../cap-nhat";
 import { PHIEN_BAN } from "../phien-ban";
+import { mucMoiHon, tachThayDoi } from "../nhung-thay-doi";
+import { DsThayDoi } from "./NhungThayDoi";
 
 /** Thẻ "Cập nhật phần mềm" trong hộp Giới thiệu: kiểm tra, xem nội dung bản mới, sao lưu rồi cài đè, khởi động lại. */
 export function TheCapNhat({ kqDau }: { kqDau?: KetQuaKiemTra | null }) {
@@ -56,7 +58,12 @@ export function TheCapNhat({ kqDau }: { kqDau?: KetQuaKiemTra | null }) {
       {kq?.ban_moi && (
         <div className="thong-bao thong-bao-xanh mt-8" role="status">
           <b>Có bản mới {kq.ban_moi.phien_ban}</b>{kq.ban_moi.ngay ? ` (phát hành ${kq.ban_moi.ngay.split("-").reverse().join("/")})` : ""} — đang dùng {kq.ban_moi.hien_tai}.
-          {kq.ban_moi.ghi_chu && <pre className="cap-nhat-ghi-chu chu-nho">{kq.ban_moi.ghi_chu}</pre>}
+          {kq.ban_moi.ghi_chu && (() => {
+            // 1.0.11: ghi chú có các mục "## X.Y.Z" → hiện mọi bản mới hơn bản đang dùng; ghi chú cũ (một đoạn) hiện nguyên văn
+            const muc = tachThayDoi(kq.ban_moi.ghi_chu);
+            const moi = muc && mucMoiHon(muc, kq.ban_moi.hien_tai, kq.ban_moi.phien_ban);
+            return moi?.length ? <DsThayDoi muc={moi} /> : <pre className="cap-nhat-ghi-chu chu-nho">{kq.ban_moi.ghi_chu}</pre>;
+          })()}
           <div className="nhom-nut mt-8" style={{ alignItems: "center" }}>
             <button className="nut nut-chinh nut-nho" disabled={!!dang || !quyen("CAI_DAT")} title={quyen("CAI_DAT") ? undefined : "Chỉ tài khoản Quản trị được cập nhật phần mềm"} onClick={() => void cai()}>{dang === "CAI" ? "Đang cập nhật…" : "Sao lưu và cập nhật"}</button>
             {!dang && <button className="nut nut-chu nut-nho" onClick={() => { ghiCaiDat({ ...docCaiDat(), boQua: kq.ban_moi!.phien_ban }); setKq({ ...kq, ban_moi: null }); }}>Để sau</button>}
