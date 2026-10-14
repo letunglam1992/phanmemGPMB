@@ -61,7 +61,7 @@ test("ghi nhận phê duyệt – đợt 1 không có số, ngày QĐ; bổ sung
   const hop = p.locator("[role=dialog]", { hasText: "Ghi nhận phê duyệt – đợt 1" });
   await expect(hop.locator("h2")).toHaveText("Ghi nhận phê duyệt – đợt 1");
   await oNhap(hop, "Số quyết định (có thể bổ sung sau)").fill("");
-  await expect(hop.getByRole("status")).toContainText("Chưa có số, ngày quyết định — vẫn ghi nhận được");
+  await expect(hop.getByRole("status").filter({ hasText: "Chưa có số" })).toContainText("Chưa có số, ngày quyết định — vẫn ghi nhận được");
   await p.screenshot({ path: "test-results/phe-duyet-dot.png" });
   await hop.getByRole("button", { name: "Ghi nhận phê duyệt" }).click();
   await expect(hop).toHaveCount(0);
