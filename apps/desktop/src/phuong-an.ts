@@ -5,7 +5,8 @@
  *   dữ liệu hồ sơ từng hộ + tham số dự án + kết quả từng khoản + mã băm SHA-256.
  * - Chỉ hộ có tổng "được chốt" (không còn khoản Thiếu căn cứ / Cần xác nhận — QD-03) mới đưa vào bản chốt;
  *   phần mềm không tự loại hộ: trả danh sách để cán bộ quyết định.
- * - Bản đã chốt → Phê duyệt (bắt buộc số, ngày quyết định) hoặc Hủy (bắt buộc lý do).
+ * - Bản đã chốt → (1.0.11) Ghi nhận thẩm định (k3 Đ3 NĐ 88/2024; Mục XII Sổ tay) → Phê duyệt, hoặc Hủy (bắt buộc lý do).
+ *   Kết quả thẩm định đã ghi không sửa (chỉ bổ sung ô trống); thẩm định yêu cầu chỉnh sửa → hủy bản, lập bản mới.
  *   Bản đã phê duyệt không sửa, không xóa; thay đổi = lập bản mới có lý do điều chỉnh.
  */
 import { D } from "@gpmb/core";
@@ -45,6 +46,27 @@ export interface HoChot {
   duLieu: Ho;
 }
 
+/** Ý kiến thẩm định (người dùng chọn theo báo cáo thẩm định thực tế; phần mềm không tự kết luận). */
+export type YKienThamDinh = "THONG_NHAT" | "THONG_NHAT_CO_Y_KIEN" | "KHONG_THONG_NHAT";
+export const TEN_Y_KIEN_TD: Record<YKienThamDinh, string> = {
+  THONG_NHAT: "Thống nhất",
+  THONG_NHAT_CO_Y_KIEN: "Thống nhất, có ý kiến chỉnh sửa, bổ sung",
+  KHONG_THONG_NHAT: "Không thống nhất / phải hoàn thiện lại",
+};
+
+/** Kết quả thẩm định phương án (văn bản/báo cáo thẩm định của cơ quan chuyên môn — k3 Đ3 NĐ 88/2024/NĐ-CP). */
+export interface ThamDinhPA {
+  so: string;
+  /** YYYY-MM-DD */
+  ngay: string;
+  coQuan: string;
+  yKien: YKienThamDinh;
+  /** Tóm tắt ý kiến, nội dung yêu cầu chỉnh sửa (nếu có). */
+  noiDung?: string;
+  luc: string;
+  nguoi: string;
+}
+
 export interface PhienBanPA {
   id: string;
   so: number;
@@ -61,6 +83,8 @@ export interface PhienBanPA {
   bam: string;
   /** Ghi nhận phê duyệt: số, ngày QĐ có thể để trống khi ghi nhận và bổ sung sau; `dot` = đợt phê duyệt thứ mấy của dự án. */
   pheDuyet?: { so: string; ngay: string; coQuan: string; luc: string; nguoi: string; dot?: number };
+  /** 1.0.11: kết quả thẩm định (trạng thái vẫn "Đã chốt" cho đến khi ghi nhận phê duyệt). */
+  thamDinh?: ThamDinhPA;
   huy?: { luc: string; nguoi: string; lyDo: string };
   /** P3-1: bản phương án của đợt thu hồi (dự án có đợt: chốt, phê duyệt theo đợt). Trống = cả dự án (dự án không chia đợt). */
   dotId?: string;
@@ -158,6 +182,33 @@ export async function chotPhuongAn(
     ...(dot ? { dotTen: tenDot(dot) } : {}),
     bam: await sha256(noiDungBam(base)),
   };
+}
+
+/** Tên trạng thái kể cả bước thẩm định. */
+export const tenTrangThai = (p: PhienBanPA): string =>
+  p.trangThai === "DA_CHOT" && p.thamDinh ? (p.thamDinh.yKien === "KHONG_THONG_NHAT" ? "Thẩm định không thống nhất" : "Đã thẩm định, chờ phê duyệt") : TEN_TT_PA[p.trangThai];
+
+/**
+ * Ghi nhận kết quả thẩm định cho bản "Đã chốt". Lần đầu ghi đủ; về sau chỉ bổ sung ô còn trống (số, ngày, cơ quan,
+ * nội dung) — ý kiến và ô đã ghi không sửa: thẩm định lại = hủy bản, lập bản mới.
+ */
+export function ghiThamDinh(p: PhienBanPA, td: Omit<ThamDinhPA, "luc" | "nguoi">, nguoi: string, luc = new Date().toISOString()): PhienBanPA {
+  if (p.trangThai !== "DA_CHOT") throw new LoiPhuongAn(`Chỉ ghi nhận thẩm định cho bản "Đã chốt" (bản này: ${TEN_TT_PA[p.trangThai]}).`);
+  const c = p.thamDinh;
+  if (!c) {
+    if (!td.coQuan.trim()) throw new LoiPhuongAn("Phải ghi cơ quan thẩm định.");
+    return { ...p, thamDinh: { so: td.so.trim(), ngay: td.ngay, coQuan: td.coQuan.trim(), yKien: td.yKien, ...(td.noiDung?.trim() ? { noiDung: td.noiDung.trim() } : {}), luc, nguoi } };
+  }
+  if (td.yKien !== c.yKien) throw new LoiPhuongAn("Ý kiến thẩm định đã ghi không sửa được — hủy bản này và lập bản mới nếu thẩm định lại.");
+  const noiDung = c.noiDung || td.noiDung?.trim();
+  return { ...p, thamDinh: { ...c, so: c.so || td.so.trim(), ngay: c.ngay || td.ngay, coQuan: c.coQuan || td.coQuan.trim(), ...(noiDung ? { noiDung } : {}) } };
+}
+
+/** Cảnh báo trước khi ghi nhận phê duyệt (không chặn: phần mềm chỉ ghi nhận quyết định đã ký). */
+export function canhBaoTruocPheDuyet(p: PhienBanPA): string | null {
+  if (!p.thamDinh) return "Bản này chưa ghi nhận kết quả thẩm định (khoản 3 Điều 3 Nghị định 88/2024/NĐ-CP; Mục XII Sổ tay) — kiểm tra lại trước khi ghi nhận phê duyệt.";
+  if (p.thamDinh.yKien === "KHONG_THONG_NHAT") return "Kết quả thẩm định ghi \"không thống nhất / phải hoàn thiện lại\" — thông thường phải hủy bản này, lập bản mới đã hoàn thiện và thẩm định lại.";
+  return null;
 }
 
 export function pheDuyet(p: PhienBanPA, qd: { so: string; ngay: string; coQuan: string; dot?: number }, nguoi: string, luc = new Date().toISOString()): PhienBanPA {
@@ -286,5 +337,9 @@ export function moTaBan(p: PhienBanPA): string {
   const chot = `${p.dotTen ? `${p.dotTen}, ` : ""}chốt ngày ${ngay(p.luc.slice(0, 10))}`;
   if (p.trangThai === "DA_PHE_DUYET" && p.pheDuyet) return `Phương án bản ${p.so} – ĐÃ PHÊ DUYỆT${p.pheDuyet.dot ? ` (đợt ${p.pheDuyet.dot})` : ""} theo Quyết định số ${moTaQd(p.pheDuyet)}${p.pheDuyet.coQuan ? ` của ${p.pheDuyet.coQuan}` : ""} (${chot})`;
   if (p.trangThai === "DA_HUY") return `Phương án bản ${p.so} – ĐÃ HỦY (${chot}) – không dùng để chi trả`;
+  if (p.thamDinh) {
+    const vb = p.thamDinh.so || p.thamDinh.ngay ? ` (văn bản ${moTaQd(p.thamDinh)}${p.thamDinh.coQuan ? ` của ${p.thamDinh.coQuan}` : ""})` : "";
+    return p.thamDinh.yKien === "KHONG_THONG_NHAT" ? `Phương án bản ${p.so} – THẨM ĐỊNH KHÔNG THỐNG NHẤT${vb} (${chot})` : `Phương án bản ${p.so} – ĐÃ THẨM ĐỊNH${vb}, CHỜ PHÊ DUYỆT (${chot})`;
+  }
   return `Phương án bản ${p.so} – ĐÃ CHỐT, CHỜ PHÊ DUYỆT (${chot})`;
 }

@@ -1,5 +1,5 @@
 import { ONgay } from "../thanh-phan/ONgay";
-import { dotPheDuyet, moTaQd } from "../phuong-an";
+import { dotPheDuyet, moTaQd, tenTrangThai } from "../phuong-an";
 import { khopLocHo } from "../van-ban/loc-ho";
 import { useEffect, useMemo, useState } from "react";
 import { useUngDung } from "../ung-dung";
@@ -111,7 +111,7 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
   const dsBanPA = useMemo(() => {
     const ds = (duAn?.phuongAn ?? []).filter((x) => x.trangThai !== "DA_HUY");
     return ds
-      .map((x) => ({ id: x.id, so: x.so, hoIds: x.ho.map((y) => y.hoId), nhan: x.trangThai === "DA_PHE_DUYET" ? `Đợt ${dotPheDuyet(ds, x)} – bản ${x.so}${x.dotTen ? ` (${x.dotTen})` : ""} – đã phê duyệt ${moTaQd(x.pheDuyet)}` : `Bản ${x.so}${x.dotTen ? ` (${x.dotTen})` : ""} – đã chốt, chờ phê duyệt` }))
+      .map((x) => ({ id: x.id, so: x.so, hoIds: x.ho.map((y) => y.hoId), nhan: x.trangThai === "DA_PHE_DUYET" ? `Đợt ${dotPheDuyet(ds, x)} – bản ${x.so}${x.dotTen ? ` (${x.dotTen})` : ""} – đã phê duyệt ${moTaQd(x.pheDuyet)}` : `Bản ${x.so}${x.dotTen ? ` (${x.dotTen})` : ""} – ${tenTrangThai(x).toLowerCase()}` }))
       .sort((a, b) => a.so - b.so);
   }, [duAn?.phuongAn]);
   const [banPA, setBanPA] = useState("");

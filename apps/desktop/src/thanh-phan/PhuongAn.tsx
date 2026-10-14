@@ -10,7 +10,6 @@ import { useMauExcel } from "./MauExcel";
 import { homNayIso } from "../trang-thai";
 import { ngayChu } from "../van-ban/du-lieu";
 import {
-  TEN_TT_PA,
   moTaBan,
   chotPhuongAn,
   chupHo,
@@ -22,6 +21,11 @@ import {
   kiemTraToanVen,
   pheDuyet,
   boSungQd,
+  canhBaoTruocPheDuyet,
+  ghiThamDinh,
+  tenTrangThai,
+  TEN_Y_KIEN_TD,
+  type YKienThamDinh,
   dotPheDuyet,
   moTaQd,
   soSanh,
@@ -51,7 +55,7 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
     const dotThuHoi = dotGhi ? duAn.dotThuHoi!.map((x) => (x.id === dotGhi.id ? { ...x, vanBan: { ...(x.vanBan ?? {}), ...vbQd } } : x)) : duAn.dotThuHoi;
     await luuDuAn({ ...duAn, vanBan, dotThuHoi, phuongAn: (duAn.phuongAn ?? []).map((x) => (x.id === d.id ? d : x)) }, "PHE_DUYET_PA");
   };
-  const [hop, setHop] = useState<null | { loai: "chot" } | { loai: "soat" } | { loai: "duyet" | "huy" | "xem" | "bo-sung"; p: PhienBanPA } | { loai: "so-sanh"; a?: string; b?: string }>(null);
+  const [hop, setHop] = useState<null | { loai: "chot" } | { loai: "soat" } | { loai: "duyet" | "huy" | "xem" | "bo-sung" | "tham-dinh"; p: PhienBanPA } | { loai: "so-sanh"; a?: string; b?: string }>(null);
   const [toanVen, setToanVen] = useState<Record<string, boolean>>({});
   const [loi, setLoi] = useState("");
   const lech = hoLechSauPheDuyet(ds, kq);
@@ -112,7 +116,10 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
                   <td>{p.so}</td>
                   <td>{p.ten}{p.lyDo && <div className="mo chu-nho">Lý do: {p.lyDo}</div>}{p.huy && <div className="mo chu-nho">Hủy: {p.huy.lyDo}</div>}</td>
                   {coDot(duAn) && <td className="chu-nho">{p.dotId ? tenDot(timDot(duAn, p.dotId)) === "Chưa xếp đợt" ? p.dotTen ?? "—" : tenDot(timDot(duAn, p.dotId)) : "Cả dự án"}</td>}
-                  <td><span className={`nhan ${NHAN_TT[p.trangThai]}`}>{TEN_TT_PA[p.trangThai]}</span></td>
+                  <td>
+                    <span className={`nhan ${p.trangThai === "DA_CHOT" && p.thamDinh ? (p.thamDinh.yKien === "KHONG_THONG_NHAT" ? "nhan-do" : "nhan-tim") : NHAN_TT[p.trangThai]}`} data-tt-pa={p.so}>{tenTrangThai(p)}</span>
+                    {p.thamDinh && <div className="mo chu-nho">Thẩm định: {moTaQd(p.thamDinh)}{p.thamDinh.coQuan ? ` (${p.thamDinh.coQuan})` : ""}</div>}
+                  </td>
                   <td className="so">{p.ho.length}</td>
                   <td className="so">{dong(p.tong)}</td>
                   <td className="chu-nho">{new Date(p.luc).toLocaleString("vi-VN", { hour12: false })}<div className="mo">{p.nguoi}</div></td>
@@ -123,6 +130,7 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
                     <button className="nut nut-nho" onClick={() => void xuat(p)}>Excel</button>{" "}
                     {p.trangThai === "DA_CHOT" && (
                       <>
+                        {quyen("PHE_DUYET_PA") && (!p.thamDinh || !p.thamDinh.so || !p.thamDinh.ngay) && <><button className="nut nut-nho" disabled={!toanVen[p.id]} title="Ghi nhận báo cáo/văn bản thẩm định phương án (khoản 3 Điều 3 Nghị định 88/2024/NĐ-CP)" onClick={() => setHop({ loai: "tham-dinh", p })}>{p.thamDinh ? "Bổ sung thẩm định…" : "Thẩm định…"}</button>{" "}</>}
                         {quyen("PHE_DUYET_PA") && <><button className="nut nut-nho nut-chinh" disabled={!toanVen[p.id]} onClick={() => setHop({ loai: "duyet", p })}>Phê duyệt…</button>{" "}</>}
                         {quyen("HUY_PA") && <button className="nut nut-nho nut-nguy" onClick={() => setHop({ loai: "huy", p })}>Hủy…</button>}
                       </>
@@ -170,6 +178,17 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
             const d = boSungQd(hop.p, qd);
             await ghiQd(d, ghiVanBan);
             await ghiNhatKy("Bổ sung số, ngày QĐ phê duyệt phương án", `${duAn.ten} – bản ${d.so}: ${moTaQd(d.pheDuyet)}`);
+          }}
+        />
+      )}
+      {hop?.loai === "tham-dinh" && (
+        <HopThamDinh
+          p={hop.p}
+          dong={() => setHop(null)}
+          luu={async (td) => {
+            const d = ghiThamDinh(hop.p, td, nguoiDung);
+            await luuDuAn({ ...duAn, phuongAn: (duAn.phuongAn ?? []).map((x) => (x.id === d.id ? d : x)) }, "PHE_DUYET_PA");
+            await ghiNhatKy(hop.p.thamDinh ? "Bổ sung kết quả thẩm định phương án" : "Ghi nhận thẩm định phương án", `${duAn.ten} – bản ${d.so}: ${TEN_Y_KIEN_TD[d.thamDinh!.yKien]}; ${moTaQd(d.thamDinh)}${d.thamDinh!.coQuan ? ` của ${d.thamDinh!.coQuan}` : ""}`);
           }}
         />
       )}
@@ -343,6 +362,7 @@ function HopPheDuyet({ duAn, p, boSung, dong: dongHop, luu }: { duAn: DuAn; p: P
         </>
       }
     >
+      {!boSung && canhBaoTruocPheDuyet(p) && <div className="thong-bao thong-bao-vang chu-nho mb-8" role="status" data-canh-bao-td>{canhBaoTruocPheDuyet(p)}</div>}
       <p className="mt-0"><b>Đợt phê duyệt {dot}</b> · bản phương án {p.so}{tenDotThuHoi ? ` · ${tenDotThuHoi}` : ""} · {p.ho.length} hộ · {dong(p.tong)} đ</p>
       <p className="mo mt-0">
         Phần mềm chỉ <b>ghi nhận</b> quyết định phê duyệt đã được cấp có thẩm quyền ký ban hành (điểm c khoản 3 Điều 87 Luật Đất đai 2024). Sau khi ghi nhận, bản {p.so} ({p.ho.length} hộ, {dong(p.tong)} đ) không sửa, không hủy được.
@@ -356,6 +376,46 @@ function HopPheDuyet({ duAn, p, boSung, dong: dongHop, luu }: { duAn: DuAn; p: P
       <label style={{ display: "block", marginTop: 8 }}>
         <input type="checkbox" checked={ghi} onChange={(e) => setGhi(e.target.checked)} /> Ghi số, ngày quyết định vào thông tin văn bản của dự án (làm căn cứ cho Mẫu 16 và các mẫu sau)
       </label>
+      {loi && <div className="thong-bao thong-bao-do mt-10">{loi}</div>}
+    </HopThoai>
+  );
+}
+
+function HopThamDinh({ p, dong: dongHop, luu }: { p: PhienBanPA; dong: () => void; luu: (td: { so: string; ngay: string; coQuan: string; yKien: YKienThamDinh; noiDung?: string }) => Promise<void> }) {
+  const c = p.thamDinh;
+  const [so, setSo] = useState(c?.so ?? "");
+  const [ngay, setNgay] = useState(c?.ngay ?? "");
+  const [coQuan, setCoQuan] = useState(c?.coQuan ?? "");
+  const [yKien, setYKien] = useState<YKienThamDinh>(c?.yKien ?? "THONG_NHAT");
+  const [noiDung, setNoiDung] = useState(c?.noiDung ?? "");
+  const [loi, setLoi] = useState("");
+  return (
+    <HopThoai
+      tieuDe={`${c ? "Bổ sung kết quả thẩm định" : "Ghi nhận thẩm định"} – bản ${p.so}`}
+      dong={dongHop}
+      rong={620}
+      chan={
+        <>
+          <button className="nut" onClick={dongHop}>Đóng</button>
+          <button className="nut nut-chinh" disabled={!coQuan.trim()} onClick={async () => { try { await luu({ so, ngay, coQuan, yKien, noiDung }); dongHop(); } catch (e) { setLoi((e as Error).message); } }}>{c ? "Lưu bổ sung" : "Ghi nhận thẩm định"}</button>
+        </>
+      }
+    >
+      <p className="mo mt-0">
+        Ghi theo báo cáo/văn bản thẩm định phương án của cơ quan chuyên môn (khoản 3 Điều 3 Nghị định 88/2024/NĐ-CP; Mục XII Sổ tay — thời hạn thẩm định theo docs/05: không quá 30 ngày làm việc kể từ khi nhận đủ hồ sơ). Phần mềm chỉ ghi nhận, không tự kết luận. Đã ghi thì không sửa ý kiến, ô đã điền; thẩm định lại = hủy bản, lập bản mới.
+      </p>
+      <div className="luoi luoi-2">
+        <O nhan="Số báo cáo/văn bản thẩm định (có thể bổ sung sau)"><input value={so} placeholder="…/BC-…" disabled={!!c?.so} onChange={(e) => setSo(e.target.value)} /></O>
+        <O nhan="Ngày (có thể bổ sung sau)"><ONgay value={ngay} disabled={!!c?.ngay} onChange={(e) => setNgay(e.target.value)} /></O>
+      </div>
+      <O nhan="Cơ quan thẩm định"><input value={coQuan} disabled={!!c?.coQuan} placeholder="vd. Phòng Kinh tế xã …" onChange={(e) => setCoQuan(e.target.value)} /></O>
+      <O nhan="Ý kiến thẩm định">
+        <select value={yKien} disabled={!!c} onChange={(e) => setYKien(e.target.value as YKienThamDinh)} aria-label="Ý kiến thẩm định">
+          {(Object.keys(TEN_Y_KIEN_TD) as YKienThamDinh[]).map((k) => <option key={k} value={k}>{TEN_Y_KIEN_TD[k]}</option>)}
+        </select>
+      </O>
+      <O nhan="Tóm tắt ý kiến, nội dung yêu cầu chỉnh sửa (nếu có)"><textarea rows={3} value={noiDung} disabled={!!c?.noiDung} onChange={(e) => setNoiDung(e.target.value)} /></O>
+      {yKien === "KHONG_THONG_NHAT" && <div className="thong-bao thong-bao-vang chu-nho mt-8">Thẩm định không thống nhất: sau khi ghi nhận, hủy bản {p.so} (ghi lý do) và lập bản mới đã hoàn thiện để thẩm định lại.</div>}
       {loi && <div className="thong-bao thong-bao-do mt-10">{loi}</div>}
     </HopThoai>
   );
@@ -386,7 +446,7 @@ function HopXem({ p, dong: dongHop }: { p: PhienBanPA; dong: () => void }) {
   return (
     <HopThoai tieuDe={`Bản ${p.so}: ${p.ten}`} dong={dongHop} rong={980}>
       <div className="mo mb-8">
-        {TEN_TT_PA[p.trangThai]} · chốt {new Date(p.luc).toLocaleString("vi-VN", { hour12: false })} ({p.nguoi}) · bộ chính sách {p.boChinhSach} · giá gạo {p.thamSoDuAn.giaGao?.dongKg ?? "—"} đ/kg · hệ số giá đất {p.thamSoDuAn.heSoGiaDat?.heSo ?? "1"}
+        {tenTrangThai(p)} · chốt {new Date(p.luc).toLocaleString("vi-VN", { hour12: false })} ({p.nguoi}) · bộ chính sách {p.boChinhSach} · giá gạo {p.thamSoDuAn.giaGao?.dongKg ?? "—"} đ/kg · hệ số giá đất {p.thamSoDuAn.heSoGiaDat?.heSo ?? "1"}
       </div>
       <table className="bang">
         <thead>
@@ -437,7 +497,7 @@ function HopSoSanh({ ds, kq, dong: dongHop }: { ds: PhienBanPA[]; kq: { h: Ho; k
   const chon = (v: string, set: (x: string) => void, coHienTai: boolean) => (
     <Chon value={v} onChange={(e) => set(e.target.value)}>
       {coHienTai && <option value={HIEN_TAI}>Tạm tính hiện tại</option>}
-      {ds.map((p) => <option key={p.id} value={p.id}>Bản {p.so} – {TEN_TT_PA[p.trangThai]}</option>)}
+      {ds.map((p) => <option key={p.id} value={p.id}>Bản {p.so} – {tenTrangThai(p)}</option>)}
     </Chon>
   );
   return (

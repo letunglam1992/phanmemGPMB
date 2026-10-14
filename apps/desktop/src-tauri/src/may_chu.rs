@@ -876,13 +876,24 @@ pub fn kiem_tra_pa(st: &MayChu, cu: Option<&Value>, moi: &Value, u: &NguoiGoi) -
             if tt != "DA_CHOT" {
                 return Err(loi(StatusCode::FORBIDDEN, format!("Bản phương án {so} đã {} — không sửa được", if tt == "DA_HUY" { "hủy" } else { "phê duyệt" })));
             }
-            let (quyen, thay) = match q["trangThai"].as_str().unwrap_or("") {
-                "DA_PHE_DUYET" => ("PHE_DUYET_PA", ["trangThai", "pheDuyet"]),
-                "DA_HUY" => ("HUY_PA", ["trangThai", "huy"]),
-                _ => return Err(loi(StatusCode::FORBIDDEN, format!("Bản phương án {so}: chỉ được ghi nhận phê duyệt hoặc hủy"))),
+            let (quyen, thay): (&str, &[&str]) = match q["trangThai"].as_str().unwrap_or("") {
+                "DA_PHE_DUYET" => ("PHE_DUYET_PA", &["trangThai", "pheDuyet"]),
+                "DA_HUY" => ("HUY_PA", &["trangThai", "huy"]),
+                // 1.0.11: ghi nhận / bổ sung kết quả thẩm định — ô đã ghi không sửa (bản đã thẩm định khóa)
+                "DA_CHOT" => {
+                    if let Some(o) = p["thamDinh"].as_object() {
+                        for (k, v) in o {
+                            if v.as_str().is_some_and(|x| !x.is_empty()) && q["thamDinh"][k] != *v {
+                                return Err(loi(StatusCode::FORBIDDEN, format!("Bản phương án {so}: kết quả thẩm định đã ghi không sửa được — lập bản mới")));
+                            }
+                        }
+                    }
+                    ("PHE_DUYET_PA", &["thamDinh"])
+                }
+                _ => return Err(loi(StatusCode::FORBIDDEN, format!("Bản phương án {so}: chỉ được ghi nhận thẩm định, phê duyệt hoặc hủy"))),
             };
             can(st, u, quyen)?;
-            if bo_truong(p, &thay) != bo_truong(q, &thay) {
+            if bo_truong(p, thay) != bo_truong(q, thay) {
                 return Err(loi(StatusCode::FORBIDDEN, format!("Bản phương án {so}: số liệu đã chốt không được sửa")));
             }
             Ok(())

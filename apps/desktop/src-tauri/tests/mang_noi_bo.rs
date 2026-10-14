@@ -155,13 +155,28 @@ async fn may_chu_dau_cuoi() {
     sua_so["tong"] = json!("999");
     sua_so["trangThai"] = json!("DA_PHE_DUYET");
     assert_eq!(m.goi("POST", "/api/lo", Some(&ld), lo_pa(&sua_so, Some(1))).await.0, 403);
-    let mut duyet = pa.clone();
+    // 1.0.11: ghi nhận thẩm định (vẫn Đã chốt); ô đã ghi không sửa; số liệu không đổi; cán bộ không ghi
+    let mut td = pa.clone();
+    td["thamDinh"] = json!({ "so": "", "ngay": "2026-09-20", "coQuan": "Phòng Kinh tế", "yKien": "THONG_NHAT" });
+    assert_eq!(m.goi("POST", "/api/lo", Some(&cb), lo_pa(&td, Some(1))).await.0, 403);
+    assert_eq!(m.goi("POST", "/api/lo", Some(&ld), lo_pa(&td, Some(1))).await.0, 200);
+    let mut sua_td = td.clone();
+    sua_td["thamDinh"]["coQuan"] = json!("Khác");
+    let (ma, v) = m.goi("POST", "/api/lo", Some(&ld), lo_pa(&sua_td, Some(2))).await;
+    assert_eq!(ma, 403, "{v}");
+    let mut td_so = td.clone();
+    td_so["tong"] = json!("5");
+    assert_eq!(m.goi("POST", "/api/lo", Some(&ld), lo_pa(&td_so, Some(2))).await.0, 403);
+    let mut bo_sung_td = td.clone();
+    bo_sung_td["thamDinh"]["so"] = json!("45/BC-KT");
+    assert_eq!(m.goi("POST", "/api/lo", Some(&ld), lo_pa(&bo_sung_td, Some(2))).await.0, 200);
+    let mut duyet = bo_sung_td.clone();
     duyet["trangThai"] = json!("DA_PHE_DUYET");
     duyet["pheDuyet"] = json!({ "so": "12/QĐ-UBND", "ngay": "2026-10-01" });
-    assert_eq!(m.goi("POST", "/api/lo", Some(&ld), lo_pa(&duyet, Some(1))).await.0, 200);
+    assert_eq!(m.goi("POST", "/api/lo", Some(&ld), lo_pa(&duyet, Some(3))).await.0, 200);
     let mut sua_duyet = duyet.clone();
     sua_duyet["tong"] = json!("1");
-    assert_eq!(m.goi("POST", "/api/lo", Some(&qt), lo_pa(&sua_duyet, Some(2))).await.0, 403);
+    assert_eq!(m.goi("POST", "/api/lo", Some(&qt), lo_pa(&sua_duyet, Some(4))).await.0, 403);
     let (_, v) = m.goi("GET", "/api/pa?duAn=da1", Some(&xem), Value::Null).await;
     assert_eq!(v[0]["duLieu"]["pa"]["trangThai"], "DA_PHE_DUYET");
     // máy trạm cũ gửi dự án kèm phương án nhúng → từ chối, nêu cần cập nhật phần mềm
