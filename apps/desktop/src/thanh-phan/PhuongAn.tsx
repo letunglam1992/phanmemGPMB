@@ -8,6 +8,7 @@ import { HopThoai, O } from "./chung";
 import { xuatExcelChiTra, xuatExcelDuAn, xuatPhieuDoiChieu } from "../xuat-excel";
 import { useMauExcel } from "./MauExcel";
 import { homNayIso } from "../trang-thai";
+import { xuatTienDoThuTuc } from "../tien-do-thu-tuc";
 import { hanGuiQdBan, hanPheDuyetBan, hanThamDinhBan, ngayToTrinhPA, type TinhHan } from "../han-buoc";
 import { hoHieuLuc } from "../mo-hinh";
 import { ngayChu } from "../van-ban/du-lieu";
@@ -93,6 +94,7 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
           <button className="nut" disabled={!ds.some((p) => p.trangThai === "DA_PHE_DUYET")} title="Phải trả, đã chi, còn lại, tiền chậm trả tạm tính theo bản đã phê duyệt" onClick={() => void xuatExcelChiTra(duAn, kq.map((x) => x.h), tyLeCham, homNayIso())}>Theo dõi chi trả (Excel)</button>
           <button className="nut" disabled={kq.length === 0} title="Kiểm tra chéo hồ sơ trước khi chốt: DT thu hồi, thửa trùng, khoản thiếu căn cứ, TĐC, ổn định đời sống…" onClick={() => setHop({ loai: "soat" })}>Soát phương án</button>
           <button className="nut" disabled={ds.length === 0} onClick={() => setHop({ loai: "so-sanh" })}>So sánh</button>
+          <button className="nut" disabled={ds.length === 0} title="Mỗi bản một dòng: nhận hồ sơ, thẩm định, tờ trình, phê duyệt, gửi QĐ — hạn và số ngày làm việc chậm" onClick={async () => { if (await xuatTienDoThuTuc(duAn, kq.map((x) => hoHieuLuc(duAn, x.h)), homNayIso(), lich)) bao("Đã xuất tiến độ thủ tục phương án"); }}>Tiến độ thủ tục (Excel)</button>
           {quyen("CHOT_PA") && <button className="nut nut-chinh" disabled={kq.length === 0} onClick={() => setHop({ loai: "chot" })}>Chốt phương án…</button>}
         </div>
       </div>

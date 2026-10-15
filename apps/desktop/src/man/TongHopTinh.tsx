@@ -7,6 +7,7 @@
  */
 import { TheLienXaTinh } from "../thanh-phan/LienXaTinh";
 import { moTaDemBanPA } from "../phuong-an";
+import { HopThoai } from "../thanh-phan/chung";
 import { TheDienBienTinh } from "../thanh-phan/DienBienTinh";
 import { dienBienTinh } from "../tong-hop-tinh/dien-bien";
 import { gomLienXa, type DoanTinh, type TuyenLienXa } from "../tong-hop-tinh/lien-xa";
@@ -321,6 +322,7 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
   const [nguong, setNguong] = useState<number | null>(docNguong);
   const [xaCong, setXaCong] = useState<XaTrenCong[]>([]);
   const [hopBc, setHopBc] = useState(false);
+  const [xemQuaHan, setXemQuaHan] = useState<typeof hien | null>(null);
   const [nhacCong, setNhacCong] = useState<string | null>(null);
   useEffect(() => {
     setNhacCong(null);
@@ -577,6 +579,7 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
             <div><b>{tong((d) => d.theoTrangThai.HOAN_THANH ?? 0)}</b><span>đã bàn giao mặt bằng</span></div>
             <div><b>{tong((d) => d.soVuongMac)}</b><span>hộ có vướng mắc</span></div>
             <div><b>{dinhDang(tongTien.div(1e9), 2)}</b><span>tỷ đồng tạm tính</span></div>
+            {hien.some((d) => d.quaHan?.length) && <div className="co-the-chon" role="button" tabIndex={0} data-tong-qua-han title="Bấm để xem chi tiết" onClick={() => setXemQuaHan(hien.filter((d) => d.quaHan?.length))} onKeyDown={(e) => e.key === "Enter" && setXemQuaHan(hien.filter((d) => d.quaHan?.length))}><b style={{ color: "var(--do-to)" }}>{tong((d) => d.quaHan?.length ?? 0)}</b><span>khâu thủ tục quá hạn</span></div>}
           </div>
           {!dong.length ? <div className="trong">Chưa nhận gói nào. Gửi tệp khóa công khai cho các xã, phường; khi nhận được gói, chọn tệp ở ô "Nhận gói".</div> : (
             <div style={{ overflowX: "auto" }}>
@@ -610,7 +613,7 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
                         </td>
                         <td className="so">{d.theoTrangThai.HOAN_THANH ?? 0}{d.soHo ? ` (${dinhDang(D(d.theoTrangThai.HOAN_THANH ?? 0).div(d.soHo).times(100), 0)}%)` : ""}</td>
                         <td className="so">{d.soVuongMac}</td>
-                        <td className="so" title={moTaDemBanPA(d.banPA) || undefined}>{d.soHoDaDuyetPA}{d.banPA?.quaHanTd ? <div className="nhan nhan-do chu-nho">{d.banPA.quaHanTd} bản quá hạn thẩm định</div> : null}</td>
+                        <td className="so" title={moTaDemBanPA(d.banPA) || undefined}>{d.soHoDaDuyetPA}{d.quaHan?.length ? <div><button className="nhan nhan-do chu-nho nut-chu" data-qua-han-da={d.id} title="Xem khâu thủ tục quá hạn" onClick={() => setXemQuaHan([d])}>{d.quaHan.length} khâu quá hạn</button></div> : null}</td>
                         <td className="so">{dinhDang(d.tongTamTinh, 0)}</td>
                         <td className="so">{dinhDang(d.dienTichThuHoi, 1)}</td>
                       </tr>
@@ -679,6 +682,22 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
           )}
         </div>
       </div>
+      {xemQuaHan && (
+        <HopThoai tieuDe="Khâu thủ tục quá hạn" dong={() => setXemQuaHan(null)} rong={900}>
+          <p className="mo chu-nho mt-0">Theo số liệu các đơn vị gửi (hạn tính theo lịch ngày nghỉ đi kèm gói). Đơn vị gửi từ bản cũ (trước 1.0.15) không có chi tiết này.</p>
+          <table className="bang" aria-label="Chi tiết khâu quá hạn">
+            <thead><tr><th>Xã, phường</th><th>Dự án</th><th>Đơn vị gửi</th><th>Bản / đợt</th><th>Khâu</th><th>Hạn</th><th>Căn cứ</th></tr></thead>
+            <tbody>
+              {xemQuaHan.flatMap((d) => (d.quaHan ?? []).map((q, i) => (
+                <tr key={`${d.goi.maGui}-${d.id}-${i}`}>
+                  <td>{d.xa}</td><td>{d.ten}</td><td className="chu-nho">{d.goi.donViGui}</td><td>{q.doiTuong}</td><td>{q.khau}</td>
+                  <td>{q.han.split("-").reverse().join("/")}</td><td className="chu-nho mo">{q.canCu}</td>
+                </tr>
+              )))}
+            </tbody>
+          </table>
+        </HopThoai>
+      )}
       {hopBc && (
         <HopBaoCaoTinh
           dong={() => setHopBc(false)}

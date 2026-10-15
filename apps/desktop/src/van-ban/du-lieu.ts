@@ -3,6 +3,7 @@
  * dấu chấm "…………" để cán bộ viết tay/bổ sung.
  */
 import { demYKien } from "../doi-thoai";
+import { moTaQd as moTaQdVb, type PhienBanPA } from "../phuong-an";
 import { NHOM_PHAP_LY, thongKePhapLy } from "../nguon-goc";
 import { D, dinhDang } from "@gpmb/core";
 import type Decimal from "decimal.js";
@@ -346,6 +347,18 @@ export function ghepDuLieu(p: {
     rieng.qd_giao_ngay = ref[`${khoa}_ngay`] ?? "";
     rieng.qd_giao_trich_yeu = laThuHoi ? `thu hồi đất để thực hiện dự án ${p.duAn.ten}` : `phê duyệt phương án bồi thường, hỗ trợ, tái định cư khi Nhà nước thu hồi đất để thực hiện dự án ${p.duAn.ten}`;
   }
+  // 1.0.15: Quyết định phê duyệt phương án (mẫu 14) — căn cứ văn bản thẩm định đã ghi nhận ở bản phương án; số, ngày tờ trình
+  // đề nghị phê duyệt (mẫu 13 / R4 đã ghi lại) điền ô "Tờ trình số" nếu còn trống. Chỉ dữ kiện đã ghi, không tự đặt nội dung.
+  if (p.mau.ma === "14") {
+    const ban = banDaThamDinhVb(p.duAn, p.ds.map((x) => x.h.id));
+    const t = ban?.thamDinh;
+    if (t && t.yKien !== "KHONG_THONG_NHAT" && (t.so || t.ngay)) {
+      const dong = `Căn cứ Văn bản số ${moTaQdVb(t)}${t.coQuan ? ` của ${t.coQuan}` : ""} về kết quả thẩm định phương án bồi thường, hỗ trợ, tái định cư;`;
+      if (!(chung.can_cu as string[]).some((c) => c.includes(t.so || "\u0000"))) chung.can_cu = [...(chung.can_cu as string[]), dong];
+    }
+    if (!String(p.chung.to_trinh_so ?? "").trim() && vbDuAn.tt_phe_duyet_pa_so) chung.to_trinh_so = vbDuAn.tt_phe_duyet_pa_so;
+    if (!String(p.chung.to_trinh_ngay ?? "").trim() && vbDuAn.tt_phe_duyet_pa_ngay) chung.to_trinh_ngay = vbDuAn.tt_phe_duyet_pa_ngay;
+  }
   const kq: Record<string, unknown> = {
     ...tu,
     ...(p.mau.nguon === "THUC_TE" ? duLieuThucTe(p) : {}),
@@ -377,6 +390,12 @@ export function ghepDuLieu(p: {
   if (!kq.ky_hieu) kq.ky_hieu = "";
   if (!kq.ngay_hieu_luc) kq.ngay_hieu_luc = "ký";
   return kq;
+}
+
+/** Bản phương án (chưa hủy) có ghi nhận thẩm định gồm các hộ đang soạn — mới nhất. */
+function banDaThamDinhVb(duAn: DuAn, hoIds: string[]): PhienBanPA | null {
+  const ids = new Set(hoIds);
+  return (duAn.phuongAn ?? []).filter((x) => x.trangThai !== "DA_HUY" && x.thamDinh && (!ids.size || x.ho.some((h) => ids.has(h.hoId)))).sort((a, b) => b.so - a.so)[0] ?? null;
 }
 
 /** 1.0.6: số ý kiến đồng ý, không đồng ý, khác cho biên bản lấy ý kiến (mẫu 08) từ ý kiến đã ghi ở bước 7 của các hộ. */

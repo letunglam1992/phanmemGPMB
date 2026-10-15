@@ -23,6 +23,7 @@ test.beforeEach(({ page }) => {
 test.afterEach(() => expect(loiTrang).toEqual([]));
 
 test("thẩm định: ghi nhận → trạng thái Đã thẩm định; ô đã ghi bị khóa; phê duyệt không còn nhắc", async ({ page: p }) => {
+  await p.addInitScript(() => void ((window as unknown as { showSaveFilePicker?: unknown }).showSaveFilePicker = undefined));
   await vao(p);
   await p.keyboard.press("Alt+3");
   await p.getByRole("button", { name: "Chốt phương án…" }).click();
@@ -72,6 +73,10 @@ test("thẩm định: ghi nhận → trạng thái Đã thẩm định; ô đã 
   await p.locator("[role=dialog]").getByRole("button", { name: "Ghi nhận phê duyệt" }).click();
   await expect(p.locator("[data-tt-pa]").first()).toHaveText("Đã phê duyệt");
   await expect(p.locator("[data-han-pd]")).toHaveCount(0);
+  // 1.0.15: Excel tiến độ thủ tục theo bản
+  const tt = p.waitForEvent("download");
+  await p.getByRole("button", { name: "Tiến độ thủ tục (Excel)" }).click();
+  expect(readFileSync((await (await tt).path())!).subarray(0, 2).toString()).toBe("PK");
 });
 
 test("chuyển bộ theo hộ: bảng chênh lệch, Word giải trình, Excel; áp dụng → hộ có bộ riêng", async ({ page: p }) => {

@@ -6,6 +6,9 @@ import type { DotThuHoi, DuAn, Ho } from "../mo-hinh";
 import type { KetQuaHo } from "../tinh-ho";
 import { CHUA_XEP_DOT, dotMoi, dsDot, khopDot, loiDot, lyDoKhongDoiDot, lyDoKhongXoaDot, tenDot, tongHopTheoDot } from "../dot-thu-hoi";
 import { TEN_TT_PA } from "../phuong-an";
+import { hanThuHoiDot } from "../han-buoc";
+import { hoHieuLuc } from "../mo-hinh";
+import { homNayIso } from "../trang-thai";
 import { HopThoai, O, ngayVN, tien } from "./chung";
 import { Chon } from "./Chon";
 import { BieuTuong } from "./BieuDo";
@@ -138,13 +141,16 @@ export function HopXepDot({ duAn, hos, dong }: { duAn: DuAn; hos: Ho[]; dong: ()
 /** Tổng hợp theo đợt (thẻ Tổng quan dự án). */
 export function TheTongHopDot({ duAn, kq, moDot }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo }[]; moDot?: (dotId: string) => void }) {
   const ds = useMemo(() => tongHopTheoDot(duAn, kq), [duAn, kq]);
+  const { lich, quyen, luuNhieuHo, bao } = useUngDung();
+  const [ghiMoc, setGhiMoc] = useState<string | null>(null);
+  const hos = useMemo(() => kq.map((x) => hoHieuLuc(duAn, x.h)), [duAn, kq]);
   const cong = (f: (x: (typeof ds)[number]) => number | import("decimal.js").default) => ds.reduce((s, x) => s.plus(f(x)), D(0));
   return (
     <div className="the mb-14">
       <div className="the-dau"><h3>Tổng hợp theo đợt thu hồi</h3><span className="mo chu-nho">Phương án chốt, phê duyệt theo đợt; dòng cộng là tổng chung của dự án</span></div>
       <div className="bang-cuon">
         <table className="bang">
-          <thead><tr><th>Đợt</th><th>Thông báo</th><th className="so">Số hộ</th><th className="so">DT thu hồi (m²)</th><th className="so">Tạm tính (đ)</th><th>Bản phương án</th><th className="so">Đã phê duyệt (đ)</th><th className="so">Đã bàn giao</th></tr></thead>
+          <thead><tr><th>Đợt</th><th>Thông báo</th><th className="so">Số hộ</th><th className="so">DT thu hồi (m²)</th><th className="so">Tạm tính (đ)</th><th>Bản phương án</th><th className="so">Đã phê duyệt (đ)</th><th className="so">Đã bàn giao</th><th>Hạn QĐ thu hồi</th></tr></thead>
           <tbody>
             {ds.map((x) => (
               <tr key={x.dotId} className={moDot ? "co-the-chon" : undefined} onClick={moDot ? () => moDot(x.dotId) : undefined}>
@@ -156,14 +162,52 @@ export function TheTongHopDot({ duAn, kq, moDot }: { duAn: DuAn; kq: { h: Ho; k:
                 <td className="chu-nho">{x.banPa.length ? x.banPa.map((p) => `Bản ${p.so}: ${TEN_TT_PA[p.trangThai]}${p.qd ? ` (${p.qd})` : ""}`).join("; ") : "—"}</td>
                 <td className="so">{x.soHoDaPheDuyet ? <>{tien(x.daPheDuyet)}<div className="mo chu-nho">{x.soHoDaPheDuyet}/{x.soHo} hộ</div></> : "—"}</td>
                 <td className="so">{x.soHoBanGiao}/{x.soHo}</td>
+                <td className="chu-nho" data-han-thu-hoi={x.dotId} onClick={(e) => e.stopPropagation()}>
+                  {(() => {
+                    // 1.0.15: bước 13 — 10 ngày từ ngày đủ điều kiện ban hành QĐ thu hồi (khoản 5, 6 Điều 87 LĐĐ 2024)
+                    if (x.dotId === CHUA_XEP_DOT) return "—";
+                    const t = hanThuHoiDot(x.dotId, hos, homNayIso(), lich);
+                    if (!t) return <span className="mo">Đã xong</span>;
+                    return (
+                      <>
+                        {t.hanChot ? <span className={t.trangThai === "QUA_HAN" ? "nhan nhan-do" : t.trangThai === "SAP_HET" ? "nhan nhan-vang" : ""} title={t.han.canCu}>{ngayVN(t.hanChot)}{t.trangThai === "QUA_HAN" ? " — quá hạn" : t.conLai !== null ? ` (còn ${t.conLai} ngày)` : ""}</span> : <span className="mo">chưa ghi ngày đủ điều kiện</span>}
+                        {quyen("SUA_HO_SO") && <div><button className="nut nut-chu nut-nho" onClick={() => setGhiMoc(x.dotId)}>{t.moc ? "Sửa ngày đủ điều kiện…" : "Ngày đủ điều kiện…"}</button></div>}
+                      </>
+                    );
+                  })()}
+                </td>
               </tr>
             ))}
           </tbody>
           <tfoot>
-            <tr><th>Cả dự án</th><th /><th className="so">{cong((x) => x.soHo).toFixed()}</th><th className="so">{hienSo(cong((x) => x.dtThuHoi).toFixed())}</th><th className="so">{tien(cong((x) => x.tamTinh))}</th><th /><th className="so">{tien(cong((x) => x.daPheDuyet))}</th><th className="so">{cong((x) => x.soHoBanGiao).toFixed()}/{cong((x) => x.soHo).toFixed()}</th></tr>
+            <tr><th>Cả dự án</th><th /><th className="so">{cong((x) => x.soHo).toFixed()}</th><th className="so">{hienSo(cong((x) => x.dtThuHoi).toFixed())}</th><th className="so">{tien(cong((x) => x.tamTinh))}</th><th /><th className="so">{tien(cong((x) => x.daPheDuyet))}</th><th className="so">{cong((x) => x.soHoBanGiao).toFixed()}/{cong((x) => x.soHo).toFixed()}</th><th /></tr>
           </tfoot>
         </table>
       </div>
+      {ghiMoc && (() => {
+        const trong = hos.filter((h) => h.dotId === ghiMoc);
+        const dau = trong.find((h) => h.tienDo["13"]?.mocHan)?.tienDo["13"]?.mocHan ?? "";
+        return <HopNgayDuDieuKien ten={tenDot(dsDot(duAn).find((d) => d.id === ghiMoc))} soHo={trong.length} ngayDau={dau} dong={() => setGhiMoc(null)} luu={async (ngay) => {
+          const goc = new Map(kq.map((x) => [x.h.id, x.h]));
+          const r = await luuNhieuHo(trong.map((h0) => {
+            const h = goc.get(h0.id)!;
+            return { h: { ...h, tienDo: { ...h.tienDo, "13": { ...(h.tienDo["13"] ?? { trangThai: "CHUA" as const }), mocHan: ngay || undefined } } }, nhatKy: ngay ? `Ngày đủ điều kiện ban hành QĐ thu hồi đất (đợt): ${ngay.split("-").reverse().join("/")}` : "Bỏ ngày đủ điều kiện ban hành QĐ thu hồi đất (đợt)" };
+          }));
+          if (r.loi.length) return bao(r.loi.join("; "), "loi");
+          bao(`Đã ghi ngày đủ điều kiện ban hành QĐ thu hồi cho ${r.daLuu} hộ`);
+        }} />;
+      })()}
     </div>
+  );
+}
+
+function HopNgayDuDieuKien({ ten, soHo, ngayDau, dong, luu }: { ten: string; soHo: number; ngayDau: string; dong: () => void; luu: (ngay: string) => Promise<void> }) {
+  const [ngay, setNgay] = useState(ngayDau);
+  return (
+    <HopThoai tieuDe={`Ngày đủ điều kiện ban hành QĐ thu hồi đất – ${ten}`} dong={dong} rong={560}
+      chan={<><button className="nut" onClick={dong}>Đóng</button><button className="nut nut-chinh" onClick={async () => { await luu(ngay); dong(); }}>Lưu cho {soHo} hộ</button></>}>
+      <p className="mo mt-0">Quyết định thu hồi đất ban hành trong thời hạn 10 ngày kể từ ngày đủ điều kiện (khoản 5, 6 Điều 87 Luật Đất đai 2024; docs/05). Ngày này do cán bộ xác định, ghi vào bước 13 của các hộ trong đợt; hộ đã xác nhận xong bước 13 không tính hạn.</p>
+      <O nhan="Ngày đủ điều kiện ban hành QĐ thu hồi"><ONgay value={ngay} onChange={(e) => setNgay(e.target.value)} /></O>
+    </HopThoai>
   );
 }

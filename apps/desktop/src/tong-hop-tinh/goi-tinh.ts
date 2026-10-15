@@ -14,7 +14,7 @@
  * mềm, không thay chữ ký số của cơ quan theo pháp luật về giao dịch điện tử.
  */
 import { dsDoan, matBangTheoLyTrinh } from "../ly-trinh";
-import { hanPheDuyetBan, hanThamDinhBan, ngayToTrinhPA } from "../han-buoc";
+import { hanGuiQdBan, hanPheDuyetBan, hanThamDinhBan, hanThuHoiDot, ngayToTrinhPA, type TinhHan } from "../han-buoc";
 import { LICH_TRONG, type LichLamViec } from "../lich-lam-viec";
 import PizZip from "pizzip";
 import { D } from "@gpmb/core";
@@ -140,6 +140,8 @@ export interface TomTatDuAn {
   lienXa?: import("./lien-xa").LienXaDuAn;
   /** 1.0.12: số bản phương án theo bước thẩm định, phê duyệt (gói cũ không có) */
   banPA?: import("../phuong-an").DemBanPA;
+  /** 1.0.15: chi tiết các khâu thủ tục đang quá hạn (bản phương án / đợt) — để tỉnh xem dự án nào, bản nào, khâu nào */
+  quaHan?: { doiTuong: string; khau: string; han: string; canCu: string }[];
   /** 1.0.4: mặt bằng theo lý trình (chỉ khi xã có ghi lý trình thửa) — mét */
   lyTrinh?: { tongM: number; sachM: number; chua: [number, number][] };
 }
@@ -196,6 +198,21 @@ export function tomTatDuAn(duAn: DuAn[], ho: Ho[], soTep: (duAnId: string) => nu
           quaHanTd: pa.filter((p) => hanThamDinhBan(p, hos, homNay, lich)?.trangThai === "QUA_HAN").length,
           quaHanPd: pa.filter((p) => hanPheDuyetBan(p, hos, homNay, lich, ngayToTrinhPA(d, p))?.trangThai === "QUA_HAN").length,
         };
+      })(),
+      ...(() => {
+        const hos = hs.map((h) => hoHieuLuc(d, h));
+        const out: NonNullable<TomTatDuAn["quaHan"]> = [];
+        const them = (doiTuong: string, khau: string, t: TinhHan | null) => {
+          if (t?.trangThai === "QUA_HAN" && t.hanChot) out.push({ doiTuong, khau, han: t.hanChot, canCu: t.han.canCu });
+        };
+        for (const p of d.phuongAn ?? []) {
+          const ten = `Bản ${p.so}${p.dotTen ? ` (${p.dotTen})` : ""}`;
+          them(ten, "Thẩm định phương án", hanThamDinhBan(p, hos, homNay, lich));
+          them(ten, "Phê duyệt phương án", hanPheDuyetBan(p, hos, homNay, lich, ngayToTrinhPA(d, p)));
+          them(ten, "Gửi QĐ phê duyệt đến từng người", hanGuiQdBan(p, hos, homNay, lich));
+        }
+        for (const dt of d.dotThuHoi ?? []) them(dt.ten.trim() || `Đợt ${dt.so}`, "Ban hành QĐ thu hồi đất", hanThuHoiDot(dt.id, hos, homNay, lich));
+        return out.length ? { quaHan: out } : {};
       })(),
       ...(d.lienXa?.ma?.trim() ? { lienXa: d.lienXa } : {}),
       ...(() => {

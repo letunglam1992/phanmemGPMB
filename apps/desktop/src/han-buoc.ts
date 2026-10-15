@@ -82,7 +82,7 @@ export function tinhHanBuoc(h: Ho, han: HanBuoc, homNay: string, lich: LichLamVi
 type BanHan = { trangThai: string; thamDinh?: { yKien: string } | unknown; ho: { hoId: string }[] };
 
 /** Hạn của bước `buoc` cho một bản: hộ có hạn chót sớm nhất; `mocMacDinh` dùng cho hộ chưa ghi mốc riêng ở bước đó. */
-function hanTheoBan(p: BanHan, buoc: string, hos: Ho[], homNay: string, lich: LichLamViec, mocMacDinh?: string | null): TinhHan {
+export function hanTheoBan(p: BanHan, buoc: string, hos: Ho[], homNay: string, lich: LichLamViec, mocMacDinh?: string | null): TinhHan {
   const han = hanCuaBuoc(buoc)!;
   const ids = new Set(p.ho.map((x) => x.hoId));
   const ds = hos
@@ -143,4 +143,18 @@ export function hanGuiQdBan(p: { trangThai: string; pheDuyet?: { ngay: string };
     .filter((t) => t.hanChot);
   if (!ds.length) return null;
   return ds.sort((a, b) => a.hanChot!.localeCompare(b.hanChot!))[0]!;
+}
+
+/**
+ * 1.0.15 — Hạn ban hành quyết định thu hồi đất của một đợt (bước 13: 10 ngày kể từ ngày đủ điều kiện — khoản 5, 6 Điều 87
+ * Luật Đất đai 2024). Mốc: ngày đủ điều kiện cán bộ ghi ở bước 13 (ghi một lần cho cả đợt). Chỉ tính hộ chưa xong bước 13;
+ * hộ có hạn sớm nhất. Không có hộ nào chưa xong → null.
+ */
+export function hanThuHoiDot(dotId: string, hos: Ho[], homNay: string, lich: LichLamViec): TinhHan | null {
+  const han = hanCuaBuoc("13")!;
+  const ds = hos.filter((h) => h.dotId === dotId && h.tienDo["13"]?.trangThai !== "XONG" && h.tienDo["13"]?.trangThai !== "KHONG_AP_DUNG");
+  if (!ds.length) return null;
+  const co = ds.map((h) => tinhHanBuoc(h, han, homNay, lich)).filter((t) => t.hanChot);
+  if (!co.length) return { han, moc: null, hanChot: null, conLai: null, trangThai: "CHUA_CO_MOC", thieuLich: [], khongTinh: 0 };
+  return co.sort((a, b) => a.hanChot!.localeCompare(b.hanChot!))[0]!;
 }
