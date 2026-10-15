@@ -24,6 +24,7 @@ Tài liệu nên đọc trước:
 | 0.9.23 | Trợ lý AI nổi: nút robot góc dưới phải mở khung chat; thanh bên "Trợ lý AI (hỏi đáp)" |
 | 0.9.25 | Cảnh báo xã lâu chưa gửi (ngưỡng do tỉnh đặt); xã tự gửi định kỳ lên cổng (chu kỳ do xã đặt); tỉnh xem lại các bản gửi trước (≤ 20 bản/đơn vị); báo cáo Word tổng hợp toàn tỉnh |
 | 0.9.26 | Tỉnh tự nhận gói mới từ cổng mỗi 30 phút khi khóa đang mở, chuông báo gói chờ nhận; phụ lục Excel kèm báo cáo Word tỉnh; thời gian không tính vào thời hạn (bước có thời hạn, bắt buộc lý do, tạm dừng); trường hợp Điều 14/17 PL I QĐ 106 do người dùng chọn + căn cứ; ghi chú bản đồ trong hồ sơ hộ; thùng rác tệp đính kèm, tài liệu; Luật Đất đai hợp nhất (VBHN 44/VBHN-VPQH) trong Trợ lý AI |
+| 1.0.14 | Tỉnh tính hạn theo lịch nghỉ đi kèm gói; hạn gửi QĐ phê duyệt đến từng người (bước 11) theo bản; kiểm thử nhập Excel, Ghi tổ thôn theo bộ của hộ |
 | 1.0.13 | Hạn phê duyệt 5 NLV theo bản (mốc tờ trình mẫu 13/R4 hoặc ngày nhận tờ trình); Excel tỉnh trang bản phương án; Ghi tổ thôn, nhập Excel theo bộ của hộ; so sánh bản đồ lưu kèm hồ sơ lúc lưu |
 | 1.0.12 | Thẩm định: mẫu 13, R4 tự điền, hạn 30 NLV theo bản (ngày nhận đủ hồ sơ), báo cáo xã/tỉnh đếm bản theo bước; thẻ nhập hồ sơ theo bộ của hộ; chặn mã kích hoạt cũ (`giay-phep-chan.ts`); lưu kết quả so sánh bản đồ vào dự án |
 | 1.0.11 | **Thẩm định phương án** tách khỏi phê duyệt (số, ngày, cơ quan, ý kiến; khóa ô đã ghi; máy chủ kiểm); **chuyển bộ chính sách theo hộ, đợt** kèm giải trình chênh lệch (Excel, Word); ghi chú phát hành lấy từ `docs/nhung-thay-doi.md`, hộp cập nhật hiện mọi bản mới hơn bản đang dùng; công cụ cấp mã: **phiếu cấp mã (Word)**, **cấp lại** cho mã cài đặt mới |
@@ -259,6 +260,7 @@ Gặp lỗi: bấm **"Chép chi tiết lỗi"** (nếu có), hoặc chụp màn 
 | Thẩm định PA (1.0.11) | `ThamDinhPA`, `ghiThamDinh`, `tenTrangThai`, `canhBaoTruocPheDuyet` (`phuong-an.ts`); `HopThamDinh` (`thanh-phan/PhuongAn.tsx`); Rust `kiem_tra_pa` (nhánh `DA_CHOT`) |
 | Chuyển bộ theo hộ, đợt (1.0.11) | `Ho.boChinhSach`, `DotThuHoi.boChinhSach`; `boCuaHo` (`dot-thu-hoi.ts`), `tinhHoMoi` tự dùng bộ riêng; `src/chuyen-bo.ts`; `HopChuyenPhamVi` (`thanh-phan/GoiChinhSach.tsx`) |
 | 1.0.12 | `ketQuaThamDinh` (`van-ban/tao-nhanh.ts`), `hanThamDinhBan` (`han-buoc.ts`), `demBanPA`/`moTaDemBanPA` (`phuong-an.ts`), `DongBaoCao.banPA`, `TomTatDuAn.banPA`; `duAnTheoBoHo` (`dot-thu-hoi.ts`); `giay-phep-chan.ts`, `bamMa` + Rust `bi_chan`; `SoSanhLuu` (`man/ban-do/ranh.ts`), `BanDoDuAn.soSanh` |
+| 1.0.14 | `lichTuBan` (`tong-hop-tinh/goi-tinh.ts`), `hanGuiQdBan` (`han-buoc.ts`) |
 | 1.0.13 | `hanPheDuyetBan`, `ngayToTrinhPA`, `ngayIsoTuChu` (`han-buoc.ts`); `DemBanPA.quaHanPd`; trang "Ban phuong an" (`excel-tinh.ts`); `HopGhiThonBan.csHo`; `donGiaCua` (`nhap-excel.ts`); `SoSanhLuu.hoLuc`, `hoDaSuaSauLuu` (`man/ban-do/ranh.ts`) |
 | Những thay đổi (1.0.11) | `docs/nhung-thay-doi.md`, `tools/ghi-chu-phat-hanh.mjs` (CI), `src/nhung-thay-doi.ts`, `thanh-phan/NhungThayDoi.tsx` |
 | Kiểm thử | `test/goi-tinh.test.ts`, `test/cong-tinh.test.ts`, `test/hoi-dap-*.test.ts`, `e2e/tong-hop-tinh.spec.ts`, `e2e/hoi-dap.spec.ts` |

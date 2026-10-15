@@ -4,6 +4,15 @@ Mỗi phiên bản một mục `## X.Y.Z`. Khi phát hành, quy trình đóng g�
 (`tools/ghi-chu-phat-hanh.mjs`) — thiếu mục của phiên bản đang phát hành thì dừng, không phát hành. Phần mềm hiện các mục
 mới hơn bản đang dùng khi có bản cập nhật.
 
+## 1.0.14
+
+- Tổng hợp tỉnh tính hạn thẩm định, phê duyệt theo lịch ngày nghỉ của đơn vị gửi (đi kèm gói) — khớp với máy xã; gói
+  không có lịch thì chỉ trừ thứ Bảy, Chủ nhật.
+- Hạn gửi quyết định phê duyệt phương án đến từng người (không quá 3 ngày làm việc kể từ ngày phê duyệt — điểm b khoản 4
+  Điều 87 Luật Đất đai 2024) tính theo bản phương án đã phê duyệt có ngày quyết định: bảng phương án hiện hạn, Tổng quan
+  và chuông báo một dòng cho cả bản khi còn hộ chưa xác nhận bước 11.
+- Bổ sung kiểm thử: nhập Excel kiểm đếm và hộp "Ghi tổ, thôn" theo bộ chính sách của từng hộ.
+
 ## 1.0.13
 
 - Hạn phê duyệt phương án không quá 5 ngày làm việc kể từ ngày nhận tờ trình (điểm c khoản 3 Điều 87 Luật Đất đai 2024):

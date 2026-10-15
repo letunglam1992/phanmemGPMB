@@ -63,6 +63,6 @@ describe("1.0.14 — lịch đi kèm gói, hạn gửi QĐ (bước 11), nhập 
     const loiMa = k.loi.filter((l) => l.cot === "maDonGia" || /Mã đơn giá/.test(l.noiDung));
     expect(loiMa).toHaveLength(1); // chỉ hộ dùng bộ của dự án báo không có mã
     expect(loiMa[0]!.noiDung).toMatch(/Z9\/9/);
-    expect(k.hoBoSung.find((h) => h.id === a.id)!.taiSan.some((t) => t.maDonGia === "Z9/9")).toBe(true);
+    expect(k.hoBoSung.find((h) => h.id === a.id)!.taiSan.some((t) => "maDonGia" in t && t.maDonGia === "Z9/9")).toBe(true);
   });
 });

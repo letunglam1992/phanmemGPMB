@@ -210,7 +210,11 @@ test("1.0.7 — điểm đo gắn tài sản kiểm đếm: đúng thửa → v�
   await p.locator("input[type=password]").nth(0).fill("matkhau123");
   await p.click("button[type=submit]");
   await expect(p.getByText(/Đang theo dõi 1 dự án/)).toBeVisible();
-  await p.keyboard.press("Alt+3");
+  // sau khi tải lại, phím tắt có thể đến trước khi trang nhận phím — nhấn lại đến khi vào không gian dự án
+  await expect(async () => {
+    await p.keyboard.press("Alt+3");
+    await expect(p.locator("[role=tablist] button", { hasText: "Bản đồ" })).toBeVisible({ timeout: 2000 });
+  }).toPass({ timeout: 30000 });
   await p.locator("[role=tablist] button", { hasText: "Bản đồ" }).click();
   const hop = p.getByRole("button", { name: "Để sau" });
   if (await hop.isVisible().catch(() => false)) await hop.click();

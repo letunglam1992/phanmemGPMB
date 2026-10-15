@@ -55,7 +55,16 @@ describe("Worker cổng tỉnh", () => {
     expect((await goi("/api/xa", { ma: cap.token, method: "POST", body: "{}" })).status).toBe(403);
     // gửi gói
     expect((await goi("/api/goi", { ma: cap.token, method: "PUT", body: new Uint8Array(500) })).status).toBe(400);
-    for (let i = 0; i < 7; i++) expect((await goi("/api/goi", { ma: cap.token, method: "PUT", body: GOI() })).status).toBe(200);
+    // tên gói theo thời điểm (đến mili giây) — cho mỗi lần gửi cách nhau 1 giây để không trùng tên khi máy chạy nhanh
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      for (let i = 0; i < 7; i++) {
+        vi.setSystemTime(Date.UTC(2026, 9, 15, 0, 0, i));
+        expect((await goi("/api/goi", { ma: cap.token, method: "PUT", body: GOI() })).status).toBe(200);
+      }
+    } finally {
+      vi.useRealTimers();
+    }
     expect([...env.KHO.m.keys()].filter((k) => k.startsWith("goi/chieng-mung/")).length).toBe(5); // giữ 5 bản
     const ds = await (await goi("/api/goi", { ma: QT })).json();
     expect(ds).toMatchObject([{ ma: "chieng-mung", ten: "Xã Chiềng Mung", kichThuoc: 500 }]);
