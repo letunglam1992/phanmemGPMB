@@ -64,6 +64,8 @@
     <div style="overflow-x:auto"><table id="bang" style="width:100%;border-collapse:collapse;font-size:13px;margin-top:8px"></table></div>
     <button id="xuatCsv" class="phu">Xuất Excel (CSV)</button>
     <button id="saoLuu" class="phu">Sao lưu danh sách (JSON)</button>
+    <button id="xuatChan" class="phu" title="Mã đã đánh dấu chặn (cấp lại cho máy mới, lộ mã) → thay tệp apps/desktop/src/giay-phep-chan.ts rồi phát hành bản mới">Danh sách mã cần chặn</button>
+    <textarea id="dsChan" readonly placeholder="Nội dung tệp giay-phep-chan.ts sẽ hiện ở đây" style="display:none;margin-top:8px"></textarea>
     <label class="phu" style="display:inline-block;font-weight:600;margin-top:12px;cursor:pointer;background:#e8eeeb;padding:9px 16px;border-radius:6px">Nạp danh sách…<input id="napDs" type="file" accept=".json" style="display:none"></label>
   </div>
 
@@ -147,7 +149,7 @@ ${x.thayCho ? hang("Ghi chú", `Cấp lại thay mã cài đặt ${esc(x.thayCho
     const hom = new Date().toISOString().slice(0, 10);
     $("bang").innerHTML = ds.length
       ? '<tr style="text-align:left;border-bottom:1px solid #d7ddd9"><th>Ngày cấp</th><th>Đơn vị</th><th>Mã cài đặt</th><th>Số dự án</th><th>Hạn</th><th></th></tr>' +
-        ds.map((x, i) => `<tr style="border-bottom:1px solid #eef1ef"><td>${ngay(x.cap)}</td><td>${esc(x.donVi)}</td><td style="font-family:monospace">${esc(x.maCaiDat)}</td><td>${x.soDuAn ?? "không giới hạn"}</td><td${x.hetHan && x.hetHan < hom ? ' style="color:#b42318"' : ""}>${ngay(x.hetHan)}</td><td><button class="phu" style="margin:2px;padding:3px 8px" data-chep="${i}">Chép mã</button><button class="phu" style="margin:2px;padding:3px 8px" data-phieu="${i}">Phiếu</button><button class="phu" style="margin:2px;padding:3px 8px" data-cap-lai="${i}" title="Đơn vị thay máy: cấp mã mới cho mã cài đặt mới, giữ số dự án, hạn dùng">Cấp lại</button><button class="phu" style="margin:2px;padding:3px 8px" data-xoa="${i}">Xóa</button>${x.thayCho ? `<div class="mo">cấp lại, thay ${esc(x.thayCho)}</div>` : ""}</td></tr>`).join("")
+        ds.map((x, i) => `<tr style="border-bottom:1px solid #eef1ef"><td>${ngay(x.cap)}</td><td>${esc(x.donVi)}</td><td style="font-family:monospace">${esc(x.maCaiDat)}</td><td>${x.soDuAn ?? "không giới hạn"}</td><td${x.hetHan && x.hetHan < hom ? ' style="color:#b42318"' : ""}>${ngay(x.hetHan)}</td><td><button class="phu" style="margin:2px;padding:3px 8px" data-chep="${i}">Chép mã</button><button class="phu" style="margin:2px;padding:3px 8px" data-phieu="${i}">Phiếu</button><button class="phu" style="margin:2px;padding:3px 8px" data-cap-lai="${i}" title="Đơn vị thay máy: cấp mã mới cho mã cài đặt mới, giữ số dự án, hạn dùng">Cấp lại</button><button class="phu" style="margin:2px;padding:3px 8px" data-chan="${i}" title="Đánh dấu mã này cần chặn ở bản phần mềm sau (mã lộ, đơn vị đã thay máy)">${x.chan ? "Bỏ chặn" : "Chặn"}</button><button class="phu" style="margin:2px;padding:3px 8px" data-xoa="${i}">Xóa</button>${x.thayCho ? `<div class="mo">cấp lại, thay ${esc(x.thayCho)}</div>` : ""}${x.chan ? '<div class="loi">cần chặn — đưa vào danh sách chặn khi phát hành</div>' : ""}</td></tr>`).join("")
       : '<tr><td class="mo">Chưa cấp mã nào.</td></tr>';
   }
   function luu() {
@@ -155,7 +157,8 @@ ${x.thayCho ? hang("Ghi chú", `Cấp lại thay mã cài đặt ${esc(x.thayCho
     ve();
   }
   $("bang").onclick = async (e) => {
-    const c = e.target.dataset.chep, x = e.target.dataset.xoa, ph = e.target.dataset.phieu, cl = e.target.dataset.capLai;
+    const c = e.target.dataset.chep, x = e.target.dataset.xoa, ph = e.target.dataset.phieu, cl = e.target.dataset.capLai, ch = e.target.dataset.chan;
+    if (ch !== undefined) { ds[ch].chan = !ds[ch].chan; luu(); return; }
     if (c !== undefined) navigator.clipboard.writeText(ds[c].ma);
     if (ph !== undefined) phieu(ds[ph]);
     if (cl !== undefined) {
@@ -170,6 +173,7 @@ ${x.thayCho ? hang("Ghi chú", `Cấp lại thay mã cài đặt ${esc(x.thayCho
       const maMoi = moi.includes("-") ? moi : moi.match(/.{4}/g).join("-");
       const nd = { v: 1, donVi: cu.donVi, maCaiDat: maMoi, soDuAn: cu.soDuAn ?? null, hetHan: cu.hetHan ?? null, cap: new Date().toISOString().slice(0, 10) };
       const ma = await kyNd(nd);
+      cu.chan = confirm(`Đánh dấu chặn mã cũ (máy ${cu.maCaiDat})? Mã cũ sẽ hết hiệu lực ở các máy đã cập nhật bản phần mềm có danh sách chặn mới.`);
       ds.unshift({ ...nd, ma, thayCho: cu.maCaiDat });
       $("ketQua").value = ma;
       $("phieu").disabled = false;
@@ -192,6 +196,23 @@ ${x.thayCho ? hang("Ghi chú", `Cấp lại thay mã cài đặt ${esc(x.thayCho
     tai(`Danh-sach-ma-kich-hoat_${new Date().toISOString().slice(0, 10)}.csv`, "\ufeff" + dong.map((d) => d.map(o).join(",")).join("\r\n"), "text/csv;charset=utf-8");
   };
   $("saoLuu").onclick = () => tai(`Danh-sach-ma-kich-hoat_${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(ds, null, 2), "application/json");
+  // Danh sách chặn: SHA-256 (hex) của cả mã (bỏ khoảng trắng) — cùng cách tính với bamMa (giay-phep.ts) và máy chủ (giay_phep.rs)
+  const bam = async (ma) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(ma.trim().replace(/\s+/g, ""))))].map((b) => b.toString(16).padStart(2, "0")).join("");
+  $("xuatChan").onclick = async () => {
+    const dong = [];
+    for (const x of ds.filter((y) => y.chan)) dong.push(`  "${await bam(x.ma)}",`);
+    const nd = `/**
+ * 1.0.12 — Mã kích hoạt bị chặn (đã cấp lại cho máy mới khi đơn vị thay máy, hoặc lộ mã). Mỗi dòng là SHA-256 (hex,
+ * chữ thường) của cả mã GPMB1.… (bỏ khoảng trắng) — lấy từ công cụ cấp mã (tools/giay-phep/cap-ma.html → "Danh sách mã
+ * cần chặn"). Chỉ ghi mã băm, không ghi mã hay tên đơn vị. Máy chủ (src-tauri/src/giay_phep.rs) đọc cùng tệp này.
+ */
+export const MA_CHAN: string[] = [
+${dong.join("\n")}${dong.length ? "\n" : ""}];
+`;
+    $("dsChan").style.display = "block";
+    $("dsChan").value = nd;
+    tai("giay-phep-chan.ts", nd, "text/plain");
+  };
   $("napDs").onchange = async (e) => {
     try {
       const moi = JSON.parse(await e.target.files[0].text());

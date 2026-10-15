@@ -6,7 +6,7 @@ import { expect, test } from "@playwright/test";
 import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { docGiayPhep } from "../src/giay-phep";
+import { bamMa, docGiayPhep, trangThaiGiayPhep } from "../src/giay-phep";
 
 test("cấp mã bằng trang công cụ: mã hợp lệ với khóa công khai tương ứng; danh sách, CSV", async ({ page: p }) => {
   const k = await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"]);
@@ -57,4 +57,14 @@ test("cấp mã bằng trang công cụ: mã hợp lệ với khóa công khai t
   const tai3 = p.waitForEvent("download");
   await p.locator("[data-phieu='0']").click();
   expect(readFileSync((await (await tai3).path())!, "utf8")).toContain("Cấp lại thay mã cài đặt ABCD-EFGH-JKMN-PQRS");
+  // 1.0.12: cấp lại → mã cũ được đánh dấu chặn; xuất danh sách chặn đúng mã băm, phần mềm coi mã cũ là bị chặn
+  await expect(p.locator("#bang")).toContainText("cần chặn");
+  const tai4 = p.waitForEvent("download");
+  await p.locator("#xuatChan").click();
+  const tepChan = readFileSync((await (await tai4).path())!, "utf8");
+  expect(tepChan).toContain("export const MA_CHAN: string[] = [");
+  const chan = new Set([...tepChan.matchAll(/"([0-9a-f]{64})"/g)].map((m) => m[1]!));
+  expect([...chan]).toEqual([await bamMa(ma)]);
+  expect((await trangThaiGiayPhep(ma, "ABCD-EFGH-JKMN-PQRS", "2026-10-15", cong, chan)).loai).toBe("BI_CHAN");
+  expect((await trangThaiGiayPhep(ma2, "WXYZ-2345-6789-ABCD", "2026-10-15", cong, chan)).loai).toBe("HOP_LE");
 });

@@ -33,11 +33,28 @@ pub fn doc_ma(ma: &str, x: &str, y: &str) -> Option<Value> {
     serde_json::from_slice(&than).ok()
 }
 
+/// 1.0.12: mã bị chặn (đã cấp lại cho máy mới) — cùng tệp với giao diện (`src/giay-phep-chan.ts`), SHA-256 hex của cả mã.
+fn ds_chan(ts: &str) -> std::collections::HashSet<String> {
+    // các chuỗi "…" dài 64 ký tự hex trong mảng MA_CHAN
+    let than = ts.split("MA_CHAN").nth(1).unwrap_or("");
+    than.split('"').skip(1).step_by(2).filter(|x| x.len() == 64 && x.chars().all(|c| c.is_ascii_hexdigit())).map(str::to_lowercase).collect()
+}
+fn bi_chan(ma: &str) -> bool {
+    static DS: std::sync::OnceLock<std::collections::HashSet<String>> = std::sync::OnceLock::new();
+    let ds = DS.get_or_init(|| ds_chan(include_str!("../../src/giay-phep-chan.ts")));
+    if ds.is_empty() {
+        return false;
+    }
+    let ma: String = ma.split_whitespace().collect();
+    let bam = ring::digest::digest(&ring::digest::SHA256, ma.as_bytes());
+    ds.contains(&bam.as_ref().iter().map(|b| format!("{b:02x}")).collect::<String>())
+}
+
 /// Số dự án được phép theo mã kích hoạt đã lưu, mã cài đặt và ngày hôm nay (YYYY-MM-DD). usize::MAX = không giới hạn.
 pub fn gioi_han(ma: Option<&str>, ma_cai_dat: Option<&str>, hom_nay: &str, x: &str, y: &str) -> usize {
     let (Some(ma), Some(mc)) = (ma, ma_cai_dat) else { return SO_DU_AN_DUNG_THU };
     let Some(gp) = doc_ma(ma, x, y) else { return SO_DU_AN_DUNG_THU };
-    if gp["v"].as_i64() != Some(1) || chuan_ma(gp["maCaiDat"].as_str().unwrap_or("")) != chuan_ma(mc) {
+    if gp["v"].as_i64() != Some(1) || chuan_ma(gp["maCaiDat"].as_str().unwrap_or("")) != chuan_ma(mc) || bi_chan(ma) {
         return SO_DU_AN_DUNG_THU;
     }
     if let Some(h) = gp["hetHan"].as_str() {
@@ -94,6 +111,19 @@ mod tests {
         let ts = include_str!("../../src/giay-phep-khoa.ts");
         assert!(ts.contains(&format!("x: \"{KHOA_X}\"")), "KHOA_X khác giay-phep-khoa.ts");
         assert!(ts.contains(&format!("y: \"{KHOA_Y}\"")), "KHOA_Y khác giay-phep-khoa.ts");
+    }
+
+    #[test]
+    fn danh_sach_chan_doc_duoc() {
+        let ts = include_str!("../../src/giay-phep-chan.ts");
+        let n = ts.split("MA_CHAN").nth(1).unwrap().matches('"').count() / 2;
+        assert_eq!(ds_chan(ts).len(), n, "có dòng trong MA_CHAN không phải mã băm 64 ký tự hex");
+        let mau = "export const MA_CHAN: string[] = [\n  \"A220D69A62AE3FD0629899076AF6BF6FD45F88F8419134BD07A17172B1398FC1\",\n  \"ngắn\",\n];";
+        assert_eq!(ds_chan(mau).into_iter().collect::<Vec<_>>(), vec!["a220d69a62ae3fd0629899076af6bf6fd45f88f8419134bd07a17172b1398fc1".to_string()]);
+        assert!(!bi_chan("GPMB1.khong.co"));
+        // cùng cách băm với giao diện (bamMa trong giay-phep.ts — kiểm thử giay-phep.test.ts dùng cùng giá trị)
+        let bam = ring::digest::digest(&ring::digest::SHA256, "GPMB1.abc.def".as_bytes());
+        assert_eq!(bam.as_ref().iter().map(|b| format!("{b:02x}")).collect::<String>(), "a220d69a62ae3fd0629899076af6bf6fd45f88f8419134bd07a17172b1398fc1");
     }
 
     #[test]

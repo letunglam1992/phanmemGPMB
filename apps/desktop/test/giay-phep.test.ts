@@ -52,3 +52,16 @@ describe("Mã cài đặt, mã kích hoạt", () => {
     expect(kiemThemDuAn(ds, 2, hl)).toMatch(/cho phép 2 dự án/);
   });
 });
+
+describe("1.0.12 — Chặn mã cũ khi cấp lại cho máy mới", () => {
+  it("mã băm trùng cách tính của máy chủ (Rust); mã nằm trong danh sách chặn → về mức dùng thử", async () => {
+    const { bamMa, MA_BI_CHAN, moTaGiayPhep } = await import("../src/giay-phep");
+    expect(await bamMa(" GPMB1.abc\n.def ")).toBe("a220d69a62ae3fd0629899076af6bf6fd45f88f8419134bd07a17172b1398fc1");
+    expect(MA_BI_CHAN.size).toBeGreaterThanOrEqual(0);
+    const ma = await kyGiayPhep(nd(), rieng);
+    const tt = await trangThaiGiayPhep(ma, "ABCD-EFGH-JKLM-NPQR", "2026-10-15", cong, new Set([await bamMa(ma)]));
+    expect(tt).toMatchObject({ loai: "BI_CHAN", gioiHan: 1 });
+    expect(moTaGiayPhep(tt)).toMatch(/đã được thay bằng mã cấp lại/);
+    expect((await trangThaiGiayPhep(ma, "ABCD-EFGH-JKLM-NPQR", "2026-10-15", cong, new Set(["0".repeat(64)]))).loai).toBe("HOP_LE");
+  });
+});

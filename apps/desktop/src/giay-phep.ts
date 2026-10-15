@@ -9,6 +9,7 @@
  */
 import type { DuAn } from "./mo-hinh";
 import { KHOA_CONG_GIAY_PHEP } from "./giay-phep-khoa";
+import { MA_CHAN } from "./giay-phep-chan";
 
 export const KHOA_MA_CAI_DAT = "maCaiDat";
 export const KHOA_GIAY_PHEP = "giayPhep";
@@ -30,7 +31,7 @@ export interface NoiDungGiayPhep {
 export type TrangThaiGiayPhep =
   | { loai: "DUNG_THU"; gioiHan: number }
   | { loai: "HOP_LE"; gioiHan: number; gp: NoiDungGiayPhep }
-  | { loai: "HET_HAN" | "SAI_MAY"; gioiHan: number; gp: NoiDungGiayPhep }
+  | { loai: "HET_HAN" | "SAI_MAY" | "BI_CHAN"; gioiHan: number; gp: NoiDungGiayPhep }
   | { loai: "SAI"; gioiHan: number; loi: string };
 
 const CHU = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // bỏ I, O, 0, 1 cho khỏi nhầm khi đọc qua điện thoại
@@ -82,8 +83,17 @@ export async function docGiayPhep(ma: string, khoaCong: JsonWebKey = KHOA_CONG_G
   return nd;
 }
 
+/** 1.0.12: mã băm SHA-256 (hex) của mã kích hoạt (bỏ khoảng trắng) — dùng cho danh sách chặn. */
+export async function bamMa(ma: string): Promise<string> {
+  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(ma.trim().replace(/\s+/g, "")));
+  return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+}
+
+/** Danh sách mã bị chặn đi kèm mỗi bản phần mềm (mã đã cấp lại cho máy mới khi đơn vị thay máy). */
+export const MA_BI_CHAN: ReadonlySet<string> = new Set(MA_CHAN.map((x) => x.toLowerCase()));
+
 /** Trạng thái theo mã kích hoạt đã lưu, mã cài đặt của máy và ngày hôm nay (YYYY-MM-DD). */
-export async function trangThaiGiayPhep(ma: string | null | undefined, maCaiDat: string | null | undefined, homNay: string, khoaCong: JsonWebKey = KHOA_CONG_GIAY_PHEP): Promise<TrangThaiGiayPhep> {
+export async function trangThaiGiayPhep(ma: string | null | undefined, maCaiDat: string | null | undefined, homNay: string, khoaCong: JsonWebKey = KHOA_CONG_GIAY_PHEP, chan: ReadonlySet<string> = MA_BI_CHAN): Promise<TrangThaiGiayPhep> {
   if (!ma) return { loai: "DUNG_THU", gioiHan: SO_DU_AN_DUNG_THU };
   let gp: NoiDungGiayPhep;
   try {
@@ -92,6 +102,7 @@ export async function trangThaiGiayPhep(ma: string | null | undefined, maCaiDat:
     return { loai: "SAI", gioiHan: SO_DU_AN_DUNG_THU, loi: (e as Error).message };
   }
   if (!maCaiDat || chuanMa(gp.maCaiDat) !== chuanMa(maCaiDat)) return { loai: "SAI_MAY", gioiHan: SO_DU_AN_DUNG_THU, gp };
+  if (chan.size && chan.has(await bamMa(ma))) return { loai: "BI_CHAN", gioiHan: SO_DU_AN_DUNG_THU, gp };
   if (gp.hetHan && homNay > gp.hetHan) return { loai: "HET_HAN", gioiHan: SO_DU_AN_DUNG_THU, gp };
   return { loai: "HOP_LE", gioiHan: gp.soDuAn ?? Infinity, gp };
 }
@@ -132,6 +143,8 @@ export const moTaGiayPhep = (tt: TrangThaiGiayPhep): string => {
       return `Đã kích hoạt cho ${tt.gp.donVi} — ${tt.gp.soDuAn === null ? "không giới hạn dự án" : `${tt.gp.soDuAn} dự án`}${tt.gp.hetHan ? `, đến ${ngay(tt.gp.hetHan)}` : ", không thời hạn"}`;
     case "HET_HAN":
       return `Mã kích hoạt của ${tt.gp.donVi} đã hết hạn ngày ${ngay(tt.gp.hetHan!)} — đang ở mức dùng thử`;
+    case "BI_CHAN":
+      return `Mã kích hoạt của ${tt.gp.donVi} đã được thay bằng mã cấp lại cho máy khác — đang ở mức dùng thử; liên hệ tác giả nếu cần`;
     case "SAI_MAY":
       return `Mã kích hoạt cấp cho máy khác (mã cài đặt ${tt.gp.maCaiDat}) — đang ở mức dùng thử`;
     case "SAI":
