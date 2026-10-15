@@ -101,4 +101,11 @@ test("chuyển bộ theo hộ: bảng chênh lệch, Word giải trình, Excel; 
   await expect(hop).toHaveCount(0);
   await expect(p.locator("[data-bo-rieng]")).toContainText("1 hộ");
   await expect(p.locator("[data-bo-rieng]")).toContainText("sonla-2026-03-31");
+  // 1.0.14: hộp Ghi tổ, thôn nhiều hộ — hộ có bộ riêng tính hệ số theo bộ của hộ
+  await p.locator("[role=tablist] button", { hasText: "Hộ, cá nhân" }).click();
+  await p.getByLabel(/^Chọn hồ sơ H01/).check();
+  await p.getByLabel(/^Chọn hồ sơ H02/).check();
+  await p.getByRole("toolbar", { name: "Thao tác với hồ sơ đã chọn" }).getByRole("button", { name: "Ghi tổ, thôn…" }).click();
+  const thon = p.locator("[role=dialog]", { hasText: "Ghi tổ, thôn, bản theo thửa" });
+  await expect(thon.getByText("bộ riêng của hộ").first()).toBeVisible();
 });

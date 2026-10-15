@@ -8,7 +8,7 @@ import { HopThoai, O } from "./chung";
 import { xuatExcelChiTra, xuatExcelDuAn, xuatPhieuDoiChieu } from "../xuat-excel";
 import { useMauExcel } from "./MauExcel";
 import { homNayIso } from "../trang-thai";
-import { hanPheDuyetBan, hanThamDinhBan, ngayToTrinhPA, type TinhHan } from "../han-buoc";
+import { hanGuiQdBan, hanPheDuyetBan, hanThamDinhBan, ngayToTrinhPA, type TinhHan } from "../han-buoc";
 import { hoHieuLuc } from "../mo-hinh";
 import { ngayChu } from "../van-ban/du-lieu";
 import {
@@ -128,6 +128,7 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
                       const ttr = ngayToTrinhPA(duAn, p);
                       const td = hanThamDinhBan(p, hos, homNayIso(), lich);
                       const pd = hanPheDuyetBan(p, hos, homNayIso(), lich, ttr);
+                      const gq = hanGuiQdBan(p, hos, homNayIso(), lich);
                       const ngay = (s: string) => s.split("-").reverse().join("/");
                       const dong = (t: TinhHan, ten: string, chuaMoc: string, buoc: "8" | "9", nutMoi: string, nutSua: string, data: Record<string, number>) => {
                         const lop = t.trangThai === "QUA_HAN" ? "nhan-do" : t.trangThai === "SAP_HET" ? "nhan-vang" : "";
@@ -143,6 +144,14 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
                       return (
                         <>
                           {td && dong(td, "Hạn thẩm định", "chưa ghi ngày nhận đủ hồ sơ", "8", "Ngày nhận đủ hồ sơ…", "Sửa ngày nhận hồ sơ…", { "data-han-td": p.so })}
+                          {gq && gq.hanChot && (
+                            <div className="chu-nho" data-han-gq={p.so} title={gq.han.canCu}>
+                              <span className={gq.trangThai === "QUA_HAN" ? "nhan nhan-do" : gq.trangThai === "SAP_HET" ? "nhan nhan-vang" : "mo"}>
+                                Hạn gửi QĐ đến từng người {gq.hanChot.split("-").reverse().join("/")}{gq.trangThai === "QUA_HAN" ? " — quá hạn" : gq.conLai !== null ? ` (còn ${gq.conLai} NLV)` : ""}
+                              </span>
+                              <span className="mo"> · xác nhận bước 11 ở Tiến độ (Cập nhật tiến độ nhiều hộ)</span>
+                            </div>
+                          )}
                           {pd && dong(pd, "Hạn phê duyệt", "chưa có ngày tờ trình (soạn mẫu 13 / R4 có số, ngày hoặc ghi ngày nhận tờ trình)", "9", "Ngày nhận tờ trình…", "Sửa ngày nhận tờ trình…", { "data-han-pd": p.so })}
                         </>
                       );

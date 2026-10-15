@@ -126,3 +126,21 @@ export function ngayToTrinhPA(duAn: { vanBan?: Record<string, string>; dotThuHoi
   const dot = p.dotId ? duAn.dotThuHoi?.find((d) => d.id === p.dotId) : undefined;
   return ngayIsoTuChu(dot?.vanBan?.tt_phe_duyet_pa_ngay) ?? (dot ? null : ngayIsoTuChu(duAn.vanBan?.tt_phe_duyet_pa_ngay));
 }
+
+/**
+ * 1.0.14 — Hạn gửi quyết định phê duyệt phương án đến từng người có đất thu hồi (bước 11: ≤ 3 ngày làm việc kể từ ngày
+ * phê duyệt — điểm b khoản 4 Điều 87 Luật Đất đai 2024) của bản "Đã phê duyệt" có ngày QĐ. Mốc của hộ: ngày xong bước 9
+ * nếu đã xác nhận, không thì ngày QĐ phê duyệt ghi ở bản. Chỉ tính hộ chưa xong bước 11; xong cả → null.
+ */
+export function hanGuiQdBan(p: { trangThai: string; pheDuyet?: { ngay: string }; ho: { hoId: string }[] }, hos: Ho[], homNay: string, lich: LichLamViec): TinhHan | null {
+  if (p.trangThai !== "DA_PHE_DUYET" || !p.pheDuyet?.ngay) return null;
+  const han = hanCuaBuoc("11")!;
+  const ids = new Set(p.ho.map((x) => x.hoId));
+  const ds = hos
+    .filter((h) => ids.has(h.id) && h.tienDo["11"]?.trangThai !== "XONG" && h.tienDo["11"]?.trangThai !== "KHONG_AP_DUNG")
+    .map((h) => (h.tienDo["9"]?.trangThai === "XONG" && h.tienDo["9"]?.ngay ? h : { ...h, tienDo: { ...h.tienDo, "9": { ...(h.tienDo["9"] ?? {}), trangThai: "XONG" as const, ngay: p.pheDuyet!.ngay } } }))
+    .map((h) => tinhHanBuoc(h, han, homNay, lich))
+    .filter((t) => t.hanChot);
+  if (!ds.length) return null;
+  return ds.sort((a, b) => a.hanChot!.localeCompare(b.hanChot!))[0]!;
+}

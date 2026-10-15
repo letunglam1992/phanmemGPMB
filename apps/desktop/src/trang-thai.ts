@@ -14,7 +14,7 @@ import { CAC_BUOC, daQuaBuoc, hoHieuLuc, tienDoHo, type DuAn, type Ho } from "./
 import type { KetQuaHo } from "./tinh-ho";
 
 import { hoLechSauPheDuyet } from "./phuong-an";
-import { HAN_BUOC, hanPheDuyetBan, hanThamDinhBan, ngayToTrinhPA, tinhHanBuoc } from "./han-buoc";
+import { HAN_BUOC, hanGuiQdBan, hanPheDuyetBan, hanThamDinhBan, ngayToTrinhPA, tinhHanBuoc } from "./han-buoc";
 import { LICH_TRONG, type LichLamViec } from "./lich-lam-viec";
 import { tinhChiTra, type GiaiDoanTyLe } from "./chi-tra";
 import { dinhDang } from "@gpmb/core";
@@ -231,6 +231,14 @@ export function canhBaoDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: st
     if (t.trangThai === "QUA_HAN") out.push({ muc: "CAO", duAnId: duAn.id, noiDung: `Phương án bản ${p.so}: quá hạn phê duyệt (hạn ${hc}, 5 ngày làm việc từ ngày nhận tờ trình) — chưa ghi nhận phê duyệt`, canCu: t.han.canCu });
     else if (t.trangThai === "SAP_HET") out.push({ muc: "TRUNG_BINH", duAnId: duAn.id, noiDung: `Phương án bản ${p.so}: sắp hết hạn phê duyệt (${hc}, còn ${t.conLai} ngày làm việc)`, canCu: t.han.canCu });
   }
+  // 1.0.14: hạn gửi QĐ phê duyệt đến từng người (bước 11) theo bản đã phê duyệt
+  for (const p of duAn.phuongAn ?? []) {
+    const t = hanGuiQdBan(p, ds.map((x) => hoHieuLuc(duAn, x.h)), homNay, lich);
+    if (!t?.hanChot) continue;
+    const hc = t.hanChot.split("-").reverse().join("/");
+    if (t.trangThai === "QUA_HAN") out.push({ muc: "CAO", duAnId: duAn.id, noiDung: `Phương án bản ${p.so}: quá hạn gửi quyết định phê duyệt đến từng người (hạn ${hc}, 3 ngày làm việc từ ngày phê duyệt) — còn hộ chưa xác nhận bước 11`, canCu: t.han.canCu });
+    else if (t.trangThai === "SAP_HET") out.push({ muc: "TRUNG_BINH", duAnId: duAn.id, noiDung: `Phương án bản ${p.so}: sắp hết hạn gửi quyết định phê duyệt đến từng người (${hc}, còn ${t.conLai} ngày làm việc)`, canCu: t.han.canCu });
+  }
   for (const { h: h0, k } of ds) {
     const h = hoHieuLuc(duAn, h0);
     const ct = tinhChiTra(h, duAn.phuongAn ?? [], tyLeCham, homNay);
@@ -255,7 +263,7 @@ export function canhBaoDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: st
         out.push({ muc: "CAO", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: QĐ thu hồi cách thông báo ${kc} ngày (< ${toiThieu} ngày)`, canCu: "khoản 2 Điều 85 Luật Đất đai 2024" });
     }
     for (const han of HAN_BUOC) {
-      if ((han.buoc === "8" || han.buoc === "9") && trongBan.has(h.id)) continue; // đã báo theo bản phương án
+      if ((han.buoc === "8" || han.buoc === "9" || han.buoc === "11") && trongBan.has(h.id)) continue; // đã báo theo bản phương án
       const t = tinhHanBuoc(h, han, homNay, lich);
       const ten = CAC_BUOC.find((b) => b.ma === han.buoc)?.ten ?? "";
       const dv = han.loai === "NLV" ? "ngày làm việc" : "ngày";

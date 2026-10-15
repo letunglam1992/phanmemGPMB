@@ -15,7 +15,7 @@
  */
 import { dsDoan, matBangTheoLyTrinh } from "../ly-trinh";
 import { hanPheDuyetBan, hanThamDinhBan, ngayToTrinhPA } from "../han-buoc";
-import { LICH_TRONG } from "../lich-lam-viec";
+import { LICH_TRONG, type LichLamViec } from "../lich-lam-viec";
 import PizZip from "pizzip";
 import { D } from "@gpmb/core";
 import type { Kho } from "../kho";
@@ -145,7 +145,7 @@ export interface TomTatDuAn {
 }
 
 /** Tóm tắt từng dự án (chạy trên máy tỉnh sau khi giải mã, hoặc trên máy xã để xem trước). */
-export function tomTatDuAn(duAn: DuAn[], ho: Ho[], soTep: (duAnId: string) => number, homNay: string): TomTatDuAn[] {
+export function tomTatDuAn(duAn: DuAn[], ho: Ho[], soTep: (duAnId: string) => number, homNay: string, lich: LichLamViec = LICH_TRONG): TomTatDuAn[] {
   return duAn.map((d) => {
     const cs = BO_CHINH_SACH[d.boChinhSach] ?? BO_CHINH_SACH[GOI_GOC]!;
     const hs = ho.filter((h) => h.duAnId === d.id && !h.daXoa);
@@ -193,8 +193,8 @@ export function tomTatDuAn(duAn: DuAn[], ho: Ho[], soTep: (duAnId: string) => nu
         const pa = d.phuongAn ?? [];
         return {
           ...demBanPA(pa),
-          quaHanTd: pa.filter((p) => hanThamDinhBan(p, hos, homNay, LICH_TRONG)?.trangThai === "QUA_HAN").length,
-          quaHanPd: pa.filter((p) => hanPheDuyetBan(p, hos, homNay, LICH_TRONG, ngayToTrinhPA(d, p))?.trangThai === "QUA_HAN").length,
+          quaHanTd: pa.filter((p) => hanThamDinhBan(p, hos, homNay, lich)?.trangThai === "QUA_HAN").length,
+          quaHanPd: pa.filter((p) => hanPheDuyetBan(p, hos, homNay, lich, ngayToTrinhPA(d, p))?.trangThai === "QUA_HAN").length,
         };
       })(),
       ...(d.lienXa?.ma?.trim() ? { lienXa: d.lienXa } : {}),
@@ -352,5 +352,14 @@ export function tomTatBan(ban: BanSaoLuu, homNay: string): TomTatDuAn[] {
   if (Array.isArray(ban.caiDat?.goiChinhSach)) dangKyGoi(ban.caiDat.goiChinhSach as GoiDaNap[]);
   const dem = new Map<string, number>();
   for (const f of ban.dinhKem.filter((x) => !x.meta.daXoa && !x.meta.thayBoi)) dem.set(f.meta.duAnId, (dem.get(f.meta.duAnId) ?? 0) + 1);
-  return tomTatDuAn(ban.duAn.filter((d) => !d.daXoa), ban.ho, (id) => dem.get(id) ?? 0, homNay);
+  return tomTatDuAn(ban.duAn.filter((d) => !d.daXoa), ban.ho, (id) => dem.get(id) ?? 0, homNay, lichTuBan(ban));
+}
+
+/** 1.0.14: lịch ngày nghỉ của đơn vị gửi (đi kèm gói trong phần cài đặt) — để hạn tính ở tỉnh khớp máy xã; sai dạng → chỉ trừ T7, CN. */
+export function lichTuBan(ban: Pick<BanSaoLuu, "caiDat">): LichLamViec {
+  const l = ban.caiDat?.lichLamViec as Partial<LichLamViec> | undefined;
+  const ngay = (x: unknown) =>
+    Array.isArray(x) ? x.filter((v): v is { ngay: string; ten: string } => !!v && typeof v === "object" && typeof (v as { ngay?: unknown }).ngay === "string" && /^\d{4}-\d{2}-\d{2}$/.test((v as { ngay: string }).ngay)).map((v) => ({ ngay: v.ngay, ten: String(v.ten ?? "") })) : [];
+  if (!l || typeof l !== "object") return LICH_TRONG;
+  return { nghi: ngay(l.nghi), lamBu: ngay(l.lamBu), namDaDu: Array.isArray(l.namDaDu) ? l.namDaDu.filter((n): n is number => typeof n === "number") : [] };
 }

@@ -79,7 +79,7 @@ export function TongHopTinh() {
 /* ================================ CẤP XÃ ================================ */
 
 function PhanGui() {
-  const { kho, dsDuAn, hoCua, quyen, taiKhoan, dsDonVi, bao, ghiNhatKy } = useUngDung();
+  const { kho, dsDuAn, hoCua, quyen, taiKhoan, dsDonVi, bao, ghiNhatKy, lich } = useUngDung();
   const [khoa, setKhoa] = useState<KhoaCongKhaiTinh | null>(null);
   const [gui, setGui] = useState<CaiDatGui | null>(null);
   const [dang, setDang] = useState("");
@@ -98,7 +98,7 @@ function PhanGui() {
   const kemTep = gui?.kemTep ?? true;
   const kemBanDo = gui?.kemBanDo ?? true;
   const dsChon = useMemo(() => dsDuAn.filter((d) => !gui?.boQua?.includes(d.id)), [dsDuAn, gui?.boQua]);
-  const tomTat = useMemo(() => tomTatDuAn(dsChon, dsChon.flatMap((d) => hoCua(d.id)), (id) => soTep.get(id) ?? 0, homNay()), [dsChon, hoCua, soTep]);
+  const tomTat = useMemo(() => tomTatDuAn(dsChon, dsChon.flatMap((d) => hoCua(d.id)), (id) => soTep.get(id) ?? 0, homNay(), lich), [dsChon, hoCua, soTep, lich]);
   const coQuyenGui = quyen("SAO_LUU");
 
   const nhapKhoa = async (f: File | undefined) => {
