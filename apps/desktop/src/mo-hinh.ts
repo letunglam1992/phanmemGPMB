@@ -505,6 +505,8 @@ export interface BanDoDuAn {
   nguongLechDiemDo?: string;
   /** Kết quả đo đã lưu (chiều dài, diện tích) — docs/08 §9.10. */
   ketQuaDo?: KetQuaDoLuu[];
+  /** 1.0.12: kết quả so sánh với bản đồ khác (trích đo bổ sung) đã lưu — chỉ thửa có thay đổi (man/ban-do/ranh.ts). */
+  soSanh?: import("./man/ban-do/ranh").SoSanhLuu[];
   /** Tệp DGN ghép thêm (tờ khác, mảnh trích đo khác) — lưu ở kho bản đồ với khóa "{duAnId}#{id}" — docs/08 §9.9. */
   tepGhep?: { id: string; tenTep: string; ngayNhap: string; /** tờ đang tắt (không dựng) */ an?: boolean; /** số tờ nhập tay (bản đồ không ghi) */ soTo?: string }[];
   /** 0.9.27: số tờ bản đồ cán bộ nhập cho tệp chính — dùng cho thửa mà bản đồ không ghi số tờ. */

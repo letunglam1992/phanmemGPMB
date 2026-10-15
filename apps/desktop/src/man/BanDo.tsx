@@ -517,7 +517,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
       )}
       {ghiChuMoi && dl && <HopGhiChu dl={dl} loai={ghiChuMoi.loai} diem={ghiChuMoi.diem} daLienKet={daLienKet} hos={hos} dong={() => setGhiChuMoi(null)} luu={(g) => void luuBanDoDa({ ghiChu: [...lopPhu.ghiChu, { ...g, id: taoId(), ngay: new Date().toISOString(), nguoi: nguoiDung }] })} />}
       {hopPhu === "GHEP" && duAn.banDo && <HopTepGhep duAn={duAn} dl={dl} dong={() => setHopPhu(null)} phongToi={(r) => setPhongToi({ vong: [[{ x: r.minX, y: r.minY }, { x: r.maxX, y: r.minY }, { x: r.maxX, y: r.maxY }, { x: r.minX, y: r.maxY }]], n: Date.now(), vua: true })} />}
-      {hopPhu === "SO_SANH" && dl && <HopSoSanh duAn={duAn} dl={dl} ketQua={setSoSanh} dong={() => setHopPhu(null)} />}
+      {hopPhu === "SO_SANH" && dl && <HopSoSanh duAn={duAn} dl={dl} ketQua={setSoSanh} dong={() => setHopPhu(null)} luu={quyen("SUA_HO_SO") ? async (ds) => luuBanDoDa({ soSanh: ds }) : undefined} />}
       {capNhatDt && dl && <HopCapNhatDt duAn={duAn} dl={dl} thuHoi={thuHoi} khoaThua={khoaThua} hos={hos} dong={() => setCapNhatDt(false)} />}
       {taoHo && dl && coPhamVi && (
         <div style={taoHoAn ? { display: "none" } : undefined}>

@@ -120,6 +120,18 @@ test("ghi chú hiện trường, điểm đo, bắt điểm và lưu kết quả
   await expect(bss.locator("tr", { hasText: "7-2" })).toContainText("Đổi diện tích");
   await expect(bss.locator("tr", { hasText: "7-3" })).toContainText("-100,00");
   await expect(bss.locator("tr", { hasText: "7-1" })).toHaveCount(0);
+  // 1.0.12: lưu kết quả vào dự án; mở lại hộp → thấy trong "Kết quả đã lưu", xem lại được, hiện trên bản đồ
+  await p.getByLabel("Ghi chú kết quả so sánh").fill("Trích đo bổ sung số 12");
+  await p.locator(".hop-thoai").getByRole("button", { name: "Lưu vào dự án" }).click();
+  await expect(p.locator("[data-dang-xem-da-luu]")).toBeVisible();
+  await p.locator(".hop-thoai").getByText("Đóng", { exact: true }).click();
+  await p.getByRole("button", { name: "So sánh bản đồ…" }).click();
+  const daLuu = p.locator("[data-so-sanh-da-luu]");
+  await expect(daLuu).toContainText("moi.dgn");
+  await expect(daLuu).toContainText("Trích đo bổ sung số 12");
+  await expect(daLuu).toContainText("2 thửa thay đổi");
+  await daLuu.getByRole("button", { name: "Xem" }).click();
+  await expect(bss.locator("tr", { hasText: "7-3" })).toContainText("-100,00");
   await p.locator(".hop-thoai").getByRole("button", { name: "Hiện trên bản đồ" }).click();
   await expect(p.getByLabel("Kết quả so sánh bản đồ")).toContainText("2 thửa thay đổi");
 

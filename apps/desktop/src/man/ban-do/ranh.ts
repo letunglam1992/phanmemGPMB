@@ -152,6 +152,29 @@ export function canhBaoConLai(cs: BoChinhSach, duAn: DuAn, dsThua: ThuaBanDo[], 
 /** Thửa trong hồ sơ hộ khớp tờ-thửa bản đồ (so số: "05" = "5"). */
 const chuanSo = (x: string | null | undefined) => (x ?? "").trim().replace(/^0+(?=\d)/, "").toUpperCase();
 
+/** 1.0.12 — Một lần so sánh bản đồ đã lưu vào dự án (chỉ thửa thay đổi; tọa độ làm tròn mm để gọn). */
+export interface SoSanhLuu {
+  id: string;
+  luc: string;
+  nguoi: string;
+  tep: string;
+  ghiChu?: string;
+  /** Số thửa theo trạng thái, kể cả không đổi */
+  dem: Partial<Record<import("@gpmb/gis").SoSanhThua["trangThai"], number>>;
+  ds: import("@gpmb/gis").SoSanhThua[];
+}
+
+export function taoSoSanhLuu(kq: { tep: string; ds: import("@gpmb/gis").SoSanhThua[] }, nguoi: string, ghiChu = "", luc = new Date().toISOString(), id = `ss-${Date.now().toString(36)}`): SoSanhLuu {
+  const dem: SoSanhLuu["dem"] = {};
+  for (const x of kq.ds) dem[x.trangThai] = (dem[x.trangThai] ?? 0) + 1;
+  const lam = (v: number) => Math.round(v * 1000) / 1000;
+  const vong = (v?: { x: number; y: number }[][]) => v?.map((r) => r.map((d) => ({ x: lam(d.x), y: lam(d.y) })));
+  const ds = kq.ds
+    .filter((x) => x.trangThai !== "GIONG")
+    .map((x) => ({ ...x, dtCu: x.dtCu === null ? null : lam(x.dtCu), dtMoi: x.dtMoi === null ? null : lam(x.dtMoi), khacBiet: lam(x.khacBiet), ...(x.vongCu ? { vongCu: vong(x.vongCu) } : {}), ...(x.vongMoi ? { vongMoi: vong(x.vongMoi) } : {}) }));
+  return { id, luc, nguoi, tep: kq.tep, ...(ghiChu.trim() ? { ghiChu: ghiChu.trim() } : {}), dem, ds };
+}
+
 export interface DongDoiChieuSoSanh {
   x: import("@gpmb/gis").SoSanhThua;
   /** Hồ sơ có thửa cùng tờ-thửa (có thể nhiều hộ cùng thửa) */

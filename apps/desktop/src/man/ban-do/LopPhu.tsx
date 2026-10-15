@@ -13,7 +13,7 @@ import { tenTep } from "../../ten-tep";
 import { MAU_GHI_CHU } from "./KhungVe";
 import { type DuLieuBanDo, dsSoTo, khoaTepGhep, kiemTraViTriTo, thamChieuThieu } from "./du-lieu";
 import { docBang } from "./RanhGpmb";
-import { doiChieuSoSanh } from "./ranh";
+import { doiChieuSoSanh, taoSoSanhLuu, type SoSanhLuu } from "./ranh";
 import { hienSo } from "../../so";
 import { lechDiemDo } from "./lech-diem-do";
 import { OSo } from "../../thanh-phan/OSo";
@@ -298,22 +298,32 @@ export const TEN_SO_SANH: Record<SoSanhThua["trangThai"], string> = { GIONG: "Kh
 export const MAU_SO_SANH: Record<SoSanhThua["trangThai"], string> = { GIONG: "#7f8c8d", DOI_DT: "#e07b00", DOI_HINH: "#c9a400", MOI: "#1f8a3a", MAT: "#d0021b" };
 
 /** So sánh bản đồ đang xem (bản cũ) với một tệp DGN khác (bản mới) — docs/08 §9.8. Kết quả giữ trong phiên. */
-export function HopSoSanh(p: { duAn: DuAn; dl: DuLieuBanDo; ketQua: (kq: { tep: string; ds: SoSanhThua[] } | null) => void; dong: () => void }) {
+export function HopSoSanh(p: { duAn: DuAn; dl: DuLieuBanDo; ketQua: (kq: { tep: string; ds: SoSanhThua[] } | null) => void; dong: () => void; luu?: (ds: SoSanhLuu[]) => Promise<unknown> }) {
   const [loi, setLoi] = useState<string | null>(null);
-  const [kq, setKq] = useState<{ tep: string; ds: SoSanhThua[] } | null>(null);
+  const [kq, setKq] = useState<{ tep: string; ds: SoSanhThua[]; daLuu?: SoSanhLuu } | null>(null);
+  const [ghiChu, setGhiChu] = useState("");
+  const daLuu = p.duAn.banDo?.soSanh ?? [];
   const dem = useMemo(() => {
     const m: Record<string, number> = {};
     for (const x of kq?.ds ?? []) m[x.trangThai] = (m[x.trangThai] ?? 0) + 1;
     return m;
   }, [kq]);
-  const { hoCua, bao } = useUngDung();
+  const { hoCua, bao, nguoiDung } = useUngDung();
+  const luuKq = async () => {
+    if (!kq || !p.luu) return;
+    const moi = taoSoSanhLuu(kq, nguoiDung, ghiChu);
+    await p.luu([moi, ...daLuu]);
+    setKq({ ...kq, daLuu: moi });
+    bao(`Đã lưu kết quả so sánh với ${kq.tep} vào dự án`);
+  };
   const khac = useMemo(() => doiChieuSoSanh((kq?.ds ?? []).filter((x) => x.trangThai !== "GIONG"), hoCua(p.duAn.id)), [kq, hoCua, p.duAn.id]);
   const xuat = async () => {
     if (!kq) return;
     const { default: E } = await import("exceljs");
     const wb = new E.Workbook();
     const ws = wb.addWorksheet("So sánh bản đồ");
-    ws.addRow([`So sánh bản đồ — ${p.duAn.ten}: bản đang dùng với tệp ${kq.tep} (${new Date().toLocaleDateString("vi-VN")})`]).font = { bold: true };
+    ws.addRow([`So sánh bản đồ — ${p.duAn.ten}: bản đang dùng với tệp ${kq.tep} (${new Date(kq.daLuu?.luc ?? Date.now()).toLocaleDateString("vi-VN")}${kq.daLuu ? `, kết quả đã lưu, người lưu ${kq.daLuu.nguoi}` : ""})`]).font = { bold: true };
+    if (kq.daLuu?.ghiChu) ws.addRow([`Ghi chú: ${kq.daLuu.ghiChu}`]);
     ws.addRow(["DT hình học tính từ bản đồ, chỉ để đối chiếu — DT lập phương án theo hồ sơ đo đạc, trích đo được duyệt."]).font = { italic: true };
     ws.addRow(["Tờ", "Thửa", "Thay đổi", "DT cũ (m²)", "DT mới (m²)", "Chênh (m²)", "Khác biệt hình (m²)", "Hồ sơ", "DT thửa trong hồ sơ (m²)", "DT thu hồi trong hồ sơ (m²)"]).font = { bold: true };
     const lam = (v: number | null) => (v === null ? null : Math.round(v * 100) / 100);
@@ -326,6 +336,26 @@ export function HopSoSanh(p: { duAn: DuAn; dl: DuLieuBanDo; ketQua: (kq: { tep: 
   return (
     <HopThoai tieuDe="So sánh với bản đồ khác (trích đo bổ sung)" dong={p.dong} rong={820} chan={<><button className="nut" disabled={!kq} onClick={() => void xuat()}>Xuất Excel</button><button className="nut" onClick={p.dong}>Đóng</button><button className="nut nut-chinh" disabled={!kq} onClick={() => { p.ketQua(kq); p.dong(); }}>Hiện trên bản đồ</button></>}>
       <p className="mt-0 chu-nho">Bản đang xem là bản cũ; chọn tệp DGN hoặc DXF bản mới (cùng hệ VN-2000). Thửa ghép theo số tờ, số thửa (thửa thiếu số ghép theo vị trí nhãn). Đổi diện tích: lệch &gt; 0,5 m² và &gt; 0,1%; đổi hình: phần khác biệt &gt; 1 m². Dùng cấu hình lớp của bản đồ đang xem.</p>
+      {daLuu.length > 0 && (
+        <details className="mb-8" open={!kq} data-so-sanh-da-luu>
+          <summary className="chu-nho"><b>Kết quả đã lưu ({daLuu.length})</b></summary>
+          <table className="bang chu-nho">
+            <tbody>
+              {daLuu.map((x) => (
+                <tr key={x.id}>
+                  <td>{new Date(x.luc).toLocaleString("vi-VN", { hour12: false })}<div className="mo">{x.nguoi}</div></td>
+                  <td>{x.tep}{x.ghiChu && <div className="mo">{x.ghiChu}</div>}</td>
+                  <td>{x.ds.length} thửa thay đổi</td>
+                  <td className="khong-xuong-dong">
+                    <button className="nut nut-nho" onClick={() => setKq({ tep: x.tep, ds: x.ds, daLuu: x })}>Xem</button>{" "}
+                    {p.luu && <button className="nut nut-nho nut-nguy" onClick={() => { if (confirm(`Xóa kết quả so sánh với ${x.tep}?`)) void p.luu!(daLuu.filter((y) => y.id !== x.id)).then(() => kq?.daLuu?.id === x.id && setKq(null)); }}>Xóa</button>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </details>
+      )}
       <ChonTep aria-label="Tệp bản đồ bản mới" accept=".dgn,.dxf,.dwg" onChange={async (e) => {
         const f = e.target.files?.[0];
         if (!f) return;
@@ -341,7 +371,15 @@ export function HopSoSanh(p: { duAn: DuAn; dl: DuLieuBanDo; ketQua: (kq: { tep: 
       {loi && <div className="thong-bao thong-bao-do">{loi}</div>}
       {kq && (
         <>
-          <div className="nhom-nut mt-8 chu-nho">{(Object.keys(TEN_SO_SANH) as SoSanhThua["trangThai"][]).map((k) => <span key={k} className="nhan" style={{ borderColor: MAU_SO_SANH[k] }}>{TEN_SO_SANH[k]}: {dem[k] ?? 0}</span>)}</div>
+          <div className="nhom-nut mt-8 chu-nho">{(Object.keys(TEN_SO_SANH) as SoSanhThua["trangThai"][]).map((k) => <span key={k} className="nhan" style={{ borderColor: MAU_SO_SANH[k] }}>{TEN_SO_SANH[k]}: {(kq.daLuu ? kq.daLuu.dem[k] : dem[k]) ?? 0}</span>)}</div>
+          {kq.daLuu ? (
+            <div className="mo chu-nho mt-6" data-dang-xem-da-luu>Đang xem kết quả đã lưu {new Date(kq.daLuu.luc).toLocaleString("vi-VN", { hour12: false })} ({kq.daLuu.nguoi}) — hồ sơ đối chiếu theo dữ liệu hiện tại.</div>
+          ) : p.luu ? (
+            <div className="nhom-nut mt-6" style={{ alignItems: "center" }}>
+              <input placeholder="Ghi chú (vd. trích đo bổ sung số …)" value={ghiChu} onChange={(e) => setGhiChu(e.target.value)} aria-label="Ghi chú kết quả so sánh" style={{ flex: 1, minWidth: 220 }} />
+              <button className="nut nut-nho" onClick={() => void luuKq()}>Lưu vào dự án</button>
+            </div>
+          ) : null}
           <div className="bang-cuon" style={{ maxHeight: "45vh" }}>
             <table className="bang" aria-label="Kết quả so sánh">
               <thead><tr><th>Tờ-thửa</th><th>Thay đổi</th><th className="so">DT cũ (m²)</th><th className="so">DT mới (m²)</th><th className="so">Chênh (m²)</th><th className="so">Khác biệt hình (m²)</th><th>Hồ sơ (DT thửa / thu hồi)</th></tr></thead>

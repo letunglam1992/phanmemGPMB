@@ -30,6 +30,15 @@ test("thẩm định: ghi nhận → trạng thái Đã thẩm định; ô đã 
   await chot.getByLabel("Chọn tất cả hộ đủ điều kiện").check();
   await chot.getByRole("button", { name: "Chốt, đóng băng số liệu" }).click();
   await expect(chot).toHaveCount(0);
+  // 1.0.12: hạn thẩm định theo bản — ghi ngày nhận đủ hồ sơ cho cả bản
+  const han = p.locator("[data-han-td]").first();
+  await expect(han).toContainText("chưa ghi ngày nhận đủ hồ sơ");
+  await han.getByRole("button", { name: "Ngày nhận đủ hồ sơ…" }).click();
+  const nhs = p.locator("[role=dialog]", { hasText: "Ngày nhận đủ hồ sơ thẩm định" });
+  await nhs.locator("input").first().fill("01/09/2026");
+  await nhs.locator("input").first().press("Tab");
+  await nhs.getByRole("button", { name: /^Lưu cho \d+ hộ$/ }).click();
+  await expect(han).toContainText("Hạn thẩm định 13/10/2026");
   // chưa thẩm định: hộp phê duyệt nhắc
   await p.getByRole("button", { name: "Phê duyệt…" }).first().click();
   await expect(p.locator("[data-canh-bao-td]")).toContainText("Nghị định 88/2024");
@@ -40,6 +49,7 @@ test("thẩm định: ghi nhận → trạng thái Đã thẩm định; ô đã 
   await td.getByRole("button", { name: "Ghi nhận thẩm định" }).click();
   await expect(td).toHaveCount(0);
   await expect(p.locator("[data-tt-pa]").first()).toHaveText("Đã thẩm định, chờ phê duyệt");
+  await expect(p.locator("[data-han-td]")).toHaveCount(0); // đã thẩm định thì không còn đếm hạn
   // còn thiếu số, ngày → bổ sung; cơ quan, ý kiến đã khóa
   await p.getByRole("button", { name: "Bổ sung thẩm định…" }).first().click();
   const bs = p.locator("[role=dialog]", { hasText: "Bổ sung kết quả thẩm định" });
