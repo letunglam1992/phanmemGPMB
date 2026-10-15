@@ -68,5 +68,6 @@ Xem docs/11. Tóm tắt: máy chủ đặt IP tĩnh, bật phần mềm trong gi
 - Hết hạn: dự án đã có vẫn xem, sửa, xuất; chỉ không thêm dự án vượt mức dùng thử. Gia hạn: cấp mã mới (cùng mã cài đặt), dán đè.
 - **Phiếu cấp mã (1.0.11):** sau khi cấp, bấm "Phiếu cấp mã (Word)" (hoặc "Phiếu" ở dòng trong danh sách) → tệp `.doc` có đơn vị, mã cài đặt, số dự án, hạn, mã kích hoạt, cách nhập, chỗ ký — mở bằng Word để in, gửi đơn vị.
 - **Đơn vị thay máy (1.0.11):** ở dòng mã cũ trong danh sách bấm "Cấp lại" → nhập mã cài đặt mới → phần mềm cấp mã mới giữ đơn vị, số dự án, hạn dùng; danh sách ghi "cấp lại, thay …" (mã cũ vẫn hợp lệ trên máy cũ — không thu hồi được).
+- **Chặn mã cũ (1.0.12):** khi "Cấp lại", trang hỏi có chặn mã cũ không; có thể bấm "Chặn" ở dòng bất kỳ (mã lộ). Trước khi phát hành bản mới: bấm "Danh sách mã cần chặn" → tải tệp `giay-phep-chan.ts` → thay tệp `apps/desktop/src/giay-phep-chan.ts` trong kho (chỉ có mã băm, không có mã, tên đơn vị) → phát hành. Máy đã cập nhật coi mã bị chặn là hết hiệu lực (về mức dùng thử).
 - **Giữ bí mật tệp khóa riêng**; mất hoặc lộ: tạo cặp khóa mới ở trang công cụ, thay khóa công khai trong `apps/desktop/src/giay-phep-khoa.ts`, phát hành bản mới, cấp lại mã cho các đơn vị.
 

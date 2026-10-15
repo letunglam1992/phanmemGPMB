@@ -4,6 +4,20 @@ Mỗi phiên bản một mục `## X.Y.Z`. Khi phát hành, quy trình đóng g�
 (`tools/ghi-chu-phat-hanh.mjs`) — thiếu mục của phiên bản đang phát hành thì dừng, không phát hành. Phần mềm hiện các mục
 mới hơn bản đang dùng khi có bản cập nhật.
 
+## 1.0.12
+
+- Thẩm định phương án: mẫu 13 và mẫu R4 tự điền "Kết quả thẩm định" từ bản phương án đã ghi nhận thẩm định; cơ quan
+  thẩm định điền sẵn cho các mẫu.
+- Hạn thẩm định không quá 30 ngày làm việc kể từ ngày nhận đủ hồ sơ (khoản 3 Điều 3 Nghị định 88/2024/NĐ-CP): ghi ngày
+  nhận đủ hồ sơ một lần cho cả bản phương án; bảng phương án hiện hạn, Tổng quan và chuông báo sắp hết, quá hạn.
+- Báo cáo xã (màn Báo cáo, Word) và tổng hợp tỉnh có số bản phương án chờ thẩm định, quá hạn, đã thẩm định, không thống
+  nhất, đã phê duyệt.
+- Hộ dùng bộ chính sách riêng: các thẻ Thửa đất, Kiểm đếm, Hỗ trợ, Hỗ trợ khác hiện danh mục, đơn giá, giá đất theo bộ
+  của hộ.
+- Mã kích hoạt: danh sách mã bị chặn đi kèm bản phần mềm — mã cũ của đơn vị đã thay máy hết hiệu lực khi cập nhật; công
+  cụ cấp mã tự đánh dấu chặn khi cấp lại, xuất tệp danh sách chặn.
+- Bản đồ: lưu kết quả so sánh với bản đồ khác (trích đo bổ sung) vào dự án — xem lại, hiện trên bản đồ, xuất Excel.
+
 ## 1.0.11
 
 - Phương án: tách bước **thẩm định** khỏi phê duyệt — ghi nhận số, ngày, cơ quan, ý kiến thẩm định (khoản 3 Điều 3

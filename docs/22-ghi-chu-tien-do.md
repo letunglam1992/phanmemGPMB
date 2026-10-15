@@ -24,6 +24,7 @@ Tài liệu nên đọc trước:
 | 0.9.23 | Trợ lý AI nổi: nút robot góc dưới phải mở khung chat; thanh bên "Trợ lý AI (hỏi đáp)" |
 | 0.9.25 | Cảnh báo xã lâu chưa gửi (ngưỡng do tỉnh đặt); xã tự gửi định kỳ lên cổng (chu kỳ do xã đặt); tỉnh xem lại các bản gửi trước (≤ 20 bản/đơn vị); báo cáo Word tổng hợp toàn tỉnh |
 | 0.9.26 | Tỉnh tự nhận gói mới từ cổng mỗi 30 phút khi khóa đang mở, chuông báo gói chờ nhận; phụ lục Excel kèm báo cáo Word tỉnh; thời gian không tính vào thời hạn (bước có thời hạn, bắt buộc lý do, tạm dừng); trường hợp Điều 14/17 PL I QĐ 106 do người dùng chọn + căn cứ; ghi chú bản đồ trong hồ sơ hộ; thùng rác tệp đính kèm, tài liệu; Luật Đất đai hợp nhất (VBHN 44/VBHN-VPQH) trong Trợ lý AI |
+| 1.0.12 | Thẩm định: mẫu 13, R4 tự điền, hạn 30 NLV theo bản (ngày nhận đủ hồ sơ), báo cáo xã/tỉnh đếm bản theo bước; thẻ nhập hồ sơ theo bộ của hộ; chặn mã kích hoạt cũ (`giay-phep-chan.ts`); lưu kết quả so sánh bản đồ vào dự án |
 | 1.0.11 | **Thẩm định phương án** tách khỏi phê duyệt (số, ngày, cơ quan, ý kiến; khóa ô đã ghi; máy chủ kiểm); **chuyển bộ chính sách theo hộ, đợt** kèm giải trình chênh lệch (Excel, Word); ghi chú phát hành lấy từ `docs/nhung-thay-doi.md`, hộp cập nhật hiện mọi bản mới hơn bản đang dùng; công cụ cấp mã: **phiếu cấp mã (Word)**, **cấp lại** cho mã cài đặt mới |
 | 1.0.8–1.0.10 | 1.0.8 sửa thanh công cụ bản đồ; 1.0.9 PDF bản đồ nền ảnh vệ tinh, ô thả xuống tự đóng, chuột phải kết thúc lệnh; 1.0.10 bản dùng thử + mã kích hoạt — xem `docs/nhung-thay-doi.md` |
 | 1.0.7 | **Mẫu T13 biên bản bốc thăm lô TĐC** (biểu lô đưa vào bốc thăm, biểu kết quả từ Quỹ TĐC); mẫu R1, R2 có mục **diện tích thu hồi theo tình trạng pháp lý nguồn gốc đất**; **tính nền lần mở đầu với dữ liệu lớn** (20.000 hộ: Tổng quan hiện 9,7 s → 2,6 s, giao diện không đứng), cổng tính nền cho màn Dự án, Danh sách hộ, Báo cáo, Việc của tôi; máy chủ **kiểm trường con** tiến độ, chi trả, hỗ trợ (cả khi khôi phục sao lưu); nút **Cập nhật hồ sơ theo lô** TĐC đã đổi DT/giá; kiểm thử tự động lịch tự nhận gói của tỉnh, chuông; **in bản đồ theo khung đang xem**; **bắt tâm cung, điểm trên cạnh**; **lịch sử phiên bản tệp đính kèm**; DGN V8: đọc đường/vùng 3D (X, Y), hết báo nhầm tệp tham chiếu từ thuộc tính tài liệu; **gợi ý cấu hình tự thêm lớp ranh thửa** khi ranh vẽ trên nhiều lớp (TD70: 4 → 96 thửa); **vẽ khung in bằng chuột**; xóa hẳn tệp còn bản trước (đưa bản gần nhất lên / xóa cả nhóm); kiểm thử mẫu Word 300 hộ; thêm 4 ca Playwright cho nhánh chưa chạy; dải bước dính khi cuộn; danh sách hộ toàn tỉnh có cột chọn, xuất Excel; dòng đợt in nghiêng trong báo cáo Word; điểm đo đối chiếu tọa độ biên bản kiểm đếm (ngưỡng do cán bộ đặt); lớp ranh thửa không dùng làm ranh GPMB; eslint 0 cảnh báo; dọn 15 dòng Hạn chế lỗi thời docs/09 — xem docs/09 |
@@ -256,6 +257,7 @@ Gặp lỗi: bấm **"Chép chi tiết lỗi"** (nếu có), hoặc chụp màn 
 | Tuyến qua cổng, bản đồ Km, báo cáo đoạn, TĐC (1.0.5) | Worker `/api/tuyen`; `dsTuyenTrenCong`, `guiTuyenLenCong` (`cong-tinh.ts`); `DaiKm`, `TheLyTrinhBanDo` (`thanh-phan/LyTrinh.tsx`); `dongTheoDoan` (`bao-cao.ts`); `duLieuBoTriTdc` (`van-ban/thuc-te.ts`), mẫu T8, T9 |
 | Thẩm định PA (1.0.11) | `ThamDinhPA`, `ghiThamDinh`, `tenTrangThai`, `canhBaoTruocPheDuyet` (`phuong-an.ts`); `HopThamDinh` (`thanh-phan/PhuongAn.tsx`); Rust `kiem_tra_pa` (nhánh `DA_CHOT`) |
 | Chuyển bộ theo hộ, đợt (1.0.11) | `Ho.boChinhSach`, `DotThuHoi.boChinhSach`; `boCuaHo` (`dot-thu-hoi.ts`), `tinhHoMoi` tự dùng bộ riêng; `src/chuyen-bo.ts`; `HopChuyenPhamVi` (`thanh-phan/GoiChinhSach.tsx`) |
+| 1.0.12 | `ketQuaThamDinh` (`van-ban/tao-nhanh.ts`), `hanThamDinhBan` (`han-buoc.ts`), `demBanPA`/`moTaDemBanPA` (`phuong-an.ts`), `DongBaoCao.banPA`, `TomTatDuAn.banPA`; `duAnTheoBoHo` (`dot-thu-hoi.ts`); `giay-phep-chan.ts`, `bamMa` + Rust `bi_chan`; `SoSanhLuu` (`man/ban-do/ranh.ts`), `BanDoDuAn.soSanh` |
 | Những thay đổi (1.0.11) | `docs/nhung-thay-doi.md`, `tools/ghi-chu-phat-hanh.mjs` (CI), `src/nhung-thay-doi.ts`, `thanh-phan/NhungThayDoi.tsx` |
 | Kiểm thử | `test/goi-tinh.test.ts`, `test/cong-tinh.test.ts`, `test/hoi-dap-*.test.ts`, `e2e/tong-hop-tinh.spec.ts`, `e2e/hoi-dap.spec.ts` |
 
@@ -263,7 +265,7 @@ Gặp lỗi: bấm **"Chép chi tiết lỗi"** (nếu có), hoặc chụp màn 
 
 Anh Lâm tự giữ:
 - Khóa ký bản cập nhật `gpmb.key`. Đã đặt trong GitHub Secrets.
-- Khóa riêng cấp mã kích hoạt `gpmb-khoa-cap-ma.json` (1.0.10, ECDSA P-256) — tác giả giữ, dùng với `tools/giay-phep/cap-ma.html`; trong kho chỉ có khóa công khai (`apps/desktop/src/giay-phep-khoa.ts`).
+- Khóa riêng cấp mã kích hoạt `gpmb-khoa-cap-ma.json` (1.0.10, ECDSA P-256) — tác giả giữ (danh sách mã bị chặn `giay-phep-chan.ts` chỉ có mã băm — được đưa vào kho), dùng với `tools/giay-phep/cap-ma.html`; trong kho chỉ có khóa công khai (`apps/desktop/src/giay-phep-khoa.ts`).
 - Mã quản trị cổng `MA_QUAN_TRI`.
 - Mật khẩu khóa cấp tỉnh.
 - Mã truy cập của xã.
