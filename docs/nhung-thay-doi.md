@@ -4,6 +4,17 @@ Mỗi phiên bản một mục `## X.Y.Z`. Khi phát hành, quy trình đóng g�
 (`tools/ghi-chu-phat-hanh.mjs`) — thiếu mục của phiên bản đang phát hành thì dừng, không phát hành. Phần mềm hiện các mục
 mới hơn bản đang dùng khi có bản cập nhật.
 
+## 1.0.15
+
+- Mẫu 14 (Quyết định phê duyệt phương án) tự thêm căn cứ "Văn bản số … về kết quả thẩm định phương án" từ bản phương án
+  đã ghi nhận thẩm định, và tự điền số, ngày tờ trình đề nghị phê duyệt (mẫu 13 / R4 đã ghi) khi ô còn trống.
+- Phương án – phiên bản có nút "Tiến độ thủ tục (Excel)": mỗi bản một dòng — nhận đủ hồ sơ, thẩm định, tờ trình, phê
+  duyệt, gửi quyết định đến từng người; hạn và số ngày làm việc chậm từng khâu.
+- Hạn ban hành quyết định thu hồi đất theo đợt (10 ngày kể từ ngày đủ điều kiện — khoản 5, 6 Điều 87 Luật Đất đai 2024):
+  ghi "Ngày đủ điều kiện" một lần cho cả đợt ở bảng Tổng hợp theo đợt; cảnh báo một dòng cho cả đợt.
+- Tổng hợp tỉnh: số "khâu thủ tục quá hạn" (thẩm định, phê duyệt, gửi quyết định, quyết định thu hồi) — bấm để xem dự án,
+  bản hoặc đợt, khâu, hạn.
+
 ## 1.0.14
 
 - Tổng hợp tỉnh tính hạn thẩm định, phê duyệt theo lịch ngày nghỉ của đơn vị gửi (đi kèm gói) — khớp với máy xã; gói
