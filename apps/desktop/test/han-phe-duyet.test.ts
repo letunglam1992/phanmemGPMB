@@ -30,7 +30,7 @@ describe("1.0.13 — hạn phê duyệt 5 NLV, Excel tỉnh, so sánh bản đ�
     expect(ngayToTrinhPA(da, td)).toBe("2026-10-05");
     const coDotDa = { ...da, dotThuHoi: [{ id: "d1", so: 1, ten: "Đợt 1" }] };
     expect(ngayToTrinhPA(coDotDa, { dotId: "d1" })).toBeNull(); // bản của đợt chỉ lấy tờ trình của đợt
-    expect(ngayToTrinhPA({ ...coDotDa, dotThuHoi: [{ id: "d1", so: 1, ten: "Đợt 1", vanBan: { tt_phe_duyet_pa_ngay: "07/10/2026" } }] }, { dotId: "d1" })).toBe("2026-10-07");
+    expect(ngayToTrinhPA({ ...coDotDa, dotThuHoi: [{ ...coDotDa.dotThuHoi[0]!, vanBan: { tt_phe_duyet_pa_ngay: "07/10/2026" } }] }, { dotId: "d1" })).toBe("2026-10-07");
     expect(hanPheDuyetBan(td, ho, "2026-10-08", LICH_TRONG, null)?.trangThai).toBe("CHUA_CO_MOC");
     const t = hanPheDuyetBan(td, ho, "2026-10-14", LICH_TRONG, ngayToTrinhPA(da, td))!;
     expect(t.hanChot).toBe("2026-10-12"); // 5 ngày làm việc sau 05/10/2026 (CN)

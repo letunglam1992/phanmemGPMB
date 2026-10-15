@@ -4,6 +4,16 @@ Mỗi phiên bản một mục `## X.Y.Z`. Khi phát hành, quy trình đóng g�
 (`tools/ghi-chu-phat-hanh.mjs`) — thiếu mục của phiên bản đang phát hành thì dừng, không phát hành. Phần mềm hiện các mục
 mới hơn bản đang dùng khi có bản cập nhật.
 
+## 1.0.13
+
+- Hạn phê duyệt phương án không quá 5 ngày làm việc kể từ ngày nhận tờ trình (điểm c khoản 3 Điều 87 Luật Đất đai 2024):
+  mốc lấy ngày Tờ trình đề nghị phê duyệt phương án (mẫu 13 nay ghi lại số, ngày; mẫu R4) hoặc ngày nhận tờ trình ghi
+  cho cả bản; bảng phương án hiện hạn, Tổng quan và chuông báo sắp hết, quá hạn; báo cáo đếm bản quá hạn phê duyệt.
+- Phụ lục Excel tổng hợp tỉnh có trang "Bản phương án": chờ thẩm định (quá hạn), đã thẩm định chờ phê duyệt (quá hạn),
+  không thống nhất, đã phê duyệt theo từng dự án.
+- Hộp "Ghi tổ, thôn" nhiều hộ và nhập Excel kiểm đếm theo bộ chính sách của từng hộ.
+- So sánh bản đồ đã lưu giữ cả số liệu hồ sơ lúc lưu: khi xem lại nêu hồ sơ đã sửa diện tích, mới có hoặc không còn thửa.
+
 ## 1.0.12
 
 - Thẩm định phương án: mẫu 13 và mẫu R4 tự điền "Kết quả thẩm định" từ bản phương án đã ghi nhận thẩm định; cơ quan
