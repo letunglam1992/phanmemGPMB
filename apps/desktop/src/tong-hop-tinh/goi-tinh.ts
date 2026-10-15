@@ -14,18 +14,20 @@
  * mềm, không thay chữ ký số của cơ quan theo pháp luật về giao dịch điện tử.
  */
 import { dsDoan, matBangTheoLyTrinh } from "../ly-trinh";
+import { hanThamDinhBan } from "../han-buoc";
+import { LICH_TRONG } from "../lich-lam-viec";
 import PizZip from "pizzip";
 import { D } from "@gpmb/core";
 import type { Kho } from "../kho";
 import type { DuAn, Ho } from "../mo-hinh";
-import { tienDoHo } from "../mo-hinh";
+import { hoHieuLuc, tienDoHo } from "../mo-hinh";
 import { taoBanSaoLuu, type BanSaoLuu, docBanSaoLuu } from "../sao-luu";
 import { taoKhoaKhoiPhuc, thuMatKhauKhoiPhuc, type KhoaKhoiPhuc } from "../ma-hoa";
 import { BO_CHINH_SACH } from "../du-lieu";
 import { GOI_GOC, dangKyGoi, type GoiDaNap } from "../goi-chinh-sach";
 import { tinhHo } from "../tinh-ho";
 import { THU_TU_TRANG_THAI, trangThaiHo, type TrangThaiGpmb } from "../trang-thai";
-import { hoDaPheDuyet } from "../phuong-an";
+import { demBanPA, hoDaPheDuyet } from "../phuong-an";
 
 export const DINH_DANG_GOI = "gpmb-sonla-goi-tinh";
 export const DINH_DANG_KHOA = "gpmb-sonla-khoa-tinh";
@@ -136,6 +138,8 @@ export interface TomTatDuAn {
   soTepDinhKem: number;
   /** 1.0.4: dự án liên xã — mã dùng chung do tỉnh cấp, tên tuyến, đoạn Km (gói cũ không có) */
   lienXa?: import("./lien-xa").LienXaDuAn;
+  /** 1.0.12: số bản phương án theo bước thẩm định, phê duyệt (gói cũ không có) */
+  banPA?: import("../phuong-an").DemBanPA;
   /** 1.0.4: mặt bằng theo lý trình (chỉ khi xã có ghi lý trình thửa) — mét */
   lyTrinh?: { tongM: number; sachM: number; chua: [number, number][] };
 }
@@ -184,6 +188,7 @@ export function tomTatDuAn(duAn: DuAn[], ho: Ho[], soTep: (duAnId: string) => nu
       soHoDaDuyetPA: duyet.length,
       tienDoBinhQuan: hs.length ? td / hs.length : 0,
       soTepDinhKem: soTep(d.id),
+      banPA: { ...demBanPA(d.phuongAn ?? []), quaHanTd: (d.phuongAn ?? []).filter((p) => hanThamDinhBan(p, hs.map((h) => hoHieuLuc(d, h)), homNay, LICH_TRONG)?.trangThai === "QUA_HAN").length },
       ...(d.lienXa?.ma?.trim() ? { lienXa: d.lienXa } : {}),
       ...(() => {
         const ds = dsDoan(hs, (h) => !!h.banGiao?.ngay);

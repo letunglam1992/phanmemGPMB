@@ -4,6 +4,7 @@
  * phần nhận định (khó khăn khác, nhiệm vụ, kiến nghị) do cán bộ nhập.
  */
 import { gomLienXa, type TuyenLienXa } from "./lien-xa";
+import { congDemBanPA, moTaDemBanPA } from "../phuong-an";
 import { D, dinhDang } from "@gpmb/core";
 import type { ThongTinBaoCao } from "../bao-cao-van-ban";
 import type { TomTatDuAn } from "./goi-tinh";
@@ -43,6 +44,10 @@ export function duLieuBaoCaoTinh(dong: DongBaoCao[], t: ThongTinBaoCaoTinh, o: {
   const tongQuat = [
     `Tổng hợp từ số liệu của ${o.soDonVi} đơn vị gửi (${xa.length} xã, phường): ${lx.soDuAn} dự án; ${soHo} hộ gia đình, cá nhân, tổ chức có đất thu hồi; tổng diện tích thu hồi theo hồ sơ ${dinhDang(dt, 1)} m².`,
     `Đã bàn giao mặt bằng ${cong(bg)}/${soHo} hộ (${pt(cong(bg), soHo)}); ${cong((d) => d.soHoDaDuyetPA)} hộ đã có phương án được phê duyệt; ${cong((d) => d.soVuongMac)} hộ đang ghi vướng mắc.`,
+    (() => {
+      const m = moTaDemBanPA(congDemBanPA(dong.map((d) => d.banPA)));
+      return m ? `Bản phương án (đơn vị gửi từ bản 1.0.12): ${m}.` : "";
+    })(),
     `Giá trị bồi thường, hỗ trợ tạm tính theo hồ sơ ${tien(tamTinh(dong))} đồng (chưa phải số đã phê duyệt).`,
     cauLienXa,
   ].filter(Boolean).join(" ");

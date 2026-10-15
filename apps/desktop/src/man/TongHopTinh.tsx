@@ -6,6 +6,7 @@
  *   xem chi tiết từng dự án như cấp xã (chỉ xem), xuất Excel; quản lý mã truy cập cổng của các xã.
  */
 import { TheLienXaTinh } from "../thanh-phan/LienXaTinh";
+import { moTaDemBanPA } from "../phuong-an";
 import { TheDienBienTinh } from "../thanh-phan/DienBienTinh";
 import { dienBienTinh } from "../tong-hop-tinh/dien-bien";
 import { gomLienXa, type DoanTinh, type TuyenLienXa } from "../tong-hop-tinh/lien-xa";
@@ -609,7 +610,7 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
                         </td>
                         <td className="so">{d.theoTrangThai.HOAN_THANH ?? 0}{d.soHo ? ` (${dinhDang(D(d.theoTrangThai.HOAN_THANH ?? 0).div(d.soHo).times(100), 0)}%)` : ""}</td>
                         <td className="so">{d.soVuongMac}</td>
-                        <td className="so">{d.soHoDaDuyetPA}</td>
+                        <td className="so" title={moTaDemBanPA(d.banPA) || undefined}>{d.soHoDaDuyetPA}{d.banPA?.quaHanTd ? <div className="nhan nhan-do chu-nho">{d.banPA.quaHanTd} bản quá hạn thẩm định</div> : null}</td>
                         <td className="so">{dinhDang(d.tongTamTinh, 0)}</td>
                         <td className="so">{dinhDang(d.dienTichThuHoi, 1)}</td>
                       </tr>

@@ -24,6 +24,11 @@ export const dotCuaHo = (duAn: Pick<DuAn, "dotThuHoi">, h: Pick<Ho, "dotId">) =>
 /** 1.0.11: khóa bộ chính sách áp dụng cho hộ — bộ riêng của hộ, rồi của đợt, rồi của dự án. */
 export const boCuaHo = (duAn: Pick<DuAn, "dotThuHoi" | "boChinhSach">, h: Pick<Ho, "dotId" | "boChinhSach">): string =>
   h.boChinhSach || dotCuaHo(duAn, h)?.boChinhSach || duAn.boChinhSach;
+/** 1.0.12: dự án nhìn từ một hộ — bộ chính sách là bộ áp dụng cho hộ (để thẻ nhập hồ sơ hiện đúng danh mục, đơn giá). */
+export const duAnTheoBoHo = <T extends Pick<DuAn, "dotThuHoi" | "boChinhSach">>(duAn: T, h: Pick<Ho, "dotId" | "boChinhSach">): T => {
+  const bo = boCuaHo(duAn, h);
+  return bo === duAn.boChinhSach ? duAn : { ...duAn, boChinhSach: bo };
+};
 export const tenDot = (d: DotThuHoi | undefined) => (d ? (d.ten.trim() || `Đợt ${d.so}`) : "Chưa xếp đợt");
 
 /**

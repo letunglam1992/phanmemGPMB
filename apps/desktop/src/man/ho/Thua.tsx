@@ -1,4 +1,5 @@
 import { TRUONG_HOP_TACH_THUA } from "../ban-do/ranh";
+import { boCuaHo, duAnTheoBoHo } from "../../dot-thu-hoi";
 import { useEffect, useMemo, useState } from "react";
 import { useCuaSo } from "../../thanh-phan/cua-so";
 import { HopXemThuaBanDo } from "./XemThuaBanDo";
@@ -44,7 +45,7 @@ export function TabThua({ h, duAn, doi, noiBat }: { h: Ho; duAn: DuAn; doi: (h: 
   const [xemBanDo, setXemBanDo] = useState<string | null>(null);
   const [chonGiaKgt, setChonGiaKgt] = useState<{ id: string; loai: "KD" | "CL"; loaiDat: string } | null>(null);
   const { chinhSach } = useUngDung();
-  const cs = chinhSach(duAn);
+  const cs = chinhSach(duAnTheoBoHo(duAn, h));
   const sua = (id: string, p: Partial<Thua>) => doi({ ...h, thua: h.thua.map((t) => (t.id === id ? { ...t, ...p } : t)) });
   // 1.0.6: hồ sơ nhiều thửa — chỉ dựng các thửa đang nhìn thấy (mỗi thửa một tbody để đo đúng chiều cao)
   const khoaThua = useMemo(() => h.thua.map((t) => t.id), [h.thua]);
@@ -310,7 +311,7 @@ export function TabThua({ h, duAn, doi, noiBat }: { h: Ho; duAn: DuAn; doi: (h: 
       {chonTuyen && (() => {
         const t = h.thua.find((x) => x.id === chonTuyen)!;
         return (
-          <ChonGiaDat bo={duAn.boChinhSach} xa={duAn.xa} loaiDat={t.loaiDat} dong={() => setChonTuyen(null)} chon={() => undefined}
+          <ChonGiaDat bo={boCuaHo(duAn, h)} xa={duAn.xa} loaiDat={t.loaiDat} dong={() => setChonTuyen(null)} chon={() => undefined}
             chonTuyen={(r) => {
               sua(t.id, { phanLop: { tuyen: { bang: r.bang, stt: r.stt, xa: r.xa, tuyen: r.tuyen, vt: r.vt }, lop: t.phanLop?.lop ?? [{ id: taoId(), lop: 1, viTri: Math.max(1, r.vt.findIndex((g) => g !== null) + 1), dienTich: "" }] } });
               setChonTuyen(null);
@@ -321,17 +322,17 @@ export function TabThua({ h, duAn, doi, noiBat }: { h: Ho; duAn: DuAn; doi: (h: 
       {(() => {
         const t = h.thua.find((x) => x.id === chonGiaHT);
         if (!t?.chenhLech) return null;
-        return <ChonGiaDat bo={duAn.boChinhSach} xa={duAn.xa} loaiDat={t.chenhLech.loaiHienTrang} dong={() => setChonGiaHT(null)} chon={(g) => { sua(t.id, { chenhLech: { ...t.chenhLech!, giaHienTrang: g.giaNghinDong, nguonGia: g.nguon } }); setChonGiaHT(null); }} />;
+        return <ChonGiaDat bo={boCuaHo(duAn, h)} xa={duAn.xa} loaiDat={t.chenhLech.loaiHienTrang} dong={() => setChonGiaHT(null)} chon={(g) => { sua(t.id, { chenhLech: { ...t.chenhLech!, giaHienTrang: g.giaNghinDong, nguonGia: g.nguon } }); setChonGiaHT(null); }} />;
       })()}
       {(() => {
         const t = h.thua.find((x) => x.id === chonGiaKgt?.id);
         if (!t?.khongGiayTo || !chonGiaKgt) return null;
         const k = t.khongGiayTo;
-        return <ChonGiaDat bo={duAn.boChinhSach} xa={duAn.xa} loaiDat={chonGiaKgt.loaiDat} dong={() => setChonGiaKgt(null)} chon={(g) => { sua(t.id, { khongGiayTo: chonGiaKgt.loai === "KD" ? { ...k, giaSxkd: g } : { ...k, giaConLai: { ...g, loaiDat: chonGiaKgt.loaiDat } } }); setChonGiaKgt(null); }} />;
+        return <ChonGiaDat bo={boCuaHo(duAn, h)} xa={duAn.xa} loaiDat={chonGiaKgt.loaiDat} dong={() => setChonGiaKgt(null)} chon={(g) => { sua(t.id, { khongGiayTo: chonGiaKgt.loai === "KD" ? { ...k, giaSxkd: g } : { ...k, giaConLai: { ...g, loaiDat: chonGiaKgt.loaiDat } } }); setChonGiaKgt(null); }} />;
       })()}
       {xemBanDo && h.thua.some((t) => t.id === xemBanDo) && <HopXemThuaBanDo duAn={duAn} h={h} thua={h.thua.find((t) => t.id === xemBanDo)!} doi={doi} dong={() => setXemBanDo(null)} />}
       {thuaChon && (
-        <ChonGiaDat bo={duAn.boChinhSach} xa={duAn.xa} loaiDat={thuaChon.loaiDat} dong={() => setChonGia(null)} chon={(g) => { sua(thuaChon.id, { gia: g }); setChonGia(null); }} />
+        <ChonGiaDat bo={boCuaHo(duAn, h)} xa={duAn.xa} loaiDat={thuaChon.loaiDat} dong={() => setChonGia(null)} chon={(g) => { sua(thuaChon.id, { gia: g }); setChonGia(null); }} />
       )}
     </div>
   );
@@ -344,7 +345,7 @@ function KhongGiayToThua({ t, h, duAn, sua, moChonGia }: { t: Thua; h: Ho; duAn:
   const [loaiCl, setLoaiCl] = useState(k?.giaConLai?.loaiDat || "CLN");
   const dat = (p: Partial<KhongGiayTo>) => sua({ ...k!, ...p });
   const { chinhSach } = useUngDung();
-  const cs = chinhSach(duAn);
+  const cs = chinhSach(duAnTheoBoHo(duAn, h));
   const laNN = laDatNN(t.loaiDat);
   const hmO = k && k.dieu !== "D12" ? hanMucDatOThua(cs, duAn, k) : null;
   const hmNN = k?.dieu === "D12" ? hanMucDatNNThua(cs, duAn, t, k) : null;

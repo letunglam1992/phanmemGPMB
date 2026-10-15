@@ -1,4 +1,5 @@
 import { useUngDung } from "../../ung-dung";
+import { duAnTheoBoHo } from "../../dot-thu-hoi";
 import { tienBoiThuongDatO, tienSddTdc, type KetQuaHo } from "../../tinh-ho";
 import { dienTichSuatToiThieu } from "@gpmb/core";
 import { TEN_HINH_THUC_TDC, type HinhThucTdc, type TaiDinhCuHo, taoId, type DuAn, type Ho } from "../../mo-hinh";
@@ -73,7 +74,7 @@ export function TabHoTro({ h, doi, duAn, kq }: Tab & { duAn: DuAn; kq: KetQuaHo 
  */
 export function TheTaiDinhCu({ h, doi, duAn, kq }: Tab & { duAn: DuAn; kq: KetQuaHo }) {
   const { chinhSach } = useUngDung();
-  const cs = chinhSach(duAn);
+  const cs = chinhSach(duAnTheoBoHo(duAn, h));
   const t = h.hoTro.taiDinhCu;
   const dat = (p: Partial<TaiDinhCuHo> | undefined) => doi({ ...h, hoTro: { ...h.hoTro, taiDinhCu: p === undefined ? undefined : { ...(t ?? { hinhThuc: "DAT_O", khoanKhac: [] }), ...p } } });
   const btDatO = tienBoiThuongDatO(h, kq.nhom.find((x) => x.ma === "A.I")?.dong ?? []);

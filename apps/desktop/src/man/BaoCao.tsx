@@ -1,4 +1,5 @@
 import { ONgay } from "../thanh-phan/ONgay";
+import { moTaDemBanPA } from "../phuong-an";
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { dinhDang } from "@gpmb/core";
 import { useUngDung } from "../ung-dung";
@@ -170,7 +171,7 @@ export function BaoCao() {
                   {n.dong.map((x) => (
                     <Fragment key={x.duAn.id}>
                     <tr className="co-the-chon" onClick={() => di({ ten: "du-an", duAnId: x.duAn.id })}>
-                      <td><b>{x.duAn.ten}</b>{x.canhBaoCao > 0 && <div className="can-cu" style={{ color: "var(--do-to)" }}>{x.canhBaoCao} cảnh báo cần xử lý ngay</div>}</td>
+                      <td><b>{x.duAn.ten}</b>{x.canhBaoCao > 0 && <div className="can-cu" style={{ color: "var(--do-to)" }}>{x.canhBaoCao} cảnh báo cần xử lý ngay</div>}{moTaDemBanPA(x.banPA) && <div className="can-cu" data-ban-pa>Phương án: {moTaDemBanPA(x.banPA)}</div>}</td>
                       <td><span className={LOP_TT[x.tinhTrang]}>{TEN_TINH_TRANG[x.tinhTrang]}</span></td>
                       <td><PhanBoTrangThaiGon dem={x.theoTrangThai} tong={x.soHo} /><div className="can-cu">{x.theoTrangThai.HOAN_THANH}/{x.soHo} hoàn thành · tiến độ {Math.round(x.tienDoChung * 100)}%</div></td>
                       {dongSo(x)}

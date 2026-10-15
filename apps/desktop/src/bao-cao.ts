@@ -6,11 +6,13 @@
 import { dsDoan, hienDiem, hopDoan, matBangTheoLyTrinh } from "./ly-trinh";
 import { D } from "@gpmb/core";
 import type Decimal from "decimal.js";
-import type { DuAn, Ho } from "./mo-hinh";
+import { hoHieuLuc, type DuAn, type Ho } from "./mo-hinh";
+import { demBanPA } from "./phuong-an";
+import { hanThamDinhBan } from "./han-buoc";
 import type { KetQuaHo } from "./tinh-ho";
 import { canhBaoDuAn, thongKe, THU_TU_TRANG_THAI, type CanhBao, type TrangThaiGpmb } from "./trang-thai";
 import { tinhChiTra, type GiaiDoanTyLe } from "./chi-tra";
-import type { LichLamViec } from "./lich-lam-viec";
+import { LICH_TRONG, type LichLamViec } from "./lich-lam-viec";
 import { soD } from "./so";
 import { CHUA_XEP_DOT, coDot, dsDot, duAnTheoDot, tenDot } from "./dot-thu-hoi";
 
@@ -54,6 +56,8 @@ export interface DongBaoCao extends SoLieu {
   vuongMac: CanhBao[];
   /** P3-1 (0.9.27): dự án có đợt thu hồi — số liệu tách theo từng đợt (hộ chưa xếp đợt gộp một dòng cuối). */
   theoDot?: DongDot[];
+  /** 1.0.12: số bản phương án theo bước thẩm định, phê duyệt (không tính bản hủy). */
+  banPA?: import("./phuong-an").DemBanPA;
   /** 1.0.5: dự án có ghi lý trình — số liệu tách theo đoạn Km (hộ xếp vào đoạn chứa điểm đầu lý trình nhỏ nhất của hộ). */
   theoDoan?: DongDot[];
 }
@@ -139,6 +143,7 @@ export function dongDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], denNgay: stri
     tienDoChung: tk.tienDoChung,
     changHienTai: changDaQua ? `${changDaQua.ten} (${changDaQua.soHo}/${ds.length} hộ)` : "Chưa bắt đầu",
     vuongMac: cb.filter((c) => c.muc === "CAO"),
+    banPA: { ...demBanPA(duAn.phuongAn ?? []), quaHanTd: (duAn.phuongAn ?? []).filter((p) => hanThamDinhBan(p, ds.map((x) => hoHieuLuc(duAn, hoDenNgay(x.h, denNgay))), denNgay, lich ?? LICH_TRONG)?.trangThai === "QUA_HAN").length },
   };
 }
 

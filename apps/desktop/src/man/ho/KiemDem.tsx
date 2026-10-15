@@ -1,4 +1,5 @@
 import { hienSo } from "../../so";
+import { boCuaHo, duAnTheoBoHo } from "../../dot-thu-hoi";
 import { useMemo, useState } from "react";
 import { useCuaSo } from "../../thanh-phan/cua-so";
 import { tenDayDu } from "../../van-ban/loai-dat";
@@ -31,7 +32,7 @@ const VAT_NUOI: Record<LoaiVatNuoi, string> = {
 
 export function TabKiemDem({ h, doi, duAn }: { h: Ho; doi: (h: Ho) => void; duAn: DuAn }) {
   const { chinhSach } = useUngDung();
-  const cs = chinhSach(duAn);
+  const cs = chinhSach(duAnTheoBoHo(duAn, h));
   const ngayTB = duAnCuaHo(duAn, h).ngayThongBao;
   const [them, setThem] = useState<{ thuaId: string; nguon: "QĐ32" | "PL VIII" } | null>(null);
   const [dot, setDot] = useState<number | "TAT_CA">("TAT_CA");
@@ -75,7 +76,7 @@ export function TabKiemDem({ h, doi, duAn }: { h: Ho; doi: (h: Ho) => void; duAn
       ))}
       {them && (
         <ChonDonGia
-          bo={duAn.boChinhSach}
+          bo={boCuaHo(duAn, h)}
           tieuDe={them.nguon === "QĐ32" ? "Đơn giá nhà, công trình – QĐ 32/2025/QĐ-UBND" : "Đơn giá cây trồng – PL VIII QĐ 106/2025/QĐ-UBND"}
           nguon={[them.nguon]}
           dong={() => setThem(null)}

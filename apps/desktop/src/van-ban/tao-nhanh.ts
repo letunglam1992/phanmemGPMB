@@ -22,12 +22,35 @@ export async function napMau(kho: Kho, ma: string): Promise<Uint8Array> {
 
 export { macDinhTuHoSo } from "./thuc-te";
 import { macDinhTuHoSo } from "./thuc-te";
+import { moTaQd, TEN_Y_KIEN_TD, type PhienBanPA } from "../phuong-an";
+
+/**
+ * 1.0.12: bản phương án (chưa hủy) có ghi nhận thẩm định, gồm các hộ đang soạn (không có hộ nào → bản mới nhất có thẩm
+ * định). Trả về null nếu chưa có.
+ */
+export function banDaThamDinh(duAn: Pick<DuAn, "phuongAn">, hoIds: string[]): PhienBanPA | null {
+  const ids = new Set(hoIds);
+  const ds = (duAn.phuongAn ?? []).filter((p) => p.trangThai !== "DA_HUY" && p.thamDinh && (!ids.size || p.ho.some((h) => ids.has(h.hoId))));
+  return ds.sort((a, b) => b.so - a.so)[0] ?? null;
+}
+
+/** Câu "Kết quả thẩm định" điền vào mẫu 13, R4 — chỉ dữ kiện đã ghi nhận (số, ngày, cơ quan, ý kiến). */
+export function ketQuaThamDinh(duAn: Pick<DuAn, "phuongAn">, hoIds: string[]): string | null {
+  const p = banDaThamDinh(duAn, hoIds);
+  if (!p?.thamDinh) return null;
+  const t = p.thamDinh;
+  const vb = t.so || t.ngay ? `Văn bản số ${moTaQd(t)}` : "Văn bản thẩm định (chưa ghi số, ngày)";
+  return `${vb}${t.coQuan ? ` của ${t.coQuan}` : ""} về kết quả thẩm định phương án (bản ${p.so}): ${TEN_Y_KIEN_TD[t.yKien].toLowerCase()}${t.noiDung ? `; ${t.noiDung}` : ""}.`;
+}
 
 /** Giá trị ban đầu các trường nhập thêm: đã lưu cho dự án > tự tính từ hồ sơ > mặc định của mẫu. */
 export function giaTriNhapThem(mau: MauVanBan, duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[]): Record<string, string> {
   const tu = macDinhTuHoSo(ds);
+  // 1.0.12: kết quả thẩm định đã ghi nhận ở bản phương án là nguồn chính (ưu tiên hơn giá trị lưu tay)
+  const td = ketQuaThamDinh(duAn, ds.map((x) => x.h.id));
   return Object.fromEntries(
     mau.nhapThem.map((t) => {
+      if (t.truong === "ket_qua_tham_dinh" && td) return [t.truong, td];
       const daLuu = t.truong !== "noi_nhan" ? duAn.vanBan?.[t.truong] : undefined;
       const dungDaLuu = daLuu && !(tu[t.truong] && daLuu === (t.macDinh ?? ""));
       return [t.truong, (dungDaLuu ? daLuu : tu[t.truong]) || t.macDinh || ""];

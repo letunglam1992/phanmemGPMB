@@ -14,7 +14,7 @@ import { CAC_BUOC, daQuaBuoc, hoHieuLuc, tienDoHo, type DuAn, type Ho } from "./
 import type { KetQuaHo } from "./tinh-ho";
 
 import { hoLechSauPheDuyet } from "./phuong-an";
-import { HAN_BUOC, tinhHanBuoc } from "./han-buoc";
+import { HAN_BUOC, hanThamDinhBan, tinhHanBuoc } from "./han-buoc";
 import { LICH_TRONG, type LichLamViec } from "./lich-lam-viec";
 import { tinhChiTra, type GiaiDoanTyLe } from "./chi-tra";
 import { dinhDang } from "@gpmb/core";
@@ -214,6 +214,15 @@ export function canhBaoDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: st
       if (d.tienDoChung?.[ma]?.trangThai === "CHO_DUYET")
         out.push({ muc: "THONG_TIN", duAnId: duAn.id, noiDung: `${d.ten || `Đợt ${d.so}`} – bước chung ${ma}. ${CAC_BUOC.find((b) => b.ma === ma)?.ten ?? ""}: chờ duyệt (áp dụng cho hộ thuộc đợt)` });
   }
+  // 1.0.12: hạn thẩm định theo bản phương án (một cảnh báo cho cả bản thay cho từng hộ)
+  const trongBan = new Set((duAn.phuongAn ?? []).filter((p) => p.trangThai !== "DA_HUY").flatMap((p) => p.ho.map((x) => x.hoId)));
+  for (const p of duAn.phuongAn ?? []) {
+    const t = hanThamDinhBan(p, ds.map((x) => hoHieuLuc(duAn, x.h)), homNay, lich);
+    if (!t?.hanChot) continue;
+    const hc = t.hanChot.split("-").reverse().join("/");
+    if (t.trangThai === "QUA_HAN") out.push({ muc: "CAO", duAnId: duAn.id, noiDung: `Phương án bản ${p.so}: quá hạn thẩm định (hạn ${hc}, 30 ngày làm việc từ ngày nhận đủ hồ sơ) — chưa ghi nhận kết quả thẩm định`, canCu: t.han.canCu });
+    else if (t.trangThai === "SAP_HET") out.push({ muc: "TRUNG_BINH", duAnId: duAn.id, noiDung: `Phương án bản ${p.so}: sắp hết hạn thẩm định (${hc}, còn ${t.conLai} ngày làm việc)`, canCu: t.han.canCu });
+  }
   for (const { h: h0, k } of ds) {
     const h = hoHieuLuc(duAn, h0);
     const ct = tinhChiTra(h, duAn.phuongAn ?? [], tyLeCham, homNay);
@@ -238,6 +247,7 @@ export function canhBaoDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: st
         out.push({ muc: "CAO", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: QĐ thu hồi cách thông báo ${kc} ngày (< ${toiThieu} ngày)`, canCu: "khoản 2 Điều 85 Luật Đất đai 2024" });
     }
     for (const han of HAN_BUOC) {
+      if (han.buoc === "8" && trongBan.has(h.id)) continue; // đã báo theo bản phương án
       const t = tinhHanBuoc(h, han, homNay, lich);
       const ten = CAC_BUOC.find((b) => b.ma === han.buoc)?.ten ?? "";
       const dv = han.loai === "NLV" ? "ngày làm việc" : "ngày";

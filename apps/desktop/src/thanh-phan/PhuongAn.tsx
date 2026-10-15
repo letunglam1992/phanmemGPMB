@@ -8,6 +8,8 @@ import { HopThoai, O } from "./chung";
 import { xuatExcelChiTra, xuatExcelDuAn, xuatPhieuDoiChieu } from "../xuat-excel";
 import { useMauExcel } from "./MauExcel";
 import { homNayIso } from "../trang-thai";
+import { hanThamDinhBan } from "../han-buoc";
+import { hoHieuLuc } from "../mo-hinh";
 import { ngayChu } from "../van-ban/du-lieu";
 import {
   moTaBan,
@@ -44,7 +46,7 @@ const TEN_LOAI: Record<LoaiThayDoi, [string, string]> = { THEM: ["Thêm", "nhan-
 
 /** Thẻ "Phương án – phiên bản" trên màn Dự án. */
 export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo }[] }) {
-  const { chinhSach, luuDuAn, luuHo, nguoiDung, quyen, ghiNhatKy, tyLeCham, nguongLechDt, nguoiCoDat, lich } = useUngDung();
+  const { chinhSach, luuDuAn, luuHo, luuNhieuHo, nguoiDung, quyen, ghiNhatKy, tyLeCham, nguongLechDt, nguoiCoDat, lich, bao } = useUngDung();
   const ds = useMemo(() => [...(duAn.phuongAn ?? [])].sort((a, b) => b.so - a.so), [duAn.phuongAn]);
   /** Lưu bản đã ghi nhận/bổ sung QĐ; ghi số, ngày (ô có giá trị) vào văn bản dự án hoặc của đợt (P3-1). */
   const ghiQd = async (d: PhienBanPA, ghiVanBan: boolean) => {
@@ -55,7 +57,7 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
     const dotThuHoi = dotGhi ? duAn.dotThuHoi!.map((x) => (x.id === dotGhi.id ? { ...x, vanBan: { ...(x.vanBan ?? {}), ...vbQd } } : x)) : duAn.dotThuHoi;
     await luuDuAn({ ...duAn, vanBan, dotThuHoi, phuongAn: (duAn.phuongAn ?? []).map((x) => (x.id === d.id ? d : x)) }, "PHE_DUYET_PA");
   };
-  const [hop, setHop] = useState<null | { loai: "chot" } | { loai: "soat" } | { loai: "duyet" | "huy" | "xem" | "bo-sung" | "tham-dinh"; p: PhienBanPA } | { loai: "so-sanh"; a?: string; b?: string }>(null);
+  const [hop, setHop] = useState<null | { loai: "chot" } | { loai: "soat" } | { loai: "duyet" | "huy" | "xem" | "bo-sung" | "tham-dinh" | "nhan-ho-so"; p: PhienBanPA } | { loai: "so-sanh"; a?: string; b?: string }>(null);
   const [toanVen, setToanVen] = useState<Record<string, boolean>>({});
   const [loi, setLoi] = useState("");
   const lech = hoLechSauPheDuyet(ds, kq);
@@ -119,6 +121,21 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
                   <td>
                     <span className={`nhan ${p.trangThai === "DA_CHOT" && p.thamDinh ? (p.thamDinh.yKien === "KHONG_THONG_NHAT" ? "nhan-do" : "nhan-tim") : NHAN_TT[p.trangThai]}`} data-tt-pa={p.so}>{tenTrangThai(p)}</span>
                     {p.thamDinh && <div className="mo chu-nho">Thẩm định: {moTaQd(p.thamDinh)}{p.thamDinh.coQuan ? ` (${p.thamDinh.coQuan})` : ""}</div>}
+                    {(() => {
+                      // 1.0.12: hạn thẩm định ≤ 30 ngày làm việc từ ngày nhận đủ hồ sơ (k3 Đ3 NĐ 88/2024)
+                      const t = hanThamDinhBan(p, kq.map((x) => hoHieuLuc(duAn, x.h)), homNayIso(), lich);
+                      if (!t) return null;
+                      const ngay = (s: string) => s.split("-").reverse().join("/");
+                      const lop = t.trangThai === "QUA_HAN" ? "nhan-do" : t.trangThai === "SAP_HET" ? "nhan-vang" : "";
+                      return (
+                        <div className="chu-nho" data-han-td={p.so} title={t.han.canCu}>
+                          {t.trangThai === "CHUA_CO_MOC" ? <span className="mo">Hạn thẩm định: chưa ghi ngày nhận đủ hồ sơ</span>
+                            : t.trangThai === "TAM_DUNG" ? <span className="mo">Hạn thẩm định: tạm dừng (đang bổ sung hồ sơ)</span>
+                            : <span className={lop ? `nhan ${lop}` : "mo"}>Hạn thẩm định {ngay(t.hanChot!)}{t.trangThai === "QUA_HAN" ? " — quá hạn" : t.conLai !== null ? ` (còn ${t.conLai} NLV)` : ""}</span>}
+                          {quyen("SUA_HO_SO") && <> <button className="nut nut-chu nut-nho" onClick={() => setHop({ loai: "nhan-ho-so", p })}>{t.moc ? "Sửa ngày nhận hồ sơ…" : "Ngày nhận đủ hồ sơ…"}</button></>}
+                        </div>
+                      );
+                    })()}
                   </td>
                   <td className="so">{p.ho.length}</td>
                   <td className="so">{dong(p.tong)}</td>
@@ -187,8 +204,27 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
           dong={() => setHop(null)}
           luu={async (td) => {
             const d = ghiThamDinh(hop.p, td, nguoiDung);
-            await luuDuAn({ ...duAn, phuongAn: (duAn.phuongAn ?? []).map((x) => (x.id === d.id ? d : x)) }, "PHE_DUYET_PA");
+            // cơ quan thẩm định điền sẵn cho các mẫu văn bản (ô "Cơ quan chủ trì thẩm định") nếu còn trống
+            const vanBan = !duAn.vanBan?.co_quan_tham_dinh?.trim() && d.thamDinh!.coQuan ? { ...(duAn.vanBan ?? {}), co_quan_tham_dinh: d.thamDinh!.coQuan } : duAn.vanBan;
+            await luuDuAn({ ...duAn, vanBan, phuongAn: (duAn.phuongAn ?? []).map((x) => (x.id === d.id ? d : x)) }, "PHE_DUYET_PA");
             await ghiNhatKy(hop.p.thamDinh ? "Bổ sung kết quả thẩm định phương án" : "Ghi nhận thẩm định phương án", `${duAn.ten} – bản ${d.so}: ${TEN_Y_KIEN_TD[d.thamDinh!.yKien]}; ${moTaQd(d.thamDinh)}${d.thamDinh!.coQuan ? ` của ${d.thamDinh!.coQuan}` : ""}`);
+          }}
+        />
+      )}
+      {hop?.loai === "nhan-ho-so" && (
+        <HopNhanHoSo
+          p={hop.p}
+          ngayDau={kq.find((x) => hop.p.ho.some((y) => y.hoId === x.h.id) && x.h.tienDo["8"]?.mocHan)?.h.tienDo["8"]?.mocHan ?? ""}
+          dong={() => setHop(null)}
+          luu={async (ngay) => {
+            const ids = new Set(hop.p.ho.map((x) => x.hoId));
+            const ds = kq.filter((x) => ids.has(x.h.id)).map(({ h }) => ({
+              h: { ...h, tienDo: { ...h.tienDo, "8": { ...(h.tienDo["8"] ?? { trangThai: "CHUA" as const }), mocHan: ngay || undefined } } },
+              nhatKy: ngay ? `Ngày nhận đủ hồ sơ thẩm định phương án (bản ${hop.p.so}): ${ngay.split("-").reverse().join("/")}` : `Bỏ ngày nhận đủ hồ sơ thẩm định (bản ${hop.p.so})`,
+            }));
+            const r = await luuNhieuHo(ds);
+            if (r.loi.length) return bao(r.loi.join("; "), "loi");
+            bao(`Đã ghi ngày nhận đủ hồ sơ thẩm định cho ${r.daLuu} hộ của bản ${hop.p.so}`);
           }}
         />
       )}
@@ -417,6 +453,26 @@ function HopThamDinh({ p, dong: dongHop, luu }: { p: PhienBanPA; dong: () => voi
       <O nhan="Tóm tắt ý kiến, nội dung yêu cầu chỉnh sửa (nếu có)"><textarea rows={3} value={noiDung} disabled={!!c?.noiDung} onChange={(e) => setNoiDung(e.target.value)} /></O>
       {yKien === "KHONG_THONG_NHAT" && <div className="thong-bao thong-bao-vang chu-nho mt-8">Thẩm định không thống nhất: sau khi ghi nhận, hủy bản {p.so} (ghi lý do) và lập bản mới đã hoàn thiện để thẩm định lại.</div>}
       {loi && <div className="thong-bao thong-bao-do mt-10">{loi}</div>}
+    </HopThoai>
+  );
+}
+
+function HopNhanHoSo({ p, ngayDau, dong: dongHop, luu }: { p: PhienBanPA; ngayDau: string; dong: () => void; luu: (ngay: string) => Promise<void> }) {
+  const [ngay, setNgay] = useState(ngayDau);
+  return (
+    <HopThoai
+      tieuDe={`Ngày nhận đủ hồ sơ thẩm định – bản ${p.so}`}
+      dong={dongHop}
+      rong={560}
+      chan={
+        <>
+          <button className="nut" onClick={dongHop}>Đóng</button>
+          <button className="nut nut-chinh" onClick={async () => { await luu(ngay); dongHop(); }}>Lưu cho {p.ho.length} hộ</button>
+        </>
+      }
+    >
+      <p className="mo mt-0">Thời hạn thẩm định không quá 30 ngày làm việc kể từ ngày nhận đủ hồ sơ; thời gian bổ sung hồ sơ không tính (khoản 3 Điều 3 Nghị định 88/2024/NĐ-CP; docs/05). Ngày này ghi vào bước 8 của các hộ trong bản; khoảng bổ sung hồ sơ khai ở Tiến độ của hộ (“Thời gian không tính”).</p>
+      <O nhan="Ngày nhận đủ hồ sơ thẩm định"><ONgay value={ngay} onChange={(e) => setNgay(e.target.value)} /></O>
     </HopThoai>
   );
 }

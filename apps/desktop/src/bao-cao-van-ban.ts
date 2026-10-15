@@ -1,5 +1,6 @@
 /** Dữ liệu điền mẫu Word "Báo cáo tổng hợp" (public/mau-van-ban/bao-cao-tong-hop.docx). */
 import { dinhDang } from "@gpmb/core";
+import { congDemBanPA, moTaDemBanPA } from "./phuong-an";
 import { TEN_TINH_TRANG, type BaoCao, type DongDot } from "./bao-cao";
 import type { SoSanhKy } from "./ky-bao-cao";
 import type { HoVuongMac } from "./bao-cao-dinh-ky";
@@ -36,6 +37,10 @@ export function duLieuBaoCaoWord(bc: BaoCao, t: ThongTinBaoCao, ss?: SoSanhKy | 
     s.soHoDaDuyet
       ? `Đã phê duyệt phương án cho ${s.soHoDaDuyet}/${s.soHo} hộ với kinh phí ${tien(s.daDuyet)} đồng; đã chi trả ${tien(s.daChi)} đồng (${phanTram(s.daChi.toNumber(), s.daDuyet.toNumber())} kinh phí đã duyệt), còn phải chi ${tien(s.conPhaiChi)} đồng.`
       : "Chưa có phương án được phê duyệt.",
+    (() => {
+      const m = moTaDemBanPA(congDemBanPA(bc.dong.map((x) => x.banPA)));
+      return m ? `Bản phương án: ${m}.` : "";
+    })(),
     `Đã hoàn thành giải phóng mặt bằng ${s.theoTrangThai.HOAN_THANH}/${s.soHo} hộ (${phanTram(s.theoTrangThai.HOAN_THANH, s.soHo)})${s.theoTrangThai.VUONG_MAC ? `; ${s.theoTrangThai.VUONG_MAC} hộ đang vướng mắc` : ""}.`,
     ss ? cauSoSanh(ss) : "",
   ].filter(Boolean).join(" ");

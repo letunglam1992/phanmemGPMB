@@ -347,3 +347,39 @@ export function moTaBan(p: PhienBanPA): string {
   }
   return `Phương án bản ${p.so} – ĐÃ CHỐT, CHỜ PHÊ DUYỆT (${chot})`;
 }
+
+/** 1.0.12 — Đếm bản phương án theo bước (không tính bản hủy) cho báo cáo xã, tỉnh. `quaHanTd`: bản quá hạn thẩm định. */
+export interface DemBanPA {
+  choThamDinh: number;
+  daThamDinh: number;
+  khongThongNhat: number;
+  daPheDuyet: number;
+  quaHanTd?: number;
+}
+export function demBanPA(ds: PhienBanPA[]): DemBanPA {
+  const r: DemBanPA = { choThamDinh: 0, daThamDinh: 0, khongThongNhat: 0, daPheDuyet: 0 };
+  for (const p of ds) {
+    if (p.trangThai === "DA_PHE_DUYET") r.daPheDuyet++;
+    else if (p.trangThai !== "DA_CHOT") continue;
+    else if (!p.thamDinh) r.choThamDinh++;
+    else if (p.thamDinh.yKien === "KHONG_THONG_NHAT") r.khongThongNhat++;
+    else r.daThamDinh++;
+  }
+  return r;
+}
+/** Cộng số bản phương án của nhiều dự án. */
+export function congDemBanPA(ds: (DemBanPA | undefined)[]): DemBanPA {
+  const r: DemBanPA = { choThamDinh: 0, daThamDinh: 0, khongThongNhat: 0, daPheDuyet: 0, quaHanTd: 0 };
+  for (const d of ds) if (d) for (const k of Object.keys(r) as (keyof DemBanPA)[]) r[k] = (r[k] ?? 0) + (d[k] ?? 0);
+  return r;
+}
+/** "2 bản chờ thẩm định (1 quá hạn), 1 bản đã thẩm định chờ phê duyệt, …" — rỗng nếu chưa có bản nào. */
+export function moTaDemBanPA(d: DemBanPA | undefined): string {
+  if (!d) return "";
+  return [
+    d.choThamDinh && `${d.choThamDinh} bản chờ thẩm định${d.quaHanTd ? ` (${d.quaHanTd} quá hạn)` : ""}`,
+    d.daThamDinh && `${d.daThamDinh} bản đã thẩm định, chờ phê duyệt`,
+    d.khongThongNhat && `${d.khongThongNhat} bản thẩm định không thống nhất`,
+    d.daPheDuyet && `${d.daPheDuyet} bản đã phê duyệt`,
+  ].filter(Boolean).join("; ");
+}

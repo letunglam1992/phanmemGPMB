@@ -1,4 +1,5 @@
 import { D, dinhDang } from "@gpmb/core";
+import { duAnTheoBoHo } from "../../dot-thu-hoi";
 import { useUngDung } from "../../ung-dung";
 import { TEN_KHOAN_KHAC, type KetQuaHo } from "../../tinh-ho";
 import { TEN_SXKD, type CachSxkd } from "@gpmb/core";
@@ -31,8 +32,8 @@ const DA_CO_NOI_KHAC: [string, string][] = [
  */
 export function TabHoTroKhac({ h, doi, duAn, kq }: Tab & { duAn: DuAn; kq: KetQuaHo }) {
   const { chinhSach } = useUngDung();
-  const cs = chinhSach(duAn).hoTroKhac;
-  const pl2 = chinhSach(duAn).phuLucII;
+  const cs = chinhSach(duAnTheoBoHo(duAn, h)).hoTroKhac;
+  const pl2 = chinhSach(duAnTheoBoHo(duAn, h)).phuLucII;
   const k: HoTroKhacHo = h.hoTro.khac ?? { khoan: [] };
   const dat = (p: Partial<HoTroKhacHo>) => {
     const moi = { ...k, ...p };
@@ -46,7 +47,7 @@ export function TabHoTroKhac({ h, doi, duAn, kq }: Tab & { duAn: DuAn; kq: KetQu
   const tong = dong.reduce((s, x) => (x.dong.thanhTien && x.dong.trangThai === "TAM_TINH" ? s.plus(x.dong.thanhTien) : s), D(0));
   return (
     <div className="luoi">
-      {!cs && <div className="thong-bao thong-bao-vang">Bộ chính sách {chinhSach(duAn).ma} chưa có mức hỗ trợ khoản 1, 2, 6 Điều 6 QĐ 14/2026 — các khoản này sẽ ở trạng thái "Thiếu căn cứ"; khoản nhập tay vẫn dùng được.</div>}
+      {!cs && <div className="thong-bao thong-bao-vang">Bộ chính sách {chinhSach(duAnTheoBoHo(duAn, h)).ma} chưa có mức hỗ trợ khoản 1, 2, 6 Điều 6 QĐ 14/2026 — các khoản này sẽ ở trạng thái "Thiếu căn cứ"; khoản nhập tay vẫn dùng được.</div>}
       <div className="luoi luoi-2">
         <div className="the">
           <div className="the-dau">

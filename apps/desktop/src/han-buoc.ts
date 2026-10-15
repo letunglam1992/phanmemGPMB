@@ -78,3 +78,18 @@ export function tinhHanBuoc(h: Ho, han: HanBuoc, homNay: string, lich: LichLamVi
   const trangThai = homNay > hc ? "QUA_HAN" : conLai <= (han.loai === "NLV" ? 1 : 2) ? "SAP_HET" : "CON_HAN";
   return { han, moc, hanChot: hc, conLai, trangThai, thieuLich, khongTinh: kt.so };
 }
+
+/**
+ * 1.0.12 — Hạn thẩm định của một bản phương án "Đã chốt" chưa ghi nhận thẩm định: theo bước 8 (≤ 30 ngày làm việc từ
+ * ngày nhận đủ hồ sơ — khoản 3 Điều 3 NĐ 88/2024/NĐ-CP) của các hộ trong bản; mốc là ngày nhận đủ hồ sơ cán bộ ghi ở bước 8
+ * (ghi một lần cho cả bản). Lấy hộ có hạn chót sớm nhất; chưa hộ nào có mốc → CHUA_CO_MOC. null nếu không áp dụng.
+ */
+export function hanThamDinhBan(p: { trangThai: string; thamDinh?: unknown; ho: { hoId: string }[] }, hos: Ho[], homNay: string, lich: LichLamViec): TinhHan | null {
+  if (p.trangThai !== "DA_CHOT" || p.thamDinh) return null;
+  const han = hanCuaBuoc("8")!;
+  const ids = new Set(p.ho.map((x) => x.hoId));
+  const ds = hos.filter((h) => ids.has(h.id)).map((h) => tinhHanBuoc(h, han, homNay, lich));
+  const coMoc = ds.filter((t) => t.hanChot);
+  if (!coMoc.length) return { han, moc: null, hanChot: null, conLai: null, trangThai: "CHUA_CO_MOC", thieuLich: [], khongTinh: 0 };
+  return coMoc.sort((a, b) => a.hanChot!.localeCompare(b.hanChot!))[0]!;
+}
