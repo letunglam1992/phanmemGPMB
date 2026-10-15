@@ -79,17 +79,50 @@ export function tinhHanBuoc(h: Ho, han: HanBuoc, homNay: string, lich: LichLamVi
   return { han, moc, hanChot: hc, conLai, trangThai, thieuLich, khongTinh: kt.so };
 }
 
+type BanHan = { trangThai: string; thamDinh?: { yKien: string } | unknown; ho: { hoId: string }[] };
+
+/** Hạn của bước `buoc` cho một bản: hộ có hạn chót sớm nhất; `mocMacDinh` dùng cho hộ chưa ghi mốc riêng ở bước đó. */
+function hanTheoBan(p: BanHan, buoc: string, hos: Ho[], homNay: string, lich: LichLamViec, mocMacDinh?: string | null): TinhHan {
+  const han = hanCuaBuoc(buoc)!;
+  const ids = new Set(p.ho.map((x) => x.hoId));
+  const ds = hos
+    .filter((h) => ids.has(h.id))
+    .map((h) => (mocMacDinh && !h.tienDo[buoc]?.mocHan ? { ...h, tienDo: { ...h.tienDo, [buoc]: { ...(h.tienDo[buoc] ?? { trangThai: "CHUA" as const }), mocHan: mocMacDinh } } } : h))
+    .map((h) => tinhHanBuoc(h, han, homNay, lich));
+  const coMoc = ds.filter((t) => t.hanChot);
+  if (!coMoc.length) return { han, moc: null, hanChot: null, conLai: null, trangThai: "CHUA_CO_MOC", thieuLich: [], khongTinh: 0 };
+  return coMoc.sort((a, b) => a.hanChot!.localeCompare(b.hanChot!))[0]!;
+}
+
 /**
  * 1.0.12 — Hạn thẩm định của một bản phương án "Đã chốt" chưa ghi nhận thẩm định: theo bước 8 (≤ 30 ngày làm việc từ
  * ngày nhận đủ hồ sơ — khoản 3 Điều 3 NĐ 88/2024/NĐ-CP) của các hộ trong bản; mốc là ngày nhận đủ hồ sơ cán bộ ghi ở bước 8
  * (ghi một lần cho cả bản). Lấy hộ có hạn chót sớm nhất; chưa hộ nào có mốc → CHUA_CO_MOC. null nếu không áp dụng.
  */
-export function hanThamDinhBan(p: { trangThai: string; thamDinh?: unknown; ho: { hoId: string }[] }, hos: Ho[], homNay: string, lich: LichLamViec): TinhHan | null {
+export function hanThamDinhBan(p: BanHan, hos: Ho[], homNay: string, lich: LichLamViec): TinhHan | null {
   if (p.trangThai !== "DA_CHOT" || p.thamDinh) return null;
-  const han = hanCuaBuoc("8")!;
-  const ids = new Set(p.ho.map((x) => x.hoId));
-  const ds = hos.filter((h) => ids.has(h.id)).map((h) => tinhHanBuoc(h, han, homNay, lich));
-  const coMoc = ds.filter((t) => t.hanChot);
-  if (!coMoc.length) return { han, moc: null, hanChot: null, conLai: null, trangThai: "CHUA_CO_MOC", thieuLich: [], khongTinh: 0 };
-  return coMoc.sort((a, b) => a.hanChot!.localeCompare(b.hanChot!))[0]!;
+  return hanTheoBan(p, "8", hos, homNay, lich);
+}
+
+/** "dd/mm/yyyy" (ngày ghi trong văn bản) → "yyyy-mm-dd"; sai dạng → null. */
+export const ngayIsoTuChu = (s: string | undefined): string | null => {
+  const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec((s ?? "").trim());
+  return m ? `${m[3]}-${m[2]!.padStart(2, "0")}-${m[1]!.padStart(2, "0")}` : null;
+};
+
+/**
+ * 1.0.13 — Hạn phê duyệt phương án (≤ 5 ngày làm việc từ ngày nhận tờ trình — điểm c khoản 3 Điều 87 Luật Đất đai 2024)
+ * của bản "Đã chốt" đã thẩm định (không tính bản thẩm định không thống nhất). Mốc: ngày nhận tờ trình ghi ở bước 9 của hộ;
+ * hộ chưa ghi thì lấy ngày Tờ trình đề nghị phê duyệt phương án (mẫu 13 / R4) đã ghi số, ngày — của đợt nếu bản thuộc đợt.
+ */
+export function hanPheDuyetBan(p: BanHan & { dotId?: string }, hos: Ho[], homNay: string, lich: LichLamViec, ngayToTrinh?: string | null): TinhHan | null {
+  const td = p.thamDinh as { yKien?: string } | undefined;
+  if (p.trangThai !== "DA_CHOT" || !td || td.yKien === "KHONG_THONG_NHAT") return null;
+  return hanTheoBan(p, "9", hos, homNay, lich, ngayToTrinh);
+}
+
+/** Ngày tờ trình đề nghị phê duyệt phương án (mẫu 13 / R4) đã ghi cho bản: của đợt (nếu bản thuộc đợt) hoặc dự án. */
+export function ngayToTrinhPA(duAn: { vanBan?: Record<string, string>; dotThuHoi?: { id: string; vanBan?: Record<string, string> }[] }, p: { dotId?: string }): string | null {
+  const dot = p.dotId ? duAn.dotThuHoi?.find((d) => d.id === p.dotId) : undefined;
+  return ngayIsoTuChu(dot?.vanBan?.tt_phe_duyet_pa_ngay) ?? (dot ? null : ngayIsoTuChu(duAn.vanBan?.tt_phe_duyet_pa_ngay));
 }

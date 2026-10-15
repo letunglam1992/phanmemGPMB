@@ -8,7 +8,7 @@ import { D } from "@gpmb/core";
 import type Decimal from "decimal.js";
 import { hoHieuLuc, type DuAn, type Ho } from "./mo-hinh";
 import { demBanPA } from "./phuong-an";
-import { hanThamDinhBan } from "./han-buoc";
+import { hanPheDuyetBan, hanThamDinhBan, ngayToTrinhPA } from "./han-buoc";
 import type { KetQuaHo } from "./tinh-ho";
 import { canhBaoDuAn, thongKe, THU_TU_TRANG_THAI, type CanhBao, type TrangThaiGpmb } from "./trang-thai";
 import { tinhChiTra, type GiaiDoanTyLe } from "./chi-tra";
@@ -143,7 +143,15 @@ export function dongDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], denNgay: stri
     tienDoChung: tk.tienDoChung,
     changHienTai: changDaQua ? `${changDaQua.ten} (${changDaQua.soHo}/${ds.length} hộ)` : "Chưa bắt đầu",
     vuongMac: cb.filter((c) => c.muc === "CAO"),
-    banPA: { ...demBanPA(duAn.phuongAn ?? []), quaHanTd: (duAn.phuongAn ?? []).filter((p) => hanThamDinhBan(p, ds.map((x) => hoHieuLuc(duAn, hoDenNgay(x.h, denNgay))), denNgay, lich ?? LICH_TRONG)?.trangThai === "QUA_HAN").length },
+    banPA: (() => {
+      const hos = ds.map((x) => hoHieuLuc(duAn, hoDenNgay(x.h, denNgay)));
+      const pa = duAn.phuongAn ?? [];
+      return {
+        ...demBanPA(pa),
+        quaHanTd: pa.filter((p) => hanThamDinhBan(p, hos, denNgay, lich ?? LICH_TRONG)?.trangThai === "QUA_HAN").length,
+        quaHanPd: pa.filter((p) => hanPheDuyetBan(p, hos, denNgay, lich ?? LICH_TRONG, ngayToTrinhPA(duAn, p))?.trangThai === "QUA_HAN").length,
+      };
+    })(),
   };
 }
 

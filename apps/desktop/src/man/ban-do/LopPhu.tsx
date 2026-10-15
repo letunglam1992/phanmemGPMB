@@ -13,7 +13,7 @@ import { tenTep } from "../../ten-tep";
 import { MAU_GHI_CHU } from "./KhungVe";
 import { type DuLieuBanDo, dsSoTo, khoaTepGhep, kiemTraViTriTo, thamChieuThieu } from "./du-lieu";
 import { docBang } from "./RanhGpmb";
-import { doiChieuSoSanh, taoSoSanhLuu, type SoSanhLuu } from "./ranh";
+import { doiChieuSoSanh, hoDaSuaSauLuu, taoSoSanhLuu, type SoSanhLuu } from "./ranh";
 import { hienSo } from "../../so";
 import { lechDiemDo } from "./lech-diem-do";
 import { OSo } from "../../thanh-phan/OSo";
@@ -311,7 +311,7 @@ export function HopSoSanh(p: { duAn: DuAn; dl: DuLieuBanDo; ketQua: (kq: { tep: 
   const { hoCua, bao, nguoiDung } = useUngDung();
   const luuKq = async () => {
     if (!kq || !p.luu) return;
-    const moi = taoSoSanhLuu(kq, nguoiDung, ghiChu);
+    const moi = taoSoSanhLuu(kq, nguoiDung, ghiChu, undefined, undefined, khac);
     await p.luu([moi, ...daLuu]);
     setKq({ ...kq, daLuu: moi });
     bao(`Đã lưu kết quả so sánh với ${kq.tep} vào dự án`);
@@ -325,10 +325,10 @@ export function HopSoSanh(p: { duAn: DuAn; dl: DuLieuBanDo; ketQua: (kq: { tep: 
     ws.addRow([`So sánh bản đồ — ${p.duAn.ten}: bản đang dùng với tệp ${kq.tep} (${new Date(kq.daLuu?.luc ?? Date.now()).toLocaleDateString("vi-VN")}${kq.daLuu ? `, kết quả đã lưu, người lưu ${kq.daLuu.nguoi}` : ""})`]).font = { bold: true };
     if (kq.daLuu?.ghiChu) ws.addRow([`Ghi chú: ${kq.daLuu.ghiChu}`]);
     ws.addRow(["DT hình học tính từ bản đồ, chỉ để đối chiếu — DT lập phương án theo hồ sơ đo đạc, trích đo được duyệt."]).font = { italic: true };
-    ws.addRow(["Tờ", "Thửa", "Thay đổi", "DT cũ (m²)", "DT mới (m²)", "Chênh (m²)", "Khác biệt hình (m²)", "Hồ sơ", "DT thửa trong hồ sơ (m²)", "DT thu hồi trong hồ sơ (m²)"]).font = { bold: true };
+    ws.addRow(["Tờ", "Thửa", "Thay đổi", "DT cũ (m²)", "DT mới (m²)", "Chênh (m²)", "Khác biệt hình (m²)", "Hồ sơ", "DT thửa trong hồ sơ (m²)", "DT thu hồi trong hồ sơ (m²)", ...(kq.daLuu ? ["Hồ sơ đã sửa sau khi lưu"] : [])]).font = { bold: true };
     const lam = (v: number | null) => (v === null ? null : Math.round(v * 100) / 100);
     for (const { x, ho } of khac)
-      ws.addRow([x.soTo ?? "", x.soThua ?? "", TEN_SO_SANH[x.trangThai], lam(x.dtCu), lam(x.dtMoi), x.dtCu !== null && x.dtMoi !== null ? lam(x.dtMoi - x.dtCu) : null, lam(x.khacBiet), ho.map((h) => `${h.ma} ${h.ten}`).join("; "), ho.map((h) => h.dtThua).join("; "), ho.map((h) => h.dtThuHoi).join("; ")]);
+      ws.addRow([x.soTo ?? "", x.soThua ?? "", TEN_SO_SANH[x.trangThai], lam(x.dtCu), lam(x.dtMoi), x.dtCu !== null && x.dtMoi !== null ? lam(x.dtMoi - x.dtCu) : null, lam(x.khacBiet), ho.map((h) => `${h.ma} ${h.ten}`).join("; "), ho.map((h) => h.dtThua).join("; "), ho.map((h) => h.dtThuHoi).join("; "), ...(kq.daLuu ? [hoDaSuaSauLuu(kq.daLuu.hoLuc?.[x.ma], ho).join("; ")] : [])]);
     ws.columns.forEach((c, i) => (c.width = [6, 8, 18, 12, 12, 11, 12, 30, 14, 14][i]));
     for (const k of [4, 5, 6, 7]) ws.getColumn(k).numFmt = "#,##0.00";
     if (await taiXuong(new Uint8Array(await wb.xlsx.writeBuffer()), tenTep(`So-sanh-ban-do - ${p.duAn.ten}.xlsx`), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) bao("Đã xuất bảng so sánh bản đồ");
@@ -392,7 +392,10 @@ export function HopSoSanh(p: { duAn: DuAn; dl: DuLieuBanDo; ketQua: (kq: { tep: 
                     <td className="so">{x.dtMoi === null ? "—" : so(x.dtMoi)}</td>
                     <td className="so">{x.dtCu !== null && x.dtMoi !== null ? so(x.dtMoi - x.dtCu) : "—"}</td>
                     <td className="so">{so(x.khacBiet)}</td>
-                    <td className="chu-nho">{ho.length ? ho.map((h) => <div key={h.id}>{h.ma} {h.ten}: {hienSo(h.dtThua) || "—"} / {hienSo(h.dtThuHoi) || "—"}</div>) : <span className="mo">—</span>}</td>
+                    <td className="chu-nho">
+                      {ho.length ? ho.map((h) => <div key={h.id}>{h.ma} {h.ten}: {hienSo(h.dtThua) || "—"} / {hienSo(h.dtThuHoi) || "—"}</div>) : <span className="mo">—</span>}
+                      {kq.daLuu && hoDaSuaSauLuu(kq.daLuu.hoLuc?.[x.ma], ho).map((s) => <div key={s} className="nhan nhan-vang" data-sua-sau-luu>Đã sửa sau khi lưu — {s}</div>)}
+                    </td>
                   </tr>
                 ))}
                 {!khac.length && <tr><td colSpan={7} className="trong">Hai bản đồ không khác nhau (theo dung sai).</td></tr>}

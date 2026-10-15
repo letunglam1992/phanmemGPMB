@@ -17,7 +17,7 @@ import { thuTinh } from "./bieu-thuc";
 import { TEN_LOAI_DAT } from "./van-ban/loai-dat";
 import { NHOM_PHAP_LY, THU_TU_PHAP_LY, nhomTuChu } from "./nguon-goc";
 import { khongDau } from "./tim-kiem";
-import { coDot, timDotTheoChu } from "./dot-thu-hoi";
+import { boCuaHo, coDot, timDotTheoChu } from "./dot-thu-hoi";
 import { hoMoi, taoId, type DuAn, type Ho, type LoaiDoiTuong, type TaiSan, type Thua } from "./mo-hinh";
 
 export interface LoiNhap {
@@ -614,7 +614,13 @@ export function kiemTraNhap(tep: TepExcel, ax: AnhXa, duAn: DuAn, hienCoTatCa: H
   }
   if (soMaTuDong) loi.push({ trang: "", dong: 0, cot: "", noiDung: `${soMaTuDong} hồ sơ được tự đánh mã (H001…) vì tệp không có mã hộ; các thửa cùng tên chủ${co("Thua", "diaChiChu") ? " và địa chỉ" : ""} gộp một hồ sơ — trùng tên có thể là người khác, kiểm tra trước khi nhập`, muc: "CANH_BAO" });
 
-  const donGia = new Map(donGiaTheoBo(duAn.boChinhSach).filter((r) => r.nguon !== "PL V").map((r) => [r.ma, r]));
+  // 1.0.13: hộ đã có bộ chính sách riêng (hoặc thuộc đợt có bộ riêng) → tra mã đơn giá theo bộ của hộ
+  const bangDonGia = new Map<string, Map<string, ReturnType<typeof donGiaTheoBo>[number]>>();
+  const donGiaCua = (h: Ho | null) => {
+    const bo = h ? boCuaHo(duAn, h) : duAn.boChinhSach;
+    if (!bangDonGia.has(bo)) bangDonGia.set(bo, new Map(donGiaTheoBo(bo).filter((r) => r.nguon !== "PL V").map((r) => [r.ma, r])));
+    return bangDonGia.get(bo)!;
+  };
   const tatCaHo = () => [...moi.values(), ...hienCo.map((h) => boSung.get(h.id) ?? h)];
   for (const { dong, o } of doc("KiemDem")) {
     const loiTruoc = soLoi();
@@ -630,7 +636,7 @@ export function kiemTraNhap(tep: TepExcel, ax: AnhXa, duAn: DuAn, hienCoTatCa: H
     const t = h?.thua.find((x) => x.soTo === soTo && x.soThua === soThua);
     if (h && !t) bao("KiemDem", dong, "soThua", `Hộ ${h.ma} không có thửa ${soThua} tờ ${soTo} (thêm ở trang thửa trước)`);
     const ma = chuO(o.maDonGia);
-    const r = donGia.get(ma);
+    const r = donGiaCua(h).get(ma);
     if (!ma) bao("KiemDem", dong, "maDonGia", "Thiếu mã đơn giá");
     else if (!r) bao("KiemDem", dong, "maDonGia", `Mã đơn giá "${ma}" không có trong danh mục (QĐ 32, PL VIII)`);
     let kl = typeof o.khoiLuong === "number" ? String(o.khoiLuong) : chuO(o.khoiLuong);

@@ -14,7 +14,7 @@
  * mềm, không thay chữ ký số của cơ quan theo pháp luật về giao dịch điện tử.
  */
 import { dsDoan, matBangTheoLyTrinh } from "../ly-trinh";
-import { hanThamDinhBan } from "../han-buoc";
+import { hanPheDuyetBan, hanThamDinhBan, ngayToTrinhPA } from "../han-buoc";
 import { LICH_TRONG } from "../lich-lam-viec";
 import PizZip from "pizzip";
 import { D } from "@gpmb/core";
@@ -188,7 +188,15 @@ export function tomTatDuAn(duAn: DuAn[], ho: Ho[], soTep: (duAnId: string) => nu
       soHoDaDuyetPA: duyet.length,
       tienDoBinhQuan: hs.length ? td / hs.length : 0,
       soTepDinhKem: soTep(d.id),
-      banPA: { ...demBanPA(d.phuongAn ?? []), quaHanTd: (d.phuongAn ?? []).filter((p) => hanThamDinhBan(p, hs.map((h) => hoHieuLuc(d, h)), homNay, LICH_TRONG)?.trangThai === "QUA_HAN").length },
+      banPA: (() => {
+        const hos = hs.map((h) => hoHieuLuc(d, h));
+        const pa = d.phuongAn ?? [];
+        return {
+          ...demBanPA(pa),
+          quaHanTd: pa.filter((p) => hanThamDinhBan(p, hos, homNay, LICH_TRONG)?.trangThai === "QUA_HAN").length,
+          quaHanPd: pa.filter((p) => hanPheDuyetBan(p, hos, homNay, LICH_TRONG, ngayToTrinhPA(d, p))?.trangThai === "QUA_HAN").length,
+        };
+      })(),
       ...(d.lienXa?.ma?.trim() ? { lienXa: d.lienXa } : {}),
       ...(() => {
         const ds = dsDoan(hs, (h) => !!h.banGiao?.ngay);

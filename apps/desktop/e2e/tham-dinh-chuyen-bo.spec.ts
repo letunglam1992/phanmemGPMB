@@ -50,6 +50,15 @@ test("thẩm định: ghi nhận → trạng thái Đã thẩm định; ô đã 
   await expect(td).toHaveCount(0);
   await expect(p.locator("[data-tt-pa]").first()).toHaveText("Đã thẩm định, chờ phê duyệt");
   await expect(p.locator("[data-han-td]")).toHaveCount(0); // đã thẩm định thì không còn đếm hạn
+  // 1.0.13: hạn phê duyệt 5 NLV — chưa có tờ trình → ghi ngày nhận tờ trình cho cả bản
+  const hanPd = p.locator("[data-han-pd]").first();
+  await expect(hanPd).toContainText("chưa có ngày tờ trình");
+  await hanPd.getByRole("button", { name: "Ngày nhận tờ trình…" }).click();
+  const ntt = p.locator("[role=dialog]", { hasText: "Ngày nhận tờ trình phê duyệt phương án" });
+  await ntt.locator("input").first().fill("05/10/2026");
+  await ntt.locator("input").first().press("Tab");
+  await ntt.getByRole("button", { name: /^Lưu cho \d+ hộ$/ }).click();
+  await expect(hanPd).toContainText("Hạn phê duyệt 12/10/2026");
   // còn thiếu số, ngày → bổ sung; cơ quan, ý kiến đã khóa
   await p.getByRole("button", { name: "Bổ sung thẩm định…" }).first().click();
   const bs = p.locator("[role=dialog]", { hasText: "Bổ sung kết quả thẩm định" });
@@ -62,6 +71,7 @@ test("thẩm định: ghi nhận → trạng thái Đã thẩm định; ô đã 
   await expect(p.locator("[data-canh-bao-td]")).toHaveCount(0);
   await p.locator("[role=dialog]").getByRole("button", { name: "Ghi nhận phê duyệt" }).click();
   await expect(p.locator("[data-tt-pa]").first()).toHaveText("Đã phê duyệt");
+  await expect(p.locator("[data-han-pd]")).toHaveCount(0);
 });
 
 test("chuyển bộ theo hộ: bảng chênh lệch, Word giải trình, Excel; áp dụng → hộ có bộ riêng", async ({ page: p }) => {

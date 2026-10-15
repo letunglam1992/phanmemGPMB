@@ -218,5 +218,36 @@ export async function taoExcelTinh(dong: DongBaoCao[], donVi: string, tieuDePhuL
     t3.ws.addRow([]);
     t3.chuThich("Ghi chú: Dự án liên xã do cấp tỉnh khai (mã dùng chung, xã dọc tuyến); mỗi xã gửi số liệu phần dự án trên địa bàn mình. \"Chưa có số liệu\": xã dọc tuyến chưa gửi gói có dự án ghi mã này. Toàn tuyến hoàn thành khi mọi xã đã gửi và mọi hộ đã bàn giao mặt bằng.");
   }
+  // 1.0.13: thẩm định, phê duyệt theo bản phương án (chỉ dự án có số liệu này — gói từ bản 1.0.12 trở đi)
+  const coBan = dong.filter((d) => d.banPA);
+  if (coBan.length) {
+    const t4 = trangBieu(wb, "Ban phuong an", {
+      donVi,
+      phuLuc: tieuDePhuLuc ? (lx.length ? "PHỤ LỤC 04" : "PHỤ LỤC 03") : undefined,
+      tieuDe: "TÌNH HÌNH THẨM ĐỊNH, PHÊ DUYỆT PHƯƠNG ÁN BỒI THƯỜNG, HỖ TRỢ, TÁI ĐỊNH CƯ (THEO BẢN PHƯƠNG ÁN)",
+      ghiChu,
+      cot: [
+        { ten: "STT", rong: 6, kieu: "giua" },
+        { ten: "Xã, phường", rong: 18, kieu: "chu" },
+        { ten: "Dự án", rong: 34, kieu: "chu" },
+        { ten: "Đơn vị gửi", rong: 18, kieu: "chu" },
+        { ten: "Chờ thẩm định (bản)", rong: 11, kieu: "so" },
+        { ten: "Trong đó quá hạn thẩm định", rong: 11, kieu: "so" },
+        { ten: "Đã thẩm định, chờ phê duyệt (bản)", rong: 12, kieu: "so" },
+        { ten: "Trong đó quá hạn phê duyệt", rong: 11, kieu: "so" },
+        { ten: "Thẩm định không thống nhất (bản)", rong: 12, kieu: "so" },
+        { ten: "Đã phê duyệt (bản)", rong: 11, kieu: "so" },
+      ],
+    });
+    const soBan = (ds: DongBaoCao[]) => {
+      const c = (f: (b: NonNullable<DongBaoCao["banPA"]>) => number | undefined) => ds.reduce((s, d) => s + (d.banPA ? f(d.banPA) ?? 0 : 0), 0);
+      return [c((b) => b.choThamDinh), c((b) => b.quaHanTd), c((b) => b.daThamDinh), c((b) => b.quaHanPd), c((b) => b.khongThongNhat), c((b) => b.daPheDuyet)];
+    };
+    let i = 0;
+    for (const [ten, ds] of xa) for (const d of ds.filter((x) => x.banPA)) t4.dong([++i, ten, d.ten, d.donViGui, ...soBan([d])]);
+    t4.dong(["", `TỔNG CỘNG (${coBan.length} dự án)`, "", "", ...soBan(coBan)], "tong", 4);
+    t4.ws.addRow([]);
+    t4.chuThich("Ghi chú: Đếm theo bản phương án (không tính bản đã hủy). Hạn thẩm định không quá 30 ngày làm việc từ ngày nhận đủ hồ sơ (khoản 3 Điều 3 Nghị định 88/2024/NĐ-CP); hạn phê duyệt không quá 5 ngày làm việc từ ngày nhận tờ trình (điểm c khoản 3 Điều 87 Luật Đất đai 2024) — tính theo ngày đơn vị ghi nhận, chỉ trừ thứ Bảy, Chủ nhật (không trừ ngày lễ). Dự án gửi từ phiên bản cũ (trước 1.0.12) không có số liệu này.");
+  }
   return new Uint8Array(await wb.xlsx.writeBuffer());
 }

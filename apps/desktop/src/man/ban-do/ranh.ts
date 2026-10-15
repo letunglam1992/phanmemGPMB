@@ -162,9 +162,11 @@ export interface SoSanhLuu {
   /** Số thửa theo trạng thái, kể cả không đổi */
   dem: Partial<Record<import("@gpmb/gis").SoSanhThua["trangThai"], number>>;
   ds: import("@gpmb/gis").SoSanhThua[];
+  /** 1.0.13: hồ sơ đối chiếu lúc lưu (theo mã thửa bản đồ) — để biết hồ sơ nào đã sửa sau lần so sánh */
+  hoLuc?: Record<string, { id: string; ma: string; ten: string; dtThua: string; dtThuHoi: string }[]>;
 }
 
-export function taoSoSanhLuu(kq: { tep: string; ds: import("@gpmb/gis").SoSanhThua[] }, nguoi: string, ghiChu = "", luc = new Date().toISOString(), id = `ss-${Date.now().toString(36)}`): SoSanhLuu {
+export function taoSoSanhLuu(kq: { tep: string; ds: import("@gpmb/gis").SoSanhThua[] }, nguoi: string, ghiChu = "", luc = new Date().toISOString(), id = `ss-${Date.now().toString(36)}`, doiChieu: DongDoiChieuSoSanh[] = []): SoSanhLuu {
   const dem: SoSanhLuu["dem"] = {};
   for (const x of kq.ds) dem[x.trangThai] = (dem[x.trangThai] ?? 0) + 1;
   const lam = (v: number) => Math.round(v * 1000) / 1000;
@@ -172,7 +174,22 @@ export function taoSoSanhLuu(kq: { tep: string; ds: import("@gpmb/gis").SoSanhTh
   const ds = kq.ds
     .filter((x) => x.trangThai !== "GIONG")
     .map((x) => ({ ...x, dtCu: x.dtCu === null ? null : lam(x.dtCu), dtMoi: x.dtMoi === null ? null : lam(x.dtMoi), khacBiet: lam(x.khacBiet), ...(x.vongCu ? { vongCu: vong(x.vongCu) } : {}), ...(x.vongMoi ? { vongMoi: vong(x.vongMoi) } : {}) }));
-  return { id, luc, nguoi, tep: kq.tep, ...(ghiChu.trim() ? { ghiChu: ghiChu.trim() } : {}), dem, ds };
+  const hoLuc = Object.fromEntries(doiChieu.filter((d) => d.ho.length).map((d) => [d.x.ma, d.ho]));
+  return { id, luc, nguoi, tep: kq.tep, ...(ghiChu.trim() ? { ghiChu: ghiChu.trim() } : {}), dem, ds, ...(Object.keys(hoLuc).length ? { hoLuc } : {}) };
+}
+
+/** 1.0.13: hồ sơ đã đổi diện tích thửa / thu hồi (hoặc mới có, không còn) so với lúc lưu kết quả so sánh. */
+export function hoDaSuaSauLuu(luc: DongDoiChieuSoSanh["ho"] | undefined, nay: DongDoiChieuSoSanh["ho"]): string[] {
+  if (!luc) return [];
+  const out: string[] = [];
+  const mLuc = new Map(luc.map((h) => [h.id, h]));
+  for (const h of nay) {
+    const c = mLuc.get(h.id);
+    if (!c) out.push(`${h.ma}: mới có thửa này sau khi lưu`);
+    else if (c.dtThua !== h.dtThua || c.dtThuHoi !== h.dtThuHoi) out.push(`${h.ma}: lúc lưu ${c.dtThua || "—"} / ${c.dtThuHoi || "—"} m²`);
+  }
+  for (const c of luc) if (!nay.some((h) => h.id === c.id)) out.push(`${c.ma}: không còn thửa này trong hồ sơ`);
+  return out;
 }
 
 export interface DongDoiChieuSoSanh {

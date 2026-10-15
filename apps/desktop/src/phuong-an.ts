@@ -355,6 +355,8 @@ export interface DemBanPA {
   khongThongNhat: number;
   daPheDuyet: number;
   quaHanTd?: number;
+  /** 1.0.13: bản đã thẩm định quá hạn phê duyệt */
+  quaHanPd?: number;
 }
 export function demBanPA(ds: PhienBanPA[]): DemBanPA {
   const r: DemBanPA = { choThamDinh: 0, daThamDinh: 0, khongThongNhat: 0, daPheDuyet: 0 };
@@ -369,7 +371,7 @@ export function demBanPA(ds: PhienBanPA[]): DemBanPA {
 }
 /** Cộng số bản phương án của nhiều dự án. */
 export function congDemBanPA(ds: (DemBanPA | undefined)[]): DemBanPA {
-  const r: DemBanPA = { choThamDinh: 0, daThamDinh: 0, khongThongNhat: 0, daPheDuyet: 0, quaHanTd: 0 };
+  const r: DemBanPA = { choThamDinh: 0, daThamDinh: 0, khongThongNhat: 0, daPheDuyet: 0, quaHanTd: 0, quaHanPd: 0 };
   for (const d of ds) if (d) for (const k of Object.keys(r) as (keyof DemBanPA)[]) r[k] = (r[k] ?? 0) + (d[k] ?? 0);
   return r;
 }
@@ -378,7 +380,7 @@ export function moTaDemBanPA(d: DemBanPA | undefined): string {
   if (!d) return "";
   return [
     d.choThamDinh && `${d.choThamDinh} bản chờ thẩm định${d.quaHanTd ? ` (${d.quaHanTd} quá hạn)` : ""}`,
-    d.daThamDinh && `${d.daThamDinh} bản đã thẩm định, chờ phê duyệt`,
+    d.daThamDinh && `${d.daThamDinh} bản đã thẩm định, chờ phê duyệt${d.quaHanPd ? ` (${d.quaHanPd} quá hạn phê duyệt)` : ""}`,
     d.khongThongNhat && `${d.khongThongNhat} bản thẩm định không thống nhất`,
     d.daPheDuyet && `${d.daPheDuyet} bản đã phê duyệt`,
   ].filter(Boolean).join("; ");

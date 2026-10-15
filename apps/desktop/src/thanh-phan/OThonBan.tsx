@@ -49,9 +49,14 @@ export function OThonBan({ cs, xa, value, onChange, nhan, goiY = [] }: { cs: BoC
  * Ghi nhanh tổ, thôn, bản cho các thửa đất nông nghiệp của nhiều hộ (QĐ 64/2026). Mỗi thửa một tổ, thôn (thửa trên
  * nhiều tổ, thôn: thêm ở thẻ Thửa đất). Lưu một lô, ghi nhật ký.
  */
-export function HopGhiThonBan({ hos, duAn, cs, dong }: { hos: Ho[]; duAn: DuAn; cs: BoChinhSach; dong: () => void }) {
+export function HopGhiThonBan({ hos, duAn, cs, csHo = () => cs, dong }: { hos: Ho[]; duAn: DuAn; cs: BoChinhSach; csHo?: (h: Ho) => BoChinhSach; dong: () => void }) {
   const { luuNhieuHo, bao } = useUngDung();
-  const ds = thonCoHeSo(cs, duAn.xa);
+  // 1.0.13: hộ có bộ chính sách riêng → danh sách tổ, thôn, hệ số theo bộ của hộ; ô gợi ý chung gộp các bộ
+  const ds = useMemo(() => {
+    const m = new Map<string, { thon: string; heSo: string }>();
+    for (const c of new Set([cs, ...hos.map(csHo)])) for (const x of thonCoHeSo(c, duAn.xa)) m.set(`${x.heSo}|${x.thon}`, x);
+    return [...m.values()];
+  }, [cs, hos, csHo, duAn.xa]);
   const dongs = useMemo(() => hos.flatMap((h) => h.thua.filter((t) => laDatNN(t.loaiDat)).map((t) => ({ h, t }))), [hos]);
   const [gt, setGt] = useState<Record<string, string>>(() => Object.fromEntries(dongs.map(({ t }) => [t.id, (t.thonBan ?? []).join("; ")])));
   const [chung, setChung] = useState("");
@@ -59,7 +64,7 @@ export function HopGhiThonBan({ hos, duAn, cs, dong }: { hos: Ho[]; duAn: DuAn; 
   const tach = (s: string) => s.split(/[;\n]+/).map((x) => x.trim()).filter(Boolean);
   const thayDoi = dongs.filter(({ t }) => tach(gt[t.id] ?? "").join("; ") !== (t.thonBan ?? []).join("; "));
   const ap = (chiTrong: boolean) => setGt((g) => Object.fromEntries(Object.entries(g).map(([id, v]) => [id, chiTrong && v.trim() ? v : chung])));
-  const goiYCua = new Map(dongs.map(({ h, t }) => [t.id, goiYThon(cs, duAn.xa, h.diaChi, t.nguonGoc, t.ghiChu)]));
+  const goiYCua = new Map(dongs.map(({ h, t }) => [t.id, goiYThon(csHo(h), duAn.xa, h.diaChi, t.nguonGoc, t.ghiChu)]));
   const soGoiY = dongs.filter(({ t }) => !(gt[t.id] ?? "").trim() && goiYCua.get(t.id)!.length === 1).length;
   const apGoiY = () => setGt((g) => Object.fromEntries(Object.entries(g).map(([id, v]) => { const x = goiYCua.get(id) ?? []; return [id, !v.trim() && x.length === 1 ? x[0]!.thon : v]; })));
   const luu = async () => {
@@ -83,10 +88,11 @@ export function HopGhiThonBan({ hos, duAn, cs, dong }: { hos: Ho[]; duAn: DuAn; 
       setDang(false);
     }
   };
-  const heSo = (s: string) => {
+  const heSo = (s: string, h: Ho) => {
+    const c = csHo(h);
     const v = tach(s);
-    if (!v.length) return ds.length ? "Cần xác nhận" : `${cs.chuyenDoiNghe.heSoMacDinh} lần`;
-    return `${heSoChuyenDoiNghe(cs, duAn.xa, v).heSo} lần`;
+    if (!v.length) return thonCoHeSo(c, duAn.xa).length ? "Cần xác nhận" : `${c.chuyenDoiNghe.heSoMacDinh} lần`;
+    return `${heSoChuyenDoiNghe(c, duAn.xa, v).heSo} lần`;
   };
   return (
     <HopThoai tieuDe="Ghi tổ, thôn, bản theo thửa" rong={920} dong={dong}
@@ -112,7 +118,7 @@ export function HopGhiThonBan({ hos, duAn, cs, dong }: { hos: Ho[]; duAn: DuAn; 
               <tr key={t.id}>
                 <td>{h.ma}</td><td>{h.ten}</td><td>{t.soTo}/{t.soThua}</td><td>{t.loaiDat}</td>
                 <td><input list="ds-thon-ban" aria-label={`Tổ, thôn ${h.ma} thửa ${t.soThua} tờ ${t.soTo}`} value={gt[t.id] ?? ""} onChange={(e) => setGt({ ...gt, [t.id]: e.target.value })} /></td>
-                <td className="chu-nho">{heSo(gt[t.id] ?? "")}</td>
+                <td className="chu-nho">{heSo(gt[t.id] ?? "", h)}{csHo(h) !== cs && <div className="mo">bộ riêng của hộ</div>}</td>
               </tr>
             ))}
             {!dongs.length && <tr><td colSpan={6} className="trong">Các hộ không có thửa đất nông nghiệp.</td></tr>}

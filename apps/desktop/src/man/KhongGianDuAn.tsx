@@ -42,7 +42,7 @@ import { TheDuBao } from "../thanh-phan/DuBao";
 import { TheQuyTdc } from "../thanh-phan/QuyTdc";
 import { HopPhanCong } from "../thanh-phan/PhanCong";
 import { ChonDot, HopXepDot, TheDotThuHoi, TheTongHopDot, loiDsDot } from "../thanh-phan/DotThuHoi";
-import { coDot, khopDot } from "../dot-thu-hoi";
+import { coDot, duAnTheoBoHo, khopDot } from "../dot-thu-hoi";
 import { MAU_MA_MAC_DINH, loiMauMa, maHoTiepTheo, mauMaCua, nhomMaTrung, taoMa } from "../ma-ho";
 
 /**
@@ -414,7 +414,7 @@ function TheHo({ duAn, kq }: { duAn: DuAn; kq: Kq }) {
             <button className="nut nut-nho" disabled={dangXuatChon} title="Xuất Excel phương án (bảng tổng hợp, biểu từng hộ) chỉ gồm các hồ sơ đã chọn" onClick={() => void xuatChon()}>{dangXuatChon ? "Đang xuất…" : `Xuất Excel ${dsChon.length} hồ sơ`}</button>
             {quyen("CHOT_PA") && <button className="nut nut-nho nut-chinh" onClick={() => setHopChot(true)}>Chốt phương án {dsChon.length} hồ sơ…</button>}
             <button className="nut nut-nho" title="Ghi lý trình (Km) cho các thửa của hồ sơ đã chọn — không bắt buộc" onClick={() => setGhiLt(true)}>Ghi lý trình…</button>
-            {chinhSach(duAn).chuyenDoiNghe.theoThon && <button className="nut nut-nho" title="Ghi tổ, thôn, bản nơi có thửa — xác định hệ số hỗ trợ chuyển đổi nghề (QĐ 64/2026)" onClick={() => setGhiThon(true)}>Ghi tổ, thôn…</button>}
+            {(chinhSach(duAn).chuyenDoiNghe.theoThon || dsChon.some((h) => chinhSach(duAnTheoBoHo(duAn, h)).chuyenDoiNghe.theoThon)) && <button className="nut nut-nho" title="Ghi tổ, thôn, bản nơi có thửa — xác định hệ số hỗ trợ chuyển đổi nghề (QĐ 64/2026)" onClick={() => setGhiThon(true)}>Ghi tổ, thôn…</button>}
             <button className="nut nut-nho nut-nguy" onClick={() => setHopXoa(true)}>Xóa {dsChon.length} hồ sơ</button>
             <button className="nut nut-nho" onClick={() => setChon(new Set())}>Bỏ chọn</button>
           </div>
@@ -429,7 +429,7 @@ function TheHo({ duAn, kq }: { duAn: DuAn; kq: Kq }) {
       {hopChot && <HopChotPhuongAn duAn={duAn} kq={kq} chonDau={dsChon.map((h) => h.id)} dong={() => setHopChot(false)} />}
       {hopXoa && <HopXoaNhieuHo duAn={duAn} hos={dsChon} dong={() => setHopXoa(false)} xong={(ids) => setChon((c) => new Set([...c].filter((id) => !ids.includes(id))))} />}
       {ghiLt && <HopGhiLyTrinh hos={dsChon} dong={() => setGhiLt(false)} />}
-      {ghiThon && <HopGhiThonBan hos={dsChon} duAn={duAn} cs={chinhSach(duAn)} dong={() => setGhiThon(false)} />}
+      {ghiThon && <HopGhiThonBan hos={dsChon} duAn={duAn} cs={chinhSach(duAn)} csHo={(h) => chinhSach(duAnTheoBoHo(duAn, h))} dong={() => setGhiThon(false)} />}
       {phanCong && <HopPhanCong hos={kq.map((x) => x.h)} dong={() => setPhanCong(false)} />}
       {xepDot && <HopXepDot duAn={duAn} hos={kq.map((x) => x.h)} dong={() => setXepDot(false)} />}
     </div>
