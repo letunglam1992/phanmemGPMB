@@ -62,6 +62,17 @@ test("P3-1: khai báo đợt, xếp hộ vào đợt, tổng hợp theo đợt; 
   await expect(th.locator("tbody tr").first()).toContainText("Đợt 1");
   await expect(th.locator("tbody tr").first()).toContainText("10/01/2026");
   await expect(th.locator("tfoot")).toContainText("Cả dự án");
+  // 1.0.15/1.0.16: hạn ban hành QĐ thu hồi theo đợt — ghi ngày đủ điều kiện một lần cho cả đợt; đợt chưa có hộ để trống
+  const han1 = th.locator("tbody tr", { hasText: "Đợt 1" }).locator("[data-han-thu-hoi]");
+  await expect(han1).toContainText("chưa ghi ngày đủ điều kiện");
+  await expect(th.locator("tbody tr", { hasText: "Đợt 2" }).locator("[data-han-thu-hoi]")).toHaveText("—");
+  await han1.getByRole("button", { name: "Ngày đủ điều kiện…" }).click();
+  const ndk = p.locator("[role=dialog]", { hasText: "Ngày đủ điều kiện ban hành QĐ thu hồi đất – Đợt 1" });
+  await ndk.locator("input").first().fill("01/09/2026");
+  await ndk.locator("input").first().press("Tab");
+  await ndk.getByRole("button", { name: /^Lưu cho \d+ hộ$/ }).click();
+  await expect(han1).toContainText("11/09/2026 — quá hạn");
+  await expect(han1.getByRole("button", { name: "Sửa ngày đủ điều kiện…" })).toBeVisible();
   await p.getByRole("button", { name: "Chốt phương án…" }).click();
   const chot = p.locator("[role=dialog]", { hasText: "Chốt phương án" });
   await expect(chot.getByLabel("Đợt của phương án")).toBeVisible();

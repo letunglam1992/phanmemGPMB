@@ -6,7 +6,7 @@ import type { DotThuHoi, DuAn, Ho } from "../mo-hinh";
 import type { KetQuaHo } from "../tinh-ho";
 import { CHUA_XEP_DOT, dotMoi, dsDot, khopDot, loiDot, lyDoKhongDoiDot, lyDoKhongXoaDot, tenDot, tongHopTheoDot } from "../dot-thu-hoi";
 import { TEN_TT_PA } from "../phuong-an";
-import { hanThuHoiDot } from "../han-buoc";
+import { hanThuHoiNhom, nhomThuHoi, type TinhHan } from "../han-buoc";
 import { hoHieuLuc } from "../mo-hinh";
 import { homNayIso } from "../trang-thai";
 import { HopThoai, O, ngayVN, tien } from "./chung";
@@ -141,9 +141,10 @@ export function HopXepDot({ duAn, hos, dong }: { duAn: DuAn; hos: Ho[]; dong: ()
 /** Tổng hợp theo đợt (thẻ Tổng quan dự án). */
 export function TheTongHopDot({ duAn, kq, moDot }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo }[]; moDot?: (dotId: string) => void }) {
   const ds = useMemo(() => tongHopTheoDot(duAn, kq), [duAn, kq]);
-  const { lich, quyen, luuNhieuHo, bao } = useUngDung();
+  const { lich, quyen } = useUngDung();
   const [ghiMoc, setGhiMoc] = useState<string | null>(null);
   const hos = useMemo(() => kq.map((x) => hoHieuLuc(duAn, x.h)), [duAn, kq]);
+  const nhom = useMemo(() => new Map(nhomThuHoi(duAn, hos).map((n) => [n.id, n])), [duAn, hos]);
   const cong = (f: (x: (typeof ds)[number]) => number | import("decimal.js").default) => ds.reduce((s, x) => s.plus(f(x)), D(0));
   return (
     <div className="the mb-14">
@@ -164,16 +165,11 @@ export function TheTongHopDot({ duAn, kq, moDot }: { duAn: DuAn; kq: { h: Ho; k:
                 <td className="so">{x.soHoBanGiao}/{x.soHo}</td>
                 <td className="chu-nho" data-han-thu-hoi={x.dotId} onClick={(e) => e.stopPropagation()}>
                   {(() => {
-                    // 1.0.15: bước 13 — 10 ngày từ ngày đủ điều kiện ban hành QĐ thu hồi (khoản 5, 6 Điều 87 LĐĐ 2024)
-                    if (x.dotId === CHUA_XEP_DOT) return "—";
-                    const t = hanThuHoiDot(x.dotId, hos, homNayIso(), lich);
-                    if (!t) return <span className="mo">Đã xong</span>;
-                    return (
-                      <>
-                        {t.hanChot ? <span className={t.trangThai === "QUA_HAN" ? "nhan nhan-do" : t.trangThai === "SAP_HET" ? "nhan nhan-vang" : ""} title={t.han.canCu}>{ngayVN(t.hanChot)}{t.trangThai === "QUA_HAN" ? " — quá hạn" : t.conLai !== null ? ` (còn ${t.conLai} ngày)` : ""}</span> : <span className="mo">chưa ghi ngày đủ điều kiện</span>}
-                        {quyen("SUA_HO_SO") && <div><button className="nut nut-chu nut-nho" onClick={() => setGhiMoc(x.dotId)}>{t.moc ? "Sửa ngày đủ điều kiện…" : "Ngày đủ điều kiện…"}</button></div>}
-                      </>
-                    );
+                    // 1.0.15: bước 13 — 10 ngày từ ngày đủ điều kiện ban hành QĐ thu hồi (khoản 5, 6 Điều 87 LĐĐ 2024);
+                    // 1.0.16: dòng "Chưa xếp đợt" cũng ghi được
+                    const n = nhom.get(x.dotId);
+                    if (!n?.hos.length) return "—";
+                    return <OHanThuHoi t={hanThuHoiNhom(n.hos, homNayIso(), lich)} ghi={quyen("SUA_HO_SO") ? () => setGhiMoc(x.dotId) : undefined} />;
                   })()}
                 </td>
               </tr>
@@ -184,29 +180,63 @@ export function TheTongHopDot({ duAn, kq, moDot }: { duAn: DuAn; kq: { h: Ho; k:
           </tfoot>
         </table>
       </div>
-      {ghiMoc && (() => {
-        const trong = hos.filter((h) => h.dotId === ghiMoc);
-        const dau = trong.find((h) => h.tienDo["13"]?.mocHan)?.tienDo["13"]?.mocHan ?? "";
-        return <HopNgayDuDieuKien ten={tenDot(dsDot(duAn).find((d) => d.id === ghiMoc))} soHo={trong.length} ngayDau={dau} dong={() => setGhiMoc(null)} luu={async (ngay) => {
-          const goc = new Map(kq.map((x) => [x.h.id, x.h]));
-          const r = await luuNhieuHo(trong.map((h0) => {
-            const h = goc.get(h0.id)!;
-            return { h: { ...h, tienDo: { ...h.tienDo, "13": { ...(h.tienDo["13"] ?? { trangThai: "CHUA" as const }), mocHan: ngay || undefined } } }, nhatKy: ngay ? `Ngày đủ điều kiện ban hành QĐ thu hồi đất (đợt): ${ngay.split("-").reverse().join("/")}` : "Bỏ ngày đủ điều kiện ban hành QĐ thu hồi đất (đợt)" };
-          }));
-          if (r.loi.length) return bao(r.loi.join("; "), "loi");
-          bao(`Đã ghi ngày đủ điều kiện ban hành QĐ thu hồi cho ${r.daLuu} hộ`);
-        }} />;
-      })()}
+      {ghiMoc && nhom.get(ghiMoc) && <HopNgayDuDieuKien nhom={nhom.get(ghiMoc)!} kq={kq} dong={() => setGhiMoc(null)} />}
     </div>
   );
 }
 
-function HopNgayDuDieuKien({ ten, soHo, ngayDau, dong, luu }: { ten: string; soHo: number; ngayDau: string; dong: () => void; luu: (ngay: string) => Promise<void> }) {
-  const [ngay, setNgay] = useState(ngayDau);
+/** Ô hạn ban hành QĐ thu hồi đất của một nhóm hộ + nút ghi ngày đủ điều kiện. */
+function OHanThuHoi({ t, ghi }: { t: TinhHan | null; ghi?: () => void }) {
+  if (!t) return <span className="mo">Đã xong</span>;
   return (
-    <HopThoai tieuDe={`Ngày đủ điều kiện ban hành QĐ thu hồi đất – ${ten}`} dong={dong} rong={560}
-      chan={<><button className="nut" onClick={dong}>Đóng</button><button className="nut nut-chinh" onClick={async () => { await luu(ngay); dong(); }}>Lưu cho {soHo} hộ</button></>}>
-      <p className="mo mt-0">Quyết định thu hồi đất ban hành trong thời hạn 10 ngày kể từ ngày đủ điều kiện (khoản 5, 6 Điều 87 Luật Đất đai 2024; docs/05). Ngày này do cán bộ xác định, ghi vào bước 13 của các hộ trong đợt; hộ đã xác nhận xong bước 13 không tính hạn.</p>
+    <>
+      {t.hanChot ? <span className={t.trangThai === "QUA_HAN" ? "nhan nhan-do" : t.trangThai === "SAP_HET" ? "nhan nhan-vang" : ""} title={t.han.canCu}>{ngayVN(t.hanChot)}{t.trangThai === "QUA_HAN" ? " — quá hạn" : t.conLai !== null ? ` (còn ${t.conLai} ngày)` : ""}</span> : <span className="mo">chưa ghi ngày đủ điều kiện</span>}
+      {ghi && <div><button className="nut nut-chu nut-nho" onClick={ghi}>{t.moc ? "Sửa ngày đủ điều kiện…" : "Ngày đủ điều kiện…"}</button></div>}
+    </>
+  );
+}
+
+/**
+ * 1.0.16 — Hạn ban hành QĐ thu hồi đất cho dự án không chia đợt: ghi "ngày đủ điều kiện" một lần cho cả dự án
+ * (khoản 5, 6 Điều 87 Luật Đất đai 2024). Dự án có đợt dùng bảng Tổng hợp theo đợt.
+ */
+export function TheHanThuHoi({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo }[] }) {
+  const { lich, quyen } = useUngDung();
+  const [mo, setMo] = useState(false);
+  const n = useMemo(() => nhomThuHoi(duAn, kq.map((x) => hoHieuLuc(duAn, x.h)))[0], [duAn, kq]);
+  if (!n) return null;
+  const t = hanThuHoiNhom(n.hos, homNayIso(), lich);
+  // Hiện khi đã có bản phương án được phê duyệt hoặc đã ghi ngày đủ điều kiện (trước đó chưa đến khâu này)
+  if (!t?.moc && !(duAn.phuongAn ?? []).some((p) => p.trangThai === "DA_PHE_DUYET")) return null;
+  return (
+    <div className="the mb-14" data-han-thu-hoi-da>
+      <div className="the-dau"><h3>Hạn ban hành quyết định thu hồi đất</h3><span className="mo chu-nho">10 ngày kể từ ngày đủ điều kiện — khoản 5, 6 Điều 87 Luật Đất đai 2024</span></div>
+      <div className="the-than chu-nho">
+        <OHanThuHoi t={t} ghi={quyen("SUA_HO_SO") ? () => setMo(true) : undefined} />
+        {t && <div className="mo mt-4">{n.hos.filter((h) => h.tienDo["13"]?.trangThai !== "XONG" && h.tienDo["13"]?.trangThai !== "KHONG_AP_DUNG").length}/{n.hos.length} hộ chưa xác nhận xong bước 13.</div>}
+      </div>
+      {mo && <HopNgayDuDieuKien nhom={n} kq={kq} dong={() => setMo(false)} />}
+    </div>
+  );
+}
+
+function HopNgayDuDieuKien({ nhom, kq, dong }: { nhom: { id: string; ten: string; hos: Ho[] }; kq: { h: Ho; k: KetQuaHo }[]; dong: () => void }) {
+  const { luuNhieuHo, bao } = useUngDung();
+  const [ngay, setNgay] = useState(() => nhom.hos.find((h) => h.tienDo["13"]?.mocHan)?.tienDo["13"]?.mocHan ?? "");
+  const nhan = nhom.id === CHUA_XEP_DOT ? (nhom.ten === "Cả dự án" ? "dự án" : "hộ chưa xếp đợt") : "đợt";
+  const luu = async () => {
+    const goc = new Map(kq.map((x) => [x.h.id, x.h]));
+    const r = await luuNhieuHo(nhom.hos.map((h0) => {
+      const h = goc.get(h0.id)!;
+      return { h: { ...h, tienDo: { ...h.tienDo, "13": { ...(h.tienDo["13"] ?? { trangThai: "CHUA" as const }), mocHan: ngay || undefined } } }, nhatKy: ngay ? `Ngày đủ điều kiện ban hành QĐ thu hồi đất (${nhan}): ${ngay.split("-").reverse().join("/")}` : `Bỏ ngày đủ điều kiện ban hành QĐ thu hồi đất (${nhan})` };
+    }));
+    if (r.loi.length) return bao(r.loi.join("; "), "loi");
+    bao(`Đã ghi ngày đủ điều kiện ban hành QĐ thu hồi cho ${r.daLuu} hộ`);
+  };
+  return (
+    <HopThoai tieuDe={`Ngày đủ điều kiện ban hành QĐ thu hồi đất – ${nhom.ten}`} dong={dong} rong={560}
+      chan={<><button className="nut" onClick={dong}>Đóng</button><button className="nut nut-chinh" onClick={async () => { await luu(); dong(); }}>Lưu cho {nhom.hos.length} hộ</button></>}>
+      <p className="mo mt-0">Quyết định thu hồi đất ban hành trong thời hạn 10 ngày kể từ ngày đủ điều kiện (khoản 5, 6 Điều 87 Luật Đất đai 2024; docs/05). Ngày này do cán bộ xác định, ghi vào bước 13 của các hộ trong {nhan === "đợt" ? "đợt" : nhan}; hộ đã xác nhận xong bước 13 không tính hạn.</p>
       <O nhan="Ngày đủ điều kiện ban hành QĐ thu hồi"><ONgay value={ngay} onChange={(e) => setNgay(e.target.value)} /></O>
     </HopThoai>
   );

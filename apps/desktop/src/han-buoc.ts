@@ -151,10 +151,31 @@ export function hanGuiQdBan(p: { trangThai: string; pheDuyet?: { ngay: string };
  * hộ có hạn sớm nhất. Không có hộ nào chưa xong → null.
  */
 export function hanThuHoiDot(dotId: string, hos: Ho[], homNay: string, lich: LichLamViec): TinhHan | null {
+  return hanThuHoiNhom(hos.filter((h) => h.dotId === dotId), homNay, lich);
+}
+
+/** Hạn bước 13 của một nhóm hộ (đợt, hộ chưa xếp đợt, hoặc cả dự án không chia đợt) — xem hanThuHoiDot. */
+export function hanThuHoiNhom(nhom: Ho[], homNay: string, lich: LichLamViec): TinhHan | null {
   const han = hanCuaBuoc("13")!;
-  const ds = hos.filter((h) => h.dotId === dotId && h.tienDo["13"]?.trangThai !== "XONG" && h.tienDo["13"]?.trangThai !== "KHONG_AP_DUNG");
+  const ds = nhom.filter((h) => h.tienDo["13"]?.trangThai !== "XONG" && h.tienDo["13"]?.trangThai !== "KHONG_AP_DUNG");
   if (!ds.length) return null;
   const co = ds.map((h) => tinhHanBuoc(h, han, homNay, lich)).filter((t) => t.hanChot);
   if (!co.length) return { han, moc: null, hanChot: null, conLai: null, trangThai: "CHUA_CO_MOC", thieuLich: [], khongTinh: 0 };
   return co.sort((a, b) => a.hanChot!.localeCompare(b.hanChot!))[0]!;
+}
+
+/** Mã nhóm "hộ không thuộc đợt nào" (trùng CHUA_XEP_DOT của dot-thu-hoi.ts). */
+export const NHOM_KHONG_DOT = "__chua__";
+
+/**
+ * 1.0.16 — Các nhóm hộ tính hạn ban hành QĐ thu hồi đất (bước 13), mỗi nhóm ghi "ngày đủ điều kiện" một lần: từng đợt;
+ * hộ không thuộc đợt nào thành một nhóm — "Cả dự án" khi dự án không chia đợt, "Hộ chưa xếp đợt" khi có đợt.
+ */
+export function nhomThuHoi(duAn: { dotThuHoi?: { id: string; so: number; ten: string }[] }, hos: Ho[]): { id: string; ten: string; hos: Ho[] }[] {
+  const dots = duAn.dotThuHoi ?? [];
+  const ids = new Set(dots.map((d) => d.id));
+  const out = dots.map((d) => ({ id: d.id, ten: d.ten.trim() || `Đợt ${d.so}`, hos: hos.filter((h) => h.dotId === d.id) }));
+  const con = hos.filter((h) => !h.dotId || !ids.has(h.dotId));
+  if (con.length) out.push({ id: NHOM_KHONG_DOT, ten: dots.length ? "Hộ chưa xếp đợt" : "Cả dự án", hos: con });
+  return out;
 }

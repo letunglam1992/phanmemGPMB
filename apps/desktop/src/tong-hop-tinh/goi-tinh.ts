@@ -14,7 +14,7 @@
  * mềm, không thay chữ ký số của cơ quan theo pháp luật về giao dịch điện tử.
  */
 import { dsDoan, matBangTheoLyTrinh } from "../ly-trinh";
-import { hanGuiQdBan, hanPheDuyetBan, hanThamDinhBan, hanThuHoiDot, ngayToTrinhPA, type TinhHan } from "../han-buoc";
+import { hanGuiQdBan, hanPheDuyetBan, hanThamDinhBan, hanThuHoiNhom, ngayToTrinhPA, nhomThuHoi, type TinhHan } from "../han-buoc";
 import { LICH_TRONG, type LichLamViec } from "../lich-lam-viec";
 import PizZip from "pizzip";
 import { D } from "@gpmb/core";
@@ -211,7 +211,7 @@ export function tomTatDuAn(duAn: DuAn[], ho: Ho[], soTep: (duAnId: string) => nu
           them(ten, "Phê duyệt phương án", hanPheDuyetBan(p, hos, homNay, lich, ngayToTrinhPA(d, p)));
           them(ten, "Gửi QĐ phê duyệt đến từng người", hanGuiQdBan(p, hos, homNay, lich));
         }
-        for (const dt of d.dotThuHoi ?? []) them(dt.ten.trim() || `Đợt ${dt.so}`, "Ban hành QĐ thu hồi đất", hanThuHoiDot(dt.id, hos, homNay, lich));
+        for (const n of nhomThuHoi(d, hos)) them(n.ten, "Ban hành QĐ thu hồi đất", hanThuHoiNhom(n.hos, homNay, lich));
         return out.length ? { quaHan: out } : {};
       })(),
       ...(d.lienXa?.ma?.trim() ? { lienXa: d.lienXa } : {}),

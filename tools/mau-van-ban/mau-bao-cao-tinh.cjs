@@ -97,6 +97,13 @@ const bangDienBien = bangCo(
   ["{#dien_bien}{tt}", "{thang}", "{don_vi}", "{so_ho}", "{ban_giao}", "{duyet_pa}", "{tam_tinh}{/dien_bien}"],
   null,
 );
+// 1.0.16: khâu thủ tục quá hạn (thẩm định, phê duyệt, gửi QĐ, QĐ thu hồi) theo bản phương án / đợt
+const bangQuaHan = bangCo(
+  ["TT", "Dự án (xã, phường)", "Bản phương án / đợt", "Khâu", "Hạn", "Căn cứ"],
+  [500, 2671, 1500, 1900, 1100, 1400],
+  ["{#qua_han}{tt}", "{du_an}", "{doi_tuong}", "{khau}", "{han}", "{can_cu}{/qua_han}"],
+  null,
+);
 
 const muc = (text) => P([R(text, { bold: true })], { before: 120 });
 const kyTen = new Table({
@@ -168,6 +175,11 @@ const doc = new Document({
         P("{#co_vuong_mac}"),
         P("Có {tong_vuong_mac} hộ đang ghi vướng mắc tại các dự án: {ds_vuong_mac}."),
         P("{/co_vuong_mac}"),
+        P("{#co_qua_han}"),
+        P("Có {tong_qua_han} khâu thủ tục quá hạn theo số liệu các đơn vị đã ghi nhận:"),
+        bangQuaHan,
+        P([R("(Hạn tính theo ngày đơn vị ghi nhận và lịch ngày nghỉ đơn vị gửi kèm gói; dự án gửi từ phiên bản trước 1.0.15 không có số liệu này)", { italics: true, size: 22 })], { indent: false, align: AlignmentType.LEFT, before: 60 }),
+        P("{/co_qua_han}"),
         P("{#co_kho_khan_khac}"),
         P("{kho_khan_khac}"),
         P("{/co_kho_khan_khac}"),

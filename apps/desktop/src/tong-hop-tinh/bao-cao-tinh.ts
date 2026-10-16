@@ -87,6 +87,15 @@ export function duLieuBaoCaoTinh(dong: DongBaoCao[], t: ThongTinBaoCaoTinh, o: {
     co_vuong_mac: vm.length > 0,
     tong_vuong_mac: cong((d) => d.soVuongMac),
     ds_vuong_mac: vm.map((d) => `${d.ten} (${tenXa(d)}: ${d.soVuongMac} hộ)`).join("; "),
+    // 1.0.16: khâu thủ tục quá hạn (TomTatDuAn.quaHan — gói từ 1.0.15)
+    ...(() => {
+      const ds = dong.flatMap((d) => (d.quaHan ?? []).map((q) => ({ d, q })));
+      return {
+        co_qua_han: ds.length > 0,
+        tong_qua_han: ds.length,
+        qua_han: ds.map(({ d, q }, i) => ({ tt: i + 1, du_an: `${d.ten} (${tenXa(d)})`, doi_tuong: q.doiTuong, khau: q.khau, han: ngayVN(q.han), can_cu: q.canCu })),
+      };
+    })(),
     co_kho_khan_khac: !!t.khoKhanKhac.trim(),
     kho_khan_khac: t.khoKhanKhac,
     nhiem_vu: t.nhiemVu,

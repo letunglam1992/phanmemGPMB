@@ -248,6 +248,32 @@ export async function taoExcelTinh(dong: DongBaoCao[], donVi: string, tieuDePhuL
     t4.dong(["", `TỔNG CỘNG (${coBan.length} dự án)`, "", "", ...soBan(coBan)], "tong", 4);
     t4.ws.addRow([]);
     t4.chuThich("Ghi chú: Đếm theo bản phương án (không tính bản đã hủy). Hạn thẩm định không quá 30 ngày làm việc từ ngày nhận đủ hồ sơ (khoản 3 Điều 3 Nghị định 88/2024/NĐ-CP); hạn phê duyệt không quá 5 ngày làm việc từ ngày nhận tờ trình (điểm c khoản 3 Điều 87 Luật Đất đai 2024) — tính theo ngày đơn vị ghi nhận và lịch ngày nghỉ đơn vị gửi kèm gói (gói không có lịch: chỉ trừ thứ Bảy, Chủ nhật). Dự án gửi từ phiên bản cũ (trước 1.0.12) không có số liệu này.");
+  }  // 1.0.16: khâu thủ tục quá hạn (TomTatDuAn.quaHan — gói từ bản 1.0.15)
+  const coQh = dong.filter((d) => d.quaHan?.length);
+  if (coQh.length) {
+    const soPl = 3 + (lx.length ? 1 : 0) + (coBan.length ? 1 : 0);
+    const t5 = trangBieu(wb, "Khau qua han", {
+      donVi,
+      phuLuc: tieuDePhuLuc ? `PHỤ LỤC ${String(soPl).padStart(2, "0")}` : undefined,
+      tieuDe: "CÁC KHÂU THỦ TỤC QUÁ HẠN (THẨM ĐỊNH, PHÊ DUYỆT, GỬI QUYẾT ĐỊNH, QUYẾT ĐỊNH THU HỒI ĐẤT)",
+      ghiChu,
+      cot: [
+        { ten: "STT", rong: 6, kieu: "giua" },
+        { ten: "Xã, phường", rong: 18, kieu: "chu" },
+        { ten: "Dự án", rong: 34, kieu: "chu" },
+        { ten: "Đơn vị gửi", rong: 18, kieu: "chu" },
+        { ten: "Bản phương án / đợt", rong: 18, kieu: "chu" },
+        { ten: "Khâu", rong: 26, kieu: "chu" },
+        { ten: "Hạn", rong: 12, kieu: "giua" },
+        { ten: "Căn cứ", rong: 34, kieu: "chu" },
+      ],
+    });
+    let i = 0;
+    for (const [ten, ds] of xa) for (const d of ds) for (const q of d.quaHan ?? []) t5.dong([++i, ten, d.ten, d.donViGui, q.doiTuong, q.khau, q.han.split("-").reverse().join("/"), q.canCu]);
+    t5.dong(["", `TỔNG CỘNG (${i} khâu, ${coQh.length} dự án)`, "", "", "", "", "", ""], "tong", 8);
+    t5.ws.addRow([]);
+    t5.chuThich("Ghi chú: Hạn tính theo ngày đơn vị ghi nhận và lịch ngày nghỉ đơn vị gửi kèm gói (gói không có lịch: chỉ trừ thứ Bảy, Chủ nhật). Dự án gửi từ phiên bản trước 1.0.15 không có số liệu này.");
   }
+
   return new Uint8Array(await wb.xlsx.writeBuffer());
 }

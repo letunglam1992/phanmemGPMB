@@ -4,6 +4,15 @@ Mỗi phiên bản một mục `## X.Y.Z`. Khi phát hành, quy trình đóng g�
 (`tools/ghi-chu-phat-hanh.mjs`) — thiếu mục của phiên bản đang phát hành thì dừng, không phát hành. Phần mềm hiện các mục
 mới hơn bản đang dùng khi có bản cập nhật.
 
+## 1.0.16
+
+- Excel "Tiến độ thủ tục" thêm khâu chi trả (không quá 30 ngày kể từ ngày quyết định phê duyệt phương án có hiệu lực —
+  điểm a khoản 3 Điều 94 Luật Đất đai 2024): hạn, số hộ đã chi đủ, ngày chi cuối, số ngày chậm; và số hộ đã bàn giao.
+- Hạn ban hành quyết định thu hồi đất cho dự án không chia đợt: thẻ ở Tổng quan dự án, ghi "Ngày đủ điều kiện" một lần cho
+  cả dự án; dự án có đợt ghi được cả cho dòng "Chưa xếp đợt". Cảnh báo một dòng cho mỗi nhóm thay cho từng hộ.
+- Báo cáo Word và phụ lục Excel tổng hợp tỉnh có bảng các khâu thủ tục quá hạn (dự án, bản phương án hoặc đợt, khâu, hạn,
+  căn cứ).
+
 ## 1.0.15
 
 - Mẫu 14 (Quyết định phê duyệt phương án) tự thêm căn cứ "Văn bản số … về kết quả thẩm định phương án" từ bản phương án

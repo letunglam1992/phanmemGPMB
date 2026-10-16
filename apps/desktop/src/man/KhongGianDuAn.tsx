@@ -41,7 +41,7 @@ import { TheDoiChieuDt } from "../thanh-phan/DoiChieuDt";
 import { TheDuBao } from "../thanh-phan/DuBao";
 import { TheQuyTdc } from "../thanh-phan/QuyTdc";
 import { HopPhanCong } from "../thanh-phan/PhanCong";
-import { ChonDot, HopXepDot, TheDotThuHoi, TheTongHopDot, loiDsDot } from "../thanh-phan/DotThuHoi";
+import { ChonDot, HopXepDot, TheDotThuHoi, TheHanThuHoi, TheTongHopDot, loiDsDot } from "../thanh-phan/DotThuHoi";
 import { coDot, duAnTheoBoHo, khopDot } from "../dot-thu-hoi";
 import { MAU_MA_MAC_DINH, loiMauMa, maHoTiepTheo, mauMaCua, nhomMaTrung, taoMa } from "../ma-ho";
 
@@ -206,7 +206,7 @@ function TheTongQuan({ duAn, kq, moHo, moDot, capNhatTd, keHoach }: { duAn: DuAn
           <div className="bang-cuon" style={{ maxHeight: 420, padding: "6px 10px" }}><DongMoc moc={moc} chon={quyen("SUA_HO_SO") ? (ma) => capNhatTd(["1", "2", "3", "4"].includes(ma) ? "chung" : "hang-loat") : undefined} /></div>
         </div>
       </div>
-      {coDot(duAn) && <TheTongHopDot duAn={duAn} kq={kq} moDot={moDot} />}
+      {coDot(duAn) ? <TheTongHopDot duAn={duAn} kq={kq} moDot={moDot} /> : <TheHanThuHoi duAn={duAn} kq={kq} />}
       <TheLyTrinh duAn={duAn} hos={kq.map((x) => x.h)} ghi={quyen("SUA_HO_SO") ? () => setGhiLt(true) : undefined}
         doan={(dongTheoDoan(duAn, kq, homNay) ?? []).map((d) => ({ ten: d.ten, soHo: d.soHo, banGiao: d.theoTrangThai.HOAN_THANH, dtThuHoi: d.dtThuHoi.toString(), tamTinh: d.tamTinh.toString(), daDuyet: d.daDuyet.toString(), mCoGhi: d.mCoGhi, mSach: d.mSach }))} />
       <ThePhuongAn duAn={duAn} kq={kq} />
