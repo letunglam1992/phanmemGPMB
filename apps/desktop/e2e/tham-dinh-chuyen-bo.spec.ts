@@ -36,6 +36,9 @@ test("thẩm định: ghi nhận → trạng thái Đã thẩm định; ô đã 
   await expect(han).toContainText("chưa ghi ngày nhận đủ hồ sơ");
   await han.getByRole("button", { name: "Ngày nhận đủ hồ sơ…" }).click();
   const nhs = p.locator("[role=dialog]", { hasText: "Ngày nhận đủ hồ sơ thẩm định" });
+  // 1.0.17: kiểm tra trước thẩm định (điểm a k3 Đ87) — chỉ nhắc
+  await expect(nhs.locator("[data-kiem-tra-td]")).toContainText("Chưa ghi thời gian niêm yết công khai phương án");
+  await expect(nhs.locator("[data-kiem-tra-td]")).toContainText("chưa xác nhận xong bước 6");
   await nhs.locator("input").first().fill("01/09/2026");
   await nhs.locator("input").first().press("Tab");
   await nhs.getByRole("button", { name: /^Lưu cho \d+ hộ$/ }).click();
@@ -46,6 +49,7 @@ test("thẩm định: ghi nhận → trạng thái Đã thẩm định; ô đã 
   await p.locator("[role=dialog]").getByText("Đóng", { exact: true }).click();
   await p.getByRole("button", { name: "Thẩm định…" }).first().click();
   const td = p.locator("[role=dialog]", { hasText: "Ghi nhận thẩm định" });
+  await expect(td.locator("[data-kiem-tra-td]")).toContainText("điểm a khoản 3 Điều 87");
   await td.getByPlaceholder("vd. Phòng Kinh tế xã …").fill("Phòng Kinh tế");
   await td.getByRole("button", { name: "Ghi nhận thẩm định" }).click();
   await expect(td).toHaveCount(0);

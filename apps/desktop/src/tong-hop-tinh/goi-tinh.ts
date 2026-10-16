@@ -14,6 +14,7 @@
  * mềm, không thay chữ ký số của cơ quan theo pháp luật về giao dịch điện tử.
  */
 import { dsDoan, matBangTheoLyTrinh } from "../ly-trinh";
+import { CAN_CU_CHI_TRA, hanChinhLyBan, khauChiTra } from "../thu-tuc-ban";
 import { hanGuiQdBan, hanPheDuyetBan, hanThamDinhBan, hanThuHoiNhom, ngayToTrinhPA, nhomThuHoi, type TinhHan } from "../han-buoc";
 import { LICH_TRONG, type LichLamViec } from "../lich-lam-viec";
 import PizZip from "pizzip";
@@ -210,6 +211,10 @@ export function tomTatDuAn(duAn: DuAn[], ho: Ho[], soTep: (duAnId: string) => nu
           them(ten, "Thẩm định phương án", hanThamDinhBan(p, hos, homNay, lich));
           them(ten, "Phê duyệt phương án", hanPheDuyetBan(p, hos, homNay, lich, ngayToTrinhPA(d, p)));
           them(ten, "Gửi QĐ phê duyệt đến từng người", hanGuiQdBan(p, hos, homNay, lich));
+          // 1.0.17: chi trả (30 ngày từ QĐ có hiệu lực), chỉnh lý hồ sơ địa chính (3 NLV sau chi trả)
+          const ct = khauChiTra(p, hos, d.phuongAn ?? [], homNay, lich);
+          if (ct.dangCham && ct.han) out.push({ doiTuong: ten, khau: `Chi trả (${ct.soHo - ct.daChiDu}/${ct.soHo} hộ chưa chi đủ)`, han: ct.han, canCu: CAN_CU_CHI_TRA });
+          them(ten, "Chỉnh lý hồ sơ địa chính", hanChinhLyBan(p, hos, d.phuongAn ?? [], homNay, lich));
         }
         for (const n of nhomThuHoi(d, hos)) them(n.ten, "Ban hành QĐ thu hồi đất", hanThuHoiNhom(n.hos, homNay, lich));
         return out.length ? { quaHan: out } : {};

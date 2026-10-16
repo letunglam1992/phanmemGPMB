@@ -4,6 +4,16 @@ Mỗi phiên bản một mục `## X.Y.Z`. Khi phát hành, quy trình đóng g�
 (`tools/ghi-chu-phat-hanh.mjs`) — thiếu mục của phiên bản đang phát hành thì dừng, không phát hành. Phần mềm hiện các mục
 mới hơn bản đang dùng khi có bản cập nhật.
 
+## 1.0.17
+
+- Hạn chỉnh lý hồ sơ địa chính (không quá 3 ngày làm việc sau khi hoàn thành chi trả — Mục XVIII Sổ tay) tính theo bản
+  phương án đã phê duyệt: cảnh báo một dòng cho cả bản; Excel "Tiến độ thủ tục" có hạn, số hộ đã chỉnh lý, ngày xong, chậm.
+- Tổng hợp tỉnh: khâu chi trả (30 ngày — điểm a khoản 3 Điều 94 Luật Đất đai 2024) và chỉnh lý hồ sơ địa chính quá hạn được
+  đếm cùng các khâu thủ tục khác, có trong hộp chi tiết, báo cáo Word và phụ lục Excel.
+- Kiểm tra trước thẩm định (điểm a khoản 3 Điều 87 Luật Đất đai 2024): khi ghi ngày nhận đủ hồ sơ hoặc ghi nhận thẩm định,
+  phần mềm nhắc nếu thời gian niêm yết (mẫu 09/10) chưa đủ 30 ngày, còn hộ chưa xong niêm yết, chưa ghi ý kiến hoặc không
+  đồng ý mà chưa đối thoại. Chỉ nhắc, không chặn.
+
 ## 1.0.16
 
 - Excel "Tiến độ thủ tục" thêm khâu chi trả (không quá 30 ngày kể từ ngày quyết định phê duyệt phương án có hiệu lực —

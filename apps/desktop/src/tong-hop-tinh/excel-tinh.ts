@@ -255,7 +255,7 @@ export async function taoExcelTinh(dong: DongBaoCao[], donVi: string, tieuDePhuL
     const t5 = trangBieu(wb, "Khau qua han", {
       donVi,
       phuLuc: tieuDePhuLuc ? `PHỤ LỤC ${String(soPl).padStart(2, "0")}` : undefined,
-      tieuDe: "CÁC KHÂU THỦ TỤC QUÁ HẠN (THẨM ĐỊNH, PHÊ DUYỆT, GỬI QUYẾT ĐỊNH, QUYẾT ĐỊNH THU HỒI ĐẤT)",
+      tieuDe: "CÁC KHÂU THỦ TỤC QUÁ HẠN (THẨM ĐỊNH, PHÊ DUYỆT, GỬI QUYẾT ĐỊNH, QUYẾT ĐỊNH THU HỒI ĐẤT, CHI TRẢ, CHỈNH LÝ HỒ SƠ ĐỊA CHÍNH)",
       ghiChu,
       cot: [
         { ten: "STT", rong: 6, kieu: "giua" },
@@ -272,7 +272,7 @@ export async function taoExcelTinh(dong: DongBaoCao[], donVi: string, tieuDePhuL
     for (const [ten, ds] of xa) for (const d of ds) for (const q of d.quaHan ?? []) t5.dong([++i, ten, d.ten, d.donViGui, q.doiTuong, q.khau, q.han.split("-").reverse().join("/"), q.canCu]);
     t5.dong(["", `TỔNG CỘNG (${i} khâu, ${coQh.length} dự án)`, "", "", "", "", "", ""], "tong", 8);
     t5.ws.addRow([]);
-    t5.chuThich("Ghi chú: Hạn tính theo ngày đơn vị ghi nhận và lịch ngày nghỉ đơn vị gửi kèm gói (gói không có lịch: chỉ trừ thứ Bảy, Chủ nhật). Dự án gửi từ phiên bản trước 1.0.15 không có số liệu này.");
+    t5.chuThich("Ghi chú: Hạn tính theo ngày đơn vị ghi nhận và lịch ngày nghỉ đơn vị gửi kèm gói (gói không có lịch: chỉ trừ thứ Bảy, Chủ nhật). Dự án gửi từ phiên bản trước 1.0.15 không có số liệu này; khâu chi trả, chỉnh lý hồ sơ địa chính có từ bản 1.0.17.");
   }
 
   return new Uint8Array(await wb.xlsx.writeBuffer());

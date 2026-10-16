@@ -13,7 +13,8 @@
 import { CAC_BUOC, daQuaBuoc, hoHieuLuc, tienDoHo, type DuAn, type Ho } from "./mo-hinh";
 import type { KetQuaHo } from "./tinh-ho";
 
-import { hoLechSauPheDuyet } from "./phuong-an";
+import { hoDaPheDuyet, hoLechSauPheDuyet } from "./phuong-an";
+import { hanChinhLyBan } from "./thu-tuc-ban";
 import { HAN_BUOC, hanThuHoiNhom, nhomThuHoi, hanGuiQdBan, hanPheDuyetBan, hanThamDinhBan, ngayToTrinhPA, tinhHanBuoc } from "./han-buoc";
 import { LICH_TRONG, type LichLamViec } from "./lich-lam-viec";
 import { tinhChiTra, type GiaiDoanTyLe } from "./chi-tra";
@@ -240,6 +241,15 @@ export function canhBaoDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: st
     if (t.trangThai === "QUA_HAN") out.push({ muc: "CAO", duAnId: duAn.id, noiDung: `${n.ten}: quá hạn ban hành quyết định thu hồi đất (hạn ${hc}, 10 ngày từ ngày đủ điều kiện) — còn hộ chưa xác nhận bước 13`, canCu: t.han.canCu });
     else if (t.trangThai === "SAP_HET") out.push({ muc: "TRUNG_BINH", duAnId: duAn.id, noiDung: `${n.ten}: sắp hết hạn ban hành quyết định thu hồi đất (${hc}, còn ${t.conLai} ngày)`, canCu: t.han.canCu });
   }
+  // 1.0.17: hạn chỉnh lý hồ sơ địa chính (bước 15) theo bản đã phê duyệt — một dòng cho cả bản
+  const duyetHienHanh = hoDaPheDuyet(duAn.phuongAn ?? []);
+  for (const p of duAn.phuongAn ?? []) {
+    const t = hanChinhLyBan(p, ds.map((x) => hoHieuLuc(duAn, x.h)), duAn.phuongAn ?? [], homNay, lich);
+    if (!t?.hanChot) continue;
+    const hc = t.hanChot.split("-").reverse().join("/");
+    if (t.trangThai === "QUA_HAN") out.push({ muc: "CAO", duAnId: duAn.id, noiDung: `Phương án bản ${p.so}: quá hạn chỉnh lý hồ sơ địa chính (hạn ${hc}, 3 ngày làm việc sau khi hoàn thành chi trả) — còn hộ chưa xác nhận bước 15`, canCu: t.han.canCu });
+    else if (t.trangThai === "SAP_HET") out.push({ muc: "TRUNG_BINH", duAnId: duAn.id, noiDung: `Phương án bản ${p.so}: sắp hết hạn chỉnh lý hồ sơ địa chính (${hc}, còn ${t.conLai} ngày làm việc)`, canCu: t.han.canCu });
+  }
   // 1.0.14: hạn gửi QĐ phê duyệt đến từng người (bước 11) theo bản đã phê duyệt
   for (const p of duAn.phuongAn ?? []) {
     const t = hanGuiQdBan(p, ds.map((x) => hoHieuLuc(duAn, x.h)), homNay, lich);
@@ -274,6 +284,7 @@ export function canhBaoDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: st
     for (const han of HAN_BUOC) {
       if ((han.buoc === "8" || han.buoc === "9" || han.buoc === "11") && trongBan.has(h.id)) continue; // đã báo theo bản phương án
       if (han.buoc === "13") continue; // đã báo theo nhóm (đợt / chưa xếp đợt / cả dự án)
+      if (han.buoc === "15" && duyetHienHanh.has(h.id)) continue; // đã báo theo bản phương án
       const t = tinhHanBuoc(h, han, homNay, lich);
       const ten = CAC_BUOC.find((b) => b.ma === han.buoc)?.ten ?? "";
       const dv = han.loai === "NLV" ? "ngày làm việc" : "ngày";

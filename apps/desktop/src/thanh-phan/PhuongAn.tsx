@@ -9,6 +9,7 @@ import { xuatExcelChiTra, xuatExcelDuAn, xuatPhieuDoiChieu } from "../xuat-excel
 import { useMauExcel } from "./MauExcel";
 import { homNayIso } from "../trang-thai";
 import { xuatTienDoThuTuc } from "../tien-do-thu-tuc";
+import { CAN_CU_TRUOC_THAM_DINH, kiemTraTruocThamDinh } from "../thu-tuc-ban";
 import { hanGuiQdBan, hanPheDuyetBan, hanThamDinhBan, ngayToTrinhPA, type TinhHan } from "../han-buoc";
 import { hoHieuLuc } from "../mo-hinh";
 import { ngayChu } from "../van-ban/du-lieu";
@@ -94,7 +95,7 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
           <button className="nut" disabled={!ds.some((p) => p.trangThai === "DA_PHE_DUYET")} title="Phải trả, đã chi, còn lại, tiền chậm trả tạm tính theo bản đã phê duyệt" onClick={() => void xuatExcelChiTra(duAn, kq.map((x) => x.h), tyLeCham, homNayIso())}>Theo dõi chi trả (Excel)</button>
           <button className="nut" disabled={kq.length === 0} title="Kiểm tra chéo hồ sơ trước khi chốt: DT thu hồi, thửa trùng, khoản thiếu căn cứ, TĐC, ổn định đời sống…" onClick={() => setHop({ loai: "soat" })}>Soát phương án</button>
           <button className="nut" disabled={ds.length === 0} onClick={() => setHop({ loai: "so-sanh" })}>So sánh</button>
-          <button className="nut" disabled={ds.length === 0} title="Mỗi bản một dòng: nhận hồ sơ, thẩm định, tờ trình, phê duyệt, gửi QĐ — hạn và số ngày làm việc chậm" onClick={async () => { if (await xuatTienDoThuTuc(duAn, kq.map((x) => hoHieuLuc(duAn, x.h)), homNayIso(), lich)) bao("Đã xuất tiến độ thủ tục phương án"); }}>Tiến độ thủ tục (Excel)</button>
+          <button className="nut" disabled={ds.length === 0} title="Mỗi bản một dòng: nhận hồ sơ, thẩm định, tờ trình, phê duyệt, gửi QĐ, chi trả, chỉnh lý hồ sơ địa chính, bàn giao — hạn và số ngày chậm" onClick={async () => { if (await xuatTienDoThuTuc(duAn, kq.map((x) => hoHieuLuc(duAn, x.h)), homNayIso(), lich)) bao("Đã xuất tiến độ thủ tục phương án"); }}>Tiến độ thủ tục (Excel)</button>
           {quyen("CHOT_PA") && <button className="nut nut-chinh" disabled={kq.length === 0} onClick={() => setHop({ loai: "chot" })}>Chốt phương án…</button>}
         </div>
       </div>
@@ -223,6 +224,7 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
       {hop?.loai === "tham-dinh" && (
         <HopThamDinh
           p={hop.p}
+          canhBao={hop.p.thamDinh ? [] : kiemTraTruocThamDinh(duAn, hop.p, kq.map((x) => hoHieuLuc(duAn, x.h)), null, homNayIso(), lich)}
           dong={() => setHop(null)}
           luu={async (td) => {
             const d = ghiThamDinh(hop.p, td, nguoiDung);
@@ -237,6 +239,7 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
         <HopNhanHoSo
           p={hop.p}
           buoc={hop.buoc}
+          canhBao={hop.buoc === "8" ? (ngay) => kiemTraTruocThamDinh(duAn, hop.p, kq.map((x) => hoHieuLuc(duAn, x.h)), ngay || null, homNayIso(), lich) : undefined}
           ngayDau={kq.find((x) => hop.p.ho.some((y) => y.hoId === x.h.id) && x.h.tienDo[hop.buoc]?.mocHan)?.h.tienDo[hop.buoc]?.mocHan ?? (hop.buoc === "9" ? ngayToTrinhPA(duAn, hop.p) ?? "" : "")}
           dong={() => setHop(null)}
           luu={async (ngay) => {
@@ -440,7 +443,18 @@ function HopPheDuyet({ duAn, p, boSung, dong: dongHop, luu }: { duAn: DuAn; p: P
   );
 }
 
-function HopThamDinh({ p, dong: dongHop, luu }: { p: PhienBanPA; dong: () => void; luu: (td: { so: string; ngay: string; coQuan: string; yKien: YKienThamDinh; noiDung?: string }) => Promise<void> }) {
+/** 1.0.17: cảnh báo trước thẩm định (niêm yết 30 ngày, ý kiến, đối thoại) — chỉ nhắc, không chặn. */
+function CanhBaoTruocTd({ ds }: { ds: string[] }) {
+  if (!ds.length) return null;
+  return (
+    <div className="thong-bao thong-bao-vang chu-nho mb-8" role="status" data-kiem-tra-td>
+      <b>Kiểm tra trước thẩm định ({CAN_CU_TRUOC_THAM_DINH}):</b>
+      <ul className="mt-4 mb-0">{ds.map((x) => <li key={x}>{x}</li>)}</ul>
+    </div>
+  );
+}
+
+function HopThamDinh({ p, canhBao, dong: dongHop, luu }: { p: PhienBanPA; canhBao: string[]; dong: () => void; luu: (td: { so: string; ngay: string; coQuan: string; yKien: YKienThamDinh; noiDung?: string }) => Promise<void> }) {
   const c = p.thamDinh;
   const [so, setSo] = useState(c?.so ?? "");
   const [ngay, setNgay] = useState(c?.ngay ?? "");
@@ -463,6 +477,7 @@ function HopThamDinh({ p, dong: dongHop, luu }: { p: PhienBanPA; dong: () => voi
       <p className="mo mt-0">
         Ghi theo báo cáo/văn bản thẩm định phương án của cơ quan chuyên môn (khoản 3 Điều 3 Nghị định 88/2024/NĐ-CP; Mục XII Sổ tay — thời hạn thẩm định theo docs/05: không quá 30 ngày làm việc kể từ khi nhận đủ hồ sơ). Phần mềm chỉ ghi nhận, không tự kết luận. Đã ghi thì không sửa ý kiến, ô đã điền; thẩm định lại = hủy bản, lập bản mới.
       </p>
+      <CanhBaoTruocTd ds={canhBao} />
       <div className="luoi luoi-2">
         <O nhan="Số báo cáo/văn bản thẩm định (có thể bổ sung sau)"><input value={so} placeholder="…/BC-…" disabled={!!c?.so} onChange={(e) => setSo(e.target.value)} /></O>
         <O nhan="Ngày (có thể bổ sung sau)"><ONgay value={ngay} disabled={!!c?.ngay} onChange={(e) => setNgay(e.target.value)} /></O>
@@ -480,7 +495,7 @@ function HopThamDinh({ p, dong: dongHop, luu }: { p: PhienBanPA; dong: () => voi
   );
 }
 
-function HopNhanHoSo({ p, buoc, ngayDau, dong: dongHop, luu }: { p: PhienBanPA; buoc: "8" | "9"; ngayDau: string; dong: () => void; luu: (ngay: string) => Promise<void> }) {
+function HopNhanHoSo({ p, buoc, ngayDau, canhBao, dong: dongHop, luu }: { p: PhienBanPA; buoc: "8" | "9"; ngayDau: string; canhBao?: (ngay: string) => string[]; dong: () => void; luu: (ngay: string) => Promise<void> }) {
   const [ngay, setNgay] = useState(ngayDau);
   const ten = buoc === "8" ? "Ngày nhận đủ hồ sơ thẩm định" : "Ngày nhận tờ trình phê duyệt phương án";
   return (
@@ -501,6 +516,7 @@ function HopNhanHoSo({ p, buoc, ngayDau, dong: dongHop, luu }: { p: PhienBanPA; 
           : "Thời hạn phê duyệt phương án không quá 5 ngày làm việc kể từ ngày nhận tờ trình (điểm c khoản 3 Điều 87 Luật Đất đai 2024; docs/05). Chưa ghi thì phần mềm lấy ngày Tờ trình đề nghị phê duyệt phương án (mẫu 13 / R4) đã ghi số, ngày. Ngày này ghi vào bước 9 của các hộ trong bản."}
       </p>
       <O nhan={ten}><ONgay value={ngay} onChange={(e) => setNgay(e.target.value)} /></O>
+      {canhBao && <CanhBaoTruocTd ds={canhBao(ngay)} />}
     </HopThoai>
   );
 }
