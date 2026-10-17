@@ -132,9 +132,100 @@ pub fn tinh_bam_nhat_ky(stt: i64, luc: &str, nguoi: &str, ho_ten: &str, hanh_don
     hex(&Sha256::digest(s.as_bytes()))
 }
 
+// ---------------- Mã hóa CSDL (B2, 1.0.19) ----------------
+
+/// Tệp khóa CSDL nằm cạnh tệp CSDL: `<tệp>.khoa` = 32 byte ngẫu nhiên bọc DPAPI của tài khoản Windows chạy phần mềm.
+pub fn tep_khoa(duong_dan: &FsPath) -> PathBuf {
+    let mut p = duong_dan.as_os_str().to_owned();
+    p.push(".khoa");
+    PathBuf::from(p)
+}
+
+/// Khóa mã hóa CSDL (SQLCipher, AES-256): đọc `<tệp>.khoa` (bọc DPAPI), chưa có thì sinh mới. Không phải Windows (môi
+/// trường phát triển, kiểm thử) → None: không mã hóa. CSDL đã mã hóa mà mất tệp khóa → lỗi, khôi phục từ bản sao lưu .gpmb.
+pub fn khoa_csdl(duong_dan: &FsPath) -> Result<Option<[u8; 32]>, String> {
+    if !cfg!(windows) {
+        return Ok(None);
+    }
+    let tk = tep_khoa(duong_dan);
+    if let Ok(boc) = std::fs::read(&tk) {
+        let k = crate::dpapi::chay(&boc, false).map_err(|e| format!("Không mở được tệp khóa CSDL {} ({e}) — tệp khóa chỉ dùng được trên đúng máy, đúng tài khoản Windows đã tạo", tk.display()))?;
+        return <[u8; 32]>::try_from(k.as_slice()).map(Some).map_err(|_| format!("Tệp khóa CSDL {} hỏng", tk.display()));
+    }
+    if duong_dan.exists() && !la_csdl_khong_ma_hoa(duong_dan) {
+        return Err(format!("CSDL {} đã mã hóa nhưng không thấy tệp khóa {} — khôi phục dữ liệu từ bản sao lưu .gpmb", duong_dan.display(), tk.display()));
+    }
+    let mut k = [0u8; 32];
+    ring::rand::SecureRandom::fill(&ring::rand::SystemRandom::new(), &mut k).map_err(|_| "Không sinh được khóa CSDL".to_string())?;
+    let boc = crate::dpapi::chay(&k, true)?;
+    std::fs::write(&tk, boc).map_err(|e| format!("Không ghi được tệp khóa CSDL: {e}"))?;
+    Ok(Some(k))
+}
+
+/// Tệp CSDL SQLite chưa mã hóa (đầu tệp "SQLite format 3\0"); tệp rỗng / chưa có → true.
+pub fn la_csdl_khong_ma_hoa(duong_dan: &FsPath) -> bool {
+    use std::io::Read;
+    let mut dau = [0u8; 16];
+    match std::fs::File::open(duong_dan) {
+        Ok(mut f) => match f.read_exact(&mut dau) {
+            Ok(()) => &dau == b"SQLite format 3\0",
+            Err(_) => true,
+        },
+        Err(_) => true,
+    }
+}
+
+fn dat_khoa(c: &Connection, k: &[u8; 32]) -> rusqlite::Result<()> {
+    c.execute_batch(&format!("PRAGMA key = \"x'{}'\";", hex(k)))
+}
+
+/// CSDL cũ chưa mã hóa → chép sang tệp mã hóa (sqlcipher_export), thay tệp cũ; không để lại bản không mã hóa.
+fn ma_hoa_csdl_cu(duong_dan: &FsPath, k: &[u8; 32]) -> Result<(), String> {
+    let tam = PathBuf::from(format!("{}.dang-ma-hoa", duong_dan.display()));
+    let _ = std::fs::remove_file(&tam);
+    {
+        let c = Connection::open(duong_dan).map_err(|e| e.to_string())?;
+        c.execute_batch("PRAGMA wal_checkpoint(TRUNCATE);").map_err(|e| e.to_string())?;
+        let v: i64 = c.query_row("PRAGMA user_version", [], |r| r.get(0)).map_err(|e| e.to_string())?;
+        c.execute("ATTACH DATABASE ?1 AS ma_hoa KEY ?2", params![tam.to_string_lossy(), format!("x'{}'", hex(k))]).map_err(|e| e.to_string())?;
+        c.query_row("SELECT sqlcipher_export('ma_hoa')", [], |_| Ok(())).map_err(|e| e.to_string())?;
+        c.execute_batch(&format!("PRAGMA ma_hoa.user_version = {v}; DETACH DATABASE ma_hoa;")).map_err(|e| e.to_string())?;
+    }
+    // kiểm bản mã hóa mở được, đủ bảng rồi mới thay
+    {
+        let c = Connection::open(&tam).map_err(|e| e.to_string())?;
+        dat_khoa(&c, k).map_err(|e| e.to_string())?;
+        c.query_row("SELECT count(*) FROM sqlite_master", [], |r| r.get::<_, i64>(0)).map_err(|e| format!("Bản mã hóa không mở được: {e}"))?;
+    }
+    for duoi in ["-wal", "-shm"] {
+        let _ = std::fs::remove_file(format!("{}{duoi}", duong_dan.display()));
+    }
+    std::fs::rename(&tam, duong_dan).map_err(|e| format!("Không thay được tệp CSDL: {e}"))
+}
+
 impl MayChu {
-    pub fn mo(duong_dan: &FsPath) -> rusqlite::Result<MayChu> {
-        let c = Connection::open(duong_dan)?;
+    /// Mở CSDL; bản cài Windows mã hóa bằng khóa trong `<tệp>.khoa` (B2).
+    pub fn mo(duong_dan: &FsPath) -> Result<MayChu, String> {
+        let k = khoa_csdl(duong_dan)?;
+        MayChu::mo_khoa(duong_dan, k.as_ref())
+    }
+
+    /// Mở CSDL với khóa cho trước (None = không mã hóa). Tệp cũ chưa mã hóa mà có khóa → mã hóa lại trước khi mở.
+    pub fn mo_khoa(duong_dan: &FsPath, k: Option<&[u8; 32]>) -> Result<MayChu, String> {
+        if let Some(k) = k {
+            if duong_dan.exists() && std::fs::metadata(duong_dan).map(|m| m.len() > 0).unwrap_or(false) && la_csdl_khong_ma_hoa(duong_dan) {
+                ma_hoa_csdl_cu(duong_dan, k)?;
+            }
+        }
+        let c = Connection::open(duong_dan).map_err(|e| e.to_string())?;
+        if let Some(k) = k {
+            dat_khoa(&c, k).map_err(|e| e.to_string())?;
+            c.query_row("SELECT count(*) FROM sqlite_master", [], |r| r.get::<_, i64>(0)).map_err(|_| "Khóa CSDL không đúng (tệp khóa không khớp tệp CSDL)".to_string())?;
+        }
+        MayChu::khoi_tao(c).map_err(|e| e.to_string())
+    }
+
+    fn khoi_tao(c: Connection) -> rusqlite::Result<MayChu> {
         c.execute_batch(
             "PRAGMA journal_mode=WAL;
              CREATE TABLE IF NOT EXISTS ban_ghi(loai TEXT NOT NULL, id TEXT NOT NULL, du_an_id TEXT, phien_ban INTEGER NOT NULL,

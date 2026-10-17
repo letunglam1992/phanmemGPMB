@@ -24,6 +24,7 @@ Tài liệu nên đọc trước:
 | 0.9.23 | Trợ lý AI nổi: nút robot góc dưới phải mở khung chat; thanh bên "Trợ lý AI (hỏi đáp)" |
 | 0.9.25 | Cảnh báo xã lâu chưa gửi (ngưỡng do tỉnh đặt); xã tự gửi định kỳ lên cổng (chu kỳ do xã đặt); tỉnh xem lại các bản gửi trước (≤ 20 bản/đơn vị); báo cáo Word tổng hợp toàn tỉnh |
 | 0.9.26 | Tỉnh tự nhận gói mới từ cổng mỗi 30 phút khi khóa đang mở, chuông báo gói chờ nhận; phụ lục Excel kèm báo cáo Word tỉnh; thời gian không tính vào thời hạn (bước có thời hạn, bắt buộc lý do, tạm dừng); trường hợp Điều 14/17 PL I QĐ 106 do người dùng chọn + căn cứ; ghi chú bản đồ trong hồ sơ hộ; thùng rác tệp đính kèm, tài liệu; Luật Đất đai hợp nhất (VBHN 44/VBHN-VPQH) trong Trợ lý AI |
+| 1.0.19 | Mã hóa CSDL máy đơn/máy chủ (SQLCipher, khóa DPAPI); nhắc cất bản sao lưu ra thiết bị khác |
 | 1.0.18 | Chữ ký gói chính sách (tác giả ký bằng khóa cấp mã; gói không ký cảnh báo, chữ ký sai không nạp — QD-35), máy chủ kiểm lại chữ ký; thông báo thu hồi theo nhóm (k1, k5 Đ85); ghi chú phát hành bỏ CRLF |
 | 1.0.17 | Chỉnh lý hồ sơ địa chính (bước 15) theo bản; chi trả, chỉnh lý quá hạn gửi tỉnh; kiểm tra trước thẩm định (niêm yết 30 ngày, ý kiến, đối thoại) |
 | 1.0.16 | Excel tiến độ thủ tục thêm chi trả (30 ngày, điểm a k3 Đ94), bàn giao; hạn QĐ thu hồi cho dự án không chia đợt và hộ chưa xếp đợt; báo cáo Word, Excel tỉnh có bảng khâu thủ tục quá hạn; Playwright cột hạn theo đợt, hộp quá hạn ở tỉnh |
@@ -264,6 +265,7 @@ Gặp lỗi: bấm **"Chép chi tiết lỗi"** (nếu có), hoặc chụp màn 
 | Thẩm định PA (1.0.11) | `ThamDinhPA`, `ghiThamDinh`, `tenTrangThai`, `canhBaoTruocPheDuyet` (`phuong-an.ts`); `HopThamDinh` (`thanh-phan/PhuongAn.tsx`); Rust `kiem_tra_pa` (nhánh `DA_CHOT`) |
 | Chuyển bộ theo hộ, đợt (1.0.11) | `Ho.boChinhSach`, `DotThuHoi.boChinhSach`; `boCuaHo` (`dot-thu-hoi.ts`), `tinhHoMoi` tự dùng bộ riêng; `src/chuyen-bo.ts`; `HopChuyenPhamVi` (`thanh-phan/GoiChinhSach.tsx`) |
 | 1.0.12 | `ketQuaThamDinh` (`van-ban/tao-nhanh.ts`), `hanThamDinhBan` (`han-buoc.ts`), `demBanPA`/`moTaDemBanPA` (`phuong-an.ts`), `DongBaoCao.banPA`, `TomTatDuAn.banPA`; `duAnTheoBoHo` (`dot-thu-hoi.ts`); `giay-phep-chan.ts`, `bamMa` + Rust `bi_chan`; `SoSanhLuu` (`man/ban-do/ranh.ts`), `BanDoDuAn.soSanh` |
+| 1.0.19 | `khoa_csdl`, `mo_khoa`, `ma_hoa_csdl_cu` (`may_chu.rs`), `dpapi` pub(crate) (`lib.rs`); `src/cat-ngoai.ts` |
 | 1.0.18 | `src/ky-goi.ts` (`kyGoi`, `kiemChuKyGoi`), `GoiDaNap.chuKy` (`ky`, `banKy`), `TheGoiChinhSach`; `tools/giay-phep/cap-ma.html` (Ký gói chính sách); Rust `kiem_goi`, `kiem_ds_goi` (`giay_phep.rs`, gọi ở `luu_cai_dat`); `thongBaoNhom`, `laDatNongNghiep` (`thu-tuc-ban.ts`), `OHanThuHoi`/`HopNgayDuDieuKien` (`DotThuHoi.tsx`) |
 | 1.0.17 | `src/thu-tuc-ban.ts` (`khau`, `khauChiTra`, `khauChinhLy`, `hanChinhLyBan`, `kiemTraTruocThamDinh`); `CanhBaoTruocTd` (`thanh-phan/PhuongAn.tsx`) |
 | 1.0.16 | `khauChiTra` (nay ở `thu-tuc-ban.ts`); `hanThuHoiNhom`, `nhomThuHoi`, `NHOM_KHONG_DOT` (`han-buoc.ts`); `TheHanThuHoi`, `OHanThuHoi`, `HopNgayDuDieuKien` (`thanh-phan/DotThuHoi.tsx`); `co_qua_han`/`qua_han` (`bao-cao-tinh.ts`, `tools/mau-van-ban/mau-bao-cao-tinh.cjs`); trang "Khau qua han" (`excel-tinh.ts`) |

@@ -549,7 +549,7 @@ fn chuyen_doi_csdl_cu_va_don_lich_su() {
         h["chiTra"] = json!({ "dot": [{ "id": "d1" }] });
         c.execute("INSERT INTO ban_ghi VALUES ('ho', 'h1', 'da1', 2, ?1, '', 'a')", [h.to_string()]).unwrap();
     }
-    drop(may_chu::MayChu::mo(&f).unwrap());
+    drop(may_chu::MayChu::mo_khoa(&f, None).unwrap());
     let c = rusqlite::Connection::open(&f).unwrap();
     let v: i64 = c.query_row("PRAGMA user_version", [], |r| r.get(0)).unwrap();
     assert_eq!(v, may_chu::PHIEN_BAN_CSDL);
@@ -567,7 +567,7 @@ fn chuyen_doi_csdl_cu_va_don_lich_su() {
     let ct: Value = serde_json::from_str(&c.query_row("SELECT noi_dung FROM ban_ghi WHERE loai = 'ct' AND id = 'h1'", [], |r| r.get::<_, String>(0)).unwrap()).unwrap();
     assert_eq!(ct["chiTra"]["dot"][0]["id"], "d1");
     // mở lại: không chuyển đổi lần hai
-    drop(may_chu::MayChu::mo(&f).unwrap());
+    drop(may_chu::MayChu::mo_khoa(&f, None).unwrap());
     // dọn lịch sử: giữ 2 năm → bản 3 năm trước bị xóa, bản mới giữ lại
     c.execute("INSERT INTO lich_su(loai, id, noi_dung, luu_luc) VALUES ('ho', 'x', '{}', ?1)", [may_chu::iso_truoc(3 * 365)]).unwrap();
     c.execute("INSERT INTO lich_su(loai, id, noi_dung, luu_luc) VALUES ('ho', 'x', '{}', ?1)", [may_chu::iso_truoc(30)]).unwrap();
@@ -764,5 +764,42 @@ async fn may_chu_dot_va_quy_tdc() {
     h["hoTro"]["khac"] = json!({ "doiTuongCs": [{ "id": "a", "ten": "A", "muc": "6000000", "xacNhan": "x" }], "khoan": [{ "id": "k", "loai": "K4", "noiDung": "", "soTien": "3000000", "canCu": "QĐ" }] });
     let (ma, v) = goi_router(&r, "PUT", "/api/ho/h9", Some(&t), json!({ "duLieu": h, "phienBanTruoc": null })).await;
     assert_eq!(ma, 200, "{v}");
+    std::fs::remove_dir_all(&dir).ok();
+}
+
+/// 1.0.19 (B2): CSDL máy chủ mã hóa SQLCipher — tệp cũ chưa mã hóa được chuyển sang bản mã hóa, giữ nguyên dữ liệu;
+/// tệp không còn đọc được bằng SQLite thường hoặc sai khóa.
+#[test]
+fn ma_hoa_csdl_sqlcipher() {
+    let dir = std::env::temp_dir().join(format!("gpmb-mh-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    let f = dir.join("may-chu.sqlite");
+    // CSDL cũ chưa mã hóa, có dữ liệu
+    drop(may_chu::MayChu::mo_khoa(&f, None).unwrap());
+    {
+        let c = rusqlite::Connection::open(&f).unwrap();
+        c.execute("INSERT INTO cai_dat VALUES ('thu', '{\"ten\":\"Nguyễn Văn Thử\"}')", []).unwrap();
+    }
+    assert!(may_chu::la_csdl_khong_ma_hoa(&f));
+    let k = [7u8; 32];
+    drop(may_chu::MayChu::mo_khoa(&f, Some(&k)).unwrap());
+    assert!(!may_chu::la_csdl_khong_ma_hoa(&f));
+    let tho = std::fs::read(&f).unwrap();
+    assert!(!tho.windows("Nguyễn Văn Thử".len()).any(|w| w == "Nguyễn Văn Thử".as_bytes()), "tệp còn chữ rõ");
+    assert!(!dir.join("may-chu.sqlite.dang-ma-hoa").exists());
+    // mở lại bằng đúng khóa: dữ liệu còn, phiên bản cấu trúc còn
+    {
+        let c = rusqlite::Connection::open(&f).unwrap();
+        c.execute_batch(&format!("PRAGMA key = \"x'{}'\";", "07".repeat(32))).unwrap();
+        let v: String = c.query_row("SELECT noi_dung FROM cai_dat WHERE khoa = 'thu'", [], |r| r.get(0)).unwrap();
+        assert!(v.contains("Nguyễn Văn Thử"));
+        let pb: i64 = c.query_row("PRAGMA user_version", [], |r| r.get(0)).unwrap();
+        assert_eq!(pb, may_chu::PHIEN_BAN_CSDL);
+    }
+    drop(may_chu::MayChu::mo_khoa(&f, Some(&k)).unwrap());
+    // sai khóa, không khóa → không mở được
+    assert!(may_chu::MayChu::mo_khoa(&f, Some(&[8u8; 32])).err().unwrap().contains("Khóa CSDL không đúng"));
+    assert!(may_chu::MayChu::mo_khoa(&f, None).is_err());
     std::fs::remove_dir_all(&dir).ok();
 }

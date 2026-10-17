@@ -5,7 +5,7 @@
 | Chế độ (từng máy chọn) | Dữ liệu | Ghi chú |
 |---|---|---|
 | **Máy đơn** (mặc định) | Từ 0.6.0: SQLite `%LOCALAPPDATA%\vn.sonla.gpmb\may-don\gpmb-may-don.sqlite`, dùng **cùng lõi Rust với máy chủ** (quy tắc nghiệp vụ, quyền, lịch sử, kiểm tra cấu trúc) nhưng gọi trong tiến trình (lệnh `goi_noi_bo`) — **không mở cổng mạng**. Lần đầu mở, dữ liệu IndexedDB của bản ≤ 0.5 tự chuyển sang SQLite (một giao dịch; giữ tài khoản, nhật ký hệ thống với chuỗi băm cũ, cài đặt, bản đồ, mẫu); dữ liệu IndexedDB cũ giữ nguyên, không xóa | Một người dùng. Bản chạy trên trình duyệt (dùng thử, kiểm thử giao diện) vẫn dùng IndexedDB |
-| **Máy chủ** | SQLite: `%LOCALAPPDATA%\vn.sonla.gpmb\may-chu\gpmb-may-chu.sqlite` (kèm chứng chỉ `chung-chi.pem`, khóa `khoa-rieng.pem`) | Phần mềm trên máy chủ mở dịch vụ HTTPS ở cổng 47800 (đổi được). Cán bộ trên chính máy chủ cũng làm việc qua dịch vụ này |
+| **Máy chủ** | SQLite: `%LOCALAPPDATA%\vn.sonla.gpmb\may-chu\gpmb-may-chu.sqlite` (kèm chứng chỉ `chung-chi.pem`, khóa `khoa-rieng.pem`; từ 1.0.19 mã hóa SQLCipher AES-256, khóa `gpmb-may-chu.sqlite.khoa` bọc DPAPI — máy đơn tương tự) | Phần mềm trên máy chủ mở dịch vụ HTTPS ở cổng 47800 (đổi được). Cán bộ trên chính máy chủ cũng làm việc qua dịch vụ này |
 | **Máy trạm** | Không lưu dữ liệu nghiệp vụ | Kết nối máy chủ theo IP[:cổng], ghim vân tay chứng chỉ |
 
 - Chỉ truyền trong mạng nội bộ, **không cần Internet, không dùng dịch vụ ngoài**. Máy chủ phải bật và mở phần mềm khi mọi người làm việc.

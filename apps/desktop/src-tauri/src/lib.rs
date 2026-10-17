@@ -268,7 +268,7 @@ async fn luu_tep_chon_noi(app: tauri::AppHandle, request: Request<'_>) -> Result
 /// Bọc / mở khóa dữ liệu sao lưu bằng Windows DPAPI của tài khoản Windows đang dùng (không cần mật khẩu;
 /// chỉ mở được trên cùng máy, cùng tài khoản). Entropy riêng của phần mềm để tách khỏi ứng dụng khác.
 #[cfg(windows)]
-mod dpapi {
+pub(crate) mod dpapi {
     use windows_sys::Win32::Foundation::LocalFree;
     use windows_sys::Win32::Security::Cryptography::{CryptProtectData, CryptUnprotectData, CRYPTPROTECT_UI_FORBIDDEN, CRYPT_INTEGER_BLOB};
 
@@ -300,7 +300,7 @@ mod dpapi {
     }
 }
 #[cfg(not(windows))]
-mod dpapi {
+pub(crate) mod dpapi {
     pub fn chay(_: &[u8], _: bool) -> Result<Vec<u8>, String> {
         Err("DPAPI chỉ có trên Windows".into())
     }

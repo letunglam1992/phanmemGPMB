@@ -4,6 +4,13 @@ Mỗi phiên bản một mục `## X.Y.Z`. Khi phát hành, quy trình đóng g�
 (`tools/ghi-chu-phat-hanh.mjs`) — thiếu mục của phiên bản đang phát hành thì dừng, không phát hành. Phần mềm hiện các mục
 mới hơn bản đang dùng khi có bản cập nhật.
 
+## 1.0.19
+
+- Dữ liệu máy đơn và máy chủ mạng nội bộ được mã hóa (AES-256): khóa gắn với máy và tài khoản Windows đang dùng. Lần
+  đầu mở bản này, dữ liệu cũ tự chuyển sang dạng mã hóa. Chuyển máy, cài lại Windows thì khôi phục bằng bản sao lưu .gpmb.
+- Nhắc cất bản sao lưu ra thiết bị khác (USB, ổ cứng ngoài, ổ mạng nội bộ) theo chu kỳ do đơn vị đặt: lưu vào ổ khác
+  thì phần mềm tự ghi nhận, không thì cán bộ xác nhận sau khi chép; Sao lưu, khôi phục hiện lần cất ra ngoài gần nhất.
+
 ## 1.0.18
 
 - Gói chính sách có chữ ký của tác giả: khi nạp, phần mềm tự kiểm gói đúng nguồn và không bị sửa sau khi ký (hiện
