@@ -45,7 +45,7 @@ export function taoMaCaiDat(ngauNhien: (n: number) => Uint8Array = (n) => crypto
 
 const chuanMa = (s: string) => s.toUpperCase().replace(/[^A-Z0-9]/g, "");
 
-const b64u = {
+export const b64u = {
   ma: (b: Uint8Array) => btoa(String.fromCharCode(...b)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""),
   giai: (s: string) => {
     const t = s.replace(/-/g, "+").replace(/_/g, "/");

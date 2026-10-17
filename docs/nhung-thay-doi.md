@@ -4,6 +4,14 @@ Mỗi phiên bản một mục `## X.Y.Z`. Khi phát hành, quy trình đóng g�
 (`tools/ghi-chu-phat-hanh.mjs`) — thiếu mục của phiên bản đang phát hành thì dừng, không phát hành. Phần mềm hiện các mục
 mới hơn bản đang dùng khi có bản cập nhật.
 
+## 1.0.18
+
+- Gói chính sách có chữ ký của tác giả: khi nạp, phần mềm tự kiểm gói đúng nguồn và không bị sửa sau khi ký (hiện
+  "Đã ký: …" ở danh sách gói). Gói chưa ký: cảnh báo, người nạp phải xác nhận đã đối chiếu nguồn gốc và mã SHA-256 mới nạp
+  được. Chữ ký sai (tệp đã bị sửa): không nạp. Chữ ký này không thay văn bản ban hành chính sách, đơn giá.
+- Công cụ của tác giả có mục "Ký gói chính sách".
+- Hộp xem bản phương án nêu nguồn bộ chính sách (có sẵn trong phần mềm, gói đã ký, gói chưa ký).
+
 ## 1.0.17
 
 - Hạn chỉnh lý hồ sơ địa chính (không quá 3 ngày làm việc sau khi hoàn thành chi trả — Mục XVIII Sổ tay) tính theo bản

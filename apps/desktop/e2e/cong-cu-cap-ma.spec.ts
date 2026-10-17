@@ -7,6 +7,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { bamMa, docGiayPhep, trangThaiGiayPhep } from "../src/giay-phep";
+import { kiemChuKyGoi } from "../src/ky-goi";
 
 test("cấp mã bằng trang công cụ: mã hợp lệ với khóa công khai tương ứng; danh sách, CSV", async ({ page: p }) => {
   const k = await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"]);
@@ -67,4 +68,29 @@ test("cấp mã bằng trang công cụ: mã hợp lệ với khóa công khai t
   expect([...chan]).toEqual([await bamMa(ma)]);
   expect((await trangThaiGiayPhep(ma, "ABCD-EFGH-JKMN-PQRS", "2026-10-15", cong, chan)).loai).toBe("BI_CHAN");
   expect((await trangThaiGiayPhep(ma2, "WXYZ-2345-6789-ABCD", "2026-10-15", cong, chan)).loai).toBe("HOP_LE");
+});
+
+test("1.0.18: ký gói chính sách bằng trang công cụ — phần mềm kiểm đúng chữ ký; sửa một số thì chữ ký sai", async ({ page: p }) => {
+  const k = await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"]);
+  const thuMuc = mkdtempSync(join(tmpdir(), "ky-goi-"));
+  const tepKhoa = join(thuMuc, "khoa-thu.json");
+  writeFileSync(tepKhoa, JSON.stringify({ ghiChu: "khóa thử", ...(await crypto.subtle.exportKey("jwk", k.privateKey)) }));
+  const cong = await crypto.subtle.exportKey("jwk", k.publicKey);
+  await p.goto(`file://${resolve(process.cwd(), "../../tools/giay-phep/cap-ma.html")}`);
+  await p.locator("#kyGoi").click();
+  await expect(p.locator("#ttGoi")).toContainText("Chưa nạp tệp khóa riêng");
+  await p.locator("#tep").setInputFiles(tepKhoa);
+  await expect(p.locator("#ttKhoa")).toHaveText("Đã nạp khóa riêng.");
+  await p.locator("#tepGoi").setInputFiles({ name: "Gói thử.json", mimeType: "application/json", buffer: readFileSync(resolve(process.cwd(), "../../policy/goi/sonla-2026-10-06.json")) });
+  await p.locator("#nguoiKyGoi").fill("Người ký thử");
+  const tai = p.waitForEvent("download");
+  await p.locator("#kyGoi").click();
+  const dl = await tai;
+  expect(dl.suggestedFilename()).toBe("Goi-thu_da-ky.json");
+  const chu = readFileSync((await dl.path())!, "utf8");
+  await expect(p.locator("#ttGoi")).toContainText("Đã ký gói");
+  expect(await kiemChuKyGoi(chu, cong)).toMatchObject({ tt: "DA_KY", chuKy: { donVi: "Tác giả phần mềm GPMB Sơn La", nguoiKy: "Người ký thử" } });
+  const sua = JSON.parse(chu);
+  sua.chinhSach.ma = `${sua.chinhSach.ma}-sua`;
+  expect((await kiemChuKyGoi(JSON.stringify(sua), cong)).tt).toBe("SAI");
 });

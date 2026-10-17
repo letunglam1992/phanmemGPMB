@@ -13,6 +13,7 @@ import { boCuaHo, coDot, dsDot, tenDot, timDot } from "../dot-thu-hoi";
 import { inTaiLieu, taoDocx } from "../van-ban/tai-lieu-don-gian";
 import { tenTep } from "../ten-tep";
 import { homNayIso } from "../trang-thai";
+import { kiemChuKyGoi, type KetQuaKyGoi } from "../ky-goi";
 
 const tomTatDonGia = (s: string) => {
   try {
@@ -33,13 +34,19 @@ const vanBanBg = (s: string) => {
 /** P2-1: Cài đặt chung → Gói chính sách: danh mục bộ chính sách, nạp gói mới (Quản trị). */
 export function TheGoiChinhSach() {
   const { goiDaNap, napGoi, quyen, bao } = useUngDung();
-  const [xem, setXem] = useState<(KetQuaDocGoi & { tenTep: string }) | null>(null);
-  const doc = async (f: File) => setXem({ ...(await docGoi(await f.text(), Object.keys(BO_CHINH_SACH))), tenTep: f.name });
+  const [xem, setXem] = useState<(KetQuaDocGoi & { tenTep: string; ky: KetQuaKyGoi }) | null>(null);
+  const [daDoiChieu, setDaDoiChieu] = useState(false);
+  const doc = async (f: File) => {
+    const chu = await f.text();
+    setDaDoiChieu(false);
+    setXem({ ...(await docGoi(chu, Object.keys(BO_CHINH_SACH))), tenTep: f.name, ky: await kiemChuKyGoi(chu) });
+  };
+  const ngayGio = (iso: string) => new Date(iso).toLocaleString("vi-VN", { hour12: false });
   return (
     <div>
       <p className="mo mt-0">
-        Bộ chính sách (mức hỗ trợ, tỷ lệ, cách tính có căn cứ) nạp bằng tệp JSON do đơn vị có thẩm quyền phát hành, không cần cài lại phần mềm. <b>Gói chưa có chữ ký số</b>:
-        đối chiếu mã SHA-256 với đơn vị phát hành trước khi dùng. Gói dạng bọc có thể kèm <b>bảng đơn giá</b> (mục <code>donGia</code>: văn bản căn cứ và các dòng theo nhóm QĐ32 — nhà, công trình; PL VIII — cây trồng, thủy sản; PL V — vật nuôi; nhóm có trong gói thay bảng có sẵn) và <b>bảng giá đất</b> (mục <code>bangGiaDat</code>, cùng cấu trúc bảng NQ 152) — dự án dùng bộ chính sách của gói thì chọn đơn giá, giá đất theo bảng của gói. Dự án chuyển sang bộ mới ở Thông tin dự án (xem chênh lệch từng hộ trước khi áp dụng).
+        Bộ chính sách (mức hỗ trợ, tỷ lệ, cách tính có căn cứ) nạp bằng tệp JSON do đơn vị có thẩm quyền phát hành, không cần cài lại phần mềm. Gói do tác giả phát hành có
+        <b>chữ ký</b> — phần mềm tự kiểm gói đúng nguồn, không bị sửa; gói <b>chưa ký</b> thì phần mềm cảnh báo, cán bộ đối chiếu mã SHA-256 với đơn vị phát hành rồi mới nạp; chữ ký sai (tệp đã bị sửa) thì không nạp. Chữ ký này không thay văn bản ban hành chính sách, đơn giá. Gói dạng bọc có thể kèm <b>bảng đơn giá</b> (mục <code>donGia</code>: văn bản căn cứ và các dòng theo nhóm QĐ32 — nhà, công trình; PL VIII — cây trồng, thủy sản; PL V — vật nuôi; nhóm có trong gói thay bảng có sẵn) và <b>bảng giá đất</b> (mục <code>bangGiaDat</code>, cùng cấu trúc bảng NQ 152) — dự án dùng bộ chính sách của gói thì chọn đơn giá, giá đất theo bảng của gói. Dự án chuyển sang bộ mới ở Thông tin dự án (xem chênh lệch từng hộ trước khi áp dụng).
       </p>
       <table className="bang">
         <thead><tr><th>Khóa</th><th>Tên, mã</th><th>Hiệu lực</th><th>Nguồn</th><th>SHA-256</th></tr></thead>
@@ -48,7 +55,7 @@ export function TheGoiChinhSach() {
           {goiDaNap.map((g) => (
             <tr key={g.khoa}>
               <td>{g.khoa}</td><td className="chu-nho">{g.ten}<div className="mo">{g.ma}</div>{(g.donGia || g.bangGiaDat) && <div className="mo" data-goi-kem>Kèm {[g.donGia && `bảng đơn giá (${tomTatDonGia(g.donGia)})`, g.bangGiaDat && `bảng giá đất (${vanBanBg(g.bangGiaDat)})`].filter(Boolean).join(", ")}</div>}</td><td className="chu-nho">từ {g.hieuLucTu}{g.hieuLucDen ? ` đến ${g.hieuLucDen}` : ""}</td>
-              <td className="chu-nho">Nạp {new Date(g.napLuc).toLocaleString("vi-VN")} · {g.napBoi}<div className="mo">{g.tenTep}</div></td>
+              <td className="chu-nho">Nạp {new Date(g.napLuc).toLocaleString("vi-VN")} · {g.napBoi}<div className="mo">{g.tenTep}</div><div data-ky-goi={g.khoa}>{g.chuKy ? <span className="nhan nhan-xanh" title={`Người ký: ${g.chuKy.nguoiKy}`}>Đã ký: {g.chuKy.donVi} · {ngayGio(g.chuKy.luc)}</span> : <span className="nhan nhan-vang">Chưa ký</span>}</div></td>
               <td className="chu-nho" style={{ fontFamily: "monospace", wordBreak: "break-all" }}>{g.sha256}</td>
             </tr>
           ))}
@@ -58,10 +65,10 @@ export function TheGoiChinhSach() {
         <label className="nut nut-chinh mt-10">Nạp gói chính sách…<input type="file" accept=".json" className="an" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void doc(f); }} /></label>
       ) : <p className="mo chu-nho">Chỉ tài khoản Quản trị nạp gói chính sách.</p>}
       {xem && (
-        <HopThoai tieuDe={`Kiểm tra gói: ${xem.tenTep}`} dong={() => setXem(null)} rong={720} chan={<><button className="nut" onClick={() => setXem(null)}>Hủy</button><button className="nut nut-chinh" disabled={!xem.goi} onClick={async () => {
+        <HopThoai tieuDe={`Kiểm tra gói: ${xem.tenTep}`} dong={() => setXem(null)} rong={720} chan={<><button className="nut" onClick={() => setXem(null)}>Hủy</button><button className="nut nut-chinh" disabled={!xem.goi || xem.ky.tt === "SAI" || (xem.ky.tt === "CHUA_KY" && !daDoiChieu)} onClick={async () => {
           const g = xem.goi!;
           const cs = g.cs as unknown as { ten?: string; ma: string; hieuLucTu: string; hieuLucDen?: string | null };
-          if (await napGoi({ khoa: g.khoa, ten: cs.ten ?? g.khoa, ma: cs.ma, hieuLucTu: cs.hieuLucTu, hieuLucDen: cs.hieuLucDen ?? null, sha256: g.sha256, tenTep: xem.tenTep, noiDung: g.noiDung, ...(g.ghiChu ? { ghiChu: g.ghiChu } : {}), ...(g.donGia ? { donGia: g.donGia } : {}), ...(g.bangGiaDat ? { bangGiaDat: g.bangGiaDat } : {}) })) {
+          if (await napGoi({ khoa: g.khoa, ten: cs.ten ?? g.khoa, ma: cs.ma, hieuLucTu: cs.hieuLucTu, hieuLucDen: cs.hieuLucDen ?? null, sha256: g.sha256, tenTep: xem.tenTep, noiDung: g.noiDung, ...(g.ghiChu ? { ghiChu: g.ghiChu } : {}), ...(g.donGia ? { donGia: g.donGia } : {}), ...(g.bangGiaDat ? { bangGiaDat: g.bangGiaDat } : {}), ...(xem.ky.tt === "DA_KY" ? { chuKy: { donVi: xem.ky.chuKy.donVi, nguoiKy: xem.ky.chuKy.nguoiKy, luc: xem.ky.chuKy.luc } } : {}) })) {
             bao(`Đã nạp gói "${g.khoa}"`);
             setXem(null);
           }
@@ -71,7 +78,17 @@ export function TheGoiChinhSach() {
           ) : (
             <>
               <div className="thong-bao thong-bao-xanh">Đúng cấu trúc bộ chính sách. Khóa: <b>{xem.goi!.khoa}</b></div>
-              <p>Mã kiểm tra SHA-256 (đối chiếu với đơn vị phát hành gói — gói chưa có chữ ký số):</p>
+              <div data-ky-goi-nap={xem.ky.tt} className="mt-8">
+                {xem.ky.tt === "DA_KY" && <div className="thong-bao thong-bao-xanh">Có chữ ký hợp lệ của tác giả phần mềm: <b>{xem.ky.chuKy.donVi}</b>, người ký {xem.ky.chuKy.nguoiKy}, ký lúc {ngayGio(xem.ky.chuKy.luc)}. Nội dung không bị sửa sau khi ký.</div>}
+                {xem.ky.tt === "SAI" && <div className="thong-bao thong-bao-do">Không nạp được: {xem.ky.lyDo}. Đề nghị lấy lại tệp gốc từ đơn vị phát hành.</div>}
+                {xem.ky.tt === "CHUA_KY" && (
+                  <div className="thong-bao thong-bao-vang">
+                    <b>Gói chưa có chữ ký</b> — phần mềm không xác định được ai phát hành, nội dung có bị sửa hay không. Chỉ nạp khi đã đối chiếu mã SHA-256 dưới đây với đơn vị phát hành gói (văn bản, điện thoại…).
+                    <label className="mt-8" style={{ display: "flex", gap: 6, alignItems: "center" }}><input type="checkbox" checked={daDoiChieu} onChange={(e) => setDaDoiChieu(e.target.checked)} />Tôi đã đối chiếu nguồn gốc và mã SHA-256 của gói</label>
+                  </div>
+                )}
+              </div>
+              <p>Mã kiểm tra SHA-256 (đối chiếu với đơn vị phát hành gói):</p>
               <p style={{ fontFamily: "monospace", wordBreak: "break-all" }}><b>{xem.goi!.sha256}</b></p>
               <p className="mo">Các mục khác bộ có sẵn: {xem.mucKhac.length ? xem.mucKhac.join(", ") : "không có"}.</p>
               <p className="mo">

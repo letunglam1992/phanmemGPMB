@@ -98,8 +98,20 @@ test("P2-1: nạp gói chính sách (mã SHA-256), chuyển dự án sang bộ m
   const kt = p.locator("[role=dialog]", { hasText: "Kiểm tra gói" }).last();
   await expect(kt).toContainText("Đúng cấu trúc bộ chính sách");
   await expect(kt.getByText(/^[0-9a-f]{64}$/)).toBeVisible();
+  // 1.0.18: gói chưa ký — cảnh báo, phải xác nhận đã đối chiếu mới nạp
+  await expect(kt.locator("[data-ky-goi-nap=CHUA_KY]")).toContainText("Gói chưa có chữ ký");
+  await expect(kt.getByRole("button", { name: "Nạp gói" })).toBeDisabled();
+  await kt.getByLabel("Tôi đã đối chiếu nguồn gốc và mã SHA-256 của gói").check();
   await kt.getByRole("button", { name: "Nạp gói" }).click();
   await expect(p.locator("td", { hasText: /^sonla-thu-e2e$/ })).toBeVisible();
+  await expect(p.locator("[data-ky-goi='sonla-thu-e2e']")).toHaveText("Chưa ký");
+  // gói có chữ ký không khớp (không do tác giả ký / đã sửa) → không nạp được
+  const gia = { dinhDang: "gpmb-goi-chinh-sach", chinhSach: { ...c, ma: "SONLA-THU-GIA" }, chuKy: { v: 1, donVi: "Tác giả phần mềm GPMB Sơn La", nguoiKy: "X", luc: "2026-10-17T00:00:00.000Z", ky: "A".repeat(86) } };
+  await p.locator("input[type=file][accept='.json']").setInputFiles({ name: "goi-gia.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(gia)) });
+  const kt2 = p.locator("[role=dialog]", { hasText: "Kiểm tra gói: goi-gia.json" }).last();
+  await expect(kt2.locator("[data-ky-goi-nap=SAI]")).toContainText("Chữ ký không khớp nội dung");
+  await expect(kt2.getByRole("button", { name: "Nạp gói" })).toBeDisabled();
+  await kt2.getByRole("button", { name: "Hủy" }).click();
   await p.keyboard.press("Escape");
   await p.keyboard.press("Alt+3");
   await p.locator("[role=tablist] button", { hasText: "Thông tin dự án" }).click();

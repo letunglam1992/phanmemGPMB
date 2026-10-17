@@ -70,6 +70,24 @@
   </div>
 
   <div class="the">
+    <b>Ký gói chính sách</b> <span class="mo">(dùng tệp khóa riêng ở mục 1 — phần mềm kiểm chữ ký khi nạp gói; gói không ký thì phần mềm cảnh báo)</span>
+    <label for="tepGoi">Tệp gói chính sách (.json)</label>
+    <input id="tepGoi" type="file" accept=".json">
+    <div class="hang">
+      <div>
+        <label for="donViGoi">Đơn vị phát hành</label>
+        <input id="donViGoi" value="Tác giả phần mềm GPMB Sơn La">
+      </div>
+      <div>
+        <label for="nguoiKyGoi">Người ký</label>
+        <input id="nguoiKyGoi" placeholder="Họ tên">
+      </div>
+    </div>
+    <button id="kyGoi">Ký gói, tải tệp đã ký</button>
+    <div id="ttGoi" class="mo"></div>
+  </div>
+
+  <div class="the">
     <b>Tạo cặp khóa mới</b> <span class="mo">(chỉ khi mất hoặc lộ khóa riêng — phải thay khóa công khai trong <code>apps/desktop/src/giay-phep-khoa.ts</code> và phát hành bản mới; mã đã cấp bằng khóa cũ hết hiệu lực)</span><br>
     <button id="taoKhoa" class="phu">Tạo cặp khóa mới</button>
     <textarea id="khoaCong" readonly placeholder="Khóa công khai sẽ hiện ở đây"></textarea>
@@ -221,6 +239,29 @@ ${dong.join("\n")}${dong.length ? "\n" : ""}];
       ds = [...ds, ...moi.filter((x) => x && x.ma && !co.has(x.ma))].sort((a, b) => (b.cap || "").localeCompare(a.cap || ""));
       luu();
     } catch { alert("Tệp không phải danh sách mã đã cấp."); }
+  };
+  // Ký gói chính sách — cùng cách với apps/desktop/src/ky-goi.ts:
+  // nội dung ký = "GPMB-GOI-CS1\n" + JSON.stringify(gói bọc, bỏ chuKy) + "\n" + JSON.stringify({ v, donVi, nguoiKy, luc })
+  const DINH_DANG_GOI = "gpmb-goi-chinh-sach";
+  $("kyGoi").onclick = async () => {
+    $("ttGoi").textContent = "";
+    const f = $("tepGoi").files[0];
+    const donVi = $("donViGoi").value.trim(), nguoiKy = $("nguoiKyGoi").value.trim();
+    if (!khoa) return ($("ttGoi").innerHTML = '<span class="loi">Chưa nạp tệp khóa riêng (mục 1).</span>');
+    if (!f) return ($("ttGoi").innerHTML = '<span class="loi">Chưa chọn tệp gói.</span>');
+    if (!donVi || !nguoiKy) return ($("ttGoi").innerHTML = '<span class="loi">Nhập đơn vị phát hành và người ký.</span>');
+    let v;
+    try { v = JSON.parse(await f.text()); } catch { return ($("ttGoi").innerHTML = '<span class="loi">Tệp không phải JSON.</span>'); }
+    let goi;
+    if (v && v.dinhDang === DINH_DANG_GOI) { const { chuKy, ...con } = v; goi = con; } else goi = { dinhDang: DINH_DANG_GOI, chinhSach: v };
+    const cs = goi.chinhSach || {};
+    if (!cs.ma || !cs.hieuLucTu) return ($("ttGoi").innerHTML = '<span class="loi">Tệp không có mã (ma), ngày hiệu lực (hieuLucTu) của bộ chính sách.</span>');
+    const tt = { v: 1, donVi, nguoiKy, luc: new Date().toISOString() };
+    const than = new TextEncoder().encode(`GPMB-GOI-CS1\n${JSON.stringify(goi)}\n${JSON.stringify(tt)}`);
+    const ky = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, khoa, than);
+    const ten = f.name.replace(/\.json$/i, "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").replace(/[^A-Za-z0-9._-]+/g, "-") + "_da-ky.json";
+    tai(ten, JSON.stringify({ ...goi, chuKy: { ...tt, ky: b64u(ky) } }, null, 2), "application/json");
+    $("ttGoi").textContent = `Đã ký gói ${cs.ma} (${ten}). Gửi tệp này cho các đơn vị nạp ở Cài đặt chung → Gói chính sách.`;
   };
   ve();
   $("chep").onclick = () => navigator.clipboard.writeText($("ketQua").value);

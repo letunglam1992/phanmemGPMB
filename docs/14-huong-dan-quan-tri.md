@@ -5,7 +5,7 @@
 - Bộ cài `GPMB Son La_x.y.z_x64-setup.exe` (cài theo người dùng, không cần quyền quản trị máy; kèm WebView2 nếu máy chưa có). Chưa có chữ ký số → Windows SmartScreen có thể cảnh báo: chọn "More info" → "Run anyway" (hoặc nhờ bộ phận CNTT cho phép).
 - **Nâng cấp:** tạo bản sao lưu thủ công trước; cài bản mới đè lên bản cũ (không cần gỡ). Mạng nội bộ: nâng cấp máy chủ trước, sau đó các máy trạm.
 - Thư mục dữ liệu: `%LOCALAPPDATA%\vn.sonla.gpmb\` — máy đơn (từ 0.6.0) trong `may-don\gpmb-may-don.sqlite`; máy chủ trong `may-chu\`; dữ liệu máy đơn bản ≤ 0.5 trong WebView2 (IndexedDB — tự chuyển sang SQLite lần đầu mở 0.6.0, bản cũ giữ nguyên). **Gỡ cài đặt có thể xóa dữ liệu máy đơn** — sao lưu trước khi gỡ.
-- Gói chính sách (0.7.0): Cài đặt chung → Gói chính sách — chỉ Quản trị nạp; **gói chưa có chữ ký số**, đối chiếu mã SHA-256 hiển thị với đơn vị phát hành trước khi nạp. Không gỡ được gói đã nạp.
+- Gói chính sách (0.7.0): Cài đặt chung → Gói chính sách — chỉ Quản trị nạp; từ 1.0.18 gói do tác giả phát hành **có chữ ký** (phần mềm hiện "Đã ký: …"); **gói chưa ký** thì cảnh báo — đối chiếu mã SHA-256 với đơn vị phát hành, đánh dấu "Tôi đã đối chiếu…" mới nạp được; chữ ký sai (tệp đã bị sửa) thì không nạp (QD-35). Không gỡ được gói đã nạp.
 - Tệp đính kèm (0.7.0): ≤ 20 MB mỗi tệp, nằm trong CSDL và trong tệp sao lưu `.gpmb` (bản sao lưu lớn hơn khi nhiều tệp).
 - Phân công (0.8.0): mọi tài khoản thấy danh sách cán bộ (họ tên, chức vụ) để phân công hồ sơ — tài khoản đã khóa không hiện trong danh sách chọn. Phân công không thay đổi quyền.
 - Người có đất nhiều hồ sơ (0.8.0): so khớp số định danh giữa các dự án (đơn vị đã nhất trí, QD-27) chạy trên máy trạm với dữ liệu trong mạng nội bộ; màn hình che giữa số định danh. Khi cung cấp dữ liệu cho bên ngoài vẫn phải tuân thủ quy định bảo vệ dữ liệu cá nhân.
@@ -64,6 +64,7 @@ Xem docs/11. Tóm tắt: máy chủ đặt IP tĩnh, bật phần mềm trong gi
 - Chưa kích hoạt: dùng đủ chức năng với **1 dự án** (dự án mẫu ẩn danh, dự án trong thùng rác không tính).
 - Mỗi máy (hoặc máy chủ mạng nội bộ) có **Mã cài đặt** (Giới thiệu, bản quyền → Bản quyền sử dụng). Mã này không đi theo bản sao lưu: chuyển sang máy mới thì máy mới có mã khác, cần cấp mã kích hoạt mới.
 - **Tác giả cấp mã:** mở `tools/giay-phep/cap-ma.html` bằng trình duyệt (chạy trên máy, không gửi gì ra ngoài) → chọn tệp khóa riêng `gpmb-khoa-cap-ma.json` → nhập tên đơn vị, mã cài đặt, số dự án (trống = không giới hạn), hạn dùng (trống = không thời hạn) → "Cấp mã kích hoạt" → gửi mã `GPMB1.…` cho đơn vị.
+- **Tác giả ký gói chính sách (1.0.18):** cùng trang `cap-ma.html`, sau khi chọn tệp khóa riêng → mục "Ký gói chính sách": chọn tệp gói `.json`, ghi đơn vị phát hành, người ký → "Ký gói, tải tệp đã ký" (tệp `…_da-ky.json`) → gửi tệp này cho các đơn vị. Sửa bất kỳ số nào trong tệp đã ký thì chữ ký hết hợp lệ — sửa thì ký lại.
 - **Đơn vị kích hoạt:** tài khoản Quản trị dán mã vào ô "Mã kích hoạt" → Kích hoạt (ghi nhật ký hệ thống).
 - Hết hạn: dự án đã có vẫn xem, sửa, xuất; chỉ không thêm dự án vượt mức dùng thử. Gia hạn: cấp mã mới (cùng mã cài đặt), dán đè.
 - **Phiếu cấp mã (1.0.11):** sau khi cấp, bấm "Phiếu cấp mã (Word)" (hoặc "Phiếu" ở dòng trong danh sách) → tệp `.doc` có đơn vị, mã cài đặt, số dự án, hạn, mã kích hoạt, cách nhập, chỗ ký — mở bằng Word để in, gửi đơn vị.

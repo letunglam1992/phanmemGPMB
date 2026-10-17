@@ -799,7 +799,7 @@ export function NhaCungCap({ children, kho: khoVao, chiXem, phienDau }: { childr
       }
       dangKyGoi(ds);
       setGoiDaNap(ds);
-      await ghiNhatKy("Nạp gói chính sách", `${g.khoa} — ${g.ten} (mã ${g.ma}, hiệu lực từ ${g.hieuLucTu}); tệp ${g.tenTep}; SHA-256 ${g.sha256}`);
+      await ghiNhatKy("Nạp gói chính sách", `${g.khoa} — ${g.ten} (mã ${g.ma}, hiệu lực từ ${g.hieuLucTu}); tệp ${g.tenTep}; SHA-256 ${g.sha256}; ${g.chuKy ? `chữ ký hợp lệ: ${g.chuKy.donVi}, người ký ${g.chuKy.nguoiKy}, ${g.chuKy.luc.slice(0, 10)}` : "gói chưa ký — người nạp xác nhận đã đối chiếu nguồn gốc"}`);
       return true;
     },
     chuyenBoChinhSach: async (duAnId, khoa, tomTat) => {

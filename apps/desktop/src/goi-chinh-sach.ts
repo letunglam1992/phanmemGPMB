@@ -1,7 +1,8 @@
 /**
  * Gói chính sách nạp được (P2-1): bộ chính sách (BoChinhSach — mức hỗ trợ, tỷ lệ, cách tính có căn cứ) dạng tệp JSON,
- * Quản trị nạp vào phần mềm mà không phải phát hành lại. CHƯA KÝ SỐ (theo quyết định người dùng): mỗi gói có mã kiểm tra
- * SHA-256 để đối chiếu với đơn vị phát hành gói; phần mềm không xác thực được nguồn gốc gói.
+ * Quản trị nạp vào phần mềm mà không phải phát hành lại. Mỗi gói có mã kiểm tra SHA-256 để đối chiếu với đơn vị phát
+ * hành. 1.0.18: gói có thể có chữ ký của tác giả (ky-goi.ts) — chữ ký đúng: ghi nhận nguồn; chưa ký: cảnh báo, cán bộ xác
+ * nhận đã đối chiếu mới nạp; chữ ký sai: không nạp.
  * Kiểm tra khi nạp: đúng cấu trúc so với bộ chính sách có sẵn (đủ mục, đúng kiểu), có mã, ngày hiệu lực; chạy thử tính toán.
  * 1.0.7: gói dạng bọc có thể kèm bảng đơn giá (`donGia`: { canCu, dong[] } — thay nhóm QĐ32/PL VIII/PL V tương ứng) và
  * bảng giá đất (`bangGiaDat`: cùng cấu trúc bảng NQ 152 trong policy/nguon) cho dự án dùng bộ chính sách của gói.
@@ -35,6 +36,8 @@ export interface GoiDaNap {
   donGia?: string;
   /** Bảng giá đất kèm gói (JSON BangGiaDat) */
   bangGiaDat?: string;
+  /** 1.0.18: chữ ký của tác giả đã kiểm đúng khi nạp (không có = gói chưa ký, nạp sau khi cán bộ xác nhận) */
+  chuKy?: { donVi: string; nguoiKy: string; luc: string };
 }
 
 export async function sha256Hex(s: string): Promise<string> {

@@ -25,7 +25,7 @@ Giá gạo, hạn mức giao đất NN, hệ số giá đất (theo dự án); l
 | 4 | Lập trình | Phát hành bộ cài mới (GitHub Actions) |
 | 5 | Người dùng | Cài bản mới; dự án mới chọn bộ chính sách mới; dự án đang làm: quyết định có chuyển sang bộ mới hay không theo quy định chuyển tiếp của văn bản |
 
-Từ 0.7.0 có thể **nạp gói chính sách** không cần bản cài mới (Cài đặt chung → Gói chính sách, Quản trị; chưa ký số — đối chiếu mã SHA-256 với đơn vị phát hành). Từ 1.0.7 gói dạng bọc kèm được bảng đơn giá, bảng giá đất:
+Từ 0.7.0 có thể **nạp gói chính sách** không cần bản cài mới (Cài đặt chung → Gói chính sách, Quản trị; từ 1.0.18 gói do tác giả ký thì phần mềm tự kiểm chữ ký, gói chưa ký thì cảnh báo và phải đối chiếu mã SHA-256 với đơn vị phát hành — QD-35). Từ 1.0.7 gói dạng bọc kèm được bảng đơn giá, bảng giá đất:
 
 ```json
 {

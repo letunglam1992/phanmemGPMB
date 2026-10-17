@@ -9,6 +9,7 @@ import { xuatExcelChiTra, xuatExcelDuAn, xuatPhieuDoiChieu } from "../xuat-excel
 import { useMauExcel } from "./MauExcel";
 import { homNayIso } from "../trang-thai";
 import { xuatTienDoThuTuc } from "../tien-do-thu-tuc";
+import { GOI_CO_SAN } from "../goi-chinh-sach";
 import { CAN_CU_TRUOC_THAM_DINH, kiemTraTruocThamDinh } from "../thu-tuc-ban";
 import { hanGuiQdBan, hanPheDuyetBan, hanThamDinhBan, ngayToTrinhPA, type TinhHan } from "../han-buoc";
 import { hoHieuLuc } from "../mo-hinh";
@@ -543,10 +544,14 @@ function HopHuy({ p, dong: dongHop, luu }: { p: PhienBanPA; dong: () => void; lu
 
 function HopXem({ p, dong: dongHop }: { p: PhienBanPA; dong: () => void }) {
   const [mo, setMo] = useState<string | null>(null);
+  const { goiDaNap } = useUngDung();
+  // 1.0.18: nguồn bộ chính sách của bản — có sẵn trong phần mềm, gói đã ký, hoặc gói chưa ký
+  const goi = goiDaNap.find((g) => g.khoa === p.boChinhSach);
+  const nguonBo = GOI_CO_SAN.includes(p.boChinhSach) ? "có sẵn trong phần mềm" : goi?.chuKy ? `gói đã ký — ${goi.chuKy.donVi}, ${goi.chuKy.luc.slice(0, 10).split("-").reverse().join("/")}` : goi ? "gói chưa ký" : "chưa nạp trên máy này";
   return (
     <HopThoai tieuDe={`Bản ${p.so}: ${p.ten}`} dong={dongHop} rong={980}>
       <div className="mo mb-8">
-        {tenTrangThai(p)} · chốt {new Date(p.luc).toLocaleString("vi-VN", { hour12: false })} ({p.nguoi}) · bộ chính sách {p.boChinhSach} · giá gạo {p.thamSoDuAn.giaGao?.dongKg ?? "—"} đ/kg · hệ số giá đất {p.thamSoDuAn.heSoGiaDat?.heSo ?? "1"}
+        {tenTrangThai(p)} · chốt {new Date(p.luc).toLocaleString("vi-VN", { hour12: false })} ({p.nguoi}) · bộ chính sách {p.boChinhSach} <span data-nguon-bo>({nguonBo})</span> · giá gạo {p.thamSoDuAn.giaGao?.dongKg ?? "—"} đ/kg · hệ số giá đất {p.thamSoDuAn.heSoGiaDat?.heSo ?? "1"}
         {p.ho.some((h) => h.duLieu.boChinhSach && h.duLieu.boChinhSach !== p.boChinhSach) && <> · bộ riêng: {p.ho.filter((h) => h.duLieu.boChinhSach && h.duLieu.boChinhSach !== p.boChinhSach).map((h) => `${h.ma} (${h.duLieu.boChinhSach})`).join(", ")}</>}
         {p.thamDinh && <div>Thẩm định: {TEN_Y_KIEN_TD[p.thamDinh.yKien]} — {moTaQd(p.thamDinh)}{p.thamDinh.coQuan ? ` của ${p.thamDinh.coQuan}` : ""}{p.thamDinh.noiDung ? `. ${p.thamDinh.noiDung}` : ""}</div>}
       </div>
