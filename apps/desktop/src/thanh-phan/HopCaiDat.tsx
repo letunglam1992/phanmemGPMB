@@ -2,6 +2,7 @@ import { ONgay } from "./ONgay";
 import { useEffect, useState, type ReactNode } from "react";
 import { TheMangNoiBo } from "./KetNoi";
 import { coVoWindows, moThuMucSaoLuu, thuMucSaoLuu, type CaiDatTuDong } from "../tu-dong-sao-luu";
+import { NHAC_NGOAI_MAC_DINH } from "../cat-ngoai";
 import { useUngDung } from "../ung-dung";
 import { HopThoai, O } from "./chung";
 import { OSo } from "./OSo";
@@ -290,7 +291,9 @@ function TheTuDong() {
         <span />
         <label className="chu-nho">Chu kỳ (ngày) <input type="number" min={1} max={30} disabled={!choSua} value={ban.soNgay} onChange={(e) => setBan({ ...ban, soNgay: Math.min(30, Math.max(1, Number(e.target.value) || 1)) })} style={{ width: 80 }} /></label>
         <label className="chu-nho">Số bản giữ lại <input type="number" min={1} max={100} disabled={!choSua} value={ban.giuLai} onChange={(e) => setBan({ ...ban, giuLai: Math.min(100, Math.max(1, Number(e.target.value) || 1)) })} style={{ width: 80 }} /></label>
+        <label className="chu-nho" title="Nhắc ở Tổng quan, chuông khi quá số ngày này chưa cất bản sao lưu ra USB, ổ cứng ngoài, ổ mạng nội bộ">Nhắc cất ra thiết bị khác sau (ngày) <input type="number" min={1} max={90} disabled={!choSua} aria-label="Nhắc cất bản sao lưu ra thiết bị khác sau (ngày)" value={ban.nhacNgoaiNgay ?? NHAC_NGOAI_MAC_DINH} onChange={(e) => setBan({ ...ban, nhacNgoaiNgay: Math.min(90, Math.max(1, Number(e.target.value) || 1)) })} style={{ width: 80 }} /></label>
       </div>
+      <p className="mo chu-nho mt-4">Thư mục tự động sao lưu đặt ở ổ khác ổ dữ liệu (vd. D:, ổ mạng \\máy-chủ\…) thì mỗi lần tự động sao lưu được tính là đã cất ra thiết bị khác.</p>
       <div className="o-nhap mt-10">
         <label>Thư mục lưu (bỏ trống = Documents\GPMB Son La\Sao luu)</label>
         <input disabled={!choSua} value={ban.thuMuc} placeholder="vd. D:\SaoLuuGPMB hoặc \\may-chu\chia-se\GPMB" onChange={(e) => setBan({ ...ban, thuMuc: e.target.value })} />

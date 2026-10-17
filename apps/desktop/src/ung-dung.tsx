@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { KHOA_KHOI_PHUC, KHOA_TU_DONG, MAC_DINH_TU_DONG, cachTuDong, coVoWindows, denHan, saoLuuTuDong, type CaiDatTuDong } from "./tu-dong-sao-luu";
+import { KHOA_KHOI_PHUC, KHOA_TU_DONG, MAC_DINH_TU_DONG, cachTuDong, coVoWindows, denHan, saoLuuTuDong, thuMucSaoLuu, type CaiDatTuDong } from "./tu-dong-sao-luu";
+import { docCatNgoai, ghiCatNgoai, laNoiNgoai, type LanCatNgoai } from "./cat-ngoai";
 import type { BoChinhSach } from "@gpmb/core";
 import { BO_CHINH_SACH } from "./du-lieu";
 import { taoKhoIndexedDb, type CanBo, type Kho } from "./kho";
@@ -111,6 +112,9 @@ interface NguCanh {
   hopSaoLuu: boolean;
   moSaoLuu: (mo: boolean) => void;
   lanSaoLuu: string | null;
+  /** 1.0.19 (B3): lần cất bản sao lưu ra thiết bị khác gần nhất (theo máy) */
+  catNgoai: LanCatNgoai | null;
+  datCatNgoai: (x: LanCatNgoai) => void;
   datLanSaoLuu: (luc: string) => void;
   /** Tài khoản đang đăng nhập (null = chưa đăng nhập). */
   taiKhoan: NguoiDung | null;
@@ -269,6 +273,7 @@ export function NhaCungCap({ children, kho: khoVao, chiXem, phienDau }: { childr
   };
   const [hopSaoLuu, moSaoLuu] = useState(false);
   const [lanSaoLuu, setLanSaoLuu] = useState<string | null>(() => docLanSaoLuu());
+  const [catNgoai, setCatNgoai] = useState<LanCatNgoai | null>(() => docCatNgoai());
 
   const taiLai = useCallback(async () => {
     if (laKhoMang(kho) && !kho.coPhien()) return; // máy chủ: chỉ tải sau khi đăng nhập
@@ -427,6 +432,12 @@ export function NhaCungCap({ children, kho: khoVao, chiXem, phienDau }: { childr
         const moi = await saoLuuTuDong(kho, c);
         await kho.luuCaiDat(KHOA_TU_DONG, moi);
         setTuDong(moi);
+        // 1.0.19 (B3): thư mục tự động sao lưu ở ổ khác / ổ mạng → tính là đã cất ra thiết bị khác
+        if (moi.lanCuoi !== c.lanCuoi && moi.tepCuoi && c.thuMuc && laNoiNgoai(moi.tepCuoi, await thuMucSaoLuu("").catch(() => "")) === true) {
+          const x = { luc: moi.lanCuoi!, noi: moi.tepCuoi };
+          ghiCatNgoai(x);
+          setCatNgoai(x);
+        }
         await kho.ghiNhatKy({ nguoi: "he-thong", hoTen: "Tự động", hanhDong: moi.lanCuoi !== c.lanCuoi ? "Tự động sao lưu" : "Tự động sao lưu không thành công", chiTiet: moi.lanCuoi !== c.lanCuoi ? moi.tepCuoi : moi.loiCuoi });
         return moi;
       } finally {
@@ -636,6 +647,11 @@ export function NhaCungCap({ children, kho: khoVao, chiXem, phienDau }: { childr
     hopSaoLuu,
     moSaoLuu,
     lanSaoLuu,
+    catNgoai,
+    datCatNgoai: (x) => {
+      ghiCatNgoai(x);
+      setCatNgoai(x);
+    },
     datLanSaoLuu: (luc) => {
       ghiLanSaoLuu(luc);
       setLanSaoLuu(luc);

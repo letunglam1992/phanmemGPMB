@@ -6,14 +6,17 @@ import { HopThoai } from "./chung";
 import { taiXuong } from "../tai-xuong";
 import { LoiCanMatKhau, LoiSaoLuu, docBanSaoLuu, thongTinMaHoa, khoiPhuc, maHoaBanSaoLuu, taoBanSaoLuu, tenTepSaoLuu, type BanSaoLuu, type ThongTinMaHoa } from "../sao-luu";
 import { loiMatKhau, moTaCachMo, type KhoaKhoiPhuc } from "../ma-hoa";
-import { KHOA_KHOI_PHUC, cachTuDong, dpapiMoNeuCo } from "../tu-dong-sao-luu";
+import { KHOA_KHOI_PHUC, cachTuDong, coVoWindows, dpapiMoNeuCo, thuMucSaoLuu } from "../tu-dong-sao-luu";
+import { laNoiNgoai, oCua } from "../cat-ngoai";
 
 const ZIP = "application/octet-stream";
 const ngayGio = (iso: string) => new Date(iso).toLocaleString("vi-VN", { hour12: false });
 
 /** Hộp thoại sao lưu, khôi phục dữ liệu. Tệp chỉ tạo/đọc trên máy, không gửi ra ngoài. */
 export function HopSaoLuu() {
-  const { kho, moSaoLuu, lanSaoLuu, datLanSaoLuu, taiLai, di, dsDuAn, hoCua, quyen, ghiNhatKy, duocThemDuAn } = useUngDung();
+  const { kho, moSaoLuu, lanSaoLuu, datLanSaoLuu, catNgoai, datCatNgoai, taiLai, di, dsDuAn, hoCua, quyen, ghiNhatKy, duocThemDuAn } = useUngDung();
+  /** 1.0.19 (B3): tệp vừa sao lưu chưa xác định đã ở thiết bị khác → cán bộ xác nhận sau khi chép */
+  const [choXacNhanNgoai, setChoXacNhanNgoai] = useState<string | null>(null);
   const [dangLam, setDangLam] = useState(false);
   const [thongBao, setThongBao] = useState<{ loai: "ok" | "loi"; noiDung: string } | null>(null);
   const [ban, setBan] = useState<{ ten: string; ban: BanSaoLuu; maHoa: boolean } | null>(null);
@@ -36,7 +39,8 @@ export function HopSaoLuu() {
     const khoiPhucKhoa = await kho.docCaiDat<KhoaKhoiPhuc>(KHOA_KHOI_PHUC);
     const bytes = matKhau === "KHONG" ? ban.bytes : await maHoaBanSaoLuu(ban, matKhau ? { matKhau, khoiPhuc: khoiPhucKhoa } : await cachTuDong(kho));
     // null: cán bộ bấm Hủy ở hộp thoại chọn nơi lưu
-    return (await taiXuong(bytes, tenTepSaoLuu(ban.thongTin.luc, tienTo), ZIP)) ? ban.thongTin : null;
+    const duongDan = await taiXuong(bytes, tenTepSaoLuu(ban.thongTin.luc, tienTo), ZIP);
+    return duongDan ? { ...ban.thongTin, duongDan } : null;
   };
 
   const taoBan = async () => {
@@ -48,10 +52,16 @@ export function HopSaoLuu() {
       const tt = await saoLuu(khongMaHoa ? "GPMB-KHONG-MA-HOA" : undefined, khongMaHoa ? "KHONG" : mk);
       if (!tt) return setThongBao({ loai: "loi", noiDung: "Đã hủy — chưa tạo bản sao lưu." });
       datLanSaoLuu(tt.luc);
+      // 1.0.19 (B3): lưu vào ổ khác ổ dữ liệu / ổ mạng → ghi nhận đã cất ra thiết bị khác; không xác định → hỏi cán bộ
+      const ngoai = coVoWindows() ? laNoiNgoai(tt.duongDan, await thuMucSaoLuu("").catch(() => "")) : null;
+      if (ngoai) {
+        datCatNgoai({ luc: tt.luc, noi: tt.duongDan });
+        setChoXacNhanNgoai(null);
+      } else setChoXacNhanNgoai(tt.luc);
       await ghiNhatKy(khongMaHoa ? "Xuất bản sao lưu KHÔNG MÃ HÓA" : "Tạo bản sao lưu (mã hóa)", `${tt.soDuAn} dự án, ${tt.soHo} hồ sơ, ${tt.soBanDo} bản đồ, ${tt.soMau} mẫu`);
       setMk("");
       setMk2("");
-      setThongBao({ loai: "ok", noiDung: `Đã tạo bản sao lưu: ${tt.soDuAn} dự án, ${tt.soHo} hồ sơ, ${tt.soBanDo} bản đồ, ${tt.soMau} mẫu tự chỉnh${tt.soLichSu ? `, ${tt.soLichSu} bản lịch sử thay đổi` : ""}. Hãy cất tệp .gpmb ra thiết bị khác (USB, ổ mạng nội bộ).` });
+      setThongBao({ loai: "ok", noiDung: `Đã tạo bản sao lưu: ${tt.soDuAn} dự án, ${tt.soHo} hồ sơ, ${tt.soBanDo} bản đồ, ${tt.soMau} mẫu tự chỉnh${tt.soLichSu ? `, ${tt.soLichSu} bản lịch sử thay đổi` : ""}. ${ngoai ? ` Tệp đã ghi ra thiết bị khác (${oCua(tt.duongDan)}).` : " Hãy cất tệp .gpmb ra thiết bị khác (USB, ổ mạng nội bộ)."}` });
     } catch (e) {
       setThongBao({ loai: "loi", noiDung: `Không tạo được bản sao lưu: ${(e as Error).message}` });
     } finally {
@@ -128,6 +138,7 @@ export function HopSaoLuu() {
         <h3 className="mt-0">Tạo bản sao lưu</h3>
         <div className="mo-ta">
           Dữ liệu hiện có: {dsDuAn.length} dự án, {soHoHienCo} hồ sơ. Lần sao lưu gần nhất: <b>{lanSaoLuu ? ngayGio(lanSaoLuu) : "chưa có"}</b>.
+          <br /><span data-cat-ngoai>Lần cất ra thiết bị khác (USB, ổ mạng) gần nhất: <b>{catNgoai ? ngayGio(catNgoai.luc) : "chưa có"}</b>{catNgoai ? <span className="mo"> — {catNgoai.noi}</span> : null}</span>
         </div>
         <div className="luoi luoi-2 mt-10">
           <div className="o-nhap"><label>Mật khẩu sao lưu</label><input type="password" autoComplete="new-password" disabled={khongMaHoa} value={mk} onChange={(e) => setMk(e.target.value)} /></div>
@@ -150,6 +161,16 @@ export function HopSaoLuu() {
         <button className="nut nut-chinh mt-10" disabled={dangLam || !dsDuAn.length || !!loiMk || (khongMaHoa && !xnKhongMaHoa)} onClick={taoBan}>
           {khongMaHoa ? "Tạo bản sao lưu KHÔNG mã hóa" : "Tạo bản sao lưu mã hóa (.gpmb)"}
         </button>
+        {choXacNhanNgoai && (
+          <div className="thong-bao thong-bao-vang chu-nho mt-10" data-xac-nhan-ngoai>
+            Tệp vừa tạo nằm cùng ổ đĩa với dữ liệu (hoặc không xác định được). Sau khi chép tệp ra USB, ổ cứng ngoài hoặc ổ mạng nội bộ, bấm xác nhận để phần mềm ghi nhận.
+            <div><button className="nut nut-nho mt-4" onClick={async () => {
+              datCatNgoai({ luc: new Date().toISOString(), noi: "Cán bộ xác nhận đã chép ra thiết bị khác" });
+              setChoXacNhanNgoai(null);
+              await ghiNhatKy("Xác nhận cất bản sao lưu ra thiết bị khác", `bản sao lưu lúc ${ngayGio(choXacNhanNgoai)}`);
+            }}>Tôi đã chép tệp ra thiết bị khác</button></div>
+          </div>
+        )}
       </div>}
 
       {!quyen("KHOI_PHUC") && <p className="mo chu-nho">Khôi phục dữ liệu chỉ dành cho tài khoản Quản trị.</p>}

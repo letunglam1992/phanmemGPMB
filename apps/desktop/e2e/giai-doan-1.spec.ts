@@ -88,6 +88,11 @@ test("P0-5: sao lưu bắt buộc mật khẩu; mở tệp mã hóa bằng mật
   await hop.locator("input[type=password]").nth(1).fill("Gpmb-sao-luu-2026");
   await nut.click();
   await expect(hop.locator("[role=status]")).toContainText("Đã tạo bản sao lưu");
+  // 1.0.19 (B3): trình duyệt không xác định được ổ đĩa → cán bộ xác nhận đã chép ra thiết bị khác
+  await expect(hop.locator("[data-cat-ngoai]")).toContainText("chưa có");
+  await hop.locator("[data-xac-nhan-ngoai]").getByRole("button", { name: "Tôi đã chép tệp ra thiết bị khác" }).click();
+  await expect(hop.locator("[data-xac-nhan-ngoai]")).toHaveCount(0);
+  await expect(hop.locator("[data-cat-ngoai]")).toContainText("Cán bộ xác nhận đã chép ra thiết bị khác");
   const b64 = await p.evaluate(() => (window as unknown as { __tep: string }).__tep);
   await hop.locator("input[type=file]").setInputFiles({ name: "sl.gpmb", mimeType: "application/octet-stream", buffer: Buffer.from(b64, "base64") });
   await hop.getByPlaceholder(/Mật khẩu sao lưu hoặc/).fill("sai-mat-khau-1");

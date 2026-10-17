@@ -24,6 +24,8 @@ export interface CaiDatTuDong {
   loiCuoi?: string;
   /** Lần thử gần nhất (để không thử lại liên tục khi lỗi — chờ 6 giờ). */
   thuLuc?: string;
+  /** 1.0.19 (B3): số ngày nhắc cất bản sao lưu ra thiết bị khác (cat-ngoai.ts); trống = 7 */
+  nhacNgoaiNgay?: number;
 }
 
 export const MAC_DINH_TU_DONG: CaiDatTuDong = { bat: true, soNgay: 1, giuLai: 10, thuMuc: "" };

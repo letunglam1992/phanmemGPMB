@@ -6,7 +6,7 @@ import type { GiaiDoanTyLe } from "../chi-tra";
 import { D } from "@gpmb/core";
 import { useUngDung } from "../ung-dung";
 import { tinhHo } from "../tinh-ho";
-import { canhBaoSaoLuu } from "../sao-luu";
+import { canhBaoCatNgoai } from "../cat-ngoai";
 import { canhBaoChung, canhBaoDuAn, homNayIso, thongKe } from "../trang-thai";
 import { useChoNhan } from "../tong-hop-tinh/phien-tinh";
 import { layTienDoNen, ngheTinhNen, tinhNen, type ViecTinh } from "../tinh-nen";
@@ -41,7 +41,7 @@ function tongHopNho(...vao: ThamSo) {
 
 /** Số liệu tổng hợp mọi dự án + danh sách cảnh báo (dùng ở Tổng quan và chuông thông báo trên thanh tiêu đề). */
 export function useTongHop() {
-  const { dsDuAn, hoCua, chinhSach, lich, tyLeCham, lanSaoLuu, quyen, di, moCaiDat, moSaoLuu, khoaKhoiPhuc } = useUngDung();
+  const { dsDuAn, hoCua, chinhSach, lich, tyLeCham, catNgoai, tuDong, quyen, di, moCaiDat, moSaoLuu, khoaKhoiPhuc } = useUngDung();
   const homNay = homNayIso();
   // 1.0.7: nhiều hộ chưa tính (lần mở đầu với dữ liệu lớn) → tính nền từng lát, tổng hợp khi xong (`lan` tăng)
   const lanNen = useSyncExternalStore(ngheTinhNen, () => layTienDoNen().lan);
@@ -58,7 +58,8 @@ export function useTongHop() {
   }, [dsDuAn, hoCua, chinhSach, homNay, lich, tyLeCham, lanNen]);
   const duLieu = tinh ?? [];
   const choNhan = useChoNhan();
-  const nhacSaoLuu = quyen("SAO_LUU") ? canhBaoSaoLuu(lanSaoLuu, homNay, dsDuAn.length > 0) : null;
+  // 1.0.19 (B3): nhắc cất bản sao lưu ra thiết bị khác theo chu kỳ đơn vị đặt (thay nhắc sao lưu 7 ngày)
+  const nhacSaoLuu = quyen("SAO_LUU") ? canhBaoCatNgoai(catNgoai, homNay, dsDuAn.length > 0, tuDong.nhacNgoaiNgay) : null;
   const canhBao: MucCanhBao[] = [
     ...canhBaoChung(homNay, lich, quyen("KHOI_PHUC") && !khoaKhoiPhuc && dsDuAn.length > 0).map((c) => ({ ...c, muc: c.muc ?? ("CAO" as const), duAnId: "" })),
     ...(nhacSaoLuu ? [{ noiDung: nhacSaoLuu, canCu: "Bấm để mở Sao lưu, khôi phục", muc: "TRUNG_BINH" as const, duAnId: "", saoLuu: true }] : []),
