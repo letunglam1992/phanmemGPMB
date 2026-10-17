@@ -695,6 +695,13 @@ async fn may_chu_dinh_kem() {
     let ld = m.dang_nhap("ld", "Matkhau2026").await;
     assert_eq!(m.goi("PUT", "/api/cai-dat/goiChinhSach", Some(&ld), json!([])).await.0, 403);
     assert_eq!(m.goi("PUT", "/api/cai-dat/goiChinhSach", Some(&qt), json!([])).await.0, 200);
+    // 1.0.18 (B1b): gói chưa ký lưu được; gói ghi "đã ký" mà chữ ký giả → 400, không ghi
+    let chua_ky = json!([{ "khoa": "thu", "noiDung": "{}" }]);
+    assert_eq!(m.goi("PUT", "/api/cai-dat/goiChinhSach", Some(&qt), chua_ky).await.0, 200);
+    let gia = json!([{ "khoa": "thu", "noiDung": "{}" }, { "khoa": "gia", "noiDung": "{}", "chuKy": { "donVi": "Tác giả", "nguoiKy": "X", "luc": "2026-10-17", "ky": "AAAA", "banKy": "AAAA" } }]);
+    let (ma, kq) = m.goi("PUT", "/api/cai-dat/goiChinhSach", Some(&qt), gia).await;
+    assert_eq!(ma, 400);
+    assert!(kq.to_string().contains("chữ ký không hợp lệ"), "{kq}");
     assert_eq!(m.goi("PUT", "/api/cai-dat/lichLamViec", Some(&ld), json!({})).await.0, 200);
     d.handle.shutdown();
     let _ = std::fs::remove_dir_all(&dir);

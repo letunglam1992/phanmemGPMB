@@ -7,7 +7,8 @@ import { fileURLToPath } from "node:url";
 
 export function tachMuc(md) {
   const muc = [];
-  for (const k of md.split(/^## /m).slice(1)) {
+  // 1.0.18: máy Windows (CI) lấy tệp về với xuống dòng CRLF — chuẩn hóa để ghi chú phát hành (latest.json) không có \r
+  for (const k of md.replace(/\r\n?/g, "\n").split(/^## /m).slice(1)) {
     const [dau, ...than] = k.split("\n");
     muc.push({ pb: dau.trim(), noiDung: than.join("\n").trim() });
   }

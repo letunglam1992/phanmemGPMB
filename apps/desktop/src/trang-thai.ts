@@ -14,7 +14,7 @@ import { CAC_BUOC, daQuaBuoc, hoHieuLuc, tienDoHo, type DuAn, type Ho } from "./
 import type { KetQuaHo } from "./tinh-ho";
 
 import { hoDaPheDuyet, hoLechSauPheDuyet } from "./phuong-an";
-import { hanChinhLyBan } from "./thu-tuc-ban";
+import { CAN_CU_THONG_BAO, hanChinhLyBan, laDatNongNghiep, thongBaoNhom } from "./thu-tuc-ban";
 import { HAN_BUOC, hanThuHoiNhom, nhomThuHoi, hanGuiQdBan, hanPheDuyetBan, hanThamDinhBan, ngayToTrinhPA, tinhHanBuoc } from "./han-buoc";
 import { LICH_TRONG, type LichLamViec } from "./lich-lam-viec";
 import { tinhChiTra, type GiaiDoanTyLe } from "./chi-tra";
@@ -236,6 +236,13 @@ export function canhBaoDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: st
   // không chia đợt cũng một dòng
   for (const n of nhomThuHoi(duAn, ds.map((x) => hoHieuLuc(duAn, x.h)))) {
     const t = hanThuHoiNhom(n.hos, homNay, lich);
+    // 1.0.18 (A4): thông báo thu hồi của nhóm — 90/180 ngày trước QĐ (k1 Đ85), hiệu lực 12 tháng (k5 Đ85)
+    const tb = thongBaoNhom(duAn, n.id, n.hos);
+    const vn = (iso: string) => iso.split("-").reverse().join("/");
+    if (tb && tb.conLai && homNay > tb.hieuLucDen)
+      out.push({ muc: "CAO", duAnId: duAn.id, noiDung: `${n.ten}: thông báo thu hồi ngày ${vn(tb.ngayTb)} đã hết hiệu lực 12 tháng (đến ${vn(tb.hieuLucDen)}) — còn ${tb.conLai} hộ chưa có quyết định thu hồi`, canCu: "khoản 5 Điều 85 Luật Đất đai 2024" });
+    if (tb && tb.conLai && t?.moc && t.moc < tb.somNhat)
+      out.push({ muc: "TRUNG_BINH", duAnId: duAn.id, noiDung: `${n.ten}: ngày đủ điều kiện ban hành QĐ thu hồi (${vn(t.moc)}) trước ngày đủ ${tb.soNgay} ngày kể từ thông báo (${vn(tb.somNhat)}) — trừ trường hợp người có đất đồng ý thu hồi trước hạn (khoản 2 Điều 85)`, canCu: CAN_CU_THONG_BAO });
     if (!t?.hanChot) continue;
     const hc = t.hanChot.split("-").reverse().join("/");
     if (t.trangThai === "QUA_HAN") out.push({ muc: "CAO", duAnId: duAn.id, noiDung: `${n.ten}: quá hạn ban hành quyết định thu hồi đất (hạn ${hc}, 10 ngày từ ngày đủ điều kiện) — còn hộ chưa xác nhận bước 13`, canCu: t.han.canCu });
@@ -276,10 +283,10 @@ export function canhBaoDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: st
     const ngayTb = (h.dotId && duAn.dotThuHoi?.find((d) => d.id === h.dotId)?.ngayThongBao) || duAn.ngayThongBao;
     if (b13?.ngay && ngayTb) {
       const kc = soNgay(ngayTb, b13.ngay);
-      const coPnn = h.thua.some((t) => !/^(LUC|LUK|LUN|HNK|BHK|NHK|CLN|RSX|RPH|RDD|NTS|NKH|LNP)$/i.test(t.loaiDat));
+      const coPnn = h.thua.some((t) => !laDatNongNghiep(t.loaiDat));
       const toiThieu = coPnn ? 180 : 90;
       if (kc < toiThieu)
-        out.push({ muc: "CAO", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: QĐ thu hồi cách thông báo ${kc} ngày (< ${toiThieu} ngày)`, canCu: "khoản 2 Điều 85 Luật Đất đai 2024" });
+        out.push({ muc: "CAO", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: QĐ thu hồi cách thông báo ${kc} ngày (< ${toiThieu} ngày; trừ trường hợp người có đất đồng ý thu hồi trước hạn — khoản 2)`, canCu: CAN_CU_THONG_BAO });
     }
     for (const han of HAN_BUOC) {
       if ((han.buoc === "8" || han.buoc === "9" || han.buoc === "11") && trongBan.has(h.id)) continue; // đã báo theo bản phương án

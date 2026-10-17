@@ -105,7 +105,7 @@ hồi (m²) — **mỗi ký hiệu loại đất một cột** (LUC, CLN, HNK…
 
 ## 5. Việc cần làm trong phần mềm
 
-> **Tình trạng 0.9.4:** điểm 1 (mẫu T1–T7, docs/10 §3b), 3 (4 biểu Excel trong mẫu mặc định), 4 (kiểm tra thống nhất) đã làm; điểm 2: đã có chọn/bỏ căn cứ theo dự án, **chưa** đưa 5 văn bản mới vào danh mục căn cứ (chờ nguyên văn); điểm 5: thời hạn 60/120 ngày là trường nhập của Kế hoạch (chưa có nguyên văn văn bản sửa đổi k2 Đ85 LĐĐ).
+> **Tình trạng 0.9.4:** điểm 1 (mẫu T1–T7, docs/10 §3b), 3 (4 biểu Excel trong mẫu mặc định), 4 (kiểm tra thống nhất) đã làm; điểm 2: đã có chọn/bỏ căn cứ theo dự án, **chưa** đưa 5 văn bản mới vào danh mục căn cứ (chờ nguyên văn); điểm 5: thời hạn 60/120 ngày là trường nhập của Kế hoạch (chưa có nguyên văn văn bản sửa đổi k1 Đ85 LĐĐ).
 
 1. **Mẫu văn bản**: rà 27 mẫu hiện có theo bố cục mục 3 (đặc biệt 11 mục của Tờ trình/QĐ phê duyệt PA, nhóm "hỗ trợ khác khoản 13
    Điều 6 QĐ 14/2026" có *nội dung — lý do — mức — tổng*); Tờ trình + QĐ thu hồi **nhiều hộ** tự lấy danh sách QĐ phê duyệt PA

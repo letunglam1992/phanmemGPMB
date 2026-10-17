@@ -118,3 +118,49 @@ export function kiemTraTruocThamDinh(
 }
 
 export const CAN_CU_TRUOC_THAM_DINH = "điểm a khoản 3 Điều 87 Luật Đất đai 2024";
+
+/** Loại đất nông nghiệp (mã theo hồ sơ thửa) — để xác định thời hạn thông báo 90 ngày (NN) hay 180 ngày (PNN). */
+export const laDatNongNghiep = (loaiDat: string) => /^(LUC|LUK|LUN|HNK|BHK|NHK|CLN|RSX|RPH|RDD|NTS|NKH|LNP)$/i.test(loaiDat.trim());
+export const CAN_CU_THONG_BAO = "khoản 1 Điều 85 Luật Đất đai 2024";
+
+const congNgay = (iso: string, n: number) => {
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+};
+const congThang = (iso: string, n: number) => {
+  const [y, m, d] = iso.split("-").map(Number) as [number, number, number];
+  const cuoi = new Date(Date.UTC(y, m - 1 + n + 1, 0)).getUTCDate(); // tháng không có ngày tương ứng → ngày cuối tháng
+  return new Date(Date.UTC(y, m - 1 + n, Math.min(d, cuoi))).toISOString().slice(0, 10);
+};
+
+export interface ThongBaoNhom {
+  ngayTb: string;
+  /** 90 (chỉ đất nông nghiệp) hoặc 180 (có đất phi nông nghiệp) — k1 Đ85 */
+  soNgay: 90 | 180;
+  /** Ngày sớm nhất ban hành QĐ thu hồi: đủ `soNgay` ngày kể từ ngày thông báo (trừ trường hợp k2 Đ85) */
+  somNhat: string;
+  /** Ngày cuối hiệu lực của thông báo: 12 tháng kể từ ngày ban hành thông báo (k5 Đ85) */
+  hieuLucDen: string;
+  /** Số hộ trong nhóm chưa xác nhận xong bước 13 */
+  conLai: number;
+}
+
+/**
+ * 1.0.18 (A4) — Thông báo thu hồi của một nhóm hộ (đợt / hộ chưa xếp đợt / cả dự án): ngày thông báo của đợt (trống thì
+ * của dự án); thời hạn 90/180 ngày trước khi ban hành QĐ thu hồi (khoản 1 Điều 85 LĐĐ 2024 — người có đất đồng ý thu hồi
+ * trước hạn thì không phải chờ, khoản 2); thông báo có hiệu lực 12 tháng (khoản 5). Không có ngày thông báo → null.
+ */
+export function thongBaoNhom(duAn: { ngayThongBao?: string; dotThuHoi?: { id: string; ngayThongBao?: string }[] }, nhomId: string, hos: Ho[]): ThongBaoNhom | null {
+  const dot = duAn.dotThuHoi?.find((d) => d.id === nhomId);
+  const ngayTb = dot?.ngayThongBao || duAn.ngayThongBao;
+  if (!ngayTb || !/^\d{4}-\d{2}-\d{2}$/.test(ngayTb) || !hos.length) return null;
+  const soNgay = hos.some((h) => h.thua.some((t) => !laDatNongNghiep(t.loaiDat))) ? 180 : 90;
+  return {
+    ngayTb,
+    soNgay,
+    somNhat: congNgay(ngayTb, soNgay),
+    hieuLucDen: congThang(ngayTb, 12),
+    conLai: hos.filter((h) => h.tienDo["13"]?.trangThai !== "XONG" && h.tienDo["13"]?.trangThai !== "KHONG_AP_DUNG").length,
+  };
+}

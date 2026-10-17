@@ -84,7 +84,7 @@ Dựng bằng `tools/mau-van-ban/mau-thuc-te.mjs` theo **bố cục** bộ văn 
 | T7 | QĐ thu hồi đất (nhiều hộ) | UBND | Đợt | Như T6; dẫn Tờ trình T6 | `qd_thu_hoi` (từng hộ) |
 
 - **Căn cứ** NQ 254/2025/QH15, NĐ 49/2026/NĐ-CP, NĐ 151/2025/NĐ-CP, QĐ 426/QĐ-UBND, QĐ 48/QĐ-UBND: chưa có nguyên văn → không đưa vào danh mục mặc định (NQ 254 có sẵn dòng trích từ phần căn cứ QĐ 14/2026 nhưng **mặc định bỏ chọn**). Cán bộ chọn/bỏ từng căn cứ hoặc nhập căn cứ riêng của dự án.
-- **Thời hạn gửi thông báo** trong Kế hoạch (T1) là trường nhập: khoản 2 Điều 85 LĐĐ 2024 ghi 90/180 ngày; văn bản thực tế 2026 ghi 60/120 ngày theo văn bản mới — phần mềm chưa có nguyên văn nên không tự điền.
+- **Thời hạn gửi thông báo** trong Kế hoạch (T1) là trường nhập: khoản 1 Điều 85 LĐĐ 2024 ghi 90/180 ngày; văn bản thực tế 2026 ghi 60/120 ngày theo văn bản mới — phần mềm chưa có nguyên văn nên không tự điền.
 - **Kiểm tra thống nhất** (`kiemTraThongNhat`): tên cơ quan, số trong "(Kèm theo …)", bằng số khớp bằng chữ, diện tích trích yếu khớp tổng biểu, số QĐ phê duyệt PA từng hộ.
 
 ## 4. Cán bộ tự chỉnh mẫu

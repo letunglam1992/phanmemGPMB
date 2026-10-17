@@ -1423,6 +1423,9 @@ async fn luu_cai_dat(State(st): State<St>, h: HeaderMap, Path(khoa): Path<String
     if khoa == "goiChinhSach" {
         // P2-1: nạp gói chính sách chỉ quản trị (quyết định cách tính của mọi dự án dùng gói)
         can(&st, &u, "NAP_CHINH_SACH")?;
+        // 1.0.18 (B1b): gói có chữ ký thì kiểm lại chữ ký, đối chiếu nội dung đã ký (gói chưa ký: máy trạm đã cảnh báo)
+        let cu: Option<Value> = c.query_row("SELECT noi_dung FROM cai_dat WHERE khoa = ?1", [&khoa], |r| r.get::<_, String>(0)).optional().map_err(loi_db)?.and_then(|s| serde_json::from_str(&s).ok());
+        crate::giay_phep::kiem_ds_goi(&v, cu.as_ref(), crate::giay_phep::KHOA_X, crate::giay_phep::KHOA_Y).map_err(|e| loi(StatusCode::BAD_REQUEST, e))?;
     }
     if khoa == "giuLichSu" {
         // thời hạn giữ lịch sử quyết định dữ liệu bị xóa vĩnh viễn: chỉ quản trị

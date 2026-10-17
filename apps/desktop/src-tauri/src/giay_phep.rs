@@ -102,6 +102,64 @@ pub fn kiem_ghi_du_an(c: &Connection, cu: Option<&Value>, moi: &Value, hom_nay: 
     Ok(())
 }
 
+/// 1.0.18 (B1b) — kiểm chữ ký gói chính sách khi máy chủ lưu danh sách gói (cài đặt `goiChinhSach`), cùng quy tắc với
+/// `src/ky-goi.ts`: máy trạm gửi kèm `chuKy.banKy` (base64url đúng nội dung đã ký) và `chuKy.ky`. Kiểm chữ ký bằng khóa công
+/// khai, rồi đối chiếu nội dung đã ký với gói được lưu (bộ chính sách, bảng giá đất, bảng đơn giá; đơn vị, người ký, thời điểm).
+/// Gói không có `chuKy` (chưa ký — máy trạm đã cảnh báo, người nạp xác nhận) thì không kiểm.
+pub fn kiem_goi(g: &Value, x: &str, y: &str) -> Result<(), String> {
+    let ck = &g["chuKy"];
+    if ck.is_null() {
+        return Ok(());
+    }
+    let ten = g["khoa"].as_str().unwrap_or("?");
+    let sai = |ly: &str| Err(format!("Gói chính sách \"{ten}\": {ly} — không lưu"));
+    let (Some(ban), Some(ky)) = (ck["banKy"].as_str().and_then(b64), ck["ky"].as_str().and_then(b64)) else {
+        return sai("thiếu nội dung đã ký");
+    };
+    let mut khoa = vec![4u8];
+    khoa.extend(b64(x).unwrap_or_default());
+    khoa.extend(b64(y).unwrap_or_default());
+    if ring::signature::UnparsedPublicKey::new(&ring::signature::ECDSA_P256_SHA256_FIXED, &khoa).verify(&ban, &ky).is_err() {
+        return sai("chữ ký không hợp lệ");
+    }
+    let Some((goi, meta)) = std::str::from_utf8(&ban).ok().and_then(|t| t.strip_prefix("GPMB-GOI-CS1\n")).and_then(|t| t.split_once('\n')) else {
+        return sai("nội dung đã ký sai dạng");
+    };
+    let (Ok(goi), Ok(meta)) = (serde_json::from_str::<Value>(goi), serde_json::from_str::<Value>(meta)) else {
+        return sai("nội dung đã ký sai dạng");
+    };
+    if ["donVi", "nguoiKy", "luc"].iter().any(|k| meta[k] != ck[k]) {
+        return sai("thông tin người ký khác nội dung đã ký");
+    }
+    let doc = |k: &str| g[k].as_str().and_then(|s| serde_json::from_str::<Value>(s).ok());
+    if doc("noiDung").as_ref() != Some(&goi["chinhSach"]) {
+        return sai("bộ chính sách khác nội dung đã ký");
+    }
+    if doc("bangGiaDat").unwrap_or(Value::Null) != goi["bangGiaDat"] {
+        return sai("bảng giá đất khác nội dung đã ký");
+    }
+    // bảng đơn giá lưu đã chuẩn hóa (ten bỏ khoảng trắng, đơn giá thành số): so số dòng, tên, đơn giá
+    let so = |v: &Value| v.as_f64().or_else(|| v.as_str().and_then(|s| s.trim().parse().ok()));
+    let luu = doc("donGia");
+    match (goi["donGia"]["dong"].as_array(), luu.as_ref().and_then(Value::as_array)) {
+        (None, None) => {}
+        (Some(a), Some(b)) if a.len() == b.len() && a.iter().zip(b).all(|(p, q)| p["ten"].as_str().map(str::trim) == q["ten"].as_str() && so(&p["donGia"]).is_some() && so(&p["donGia"]) == so(&q["donGia"])) => {}
+        _ => return sai("bảng đơn giá khác nội dung đã ký"),
+    }
+    Ok(())
+}
+
+/// Kiểm các gói mới hoặc đổi chữ ký trong danh sách `moi` (gói đã có, cùng chữ ký thì bỏ qua).
+pub fn kiem_ds_goi(moi: &Value, cu: Option<&Value>, x: &str, y: &str) -> Result<(), String> {
+    for g in moi.as_array().into_iter().flatten() {
+        let da_co = cu.and_then(Value::as_array).into_iter().flatten().any(|c| c["khoa"] == g["khoa"] && c["chuKy"]["ky"] == g["chuKy"]["ky"] && c["noiDung"] == g["noiDung"]);
+        if !da_co {
+            kiem_goi(g, x, y)?;
+        }
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -160,5 +218,39 @@ mod tests {
         assert_eq!(gioi_han(Some(&ma), Some("ABCD-EFGH-JKLM-NPQR"), "2026-10-13", KHOA_X, KHOA_Y), 1);
         // mã sai chữ ký → dùng thử
         assert_eq!(gioi_han(Some("GPMB1.eyJ2IjoxfQ.AAAA"), Some("ABCD"), "2026-10-13", KHOA_X, KHOA_Y), 1);
+    }
+
+    #[test]
+    fn chu_ky_goi_chinh_sach() {
+        use ring::signature::{EcdsaKeyPair, KeyPair, ECDSA_P256_SHA256_FIXED_SIGNING};
+        let rng = ring::rand::SystemRandom::new();
+        let pk = EcdsaKeyPair::generate_pkcs8(&ECDSA_P256_SHA256_FIXED_SIGNING, &rng).unwrap();
+        let cap = EcdsaKeyPair::from_pkcs8(&ECDSA_P256_SHA256_FIXED_SIGNING, pk.as_ref(), &rng).unwrap();
+        let cong = cap.public_key().as_ref();
+        let e = base64::engine::general_purpose::URL_SAFE_NO_PAD;
+        let (x, y) = (e.encode(&cong[1..33]), e.encode(&cong[33..65]));
+        let goi = r#"{"dinhDang":"gpmb-goi-chinh-sach","chinhSach":{"ma":"THU","hieuLucTu":"2026-10-17","tyLe":0.5},"donGia":{"canCu":"QĐ thử","dong":[{"nguon":"QĐ32","ten":" Nhà A ","donVi":"m2","donGia":"1200000"}]}}"#;
+        let meta = r#"{"v":1,"donVi":"Tác giả","nguoiKy":"A","luc":"2026-10-17T00:00:00.000Z"}"#;
+        let ban = format!("GPMB-GOI-CS1\n{goi}\n{meta}");
+        let ky = cap.sign(&rng, ban.as_bytes()).unwrap();
+        let tao = |noi_dung: &str, dg: &str, nguoi: &str, ky: &[u8]| {
+            serde_json::json!({ "khoa": "thu", "noiDung": noi_dung, "donGia": dg,
+                "chuKy": { "donVi": "Tác giả", "nguoiKy": nguoi, "luc": "2026-10-17T00:00:00.000Z", "ky": e.encode(ky), "banKy": e.encode(ban.as_bytes()) } })
+        };
+        let cs = r#"{"ma":"THU","hieuLucTu":"2026-10-17","tyLe":0.5}"#;
+        let dg = r#"[{"nguon":"QĐ32","ma":"QĐ32/G1","nhom":"","ten":"Nhà A","donVi":"m2","donGia":1200000,"matDo":null,"trang":0,"canCu":"QĐ thử"}]"#;
+        assert_eq!(kiem_goi(&tao(cs, dg, "A", ky.as_ref()), &x, &y), Ok(()));
+        // bộ chính sách bị sửa, đơn giá bị sửa, người ký khác, chữ ký giả, khóa khác → từ chối
+        assert!(kiem_goi(&tao(&cs.replace("0.5", "0.7"), dg, "A", ky.as_ref()), &x, &y).unwrap_err().contains("bộ chính sách"));
+        assert!(kiem_goi(&tao(cs, &dg.replace("1200000", "1300000"), "A", ky.as_ref()), &x, &y).unwrap_err().contains("bảng đơn giá"));
+        assert!(kiem_goi(&tao(cs, dg, "B", ky.as_ref()), &x, &y).unwrap_err().contains("người ký"));
+        assert!(kiem_goi(&tao(cs, dg, "A", &[1u8; 64]), &x, &y).unwrap_err().contains("chữ ký không hợp lệ"));
+        assert!(kiem_goi(&tao(cs, dg, "A", ky.as_ref()), KHOA_X, KHOA_Y).is_err());
+        // gói chưa ký: không kiểm; danh sách: gói đã có cùng chữ ký thì bỏ qua
+        assert_eq!(kiem_goi(&serde_json::json!({ "khoa": "k", "noiDung": "{}" }), &x, &y), Ok(()));
+        let gia = tao(cs, dg, "A", &[1u8; 64]);
+        let ds = serde_json::json!([gia]);
+        assert!(kiem_ds_goi(&ds, None, &x, &y).is_err());
+        assert!(kiem_ds_goi(&ds, Some(&ds), &x, &y).is_ok());
     }
 }

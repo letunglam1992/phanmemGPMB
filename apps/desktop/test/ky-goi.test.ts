@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { kiemChuKyGoi, kyGoi } from "../src/ky-goi";
 import { docGoi } from "../src/goi-chinh-sach";
 import { KHOA_CONG_GIAY_PHEP } from "../src/giay-phep-khoa";
+import { b64u } from "../src/giay-phep";
 
 const goc = readFileSync(new URL("../../../policy/goi/sonla-2026-03-31.json", import.meta.url), "utf8");
 const taoKhoa = async () => {
@@ -15,7 +16,13 @@ describe("1.0.18 — chữ ký gói chính sách", () => {
     const k = await taoKhoa();
     const da = await kyGoi(goc, { donVi: "Tác giả phần mềm GPMB Sơn La", nguoiKy: "Người ký thử", luc: "2026-10-17T01:00:00.000Z" }, k.rieng);
     expect(JSON.parse(da)).toMatchObject({ dinhDang: "gpmb-goi-chinh-sach", chuKy: { v: 1, nguoiKy: "Người ký thử" } });
-    expect(await kiemChuKyGoi(da, k.cong)).toEqual({ tt: "DA_KY", chuKy: { v: 1, donVi: "Tác giả phần mềm GPMB Sơn La", nguoiKy: "Người ký thử", luc: "2026-10-17T01:00:00.000Z" } });
+    const kq = await kiemChuKyGoi(da, k.cong);
+    expect(kq).toMatchObject({ tt: "DA_KY", chuKy: { v: 1, donVi: "Tác giả phần mềm GPMB Sơn La", nguoiKy: "Người ký thử", luc: "2026-10-17T01:00:00.000Z" } });
+    // banKy: đúng nội dung đã ký (máy chủ kiểm lại) — bắt đầu bằng tiền tố, dòng cuối là thông tin người ký
+    const ban = new TextDecoder().decode(b64u.giai((kq as { banKy: string }).banKy));
+    expect(ban.startsWith("GPMB-GOI-CS1\n")).toBe(true);
+    expect(JSON.parse(ban.split("\n")[2]!)).toEqual({ v: 1, donVi: "Tác giả phần mềm GPMB Sơn La", nguoiKy: "Người ký thử", luc: "2026-10-17T01:00:00.000Z" });
+    expect(JSON.parse(ban.split("\n")[1]!).chinhSach).toEqual(JSON.parse(goc));
     const a = await docGoi(goc, []), b = await docGoi(da, []);
     expect(b.loi).toEqual([]);
     expect(b.goi!.sha256).toBe(a.goi!.sha256);

@@ -68,7 +68,7 @@ export function TheGoiChinhSach() {
         <HopThoai tieuDe={`Kiểm tra gói: ${xem.tenTep}`} dong={() => setXem(null)} rong={720} chan={<><button className="nut" onClick={() => setXem(null)}>Hủy</button><button className="nut nut-chinh" disabled={!xem.goi || xem.ky.tt === "SAI" || (xem.ky.tt === "CHUA_KY" && !daDoiChieu)} onClick={async () => {
           const g = xem.goi!;
           const cs = g.cs as unknown as { ten?: string; ma: string; hieuLucTu: string; hieuLucDen?: string | null };
-          if (await napGoi({ khoa: g.khoa, ten: cs.ten ?? g.khoa, ma: cs.ma, hieuLucTu: cs.hieuLucTu, hieuLucDen: cs.hieuLucDen ?? null, sha256: g.sha256, tenTep: xem.tenTep, noiDung: g.noiDung, ...(g.ghiChu ? { ghiChu: g.ghiChu } : {}), ...(g.donGia ? { donGia: g.donGia } : {}), ...(g.bangGiaDat ? { bangGiaDat: g.bangGiaDat } : {}), ...(xem.ky.tt === "DA_KY" ? { chuKy: { donVi: xem.ky.chuKy.donVi, nguoiKy: xem.ky.chuKy.nguoiKy, luc: xem.ky.chuKy.luc } } : {}) })) {
+          if (await napGoi({ khoa: g.khoa, ten: cs.ten ?? g.khoa, ma: cs.ma, hieuLucTu: cs.hieuLucTu, hieuLucDen: cs.hieuLucDen ?? null, sha256: g.sha256, tenTep: xem.tenTep, noiDung: g.noiDung, ...(g.ghiChu ? { ghiChu: g.ghiChu } : {}), ...(g.donGia ? { donGia: g.donGia } : {}), ...(g.bangGiaDat ? { bangGiaDat: g.bangGiaDat } : {}), ...(xem.ky.tt === "DA_KY" ? { chuKy: { donVi: xem.ky.chuKy.donVi, nguoiKy: xem.ky.chuKy.nguoiKy, luc: xem.ky.chuKy.luc, ky: xem.ky.ky, banKy: xem.ky.banKy } } : {}) })) {
             bao(`Đã nạp gói "${g.khoa}"`);
             setXem(null);
           }

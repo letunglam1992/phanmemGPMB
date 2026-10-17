@@ -11,6 +11,14 @@ mới hơn bản đang dùng khi có bản cập nhật.
   được. Chữ ký sai (tệp đã bị sửa): không nạp. Chữ ký này không thay văn bản ban hành chính sách, đơn giá.
 - Công cụ của tác giả có mục "Ký gói chính sách".
 - Hộp xem bản phương án nêu nguồn bộ chính sách (có sẵn trong phần mềm, gói đã ký, gói chưa ký).
+- Máy chủ mạng nội bộ tự kiểm lại chữ ký gói và đối chiếu nội dung đã ký trước khi lưu; gói ghi "đã ký" mà chữ ký sai bị
+  từ chối.
+- Thông báo thu hồi đất theo đợt (hoặc cả dự án): hiện ngày sớm nhất được ban hành quyết định thu hồi (90 ngày với đất
+  nông nghiệp, 180 ngày khi có đất phi nông nghiệp — khoản 1 Điều 85 Luật Đất đai 2024) và ngày hết hiệu lực của thông báo
+  (12 tháng — khoản 5); cảnh báo một dòng khi ngày đủ điều kiện ghi trước ngày sớm nhất (trừ trường hợp người có đất đồng ý
+  thu hồi trước hạn — khoản 2) hoặc thông báo đã hết hiệu lực mà còn hộ chưa có quyết định thu hồi. Sửa căn cứ cảnh báo
+  90/180 ngày từ "khoản 2" thành "khoản 1 Điều 85".
+- Ghi chú phát hành không còn ký tự xuống dòng kiểu Windows.
 
 ## 1.0.17
 

@@ -12,6 +12,11 @@ describe("1.0.11 — Những thay đổi, ghi chú phát hành", () => {
     expect(tachThayDoi(md)!.map((m) => m.pb)).toContain(pb);
     expect(ghiChu(md, pb)).toMatch(new RegExp(`^## ${pb.replace(/\./g, "\\.")}`));
     expect(ghiChu(md, "0.0.1")).toBeNull();
+    // 1.0.18: tệp lấy về trên Windows có CRLF → ghi chú không còn \r, phần mềm đọc như nhau
+    const crlf = md.replace(/\n/g, "\r\n");
+    expect(ghiChu(crlf, pb)).toBe(ghiChu(md, pb));
+    expect(ghiChu(crlf, pb)).not.toContain("\r");
+    expect(tachThayDoi(crlf)).toEqual(tachThayDoi(md));
   });
 
   it("phần mềm hiện mọi mục mới hơn bản đang dùng, đến bản mới; ghi chú cũ không có mục → null", () => {

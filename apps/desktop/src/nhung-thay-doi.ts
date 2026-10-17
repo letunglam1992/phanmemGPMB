@@ -18,7 +18,7 @@ export function soPhienBan(a: string, b: string): number {
 /** Tách các mục "## X.Y.Z"; mỗi gạch đầu dòng (kể cả dòng nối tiếp thụt lề) là một dòng. Văn bản không có mục → null. */
 export function tachThayDoi(md: string): MucThayDoi[] | null {
   const muc: MucThayDoi[] = [];
-  for (const k of md.split(/^## /m).slice(1)) {
+  for (const k of md.replace(/\r\n?/g, "\n").split(/^## /m).slice(1)) {
     const [dau = "", ...than] = k.split("\n");
     const pb = dau.trim();
     if (!/^\d+\.\d+\.\d+$/.test(pb)) continue;

@@ -30,7 +30,8 @@ export interface ChuKyGoi extends ThongTinKyGoi {
 }
 
 export type KetQuaKyGoi =
-  | { tt: "DA_KY"; chuKy: ThongTinKyGoi }
+  /** `ky`, `banKy` (base64url đúng nội dung đã ký) gửi kèm để máy chủ mạng nội bộ kiểm lại (giay_phep.rs `kiem_goi`) */
+  | { tt: "DA_KY"; chuKy: ThongTinKyGoi; ky: string; banKy: string }
   | { tt: "CHUA_KY" }
   | { tt: "SAI"; lyDo: string };
 
@@ -80,6 +81,7 @@ export async function kiemChuKyGoi(chu: string, khoaCong: JsonWebKey = KHOA_CONG
     return { tt: "SAI", lyDo: "Chữ ký hỏng (sai ký tự)" };
   }
   const k = await crypto.subtle.importKey("jwk", khoaCong, THUAT_TOAN, false, ["verify"]);
-  const dung = await crypto.subtle.verify(KY, k, byteKy, noiDungKy(bocGoi(v), tt));
-  return dung ? { tt: "DA_KY", chuKy: tt } : { tt: "SAI", lyDo: "Chữ ký không khớp nội dung — tệp đã bị sửa sau khi ký, hoặc không do tác giả ký" };
+  const ban = noiDungKy(bocGoi(v), tt);
+  const dung = await crypto.subtle.verify(KY, k, byteKy, ban);
+  return dung ? { tt: "DA_KY", chuKy: tt, ky: ck.ky, banKy: b64u.ma(ban) } : { tt: "SAI", lyDo: "Chữ ký không khớp nội dung — tệp đã bị sửa sau khi ký, hoặc không do tác giả ký" };
 }

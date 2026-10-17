@@ -68,10 +68,14 @@ test("P3-1: khai báo đợt, xếp hộ vào đợt, tổng hợp theo đợt; 
   await expect(th.locator("tbody tr", { hasText: "Đợt 2" }).locator("[data-han-thu-hoi]")).toHaveText("—");
   await han1.getByRole("button", { name: "Ngày đủ điều kiện…" }).click();
   const ndk = p.locator("[role=dialog]", { hasText: "Ngày đủ điều kiện ban hành QĐ thu hồi đất – Đợt 1" });
+  // 1.0.18 (A4): mốc thông báo thu hồi của đợt (10/01/2026) — ngày sớm nhất (k1 Đ85), hiệu lực 12 tháng (k5 Đ85)
+  await expect(ndk.locator("[data-kiem-tb]")).toContainText(/QĐ thu hồi ban hành sớm nhất ngày (10\/04|09\/07)\/2026/);
+  await expect(ndk.locator("[data-kiem-tb]")).toContainText("hiệu lực đến 10/01/2027");
   await ndk.locator("input").first().fill("01/09/2026");
   await ndk.locator("input").first().press("Tab");
   await ndk.getByRole("button", { name: /^Lưu cho \d+ hộ$/ }).click();
   await expect(han1).toContainText("11/09/2026 — quá hạn");
+  await expect(han1.locator("[data-thong-bao-th]")).toContainText("thông báo hiệu lực đến 10/01/2027");
   await expect(han1.getByRole("button", { name: "Sửa ngày đủ điều kiện…" })).toBeVisible();
   await p.getByRole("button", { name: "Chốt phương án…" }).click();
   const chot = p.locator("[role=dialog]", { hasText: "Chốt phương án" });

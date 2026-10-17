@@ -37,7 +37,7 @@ export interface GoiDaNap {
   /** Bảng giá đất kèm gói (JSON BangGiaDat) */
   bangGiaDat?: string;
   /** 1.0.18: chữ ký của tác giả đã kiểm đúng khi nạp (không có = gói chưa ký, nạp sau khi cán bộ xác nhận) */
-  chuKy?: { donVi: string; nguoiKy: string; luc: string };
+  chuKy?: { donVi: string; nguoiKy: string; luc: string; ky?: string; banKy?: string };
 }
 
 export async function sha256Hex(s: string): Promise<string> {

@@ -7,6 +7,7 @@ import type { KetQuaHo } from "../tinh-ho";
 import { CHUA_XEP_DOT, dotMoi, dsDot, khopDot, loiDot, lyDoKhongDoiDot, lyDoKhongXoaDot, tenDot, tongHopTheoDot } from "../dot-thu-hoi";
 import { TEN_TT_PA } from "../phuong-an";
 import { hanThuHoiNhom, nhomThuHoi, type TinhHan } from "../han-buoc";
+import { thongBaoNhom, type ThongBaoNhom } from "../thu-tuc-ban";
 import { hoHieuLuc } from "../mo-hinh";
 import { homNayIso } from "../trang-thai";
 import { HopThoai, O, ngayVN, tien } from "./chung";
@@ -169,7 +170,7 @@ export function TheTongHopDot({ duAn, kq, moDot }: { duAn: DuAn; kq: { h: Ho; k:
                     // 1.0.16: dòng "Chưa xếp đợt" cũng ghi được
                     const n = nhom.get(x.dotId);
                     if (!n?.hos.length) return "—";
-                    return <OHanThuHoi t={hanThuHoiNhom(n.hos, homNayIso(), lich)} ghi={quyen("SUA_HO_SO") ? () => setGhiMoc(x.dotId) : undefined} />;
+                    return <OHanThuHoi t={hanThuHoiNhom(n.hos, homNayIso(), lich)} tb={thongBaoNhom(duAn, n.id, n.hos)} ghi={quyen("SUA_HO_SO") ? () => setGhiMoc(x.dotId) : undefined} />;
                   })()}
                 </td>
               </tr>
@@ -180,17 +181,25 @@ export function TheTongHopDot({ duAn, kq, moDot }: { duAn: DuAn; kq: { h: Ho; k:
           </tfoot>
         </table>
       </div>
-      {ghiMoc && nhom.get(ghiMoc) && <HopNgayDuDieuKien nhom={nhom.get(ghiMoc)!} kq={kq} dong={() => setGhiMoc(null)} />}
+      {ghiMoc && nhom.get(ghiMoc) && <HopNgayDuDieuKien nhom={nhom.get(ghiMoc)!} tb={thongBaoNhom(duAn, ghiMoc, nhom.get(ghiMoc)!.hos)} kq={kq} dong={() => setGhiMoc(null)} />}
     </div>
   );
 }
 
-/** Ô hạn ban hành QĐ thu hồi đất của một nhóm hộ + nút ghi ngày đủ điều kiện. */
-function OHanThuHoi({ t, ghi }: { t: TinhHan | null; ghi?: () => void }) {
+/** Ô hạn ban hành QĐ thu hồi đất của một nhóm hộ + nút ghi ngày đủ điều kiện; 1.0.18: mốc thông báo thu hồi (Điều 85). */
+function OHanThuHoi({ t, tb, ghi }: { t: TinhHan | null; tb?: ThongBaoNhom | null; ghi?: () => void }) {
+  const homNay = homNayIso();
+  const dongTb = tb && tb.conLai > 0 && (
+    <div className="mo" data-thong-bao-th title="Khoản 1, 5 Điều 85 Luật Đất đai 2024">
+      QĐ thu hồi sớm nhất {ngayVN(tb.somNhat)} ({tb.soNgay} ngày từ thông báo {ngayVN(tb.ngayTb)}) · thông báo hiệu lực đến{" "}
+      <span className={homNay > tb.hieuLucDen ? "chu-do" : ""}>{ngayVN(tb.hieuLucDen)}{homNay > tb.hieuLucDen ? " — đã hết" : ""}</span>
+    </div>
+  );
   if (!t) return <span className="mo">Đã xong</span>;
   return (
     <>
       {t.hanChot ? <span className={t.trangThai === "QUA_HAN" ? "nhan nhan-do" : t.trangThai === "SAP_HET" ? "nhan nhan-vang" : ""} title={t.han.canCu}>{ngayVN(t.hanChot)}{t.trangThai === "QUA_HAN" ? " — quá hạn" : t.conLai !== null ? ` (còn ${t.conLai} ngày)` : ""}</span> : <span className="mo">chưa ghi ngày đủ điều kiện</span>}
+      {dongTb}
       {ghi && <div><button className="nut nut-chu nut-nho" onClick={ghi}>{t.moc ? "Sửa ngày đủ điều kiện…" : "Ngày đủ điều kiện…"}</button></div>}
     </>
   );
@@ -212,15 +221,15 @@ export function TheHanThuHoi({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaH
     <div className="the mb-14" data-han-thu-hoi-da>
       <div className="the-dau"><h3>Hạn ban hành quyết định thu hồi đất</h3><span className="mo chu-nho">10 ngày kể từ ngày đủ điều kiện — khoản 5, 6 Điều 87 Luật Đất đai 2024</span></div>
       <div className="the-than chu-nho">
-        <OHanThuHoi t={t} ghi={quyen("SUA_HO_SO") ? () => setMo(true) : undefined} />
+        <OHanThuHoi t={t} tb={thongBaoNhom(duAn, n.id, n.hos)} ghi={quyen("SUA_HO_SO") ? () => setMo(true) : undefined} />
         {t && <div className="mo mt-4">{n.hos.filter((h) => h.tienDo["13"]?.trangThai !== "XONG" && h.tienDo["13"]?.trangThai !== "KHONG_AP_DUNG").length}/{n.hos.length} hộ chưa xác nhận xong bước 13.</div>}
       </div>
-      {mo && <HopNgayDuDieuKien nhom={n} kq={kq} dong={() => setMo(false)} />}
+      {mo && <HopNgayDuDieuKien nhom={n} tb={thongBaoNhom(duAn, n.id, n.hos)} kq={kq} dong={() => setMo(false)} />}
     </div>
   );
 }
 
-function HopNgayDuDieuKien({ nhom, kq, dong }: { nhom: { id: string; ten: string; hos: Ho[] }; kq: { h: Ho; k: KetQuaHo }[]; dong: () => void }) {
+function HopNgayDuDieuKien({ nhom, tb, kq, dong }: { nhom: { id: string; ten: string; hos: Ho[] }; tb?: ThongBaoNhom | null; kq: { h: Ho; k: KetQuaHo }[]; dong: () => void }) {
   const { luuNhieuHo, bao } = useUngDung();
   const [ngay, setNgay] = useState(() => nhom.hos.find((h) => h.tienDo["13"]?.mocHan)?.tienDo["13"]?.mocHan ?? "");
   const nhan = nhom.id === CHUA_XEP_DOT ? (nhom.ten === "Cả dự án" ? "dự án" : "hộ chưa xếp đợt") : "đợt";
@@ -238,6 +247,12 @@ function HopNgayDuDieuKien({ nhom, kq, dong }: { nhom: { id: string; ten: string
       chan={<><button className="nut" onClick={dong}>Đóng</button><button className="nut nut-chinh" onClick={async () => { await luu(); dong(); }}>Lưu cho {nhom.hos.length} hộ</button></>}>
       <p className="mo mt-0">Quyết định thu hồi đất ban hành trong thời hạn 10 ngày kể từ ngày đủ điều kiện (khoản 5, 6 Điều 87 Luật Đất đai 2024; docs/05). Ngày này do cán bộ xác định, ghi vào bước 13 của các hộ trong {nhan === "đợt" ? "đợt" : nhan}; hộ đã xác nhận xong bước 13 không tính hạn.</p>
       <O nhan="Ngày đủ điều kiện ban hành QĐ thu hồi"><ONgay value={ngay} onChange={(e) => setNgay(e.target.value)} /></O>
+      {tb ? (
+        <div className={`thong-bao chu-nho mt-8 ${ngay && ngay < tb.somNhat ? "thong-bao-vang" : ""}`} data-kiem-tb>
+          Thông báo thu hồi ngày {ngayVN(tb.ngayTb)}: QĐ thu hồi ban hành sớm nhất ngày {ngayVN(tb.somNhat)} (đủ {tb.soNgay} ngày — {tb.soNgay === 180 ? "có đất phi nông nghiệp" : "đất nông nghiệp"}; khoản 1 Điều 85 Luật Đất đai 2024), thông báo có hiệu lực đến {ngayVN(tb.hieuLucDen)} (khoản 5).
+          {ngay && ngay < tb.somNhat && <div><b>Ngày đã chọn trước ngày sớm nhất</b> — chỉ ban hành trước hạn khi người có đất đồng ý (khoản 2 Điều 85).</div>}
+        </div>
+      ) : <div className="mo chu-nho mt-8">Chưa ghi ngày thông báo thu hồi (Thông tin dự án / đợt) — chưa kiểm tra được thời hạn 90/180 ngày (khoản 1 Điều 85).</div>}
     </HopThoai>
   );
 }
