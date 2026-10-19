@@ -104,6 +104,9 @@ interface NguCanh {
   /** Xóa hẳn khỏi thùng rác: quyền XOA_HAN, sau THOI_HAN_THUNG_RAC ngày. */
   xoaHanHo: (id: string) => Promise<void>;
   xoaHanDuAn: (id: string) => Promise<void>;
+  /** 1.0.20 (D2): tạo dự án tập huấn (dữ liệu, bản đồ giả lập) → mã dự án; xóa sạch dự án tập huấn (không qua thùng rác). */
+  taoTapHuan: () => Promise<string | null>;
+  xoaTapHuan: (id: string) => Promise<boolean>;
   chinhSach: (d: DuAn) => BoChinhSach;
   dangTai: boolean;
   nguoiDung: string;
@@ -639,6 +642,24 @@ export function NhaCungCap({ children, kho: khoVao, chiXem, phienDau }: { childr
       await ghi(() => kho.ghiLo({ xoaDuAn: [id] }));
       capNhat({ xoaDuAn: [id] });
       await ghiNhatKy("Xóa hẳn dự án", `${d.ten} (vào thùng rác ${vn(d.daXoa.luc)} bởi ${d.daXoa.nguoi}: ${d.daXoa.lyDo})`);
+    },
+    taoTapHuan: async () => {
+      if (chan("SUA_HO_SO")) return null;
+      const { taoDuAnTapHuan } = await import("./tap-huan");
+      const { duAn, ho, banDo } = taoDuAnTapHuan();
+      await ghi(() => kho.ghiLo({ duAn: [duAn], ho, banDo: [{ duAnId: duAn.id, bytes: banDo }] }));
+      await taiLai();
+      await ghiNhatKy("Tạo dự án tập huấn", duAn.ten);
+      return duAn.id;
+    },
+    xoaTapHuan: async (id) => {
+      if (chan("XOA_DU_AN")) return false;
+      const d = dsDuAn.find((x) => x.id === id);
+      if (!d?.tapHuan) return bao("Chỉ xóa nhanh được dự án tập huấn", "loi"), false;
+      await ghi(() => kho.ghiLo({ xoaDuAn: [id] }));
+      capNhat({ xoaDuAn: [id] });
+      await ghiNhatKy("Xóa dự án tập huấn", d.ten);
+      return true;
     },
     chinhSach,
     dangTai,

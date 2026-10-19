@@ -98,7 +98,7 @@ function PhanGui() {
   }, [kho, dsDuAn, dsDonVi]);
   const kemTep = gui?.kemTep ?? true;
   const kemBanDo = gui?.kemBanDo ?? true;
-  const dsChon = useMemo(() => dsDuAn.filter((d) => !gui?.boQua?.includes(d.id)), [dsDuAn, gui?.boQua]);
+  const dsChon = useMemo(() => dsDuAn.filter((d) => !d.tapHuan && !gui?.boQua?.includes(d.id)), [dsDuAn, gui?.boQua]);
   const tomTat = useMemo(() => tomTatDuAn(dsChon, dsChon.flatMap((d) => hoCua(d.id)), (id) => soTep.get(id) ?? 0, homNay(), lich), [dsChon, hoCua, soTep, lich]);
   const coQuyenGui = quyen("SAO_LUU");
 

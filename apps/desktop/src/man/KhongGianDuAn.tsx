@@ -65,7 +65,7 @@ const THE = [
 // "Văn bản dự án, đợt" ở đầu trang (tab "van-ban", chỉ các mẫu cấp dự án, đợt).
 
 export function KhongGianDuAn({ duAnId, tab = "tong-quan", ma, hoId }: { duAnId: string; tab?: string; ma?: string; hoId?: string }) {
-  const { dsDuAn, hoCua, di, chinhSach, xoaDuAn, quyen } = useUngDung();
+  const { dsDuAn, hoCua, di, chinhSach, xoaDuAn, quyen, xoaTapHuan } = useUngDung();
   const duAn = dsDuAn.find((d) => d.id === duAnId);
   const [menuThem, setMenuThem] = useState(false);
   const [dangXuat, setDangXuat] = useState(false);
@@ -116,6 +116,14 @@ export function KhongGianDuAn({ duAnId, tab = "tong-quan", ma, hoId }: { duAnId:
           {quyen("SUA_HO_SO") && <button className="nut nut-chinh" onClick={() => setThem(true)}><BieuTuong ten="cong" co={15} /> Thêm hộ, tổ chức</button>}
         </div>
       </div>
+      {duAn.tapHuan && (
+        <div className="thong-bao thong-bao-xanh" data-du-an-tap-huan style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+          <span style={{ flex: 1, minWidth: 280 }}>
+            <b>Dự án tập huấn</b> — dữ liệu, bản đồ giả lập để thực hành: nạp ranh GPMB ở thẻ Bản đồ, tra giá thửa HNK của hộ H03, lập, chốt phương án, soạn văn bản, ghi chi trả… Không gửi lên tỉnh, không tính vào bản dùng thử.
+          </span>
+          {quyen("XOA_DU_AN") && <button className="nut nut-nho nut-nguy" data-xoa-tap-huan onClick={async () => { if (confirm(`Xóa sạch "${duAn.ten}" (cả hộ, bản đồ, tệp)? Không qua thùng rác, không khôi phục được.`) && (await xoaTapHuan(duAn.id))) di({ ten: "du-an" }); }}>Xóa dự án tập huấn</button>}
+        </div>
+      )}
       <div className="the the-tab">
         <TabCuon chon={tab}>
           {THE.map((t) => (

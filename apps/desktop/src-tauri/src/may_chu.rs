@@ -676,6 +676,14 @@ pub fn kiem_luoc_do(loai: &str, cu: Option<&Value>, v: &Value, kiem_so: bool) ->
         }
         "duAn" => {
             chuoi("ten", false)?;
+            // 1.0.20 (D2): đánh dấu dự án tập huấn chỉ đặt khi tạo — không đổi về sau (tránh lách thùng rác khi xóa)
+            if let Some(cu) = cu {
+                if cu["tapHuan"] == json!(true) || v["tapHuan"] == json!(true) {
+                    if (cu["tapHuan"] == json!(true)) != (v["tapHuan"] == json!(true)) {
+                        return Err("Không đổi được đánh dấu \"dự án tập huấn\" của dự án đã có".into());
+                    }
+                }
+            }
             if o.get("tienDoChung").is_some_and(|x| !x.is_null()) {
                 kiem_tien_do(&v["tienDoChung"], "Tiến độ chung")?;
             }
@@ -917,9 +925,22 @@ fn kiem_tra_xoa_mem(c: &Connection, st: &MayChu, u: &NguoiGoi, loai: &str, id: &
 }
 
 /// Xóa hẳn (khỏi thùng rác): quyền XOA_HAN, bản ghi đã trong thùng rác đủ THOI_HAN_THUNG_RAC ngày.
+/// 1.0.20 (D2): bản ghi thuộc dự án tập huấn (đánh dấu `tapHuan` khi tạo, không đổi được về sau).
+fn la_tap_huan(c: &Connection, loai: &str, v: &Value) -> Kq<bool> {
+    if loai == "duAn" {
+        return Ok(v["tapHuan"] == json!(true));
+    }
+    let Some(da) = v["duAnId"].as_str() else { return Ok(false) };
+    Ok(doc_json(c, "duAn", da)?.is_some_and(|d| d["tapHuan"] == json!(true)))
+}
+
 fn kiem_tra_xoa_han(c: &Connection, st: &MayChu, u: &NguoiGoi, loai: &str, id: &str) -> Kq<()> {
+    let Some(v) = doc_json(c, loai, id)? else { return can(st, u, "XOA_HAN") };
+    // Dự án tập huấn: dọn sạch ngay sau buổi tập huấn, không qua thùng rác (người có quyền xóa dự án)
+    if la_tap_huan(c, loai, &v)? {
+        return can(st, u, "XOA_DU_AN");
+    }
     can(st, u, "XOA_HAN")?;
-    let Some(v) = doc_json(c, loai, id)? else { return Ok(()) };
     let luc = v["daXoa"]["luc"].as_str().ok_or_else(|| loi(StatusCode::CONFLICT, "Chỉ xóa hẳn được bản ghi đã nằm trong thùng rác"))?;
     if luc > iso_truoc(THOI_HAN_THUNG_RAC).as_str() {
         return Err(loi(StatusCode::CONFLICT, format!("Bản ghi mới vào thùng rác lúc {luc} — chỉ xóa hẳn sau {THOI_HAN_THUNG_RAC} ngày")));

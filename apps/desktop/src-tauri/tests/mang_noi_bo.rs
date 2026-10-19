@@ -333,6 +333,23 @@ async fn may_chu_ghi_lo_nguyen_tu() {
     x["daXoa"] = json!({ "luc": "2000-01-01T00:00:00.000Z", "nguoi": "canbo1", "lyDo": "nhập trùng" });
     assert_eq!(m.goi("POST", "/api/lo", Some(&qt), json!({ "ghiDe": true, "ghi": [{ "loai": "ho", "duLieu": x }] })).await.0, 200);
     assert_eq!(m.goi("POST", "/api/lo", Some(&qt), json!({ "xoaHo": ["h10"] })).await.0, 200);
+    // 1.0.20 (D2): dự án tập huấn xóa sạch ngay (không qua thùng rác) — cần quyền xóa dự án; cờ tập huấn không đổi được
+    let th = json!({ "id": "dath", "ten": "Tập huấn", "mau": true, "tapHuan": true });
+    let mut hth = ho("hth", "H001");
+    hth["duAnId"] = json!("dath");
+    assert_eq!(m.goi("POST", "/api/lo", Some(&qt), json!({ "ghi": [{ "loai": "duAn", "duLieu": th }, { "loai": "ho", "duLieu": hth }] })).await.0, 200);
+    let mut doi = th.clone();
+    doi["tapHuan"] = json!(false);
+    let (ma, v) = m.goi("PUT", "/api/du-an/dath", Some(&qt), json!({ "duLieu": doi, "phienBanTruoc": 1 })).await;
+    assert_eq!(ma, 400, "{v}");
+    assert_eq!(m.goi("PUT", "/api/du-an/dathat", Some(&qt), json!({ "duLieu": { "id": "dathat", "ten": "Dự án thật", "mau": true } })).await.0, 200);
+    let (ma, v) = m.goi("PUT", "/api/du-an/dathat", Some(&qt), json!({ "duLieu": { "id": "dathat", "ten": "Dự án thật", "mau": true, "tapHuan": true }, "phienBanTruoc": 1 })).await;
+    assert_eq!(ma, 400, "{v}");
+    assert_eq!(m.goi("POST", "/api/lo", Some(&cb), json!({ "xoaHo": ["hth"] })).await.0, 403);
+    let (ma, v) = m.goi("POST", "/api/lo", Some(&qt), json!({ "xoaDuAn": ["dath"] })).await;
+    assert_eq!(ma, 200, "{v}");
+    let (_, dsh) = m.goi("GET", "/api/ho", Some(&qt), Value::Null).await;
+    assert!(!dsh.to_string().contains("\"hth\""));
     // hộ đã chi trả / có trong phương án đã chốt → không xóa được
     let mut c = ho("h12", "H012");
     assert_eq!(m.goi("PUT", "/api/ho/h12", Some(&cb), json!({ "duLieu": c })).await.0, 200);

@@ -27,7 +27,7 @@ type SapXep = "MOI" | "TEN" | "TIEN_DO" | "TIEN";
 
 /** Dự án & hồ sơ: danh sách dự án (thẻ hoặc bảng) + chi tiết dự án đang chọn và bảng hộ, cá nhân, tổ chức. */
 export function ManDuAn({ duAnId: idVao }: { duAnId?: string }) {
-  const { dsDuAn, hoCua, di, chinhSach, quyen, dangTai, kho, taiLai, giayPhep } = useUngDung();
+  const { dsDuAn, hoCua, di, chinhSach, quyen, dangTai, kho, taiLai, giayPhep, taoTapHuan } = useUngDung();
   const homNay = homNayIso();
   const [timDa, setTimDa] = useState("");
   const [locDa, setLocDa] = useState<TrangThaiDuAn | "">("");
@@ -107,6 +107,9 @@ export function ManDuAn({ duAnId: idVao }: { duAnId?: string }) {
               <button className={dangLuoi ? "chon" : ""} onClick={() => setDangLuoi(true)} aria-label="Dạng thẻ" title="Dạng thẻ"><BieuTuong ten="luoi" co={16} /></button>
               <button className={!dangLuoi ? "chon" : ""} onClick={() => setDangLuoi(false)} aria-label="Dạng bảng" title="Dạng bảng"><BieuTuong ten="danhSach" co={16} /></button>
             </div>
+            {quyen("SUA_HO_SO") && !dsDuAn.some((d) => d.tapHuan && !d.daXoa) && (
+              <button className="nut" data-tao-tap-huan title="Dự án, hộ và bản đồ giả lập để cán bộ thực hành — không gửi lên tỉnh, xóa sạch được sau buổi tập huấn" onClick={async () => { const id = await taoTapHuan(); if (id) di({ ten: "du-an", duAnId: id }); }}>Tạo dự án tập huấn</button>
+            )}
             {quyen("SUA_HO_SO") && <button className="nut nut-chinh" onClick={() => setTaoMoi(true)}><BieuTuong ten="cong" co={15} /> Dự án mới</button>}
           </div>
         </div>

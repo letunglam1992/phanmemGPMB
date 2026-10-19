@@ -284,7 +284,10 @@ export interface TuyChonGoi {
   nguoiXuat: string;
 }
 
-export async function taoGoiTinh(kho: Kho, o: TuyChonGoi): Promise<{ bytes: Uint8Array; thongTin: ThongTinGoi }> {
+export async function taoGoiTinh(kho: Kho, o0: TuyChonGoi): Promise<{ bytes: Uint8Array; thongTin: ThongTinGoi }> {
+  // 1.0.20 (D2): dự án tập huấn (dữ liệu giả lập) không bao giờ gửi lên tỉnh
+  const tapHuan = new Set((await kho.dsDuAn()).filter((d) => d.tapHuan).map((d) => d.id));
+  const o = { ...o0, duAnIds: o0.duAnIds.filter((id) => !tapHuan.has(id)) };
   if (!o.duAnIds.length) throw new LoiGoiTinh("Chưa chọn dự án nào để gửi.");
   if (!(await kiemVanTay(o.khoaTinh))) throw new LoiGoiTinh("Khóa công khai của tỉnh không hợp lệ (vân tay không khớp) — nhập lại tệp khóa do tỉnh gửi.");
   if (!o.donViGui.trim()) throw new LoiGoiTinh("Chưa nhập tên đơn vị gửi.");

@@ -51,7 +51,7 @@ export async function taoGoiTheoCaiDat(kho: Kho, cd: CaiDatGui, o: { ungDung: st
   const khoaTinh = o.khoaTinh ?? (await kho.docCaiDat<KhoaCongKhaiTinh>(KHOA_CD_KHOA_TINH));
   if (!khoaTinh) throw new LoiGoiTinh("Chưa có khóa của tỉnh");
   const bo = new Set(cd.boQua ?? []);
-  const duAnIds = (await kho.dsDuAn()).filter((d) => !d.daXoa && !bo.has(d.id)).map((d) => d.id);
+  const duAnIds = (await kho.dsDuAn()).filter((d) => !d.daXoa && !d.tapHuan && !bo.has(d.id)).map((d) => d.id);
   return taoGoiTinh(kho, { khoaTinh, khoaKy: await layKhoaKy(kho), maGui: cd.maGui, donViGui: cd.ten, duAnIds, kemDinhKem: cd.kemTep ?? true, kemBanDo: cd.kemBanDo ?? true, ungDung: o.ungDung, nguoiXuat: o.nguoiXuat });
 }
 
