@@ -8,6 +8,42 @@ import { TheGiayPhep } from "./GiayPhep";
 import thayDoiMd from "../../../../docs/nhung-thay-doi.md?raw";
 import { tachThayDoi } from "../nhung-thay-doi";
 import { DsThayDoi } from "./NhungThayDoi";
+import { useState } from "react";
+import { useUngDung } from "../ung-dung";
+import { docCheDo, laKhoMang } from "../kho-mang";
+import { docLoi, taoTepNhatKy, xoaLoi } from "../nhat-ky-loi";
+
+const TEN_CHE_DO = { MAY_DON: "Máy đơn", MAY_CHU: "Máy chủ mạng nội bộ", MAY_TRAM: "Máy trạm" } as const;
+
+/** 1.0.20 (C2): nhật ký sự cố trên máy — xuất ra tệp để gửi tác giả khi cần hỗ trợ (không tự gửi đi). */
+function TheNhatKyLoi() {
+  const { kho, quyen, bao } = useUngDung();
+  const [so, setSo] = useState(() => docLoi().length);
+  const xuat = async () => {
+    const cd = docCheDo().cheDo;
+    let mayChu: string[] | string | undefined;
+    if (laKhoMang(kho) && quyen("XEM_NHAT_KY")) {
+      try {
+        mayChu = await kho.loiMayChu();
+      } catch (e) {
+        mayChu = `(không đọc được: ${String((e as Error)?.message ?? e)})`;
+      }
+    }
+    const ngay = new Date().toISOString().slice(0, 10);
+    await taiXuong(new TextEncoder().encode(taoTepNhatKy({ cheDo: TEN_CHE_DO[cd], mayChu })), `Nhat-ky-su-co_${PHIEN_BAN}_${ngay}.txt`, "text/plain");
+  };
+  return (
+    <div className="the mt-8" data-nhat-ky-loi>
+      <div className="the-than chu-nho" style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+        <span style={{ flex: 1, minWidth: 260 }}>
+          <b>Nhật ký sự cố:</b> <span data-so-loi>{so}</span> lỗi ghi trên máy này{laKhoMang(kho) && quyen("XEM_NHAT_KY") ? " (kèm lỗi máy chủ khi xuất)" : ""}. Chỉ thông điệp kỹ thuật, đã che số định danh, điện thoại — không tự gửi đi; khi cần hỗ trợ, xuất tệp và gửi tác giả.
+        </span>
+        <button className="nut nut-nho" onClick={() => void xuat()}>Xuất nhật ký lỗi</button>
+        <button className="nut nut-nho" disabled={!so} onClick={() => { if (confirm("Xóa nhật ký sự cố trên máy này?")) { xoaLoi(); setSo(0); bao("Đã xóa nhật ký sự cố"); } }}>Xóa</button>
+      </div>
+    </div>
+  );
+}
 
 /** Giới thiệu phần mềm, phiên bản, bản quyền, liên hệ. */
 export function HopGioiThieu({ dong, kqCapNhat }: { dong: () => void; kqCapNhat?: KetQuaKiemTra | null }) {
@@ -35,6 +71,7 @@ export function HopGioiThieu({ dong, kqCapNhat }: { dong: () => void; kqCapNhat?
       </table>
       <TheGiayPhep />
       <TheCapNhat kqDau={kqCapNhat} />
+      <TheNhatKyLoi />
       <details className="mt-8">
         <summary className="chu-nho">Những thay đổi của các phiên bản gần đây</summary>
         <DsThayDoi muc={(tachThayDoi(thayDoiMd) ?? []).slice(0, 5)} />

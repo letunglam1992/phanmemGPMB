@@ -1,9 +1,10 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
+import { ghiLoi } from "../nhat-ky-loi";
 
 /**
  * Rào lỗi giao diện (P0-1): một lỗi khi vẽ chỉ làm hỏng vùng được rào (màn, thẻ) — không trắng cả phần mềm,
  * không mất trạng thái của thành phần cha (hồ sơ đang sửa). Đổi `khoa` (chuyển màn, chuyển thẻ) thì tự thử lại.
- * Chi tiết lỗi chỉ chép vào bộ nhớ tạm theo yêu cầu, không gửi đi đâu.
+ * Chi tiết lỗi chỉ chép vào bộ nhớ tạm theo yêu cầu và ghi vào nhật ký sự cố trên máy (nhat-ky-loi.ts), không gửi đi đâu.
  */
 export class RaoLoi extends Component<{ ten: string; khoa?: string; khiLoi?: (thongDiep: string) => void; children: ReactNode }, { loi: Error | null }> {
   state: { loi: Error | null } = { loi: null };
@@ -14,6 +15,7 @@ export class RaoLoi extends Component<{ ten: string; khoa?: string; khiLoi?: (th
 
   componentDidCatch(loi: Error, info: ErrorInfo) {
     console.error(`Lỗi giao diện (${this.props.ten})`, loi, info.componentStack);
+    ghiLoi("GIAO_DIEN", `${this.props.ten}: ${loi.message}`, `${loi.stack ?? ""}\n${info.componentStack ?? ""}`);
     this.props.khiLoi?.(`${this.props.ten}: ${loi.message}`.slice(0, 300));
   }
 

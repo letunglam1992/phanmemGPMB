@@ -3,6 +3,7 @@
  * bằng HTTPS ghim vân tay chứng chỉ. Máy chủ kiểm tra lại quyền và quy tắc nghiệp vụ; kho này chỉ
  * chuyển tiếp, giữ phiên bản bản ghi để phát hiện xung đột khi hai người cùng sửa.
  */
+import { ghiLoi } from "./nhat-ky-loi";
 import type { BanLichSu, CanBo, DinhKem, Kho, KetQuaGhi } from "./kho";
 import type { PhienBanPA } from "./phuong-an";
 import type { DuAn, Ho } from "./mo-hinh";
@@ -49,6 +50,8 @@ export interface KhoMang extends Kho {
   /** Máy đơn: lõi SQLite gọi trong tiến trình (không qua mạng). */
   noiBo: boolean;
   trangThai(): Promise<{ coTaiKhoan: boolean; phienBan: string }>;
+  /** 1.0.20 (C2): lỗi nội bộ gần đây của máy chủ (Quản trị / người có quyền xem nhật ký). */
+  loiMayChu(): Promise<string[]>;
   dangNhap(ten: string, matKhau: string): Promise<NguoiDung>;
   khoiTao(u: NguoiDung): Promise<NguoiDung>;
   dangXuat(): Promise<void>;
@@ -113,6 +116,7 @@ export function taoKhoMang(ketNoi: KetNoi, gui: GuiYeuCau = guiQuaVo(ketNoi)): K
       /* thân không phải JSON */
     }
     if (r.ma === 401) token = undefined;
+    if (r.ma >= 500) ghiLoi("MAY_CHU", `${pt} ${dd.split("?")[0]} → ${r.ma}: ${tb}`);
     throw new LoiMayChu(r.ma, tb);
   }
   const json = async <T>(pt: string, dd: string, o?: Parameters<typeof goi>[2]): Promise<T> => JSON.parse(GIAI.decode((await goi(pt, dd, o)).than)) as T;
@@ -218,6 +222,7 @@ export function taoKhoMang(ketNoi: KetNoi, gui: GuiYeuCau = guiQuaVo(ketNoi)): K
     ketNoi,
     coPhien: () => !!token,
     trangThai: () => json("GET", "/api/trang-thai"),
+    loiMayChu: () => json<string[]>("GET", "/api/nhat-ky-loi"),
     async dangNhap(ten, matKhau) {
       const r = await json<{ token: string; nguoiDung: NguoiDung }>("POST", "/api/dang-nhap", { json: { ten, matKhau } });
       token = r.token;

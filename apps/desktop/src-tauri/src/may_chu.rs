@@ -36,8 +36,40 @@ pub type St = Arc<MayChu>;
 pub struct Loi(pub StatusCode, pub String);
 impl IntoResponse for Loi {
     fn into_response(self) -> Response {
+        if self.0.is_server_error() {
+            ghi_loi_he_thong(&format!("{} {}", self.0.as_u16(), self.1));
+        }
         (self.0, Json(json!({ "loi": self.1 }))).into_response()
     }
+}
+
+/// 1.0.20 (C2): nhật ký sự cố của máy chủ — lỗi nội bộ (5xx) ghi vào bộ nhớ (200 dòng gần nhất) và tệp `<CSDL>.loi.log`
+/// cạnh CSDL (quá 1 MB thì đổi tên thành `.loi.log.1`). Chỉ thông điệp lỗi kỹ thuật, không ghi nội dung hồ sơ; không gửi đi đâu.
+static LOI_GAN_DAY: Mutex<std::collections::VecDeque<String>> = Mutex::new(std::collections::VecDeque::new());
+static TEP_LOI: std::sync::OnceLock<PathBuf> = std::sync::OnceLock::new();
+pub const SO_DONG_LOI: usize = 200;
+
+pub fn ghi_loi_he_thong(thong_diep: &str) {
+    let dong = format!("{} {}", bay_gio(), thong_diep.replace(['\r', '\n'], " "));
+    if let Ok(mut q) = LOI_GAN_DAY.lock() {
+        q.push_back(dong.clone());
+        while q.len() > SO_DONG_LOI {
+            q.pop_front();
+        }
+    }
+    if let Some(p) = TEP_LOI.get() {
+        if std::fs::metadata(p).map(|m| m.len() > 1_048_576).unwrap_or(false) {
+            let _ = std::fs::rename(p, p.with_extension("log.1"));
+        }
+        use std::io::Write;
+        if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(p) {
+            let _ = writeln!(f, "{dong}");
+        }
+    }
+}
+
+pub fn loi_gan_day() -> Vec<String> {
+    LOI_GAN_DAY.lock().map(|q| q.iter().cloned().collect()).unwrap_or_default()
 }
 fn loi(ma: StatusCode, s: impl Into<String>) -> Loi {
     Loi(ma, s.into())
@@ -217,6 +249,7 @@ impl MayChu {
                 ma_hoa_csdl_cu(duong_dan, k)?;
             }
         }
+        let _ = TEP_LOI.set(duong_dan.with_extension("loi.log"));
         let c = Connection::open(duong_dan).map_err(|e| e.to_string())?;
         if let Some(k) = k {
             dat_khoa(&c, k).map_err(|e| e.to_string())?;
@@ -1489,6 +1522,13 @@ async fn ds_nhat_ky(State(st): State<St>, h: HeaderMap) -> Kq<Json<Value>> {
     Ok(Json(Value::Array(ds)))
 }
 
+/// 1.0.20 (C2): Quản trị xem lỗi nội bộ gần đây của máy chủ (để gửi tác giả khi cần hỗ trợ).
+async fn ds_loi_he_thong(State(st): State<St>, h: HeaderMap) -> Kq<Json<Value>> {
+    let u = xac_thuc(&st, &h)?;
+    can(&st, &u, "XEM_NHAT_KY")?;
+    Ok(Json(json!(loi_gan_day())))
+}
+
 /// Máy trạm ghi nhật ký: người thực hiện lấy theo phiên đăng nhập, không theo nội dung gửi lên.
 async fn ghi_nhat_ky(State(st): State<St>, h: HeaderMap, b: Bytes) -> Kq<Json<Value>> {
     let u = xac_thuc(&st, &h)?;
@@ -1897,6 +1937,7 @@ pub fn dinh_tuyen(st: St) -> Router {
         .route("/api/tep/:loai", get(ds_tep))
         .route("/api/tep/:loai/:id", get(doc_tep).put(luu_tep).delete(xoa_tep))
         .route("/api/nhat-ky", get(ds_nhat_ky).post(ghi_nhat_ky))
+        .route("/api/nhat-ky-loi", get(ds_loi_he_thong))
         .route("/api/cai-dat/:khoa", get(doc_cai_dat).put(luu_cai_dat))
         .route("/api/xoa-tat-ca", post(xoa_tat_ca))
         .route("/api/lo", post(ghi_lo))

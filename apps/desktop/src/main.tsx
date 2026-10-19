@@ -7,8 +7,10 @@ import { TAI_KHOAN_XEM, dangKyPhienXem, type PhienXem } from "./tong-hop-tinh/xe
 import type { Kho } from "./kho";
 import { ManLoiKetNoi, moKho } from "./thanh-phan/KetNoi";
 import { apDungGiaoDien, docGiaoDien } from "./giao-dien-sang-toi";
+import { caiBatLoi } from "./nhat-ky-loi";
 
 apDungGiaoDien(docGiaoDien());
+caiBatLoi();
 
 /** Mở kho theo chế độ của máy (máy đơn / máy chủ / máy trạm) rồi mới dựng giao diện. */
 function KhoiDong() {

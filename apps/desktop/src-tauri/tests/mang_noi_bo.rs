@@ -196,6 +196,11 @@ async fn may_chu_dau_cuoi() {
     let (_, d1) = m.goi("POST", "/api/nhat-ky", Some(&cb), json!({ "hanhDong": "Nhập Excel", "nguoi": "gia-mao" })).await;
     assert_eq!(d1["nguoi"], "canbo1");
     assert_eq!(m.goi("GET", "/api/nhat-ky", Some(&cb), Value::Null).await.0, 403);
+    // 1.0.20 (C2): lỗi nội bộ máy chủ — chỉ người có quyền xem nhật ký
+    assert_eq!(m.goi("GET", "/api/nhat-ky-loi", Some(&cb), Value::Null).await.0, 403);
+    let (ma_loi, ds_loi) = m.goi("GET", "/api/nhat-ky-loi", Some(&qt), Value::Null).await;
+    assert_eq!(ma_loi, 200);
+    assert!(ds_loi.is_array());
     let (_, nk) = m.goi("GET", "/api/nhat-ky", Some(&qt), Value::Null).await;
     let nk = nk.as_array().unwrap();
     let mut truoc = "0".repeat(64);
@@ -231,6 +236,21 @@ fn mat_khau_trung_giao_dien() {
     let u = json!({ "muoi": "00112233445566778899aabbccddeeff", "vongLap": 1000, "bam": "f0cefa2a773993cb679b769828ce6e3454961748d43ee4e2f790ca0c2631b6a0" });
     assert!(may_chu::dung_mat_khau(&u, "Matkhau2026"));
     assert!(!may_chu::dung_mat_khau(&u, "Matkhau2027"));
+}
+
+/// 1.0.20 (C2): lỗi nội bộ của máy chủ ghi vào nhật ký sự cố (một dòng, có thời điểm), giữ tối đa SO_DONG_LOI dòng gần nhất.
+#[test]
+fn nhat_ky_loi_may_chu() {
+    may_chu::ghi_loi_he_thong("500 Lỗi cơ sở dữ liệu:\nthử dòng hai");
+    let ds = may_chu::loi_gan_day();
+    let d = ds.iter().rev().find(|x| x.contains("thử dòng hai")).expect("có dòng lỗi");
+    assert!(d.contains("500 Lỗi cơ sở dữ liệu: thử dòng hai") && d.as_bytes()[10] == b'T');
+    for i in 0..(may_chu::SO_DONG_LOI + 5) {
+        may_chu::ghi_loi_he_thong(&format!("lỗi số {i}"));
+    }
+    let ds = may_chu::loi_gan_day();
+    assert_eq!(ds.len(), may_chu::SO_DONG_LOI);
+    assert!(ds.last().unwrap().ends_with(&format!("lỗi số {}", may_chu::SO_DONG_LOI + 4)));
 }
 
 #[test]
