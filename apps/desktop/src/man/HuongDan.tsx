@@ -2,6 +2,11 @@ import { useMemo, useState, type ReactNode } from "react";
 import { useUngDung, type Man } from "../ung-dung";
 import { khongDau } from "../tim-kiem";
 import { BieuTuong } from "../thanh-phan/BieuDo";
+import { taiXuong } from "../tai-xuong";
+import { PHIEN_BAN } from "../phien-ban";
+
+/** 1.0.20 (D1): tài liệu Word có ảnh minh họa (tools/huong-dan) — kèm trong bộ cài, tải về máy để in, tập huấn. */
+export const TEP_HUONG_DAN = "huong-dan/Huong-dan-su-dung-GPMB.docx";
 
 /**
  * Hướng dẫn sử dụng trong phần mềm (tóm tắt docs/13, docs/14): mục lục, tìm kiếm, mỗi bước có nút mở đúng màn hình.
@@ -20,6 +25,7 @@ const MUC: Muc[] = [
       { tieuDe: "Thiết lập đơn vị", noiDung: <>Khai báo đơn vị sử dụng phần mềm và các cơ quan thường dùng (UBND xã, đơn vị bồi thường, phòng chuyên môn): tên, cơ quan cấp trên, ký hiệu, người ký. Thông tin được điền sẵn vào văn bản, báo cáo.</>, mo: { nhan: "Mở Thiết lập đơn vị", man: { ten: "don-vi" } } },
       { tieuDe: "Nhập lịch ngày nghỉ năm hiện tại", noiDung: <>Cài đặt chung → Lịch ngày nghỉ: ngày lễ, Tết, nghỉ bù, làm bù theo thông báo chính thức. Thời hạn tính theo ngày làm việc dựa vào lịch này (VM-25).</>, mo: { nhan: "Mở Cài đặt chung", hanhDong: "caiDat" } },
       { tieuDe: "Tạo dự án", noiDung: <>Menu <b>Dự án</b> → <b>Dự án mới</b>: tên, xã. Lưu xong phần mềm mở ngay không gian <b>Hồ sơ</b> của dự án ở thẻ Thông tin dự án để nhập tiếp: căn cứ thu hồi, ngày thông báo, giá gạo (kèm nguồn), hạn mức giao đất nông nghiệp, hệ số giá đất và thông tin dùng chung cho văn bản.</>, mo: { nhan: "Mở Dự án & hồ sơ", man: { ten: "du-an" } } },
+      { tieuDe: "Tập huấn", noiDung: <>Dự án → <b>Tạo dự án tập huấn</b>: 6 hộ, bản đồ DXF giả lập để thực hành; không gửi lên tỉnh; kết thúc bấm <b>Xóa dự án tập huấn</b> (xóa sạch ngay). Tài liệu Word có ảnh: nút <b>Tải hướng dẫn (Word, có ảnh)</b> ở đầu màn này.</>, mo: { nhan: "Mở Dự án", man: { ten: "du-an" } } },
       { tieuDe: "Sao lưu định kỳ", noiDung: <>Nút <b>Sao lưu, khôi phục</b> trên thanh tiêu đề; nên bật tự động sao lưu ra ổ mạng nội bộ. Tệp sao lưu có thông tin cá nhân, được mã hóa (mật khẩu sao lưu hoặc mật khẩu khôi phục) — vẫn cất giữ theo quy chế bảo mật.</>, mo: { nhan: "Mở Sao lưu", hanhDong: "saoLuu" } },
     ],
   },
@@ -35,6 +41,8 @@ const MUC: Muc[] = [
       { tieuDe: "7. Chốt, phê duyệt phương án", noiDung: <>Trước khi chốt, bấm <b>Soát phương án</b> (Tổng quan dự án → Phương án – phiên bản): phần mềm liệt kê lỗi số liệu (DT thu hồi vượt DT thửa, thửa trùng giữa hộ, mã trùng), khoản thiếu căn cứ và các mục cần xem xét (thu hồi hết đất ở chưa ghi TĐC, đất NN chưa khai để xét ổn định đời sống, tạm cư chưa có nhân khẩu…) kèm căn cứ — chỉ để nhắc, không thay việc thẩm định. Hồ sơ → Tổng quan dự án → Phương án – phiên bản → <b>Chốt phương án…</b> (lãnh đạo) → <b>Phê duyệt…</b> nhập số, ngày QĐ đã ký. Bản đã duyệt không sửa được; thay đổi sau đó lập bản điều chỉnh (ghi lý do).</> },
       { tieuDe: "8. Chi trả", noiDung: <>Hồ sơ → <b>Chi trả</b>: ghi từng đợt kèm chứng từ; theo dõi hạn 30 ngày (khoản 3 Điều 94 Luật Đất đai), tiền chậm trả tạm tính; xuất Excel theo dõi chi trả.</> },
       { tieuDe: "8a. Bàn giao mặt bằng", noiDung: <>Hồ sơ → tab <b>Tiến độ</b> → thẻ <b>Bàn giao mặt bằng</b>: ngày, số biên bản, DT bàn giao (trống = toàn bộ DT thu hồi). Hộ đã chi trả mà chưa ghi bàn giao hiện "Đã chi trả, chờ bàn giao"; ghi bàn giao xong là <b>hoàn thành GPMB</b>. Thưởng bàn giao trước hạn: khai báo mốc (hạn, tỷ lệ, mức tối đa, cơ sở tính, căn cứ) ở Thông tin dự án — phần mềm chỉ tính theo mốc đã khai. Bước 14 "Cưỡng chế (nếu có)" không phát sinh: chọn bước → <b>Không áp dụng</b> (ghi lý do; cần quyền xác nhận bước).</> },
+      { tieuDe: "8a1. Khiếu nại, kiến nghị, cưỡng chế (1.0.20)", noiDung: <>Hồ sơ → thẻ <b>Khiếu nại, cưỡng chế</b>: ghi đơn khiếu nại (hạn thụ lý 10 ngày — Điều 27, 36; giải quyết lần đầu 30–60 ngày — Điều 28; lần hai 45–70 ngày — Điều 37 Luật Khiếu nại 2011; cán bộ đánh dấu phức tạp, vùng sâu vùng xa), kiến nghị (hạn do đơn vị nhập kèm căn cứ). Cưỡng chế kiểm đếm bắt buộc (Điều 88), cưỡng chế thu hồi đất (Điều 89 Luật Đất đai 2024): phần mềm đối chiếu vận động 10 ngày (điểm b k7 Đ87), niêm yết, hiệu lực, hạn thi hành 10 ngày, ngày nghỉ và 15 ngày trước, sau Tết Âm lịch, bàn giao 30 ngày sau chấp hành.</> },
+      { tieuDe: "8a2. Chi trả, kinh phí, quyết toán (1.0.20)", noiDung: <>Dự án → thẻ <b>Chi trả, kinh phí</b>: tổng hợp chi trả theo bản phương án đã phê duyệt (tiền mặt, chuyển khoản, gửi ngân hàng, còn phải chi), <b>Xuất Excel quyết toán</b>; kinh phí tổ chức thực hiện (k1 Đ94; khoản cưỡng chế k6 Đ89): tỷ lệ trích nhập kèm căn cứ, dự toán, giải ngân.</> },
       { tieuDe: "8b. Lịch sử thay đổi, khôi phục hồ sơ", noiDung: <>Hồ sơ → tab <b>Nhật ký</b> → <b>Lịch sử thay đổi</b>: mỗi lần lưu, bản cũ được giữ; bảng nêu từng trường "từ … thành …", người, thời điểm. <b>Quản trị</b> bấm <b>Khôi phục bản này</b> (ghi lý do) để đưa hồ sơ về bản cũ — bản hiện tại vẫn được giữ. Hồ sơ đã xóa hẳn: Thùng rác → <b>Hồ sơ đã xóa hẳn (còn trong lịch sử)</b>. Số năm giữ lịch sử: Cài đặt chung → <b>Lịch sử bản ghi</b> (Quản trị đặt; 0 = không thời hạn).</> },
       { tieuDe: "8c. Tệp đính kèm, lịch sử từng ô", noiDung: <>Hồ sơ → tab <b>Đính kèm</b>: chọn bước (hoặc chung), ghi chú, <b>Chọn tệp đính kèm…</b> (PDF, ảnh, Word, Excel; ≤ 20 MB mỗi tệp) — biên bản đã ký, QĐ bản quét, GCN; tệp có trong bản sao lưu. Chuột phải trên một ô (họ tên, diện tích, đơn giá…) → <b>Lịch sử thay đổi của ô này</b>: ai sửa, lúc nào, từ … thành ….</> },
       { tieuDe: "8d. Dự báo tiến độ, đối chiếu diện tích", noiDung: <>Tổng quan dự án → <b>Dự báo tiến độ</b>: ngày dự kiến chi trả xong từng hộ và cả dự án theo thời hạn luật định; bước không có thời hạn luật định cần nhập <b>thời gian dự kiến</b> ở Lập kế hoạch. Thẻ <b>Đối chiếu diện tích</b>: bản đồ ↔ hồ sơ ↔ phương án ↔ GCN; ngưỡng lệch do đơn vị đặt ở Cài đặt chung → Ngưỡng lệch diện tích.</> },
@@ -143,8 +151,13 @@ export function HuongDan() {
         <div>
           <div className="nhan-trang">Trợ giúp</div>
           <h1>Hướng dẫn sử dụng</h1>
-          <div className="mo-ta">Cách dùng phần mềm theo quy trình công việc. Bản đầy đủ: docs/13 (sử dụng), docs/14 (quản trị) trong bộ tài liệu kèm phần mềm.</div>
+          <div className="mo-ta">Cách dùng phần mềm theo quy trình công việc. Bản đầy đủ có ảnh minh họa: tài liệu Word (tải về bên phải); docs/13 (sử dụng), docs/14 (quản trị).</div>
         </div>
+        <button className="nut nut-chinh" data-tai-huong-dan onClick={async () => {
+          const r = await fetch(`${import.meta.env.BASE_URL}${TEP_HUONG_DAN}`);
+          if (!r.ok) throw new Error("Không đọc được tệp hướng dẫn kèm phần mềm");
+          await taiXuong(new Uint8Array(await r.arrayBuffer()), `Huong-dan-su-dung-GPMB_${PHIEN_BAN}.docx`, "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+        }}>Tải hướng dẫn (Word, có ảnh)</button>
       </div>
       <div className="hd-khung">
         <div className="the hd-muc-luc">

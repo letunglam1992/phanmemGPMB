@@ -161,3 +161,15 @@ test("C2, D2: dự án tập huấn tạo — có bản đồ, không gửi tỉ
   await nk.getByRole("button", { name: "Xóa" }).click();
   await expect(nk.locator("[data-so-loi]")).toHaveText("0");
 });
+
+test("D1: tải hướng dẫn sử dụng (Word, có ảnh) ở màn Hướng dẫn", async ({ page: p }) => {
+  await vao(p, false);
+  await p.getByRole("button", { name: "Hướng dẫn sử dụng", exact: true }).click();
+  await p.locator("[data-tai-huong-dan]").click();
+  const t = await tep(p, "Huong-dan-su-dung-GPMB_");
+  expect(t.buf.length).toBeGreaterThan(500_000);
+  const PizZip = (await import("pizzip")).default;
+  const z = new PizZip(t.buf);
+  expect(z.file("word/document.xml")!.asText()).toContain("HƯỚNG DẪN SỬ DỤNG");
+  expect(Object.keys(z.files).filter((k) => k.startsWith("word/media/")).length).toBeGreaterThanOrEqual(20);
+});

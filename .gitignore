@@ -14,3 +14,6 @@ thay-the*.json
 # Kết quả kiểm thử giao diện
 apps/desktop/test-results/
 apps/desktop/playwright-report/
+
+# Ảnh chụp tạm cho tài liệu hướng dẫn (tools/huong-dan/chup-anh.mjs)
+tools/huong-dan/anh/
