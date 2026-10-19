@@ -381,6 +381,102 @@ export async function xuatExcelChiTra(duAn: DuAn, hos: Ho[], tyLe: GiaiDoanTyLe[
   await taiVe(await taoWorkbookChiTra(duAn, hos, tyLe, homNay), `Theo-doi-chi-tra_${tenAnToan(duAn.ten)}.xlsx`);
 }
 
+/**
+ * 1.0.20 (B4, B3): quyết toán chi trả theo bản phương án đã phê duyệt + kinh phí tổ chức thực hiện; kèm trang theo dõi
+ * chi trả từng hộ (taoWorkbookChiTra).
+ */
+export async function taoWorkbookQuyetToan(duAn: DuAn, hos: Ho[], tyLe: GiaiDoanTyLe[], homNay: string): Promise<ExcelJS.Workbook> {
+  const { quyetToanChiTra, tinhKinhPhi, giaiNganHieuLuc, TEN_LOAI_KHOAN_KP } = await import("./quyet-toan");
+  const wb = await taoWorkbookChiTra(duAn, hos, tyLe, homNay);
+  const ngay = homNay.split("-").reverse().join("/");
+  const tieuDe = (ws: ExcelJS.Worksheet, n: number, a: string, b: string) => {
+    ws.mergeCells(1, 1, 1, n);
+    ws.getCell(1, 1).value = a;
+    ws.getCell(1, 1).font = { name: FONT, bold: true, size: 13 };
+    ws.getCell(1, 1).alignment = { horizontal: "center" };
+    ws.mergeCells(2, 1, 2, n);
+    ws.getCell(2, 1).value = b;
+    ws.getCell(2, 1).font = { name: FONT, italic: true };
+    ws.getCell(2, 1).alignment = { horizontal: "center", wrapText: true };
+    ws.getRow(2).height = 32;
+  };
+  const dau = (ws: ExcelJS.Worksheet, r: number, cot: string[]) => {
+    const hd = ws.getRow(r);
+    hd.values = cot;
+    hd.font = { name: FONT, bold: true };
+    hd.alignment = { wrapText: true, vertical: "middle", horizontal: "center" };
+    hd.height = 44;
+    dongKe(hd, 1, cot.length);
+  };
+  const qt = quyetToanChiTra(duAn, hos, tyLe, homNay);
+  const ws = wb.addWorksheet("QUYET TOAN CHI TRA");
+  const cot = ["STT", "Bản phương án / QĐ phê duyệt", "Số hộ", "Phải trả (đ)", "Tiền mặt (đ)", "Chuyển khoản (đ)", "Gửi NH chưa trả (đ)", "Gửi NH đã trả (đ)", "Tổng đã chi (đ)", "Còn phải chi (đ)", "Chi vượt (đ)", "Hộ chưa chi đủ", "Tiền chậm trả tạm tính (đ)", "Lãi tiền gửi đã trả (đ)"];
+  ws.columns = [6, 40, 8, 17, 16, 16, 16, 16, 17, 17, 14, 10, 17, 15].map((w) => ({ width: w }));
+  tieuDe(ws, cot.length, `TỔNG HỢP CHI TRẢ TIỀN BỒI THƯỜNG, HỖ TRỢ, TÁI ĐỊNH CƯ THEO PHƯƠNG ÁN ĐÃ PHÊ DUYỆT – ${duAn.ten}`, `Số liệu đến ngày ${ngay}, theo bản phê duyệt hiện hành của từng hộ. Gửi ngân hàng: khoản 4 Điều 94 Luật Đất đai 2024 (đã coi là chi trả). Tiền chậm trả là TẠM TÍNH (điểm b khoản 3 Điều 94).`);
+  dau(ws, 4, cot);
+  let r = 5;
+  const tienO = (row: ExcelJS.Row) => { for (const k of [4, 5, 6, 7, 8, 9, 10, 11, 13, 14]) row.getCell(k).numFmt = DINH_DANG_TIEN; };
+  qt.dong.forEach((d, i) => {
+    const row = ws.getRow(r++);
+    row.values = [i + 1, `Bản ${d.ban.so}${d.ban.dotTen ? ` (${d.ban.dotTen})` : ""} – ${moTaQd(d.ban.pheDuyet)}`, d.soHo, so(d.phaiTra), so(d.tienMat), so(d.chuyenKhoan), so(d.guiNHChuaTra), so(d.guiNHDaTra), so(d.daChi), so(d.conPhaiChi), so(d.chiVuot), d.soHoChuaChiDu, d.tienChamTra ? so(d.tienChamTra) : "Thiếu căn cứ", so(d.tienLaiNH)];
+    row.font = { name: FONT };
+    row.alignment = { vertical: "top", wrapText: true };
+    tienO(row);
+    dongKe(row, 1, cot.length);
+  });
+  const t = qt.tong;
+  const tg = ws.getRow(r++);
+  tg.values = ["", "Tổng cộng", t.soHo, so(t.phaiTra), so(t.tienMat), so(t.chuyenKhoan), so(t.guiNHChuaTra), so(t.guiNHDaTra), so(t.daChi), so(t.conPhaiChi), so(t.chiVuot), t.soHoChuaChiDu, t.tienChamTra ? so(t.tienChamTra) : "Thiếu căn cứ", so(t.tienLaiNH)];
+  tg.font = { name: FONT, bold: true };
+  tienO(tg);
+  dongKe(tg, 1, cot.length);
+  if (qt.hoChuaDuyetCoChi) {
+    ws.mergeCells(r + 1, 1, r + 1, cot.length);
+    ws.getCell(r + 1, 1).value = `Lưu ý: ${qt.hoChuaDuyetCoChi} hộ đã ghi chi trả nhưng chưa có trong bản phương án đã phê duyệt — không tính vào bảng trên.`;
+    ws.getCell(r + 1, 1).font = { name: FONT, italic: true, color: { argb: "FFC00000" } };
+  }
+
+  const kp = duAn.kinhPhi;
+  const k = tinhKinhPhi(duAn, hos, tyLe, homNay);
+  const w2 = wb.addWorksheet("KINH PHI TCTH");
+  w2.columns = [6, 46, 18, 50].map((w) => ({ width: w }));
+  tieuDe(w2, 4, `KINH PHÍ TỔ CHỨC THỰC HIỆN BỒI THƯỜNG, HỖ TRỢ, TÁI ĐỊNH CƯ – ${duAn.ten}`, `Khoản 1 Điều 94, khoản 6 Điều 89 Luật Đất đai 2024. Tỷ lệ, cơ sở tính, nội dung chi do đơn vị nhập kèm căn cứ. Số liệu đến ngày ${ngay}.`);
+  const ghi = (row: number, vals: (string | number | null)[], dam = false, tien = [3]) => {
+    const rw = w2.getRow(row);
+    rw.values = vals;
+    rw.font = { name: FONT, bold: dam };
+    rw.alignment = { vertical: "top", wrapText: true };
+    for (const c of tien) rw.getCell(c).numFmt = DINH_DANG_TIEN;
+    dongKe(rw, 1, 4);
+  };
+  let r2 = 4;
+  ghi(r2++, ["", "Chỉ tiêu", "Số tiền (đ)", "Ghi chú, căn cứ"], true, []);
+  ghi(r2++, ["1", k.coSoNhap ? "Cơ sở tính (đơn vị nhập)" : "Cơ sở tính: tổng phải trả theo các bản đã phê duyệt", so(k.coSo), ""]);
+  ghi(r2++, ["2", `Mức tối đa theo tỷ lệ${kp?.tyLe ? ` ${kp.tyLe.replace(".", ",")}%` : ""}`, k.mucToiDa ? so(k.mucToiDa) : null, k.mucToiDa ? kp?.canCuTyLe ?? "" : "Thiếu căn cứ / chưa nhập tỷ lệ"]);
+  ghi(r2++, ["3", "Tổng dự toán", so(k.duToan), kp?.qdDuToan?.so ? `QĐ ${kp.qdDuToan.so}${kp.qdDuToan.ngay ? ` ngày ${kp.qdDuToan.ngay.split("-").reverse().join("/")}` : ""}${kp.qdDuToan.coQuan ? ` của ${kp.qdDuToan.coQuan}` : ""}` : "Chưa ghi QĐ phê duyệt dự toán"]);
+  ghi(r2++, ["4", "Đã giải ngân", so(k.daGiaiNgan), ""]);
+  ghi(r2++, ["5", "Còn lại (3 − 4)", so(k.conLai), ""], true);
+  r2++;
+  ghi(r2++, ["STT", "Khoản dự toán", "Số tiền (đ)", "Loại, căn cứ"], true, []);
+  (kp?.khoan ?? []).forEach((x, i) => ghi(r2++, [i + 1, x.noiDung, so(D(x.soTien || "0")), [TEN_LOAI_KHOAN_KP[x.loai], x.canCu].filter(Boolean).join(" — ")]));
+  r2++;
+  ghi(r2++, ["STT", "Giải ngân (ngày — nội dung)", "Số tiền (đ)", "Chứng từ"], true, []);
+  giaiNganHieuLuc(kp).sort((a, b) => a.ngay.localeCompare(b.ngay)).forEach((g, i) => ghi(r2++, [i + 1, `${g.ngay.split("-").reverse().join("/")} — ${g.noiDung}`, so(D(g.soTien || "0")), g.chungTu]));
+  if (k.canhBao.length) {
+    r2++;
+    for (const c of k.canhBao) {
+      w2.mergeCells(r2, 1, r2, 4);
+      w2.getCell(r2, 1).value = `Lưu ý: ${c.noiDung}${c.canCu ? ` (${c.canCu})` : ""}`;
+      w2.getCell(r2++, 1).font = { name: FONT, italic: true, color: { argb: "FFC00000" } };
+    }
+  }
+  return wb;
+}
+
+export async function xuatExcelQuyetToan(duAn: DuAn, hos: Ho[], tyLe: GiaiDoanTyLe[], homNay: string) {
+  await taiVe(await taoWorkbookQuyetToan(duAn, hos, tyLe, homNay), `Quyet-toan-chi-tra_${tenAnToan(duAn.ten)}.xlsx`);
+}
+
 function colName(n: number): string {
   let s = "";
   while (n > 0) {

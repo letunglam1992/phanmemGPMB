@@ -652,6 +652,8 @@ export interface DuAn {
   dotThuHoi?: DotThuHoi[];
   /** P3-3: quỹ đất, nhà tái định cư của dự án (quy-tdc.ts). */
   quyTdc?: import("./quy-tdc").QuyTdc;
+  /** 1.0.20 (B3): kinh phí tổ chức thực hiện bồi thường, hỗ trợ, TĐC — dự toán, giải ngân (quyet-toan.ts). */
+  kinhPhi?: import("./quyet-toan").KinhPhiTcth;
   taoLuc: string;
 }
 

@@ -40,6 +40,7 @@ import { HopGhiThonBan } from "../thanh-phan/OThonBan";
 import { TheDoiChieuDt } from "../thanh-phan/DoiChieuDt";
 import { TheDuBao } from "../thanh-phan/DuBao";
 import { TheQuyTdc } from "../thanh-phan/QuyTdc";
+import { TheChiTraKinhPhi } from "../thanh-phan/KinhPhi";
 import { HopPhanCong } from "../thanh-phan/PhanCong";
 import { ChonDot, HopXepDot, TheDotThuHoi, TheHanThuHoi, TheTongHopDot, loiDsDot } from "../thanh-phan/DotThuHoi";
 import { coDot, duAnTheoBoHo, khopDot } from "../dot-thu-hoi";
@@ -56,6 +57,7 @@ const THE = [
   { ma: "buoc-chung", ten: "Bước chung (1–4)", bt: "dongHo" },
   { ma: "ho", ten: "Hộ, cá nhân, tổ chức", bt: "nguoi" },
   { ma: "tai-dinh-cu", ten: "Tái định cư", bt: "nha" },
+  { ma: "kinh-phi", ten: "Chi trả, kinh phí", bt: "theNganHang" },
   { ma: "ban-do", ten: "Bản đồ", bt: "thua" },
   { ma: "tai-lieu", ten: "Tài liệu, văn bản", bt: "saoChep" },
 ] as const;
@@ -144,6 +146,7 @@ export function KhongGianDuAn({ duAnId, tab = "tong-quan", ma, hoId }: { duAnId:
       {tab === "ho" && <TheHo duAn={duAn} kq={kq} />}
       {tab === "tai-lieu" && <TaiLieuDuAn duAn={duAn} />}
       {tab === "tai-dinh-cu" && <TheQuyTdc duAn={duAn} hos={hoCua(duAnId, true)} />}
+      {tab === "kinh-phi" && <TheChiTraKinhPhi key={duAn.id} duAn={duAn} />}
       {tab === "ban-do" && <div className="kg-nhung"><BanDo duAnId={duAnId} /></div>}
       {tab === "van-ban" && <div className="kg-nhung"><VanBan key={`${duAnId}-${ma}-${hoId}`} duAnId={duAnId} maDau={ma} hoIdDau={hoId} chiDuAn={!hoId} /></div>}
       </RaoLoi>
