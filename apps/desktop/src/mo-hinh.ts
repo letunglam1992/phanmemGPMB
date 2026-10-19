@@ -447,6 +447,10 @@ export interface Ho {
   phuTrach?: string;
   /** 1.0.11: bộ chính sách riêng của hộ (chuyển theo hộ, kèm giải trình — chuyen-bo.ts); trống = theo đợt / dự án. */
   boChinhSach?: string;
+  /** 1.0.20 (B1): đơn khiếu nại, kiến nghị của hộ (khieu-nai.ts). */
+  khieuNai?: import("./khieu-nai").DonKhieuNai[];
+  /** 1.0.20 (B2): hồ sơ cưỡng chế kiểm đếm bắt buộc, cưỡng chế thu hồi đất (cuong-che.ts). */
+  cuongChe?: import("./cuong-che").CuongChe[];
 }
 
 /**

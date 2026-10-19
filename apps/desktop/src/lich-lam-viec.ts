@@ -60,6 +60,13 @@ export function hanChot(moc: string, n: number, loai: "N" | "NLV", lich: LichLam
   return d;
 }
 
+/** Hạn n ngày kể từ ngày mốc; ngày cuối là ngày nghỉ cuối tuần, lễ, Tết → ngày làm việc tiếp theo (khoản 5 Điều 148 BLDS 2015). */
+export function hanChotNgay(moc: string, n: number, lich: LichLamViec): string {
+  let d = hanChot(moc, n, "N", lich);
+  while (!laNgayLamViec(d, lich)) d = cong1(d);
+  return d;
+}
+
 /** Số ngày làm việc từ sau `tu` đến hết `den` (âm nếu den trước tu). */
 export function soNgayLamViec(tu: string, den: string, lich: LichLamViec): number {
   if (den === tu) return 0;

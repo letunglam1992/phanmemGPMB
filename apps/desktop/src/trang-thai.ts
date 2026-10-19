@@ -20,6 +20,8 @@ import { LICH_TRONG, type LichLamViec } from "./lich-lam-viec";
 import { tinhChiTra, type GiaiDoanTyLe } from "./chi-tra";
 import { dinhDang } from "@gpmb/core";
 import { dtDaBanGiao, dtThuHoiHo } from "./ban-giao";
+import { TEN_LOAI_DON, hanDon } from "./khieu-nai";
+import { TEN_LOAI_CC, cuongCheDangMo, kiemCuongChe } from "./cuong-che";
 export type TrangThaiGpmb = "HOAN_THANH" | "CHO_BAN_GIAO" | "DANG_XU_LY" | "DA_KIEM_DEM" | "VUONG_MAC" | "CHUA_KIEM_DEM";
 
 export const THU_TU_TRANG_THAI: TrangThaiGpmb[] = ["HOAN_THANH", "CHO_BAN_GIAO", "DANG_XU_LY", "DA_KIEM_DEM", "VUONG_MAC", "CHUA_KIEM_DEM"];
@@ -300,6 +302,19 @@ export function canhBaoDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: st
       else if (t.trangThai === "SAP_HET") out.push({ muc: "TRUNG_BINH", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: bước ${han.buoc}. ${ten} sắp hết hạn (${hc}, còn ${t.conLai} ${dv})`, canCu: han.canCu });
     }
     if (h.vuongMac?.noiDung) out.push({ muc: "TRUNG_BINH", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: ${h.vuongMac.noiDung}` });
+    // 1.0.20 (B1): đơn khiếu nại, kiến nghị quá hạn / sắp hết hạn thụ lý, giải quyết
+    for (const d of h.khieuNai ?? []) {
+      const t = hanDon(d, homNay, lich);
+      const ten = `${TEN_LOAI_DON[d.loai]}${d.loai === "KHIEU_NAI" ? ` lần ${d.lan ?? 1}` : ""} nhận ngày ${d.ngayNhan.split("-").reverse().join("/")}`;
+      const hc = t.han?.split("-").reverse().join("/");
+      if (t.tt === "QUA_HAN_THU_LY") out.push({ muc: "CAO", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: ${ten} quá hạn thụ lý (hạn ${hc})`, canCu: t.canCu });
+      else if (t.tt === "QUA_HAN") out.push({ muc: "CAO", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: ${ten} quá hạn giải quyết (hạn ${hc}, ${t.soNgay} ngày)`, canCu: t.canCu });
+      else if (t.tt === "SAP_HET") out.push({ muc: "TRUNG_BINH", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: ${ten} sắp hết hạn giải quyết (${hc}, còn ${t.conLai} ngày)`, canCu: t.canCu });
+    }
+    // 1.0.20 (B2): cưỡng chế — điều kiện, thời hạn mức cao
+    for (const c of h.cuongChe ?? [])
+      for (const k of kiemCuongChe(c, h, homNay, lich).filter((x) => x.muc === "CAO"))
+        out.push({ muc: "CAO", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: ${TEN_LOAI_CC[c.loai].toLowerCase()} — ${k.noiDung}`, canCu: k.canCu });
     for (const v of vuongMacBuoc(h)) out.push({ muc: "TRUNG_BINH", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: vướng mắc ở bước ${v.ma}. ${v.ten} — ${v.noiDung}` });
     if (k.tong.soDongThieuCanCu && dangLapPhuongAn(h))
       out.push({ muc: daNiemYet(h) ? "CAO" : "TRUNG_BINH", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: ${k.tong.soDongThieuCanCu} khoản thiếu căn cứ${daNiemYet(h) ? " (phương án đã niêm yết)" : ""}` });
@@ -341,6 +356,14 @@ export function vuongMacHo(duAn: DuAn, h0: Ho, kq: KetQuaHo, homNay: string): { 
   if (qh.length) out.push({ noiDung: `Quá hạn kế hoạch bước ${qh.join(", ")}`, muc: "CAO" });
   if (kq.tong.soDongThieuCanCu > 0 && daNiemYet(h)) out.push({ noiDung: `${kq.tong.soDongThieuCanCu} khoản thiếu căn cứ (đã niêm yết)`, muc: "CAO" });
   else if (kq.tong.soDongThieuCanCu > 0) out.push({ noiDung: `${kq.tong.soDongThieuCanCu} khoản thiếu căn cứ`, muc: "TRUNG_BINH" });
+  // 1.0.20: đơn khiếu nại, kiến nghị chưa giải quyết; hồ sơ cưỡng chế chưa kết thúc
+  const don = (h0.khieuNai ?? []).filter((d) => !d.ketQua);
+  if (don.length) {
+    const qh = don.filter((d) => /^QUA_HAN/.test(hanDon(d, homNay, LICH_TRONG).tt)).length;
+    out.push({ noiDung: `${don.length} đơn khiếu nại, kiến nghị đang giải quyết${qh ? ` (${qh} quá hạn)` : ""}`, muc: qh ? "CAO" : "TRUNG_BINH" });
+  }
+  const cc = cuongCheDangMo(h0);
+  if (cc.length) out.push({ noiDung: cc.map((c) => TEN_LOAI_CC[c.loai]).join("; ") + " — đang thực hiện", muc: "CAO" });
   const cho = CAC_BUOC.filter((b) => h.tienDo[b.ma]?.trangThai === "CHO_DUYET" && !h.tienDo[b.ma]?.tuDuAn).map((b) => b.ma);
   if (cho.length) out.push({ noiDung: `Bước ${cho.join(", ")} chờ duyệt`, muc: "TRUNG_BINH" });
   return out;

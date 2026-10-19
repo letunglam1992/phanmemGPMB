@@ -10,6 +10,9 @@ import { ngayVN, tien } from "../thanh-phan/chung";
 import { BieuTuong } from "../thanh-phan/BieuDo";
 import { TabThua } from "./ho/Thua";
 import { TabChiTra } from "./ho/ChiTra";
+import { TabKhieuNai } from "./ho/KhieuNai";
+import { donDangMo } from "../khieu-nai";
+import { cuongCheDangMo } from "../cuong-che";
 import { TabKiemDem } from "./ho/KiemDem";
 import { TabTinhToan } from "./ho/TinhToan";
 import { RaoLoi } from "../thanh-phan/RaoLoi";
@@ -38,6 +41,7 @@ const CAC_TAB = [
   ["van-ban", "Văn bản", "vanBan"],
   ["tien-do", "Tiến độ", "dongHo"],
   ["chi-tra", "Chi trả", "theNganHang"],
+  ["khieu-nai", "Khiếu nại, cưỡng chế", "canhBao"],
   ["dinh-kem", "Đính kèm", "saoChep"],
   ["nhat-ky", "Nhật ký", "nhatKy"],
 ] as const;
@@ -112,7 +116,7 @@ export function HoSo({ duAnId, hoId, tabDau, maVbDau, thuaDau }: { duAnId: strin
     return true;
   };
   /** Thẻ kế tiếp theo trình tự nhập liệu (bỏ Nhật ký) — "Lưu và tiếp" lưu rồi chuyển sang. */
-  const THU_TU = CAC_TAB.map(([ma]) => ma).filter((ma) => ma !== "nhat-ky" && ma !== "dinh-kem");
+  const THU_TU = CAC_TAB.map(([ma]) => ma).filter((ma) => ma !== "nhat-ky" && ma !== "dinh-kem" && ma !== "khieu-nai");
   const ke = CAC_TAB.find(([ma]) => ma === THU_TU[THU_TU.indexOf(tab as (typeof THU_TU)[number]) + 1]);
   const luuTiep = async () => {
     if (daSua && !(await luu())) return;
@@ -143,7 +147,7 @@ export function HoSo({ duAnId, hoId, tabDau, maVbDau, thuaDau }: { duAnId: strin
   };
   const hieuLuc = hoHieuLuc(duAn, h);
   const tt = trangThaiHo(duAn, h, kq, homNayIso());
-  const dem: Record<string, number> = { "nhan-khau": h.nhanKhau.length, thua: h.thua.length, "kiem-dem": h.taiSan.length, tinh: kq.tong.soDongCanXacNhan + kq.tong.soDongThieuCanCu };
+  const dem: Record<string, number> = { "nhan-khau": h.nhanKhau.length, thua: h.thua.length, "kiem-dem": h.taiSan.length, tinh: kq.tong.soDongCanXacNhan + kq.tong.soDongThieuCanCu, "khieu-nai": donDangMo(h).length + cuongCheDangMo(h).length };
 
   return (
     <div className="trang trang-ho">
@@ -231,6 +235,7 @@ export function HoSo({ duAnId, hoId, tabDau, maVbDau, thuaDau }: { duAnId: strin
           </fieldset>
           {tab === "tinh" && <TabTinhToan h={h} duAn={duAn} kq={kq} />}
           {tab === "chi-tra" && <fieldset className="khung-quyen" disabled={!choSua}><TabChiTra h={h} duAn={duAn} doi={doi} /></fieldset>}
+          {tab === "khieu-nai" && <fieldset className="khung-quyen" disabled={!choSua}><TabKhieuNai h={h} duAn={duAn} doi={doi} /></fieldset>}
           {tab === "tien-do" && (
             <>
               <TabTienDo h={h} duAn={duAn} doi={doi} moDuAn={() => di({ ten: "du-an", duAnId, tab: "buoc-chung" })} soanMau={(ma) => soanVb(ma)} luuNgay={async (moi, nk) => { setH(moi); await luuHo(moi, nk); xoaBanNhap(hoId); setDaSua(false); }} />

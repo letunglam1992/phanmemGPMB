@@ -13,6 +13,7 @@
  * gói trước đó của cùng đơn vị — phát hiện gói giả danh (khóa ký khác lần trước). Đây là chữ ký kỹ thuật của bản cài phần
  * mềm, không thay chữ ký số của cơ quan theo pháp luật về giao dịch điện tử.
  */
+import { thongKeDon } from "../khieu-nai";
 import { dsDoan, matBangTheoLyTrinh } from "../ly-trinh";
 import { CAN_CU_CHI_TRA, hanChinhLyBan, khauChiTra } from "../thu-tuc-ban";
 import { hanGuiQdBan, hanPheDuyetBan, hanThamDinhBan, hanThuHoiNhom, ngayToTrinhPA, nhomThuHoi, type TinhHan } from "../han-buoc";
@@ -143,6 +144,9 @@ export interface TomTatDuAn {
   banPA?: import("../phuong-an").DemBanPA;
   /** 1.0.15: chi tiết các khâu thủ tục đang quá hạn (bản phương án / đợt) — để tỉnh xem dự án nào, bản nào, khâu nào */
   quaHan?: { doiTuong: string; khau: string; han: string; canCu: string }[];
+  /** 1.0.20: đơn khiếu nại, kiến nghị (B1) và hồ sơ cưỡng chế (B2) — chỉ số lượng (gói cũ không có) */
+  khieuNai?: import("../khieu-nai").ThongKeDon;
+  cuongChe?: { kiemDem: number; thuHoi: number; dangThucHien: number };
   /** 1.0.4: mặt bằng theo lý trình (chỉ khi xã có ghi lý trình thửa) — mét */
   lyTrinh?: { tongM: number; sachM: number; chua: [number, number][] };
 }
@@ -218,6 +222,14 @@ export function tomTatDuAn(duAn: DuAn[], ho: Ho[], soTep: (duAnId: string) => nu
         }
         for (const n of nhomThuHoi(d, hos)) them(n.ten, "Ban hành QĐ thu hồi đất", hanThuHoiNhom(n.hos, homNay, lich));
         return out.length ? { quaHan: out } : {};
+      })(),
+      ...(() => {
+        const kn = thongKeDon(hs, homNay, lich);
+        const cc = hs.flatMap((h) => h.cuongChe ?? []);
+        return {
+          ...(kn.tong ? { khieuNai: kn } : {}),
+          ...(cc.length ? { cuongChe: { kiemDem: cc.filter((c) => c.loai === "KIEM_DEM").length, thuHoi: cc.filter((c) => c.loai === "THU_HOI").length, dangThucHien: cc.filter((c) => !c.ketQua).length } } : {}),
+        };
       })(),
       ...(d.lienXa?.ma?.trim() ? { lienXa: d.lienXa } : {}),
       ...(() => {

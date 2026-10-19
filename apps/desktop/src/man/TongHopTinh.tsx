@@ -579,6 +579,8 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
             <div><b>{tong((d) => d.theoTrangThai.HOAN_THANH ?? 0)}</b><span>đã bàn giao mặt bằng</span></div>
             <div><b>{tong((d) => d.soVuongMac)}</b><span>hộ có vướng mắc</span></div>
             <div><b>{dinhDang(tongTien.div(1e9), 2)}</b><span>tỷ đồng tạm tính</span></div>
+            {hien.some((d) => d.khieuNai?.tong) && <div data-tong-khieu-nai title={`Đã giải quyết ${tong((d) => d.khieuNai?.daGiaiQuyet ?? 0)} đơn (gói từ bản 1.0.20)`}><b style={tong((d) => d.khieuNai?.quaHan ?? 0) ? { color: "var(--do-to)" } : undefined}>{tong((d) => d.khieuNai?.dangGiaiQuyet ?? 0)}</b><span>đơn khiếu nại, kiến nghị đang giải quyết{tong((d) => d.khieuNai?.quaHan ?? 0) ? ` (${tong((d) => d.khieuNai?.quaHan ?? 0)} quá hạn)` : ""}</span></div>}
+            {hien.some((d) => d.cuongChe) && <div data-tong-cuong-che title={`Cưỡng chế kiểm đếm ${tong((d) => d.cuongChe?.kiemDem ?? 0)}, cưỡng chế thu hồi ${tong((d) => d.cuongChe?.thuHoi ?? 0)} hồ sơ`}><b>{tong((d) => d.cuongChe?.dangThucHien ?? 0)}</b><span>hồ sơ cưỡng chế đang thực hiện</span></div>}
             {hien.some((d) => d.quaHan?.length) && <div className="co-the-chon" role="button" tabIndex={0} data-tong-qua-han title="Bấm để xem chi tiết" onClick={() => setXemQuaHan(hien.filter((d) => d.quaHan?.length))} onKeyDown={(e) => e.key === "Enter" && setXemQuaHan(hien.filter((d) => d.quaHan?.length))}><b style={{ color: "var(--do-to)" }}>{tong((d) => d.quaHan?.length ?? 0)}</b><span>khâu thủ tục quá hạn</span></div>}
           </div>
           {!dong.length ? <div className="trong">Chưa nhận gói nào. Gửi tệp khóa công khai cho các xã, phường; khi nhận được gói, chọn tệp ở ô "Nhận gói".</div> : (
