@@ -4,6 +4,22 @@ Mỗi phiên bản một mục `## X.Y.Z`. Khi phát hành, quy trình đóng g�
 (`tools/ghi-chu-phat-hanh.mjs`) — thiếu mục của phiên bản đang phát hành thì dừng, không phát hành. Phần mềm hiện các mục
 mới hơn bản đang dùng khi có bản cập nhật.
 
+## 1.0.20
+
+- Hồ sơ hộ có thẻ mới "Khiếu nại, cưỡng chế": ghi đơn khiếu nại, kiến nghị; phần mềm tính hạn thụ lý (10 ngày) và hạn
+  giải quyết lần đầu, lần hai (Điều 27, 28, 36, 37 Luật Khiếu nại 2011; cán bộ đánh dấu vụ việc phức tạp, vùng sâu vùng
+  xa); kiến nghị nhập hạn kèm căn cứ. Theo dõi cưỡng chế kiểm đếm bắt buộc, cưỡng chế thu hồi đất (Điều 88, 89 Luật Đất đai
+  2024): nhắc quyết định cưỡng chế chỉ ban hành sau 10 ngày kể từ khi kết thúc vận động, hạn thi hành 10 ngày, không cưỡng
+  chế ngày nghỉ và 15 ngày trước, sau Tết Âm lịch, bàn giao đất 30 ngày sau biên bản chấp hành. Cảnh báo ở chuông; số lượng
+  gửi lên tỉnh.
+- Dự án có thẻ mới "Chi trả, kinh phí": tổng hợp chi trả theo bản phương án đã phê duyệt (tiền mặt, chuyển khoản, gửi ngân
+  hàng, còn phải chi), xuất Excel quyết toán; kinh phí tổ chức thực hiện: tỷ lệ trích do đơn vị nhập kèm căn cứ, dự toán,
+  giải ngân, cảnh báo vượt mức.
+- Dự án tập huấn: dữ liệu và bản đồ giả lập để thực hành, không gửi lên tỉnh, xóa sạch ngay sau buổi tập huấn.
+- Hướng dẫn sử dụng bằng Word có ảnh minh họa: tải ở màn Hướng dẫn sử dụng.
+- Nhật ký sự cố: Giới thiệu → "Xuất nhật ký lỗi" để gửi tác giả khi cần hỗ trợ (đã che số định danh, điện thoại; phần
+  mềm không tự gửi).
+
 ## 1.0.19
 
 - Dữ liệu máy đơn và máy chủ mạng nội bộ được mã hóa (AES-256): khóa gắn với máy và tài khoản Windows đang dùng. Lần
