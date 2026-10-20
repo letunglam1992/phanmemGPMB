@@ -6,7 +6,7 @@ mới hơn bản đang dùng khi có bản cập nhật.
 
 ## 1.0.20
 
-- Hồ sơ hộ có thẻ mới "Khiếu nại, cưỡng chế": ghi đơn khiếu nại, kiến nghị; phần mềm tính hạn thụ lý (10 ngày) và hạn
+- Hồ sơ hộ có thẻ mới "Khiếu nại" (gồm khiếu nại, kiến nghị và cưỡng chế): ghi đơn khiếu nại, kiến nghị; phần mềm tính hạn thụ lý (10 ngày) và hạn
   giải quyết lần đầu, lần hai (Điều 27, 28, 36, 37 Luật Khiếu nại 2011; cán bộ đánh dấu vụ việc phức tạp, vùng sâu vùng
   xa); kiến nghị nhập hạn kèm căn cứ. Theo dõi cưỡng chế kiểm đếm bắt buộc, cưỡng chế thu hồi đất (Điều 88, 89 Luật Đất đai
   2024): nhắc quyết định cưỡng chế chỉ ban hành sau 10 ngày kể từ khi kết thúc vận động, hạn thi hành 10 ngày, không cưỡng

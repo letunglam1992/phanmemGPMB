@@ -63,7 +63,7 @@ test("B1, B2: đơn khiếu nại — hạn thụ lý, giải quyết; cưỡng 
   await p.locator("[role=tablist] button", { hasText: "Hộ, cá nhân" }).click();
   await p.locator("tr[data-ho-id]").first().click();
   await expect(p.locator(".trang-ho h1")).toBeVisible();
-  await p.locator("[role=tablist] button", { hasText: "Khiếu nại, cưỡng chế" }).click();
+  await p.locator("[role=tablist] button", { hasText: "Khiếu nại" }).click();
   await expect(p.locator("[data-khieu-nai]")).toContainText("chưa có đơn");
   await p.getByRole("button", { name: "+ Ghi đơn khiếu nại" }).click();
   const don = p.locator("[data-don]").first();
@@ -89,7 +89,7 @@ test("B1, B2: đơn khiếu nại — hạn thụ lý, giải quyết; cưỡng 
   await expect(cc.locator("[data-kiem-cc]")).toContainText("ngày nghỉ");
   await expect(cc.locator("[data-kiem-cc]")).toContainText("nghỉ Tết Âm lịch");
   await p.getByRole("button", { name: "Lưu hồ sơ" }).click();
-  await expect(p.locator('[role=tablist] button', { hasText: "Khiếu nại, cưỡng chế" }).locator(".dem")).toHaveText("2");
+  await expect(p.locator('[role=tablist] button', { hasText: "Khiếu nại" }).locator(".dem")).toHaveText("2");
 });
 
 test("B3, B4: thẻ Chi trả, kinh phí — tổng hợp theo bản phê duyệt, kinh phí thiếu căn cứ / có căn cứ, Excel quyết toán", async ({ page: p }) => {

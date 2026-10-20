@@ -80,7 +80,7 @@ await the("Văn bản").click();
 await chup("ho-van-ban", { cho: 1200 });
 await the("Tiến độ").click();
 await chup("ho-tien-do");
-await the("Khiếu nại, cưỡng chế").click();
+await the("Khiếu nại").click();
 await nut("+ Ghi đơn khiếu nại").click();
 const don = p.locator("[data-don]").first();
 await don.getByLabel("Ngày nhận đơn", { exact: true }).fill("05/10/2026");

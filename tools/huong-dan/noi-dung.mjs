@@ -118,14 +118,14 @@ export const CHUONG = [
   },
   {
     ten: "Khiếu nại, kiến nghị và cưỡng chế",
-    doan: ["Hồ sơ hộ → thẻ **Khiếu nại, cưỡng chế**. Phần mềm ghi nhận, đối chiếu thời hạn, điều kiện theo ngày cán bộ đã ghi; không kết luận đúng sai, không thay việc xem xét của người có thẩm quyền."],
+    doan: ["Hồ sơ hộ → thẻ **Khiếu nại**. Phần mềm ghi nhận, đối chiếu thời hạn, điều kiện theo ngày cán bộ đã ghi; không kết luận đúng sai, không thay việc xem xét của người có thẩm quyền."],
     buoc: [
       "**+ Ghi đơn khiếu nại**: ngày nhận, ngày thụ lý, quyết định/hành vi bị khiếu nại, nội dung. Hạn thụ lý 10 ngày (Điều 27, 36 Luật Khiếu nại 2011); hạn giải quyết lần đầu 30 ngày, phức tạp 45 ngày, vùng sâu vùng xa 45/60 ngày (Điều 28); lần hai 45/60, vùng sâu vùng xa 60/70 ngày (Điều 37). Cán bộ đánh dấu “phức tạp”, “vùng sâu, vùng xa”.",
       "**+ Ghi kiến nghị, phản ánh**: thời hạn trả lời do đơn vị nhập kèm căn cứ (không nhập thì không tính hạn).",
       "**+ Cưỡng chế kiểm đếm bắt buộc** (Điều 88) / **+ Cưỡng chế thu hồi đất** (Điều 89): ghi vận động, quyết định cưỡng chế, niêm yết, hiệu lực, ngày nhận quyết định, Ban cưỡng chế, ngày dự kiến, kết quả. Phần mềm nhắc: quyết định cưỡng chế thu hồi chỉ ban hành sau 10 ngày kể từ khi kết thúc vận động (điểm b khoản 7 Điều 87); hạn thi hành 10 ngày (khoản 3 Điều 89); không cưỡng chế ngày nghỉ, lễ, 15 ngày trước và sau thời gian nghỉ Tết Âm lịch (điểm b khoản 1 Điều 89); bàn giao đất chậm nhất 30 ngày sau biên bản chấp hành (điểm b khoản 4 Điều 89).",
       "Đơn quá hạn, cưỡng chế không đủ điều kiện hiện ở chuông thông báo; số lượng (không có thông tin cá nhân) được gửi lên tỉnh.",
     ],
-    anh: [["ho-khieu-nai", "Thẻ Khiếu nại, cưỡng chế — đơn khiếu nại lần đầu"]],
+    anh: [["ho-khieu-nai", "Thẻ Khiếu nại (khiếu nại, kiến nghị, cưỡng chế) — đơn khiếu nại lần đầu"]],
     luuY: ["Luật Đất đai ghi thẩm quyền ban hành quyết định cưỡng chế là Chủ tịch UBND cấp huyện; từ 01/7/2025 thực hiện theo văn bản phân định thẩm quyền của chính quyền địa phương hai cấp."],
   },
   {

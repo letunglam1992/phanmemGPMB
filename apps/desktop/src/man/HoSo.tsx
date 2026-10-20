@@ -41,7 +41,7 @@ const CAC_TAB = [
   ["van-ban", "Văn bản", "vanBan"],
   ["tien-do", "Tiến độ", "dongHo"],
   ["chi-tra", "Chi trả", "theNganHang"],
-  ["khieu-nai", "Khiếu nại, cưỡng chế", "canhBao"],
+  ["khieu-nai", "Khiếu nại", "canhBao"],
   ["dinh-kem", "Đính kèm", "saoChep"],
   ["nhat-ky", "Nhật ký", "nhatKy"],
 ] as const;
@@ -201,7 +201,7 @@ export function HoSo({ duAnId, hoId, tabDau, maVbDau, thuaDau }: { duAnId: strin
       <div className="the the-tab">
         <TabCuon className="tab tab-bt tab-gon" chon={tab}>
           {CAC_TAB.map(([ma, ten, bt]) => (
-            <button key={ma} role="tab" aria-selected={tab === ma} className={tab === ma ? "chon" : ""} onClick={() => setTab(ma)}>
+            <button key={ma} role="tab" aria-selected={tab === ma} className={tab === ma ? "chon" : ""} title={ma === "khieu-nai" ? "Khiếu nại, kiến nghị, cưỡng chế" : undefined} onClick={() => setTab(ma)}>
               <BieuTuong ten={bt} co={18} />
               {ten}
               {dem[ma] ? <span className="dem">{dem[ma]}</span> : null}
