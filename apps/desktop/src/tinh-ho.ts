@@ -627,6 +627,17 @@ function tinhHoGoc(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
         nguonGiaGao: duAn.giaGao.nguon,
         chonNhom: od.chonNhom,
       });
+    if (d.thanhTien) {
+      // B4 (1.0.21): DT thu hồi theo từng dự án, trong phạm vi xã, không cộng dồn dự án trước (điểm b k1 Đ19 NĐ 88);
+      // hộ không đủ điều kiện bồi thường về đất, nhận giao khoán: mức tương đương (k2 Đ19 NĐ 88; k2 Điều 12 PL II QĐ 106).
+      const thamSo: Record<string, string> = { ...d.thamSo, "DT đất NN thu hồi tính hỗ trợ": `${dinhDang(dtNN, 1)} m² — thửa đất NN của hộ trong dự án này, không cộng dồn dự án trước (điểm b k1 Đ19 NĐ 88/2024)` };
+      const canCu = [...d.canCu, { vanBan: "NĐ 88/2024/NĐ-CP", viTri: "điểm b khoản 1 Điều 19" }];
+      if (od.truongHop) {
+        thamSo["Trường hợp"] = `${TEN_TRUONG_HOP_ON_DINH[od.truongHop]} — mức tương đương k1 Đ19 NĐ 88 và k1 Điều 12 PL II (k2 Điều 12 PL II QĐ 106/2025; k2 Đ19 NĐ 88/2024)`;
+        canCu.push({ vanBan: "NĐ 88/2024/NĐ-CP", viTri: "khoản 2 Điều 19" }, { vanBan: "QĐ 106/2025/QĐ-UBND", viTri: "khoản 2 Điều 12 Phụ lục II" });
+      }
+      d = { ...d, thamSo, canCu };
+    }
     if (od.nhanKhau?.trim() && d.thanhTien) d = { ...d, thamSo: { ...d.thamSo, "Nhân khẩu được hỗ trợ": `${khauOnDinh(ho)} (người có chung quyền sử dụng đất — điểm d k1 Đ19 NĐ 88 bổ sung bởi NĐ 226/2025; điểm b k1 Điều 12 PL II QĐ 106; hồ sơ có ${ho.nhanKhau.length})` } };
     n("B.V").dong.push({ dong: d, cot: "HT_KHAC" });
   }
@@ -860,6 +871,10 @@ function dongHoTroKhac(cs: BoChinhSach, duAn: DuAn, ho: Ho, k: NonNullable<Ho["h
 }
 
 /** Số nhân khẩu tính ổn định đời sống (Điều 12 PL II QĐ 106): số người dùng nhập, trống = nhân khẩu trong hồ sơ. */
+export const TEN_TRUONG_HOP_ON_DINH: Record<"KHONG_DU_DK" | "GIAO_KHOAN", string> = {
+  KHONG_DU_DK: "Hộ, cá nhân đang sử dụng đất không đủ điều kiện bồi thường về đất",
+  GIAO_KHOAN: "Nhận giao khoán đất NN, LN, NTTS của nông, lâm trường, công ty nông, lâm nghiệp, tập đoàn SX, HTX (có hợp đồng giao khoán)",
+};
 export const khauOnDinh = (ho: Ho): number => (ho.hoTro.onDinh?.nhanKhau?.trim() ? Number(ho.hoTro.onDinh.nhanKhau) : ho.nhanKhau.length);
 
 /** C03 – ổn định sản xuất theo định mức (k1 Điều 13 PL II QĐ 106), cơ sở D13 (bồi thường bằng đất) hoặc k5 Điều 6 QĐ 14/2026. */

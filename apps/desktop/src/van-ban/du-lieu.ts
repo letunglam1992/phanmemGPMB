@@ -13,7 +13,7 @@ import { docSoTien } from "./doc-so";
 import type { MauVanBan } from "./danh-muc";
 import { tenDayDu, tenLoaiDat } from "./loai-dat";
 import { soD } from "../so";
-import { duLieuBocTham, duLieuBoTriTdc, duLieuChamTra, duLieuDoiThoai, duLieuThuong, duLieuKeHoach, duLieuNhieuHo, duLieuPhuongAnHo } from "./thuc-te";
+import { duLieuBocTham, duLieuBoTriTdc, duLieuChamTra, duLieuDoiThoai, duLieuThuong, duLieuKeHoach, duLieuNhieuHo, duLieuPhuongAnHo, docDuToan, duLieuKhieuNaiCuongChe } from "./thuc-te";
 
 export const CHAM = "…………";
 
@@ -381,6 +381,17 @@ export function ghepDuLieu(p: {
     kq.tong_gia_tri = dinhDang(tong, 0);
     kq.tong_gia_tri_chu = docSoTien(tong.toFixed(0));
   }
+  // 1.0.21 (B2): căn cứ của QĐ giải quyết khiếu nại (Mẫu 15 NĐ 124/2020), thành viên Ban cưỡng chế, dự toán cưỡng chế
+  if (p.mau.ma === "T14" && Array.isArray(kq.kn_can_cu)) {
+    const cc = [...(kq.kn_can_cu as string[])];
+    const luatSua = String(p.rieng.can_cu_luat_sua_doi ?? "").trim().replace(/;$/, "");
+    if (luatSua) cc.splice(1, 0, `Căn cứ ${luatSua.replace(/^Căn cứ\s+/i, "")};`);
+    const thamQuyen = String(p.rieng.can_cu_tham_quyen ?? "").trim().replace(/;$/, "");
+    if (thamQuyen) cc.push(`Căn cứ ${thamQuyen.replace(/^Căn cứ\s+/i, "")};`);
+    kq.kn_can_cu = cc;
+  }
+  if (p.mau.ma === "T16") kq.thanh_vien_ban = String(p.rieng.thanh_vien_ban ?? "").split("\n").map((s) => s.trim()).filter(Boolean);
+  if (p.mau.ma === "T17") Object.assign(kq, docDuToan(String(p.rieng.du_toan_kinh_phi ?? "")));
   const tenTo = (p.rieng.ten_to_ban_do || "tờ bản đồ số").trim();
   kq.ds_thua_pa = p.ds.flatMap(({ h }) =>
     h.thua
@@ -415,6 +426,7 @@ function duLieuThucTe(p: { mau: MauVanBan; duAn: DuAn; ds: { h: Ho; k: KetQuaHo 
     ...(p.mau.ma === "T8" || p.mau.ma === "T9" ? duLieuBoTriTdc(p.duAn, p.ds) : {}),
     ...(p.mau.ma === "T12" && p.ho ? duLieuDoiThoai(p.ho.h) : {}),
     ...(p.mau.ma === "T13" ? duLieuBocTham(p.duAn, p.ds) : {}),
+    ...(p.ho && /^T1[4-7]$/.test(p.mau.ma) ? duLieuKhieuNaiCuongChe(p.ho.h, p.ngayKy, p.duAn.xa) : {}),
     ...(p.mau.ma === "T10" ? { kinh_gui: `Chủ tịch Ủy ban nhân dân ${lower1(p.duAn.xa)}` } : {}),
     ...(p.mau.ma === "T10" || p.mau.ma === "T11" ? duLieuChamTra(p.duAn, p.ds, p.tyLeCham ?? [], p.ngayKy || new Date().toISOString().slice(0, 10)) : {}),
   };

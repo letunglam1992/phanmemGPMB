@@ -1,7 +1,8 @@
 /**
  * 1.0.20 (B1) — Sổ theo dõi khiếu nại, kiến nghị của hộ trong bồi thường, hỗ trợ, tái định cư.
- * Thời hạn theo Luật Khiếu nại 2011:
- * - thụ lý: 10 ngày kể từ ngày nhận được khiếu nại thuộc thẩm quyền (Điều 27 lần đầu, Điều 36 lần hai);
+ * Thời hạn theo Luật Khiếu nại 2011 và Nghị định 124/2020/NĐ-CP:
+ * - thụ lý (1.0.21): 10 ngày làm việc kể từ ngày nhận được khiếu nại thuộc thẩm quyền (khoản 1 Điều 16 NĐ 124/2020);
+ *   đơn nhận từ 01/7/2026: 07 ngày làm việc (khoản 1 Điều 16 sửa bởi Điều 10 NĐ 155/2026/NĐ-CP, hiệu lực theo k1 Điều 21);
  * - giải quyết lần đầu (Điều 28): ≤ 30 ngày kể từ ngày thụ lý, vụ việc phức tạp ≤ 45 ngày; vùng sâu, vùng xa đi lại
  *   khó khăn ≤ 45 ngày, phức tạp ≤ 60 ngày;
  * - giải quyết lần hai (Điều 37): ≤ 45 ngày, phức tạp ≤ 60 ngày; vùng sâu, vùng xa ≤ 60 ngày, phức tạp ≤ 70 ngày.
@@ -9,7 +10,7 @@
  * Khiếu nại → hạn do đơn vị nhập kèm căn cứ (không có thì không tính hạn). Hạn đếm theo ngày như câu chữ của Luật; ngày
  * thứ nhất là ngày liền sau ngày mốc (Điều 147 BLDS 2015), ngày cuối là ngày nghỉ thì sang ngày làm việc tiếp theo (k5 Đ148). Phần mềm ghi nhận, nhắc hạn — không kết luận đúng sai.
  */
-import { hanChotNgay, type LichLamViec } from "./lich-lam-viec";
+import { hanChot, hanChotNgay, type LichLamViec } from "./lich-lam-viec";
 import type { Ho } from "./mo-hinh";
 
 export type LoaiDon = "KHIEU_NAI" | "KIEN_NGHI";
@@ -48,7 +49,12 @@ export interface DonKhieuNai {
   nguoiGhi?: string;
 }
 
-export const CAN_CU_THU_LY = (lan: 1 | 2) => `Điều ${lan === 1 ? 27 : 36} Luật Khiếu nại 2011`;
+/** Ngày NĐ 155/2026/NĐ-CP có hiệu lực (khoản 1 Điều 21) — thụ lý rút từ 10 xuống 07 ngày làm việc. */
+export const NGAY_HL_ND155 = "2026-07-01";
+/** Số ngày làm việc để thụ lý theo ngày nhận đơn (khoản 1 Điều 16 NĐ 124/2020/NĐ-CP, sửa bởi Điều 10 NĐ 155/2026/NĐ-CP). */
+export const soNgayThuLy = (ngayNhan: string) => (ngayNhan >= NGAY_HL_ND155 ? 7 : 10);
+export const CAN_CU_THU_LY = (lan: 1 | 2, ngayNhan = "") =>
+  `k1 Điều 16 NĐ 124/2020/NĐ-CP${ngayNhan >= NGAY_HL_ND155 ? " (sửa bởi Điều 10 NĐ 155/2026/NĐ-CP)" : ""}; Điều ${lan === 1 ? 27 : 36} Luật Khiếu nại 2011`;
 export const CAN_CU_GIAI_QUYET = (lan: 1 | 2) => `Điều ${lan === 1 ? 28 : 37} Luật Khiếu nại 2011`;
 
 /** Số ngày giải quyết theo Điều 28 (lần 1) / Điều 37 (lần 2) Luật Khiếu nại 2011. */
@@ -92,9 +98,10 @@ export function hanDon(d: DonKhieuNai, homNay: string, lich: LichLamViec): HanDo
   }
   const lan = d.lan ?? 1;
   if (!d.ngayThuLy) {
-    const han = hanChotNgay(d.ngayNhan, 10, lich);
+    const n = soNgayThuLy(d.ngayNhan);
+    const han = hanChot(d.ngayNhan, n, "NLV", lich);
     const conLai = soNgay(homNay, han);
-    return { tt: conLai < 0 ? "QUA_HAN_THU_LY" : "CHO_THU_LY", han, soNgay: 10, canCu: CAN_CU_THU_LY(lan), conLai };
+    return { tt: conLai < 0 ? "QUA_HAN_THU_LY" : "CHO_THU_LY", han, soNgay: n, canCu: CAN_CU_THU_LY(lan, d.ngayNhan), conLai };
   }
   const n = soNgayGiaiQuyet(lan, !!d.phucTap, !!d.vungKhoKhan);
   const han = hanChotNgay(d.ngayThuLy, n, lich);

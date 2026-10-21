@@ -19,12 +19,19 @@ export function TabHoTro({ h, doi, duAn, kq }: Tab & { duAn: DuAn; kq: KetQuaHo 
         <div className="the-dau"><h3>Hỗ trợ ổn định đời sống</h3><div className="phai"><label><input type="checkbox" checked={!!ht.onDinh} onChange={(e) => dat({ onDinh: e.target.checked ? { dienTichNNDangSuDung: "", diChuyen: "KHONG_DI_CHUYEN" } : undefined })} /> Áp dụng</label></div></div>
         {ht.onDinh && (
           <div className="the-than luoi luoi-2">
-            <O lichSu="hoTro.onDinh.dienTichNNDangSuDung" nhan="DT đất NN đang sử dụng (m²)" goiY="Tỷ lệ thu hồi = DT đất NN thu hồi / DT đang sử dụng"><OSo className="o-so" value={ht.onDinh.dienTichNNDangSuDung} onChange={(v) => dat({ onDinh: { ...ht.onDinh!, dienTichNNDangSuDung: v } })} /></O>
+            <O lichSu="hoTro.onDinh.dienTichNNDangSuDung" nhan="DT đất NN đang sử dụng (m²)" goiY="Tỷ lệ thu hồi = DT đất NN thu hồi / DT đang sử dụng. DT thu hồi tính trong phạm vi xã nơi có đất, theo từng dự án, không cộng dồn DT đã thu hồi của dự án trước (điểm b k1 Đ19 NĐ 88/2024)"><OSo className="o-so" value={ht.onDinh.dienTichNNDangSuDung} onChange={(v) => dat({ onDinh: { ...ht.onDinh!, dienTichNNDangSuDung: v } })} /></O>
             <O lichSu="hoTro.onDinh.diChuyen" nhan="Di chuyển chỗ ở">
               <Chon value={ht.onDinh.diChuyen} onChange={(e) => dat({ onDinh: { ...ht.onDinh!, diChuyen: e.target.value as DiChuyen } })}>
                 <option value="KHONG_DI_CHUYEN">Không phải di chuyển</option>
                 <option value="DI_CHUYEN">Phải di chuyển chỗ ở</option>
                 <option value="DEN_VUNG_KHO_KHAN">Di chuyển đến vùng KT-XH khó khăn, ĐBKK</option>
+              </Chon>
+            </O>
+            <O lichSu="hoTro.onDinh.truongHop" nhan="Trường hợp" goiY="Không đủ điều kiện bồi thường về đất, nhận giao khoán: mức hỗ trợ tương đương (k2 Đ19 NĐ 88/2024; k2 Điều 12 PL II QĐ 106/2025)">
+              <Chon aria-label="Trường hợp ổn định đời sống" value={ht.onDinh.truongHop ?? ""} onChange={(e) => dat({ onDinh: { ...ht.onDinh!, truongHop: (e.target.value || undefined) as "KHONG_DU_DK" | "GIAO_KHOAN" | undefined } })}>
+                <option value="">Đủ điều kiện bồi thường về đất (k1 Đ19 NĐ 88)</option>
+                <option value="KHONG_DU_DK">Không đủ điều kiện bồi thường về đất</option>
+                <option value="GIAO_KHOAN">Nhận giao khoán của nông, lâm trường, HTX…</option>
               </Chon>
             </O>
             <O lichSu="hoTro.onDinh.chonNhom" nhan="Chọn nhóm khi tỷ lệ đúng ngưỡng 30% (QD-16)" goiY="Để trống = mặc định theo NĐ 88">

@@ -4,6 +4,20 @@ Mỗi phiên bản một mục `## X.Y.Z`. Khi phát hành, quy trình đóng g�
 (`tools/ghi-chu-phat-hanh.mjs`) — thiếu mục của phiên bản đang phát hành thì dừng, không phát hành. Phần mềm hiện các mục
 mới hơn bản đang dùng khi có bản cập nhật.
 
+## 1.0.21
+
+- Sửa hạn thụ lý đơn khiếu nại: tính theo **ngày làm việc** — 10 ngày làm việc (khoản 1 Điều 16 Nghị định 124/2020/NĐ-CP);
+  đơn nhận từ 01/7/2026: 07 ngày làm việc (Điều 10 Nghị định 155/2026/NĐ-CP). Bản 1.0.20 đếm 10 ngày theo lịch.
+- Mẫu văn bản mới, tự điền từ thẻ Khiếu nại của hộ: T14 Quyết định giải quyết khiếu nại lần đầu (Mẫu số 15 Nghị định
+  124/2020/NĐ-CP), T15 Biên bản vận động, thuyết phục bàn giao đất (khoản 7 Điều 87 Luật Đất đai 2024), T16 Quyết định thành
+  lập Ban cưỡng chế thu hồi đất, T17 Phương án cưỡng chế và dự toán kinh phí cưỡng chế (Điều 89). Nút soạn ngay trong thẻ
+  Khiếu nại.
+- Hỗ trợ ổn định đời sống: chọn trường hợp hộ không đủ điều kiện bồi thường về đất hoặc nhận giao khoán (mức tương đương —
+  khoản 2 Điều 12 Phụ lục II QĐ 106/2025); giải trình ghi diện tích thu hồi theo từng dự án, không cộng dồn (điểm b khoản 1
+  Điều 19 Nghị định 88/2024/NĐ-CP).
+- Hỏi đáp, tra cứu thêm nguyên văn: Nghị định 88/2024 (toàn văn), Nghị định 102/2024, Luật Khiếu nại 2011, Nghị định
+  124/2020, Nghị định 155/2026.
+
 ## 1.0.20
 
 - Hồ sơ hộ có thẻ mới "Khiếu nại" (gồm khiếu nại, kiến nghị và cưỡng chế): ghi đơn khiếu nại, kiến nghị; phần mềm tính hạn thụ lý (10 ngày) và hạn

@@ -332,3 +332,75 @@ DANH_MUC_MAU.push(
 
 export const mauTheoMa = (ma: string) => DANH_MUC_MAU.find((m) => m.ma === ma)!;
 export const tepMau = (m: MauVanBan) => m.tep ?? `mau-${m.ma}.docx`;
+
+/**
+ * 1.0.21 (B2) — Văn bản khiếu nại, cưỡng chế của hộ: tự điền từ thẻ Khiếu nại của hồ sơ hộ. Thẩm quyền ban hành quyết định
+ * cưỡng chế, thành lập Ban cưỡng chế ghi trong Luật là Chủ tịch UBND cấp huyện — thực hiện theo văn bản phân định thẩm quyền
+ * hiện hành; mẫu để mặc định Chủ tịch UBND xã, cán bộ sửa khi khác. Kết luận, biện pháp, kinh phí do cán bộ ghi.
+ */
+DANH_MUC_MAU.push(
+  {
+    ma: "T14", ten: "Quyết định giải quyết khiếu nại (lần đầu)", buoc: "9", phamVi: "HO", coQuan: "UBND", nguon: "THUC_TE", tep: "tt-qd-giai-quyet-kn.docx",
+    moTa: "Theo Mẫu số 15 Phụ lục Nghị định 124/2020/NĐ-CP (Điều 31 Luật Khiếu nại 2011). Đơn khiếu nại lần đầu lấy từ thẻ Khiếu nại của hộ (đơn chưa có kết quả mới nhất, không có thì đơn mới nhất). Căn cứ NĐ 155/2026/NĐ-CP thêm khi ngày ký từ 01/7/2026.",
+    ghiLai: { khoa: "qd_gqkn", capDo: "HO", kyHieu: "QĐ-UBND" },
+    nhapThem: [
+      { truong: "can_cu_tham_quyen", nhan: "Căn cứ chức năng, nhiệm vụ, quyền hạn của người giải quyết", goiY: "Ghi chú (5) Mẫu 15: văn bản quy định chức năng, nhiệm vụ, quyền hạn — vd. Luật Tổ chức chính quyền địa phương …" },
+      { truong: "can_cu_luat_sua_doi", nhan: "Căn cứ Luật sửa đổi Luật Khiếu nại", macDinh: "Luật sửa đổi, bổ sung một số điều của Luật Tiếp công dân, Luật Khiếu nại, Luật Tố cáo số 136/2025/QH15", goiY: "NĐ 155/2026 dẫn luật này; phần mềm chưa có nguyên văn — kiểm tra ngày hiệu lực, xóa nếu chưa áp dụng" },
+      { truong: "kn_doi_tuong", nhan: "Quyết định, hành vi bị khiếu nại", goiY: "Để trống = đã ghi ở đơn (thẻ Khiếu nại)" },
+      { truong: "kn_tham_muu", nhan: "Cơ quan, người được giao tham mưu giải quyết", goiY: "Ghi chú (6) Mẫu 15" },
+      { truong: "kn_bc_so", nhan: "Báo cáo kết quả xác minh số" }, { truong: "kn_bc_ngay", nhan: "ngày" },
+      { truong: "kn_noi_dung", nhan: "I. Nội dung khiếu nại", nhieuDong: true, goiY: "Để trống = nội dung đơn đã ghi" },
+      { truong: "kn_xac_minh", nhan: "II. Kết quả xác minh", nhieuDong: true },
+      { truong: "kn_doi_thoai", nhan: "III. Kết quả đối thoại (nếu có)", nhieuDong: true, macDinh: "Không." },
+      { truong: "kn_ket_luan", nhan: "IV. Kết luận", nhieuDong: true, goiY: "Nêu căn cứ pháp luật, kết luận từng nội dung đúng, đúng một phần hay sai (Mẫu 15; điểm e, g k2 Điều 31 Luật Khiếu nại)" },
+      { truong: "kn_dieu_1", nhan: "Điều 1", nhieuDong: true, goiY: "Giữ nguyên, sửa đổi, bổ sung hoặc hủy bỏ một phần hay toàn bộ quyết định hành chính; tiếp tục thực hiện hoặc chấm dứt hành vi hành chính bị khiếu nại" },
+      { truong: "kn_dieu_2", nhan: "Điều 2", nhieuDong: true, goiY: "Giải quyết các vấn đề liên quan (bồi thường thiệt hại nếu có — điểm i k2 Điều 31)" },
+      { truong: "kn_so_ngay_lan_hai", nhan: "Thời hạn khiếu nại lần hai (ngày)", goiY: "Để trống = 30 ngày; vùng sâu, vùng xa (đơn đã đánh dấu) = 45 ngày (k1 Điều 33 Luật Khiếu nại 2011)" },
+      { truong: "kn_nguoi_gq_lan_hai", nhan: "Người có thẩm quyền giải quyết lần hai", goiY: "Ghi chú (12) Mẫu 15" },
+      { truong: "kn_thi_hanh", nhan: "Người chịu trách nhiệm thi hành (Điều 4)", macDinh: "Chánh Văn phòng Hội đồng nhân dân và Ủy ban nhân dân, Thủ trưởng các cơ quan, đơn vị có liên quan và người khiếu nại" },
+      HIEU_LUC,
+      NOI_NHAN("Như Điều 4\nThủ trưởng cấp trên trực tiếp\nNgười có quyền, nghĩa vụ liên quan\nCơ quan thanh tra nhà nước cùng cấp\nLưu: VT, hồ sơ"),
+    ],
+  },
+  {
+    ma: "T15", ten: "Biên bản vận động, thuyết phục bàn giao đất", buoc: "14", phamVi: "HO", coQuan: "BIEN_BAN", nguon: "THUC_TE", tep: "tt-bb-van-dong-ban-giao.docx",
+    moTa: "Điểm a, b khoản 7 Điều 87 Luật Đất đai 2024: UBND cấp xã chủ trì, phối hợp UB MTTQ cấp xã và đơn vị bồi thường vận động trong 10 ngày, thể hiện bằng văn bản. Thời gian vận động lấy từ hồ sơ cưỡng chế thu hồi đất của hộ (thẻ Khiếu nại).",
+    nhapThem: [
+      THOI_DIEM, DIA_DIEM,
+      { truong: "tp_ubnd", nhan: "Đại diện UBND xã", nhieuDong: true },
+      { truong: "tp_mttq", nhan: "Đại diện Ủy ban MTTQ Việt Nam xã", nhieuDong: true },
+      { truong: "tp_don_vi_bt", nhan: "Đại diện đơn vị bồi thường", nhieuDong: true },
+      { truong: "tp_khac", nhan: "Thành phần khác (nếu có)", nhieuDong: true },
+      { truong: "cc_van_dong_tu", nhan: "Vận động từ ngày", goiY: "Để trống = đã ghi ở hồ sơ cưỡng chế" }, { truong: "cc_van_dong_den", nhan: "đến ngày" },
+      { truong: "noi_dung_van_dong", nhan: "Nội dung tuyên truyền, vận động, giải thích", nhieuDong: true },
+      Y_KIEN,
+      { truong: "ket_qua_van_dong", nhan: "Kết quả", nhieuDong: true, goiY: "vd. Hộ đồng ý bàn giao đất ngày …; hoặc: Hộ chưa đồng ý bàn giao đất. Quá thời hạn 10 ngày kể từ ngày kết thúc vận động mà không chấp hành thì ban hành quyết định cưỡng chế (điểm b k7 Đ87)" },
+      GIO_KT,
+    ],
+  },
+  {
+    ma: "T16", ten: "Quyết định thành lập Ban cưỡng chế thu hồi đất", buoc: "14", phamVi: "HO", coQuan: "UBND", nguon: "THUC_TE", tep: "tt-qd-ban-cuong-che.docx",
+    moTa: "Điểm a khoản 4 Điều 89 Luật Đất đai 2024. Số, ngày quyết định cưỡng chế lấy từ hồ sơ cưỡng chế của hộ; nhiệm vụ của Ban trích điểm b, c, d khoản 4 và điểm b khoản 5 Điều 89. Thẩm quyền theo văn bản phân định thẩm quyền hiện hành.",
+    ghiLai: { khoa: "qd_ban_cc", capDo: "HO", kyHieu: "QĐ-UBND" },
+    nhapThem: [
+      { truong: "chuc_danh_de_nghi", nhan: "Chức danh người đề nghị", goiY: "Để trống = Trưởng + tên phòng" },
+      { truong: "thanh_vien_ban", nhan: "Thành viên Ban (mỗi dòng một người: họ tên, chức vụ, nhiệm vụ trong Ban)", nhieuDong: true, goiY: "Điểm a k4 Đ89: Chủ tịch hoặc Phó Chủ tịch UBND là trưởng ban; đại diện các cơ quan có chức năng thanh tra, tư pháp, tài nguyên và môi trường, xây dựng; đơn vị bồi thường; lãnh đạo UBND xã nơi có đất; thành viên khác do người ký quyết định" },
+      { truong: "nhiem_vu_khac", nhan: "Nhiệm vụ khác (nếu có)", nhieuDong: true },
+      HIEU_LUC,
+      { truong: "co_quan_thi_hanh", nhan: "Cơ quan thi hành (Điều 3)", macDinh: "Chánh Văn phòng Hội đồng nhân dân và Ủy ban nhân dân, Thủ trưởng các cơ quan, đơn vị có liên quan" },
+      NOI_NHAN("Như Điều 3\nỦy ban Mặt trận Tổ quốc Việt Nam (để giám sát)\nLưu: VT"),
+    ],
+  },
+  {
+    ma: "T17", ten: "Phương án cưỡng chế, dự toán kinh phí cưỡng chế", buoc: "14", phamVi: "HO", coQuan: "BIEN_BAN", nguon: "THUC_TE", tep: "tt-pa-cuong-che.docx",
+    moTa: "Điểm b khoản 5 Điều 89 Luật Đất đai 2024: Ban cưỡng chế lập phương án và dự toán kinh phí trình phê duyệt; khoản 6 Điều 89: kinh phí là một khoản trong kinh phí bồi thường. Thửa đất, QĐ thu hồi, QĐ cưỡng chế, ngày dự kiến lấy từ hồ sơ hộ; dự toán do cán bộ nhập từng dòng, phần mềm cộng tổng.",
+    nhapThem: [
+      { truong: "xu_ly_tai_san", nhan: "Tài sản trên đất, phương án di chuyển, bảo quản", nhieuDong: true, goiY: "Điểm c k4, điểm b k5 Đ89: chi phí bảo quản tài sản do chủ sở hữu thanh toán" },
+      { truong: "luc_luong", nhan: "Lực lượng, phân công nhiệm vụ", nhieuDong: true },
+      { truong: "trinh_tu", nhan: "Trình tự thực hiện", nhieuDong: true },
+      { truong: "can_cu_du_toan", nhan: "Căn cứ lập dự toán (chế độ, định mức chi)", goiY: "Ghi văn bản quy định mức chi áp dụng — phần mềm không đặt mức chi" },
+      { truong: "du_toan_kinh_phi", nhan: "Dự toán (mỗi dòng: nội dung chi | số tiền)", nhieuDong: true, goiY: "vd. Bồi dưỡng lực lượng tham gia … | 5.000.000" },
+      { truong: "nguoi_ky", nhan: "Trưởng Ban cưỡng chế (họ tên)" },
+    ],
+  },
+);

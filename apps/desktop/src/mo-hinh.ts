@@ -262,7 +262,14 @@ export interface HoTroHo {
    * `nhanKhau`: số nhân khẩu được hỗ trợ theo điểm b k1 Điều 12 PL II QĐ 106 (người có chung quyền sử dụng đất tại thời điểm
    * phê duyệt phương án + thành viên phát sinh sau khi giao đất NN; hộ tự thỏa thuận). Trống = số nhân khẩu trong hồ sơ.
    */
-  onDinh?: { dienTichNNDangSuDung: string; diChuyen: DiChuyen; chonNhom?: { ma: string; lyDo: string }; nhanKhau?: string };
+  onDinh?: {
+    dienTichNNDangSuDung: string;
+    diChuyen: DiChuyen;
+    chonNhom?: { ma: string; lyDo: string };
+    nhanKhau?: string;
+    /** 1.0.21 (B4): trống = đủ điều kiện bồi thường về đất (k1 Đ19 NĐ 88); không đủ điều kiện / nhận giao khoán → k2 Đ19 NĐ 88, k2 Điều 12 PL II QĐ 106 (mức tương đương) */
+    truongHop?: "KHONG_DU_DK" | "GIAO_KHOAN";
+  };
   chuyenDoiNghe: boolean;
   tamCu?: { soThang: number; tdcBangDat: boolean };
   moMa?: { xay: number; khongXay: number };

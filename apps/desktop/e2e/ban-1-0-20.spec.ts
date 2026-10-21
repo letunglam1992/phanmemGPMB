@@ -69,7 +69,8 @@ test("B1, B2: đơn khiếu nại — hạn thụ lý, giải quyết; cưỡng 
   const don = p.locator("[data-don]").first();
   await ngay(p, "Ngày nhận đơn", "01/09/2026", don);
   await expect(don.locator("[data-tt-don]")).toHaveText("Quá hạn thụ lý");
-  await expect(don).toContainText("Hạn thụ lý 11/09/2026");
+  // 1.0.21: 07 ngày làm việc (k1 Đ16 NĐ 124/2020 sửa bởi NĐ 155/2026); lịch mẫu chưa nhập ngày nghỉ Quốc khánh
+  await expect(don).toContainText("Hạn thụ lý 10/09/2026 (7 ngày làm việc");
   await ngay(p, "Ngày thụ lý", "05/10/2026", don);
   await expect(don.locator("[data-tt-don]")).toHaveText("Đang giải quyết");
   await expect(don).toContainText("Hạn giải quyết 04/11/2026 (30 ngày, còn 16 ngày) — Điều 28 Luật Khiếu nại 2011");

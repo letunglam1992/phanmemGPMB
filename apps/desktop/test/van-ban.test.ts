@@ -20,7 +20,7 @@ const vanBan = (u8: Uint8Array) => new PizZip(u8).file("word/document.xml")!.asT
 describe("22 mẫu văn bản QĐ 1966/QĐ-UBND", () => {
   it("đủ 22 mẫu Sổ tay + 5 mẫu riêng, mỗi mẫu có tệp và trường hợp lệ", () => {
     expect(DANH_MUC_MAU.filter((m) => !m.nguon).map((m) => m.ma)).toEqual(Array.from({ length: 22 }, (_, i) => String(i + 1).padStart(2, "0")));
-    expect(DANH_MUC_MAU.filter((m) => m.nguon === "THUC_TE").map((m) => m.ma)).toEqual(["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12", "T13"]);
+    expect(DANH_MUC_MAU.filter((m) => m.nguon === "THUC_TE").map((m) => m.ma)).toEqual(["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12", "T13", "T14", "T15", "T16", "T17"]);
     expect(DANH_MUC_MAU.filter((m) => m.nguon === "RIENG").map((m) => m.ma)).toEqual(["R1", "R2", "R3", "R4", "R5"]);
     for (const m of DANH_MUC_MAU) expect(truongTrongMau(docMau(m.ma)).length).toBeGreaterThan(3);
   });

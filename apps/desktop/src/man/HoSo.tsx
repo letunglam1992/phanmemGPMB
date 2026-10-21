@@ -235,7 +235,7 @@ export function HoSo({ duAnId, hoId, tabDau, maVbDau, thuaDau }: { duAnId: strin
           </fieldset>
           {tab === "tinh" && <TabTinhToan h={h} duAn={duAn} kq={kq} />}
           {tab === "chi-tra" && <fieldset className="khung-quyen" disabled={!choSua}><TabChiTra h={h} duAn={duAn} doi={doi} /></fieldset>}
-          {tab === "khieu-nai" && <fieldset className="khung-quyen" disabled={!choSua}><TabKhieuNai h={h} duAn={duAn} doi={doi} /></fieldset>}
+          {tab === "khieu-nai" && <fieldset className="khung-quyen" disabled={!choSua}><TabKhieuNai h={h} duAn={duAn} doi={doi} soanMau={(ma) => soanVb(ma)} /></fieldset>}
           {tab === "tien-do" && (
             <>
               <TabTienDo h={h} duAn={duAn} doi={doi} moDuAn={() => di({ ten: "du-an", duAnId, tab: "buoc-chung" })} soanMau={(ma) => soanVb(ma)} luuNgay={async (moi, nk) => { setH(moi); await luuHo(moi, nk); xoaBanNhap(hoId); setDaSua(false); }} />

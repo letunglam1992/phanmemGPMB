@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hanDon, soNgayGiaiQuyet, thongKeDon, type DonKhieuNai } from "../src/khieu-nai";
+import { hanDon, soNgayGiaiQuyet, soNgayThuLy, thongKeDon, type DonKhieuNai } from "../src/khieu-nai";
 import { hanBanGiaoSauChapHanh, hanThiHanh, kiemCuongChe, nghiTet, ngaySomNhatQdThuHoi, trongKhoangTet, type CuongChe } from "../src/cuong-che";
 import { LICH_TRONG, hanChotNgay, type LichLamViec } from "../src/lich-lam-viec";
 import type { Ho } from "../src/mo-hinh";
@@ -12,11 +12,18 @@ describe("Khiếu nại — Điều 27, 28, 36, 37 Luật Khiếu nại 2011 (1.
     expect([soNgayGiaiQuyet(1, false, false), soNgayGiaiQuyet(1, true, false), soNgayGiaiQuyet(1, false, true), soNgayGiaiQuyet(1, true, true)]).toEqual([30, 45, 45, 60]);
     expect([soNgayGiaiQuyet(2, false, false), soNgayGiaiQuyet(2, true, false), soNgayGiaiQuyet(2, false, true), soNgayGiaiQuyet(2, true, true)]).toEqual([45, 60, 60, 70]);
   });
-  it("chưa thụ lý: hạn 10 ngày kể từ ngày nhận; ngày cuối Chủ nhật → thứ Hai (k5 Đ148 BLDS)", () => {
+  it("chưa thụ lý: từ 01/7/2026 hạn 07 ngày làm việc (k1 Đ16 NĐ 124/2020 sửa bởi Điều 10 NĐ 155/2026)", () => {
     const t = hanDon(don({}), "2026-10-05", LICH_TRONG);
-    expect(t).toMatchObject({ tt: "CHO_THU_LY", han: "2026-10-12", soNgay: 10, canCu: "Điều 27 Luật Khiếu nại 2011" });
+    expect(t).toMatchObject({ tt: "CHO_THU_LY", han: "2026-10-12", soNgay: 7 });
+    expect(t.canCu).toBe("k1 Điều 16 NĐ 124/2020/NĐ-CP (sửa bởi Điều 10 NĐ 155/2026/NĐ-CP); Điều 27 Luật Khiếu nại 2011");
     expect(hanDon(don({}), "2026-10-13", LICH_TRONG).tt).toBe("QUA_HAN_THU_LY");
-    expect(hanDon(don({ lan: 2 }), "2026-10-05", LICH_TRONG).canCu).toBe("Điều 36 Luật Khiếu nại 2011");
+    expect(hanDon(don({ lan: 2 }), "2026-10-05", LICH_TRONG).canCu).toMatch(/Điều 36 Luật Khiếu nại 2011$/);
+  });
+  it("chưa thụ lý: đơn nhận trước 01/7/2026 hạn 10 ngày làm việc (k1 Đ16 NĐ 124/2020), bỏ qua thứ Bảy, Chủ nhật", () => {
+    const t = hanDon(don({ ngayNhan: "2026-06-01" }), "2026-06-02", LICH_TRONG);
+    expect(t).toMatchObject({ tt: "CHO_THU_LY", han: "2026-06-15", soNgay: 10, canCu: "k1 Điều 16 NĐ 124/2020/NĐ-CP; Điều 27 Luật Khiếu nại 2011" });
+    expect(soNgayThuLy("2026-06-30")).toBe(10);
+    expect(soNgayThuLy("2026-07-01")).toBe(7);
   });
   it("đã thụ lý: hạn giải quyết tính từ ngày thụ lý; sắp hết (≤ 5 ngày), quá hạn, đã giải quyết", () => {
     const d = don({ ngayThuLy: "2026-10-05" });

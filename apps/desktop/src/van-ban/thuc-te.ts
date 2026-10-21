@@ -14,6 +14,7 @@ import { canBoTriLo, quyCua, tenLo, trangThaiLo } from "../quy-tdc";
 import { tinhChiTra, type GiaiDoanTyLe } from "../chi-tra";
 import { canhBaoCanCu } from "../van-ban-can-cu";
 import { tinhThuong } from "../ban-giao";
+import { NGAY_HL_ND155 } from "../khieu-nai";
 
 const soM2 = (v: Decimal) => dinhDang(v, 2);
 const tien = (v: Decimal) => dinhDang(v.toDecimalPlaces(0), 0);
@@ -262,6 +263,14 @@ export function kiemTraThongNhat(ma: string, duAn: DuAn, du: Record<string, unkn
   if (ma === "T13" && !Number(du.so_ho_boc)) out.push("Các hộ được chọn không có hộ cần bố trí lô đất ở/căn nhà ở (Hồ sơ hộ → Hỗ trợ → Tái định cư) — Biểu 02 trống.");
   if (ma === "T13" && Number(du.so_ho_boc) > 0 && Number(du.so_lo_boc) < Number(du.so_ho_boc)) out.push(`Số lô, căn đưa vào bốc thăm (${String(du.so_lo_boc)}) ít hơn số hộ cần bố trí (${String(du.so_ho_boc)}).`);
   if (ma === "T13" && Number(du.so_ho_boc) > 0 && Number(du.boc_tham_thieu_kq) > 0) out.push(du.boc_tham_bien_ban ? `${String(du.boc_tham_thieu_kq)} hộ chưa có trong kết quả bốc thăm đã ghi nhận (${String(du.boc_tham_bien_ban)}) — cột thứ tự, lô để trống.` : "Chưa ghi nhận kết quả bốc thăm cho các hộ được chọn — cột thứ tự, lô bốc được để trống, ghi tay tại buổi bốc thăm rồi ghi nhận lại ở Quỹ tái định cư.");
+  if (ma === "T14" && du.kn_khong_co_don) out.push("Hộ chưa có đơn khiếu nại lần đầu (Hồ sơ hộ → thẻ Khiếu nại) — nội dung đơn để trống.");
+  else if (ma === "T14" && Number(du.kn_so_don) > 1) out.push(`Hộ có ${String(du.kn_so_don)} đơn khiếu nại lần đầu — mẫu lấy đơn nhận ngày ${String(du.kn_ngay_don_ngan)}; đơn khác soạn riêng, sửa nội dung ở ô nhập thêm.`);
+  if (ma === "T14" && !du.kn_khong_co_don && !du.kn_da_thu_ly) out.push("Đơn chưa ghi ngày thụ lý — kiểm tra việc thụ lý (k1 Điều 16 NĐ 124/2020/NĐ-CP) trước khi ban hành quyết định giải quyết.");
+  if (/^T1[5-7]$/.test(ma) && du.cc_khong_co) out.push("Hộ chưa có hồ sơ cưỡng chế thu hồi đất (Hồ sơ hộ → thẻ Khiếu nại → Cưỡng chế) — thời gian vận động, số QĐ cưỡng chế để trống.");
+  if ((ma === "T16" || ma === "T17") && !du.cc_khong_co && !String(du.cc_so_qd ?? "").trim()) out.push("Chưa ghi số quyết định cưỡng chế thực hiện quyết định thu hồi đất ở hồ sơ cưỡng chế của hộ.");
+  if (ma === "T16" && !(Array.isArray(du.thanh_vien_ban) && du.thanh_vien_ban.length)) out.push("Chưa nhập thành viên Ban cưỡng chế (điểm a khoản 4 Điều 89 Luật Đất đai 2024).");
+  if (ma === "T17" && !(Array.isArray(du.ds_du_toan) && du.ds_du_toan.length)) out.push("Chưa nhập dự toán kinh phí cưỡng chế — bảng dự toán trống.");
+  if (ma === "T17" && Number(du.du_toan_loi) > 0) out.push(`${String(du.du_toan_loi)} dòng dự toán không đọc được số tiền (dạng: nội dung | số tiền) — không cộng vào tổng.`);
   if (ma === "T1" && !Number(du.so_moc)) out.push("Dự án chưa lập kế hoạch từng bước (Dự án → Lập kế hoạch): các mốc thời gian trong Kế hoạch để trống.");
   return out;
 }
@@ -431,4 +440,62 @@ export function duLieuThuong(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[]): Record<s
   }
   if (!dong.length) return { thuong_thieu_khai_bao: thieu, thuong_chua_ban_giao: chuaBanGiao };
   return { ds_thuong: dong, so_ho_thuong: String(dong.length), tong_tien_thuong: dinhDang(tong, 0), tong_tien_thuong_chu: docSoTien(tong.toFixed(0)), thuong_thieu_khai_bao: thieu, thuong_chua_ban_giao: chuaBanGiao };
+}
+
+/**
+ * 1.0.21 (B2) — Dữ liệu cho T14 (QĐ giải quyết khiếu nại lần đầu) và T15–T17 (vận động, Ban cưỡng chế, phương án cưỡng chế)
+ * từ thẻ Khiếu nại của hộ. T14 lấy đơn khiếu nại lần đầu chưa có kết quả mới nhất (không có thì đơn mới nhất); T15–T17 lấy hồ
+ * sơ cưỡng chế thu hồi đất mới nhất. Chỉ chép dữ kiện đã ghi — kết luận, biện pháp do cán bộ ghi.
+ */
+export function duLieuKhieuNaiCuongChe(h: Ho, ngayKy: string, xa: string): Record<string, unknown> {
+  const chu = (iso?: string) => (iso ? `ngày ${iso.slice(8, 10)} tháng ${iso.slice(5, 7)} năm ${iso.slice(0, 4)}` : "");
+  const lan1 = (h.khieuNai ?? []).filter((d) => d.loai === "KHIEU_NAI" && (d.lan ?? 1) === 1).sort((a, b) => a.ngayNhan.localeCompare(b.ngayNhan));
+  const don = [...lan1].reverse().find((d) => !d.ketQua) ?? lan1[lan1.length - 1];
+  const ky = ngayKy || new Date().toISOString().slice(0, 10);
+  const kn_can_cu = [
+    "Căn cứ Luật Khiếu nại ngày 11 tháng 11 năm 2011;",
+    `Căn cứ Nghị định số 124/2020/NĐ-CP ngày 19 tháng 10 năm 2020 của Chính phủ quy định chi tiết một số điều và biện pháp thi hành Luật Khiếu nại${ky >= NGAY_HL_ND155 ? "; Nghị định số 155/2026/NĐ-CP ngày 15 tháng 5 năm 2026 của Chính phủ sửa đổi, bổ sung một số điều của Nghị định số 124/2020/NĐ-CP" : ""};`,
+  ];
+  const cc = (h.cuongChe ?? []).filter((c) => c.loai === "THU_HOI").sort((a, b) => (a.ngayQd ?? a.vanDongTu ?? "").localeCompare(b.ngayQd ?? b.vanDongTu ?? "")).pop();
+  return {
+    kn_nguoi_khieu_nai: h.ten,
+    CHUC_DANH_GQKN: `CHỦ TỊCH ỦY BAN NHÂN DÂN ${xa.toUpperCase()}`,
+    chuc_danh_gqkn: `Chủ tịch Ủy ban nhân dân ${xa.charAt(0).toLowerCase()}${xa.slice(1)}`,
+    kn_can_cu,
+    kn_khong_co_don: !don,
+    kn_so_don: lan1.length,
+    kn_da_thu_ly: !!don?.ngayThuLy,
+    kn_ngay_don: chu(don?.ngayNhan),
+    kn_ngay_don_ngan: ngayVn(don?.ngayNhan),
+    kn_doi_tuong: don?.doiTuong ?? "",
+    kn_noi_dung: don?.noiDung ?? "",
+    kn_so_ngay_lan_hai: don?.vungKhoKhan ? "45" : "30",
+    cc_khong_co: !cc,
+    cc_van_dong_tu: ngayVn(cc?.vanDongTu),
+    cc_van_dong_den: ngayVn(cc?.vanDongDen),
+    cc_so_qd: cc?.soQd ?? "",
+    cc_ngay_qd: ngayVn(cc?.ngayQd),
+    cc_ngay_du_kien: ngayVn(cc?.ngayDuKien),
+    cc_qd_ban: cc?.qdBan ?? "",
+  };
+}
+
+/** Dự toán kinh phí cưỡng chế (T17): mỗi dòng "nội dung | số tiền" do cán bộ nhập; cộng bằng Decimal. */
+export function docDuToan(chu: string): { ds_du_toan: { stt: number; noi_dung: string; so_tien: string }[]; tong_du_toan: string; tong_du_toan_chu: string; du_toan_loi: number } {
+  const ds: { stt: number; noi_dung: string; so_tien: string }[] = [];
+  let tong = D(0);
+  let loi = 0;
+  for (const dong of chu.split("\n").map((x) => x.trim()).filter(Boolean)) {
+    const i = Math.max(dong.lastIndexOf("|"), dong.lastIndexOf("\t"));
+    const nd = (i >= 0 ? dong.slice(0, i) : dong).trim();
+    const so = i >= 0 ? dong.slice(i + 1).replace(/[.\s]/g, "").replace(",", ".") : "";
+    if (!/^\d+(\.\d+)?$/.test(so)) {
+      loi++;
+      ds.push({ stt: ds.length + 1, noi_dung: nd, so_tien: "" });
+      continue;
+    }
+    tong = tong.plus(so);
+    ds.push({ stt: ds.length + 1, noi_dung: nd, so_tien: tien(D(so)) });
+  }
+  return { ds_du_toan: ds, tong_du_toan: tien(tong), tong_du_toan_chu: docSoTien(tong.toFixed(0)), du_toan_loi: loi };
 }

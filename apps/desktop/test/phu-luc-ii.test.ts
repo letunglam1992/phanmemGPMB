@@ -77,6 +77,18 @@ describe("Điều 11, 12, 13", () => {
     const b = tim(co("1"), "C01")[0]!.dong;
     expect(a.thanhTien!.div(b.thanhTien!).toNumber()).toBe(h0.nhanKhau.length);
     expect(truongLoi(truongSoHo(co("x")))).toHaveLength(1);
+  });  it("B4 (1.0.21): ≥ 30% theo k1 Đ19 NĐ 88; điểm b k1 Đ19 (theo dự án, không cộng dồn); không đủ ĐK, giao khoán → mức tương đương (k2 Điều 12 PL II)", () => {
+    const dt = h0.thua.reduce((s, t) => s + Number(t.dienTichThuHoi || 0), 0);
+    const co = (truongHop?: "KHONG_DU_DK" | "GIAO_KHOAN"): Ho => ({ ...h0, hoTro: { ...h0.hoTro, onDinh: { dienTichNNDangSuDung: String(dt * 2), diChuyen: "DI_CHUYEN", truongHop } } });
+    const a = tim(co(), "C02")[0]!.dong;
+    expect([a.thamSo!["Số tháng"], a.thamSo!["Tỷ lệ đất NN thu hồi"]]).toEqual(["12", "50,00%"]);
+    expect(a.thamSo!["DT đất NN thu hồi tính hỗ trợ"]).toMatch(/không cộng dồn dự án trước \(điểm b k1 Đ19/);
+    expect(a.canCu.map((c) => c.viTri)).toContain("điểm b khoản 1 Điều 19");
+    expect(a.thamSo!["Trường hợp"]).toBeUndefined();
+    const b = tim(co("GIAO_KHOAN"), "C02")[0]!.dong;
+    expect(b.thanhTien!.toString()).toBe(a.thanhTien!.toString());
+    expect(b.thamSo!["Trường hợp"]).toMatch(/giao khoán.*k2 Điều 12 PL II/);
+    expect(b.canCu.map((c) => c.viTri)).toEqual(expect.arrayContaining(["khoản 2 Điều 19", "khoản 2 Điều 12 Phụ lục II"]));
   });
 });
 

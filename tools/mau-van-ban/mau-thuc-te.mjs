@@ -6,7 +6,7 @@
  */
 import { writeFileSync } from "node:fs";
 import { AlignmentType, BorderStyle, Document, Packer, PageOrientation, Paragraph, Table, TableCell, TableRow, TextRun, WidthType, VerticalAlign } from "docx";
-import { FONT, P, giua, trai, lap, runs, dauVanBan, tenVanBan, kyVanBan, quocHieu, thanhPhan, kyBienBan } from "./khung.mjs";
+import { FONT, P, giua, trai, lap, runs, dauVanBan, tenVanBan, kyVanBan, quocHieu, thanhPhan, kyBienBan, bangLap } from "./khung.mjs";
 
 const RA = new URL("../../apps/desktop/public/mau-van-ban/", import.meta.url);
 const UBND_XA = ["ỦY BAN NHÂN DÂN", "{TEN_XA}"];
@@ -536,7 +536,141 @@ MAU.T13 = () => [
   ],
 ];
 
-const DANH_SACH = { T1: "tt-ke-hoach", T8: "tt-tb-du-kien-tdc", T9: "tt-tb-cong-bo-tdc", T10: "tt-to-trinh-cham-tra", T11: "tt-qd-cham-tra", T12: "tt-bb-doi-thoai", T13: "tt-bb-boc-tham-tdc", T2: "tt-to-trinh-tb", T3: "tt-thong-bao", T4: "tt-to-trinh-pa-ho", T5: "tt-qd-pa-ho", T6: "tt-to-trinh-thu-hoi", T7: "tt-qd-thu-hoi" };
+
+/**
+ * 1.0.21 (B2) — Văn bản khiếu nại, cưỡng chế của hộ: số liệu lấy từ thẻ Khiếu nại của hồ sơ hộ (khieu-nai.ts, cuong-che.ts).
+ * T14 theo Mẫu số 15 Phụ lục NĐ 124/2020/NĐ-CP (NĐ 155/2026/NĐ-CP không thay mẫu này — Điều 20); T15–T17: Luật Đất đai 2024
+ * không ban hành mẫu — bố cục theo biên bản, quyết định của Sổ tay; câu chữ nghĩa vụ trích nguyên văn khoản 7 Điều 87, Điều 89.
+ * Kết luận, biện pháp, lực lượng, kinh phí do cán bộ ghi — phần mềm không tự đặt.
+ */
+const BANG_THUA_HO = () =>
+  bangLap("thua", [
+    { tieuDe: "STT", truong: "stt", rong: 6 },
+    { tieuDe: "Tờ bản đồ số", truong: "so_to", rong: 10 },
+    { tieuDe: "Thửa đất số", truong: "so_thua", rong: 10 },
+    { tieuDe: "Loại đất", truong: "loai_dat", rong: 30, canh: AlignmentType.LEFT },
+    { tieuDe: "DT thửa (m²)", truong: "dien_tich", rong: 12, canh: AlignmentType.RIGHT },
+    { tieuDe: "DT thu hồi (m²)", truong: "dt_thu_hoi", rong: 12, canh: AlignmentType.RIGHT },
+  ]);
+const CC_QD_THU_HOI = () => P("Căn cứ Quyết định số {qd_thu_hoi_so} ngày {qd_thu_hoi_ngay} về việc thu hồi đất đối với {doi_tuong_goi} {ho_ten} để thực hiện dự án {ten_du_an};", { nghieng: true });
+const CC_QD_CUONG_CHE = () => P("Căn cứ Quyết định số {cc_so_qd} ngày {cc_ngay_qd} về việc cưỡng chế thực hiện quyết định thu hồi đất đối với {doi_tuong_goi} {ho_ten};", { nghieng: true });
+
+MAU.T14 = () => [
+  [
+    dauVanBan({ coQuan: UBND_XA, so: "Số: {so}/QĐ-UBND" }),
+    ...tenVanBan("QUYẾT ĐỊNH", "Về việc giải quyết khiếu nại của {kn_nguoi_khieu_nai}\n(lần đầu)"),
+    giua("{CHUC_DANH_GQKN}", { dam: true, truoc: 120 }),
+    ...lap("kn_can_cu", "{.}", { nghieng: true, sau: 60 }),
+    P("Xét đơn khiếu nại {kn_ngay_don} của {kn_nguoi_khieu_nai} (địa chỉ: {dia_chi}) khiếu nại {kn_doi_tuong}.", { nghieng: true }),
+    P("Theo báo cáo của {kn_tham_muu} tại Văn bản số {kn_bc_so} ngày {kn_bc_ngay} về việc giải quyết khiếu nại của {kn_nguoi_khieu_nai} với các nội dung sau đây:"),
+    P("**I. Nội dung khiếu nại:**"),
+    P("{kn_noi_dung}"),
+    P("**II. Kết quả xác minh nội dung khiếu nại:**"),
+    P("{kn_xac_minh}"),
+    P("**III. Kết quả đối thoại (nếu có):**"),
+    P("{kn_doi_thoai}"),
+    P("**IV. Kết luận**"),
+    P("{kn_ket_luan}"),
+    P("Từ những nhận định và căn cứ trên,"),
+    giua("QUYẾT ĐỊNH:", { dam: true, truoc: 120 }),
+    P("**Điều 1.** {kn_dieu_1}"),
+    P("**Điều 2.** {kn_dieu_2}"),
+    P("**Điều 3.** Trong thời hạn {kn_so_ngay_lan_hai} ngày, kể từ ngày nhận được Quyết định này, nếu {kn_nguoi_khieu_nai} không đồng ý với giải quyết khiếu nại của {chuc_danh_gqkn} thì {kn_nguoi_khieu_nai} có quyền khiếu nại đến {kn_nguoi_gq_lan_hai} hoặc khởi kiện vụ án hành chính tại Tòa án theo quy định của pháp luật về tố tụng hành chính."),
+    P("**Điều 4.** {kn_thi_hanh} chịu trách nhiệm thi hành Quyết định này./."),
+    kyVanBan(),
+  ],
+];
+
+MAU.T15 = () => [
+  [
+    ...quocHieu({ ngay: true }),
+    ...tenVanBan("BIÊN BẢN", "Vận động, thuyết phục bàn giao đất bị thu hồi\nđể thực hiện dự án {ten_du_an}"),
+    P("Căn cứ điểm a, điểm b khoản 7 Điều 87 Luật Đất đai năm 2024;", { nghieng: true, truoc: 120 }),
+    CC_QD_THU_HOI(),
+    P("Hôm nay, vào hồi {thoi_diem}, tại {dia_diem_lam_viec}, Ủy ban nhân dân {ten_xa} chủ trì, phối hợp với Ủy ban Mặt trận Tổ quốc Việt Nam {ten_xa} và {ten_don_vi_bt} tổ chức vận động, thuyết phục người có đất thu hồi bàn giao đất, gồm:"),
+    P("**I. THÀNH PHẦN**"),
+    ...thanhPhan([
+      ["Đại diện Ủy ban nhân dân {ten_xa}:", "tp_ubnd"],
+      ["Đại diện Ủy ban Mặt trận Tổ quốc Việt Nam {ten_xa}:", "tp_mttq"],
+      ["Đại diện đơn vị, tổ chức thực hiện nhiệm vụ bồi thường, hỗ trợ, tái định cư:", "tp_don_vi_bt"],
+      ["Thành phần khác (nếu có):", "tp_khac"],
+    ]),
+    P("**5. Người có đất thu hồi:** {ho_ten}{ho_cung_ten}; địa chỉ: {dia_chi}.", { dam: false }),
+    P("**II. NỘI DUNG**"),
+    P("1. Đất bị thu hồi chưa bàn giao: {thua_mo_ta}; tổng diện tích thu hồi {dt_thu_hoi} m² (chi tiết tại bảng dưới)."),
+    BANG_THUA_HO(),
+    P("2. Thời gian tổ chức vận động, thuyết phục: từ ngày {cc_van_dong_tu} đến ngày {cc_van_dong_den} (điểm b khoản 7 Điều 87: việc tổ chức vận động, thuyết phục được tiến hành trong thời gian 10 ngày và phải được thể hiện bằng văn bản).", { truoc: 120 }),
+    P("3. Nội dung tuyên truyền, vận động, giải thích: {noi_dung_van_dong}"),
+    P("4. Ý kiến của người có đất thu hồi: {y_kien}"),
+    P("**III. KẾT QUẢ**"),
+    P("{ket_qua_van_dong}"),
+    P("Biên bản kết thúc vào hồi {gio_ket_thuc} cùng ngày, đã đọc lại cho các thành phần tham gia cùng nghe và ký tên dưới đây./."),
+    kyBienBan([
+      "ĐẠI DIỆN UBND {TEN_XA}",
+      "ĐẠI DIỆN ỦY BAN MTTQ VIỆT NAM {TEN_XA}",
+      "ĐƠN VỊ, TỔ CHỨC THỰC HIỆN NHIỆM VỤ\nBỒI THƯỜNG, HỖ TRỢ, TÁI ĐỊNH CƯ",
+      "NGƯỜI CÓ ĐẤT THU HỒI",
+    ]),
+  ],
+];
+
+MAU.T16 = () => [
+  [
+    dauVanBan({ coQuan: UBND_XA, so: "Số: {so}/QĐ-UBND" }),
+    ...tenVanBan("QUYẾT ĐỊNH", "Về việc thành lập Ban cưỡng chế thu hồi đất đối với {doi_tuong_goi} {ho_ten}\nđể thực hiện dự án {ten_du_an}"),
+    giua("CHỦ TỊCH ỦY BAN NHÂN DÂN {TEN_XA}", { dam: true, truoc: 120 }),
+    ...CAN_CU(),
+    CC_QD_THU_HOI(),
+    CC_QD_CUONG_CHE(),
+    P("Xét đề nghị của {chuc_danh_de_nghi}.", { nghieng: true }),
+    giua("QUYẾT ĐỊNH:", { dam: true, truoc: 120 }),
+    P("**Điều 1.** Thành lập Ban cưỡng chế thu hồi đất để tổ chức thực hiện Quyết định số {cc_so_qd} ngày {cc_ngay_qd} về việc cưỡng chế thực hiện quyết định thu hồi đất đối với {doi_tuong_goi} {ho_ten}, địa chỉ: {dia_chi}, gồm các ông (bà) có tên sau:"),
+    ...lap("thanh_vien_ban", "- {.}", { thut: 0, trai: 567, sau: 40 }),
+    P("**Điều 2.** Ban cưỡng chế thu hồi đất có nhiệm vụ:", { truoc: 120 }),
+    P("1. Vận động, thuyết phục, đối thoại với người bị cưỡng chế; nếu người bị cưỡng chế chấp hành thì lập biên bản ghi nhận sự chấp hành. Việc bàn giao đất được thực hiện chậm nhất là 30 ngày kể từ ngày lập biên bản. Trường hợp người bị cưỡng chế không chấp hành quyết định cưỡng chế thì tổ chức thực hiện cưỡng chế (điểm b khoản 4 Điều 89 Luật Đất đai năm 2024)."),
+    P("2. Chủ trì lập phương án cưỡng chế và dự toán kinh phí cho hoạt động cưỡng chế trình phê duyệt; bàn giao đất cho đơn vị, tổ chức thực hiện nhiệm vụ bồi thường, hỗ trợ, tái định cư (điểm b khoản 5 Điều 89 Luật Đất đai năm 2024)."),
+    P("3. Thực hiện các quyền, trách nhiệm quy định tại điểm c, điểm d khoản 4 Điều 89 Luật Đất đai năm 2024; mời đại diện Ủy ban Mặt trận Tổ quốc Việt Nam tham gia giám sát việc cưỡng chế thu hồi đất."),
+    P("{nhiem_vu_khac}"),
+    P("**Điều 3.** Quyết định có hiệu lực kể từ ngày {ngay_hieu_luc}. {co_quan_thi_hanh}, các ông (bà) có tên tại Điều 1 và {doi_tuong_goi} {ho_ten} chịu trách nhiệm thi hành Quyết định này./."),
+    kyVanBan(),
+  ],
+];
+
+MAU.T17 = () => [
+  [
+    dauVanBan({ coQuan: ["ỦY BAN NHÂN DÂN {TEN_XA}", "BAN CƯỠNG CHẾ THU HỒI ĐẤT"], so: "Số: {so}/PA-BCC" }),
+    ...tenVanBan("PHƯƠNG ÁN", "Cưỡng chế thực hiện quyết định thu hồi đất đối với {doi_tuong_goi} {ho_ten}\nđể thực hiện dự án {ten_du_an}"),
+    P("**I. CĂN CỨ**", { truoc: 120 }),
+    ...CAN_CU(),
+    P("Căn cứ Điều 89 Luật Đất đai năm 2024;", { nghieng: true }),
+    CC_QD_THU_HOI(),
+    CC_QD_CUONG_CHE(),
+    P("Căn cứ Quyết định số {cc_qd_ban} về việc thành lập Ban cưỡng chế thu hồi đất;", { nghieng: true }),
+    P("**II. ĐỐI TƯỢNG, ĐỊA ĐIỂM CƯỠNG CHẾ**"),
+    P("1. Người bị cưỡng chế: {ho_ten}{ho_cung_ten}; địa chỉ: {dia_chi}."),
+    P("2. Đất bị cưỡng chế: {thua_mo_ta}; tổng diện tích {dt_thu_hoi} m², chi tiết:"),
+    BANG_THUA_HO(),
+    P("3. Tài sản trên đất (nếu có) và phương án di chuyển, bảo quản tài sản: {xu_ly_tai_san}", { truoc: 120 }),
+    P("**III. THỜI GIAN CƯỠNG CHẾ**"),
+    P("Thời gian dự kiến bắt đầu: {cc_ngay_du_kien}. Thời điểm bắt đầu tiến hành cưỡng chế được thực hiện trong giờ hành chính; không thực hiện cưỡng chế trong thời gian từ 10 giờ đêm ngày hôm trước đến 06 giờ sáng ngày hôm sau; các ngày nghỉ, ngày lễ theo quy định của pháp luật, ngày lễ theo truyền thống của đồng bào dân tộc; trong thời gian 15 ngày trước và sau thời gian nghỉ Tết Âm lịch và các trường hợp đặc biệt khác (điểm b khoản 1 Điều 89 Luật Đất đai năm 2024)."),
+    P("**IV. LỰC LƯỢNG, PHÂN CÔNG NHIỆM VỤ**"),
+    P("{luc_luong}"),
+    P("**V. TRÌNH TỰ THỰC HIỆN**"),
+    P("{trinh_tu}"),
+    P("**VI. DỰ TOÁN KINH PHÍ**"),
+    P("Kinh phí cưỡng chế thu hồi đất do ngân sách nhà nước bảo đảm, được lập thành một khoản trong kinh phí bồi thường, hỗ trợ, tái định cư (khoản 6 Điều 89 Luật Đất đai năm 2024). Căn cứ lập dự toán: {can_cu_du_toan}."),
+    bangLap("ds_du_toan", [
+      { tieuDe: "STT", truong: "stt", rong: 7 },
+      { tieuDe: "Nội dung chi", truong: "noi_dung", rong: 63, canh: AlignmentType.LEFT },
+      { tieuDe: "Số tiền (đồng)", truong: "so_tien", rong: 30, canh: AlignmentType.RIGHT, tong: "tong_du_toan" },
+    ]),
+    P("Tổng dự toán: {tong_du_toan} đồng (Bằng chữ: {tong_du_toan_chu}).", { truoc: 120 }),
+    P("Ban cưỡng chế thu hồi đất kính trình Chủ tịch Ủy ban nhân dân {ten_xa} xem xét, phê duyệt (điểm b khoản 5 Điều 89 Luật Đất đai năm 2024)./."),
+    kyVanBan({ quyenHan: "TRƯỞNG BAN" }),
+  ],
+];
+
+const DANH_SACH = { T1: "tt-ke-hoach", T8: "tt-tb-du-kien-tdc", T9: "tt-tb-cong-bo-tdc", T10: "tt-to-trinh-cham-tra", T11: "tt-qd-cham-tra", T12: "tt-bb-doi-thoai", T13: "tt-bb-boc-tham-tdc", T14: "tt-qd-giai-quyet-kn", T15: "tt-bb-van-dong-ban-giao", T16: "tt-qd-ban-cuong-che", T17: "tt-pa-cuong-che", T2: "tt-to-trinh-tb", T3: "tt-thong-bao", T4: "tt-to-trinh-pa-ho", T5: "tt-qd-pa-ho", T6: "tt-to-trinh-thu-hoi", T7: "tt-qd-thu-hoi" };
 for (const [ma, tep] of Object.entries(DANH_SACH)) {
   const [chinh, phu] = MAU[ma]();
   const buf = await Packer.toBuffer(taoDoc(chinh, phu));

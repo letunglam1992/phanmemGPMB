@@ -11,7 +11,7 @@ const LOP_TT: Record<string, string> = { QUA_HAN: "nhan-do", QUA_HAN_THU_LY: "nh
 const LOP_MUC = { CAO: "thong-bao-do", TRUNG_BINH: "thong-bao-vang", THONG_TIN: "thong-bao-xanh" } as const;
 
 /** 1.0.20 (B1, B2): thẻ Khiếu nại, cưỡng chế của hồ sơ hộ. */
-export function TabKhieuNai({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => void }) {
+export function TabKhieuNai({ h, duAn, doi, soanMau }: { h: Ho; duAn: DuAn; doi: (h: Ho) => void; soanMau?: (ma: string) => void }) {
   const { lich, nguoiDung } = useUngDung();
   const homNay = homNayIso();
   const ds = h.khieuNai ?? [];
@@ -30,7 +30,7 @@ export function TabKhieuNai({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) 
       <div className="the" data-khieu-nai>
         <div className="the-dau">
           <h3>Khiếu nại, kiến nghị</h3>
-          <span className="mo chu-nho">Thụ lý 10 ngày (Điều 27, 36); giải quyết lần đầu 30–60 ngày (Điều 28), lần hai 45–70 ngày (Điều 37) Luật Khiếu nại 2011</span>
+          <span className="mo chu-nho">Thụ lý 10 ngày làm việc, đơn nhận từ 01/7/2026: 07 ngày làm việc (k1 Đ16 NĐ 124/2020, sửa bởi Điều 10 NĐ 155/2026); giải quyết lần đầu 30–60 ngày (Điều 28), lần hai 45–70 ngày (Điều 37) Luật Khiếu nại 2011</span>
         </div>
         <div className="the-than" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button className="nut nut-nho" onClick={() => themDon("KHIEU_NAI")}>+ Ghi đơn khiếu nại</button>
@@ -44,8 +44,9 @@ export function TabKhieuNai({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) 
               <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 8 }}>
                 <b>{TEN_LOAI_DON[d.loai]}{d.loai === "KHIEU_NAI" ? ` lần ${d.lan ?? 1}` : ""}</b>
                 <span className={`nhan ${LOP_TT[t.tt]}`} data-tt-don={t.tt}>{TEN_TT_DON[t.tt]}</span>
-                {t.han && <span className="chu-nho">{t.tt === "CHO_THU_LY" || t.tt === "QUA_HAN_THU_LY" ? "Hạn thụ lý" : "Hạn giải quyết"} {ngayVN(t.han)} ({t.soNgay} ngày{t.conLai !== undefined ? (t.conLai < 0 ? `, quá ${-t.conLai} ngày` : `, còn ${t.conLai} ngày`) : ""}) — {t.canCu}</span>}
+                {t.han && <span className="chu-nho">{t.tt === "CHO_THU_LY" || t.tt === "QUA_HAN_THU_LY" ? "Hạn thụ lý" : "Hạn giải quyết"} {ngayVN(t.han)} ({t.soNgay} {t.tt === "CHO_THU_LY" || t.tt === "QUA_HAN_THU_LY" ? "ngày làm việc" : "ngày"}{t.conLai !== undefined ? (t.conLai < 0 ? `, quá ${-t.conLai} ngày` : `, còn ${t.conLai} ngày`) : ""}) — {t.canCu}</span>}
                 <span style={{ flex: 1 }} />
+                {soanMau && d.loai === "KHIEU_NAI" && (d.lan ?? 1) === 1 && <button className="nut nut-nho" data-soan-t14 onClick={() => soanMau("T14")}>Soạn QĐ giải quyết (T14)</button>}
                 <button className="nut nut-nho nut-nguy" onClick={() => xoa("đơn", ds, d.id, (m) => ({ ...h, khieuNai: m }))}>Xóa</button>
               </div>
               <div className="luoi luoi-4">
@@ -114,6 +115,13 @@ export function TabKhieuNai({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) 
                 <b>{TEN_LOAI_CC[c.loai]}</b> <span className="chu-nho mo">({DIEU_CC[c.loai]} LĐĐ 2024)</span>
                 {c.ketQua && <span className="nhan nhan-xam">{c.ketQua === "CHAP_HANH" ? "Đã chấp hành" : "Đã thực hiện cưỡng chế"}</span>}
                 <span style={{ flex: 1 }} />
+                {soanMau && c.loai === "THU_HOI" && (
+                  <>
+                    <button className="nut nut-nho" title="Điểm a, b khoản 7 Điều 87" onClick={() => soanMau("T15")}>Biên bản vận động (T15)</button>
+                    <button className="nut nut-nho" title="Điểm a khoản 4 Điều 89" onClick={() => soanMau("T16")}>QĐ thành lập Ban (T16)</button>
+                    <button className="nut nut-nho" title="Điểm b khoản 5, khoản 6 Điều 89" onClick={() => soanMau("T17")}>Phương án, dự toán (T17)</button>
+                  </>
+                )}
                 <button className="nut nut-nho nut-nguy" onClick={() => xoa("hồ sơ cưỡng chế", dsCc, c.id, (m) => ({ ...h, cuongChe: m }))}>Xóa</button>
               </div>
               <div className="luoi luoi-4">
