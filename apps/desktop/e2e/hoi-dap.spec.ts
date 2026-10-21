@@ -38,7 +38,8 @@ test("nội bộ: không gọi mạng ngoài; trích nguyên văn; trả lời s
   await p.getByLabel("Câu hỏi").fill("Hạn mức công nhận đất ở đối với đất sử dụng trước ngày 18/12/1980?");
   await p.getByLabel("Câu hỏi").press("Enter");
   const doan = p.locator(".hd-doan").first();
-  await expect(doan).toContainText("Phụ lục I");
+  // 1.0.21: kho tri thức ~1,9 MB (thêm NĐ 88 toàn văn, NĐ 102, Luật Khiếu nại, NĐ 124, 155, Luật 136) — lần hỏi đầu phải tải, lập chỉ mục
+  await expect(doan).toContainText("Phụ lục I", { timeout: 30_000 });
   await expect(doan).toContainText("Điều 3");
   await p.getByLabel("Câu hỏi").fill("Dự án có bao nhiêu hộ, tổng kinh phí bao nhiêu?");
   await p.getByRole("button", { name: "Gửi", exact: true }).click();
