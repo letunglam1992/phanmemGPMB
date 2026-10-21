@@ -30,7 +30,7 @@ export function TabKhieuNai({ h, duAn, doi, soanMau }: { h: Ho; duAn: DuAn; doi:
       <div className="the" data-khieu-nai>
         <div className="the-dau">
           <h3>Khiếu nại, kiến nghị</h3>
-          <span className="mo chu-nho">Thụ lý 10 ngày làm việc, đơn nhận từ 01/7/2026: 07 ngày làm việc (k1 Đ16 NĐ 124/2020, sửa bởi Điều 10 NĐ 155/2026); giải quyết lần đầu 30–60 ngày (Điều 28), lần hai 45–70 ngày (Điều 37) Luật Khiếu nại 2011</span>
+          <span className="mo chu-nho">Thụ lý 10 ngày làm việc, đơn nhận từ 01/7/2026: 07 ngày làm việc (Điều 27, 36 Luật Khiếu nại sửa bởi Luật 136/2025; k1 Đ16 NĐ 124/2020 sửa bởi NĐ 155/2026); giải quyết lần đầu 30–60 ngày (Điều 28), lần hai 45–70 ngày (Điều 37) Luật Khiếu nại 2011</span>
         </div>
         <div className="the-than" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button className="nut nut-nho" onClick={() => themDon("KHIEU_NAI")}>+ Ghi đơn khiếu nại</button>

@@ -341,11 +341,10 @@ export const tepMau = (m: MauVanBan) => m.tep ?? `mau-${m.ma}.docx`;
 DANH_MUC_MAU.push(
   {
     ma: "T14", ten: "Quyết định giải quyết khiếu nại (lần đầu)", buoc: "9", phamVi: "HO", coQuan: "UBND", nguon: "THUC_TE", tep: "tt-qd-giai-quyet-kn.docx",
-    moTa: "Theo Mẫu số 15 Phụ lục Nghị định 124/2020/NĐ-CP (Điều 31 Luật Khiếu nại 2011). Đơn khiếu nại lần đầu lấy từ thẻ Khiếu nại của hộ (đơn chưa có kết quả mới nhất, không có thì đơn mới nhất). Căn cứ NĐ 155/2026/NĐ-CP thêm khi ngày ký từ 01/7/2026.",
+    moTa: "Theo Mẫu số 15 Phụ lục Nghị định 124/2020/NĐ-CP (Điều 31 Luật Khiếu nại 2011). Đơn khiếu nại lần đầu lấy từ thẻ Khiếu nại của hộ (đơn chưa có kết quả mới nhất, không có thì đơn mới nhất). Ngày ký từ 01/7/2026 tự thêm căn cứ Luật 136/2025/QH15 và NĐ 155/2026/NĐ-CP (cùng hiệu lực 01/7/2026).",
     ghiLai: { khoa: "qd_gqkn", capDo: "HO", kyHieu: "QĐ-UBND" },
     nhapThem: [
       { truong: "can_cu_tham_quyen", nhan: "Căn cứ chức năng, nhiệm vụ, quyền hạn của người giải quyết", goiY: "Ghi chú (5) Mẫu 15: văn bản quy định chức năng, nhiệm vụ, quyền hạn — vd. Luật Tổ chức chính quyền địa phương …" },
-      { truong: "can_cu_luat_sua_doi", nhan: "Căn cứ Luật sửa đổi Luật Khiếu nại", macDinh: "Luật sửa đổi, bổ sung một số điều của Luật Tiếp công dân, Luật Khiếu nại, Luật Tố cáo số 136/2025/QH15", goiY: "NĐ 155/2026 dẫn luật này; phần mềm chưa có nguyên văn — kiểm tra ngày hiệu lực, xóa nếu chưa áp dụng" },
       { truong: "kn_doi_tuong", nhan: "Quyết định, hành vi bị khiếu nại", goiY: "Để trống = đã ghi ở đơn (thẻ Khiếu nại)" },
       { truong: "kn_tham_muu", nhan: "Cơ quan, người được giao tham mưu giải quyết", goiY: "Ghi chú (6) Mẫu 15" },
       { truong: "kn_bc_so", nhan: "Báo cáo kết quả xác minh số" }, { truong: "kn_bc_ngay", nhan: "ngày" },
@@ -356,7 +355,7 @@ DANH_MUC_MAU.push(
       { truong: "kn_dieu_1", nhan: "Điều 1", nhieuDong: true, goiY: "Giữ nguyên, sửa đổi, bổ sung hoặc hủy bỏ một phần hay toàn bộ quyết định hành chính; tiếp tục thực hiện hoặc chấm dứt hành vi hành chính bị khiếu nại" },
       { truong: "kn_dieu_2", nhan: "Điều 2", nhieuDong: true, goiY: "Giải quyết các vấn đề liên quan (bồi thường thiệt hại nếu có — điểm i k2 Điều 31)" },
       { truong: "kn_so_ngay_lan_hai", nhan: "Thời hạn khiếu nại lần hai (ngày)", goiY: "Để trống = 30 ngày; vùng sâu, vùng xa (đơn đã đánh dấu) = 45 ngày (k1 Điều 33 Luật Khiếu nại 2011)" },
-      { truong: "kn_nguoi_gq_lan_hai", nhan: "Người có thẩm quyền giải quyết lần hai", goiY: "Ghi chú (12) Mẫu 15" },
+      { truong: "kn_nguoi_gq_lan_hai", nhan: "Người có thẩm quyền giải quyết lần hai", goiY: "Ghi chú (12) Mẫu 15. Để trống (ký từ 01/7/2026) = Chủ tịch UBND tỉnh — khoản 2 Điều 21 Luật Khiếu nại sửa bởi Luật 136/2025, áp dụng khi người giải quyết lần đầu là Chủ tịch UBND xã" },
       { truong: "kn_thi_hanh", nhan: "Người chịu trách nhiệm thi hành (Điều 4)", macDinh: "Chánh Văn phòng Hội đồng nhân dân và Ủy ban nhân dân, Thủ trưởng các cơ quan, đơn vị có liên quan và người khiếu nại" },
       HIEU_LUC,
       NOI_NHAN("Như Điều 4\nThủ trưởng cấp trên trực tiếp\nNgười có quyền, nghĩa vụ liên quan\nCơ quan thanh tra nhà nước cùng cấp\nLưu: VT, hồ sơ"),

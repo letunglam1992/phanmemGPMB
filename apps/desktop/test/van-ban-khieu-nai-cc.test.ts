@@ -34,10 +34,11 @@ describe("1.0.21 (B2) — mẫu văn bản khiếu nại, cưỡng chế tự đ
   };
 
   it("T14 — Mẫu 15 NĐ 124/2020: căn cứ (NĐ 155/2026 khi ký từ 01/7/2026), đơn, thời hạn khiếu nại lần hai vùng sâu vùng xa 45 ngày", () => {
-    const r = tao("T14", h, duAn, { can_cu_tham_quyen: "Luật Tổ chức chính quyền địa phương", kn_ket_luan: "Khiếu nại sai.", kn_nguoi_gq_lan_hai: "Chủ tịch UBND tỉnh", can_cu_luat_sua_doi: "Luật số 136/2025/QH15" });
+    const r = tao("T14", h, duAn, { can_cu_tham_quyen: "Luật Tổ chức chính quyền địa phương", kn_ket_luan: "Khiếu nại sai.", kn_nguoi_gq_lan_hai: "Chủ tịch UBND tỉnh" });
     expect(r.chu).toContain("Về việc giải quyết khiếu nại của " + h.ten);
     expect(r.chu).toContain("Căn cứ Luật Khiếu nại ngày 11 tháng 11 năm 2011;\n");
-    expect(r.chu).toContain("Căn cứ Luật số 136/2025/QH15;");
+    expect(r.chu).toContain("Căn cứ Luật sửa đổi, bổ sung một số điều của Luật Tiếp công dân, Luật Khiếu nại, Luật Tố cáo ngày 10 tháng 12 năm 2025;");
+    expect(tao("T14", h, duAn, {}).chu).toContain("có quyền khiếu nại đến Chủ tịch Ủy ban nhân dân tỉnh");
     expect(r.chu).toContain("Nghị định số 155/2026/NĐ-CP ngày 15 tháng 5 năm 2026");
     expect(r.chu).toContain("Căn cứ Luật Tổ chức chính quyền địa phương;");
     expect(r.chu).toContain("Xét đơn khiếu nại ngày 01 tháng 09 năm 2026");
@@ -48,7 +49,9 @@ describe("1.0.21 (B2) — mẫu văn bản khiếu nại, cưỡng chế tự đ
     expect(r.chu).not.toContain("{");
     expect(r.canhBao.filter((c) => /khiếu nại|thụ lý/.test(c))).toEqual([]);
     // ký trước 01/7/2026 → chỉ NĐ 124/2020
-    expect(tao("T14", h, duAn, {}, "2026-06-15").chu).not.toContain("155/2026");
+    const truoc = tao("T14", h, duAn, {}, "2026-06-15").chu;
+    expect(truoc).not.toContain("155/2026");
+    expect(truoc).not.toContain("ngày 10 tháng 12 năm 2025");
     // không có đơn → cảnh báo
     expect(tao("T14", { ...h, khieuNai: [] }, duAn, {}).canhBao.some((c) => c.includes("chưa có đơn khiếu nại lần đầu"))).toBe(true);
   });

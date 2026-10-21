@@ -1,6 +1,6 @@
 # Luật Khiếu nại số 02/2011/QH13 ngày 11/11/2011 (Quốc hội)
 
-Toàn văn, từ tệp người dùng cung cấp ngày 21/10/2026. Lưu ý: Luật số 136/2025/QH15 sửa đổi, bổ sung một số điều của Luật Tiếp công dân, Luật Khiếu nại, Luật Tố cáo (được NĐ 155/2026/NĐ-CP dẫn làm căn cứ) CHƯA có nguyên văn trong phần mềm — các thời hạn Điều 27, 28, 33, 36, 37 dưới đây là theo Luật 2011, cần đối chiếu khi có văn bản sửa đổi. Chỉ dùng để tra cứu, trích dẫn trong phần mềm; khi cần giá trị pháp lý dùng văn bản gốc.
+Toàn văn, từ tệp người dùng cung cấp ngày 21/10/2026. Bản gốc 2011 (chưa hợp nhất). Từ 01/7/2026 được sửa đổi, bổ sung bởi Luật số 136/2025/QH15 (xem luat-136-2025-sua-luat-khieu-nai.md): thụ lý Điều 27, khoản 1 Điều 36 là 07 ngày làm việc; bổ sung Điều 11a; sửa Điều 2, 8, 10, 17, khoản 2 Điều 21, Điều 25, khoản 6 Điều 30, khoản 1 Điều 33; bãi bỏ khoản 8 Điều 6, Điều 18. Điều 28, 37 không bị sửa. Chỉ dùng để tra cứu, trích dẫn trong phần mềm; khi cần giá trị pháp lý dùng văn bản gốc.
 
 ----------------------- -----------------------------------------------
   QUỐC HỘI                CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM

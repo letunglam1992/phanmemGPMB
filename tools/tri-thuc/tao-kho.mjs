@@ -21,6 +21,7 @@ export const NGUON = [
   ["policy/nguon/qd64-2026-sua-qd106-qd14.md", "QĐ 64/2026/QĐ-UBND (sửa QĐ 106/2025, QĐ 14/2026)", "VAN_BAN"],
   ["policy/nguon/nd102-2024-dat-dai.md", "Nghị định 102/2024/NĐ-CP (quy định chi tiết Luật Đất đai)", "VAN_BAN", "PHỤ LỤC"],
   ["policy/nguon/luat-khieu-nai-02-2011.md", "Luật Khiếu nại 2011 (số 02/2011/QH13)", "VAN_BAN"],
+  ["policy/nguon/luat-136-2025-sua-luat-khieu-nai.md", "Luật 136/2025/QH15 (sửa Luật Tiếp công dân, Khiếu nại, Tố cáo; hiệu lực 01/7/2026)", "VAN_BAN"],
   ["policy/nguon/nd124-2020-khieu-nai.md", "Nghị định 124/2020/NĐ-CP (thi hành Luật Khiếu nại)", "VAN_BAN", "Phụ lục"],
   ["policy/nguon/nd155-2026-sua-nd124.md", "Nghị định 155/2026/NĐ-CP (sửa NĐ 124/2020, hiệu lực 01/7/2026)", "VAN_BAN", "PHỤ LỤC"],
   ["policy/nguon/nq152-can-doi-chieu.md", "NQ 152/2025 – bảng giá đất (dòng cần đối chiếu)", "VAN_BAN"],

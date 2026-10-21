@@ -15,9 +15,9 @@ describe("Khiếu nại — Điều 27, 28, 36, 37 Luật Khiếu nại 2011 (1.
   it("chưa thụ lý: từ 01/7/2026 hạn 07 ngày làm việc (k1 Đ16 NĐ 124/2020 sửa bởi Điều 10 NĐ 155/2026)", () => {
     const t = hanDon(don({}), "2026-10-05", LICH_TRONG);
     expect(t).toMatchObject({ tt: "CHO_THU_LY", han: "2026-10-12", soNgay: 7 });
-    expect(t.canCu).toBe("k1 Điều 16 NĐ 124/2020/NĐ-CP (sửa bởi Điều 10 NĐ 155/2026/NĐ-CP); Điều 27 Luật Khiếu nại 2011");
+    expect(t.canCu).toBe("k1 Điều 16 NĐ 124/2020/NĐ-CP (sửa bởi Điều 10 NĐ 155/2026/NĐ-CP); Điều 27 Luật Khiếu nại (sửa bởi Luật 136/2025/QH15)");
     expect(hanDon(don({}), "2026-10-13", LICH_TRONG).tt).toBe("QUA_HAN_THU_LY");
-    expect(hanDon(don({ lan: 2 }), "2026-10-05", LICH_TRONG).canCu).toMatch(/Điều 36 Luật Khiếu nại 2011$/);
+    expect(hanDon(don({ lan: 2 }), "2026-10-05", LICH_TRONG).canCu).toMatch(/khoản 1 Điều 36 Luật Khiếu nại \(sửa bởi Luật 136\/2025\/QH15\)$/);
   });
   it("chưa thụ lý: đơn nhận trước 01/7/2026 hạn 10 ngày làm việc (k1 Đ16 NĐ 124/2020), bỏ qua thứ Bảy, Chủ nhật", () => {
     const t = hanDon(don({ ngayNhan: "2026-06-01" }), "2026-06-02", LICH_TRONG);

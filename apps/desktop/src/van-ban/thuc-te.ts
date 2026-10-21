@@ -454,6 +454,7 @@ export function duLieuKhieuNaiCuongChe(h: Ho, ngayKy: string, xa: string): Recor
   const ky = ngayKy || new Date().toISOString().slice(0, 10);
   const kn_can_cu = [
     "Căn cứ Luật Khiếu nại ngày 11 tháng 11 năm 2011;",
+    ...(ky >= NGAY_HL_ND155 ? ["Căn cứ Luật sửa đổi, bổ sung một số điều của Luật Tiếp công dân, Luật Khiếu nại, Luật Tố cáo ngày 10 tháng 12 năm 2025;"] : []),
     `Căn cứ Nghị định số 124/2020/NĐ-CP ngày 19 tháng 10 năm 2020 của Chính phủ quy định chi tiết một số điều và biện pháp thi hành Luật Khiếu nại${ky >= NGAY_HL_ND155 ? "; Nghị định số 155/2026/NĐ-CP ngày 15 tháng 5 năm 2026 của Chính phủ sửa đổi, bổ sung một số điều của Nghị định số 124/2020/NĐ-CP" : ""};`,
   ];
   const cc = (h.cuongChe ?? []).filter((c) => c.loai === "THU_HOI").sort((a, b) => (a.ngayQd ?? a.vanDongTu ?? "").localeCompare(b.ngayQd ?? b.vanDongTu ?? "")).pop();
@@ -470,6 +471,8 @@ export function duLieuKhieuNaiCuongChe(h: Ho, ngayKy: string, xa: string): Recor
     kn_doi_tuong: don?.doiTuong ?? "",
     kn_noi_dung: don?.noiDung ?? "",
     kn_so_ngay_lan_hai: don?.vungKhoKhan ? "45" : "30",
+    // k2 Điều 21 Luật Khiếu nại sửa bởi k8 Điều 2 Luật 136/2025: Chủ tịch UBND cấp tỉnh giải quyết lần hai QĐ, hành vi của Chủ tịch UBND cấp xã
+    kn_nguoi_gq_lan_hai: ky >= NGAY_HL_ND155 ? "Chủ tịch Ủy ban nhân dân tỉnh" : undefined,
     cc_khong_co: !cc,
     cc_van_dong_tu: ngayVn(cc?.vanDongTu),
     cc_van_dong_den: ngayVn(cc?.vanDongDen),

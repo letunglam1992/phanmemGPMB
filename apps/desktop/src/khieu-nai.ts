@@ -2,7 +2,8 @@
  * 1.0.20 (B1) — Sổ theo dõi khiếu nại, kiến nghị của hộ trong bồi thường, hỗ trợ, tái định cư.
  * Thời hạn theo Luật Khiếu nại 2011 và Nghị định 124/2020/NĐ-CP:
  * - thụ lý (1.0.21): 10 ngày làm việc kể từ ngày nhận được khiếu nại thuộc thẩm quyền (khoản 1 Điều 16 NĐ 124/2020);
- *   đơn nhận từ 01/7/2026: 07 ngày làm việc (khoản 1 Điều 16 sửa bởi Điều 10 NĐ 155/2026/NĐ-CP, hiệu lực theo k1 Điều 21);
+ *   đơn nhận từ 01/7/2026: 07 ngày làm việc (Điều 27, khoản 1 Điều 36 Luật Khiếu nại sửa bởi điểm b khoản 15 Điều 2 Luật
+ *   136/2025/QH15; khoản 1 Điều 16 NĐ 124 sửa bởi Điều 10 NĐ 155/2026/NĐ-CP — cùng hiệu lực 01/7/2026);
  * - giải quyết lần đầu (Điều 28): ≤ 30 ngày kể từ ngày thụ lý, vụ việc phức tạp ≤ 45 ngày; vùng sâu, vùng xa đi lại
  *   khó khăn ≤ 45 ngày, phức tạp ≤ 60 ngày;
  * - giải quyết lần hai (Điều 37): ≤ 45 ngày, phức tạp ≤ 60 ngày; vùng sâu, vùng xa ≤ 60 ngày, phức tạp ≤ 70 ngày.
@@ -54,7 +55,9 @@ export const NGAY_HL_ND155 = "2026-07-01";
 /** Số ngày làm việc để thụ lý theo ngày nhận đơn (khoản 1 Điều 16 NĐ 124/2020/NĐ-CP, sửa bởi Điều 10 NĐ 155/2026/NĐ-CP). */
 export const soNgayThuLy = (ngayNhan: string) => (ngayNhan >= NGAY_HL_ND155 ? 7 : 10);
 export const CAN_CU_THU_LY = (lan: 1 | 2, ngayNhan = "") =>
-  `k1 Điều 16 NĐ 124/2020/NĐ-CP${ngayNhan >= NGAY_HL_ND155 ? " (sửa bởi Điều 10 NĐ 155/2026/NĐ-CP)" : ""}; Điều ${lan === 1 ? 27 : 36} Luật Khiếu nại 2011`;
+  ngayNhan >= NGAY_HL_ND155
+    ? `k1 Điều 16 NĐ 124/2020/NĐ-CP (sửa bởi Điều 10 NĐ 155/2026/NĐ-CP); ${lan === 1 ? "Điều 27" : "khoản 1 Điều 36"} Luật Khiếu nại (sửa bởi Luật 136/2025/QH15)`
+    : `k1 Điều 16 NĐ 124/2020/NĐ-CP; Điều ${lan === 1 ? 27 : 36} Luật Khiếu nại 2011`;
 export const CAN_CU_GIAI_QUYET = (lan: 1 | 2) => `Điều ${lan === 1 ? 28 : 37} Luật Khiếu nại 2011`;
 
 /** Số ngày giải quyết theo Điều 28 (lần 1) / Điều 37 (lần 2) Luật Khiếu nại 2011. */

@@ -384,8 +384,6 @@ export function ghepDuLieu(p: {
   // 1.0.21 (B2): căn cứ của QĐ giải quyết khiếu nại (Mẫu 15 NĐ 124/2020), thành viên Ban cưỡng chế, dự toán cưỡng chế
   if (p.mau.ma === "T14" && Array.isArray(kq.kn_can_cu)) {
     const cc = [...(kq.kn_can_cu as string[])];
-    const luatSua = String(p.rieng.can_cu_luat_sua_doi ?? "").trim().replace(/;$/, "");
-    if (luatSua) cc.splice(1, 0, `Căn cứ ${luatSua.replace(/^Căn cứ\s+/i, "")};`);
     const thamQuyen = String(p.rieng.can_cu_tham_quyen ?? "").trim().replace(/;$/, "");
     if (thamQuyen) cc.push(`Căn cứ ${thamQuyen.replace(/^Căn cứ\s+/i, "")};`);
     kq.kn_can_cu = cc;
