@@ -18,7 +18,7 @@ function tao(ma: string, h: Ho, duAn: DuAn, rieng: Record<string, string>, ngayK
   const m = DANH_MUC_MAU.find((x) => x.ma === ma)!;
   const k = tinhHo(cs, duAn, h);
   const du = ghepDuLieu({ mau: m, duAn, ds: [{ h, k }], ho: { h, k }, chung: thongTinChungMacDinh(duAn), rieng, so: "", ngayKy });
-  const tep = readFileSync(new URL(`../public/mau-van-ban/${m.tep}`, import.meta.url));
+  const tep = readFileSync(new URL(`../public/mau-van-ban/${m.tep ?? `mau-${m.ma}.docx`}`, import.meta.url));
   return { du, chu: chu(dienMau(tep, du)), canhBao: kiemTraThongNhat(ma, duAn, du) };
 }
 
@@ -79,5 +79,62 @@ describe("1.0.21 (B2) — mẫu văn bản khiếu nại, cưỡng chế tự đ
     expect(r.chu).toContain("90/QĐ-UBND ngày 22/10/2026");
     expect(r.chu).not.toContain("{");
     expect(tao("T17", h, duAn, {}).canhBao.some((c) => c.includes("Chưa nhập dự toán"))).toBe(true);
+  });
+
+  it("1.0.21 A2 — T18–T22 theo Phụ lục NĐ 155/2026: thụ lý, không thụ lý, đối thoại (vắng không lý do), tạm đình chỉ, tiếp tục", () => {
+    const d0 = h.khieuNai![0]!;
+    const hk: Ho = { ...h, khieuNai: [{ ...d0, tbThuLy: { so: "15/TB-UBND", ngay: "2026-09-08" }, vangDoiThoai: { ngay: "2026-09-20", coLyDo: false }, tamDinhChi: [{ id: "t", tu: "2026-09-25", den: "2026-10-05", truongHop: "a", lyDo: "Người khiếu nại điều trị tại bệnh viện", soQd: "20/QĐ-UBND" }] }] };
+    const t18 = tao("T18", hk, duAn, {});
+    expect(t18.chu).toContain("Về việc thụ lý giải quyết khiếu nại lần đầu");
+    expect(t18.chu).toContain("Ngày 01/09/2026, Ủy ban nhân dân");
+    expect(t18.chu).toContain("đủ điều kiện thụ lý");
+    expect(t18.chu).not.toContain("{");
+    const t19 = tao("T19", hk, duAn, {});
+    expect(t19.canhBao.some((c) => c.includes("lý do không thụ lý"))).toBe(true);
+    expect(tao("T19", { ...hk, khieuNai: [{ ...hk.khieuNai![0]!, ketQua: "KHONG_THU_LY", lyDoKhongThuLy: "đã có quyết định giải quyết khiếu nại lần hai" }] }, duAn, {}).chu).toContain("không đủ điều kiện để thụ lý giải quyết vì đã có quyết định giải quyết khiếu nại lần hai");
+    const t20 = tao("T20", hk, duAn, { ket_qua_doi_thoai: "Thống nhất nội dung 1." });
+    expect(t20.chu).toContain("vắng mặt ngày 20/09/2026 — không có lý do chính đáng; người giải quyết khiếu nại vẫn tiếp tục giải quyết khiếu nại theo khoản 6 Điều 30 Luật Khiếu nại");
+    expect(t20.chu).toContain("BIÊN BẢN ĐỐI THOẠI VỚI NGƯỜI KHIẾU NẠI");
+    expect(t20.chu).not.toContain("{");
+    const t21 = tao("T21", hk, duAn, {});
+    expect(t21.chu).toContain("Về việc tạm đình chỉ giải quyết khiếu nại");
+    expect(t21.chu).toContain("theo Thông báo thụ lý giải quyết khiếu nại số 15/TB-UBND ngày 08/09/2026");
+    expect(t21.chu).toContain("Người khiếu nại điều trị tại bệnh viện; thuộc trường hợp quy định tại điểm a khoản 1 Điều 11a Luật Khiếu nại (sự kiện bất khả kháng, trở ngại khách quan).");
+    expect(t21.chu).not.toContain("{");
+    const dc = tao("T21", { ...hk, khieuNai: [{ ...hk.khieuNai![0]!, ketQua: "DINH_CHI", dinhChi: { truongHop: "d" } }] }, duAn, {});
+    expect(dc.chu).toContain("Về việc đình chỉ giải quyết khiếu nại");
+    expect(dc.chu).toContain("Tòa án đã thụ lý hoặc đã giải quyết");
+    const t22 = tao("T22", hk, duAn, {});
+    expect(t22.chu).toContain("Quyết định tạm đình chỉ giải quyết khiếu nại số 20/QĐ-UBND ngày 25/09/2026");
+    expect(t22.chu).toContain("Thời hạn giải quyết khiếu nại tiếp tục được tính từ ngày ban hành Quyết định này");
+    expect(t22.chu).not.toContain("{");
+    expect(tao("T22", h, duAn, {}).canhBao.some((c) => c.includes("chưa ghi tạm đình chỉ"))).toBe(true);
+  });
+
+  it("1.0.21 A3 — cấp số thì ghi ngược vào đơn, hồ sơ cưỡng chế; chỉ ô còn trống", async () => {
+    const { ghiNguocVanBan } = await import("../src/ghi-nguoc-van-ban");
+    const d0 = h.khieuNai![0]!;
+    expect(ghiNguocVanBan(h, "T14", "30/QĐ-UBND", "2026-10-20")!.khieuNai![0]).toMatchObject({ soVb: "30/QĐ-UBND", ngayVb: "2026-10-20" });
+    expect(ghiNguocVanBan({ ...h, khieuNai: [{ ...d0, soVb: "29/QĐ-UBND" }] }, "T14", "30/QĐ-UBND", "2026-10-20")!.khieuNai![0]).toMatchObject({ soVb: "29/QĐ-UBND", ngayVb: "2026-10-20" });
+    expect(ghiNguocVanBan(h, "T18", "15/TB-UBND", "2026-09-08")!.khieuNai![0]!.tbThuLy).toEqual({ so: "15/TB-UBND", ngay: "2026-09-08" });
+    const tdc: Ho = { ...h, khieuNai: [{ ...d0, tamDinhChi: [{ id: "t", tu: "2026-09-25", truongHop: "a", lyDo: "x" }] }] };
+    expect(ghiNguocVanBan(tdc, "T21", "20/QĐ-UBND", "2026-09-26")!.khieuNai![0]!.tamDinhChi![0]).toMatchObject({ soQd: "20/QĐ-UBND", tu: "2026-09-26" });
+    expect(ghiNguocVanBan(tdc, "T22", "25/QĐ-UBND", "2026-10-05")!.khieuNai![0]!.tamDinhChi![0]).toMatchObject({ den: "2026-10-05", soQdTiepTuc: "25/QĐ-UBND" });
+    const cc: Ho = { ...h, cuongChe: [{ id: "c", loai: "THU_HOI" }] };
+    expect(ghiNguocVanBan(cc, "22", "88/QĐ-UBND", "2026-10-21")!.cuongChe![0]).toMatchObject({ soQd: "88/QĐ-UBND", ngayQd: "2026-10-21" });
+    expect(ghiNguocVanBan(h, "22", "88/QĐ-UBND", "2026-10-21")).toBeNull();
+    expect(ghiNguocVanBan(h, "T14", "", "2026-10-20")).toBeNull();
+  });
+
+  it("1.0.21 B1, B2 — mẫu 22 lấy ngày dự kiến cưỡng chế, ghi chú Mẫu 01đ NĐ 102; T23 bàn giao đất trên thực địa (Mẫu 06 NĐ 102)", () => {
+    expect(DANH_MUC_MAU.find((m) => m.ma === "22")!.moTa).toContain("Mẫu số 01đ");
+    expect(DANH_MUC_MAU.find((m) => m.ma === "22")!.ghiLai?.khoa).toBe("qd_cc_thu_hoi");
+    const m22 = tao("22", h, duAn, {});
+    expect(m22.chu).toContain("Thời gian thực hiện cưỡng chế thu hồi đất từ ngày 05/11/2026");
+    const t23 = tao("T23", h, { ...duAn, chuDauTu: "Ban QLDA thử" }, { qd_giao_dat_so: "99/QĐ-UBND", qd_giao_dat_ngay: "01/11/2026", co_quan_giao_dat: "Ủy ban nhân dân tỉnh Sơn La", moc_gioi: "Mốc 1 – mốc 2: 25,0 m\nMốc 2 – mốc 3: 40,0 m;" });
+    expect(t23.chu).toContain("Thực hiện Quyết định số 99/QĐ-UBND ngày 01/11/2026 của Ủy ban nhân dân tỉnh Sơn La về việc giao đất");
+    expect(t23.chu).toContain("cho Ban QLDA thử đã được giao đất");
+    expect(t23.chu).toContain("- Mốc 2 – mốc 3: 40,0 m;");
+    expect(t23.chu).not.toContain("{");
   });
 });

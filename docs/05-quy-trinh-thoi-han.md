@@ -17,15 +17,15 @@ Ký hiệu thời hạn: **N** = ngày; **NLV** = ngày làm việc. Chỉ các 
 | 4a | Niêm yết kết quả kiểm đếm (khi người có đất không ký biên bản) | Đơn vị BT + UBND xã | 10 N | — | Mục XXI.3 Sổ tay |
 | 4b | Vận động kiểm đếm | UBND xã + MTTQ | 15 N | 05 | k2 đ Đ87 LĐĐ |
 | 4c | Kiểm đếm bắt buộc | Đề nghị sau 10 N kết thúc vận động; trình ≤ 3 NLV; ký ≤ 2 NLV; giao QĐ ≤ 3 NLV; niêm yết 5 N | 06 | Đ88 LĐĐ; Đ36 NĐ102 |
-| 4d | Cưỡng chế kiểm đếm bắt buộc | Trình ≤ 3 NLV; ký ≤ 2 NLV; giao ≤ 2 NLV; vận động 5 NLV; báo Công an trước 5 NLV | 07 | Đ88 LĐĐ; Đ36, 37 NĐ102 |
+| 4d | Cưỡng chế kiểm đếm bắt buộc | Trình ≤ 3 NLV; ký ≤ 2 NLV; giao ≤ 2 NLV (Sổ tay); vận động 5 NLV (k2 Đ36 NĐ102); báo Công an trước 5 NLV (Đ37 NĐ102) | 07 | Đ88 LĐĐ; Đ36, 37 NĐ102 |
 | 5 | Lập phương án BT-HT-TĐC | Đơn vị BT | — | — | k3 a Đ87 LĐĐ; Đ3 NĐ88 |
 | 6 | Niêm yết công khai PA | Đơn vị BT + UBND xã | **30 N** | 09, 10 | k3 a Đ87 LĐĐ |
 | 7 | Lấy ý kiến (họp trực tiếp); đối thoại | Đơn vị BT + UBND xã + MTTQ | Ngay sau niêm yết; đối thoại **≤ 60 N** | 08 | k3 a Đ87 LĐĐ |
 | 7a | Hỗ trợ khác (nếu còn kiến nghị) | Phòng KT → UBND xã | — | — | k2 Đ108 LĐĐ; Mục XI.2 Sổ tay |
-| 8 | Thẩm định PA + dự thảo QĐ thu hồi | Phòng KT/KT-HT-ĐT/KT-VH-XH | **≤ 30 NLV** từ đủ hồ sơ (thời gian bổ sung không tính) | 11, 12, 13 | k3 Đ3 NĐ88; Mục XII Sổ tay |
-| 9 | Phê duyệt PA | Chủ tịch UBND xã | **≤ 5 NLV** | 14 | điểm c k3 Đ87 LĐĐ |
+| 8 | Thẩm định PA + dự thảo QĐ thu hồi | Phòng KT/KT-HT-ĐT/KT-VH-XH | **≤ 30 N** từ đủ hồ sơ (thời gian bổ sung không tính) — 1.0.21 theo nguyên văn "không quá 30 ngày" | 11, 12, 13 | k3 Đ3 NĐ88; Mục XII Sổ tay |
+| 9 | Phê duyệt PA | Chủ tịch UBND xã | **≤ 5 NLV** | 14 | Sổ tay QĐ 1966 (điểm c k3 Đ87 LĐĐ không quy định số ngày) |
 | 10 | Phổ biến, niêm yết QĐ phê duyệt | Đơn vị BT + UBND xã | — | — | k4 a Đ87 LĐĐ |
-| 11 | Gửi PA/QĐ đến từng người | Đơn vị BT + UBND xã | **≤ 3 NLV** | 16 | k4 b Đ87 LĐĐ |
+| 11 | Gửi PA/QĐ đến từng người | Đơn vị BT + UBND xã | **≤ 3 NLV** | 16 | Sổ tay QĐ 1966 (điểm b k4 Đ87 LĐĐ không quy định số ngày) |
 | 12 | Chi trả | Đơn vị BT + Chủ đầu tư | **≤ 30 N** từ QĐ duyệt PA có hiệu lực; loa 3 N; vận động không nhận tiền 10 N rồi gửi ngân hàng | 17, 18, 19 | k3, k4 Đ94 LĐĐ |
 | 12a | Thưởng bàn giao sớm | Phòng KT trình, Chủ tịch xã duyệt, chi trong 10 N | 3 N + 3 N + 10 N (VM-23, QD-32: "03 ngày") | 20, 21 | Mục XV.3 Sổ tay |
 | 13 | QĐ thu hồi đất | Chủ tịch UBND xã | **≤ 10 N** từ khi đủ 1 trong 7 điều kiện k5 Đ87; hoặc sau vận động 10 N + 10 N | 15 | k5, k6 Đ87 LĐĐ |
@@ -37,7 +37,7 @@ Ký hiệu thời hạn: **N** = ngày; **NLV** = ngày làm việc. Chỉ các 
 
 - TB gửi chưa đủ 90/180 ngày mà đã lập dự thảo QĐ thu hồi.
 - Niêm yết PA chưa đủ 30 ngày mà đã chuyển bước lấy ý kiến.
-- Quá 30 NLV thẩm định; quá 30 ngày chi trả kể từ QĐ duyệt PA (kèm tính **tiền chậm trả** theo k3 b Đ94 LĐĐ).
+- Quá 30 ngày thẩm định; quá 30 ngày chi trả kể từ QĐ duyệt PA (kèm tính **tiền chậm trả** theo k3 b Đ94 LĐĐ).
 - Quá 10 ngày chưa ban hành QĐ thu hồi khi đã đủ điều kiện k5 Đ87.
 - Hộ vắng mặt, chưa xác định người thừa kế (Mục XXI.1, 9, 10 Sổ tay: niêm yết 15 ngày).
 

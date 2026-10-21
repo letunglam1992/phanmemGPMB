@@ -16,6 +16,16 @@ mới hơn bản đang dùng khi có bản cập nhật.
 - Hỗ trợ ổn định đời sống: chọn trường hợp hộ không đủ điều kiện bồi thường về đất hoặc nhận giao khoán (mức tương đương —
   khoản 2 Điều 12 Phụ lục II QĐ 106/2025); giải trình ghi diện tích thu hồi theo từng dự án, không cộng dồn (điểm b khoản 1
   Điều 19 Nghị định 88/2024/NĐ-CP).
+- Khiếu nại theo Luật 136/2025/QH15 và Nghị định 155/2026/NĐ-CP: ghi tạm đình chỉ (thời gian tạm đình chỉ không tính vào hạn
+  giải quyết), đình chỉ, không thụ lý, người khiếu nại vắng đối thoại, thông báo thụ lý, ngày gửi quyết định giải quyết (nhắc khi
+  quá 03/07 ngày làm việc). Mẫu mới: T18 thông báo thụ lý, T19 không thụ lý, T20 biên bản đối thoại, T21 quyết định tạm đình
+  chỉ/đình chỉ, T22 quyết định tiếp tục giải quyết (Mẫu 03, 04, 14, 14a, 14b Nghị định 155/2026). Cấp số văn bản thì số, ngày tự
+  ghi vào đơn, hồ sơ cưỡng chế.
+- Mẫu T23 biên bản bàn giao đất trên thực địa (Mẫu 06 Nghị định 102/2024); mẫu 07, 22 lấy ngày dự kiến cưỡng chế.
+- **Hạn thẩm định phương án đổi thành 30 ngày** (khoản 3 Điều 3 Nghị định 88/2024: "không quá 30 ngày"); bản trước đếm 30 ngày
+  làm việc. Hạn phê duyệt 5 ngày làm việc, gửi quyết định 3 ngày làm việc ghi đúng nguồn là Sổ tay QĐ 1966.
+- Kinh phí cưỡng chế ghi căn cứ khoản 3 Điều 27 Nghị định 88/2024; cưỡng chế nhắc gửi văn bản Công an trước 05 ngày làm việc
+  (Điều 37 Nghị định 102/2024).
 - Hỏi đáp, tra cứu thêm nguyên văn: Nghị định 88/2024 (toàn văn), Nghị định 102/2024, Luật Khiếu nại 2011, Nghị định
   124/2020, Nghị định 155/2026, Luật 136/2025/QH15 (sửa Luật Khiếu nại).
 

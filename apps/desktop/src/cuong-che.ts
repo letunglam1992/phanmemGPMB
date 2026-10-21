@@ -6,7 +6,7 @@
  * của chính quyền địa phương hai cấp; phần mềm không tự xác định cấp ban hành.
  */
 import { amSangDuong } from "./am-lich";
-import { hanChotNgay, laNgayLamViec, type LichLamViec } from "./lich-lam-viec";
+import { hanChot, hanChotNgay, laNgayLamViec, type LichLamViec } from "./lich-lam-viec";
 import type { Ho } from "./mo-hinh";
 
 export type LoaiCuongChe = "KIEM_DEM" | "THU_HOI";
@@ -119,6 +119,10 @@ export function kiemCuongChe(c: CuongChe, h: Ho, homNay: string, lich: LichLamVi
   if (han && !c.ketQua && homNay > han)
     out.push({ muc: "CAO", noiDung: `Quá hạn thi hành quyết định cưỡng chế (hạn ${vn(han)}, ${Math.max(10, c.hanThiHanhNgay ?? 10)} ngày kể từ ngày nhận quyết định / lập biên bản)`, canCu: cc("khoản 3") });
   if (c.ngayDuKien && !c.ketQua) {
+    // 1.0.21 (C2): đề nghị Công an bảo đảm trật tự phải gửi trước thời điểm cưỡng chế 05 ngày làm việc (Điều 37 NĐ 102/2024)
+    let cs = c.ngayDuKien;
+    for (let i = 0; i < 5; i++) do cs = hanChot(cs, -1, "N", lich); while (!laNgayLamViec(cs, lich));
+    out.push({ muc: "THONG_TIN", noiDung: `Nếu cần Công an tham gia bảo đảm trật tự: gửi văn bản đến cơ quan Công an cùng cấp chậm nhất ${vn(cs)} (trước thời điểm cưỡng chế 05 ngày làm việc)${c.loai === "KIEM_DEM" ? "; Ban cưỡng chế kiểm đếm bắt buộc vận động, thuyết phục, đối thoại trong 05 ngày làm việc (k2 Điều 36 NĐ 102/2024)" : ""}`, canCu: "Điều 37 NĐ 102/2024/NĐ-CP" });
     if (han && c.ngayDuKien > han) out.push({ muc: "CAO", noiDung: `Ngày dự kiến cưỡng chế ${vn(c.ngayDuKien)} sau hạn thi hành ${vn(han)}`, canCu: cc("khoản 3") });
     if (c.ngayHieuLuc && c.ngayDuKien < c.ngayHieuLuc) out.push({ muc: "CAO", noiDung: `Ngày dự kiến cưỡng chế ${vn(c.ngayDuKien)} trước ngày quyết định có hiệu lực ${vn(c.ngayHieuLuc)}`, canCu: cc("điểm c khoản 2") });
     if (!laNgayLamViec(c.ngayDuKien, lich)) out.push({ muc: "CAO", noiDung: `Ngày dự kiến cưỡng chế ${vn(c.ngayDuKien)} là ngày nghỉ — thời điểm bắt đầu phải trong giờ hành chính${c.loai === "THU_HOI" ? ", không cưỡng chế ngày nghỉ, ngày lễ" : ""}`, canCu: cc("điểm b khoản 1") });

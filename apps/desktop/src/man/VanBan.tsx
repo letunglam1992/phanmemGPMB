@@ -10,6 +10,7 @@ import { ghepDuLieu, ngayChu, thongTinChungMacDinh } from "../van-ban/du-lieu";
 import { truongVanBanTuDonVi } from "../don-vi";
 import { dienMau, dongGoiZip, truongTrongMau } from "../van-ban/dien-mau";
 import { HopThoai, O } from "../thanh-phan/chung";
+import { ghiNguocVanBan } from "../ghi-nguoc-van-ban";
 import { taiXuong } from "../tai-xuong";
 import { tenTep } from "../ten-tep";
 import { giaTriNhapThem } from "../van-ban/tao-nhanh";
@@ -200,6 +201,8 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
           tep.push({ ten: `Mau-${ma}_${tenAnToan(x.h.ma + " " + x.h.ten)}.docx`, noiDung });
           const ghi: Partial<Ho> = { nhatKy: [...x.h.nhatKy, { luc: new Date().toISOString(), nguoi: nguoiDung, noiDung: `Tạo văn bản Mẫu ${ma} – ${mau.ten}${soHo.trim() ? ` số ${soHo}` : ""}` }] };
           if (mau.ghiLai && soHo.trim()) ghi.vanBan = { ...(x.h.vanBan ?? {}), [`${mau.ghiLai.khoa}_so`]: `${soHo.trim()}/${kyHieu}`, [`${mau.ghiLai.khoa}_ngay`]: ngayChu(ngayKy) };
+          // 1.0.21 (A3): ghi số, ngày vào đơn khiếu nại / hồ sơ cưỡng chế (chỉ ô còn trống)
+          Object.assign(ghi, ghiNguocVanBan(x.h, ma, soHo.trim() ? `${soHo.trim()}${kyHieu ? `/${kyHieu}` : ""}` : "", ngayKy) ?? {});
           ghiHo.push({ ...x.h, ...ghi });
         }
         const daLuu = tep.length === 1 ? await taiXuong(tep[0]!.noiDung, tep[0]!.ten, DOCX) : await taiXuong(dongGoiZip(tep), `Mau-${ma}_${tep.length}-ho_${tenAnToan(duAn.ten)}.zip`, "application/zip");

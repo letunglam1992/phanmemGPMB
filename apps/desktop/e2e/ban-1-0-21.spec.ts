@@ -109,3 +109,29 @@ test("B4: ổn định đời sống — chọn trường hợp nhận giao kho�
   await p.locator("[role=tablist] button", { hasText: "Hỗ trợ" }).first().click();
   await expect(p.getByLabel("Trường hợp ổn định đời sống")).toHaveValue("GIAO_KHOAN");
 });
+
+test("A1, A2, A3: tạm đình chỉ không tính vào hạn; nút T18–T22; ngày gửi QĐ", async ({ page: p }) => {
+  await vao(p);
+  await moHo(p);
+  await p.locator("[role=tablist] button", { hasText: "Khiếu nại" }).click();
+  await p.getByRole("button", { name: "+ Ghi đơn khiếu nại" }).click();
+  const don = p.locator("[data-don]").first();
+  await ngay(p, "Ngày nhận đơn", "01/10/2026", don);
+  await ngay(p, "Ngày thụ lý", "05/10/2026", don);
+  await expect(don).toContainText("Hạn giải quyết 04/11/2026 (30 ngày");
+  await don.getByRole("button", { name: "+ Tạm đình chỉ" }).click();
+  const tdc = don.locator("[data-tam-dinh-chi]");
+  await ngay(p, "Ngày QĐ tạm đình chỉ", "10/10/2026", tdc);
+  await tdc.getByLabel("Lý do tạm đình chỉ").fill("Người khiếu nại ốm (thử)");
+  await expect(don.locator("[data-tt-don]")).toHaveText("Tạm đình chỉ");
+  await ngay(p, "Ngày QĐ tiếp tục giải quyết", "20/10/2026", tdc);
+  // 30 + 10 ngày tạm đình chỉ = 14/11/2026 (thứ Bảy) → 16/11/2026
+  await expect(don).toContainText("Hạn giải quyết 16/11/2026 (30 ngày");
+  await expect(don).toContainText("k4 Điều 11a");
+  for (const n of ["TB thụ lý (T18)", "TB không thụ lý (T19)", "BB đối thoại (T20)", "QĐ tạm đình chỉ / đình chỉ (T21)", "QĐ tiếp tục giải quyết (T22)"]) await expect(don.getByRole("button", { name: n })).toBeVisible();
+  await don.getByLabel("Kết quả giải quyết").selectOption("SAI");
+  await expect(don.getByLabel("Ngày gửi QĐ giải quyết")).toBeVisible();
+  await p.getByRole("button", { name: "Lưu hồ sơ" }).click();
+  await don.getByRole("button", { name: "QĐ tiếp tục giải quyết (T22)" }).click();
+  await expect(p.getByRole("heading", { name: /Quyết định tiếp tục giải quyết khiếu nại/ })).toBeVisible();
+});

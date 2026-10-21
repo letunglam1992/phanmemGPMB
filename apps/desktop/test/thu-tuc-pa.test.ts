@@ -42,7 +42,7 @@ describe("1.0.15 — mẫu 14 tự điền, tiến độ thủ tục, hạn QĐ 
     const da: DuAn = { ...duAn, phuongAn: [p], vanBan: { ...(duAn.vanBan ?? {}), tt_phe_duyet_pa_ngay: "19/10/2026" } };
     const hos = [moc(moc(ho[0]!, "8", "2026-09-01"), "11", "", "2026-10-28")];
     const [d] = tienDoThuTuc(da, hos, "2026-11-02", LICH_TRONG);
-    expect(d!.thamDinh).toMatchObject({ moc: "2026-09-01", han: "2026-10-13", xong: "2026-10-16", cham: 3 });
+    expect(d!.thamDinh).toMatchObject({ moc: "2026-09-01", han: "2026-10-01", xong: "2026-10-16", cham: 11 }); // 1.0.21: 30 ngày (k3 Đ3 NĐ 88)
     expect(d!.pheDuyet).toMatchObject({ moc: "2026-10-19", han: "2026-10-26", xong: "2026-10-26", cham: 0 });
     expect(d!.guiQd).toMatchObject({ han: "2026-10-29", xong: "2026-10-28", cham: 0 });
   });

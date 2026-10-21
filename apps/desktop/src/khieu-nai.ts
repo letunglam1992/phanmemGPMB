@@ -7,6 +7,12 @@
  * - giải quyết lần đầu (Điều 28): ≤ 30 ngày kể từ ngày thụ lý, vụ việc phức tạp ≤ 45 ngày; vùng sâu, vùng xa đi lại
  *   khó khăn ≤ 45 ngày, phức tạp ≤ 60 ngày;
  * - giải quyết lần hai (Điều 37): ≤ 45 ngày, phức tạp ≤ 60 ngày; vùng sâu, vùng xa ≤ 60 ngày, phức tạp ≤ 70 ngày.
+ * 1.0.21 (A1, A3): tạm đình chỉ (k1 Điều 11a Luật Khiếu nại bổ sung bởi Luật 136/2025): thời gian tạm đình chỉ không tính vào
+ * thời hạn giải quyết (k4 Điều 11a); thời hạn tiếp tục tính từ ngày ban hành QĐ tiếp tục giải quyết (k2 Điều 28b NĐ 124/2020 bổ sung
+ * bởi NĐ 155/2026) → hạn = ngày thụ lý + số ngày giải quyết + (ngày QĐ tiếp tục − ngày QĐ tạm đình chỉ). Đình chỉ (k2 Điều 11a);
+ * vắng đối thoại không có lý do chính đáng thì vẫn giải quyết (k6 Điều 30 Luật; k5 Điều 28 NĐ 124 sửa bởi NĐ 155); gửi QĐ giải
+ * quyết lần đầu trong 03 ngày làm việc, lần hai 07 ngày làm việc kể từ ngày ban hành (điểm a k2 Điều 29 NĐ 124/2020); gửi QĐ tạm
+ * đình chỉ, đình chỉ, tiếp tục trong 03 ngày làm việc (Điều 28b).
  * "Phức tạp", "vùng sâu, vùng xa" do cán bộ đánh dấu (phần mềm không tự xác định). Kiến nghị, phản ánh không thuộc Luật
  * Khiếu nại → hạn do đơn vị nhập kèm căn cứ (không có thì không tính hạn). Hạn đếm theo ngày như câu chữ của Luật; ngày
  * thứ nhất là ngày liền sau ngày mốc (Điều 147 BLDS 2015), ngày cuối là ngày nghỉ thì sang ngày làm việc tiếp theo (k5 Đ148). Phần mềm ghi nhận, nhắc hạn — không kết luận đúng sai.
@@ -17,12 +23,14 @@ import type { Ho } from "./mo-hinh";
 export type LoaiDon = "KHIEU_NAI" | "KIEN_NGHI";
 export const TEN_LOAI_DON: Record<LoaiDon, string> = { KHIEU_NAI: "Khiếu nại", KIEN_NGHI: "Kiến nghị, phản ánh" };
 
-export type KetQuaDon = "DUNG" | "DUNG_MOT_PHAN" | "SAI" | "RUT" | "TRA_LOI";
+export type KetQuaDon = "DUNG" | "DUNG_MOT_PHAN" | "SAI" | "RUT" | "DINH_CHI" | "KHONG_THU_LY" | "TRA_LOI";
 export const TEN_KET_QUA_DON: Record<KetQuaDon, string> = {
   DUNG: "Khiếu nại đúng",
   DUNG_MOT_PHAN: "Đúng một phần",
   SAI: "Khiếu nại sai",
   RUT: "Rút đơn (đình chỉ)",
+  DINH_CHI: "Đình chỉ (k2 Điều 11a)",
+  KHONG_THU_LY: "Không thụ lý (Điều 11)",
   TRA_LOI: "Đã trả lời, giải thích",
 };
 
@@ -48,7 +56,42 @@ export interface DonKhieuNai {
   ketQua?: KetQuaDon;
   ghiChu?: string;
   nguoiGhi?: string;
+  /** 1.0.21: thông báo thụ lý (Mẫu 03 NĐ 124 thay bởi NĐ 155) — số, ngày */
+  tbThuLy?: { so: string; ngay: string };
+  /** Không thụ lý: lý do (Điều 11 Luật Khiếu nại; Mẫu 04) */
+  lyDoKhongThuLy?: string;
+  tamDinhChi?: TamDinhChi[];
+  /** Đình chỉ: trường hợp điểm a–d k2 Điều 11a */
+  dinhChi?: { truongHop: "a" | "b" | "c" | "d"; ngay?: string; soQd?: string };
+  /** Người khiếu nại vắng đối thoại (k6 Điều 30 Luật; k5 Điều 28 NĐ 124 sửa bởi NĐ 155) */
+  vangDoiThoai?: { ngay: string; coLyDo: boolean };
+  /** Ngày gửi QĐ giải quyết cho người khiếu nại (điểm a k2 Điều 29 NĐ 124/2020) */
+  ngayGuiQd?: string;
 }
+
+export interface TamDinhChi {
+  id: string;
+  /** Ngày ban hành QĐ tạm đình chỉ (Mẫu 14a) */
+  tu: string;
+  /** Ngày ban hành QĐ tiếp tục giải quyết (Mẫu 14b); trống = đang tạm đình chỉ */
+  den?: string;
+  /** Điểm a (bất khả kháng, trở ngại khách quan — Điều 28a NĐ 124) / điểm b (chờ kết quả cơ quan khác) k1 Điều 11a */
+  truongHop: "a" | "b";
+  lyDo: string;
+  soQd?: string;
+  soQdTiepTuc?: string;
+}
+
+export const TEN_TDC: Record<TamDinhChi["truongHop"], string> = {
+  a: "Bất khả kháng, trở ngại khách quan (điểm a k1 Điều 11a)",
+  b: "Chờ kết quả giải quyết vấn đề liên quan (điểm b k1 Điều 11a)",
+};
+export const TEN_DINH_CHI: Record<NonNullable<DonKhieuNai["dinhChi"]>["truongHop"], string> = {
+  a: "Người khiếu nại rút toàn bộ khiếu nại (điểm a)",
+  b: "Cá nhân chết / tổ chức giải thể, không có người kế thừa (điểm b)",
+  c: "Không còn đối tượng, nội dung để giải quyết (điểm c)",
+  d: "Tòa án đã thụ lý hoặc đã giải quyết (điểm d)",
+};
 
 /** Ngày NĐ 155/2026/NĐ-CP có hiệu lực (khoản 1 Điều 21) — thụ lý rút từ 10 xuống 07 ngày làm việc. */
 export const NGAY_HL_ND155 = "2026-07-01";
@@ -66,13 +109,14 @@ export function soNgayGiaiQuyet(lan: 1 | 2, phucTap: boolean, vungKhoKhan: boole
   return bang[(vungKhoKhan ? 2 : 0) + (phucTap ? 1 : 0)]!;
 }
 
-export type TrangThaiDon = "CHO_THU_LY" | "QUA_HAN_THU_LY" | "DANG_GIAI_QUYET" | "SAP_HET" | "QUA_HAN" | "DA_GIAI_QUYET" | "KHONG_TINH_HAN";
+export type TrangThaiDon = "CHO_THU_LY" | "QUA_HAN_THU_LY" | "DANG_GIAI_QUYET" | "SAP_HET" | "QUA_HAN" | "TAM_DINH_CHI" | "DA_GIAI_QUYET" | "KHONG_TINH_HAN";
 export const TEN_TT_DON: Record<TrangThaiDon, string> = {
   CHO_THU_LY: "Chờ thụ lý",
   QUA_HAN_THU_LY: "Quá hạn thụ lý",
   DANG_GIAI_QUYET: "Đang giải quyết",
   SAP_HET: "Sắp hết hạn",
   QUA_HAN: "Quá hạn giải quyết",
+  TAM_DINH_CHI: "Tạm đình chỉ",
   DA_GIAI_QUYET: "Đã giải quyết",
   KHONG_TINH_HAN: "Không tính hạn (thiếu căn cứ)",
 };
@@ -85,6 +129,8 @@ export interface HanDon {
   canCu?: string;
   /** Số ngày còn lại (≥ 0) hoặc số ngày đã quá (< 0) tính đến hôm nay */
   conLai?: number;
+  /** Số ngày tạm đình chỉ không tính vào thời hạn (k4 Điều 11a) */
+  ngayTamDinhChi?: number;
 }
 
 const soNgay = (tu: string, den: string) => Math.round((Date.parse(den) - Date.parse(tu)) / 86400000);
@@ -107,9 +153,14 @@ export function hanDon(d: DonKhieuNai, homNay: string, lich: LichLamViec): HanDo
     return { tt: conLai < 0 ? "QUA_HAN_THU_LY" : "CHO_THU_LY", han, soNgay: n, canCu: CAN_CU_THU_LY(lan, d.ngayNhan), conLai };
   }
   const n = soNgayGiaiQuyet(lan, !!d.phucTap, !!d.vungKhoKhan);
-  const han = hanChotNgay(d.ngayThuLy, n, lich);
+  const tdc = d.tamDinhChi ?? [];
+  const dang = tdc.find((t) => !t.den);
+  const ngayTdc = tdc.filter((t) => t.den).reduce((s, t) => s + Math.max(0, soNgay(t.tu, t.den!)), 0);
+  const canCu = CAN_CU_GIAI_QUYET(lan) + (tdc.length ? "; k4 Điều 11a Luật Khiếu nại (Luật 136/2025), k2 Điều 28b NĐ 124/2020 (NĐ 155/2026)" : "");
+  if (dang) return { tt: "TAM_DINH_CHI", soNgay: n, canCu, ngayTamDinhChi: ngayTdc + Math.max(0, soNgay(dang.tu, homNay)) };
+  const han = hanChotNgay(d.ngayThuLy, n + ngayTdc, lich);
   const conLai = soNgay(homNay, han);
-  return { tt: conLai < 0 ? "QUA_HAN" : conLai <= NGAY_NHAC_DON ? "SAP_HET" : "DANG_GIAI_QUYET", han, soNgay: n, canCu: CAN_CU_GIAI_QUYET(lan), conLai };
+  return { tt: conLai < 0 ? "QUA_HAN" : conLai <= NGAY_NHAC_DON ? "SAP_HET" : "DANG_GIAI_QUYET", han, soNgay: n, canCu, conLai, ...(ngayTdc ? { ngayTamDinhChi: ngayTdc } : {}) };
 }
 
 /** Đơn chưa có kết quả của hộ */
@@ -139,4 +190,15 @@ export function thongKeDon(hos: Ho[], homNay: string, lich: LichLamViec): ThongK
     }
   }
   return tk;
+}
+
+/** Kết quả đã có văn bản giải quyết (không tính đình chỉ, không thụ lý) — để tính hạn gửi QĐ (điểm a k2 Điều 29 NĐ 124/2020). */
+const CO_QD_GIAI_QUYET: KetQuaDon[] = ["DUNG", "DUNG_MOT_PHAN", "SAI"];
+
+/** A3: hạn gửi QĐ giải quyết khiếu nại: lần đầu 03, lần hai 07 ngày làm việc kể từ ngày ban hành (điểm a k2 Điều 29 NĐ 124/2020). */
+export function hanGuiQd(d: DonKhieuNai, homNay: string, lich: LichLamViec): { han: string; soNgay: number; quaHan: boolean; canCu: string } | null {
+  if (d.loai !== "KHIEU_NAI" || !d.ketQua || !CO_QD_GIAI_QUYET.includes(d.ketQua) || !d.ngayVb || d.ngayGuiQd) return null;
+  const n = (d.lan ?? 1) === 2 ? 7 : 3;
+  const han = hanChot(d.ngayVb, n, "NLV", lich);
+  return { han, soNgay: n, quaHan: homNay > han, canCu: "điểm a khoản 2 Điều 29 NĐ 124/2020/NĐ-CP" };
 }

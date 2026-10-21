@@ -16,9 +16,9 @@ export interface HanBuoc {
 }
 
 export const HAN_BUOC: HanBuoc[] = [
-  { buoc: "8", soNgay: 30, loai: "NLV", moc: { loai: "NHAP", nhan: "Ngày nhận đủ hồ sơ thẩm định (thời gian bổ sung hồ sơ không tính — khai báo ở \"Thời gian không tính\")" }, canCu: "khoản 3 Điều 3 NĐ 88/2024/NĐ-CP; Mục XII Sổ tay" },
-  { buoc: "9", soNgay: 5, loai: "NLV", moc: { loai: "NHAP", nhan: "Ngày nhận tờ trình phê duyệt phương án" }, canCu: "điểm c khoản 3 Điều 87 Luật Đất đai 2024" },
-  { buoc: "11", soNgay: 3, loai: "NLV", moc: { loai: "BUOC", buoc: "9", nhan: "ngày phê duyệt phương án (bước 9)" }, canCu: "điểm b khoản 4 Điều 87 Luật Đất đai 2024" },
+  { buoc: "8", soNgay: 30, loai: "N", moc: { loai: "NHAP", nhan: "Ngày nhận đủ hồ sơ thẩm định (thời gian bổ sung hồ sơ không tính — khai báo ở \"Thời gian không tính\")" }, canCu: "khoản 3 Điều 3 NĐ 88/2024/NĐ-CP — \"không quá 30 ngày\" (1.0.21: trước đây đếm 30 ngày làm việc)" },
+  { buoc: "9", soNgay: 5, loai: "NLV", moc: { loai: "NHAP", nhan: "Ngày nhận tờ trình phê duyệt phương án" }, canCu: "Sổ tay QĐ 1966/QĐ-UBND (điểm c khoản 3 Điều 87 Luật Đất đai 2024 không quy định số ngày)" },
+  { buoc: "11", soNgay: 3, loai: "NLV", moc: { loai: "BUOC", buoc: "9", nhan: "ngày phê duyệt phương án (bước 9)" }, canCu: "Sổ tay QĐ 1966/QĐ-UBND (điểm b khoản 4 Điều 87 Luật Đất đai 2024 không quy định số ngày)" },
   { buoc: "13", soNgay: 10, loai: "N", moc: { loai: "NHAP", nhan: "Ngày đủ điều kiện ban hành QĐ thu hồi (khoản 5 Điều 87)" }, canCu: "khoản 5, 6 Điều 87 Luật Đất đai 2024" },
   { buoc: "15", soNgay: 3, loai: "NLV", moc: { loai: "BUOC", buoc: "12", nhan: "ngày hoàn thành chi trả (bước 12)" }, canCu: "Mục XVIII Sổ tay" },
 ];
@@ -95,7 +95,7 @@ export function hanTheoBan(p: BanHan, buoc: string, hos: Ho[], homNay: string, l
 }
 
 /**
- * 1.0.12 — Hạn thẩm định của một bản phương án "Đã chốt" chưa ghi nhận thẩm định: theo bước 8 (≤ 30 ngày làm việc từ
+ * 1.0.12 — Hạn thẩm định của một bản phương án "Đã chốt" chưa ghi nhận thẩm định: theo bước 8 (≤ 30 ngày [từ 1.0.21; trước đếm ngày làm việc] từ
  * ngày nhận đủ hồ sơ — khoản 3 Điều 3 NĐ 88/2024/NĐ-CP) của các hộ trong bản; mốc là ngày nhận đủ hồ sơ cán bộ ghi ở bước 8
  * (ghi một lần cho cả bản). Lấy hộ có hạn chót sớm nhất; chưa hộ nào có mốc → CHUA_CO_MOC. null nếu không áp dụng.
  */
@@ -111,7 +111,7 @@ export const ngayIsoTuChu = (s: string | undefined): string | null => {
 };
 
 /**
- * 1.0.13 — Hạn phê duyệt phương án (≤ 5 ngày làm việc từ ngày nhận tờ trình — điểm c khoản 3 Điều 87 Luật Đất đai 2024)
+ * 1.0.13 — Hạn phê duyệt phương án (≤ 5 ngày làm việc từ ngày nhận tờ trình — Sổ tay QĐ 1966; Điều 87 LĐĐ 2024 không quy định số ngày)
  * của bản "Đã chốt" đã thẩm định (không tính bản thẩm định không thống nhất). Mốc: ngày nhận tờ trình ghi ở bước 9 của hộ;
  * hộ chưa ghi thì lấy ngày Tờ trình đề nghị phê duyệt phương án (mẫu 13 / R4) đã ghi số, ngày — của đợt nếu bản thuộc đợt.
  */
@@ -129,7 +129,7 @@ export function ngayToTrinhPA(duAn: { vanBan?: Record<string, string>; dotThuHoi
 
 /**
  * 1.0.14 — Hạn gửi quyết định phê duyệt phương án đến từng người có đất thu hồi (bước 11: ≤ 3 ngày làm việc kể từ ngày
- * phê duyệt — điểm b khoản 4 Điều 87 Luật Đất đai 2024) của bản "Đã phê duyệt" có ngày QĐ. Mốc của hộ: ngày xong bước 9
+ * phê duyệt — Sổ tay QĐ 1966) của bản "Đã phê duyệt" có ngày QĐ. Mốc của hộ: ngày xong bước 9
  * nếu đã xác nhận, không thì ngày QĐ phê duyệt ghi ở bản. Chỉ tính hộ chưa xong bước 11; xong cả → null.
  */
 export function hanGuiQdBan(p: { trangThai: string; pheDuyet?: { ngay: string }; ho: { hoId: string }[] }, hos: Ho[], homNay: string, lich: LichLamViec): TinhHan | null {

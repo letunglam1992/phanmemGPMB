@@ -90,6 +90,22 @@ export const DANH_MUC_MAU: MauVanBan[] = [
   { ma: "22", ten: "Quyết định cưỡng chế thu hồi đất", buoc: "14", phamVi: "HO", coQuan: "UBND", nhapThem: [TG("tg_cuong_che_tu", "Cưỡng chế từ ngày"), TG("tg_cuong_che_den", "đến ngày"), HIEU_LUC, { truong: "co_quan_cuong_che", nhan: "Cơ quan triển khai cưỡng chế" }, { truong: "kinh_phi_cuong_che", nhan: "Kinh phí phục vụ cưỡng chế" }, { truong: "co_quan_thi_hanh", nhan: "Các cơ quan chịu trách nhiệm thi hành" }, NOI_NHAN("Như Điều 2\nLưu: VT")] },
 ];
 
+/**
+ * 1.0.21 (B1) — Đối chiếu Phụ lục NĐ 102/2024/NĐ-CP: mẫu 06, 07, 15, 22 của Sổ tay có bố cục theo Mẫu 01a, 01b, 01c, 01đ (cùng các
+ * điều, khoản). Mẫu 07, 22: số liệu thời gian, ghi ngược số QĐ cưỡng chế vào hồ sơ cưỡng chế của hộ (thẻ Khiếu nại).
+ */
+for (const [ma, mauNd102, ghiLai] of [
+  ["06", "01a (Quyết định kiểm đếm bắt buộc)", undefined],
+  ["07", "01b (Quyết định cưỡng chế kiểm đếm bắt buộc)", { khoa: "qd_cc_kiem_dem", capDo: "HO", kyHieu: "QĐ-UBND" }],
+  ["15", "01c (Quyết định thu hồi đất)", undefined],
+  ["22", "01đ (Quyết định cưỡng chế thu hồi đất)", { khoa: "qd_cc_thu_hoi", capDo: "HO", kyHieu: "QĐ-UBND" }],
+] as const) {
+  const m = DANH_MUC_MAU.find((x) => x.ma === ma)!;
+  const them = ma === "07" || ma === "22" ? " Thời gian bắt đầu lấy từ ngày dự kiến ở hồ sơ cưỡng chế của hộ (thẻ Khiếu nại); cấp số thì số, ngày được ghi vào hồ sơ cưỡng chế." : "";
+  m.moTa = `${m.moTa ? m.moTa + " " : ""}Bố cục tương ứng Mẫu số ${mauNd102} Phụ lục NĐ 102/2024/NĐ-CP.${them}`;
+  if (ghiLai) m.ghiLai = { ...ghiLai };
+}
+
 function PHUONG_AN(): TruongNhap[] {
   return [
     { truong: "pa_chuyen_doi_nghe", nhan: "Phương án đào tạo, chuyển đổi nghề", nhieuDong: true, macDinh: "Không" },
@@ -403,3 +419,80 @@ DANH_MUC_MAU.push(
     ],
   },
 );
+
+/**
+ * 1.0.21 (A2) — Mẫu thủ tục khiếu nại theo Phụ lục NĐ 155/2026/NĐ-CP (thay Mẫu 03, 04, 14; bổ sung 14a, 14b của NĐ 124/2020),
+ * tự điền từ đơn khiếu nại của hộ (đơn chưa có kết quả mới nhất). Cơ quan ban hành mặc định UBND xã (Điều 17 Luật Khiếu nại sửa bởi
+ * Luật 136/2025: Chủ tịch UBND cấp xã giải quyết lần đầu QĐ, hành vi của mình và cơ quan thuộc UBND xã).
+ */
+const KN_NOI_NHAN = NOI_NHAN("Như trên\nCơ quan, tổ chức, cá nhân theo khoản 2 Điều 16 NĐ 124/2020\nLưu: VT, hồ sơ");
+const KN_GIAY_TO: TruongNhap[] = [{ truong: "kn_ngay_cap_giay_to", nhan: "Ngày cấp giấy tờ tùy thân" }, { truong: "kn_noi_cap_giay_to", nhan: "Nơi cấp" }];
+DANH_MUC_MAU.push(
+  {
+    ma: "T18", ten: "Thông báo thụ lý giải quyết khiếu nại", buoc: "9", phamVi: "HO", coQuan: "UBND", nguon: "THUC_TE", tep: "tt-tb-thu-ly-kn.docx",
+    moTa: "Mẫu số 03 Phụ lục NĐ 155/2026/NĐ-CP; thụ lý trong 07 ngày làm việc từ ngày nhận đơn (Điều 27, k1 Điều 36 Luật Khiếu nại sửa bởi Luật 136/2025; k1 Điều 16 NĐ 124 sửa bởi NĐ 155). Gửi người khiếu nại và cơ quan theo k2 Điều 16 NĐ 124.",
+    ghiLai: { khoa: "tb_thu_ly_kn", capDo: "HO", kyHieu: "TB-UBND" },
+    nhapThem: [...KN_GIAY_TO, { truong: "kn_noi_dung", nhan: "Tóm tắt nội dung khiếu nại", nhieuDong: true, goiY: "Để trống = nội dung đơn" }, KN_NOI_NHAN],
+  },
+  {
+    ma: "T19", ten: "Thông báo không thụ lý giải quyết khiếu nại", buoc: "9", phamVi: "HO", coQuan: "UBND", nguon: "THUC_TE", tep: "tt-tb-khong-thu-ly-kn.docx",
+    moTa: "Mẫu số 04 Phụ lục NĐ 155/2026/NĐ-CP; lý do theo Điều 11 Luật Khiếu nại (lấy từ đơn có kết quả \"Không thụ lý\").",
+    nhapThem: [...KN_GIAY_TO, { truong: "kn_noi_dung", nhan: "Tóm tắt nội dung khiếu nại", nhieuDong: true, goiY: "Để trống = nội dung đơn" }, { truong: "kn_ly_do_khong_thu_ly", nhan: "Lý do không thụ lý", nhieuDong: true, goiY: "Để trống = đã ghi ở đơn; các trường hợp tại Điều 11 Luật Khiếu nại" }, KN_NOI_NHAN],
+  },
+  {
+    ma: "T20", ten: "Biên bản đối thoại với người khiếu nại", buoc: "9", phamVi: "HO", coQuan: "BIEN_BAN", nguon: "THUC_TE", tep: "tt-bb-doi-thoai-kn.docx",
+    moTa: "Mẫu số 14 Phụ lục NĐ 155/2026/NĐ-CP (Điều 28 NĐ 124 sửa bởi NĐ 155: thông báo đối thoại trước ít nhất 05 ngày; biên bản ít nhất ba bản). Người khiếu nại vắng (đã ghi ở đơn) thì tự ghi có/không có lý do. Khác T12 (đối thoại về phương án — điểm a k3 Đ87 LĐĐ).",
+    nhapThem: [
+      THOI_DIEM, DIA_DIEM,
+      { truong: "tp_chu_tri", nhan: "Người giải quyết khiếu nại / người chủ trì đối thoại (họ tên, chức vụ, cơ quan)" },
+      { truong: "tp_ghi_bien_ban", nhan: "Người ghi biên bản (họ tên, chức vụ, cơ quan)" },
+      ...KN_GIAY_TO,
+      { truong: "tp_bi_khieu_nai", nhan: "Người bị khiếu nại (nếu có)" },
+      { truong: "tp_quyen_nghia_vu", nhan: "Người có quyền, nghĩa vụ liên quan (nếu có)", macDinh: "Không" },
+      { truong: "tp_khac", nhan: "Đại diện cơ quan, tổ chức, cá nhân có liên quan (nếu có)", nhieuDong: true },
+      { truong: "noi_dung_doi_thoai", nhan: "Mục đích, yêu cầu; tóm tắt kết quả xác minh; nội dung đối thoại", nhieuDong: true },
+      Y_KIEN,
+      { truong: "ket_qua_doi_thoai", nhan: "Kết quả đối thoại", nhieuDong: true, goiY: "Những nội dung đã thống nhất, những vấn đề còn ý kiến khác nhau và ý kiến khác (nếu có)" },
+      GIO_KT,
+      { truong: "so_ban", nhan: "Số bản", macDinh: "04", goiY: "Ít nhất ba bản (k4 Điều 28 NĐ 124 sửa bởi NĐ 155)" },
+      { truong: "nguoi_nhan_bien_ban", nhan: "Người nhận biên bản", macDinh: "người giải quyết khiếu nại, người được giao nhiệm vụ xác minh, người khiếu nại, người bị khiếu nại", goiY: "Người khiếu nại, người bị khiếu nại không tham gia đối thoại thì không được nhận (ghi chú 5 Mẫu 14)" },
+    ],
+  },
+  {
+    ma: "T21", ten: "Quyết định tạm đình chỉ / đình chỉ giải quyết khiếu nại", buoc: "9", phamVi: "HO", coQuan: "UBND", nguon: "THUC_TE", tep: "tt-qd-tam-dinh-chi-kn.docx",
+    moTa: "Mẫu số 14a Phụ lục NĐ 155/2026/NĐ-CP; k1, k2 Điều 11a Luật Khiếu nại (bổ sung bởi Luật 136/2025). Đơn có kết quả \"Đình chỉ\"/\"Rút đơn\" → đình chỉ; còn lại theo lần tạm đình chỉ mới nhất. Ban hành ngay, gửi trong 03 ngày làm việc (k1 Điều 28b NĐ 124).",
+    ghiLai: { khoa: "qd_tdc_kn", capDo: "HO", kyHieu: "QĐ-UBND" },
+    nhapThem: [{ truong: "chuc_danh_de_nghi", nhan: "Chức danh người đề nghị", goiY: "Để trống = Trưởng + tên phòng" }, { truong: "kn_ly_do_dinh_chi", nhan: "Lý do", nhieuDong: true, goiY: "Để trống = theo trường hợp, lý do đã ghi ở đơn" }, NOI_NHAN("Như Điều 3\nLưu: VT, hồ sơ")],
+  },
+  {
+    ma: "T22", ten: "Quyết định tiếp tục giải quyết khiếu nại", buoc: "9", phamVi: "HO", coQuan: "UBND", nguon: "THUC_TE", tep: "tt-qd-tiep-tuc-kn.docx",
+    moTa: "Mẫu số 14b Phụ lục NĐ 155/2026/NĐ-CP; k4 Điều 11a Luật Khiếu nại; k2 Điều 28b NĐ 124: thời hạn giải quyết tiếp tục tính từ ngày ban hành quyết định này — ghi ngày vào ô \"Ngày QĐ tiếp tục giải quyết\" của đơn để phần mềm tính lại hạn.",
+    ghiLai: { khoa: "qd_tiep_tuc_kn", capDo: "HO", kyHieu: "QĐ-UBND" },
+    nhapThem: [{ truong: "chuc_danh_de_nghi", nhan: "Chức danh người đề nghị", goiY: "Để trống = Trưởng + tên phòng" }, NOI_NHAN("Như Điều 3\nLưu: VT, hồ sơ")],
+  },
+);
+
+/** 1.0.21 (B2) — Mẫu số 06 Phụ lục NĐ 102/2024/NĐ-CP: bàn giao đất trên thực địa cho người được giao đất, cho thuê đất. */
+DANH_MUC_MAU.push({
+  ma: "T23", ten: "Biên bản bàn giao đất trên thực địa", buoc: "16", phamVi: "DU_AN", coQuan: "BIEN_BAN", nguon: "THUC_TE", tep: "tt-bb-ban-giao-dat-thuc-dia.docx",
+  moTa: "Mẫu số 06 Phụ lục NĐ 102/2024/NĐ-CP — bàn giao khu đất cho người được giao đất, cho thuê đất (chủ đầu tư) theo quyết định giao đất/cho thuê đất, sau khi giải phóng mặt bằng. Bên nhận mặc định chủ đầu tư; diện tích mặc định tổng diện tích thu hồi của dự án (đợt) — sửa theo trích lục/trích đo được thẩm định.",
+  nhapThem: [
+    { truong: "qd_giao_dat_so", nhan: "Quyết định giao đất/cho thuê đất số" }, { truong: "qd_giao_dat_ngay", nhan: "ngày" },
+    { truong: "co_quan_giao_dat", nhan: "Cơ quan ban hành quyết định", goiY: "vd. Ủy ban nhân dân tỉnh Sơn La" },
+    { truong: "loai_giao_dat", nhan: "Hình thức", macDinh: "giao đất", luaChon: [{ giaTri: "giao đất", nhan: "Giao đất" }, { giaTri: "cho thuê đất", nhan: "Cho thuê đất" }] },
+    DIA_DIEM,
+    { truong: "CO_QUAN_BAN_GIAO", nhan: "Cơ quan bàn giao (in hoa)", goiY: "vd. SỞ NÔNG NGHIỆP VÀ MÔI TRƯỜNG / VĂN PHÒNG ĐĂNG KÝ ĐẤT ĐAI … — theo phân công tại địa phương" },
+    { truong: "tp_co_quan", nhan: "Đại diện cơ quan bàn giao", nhieuDong: true },
+    { truong: "tp_ubnd", nhan: "Đại diện UBND xã", nhieuDong: true },
+    { truong: "ben_nhan", nhan: "Bên nhận bàn giao", goiY: "Để trống = chủ đầu tư của dự án" },
+    { truong: "tp_ben_nhan", nhan: "Đại diện bên nhận (họ tên, chức vụ)", nhieuDong: true },
+    { truong: "thua_khu_dat", nhan: "Thửa đất/khu đất", goiY: "vd. khu đất thực hiện dự án …, gồm các thửa … tờ bản đồ số …" },
+    { truong: "dia_diem_khu_dat", nhan: "Địa điểm khu đất", goiY: "Để trống = tên xã" },
+    { truong: "dien_tich_giao", nhan: "Diện tích bàn giao (m²)", goiY: "Để trống = tổng diện tích thu hồi" },
+    { truong: "trich_do", nhan: "Tờ trích lục/trích đo địa chính", macDinh: "tờ trích lục bản đồ địa chính (hoặc tờ trích đo địa chính) số …, tỷ lệ …, do … lập ngày …, đã được … thẩm định" },
+    { truong: "moc_gioi", nhan: "Mốc giới, ranh giới (mỗi dòng một mốc/cạnh)", nhieuDong: true },
+    GIO_KT,
+    { truong: "so_ban", nhan: "Số bản", macDinh: "04" },
+    { truong: "noi_gui", nhan: "Gửi", macDinh: "các bên tham dự, lưu hồ sơ" },
+  ],
+});

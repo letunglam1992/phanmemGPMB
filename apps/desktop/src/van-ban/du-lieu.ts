@@ -13,7 +13,7 @@ import { docSoTien } from "./doc-so";
 import type { MauVanBan } from "./danh-muc";
 import { tenDayDu, tenLoaiDat } from "./loai-dat";
 import { soD } from "../so";
-import { duLieuBocTham, duLieuBoTriTdc, duLieuChamTra, duLieuDoiThoai, duLieuThuong, duLieuKeHoach, duLieuNhieuHo, duLieuPhuongAnHo, docDuToan, duLieuKhieuNaiCuongChe } from "./thuc-te";
+import { duLieuBocTham, duLieuBoTriTdc, duLieuChamTra, duLieuDoiThoai, duLieuThuong, duLieuKeHoach, duLieuNhieuHo, duLieuPhuongAnHo, docDuToan, duLieuKhieuNaiCuongChe, duLieuCuongCheMau } from "./thuc-te";
 
 export const CHAM = "…………";
 
@@ -362,6 +362,7 @@ export function ghepDuLieu(p: {
   const kq: Record<string, unknown> = {
     ...tu,
     ...(p.mau.nguon === "THUC_TE" ? duLieuThucTe(p) : {}),
+    ...(p.ho && (p.mau.ma === "07" || p.mau.ma === "22") ? duLieuCuongCheMau(p.ho.h, p.mau.ma) : {}),
     ...(p.mau.ma === "08" ? soYKienBienBan(p.ds.map((x) => x.h)) : {}),
     ...(p.mau.ma === "20" || p.mau.ma === "21" ? duLieuThuong(p.duAn, p.ds) : {}),
     tb_thu_hoi_ngay: (p.ho?.h.vanBan?.tb_thu_hoi_ngay ?? vbDuAn.tb_thu_hoi_ngay) || (du.tb_thu_hoi_ngay_du_an as string),
@@ -387,6 +388,14 @@ export function ghepDuLieu(p: {
     const thamQuyen = String(p.rieng.can_cu_tham_quyen ?? "").trim().replace(/;$/, "");
     if (thamQuyen) cc.push(`Căn cứ ${thamQuyen.replace(/^Căn cứ\s+/i, "")};`);
     kq.kn_can_cu = cc;
+  }
+  if (p.mau.ma === "T23") {
+    if (!String(p.rieng.ben_nhan ?? "").trim()) kq.ben_nhan = p.duAn.chuDauTu || "…………";
+    if (!String(p.rieng.loai_giao_dat ?? "").trim()) kq.loai_giao_dat = "giao đất";
+    if (!String(p.rieng.dia_diem_khu_dat ?? "").trim()) kq.dia_diem_khu_dat = kq.ten_xa;
+    if (!String(p.rieng.dien_tich_giao ?? "").trim()) kq.dien_tich_giao = kq.tong_dt_thu_hoi;
+    kq.moc_gioi = String(p.rieng.moc_gioi ?? "").split("\n").map((x) => x.trim().replace(/[;.]$/, "")).filter(Boolean);
+    if (!String(kq.CO_QUAN_BAN_GIAO ?? "").trim()) kq.CO_QUAN_BAN_GIAO = "CƠ QUAN …………";
   }
   if (p.mau.ma === "T16") kq.thanh_vien_ban = String(p.rieng.thanh_vien_ban ?? "").split("\n").map((s) => s.trim()).filter(Boolean);
   if (p.mau.ma === "T17") Object.assign(kq, docDuToan(String(p.rieng.du_toan_kinh_phi ?? "")));
@@ -424,7 +433,7 @@ function duLieuThucTe(p: { mau: MauVanBan; duAn: DuAn; ds: { h: Ho; k: KetQuaHo 
     ...(p.mau.ma === "T8" || p.mau.ma === "T9" ? duLieuBoTriTdc(p.duAn, p.ds) : {}),
     ...(p.mau.ma === "T12" && p.ho ? duLieuDoiThoai(p.ho.h) : {}),
     ...(p.mau.ma === "T13" ? duLieuBocTham(p.duAn, p.ds) : {}),
-    ...(p.ho && /^T1[4-7]$/.test(p.mau.ma) ? duLieuKhieuNaiCuongChe(p.ho.h, p.ngayKy, p.duAn.xa) : {}),
+    ...(p.ho && /^T(1[4-9]|2[0-2])$/.test(p.mau.ma) ? duLieuKhieuNaiCuongChe(p.ho.h, p.ngayKy, p.duAn.xa, p.mau.ma) : {}),
     ...(p.mau.ma === "T10" ? { kinh_gui: `Chủ tịch Ủy ban nhân dân ${lower1(p.duAn.xa)}` } : {}),
     ...(p.mau.ma === "T10" || p.mau.ma === "T11" ? duLieuChamTra(p.duAn, p.ds, p.tyLeCham ?? [], p.ngayKy || new Date().toISOString().slice(0, 10)) : {}),
   };

@@ -247,7 +247,7 @@ export async function taoExcelTinh(dong: DongBaoCao[], donVi: string, tieuDePhuL
     for (const [ten, ds] of xa) for (const d of ds.filter((x) => x.banPA)) t4.dong([++i, ten, d.ten, d.donViGui, ...soBan([d])]);
     t4.dong(["", `TỔNG CỘNG (${coBan.length} dự án)`, "", "", ...soBan(coBan)], "tong", 4);
     t4.ws.addRow([]);
-    t4.chuThich("Ghi chú: Đếm theo bản phương án (không tính bản đã hủy). Hạn thẩm định không quá 30 ngày làm việc từ ngày nhận đủ hồ sơ (khoản 3 Điều 3 Nghị định 88/2024/NĐ-CP); hạn phê duyệt không quá 5 ngày làm việc từ ngày nhận tờ trình (điểm c khoản 3 Điều 87 Luật Đất đai 2024) — tính theo ngày đơn vị ghi nhận và lịch ngày nghỉ đơn vị gửi kèm gói (gói không có lịch: chỉ trừ thứ Bảy, Chủ nhật). Dự án gửi từ phiên bản cũ (trước 1.0.12) không có số liệu này.");
+    t4.chuThich("Ghi chú: Đếm theo bản phương án (không tính bản đã hủy). Hạn thẩm định không quá 30 ngày từ ngày nhận đủ hồ sơ (khoản 3 Điều 3 Nghị định 88/2024/NĐ-CP); hạn phê duyệt không quá 5 ngày làm việc từ ngày nhận tờ trình (Sổ tay QĐ 1966/QĐ-UBND) — tính theo ngày đơn vị ghi nhận và lịch ngày nghỉ đơn vị gửi kèm gói (gói không có lịch: chỉ trừ thứ Bảy, Chủ nhật). Dự án gửi từ phiên bản cũ (trước 1.0.12) không có số liệu này.");
   }  // 1.0.16: khâu thủ tục quá hạn (TomTatDuAn.quaHan — gói từ bản 1.0.15)
   const coQh = dong.filter((d) => d.quaHan?.length);
   if (coQh.length) {

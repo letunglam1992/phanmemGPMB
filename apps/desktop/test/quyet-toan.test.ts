@@ -84,7 +84,7 @@ describe("Kinh phí tổ chức thực hiện (1.0.20, B3 — k1 Đ94, k6 Đ89 L
     expect(nd).toMatch(/vượt mức theo tỷ lệ 1%/);
     expect(nd).toMatch(/vượt tổng dự toán/);
     expect(nd).toMatch(/chưa ghi quyết định phê duyệt dự toán/);
-    expect(k.canhBao.find((c) => /cưỡng chế/.test(c.noiDung))?.canCu).toBe("khoản 6 Điều 89 Luật Đất đai 2024");
+    expect(k.canhBao.find((c) => /cưỡng chế/.test(c.noiDung))?.canCu).toBe("khoản 6, điểm b khoản 5 Điều 89 Luật Đất đai 2024; khoản 3 Điều 27 NĐ 88/2024/NĐ-CP");
     const ok = tinhKinhPhi({ ...duAn, kinhPhi: { ...kp, qdDuToan: { so: "5/QĐ", ngay: "2026-09-01" }, khoan: [...kp.khoan, { id: "k2", loai: "CUONG_CHE" as const, noiDung: "Cưỡng chế", soTien: "600000" }] } }, hosCc, gd, "2026-10-28");
     expect(ok.canhBao.map((c) => c.noiDung).join("\n")).not.toMatch(/quyết định phê duyệt dự toán|khoản kinh phí cưỡng chế|vượt tổng dự toán/);
   });

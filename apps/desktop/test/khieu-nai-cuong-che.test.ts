@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hanDon, soNgayGiaiQuyet, soNgayThuLy, thongKeDon, type DonKhieuNai } from "../src/khieu-nai";
+import { hanDon, hanGuiQd, soNgayGiaiQuyet, soNgayThuLy, thongKeDon, type DonKhieuNai } from "../src/khieu-nai";
 import { hanBanGiaoSauChapHanh, hanThiHanh, kiemCuongChe, nghiTet, ngaySomNhatQdThuHoi, trongKhoangTet, type CuongChe } from "../src/cuong-che";
 import { LICH_TRONG, hanChotNgay, type LichLamViec } from "../src/lich-lam-viec";
 import type { Ho } from "../src/mo-hinh";
@@ -18,6 +18,22 @@ describe("Khiếu nại — Điều 27, 28, 36, 37 Luật Khiếu nại 2011 (1.
     expect(t.canCu).toBe("k1 Điều 16 NĐ 124/2020/NĐ-CP (sửa bởi Điều 10 NĐ 155/2026/NĐ-CP); Điều 27 Luật Khiếu nại (sửa bởi Luật 136/2025/QH15)");
     expect(hanDon(don({}), "2026-10-13", LICH_TRONG).tt).toBe("QUA_HAN_THU_LY");
     expect(hanDon(don({ lan: 2 }), "2026-10-05", LICH_TRONG).canCu).toMatch(/khoản 1 Điều 36 Luật Khiếu nại \(sửa bởi Luật 136\/2025\/QH15\)$/);
+  });
+  it("1.0.21 A1: tạm đình chỉ không tính vào thời hạn (k4 Điều 11a; k2 Điều 28b NĐ 124 sửa bởi NĐ 155); đang tạm đình chỉ thì không báo quá hạn", () => {
+    const d = don({ ngayThuLy: "2026-10-05", tamDinhChi: [{ id: "t", tu: "2026-10-10", den: "2026-10-20", truongHop: "a", lyDo: "Ốm đau" }] });
+    // 30 + 10 ngày = 14/11/2026 (thứ Bảy) → thứ Hai 16/11/2026
+    expect(hanDon(d, "2026-10-21", LICH_TRONG)).toMatchObject({ tt: "DANG_GIAI_QUYET", han: "2026-11-16", soNgay: 30, ngayTamDinhChi: 10 });
+    expect(hanDon(d, "2026-10-21", LICH_TRONG).canCu).toContain("k4 Điều 11a");
+    const dang = don({ ngayThuLy: "2026-09-01", tamDinhChi: [{ id: "t", tu: "2026-09-10", truongHop: "b", lyDo: "Chờ kết quả" }] });
+    expect(hanDon(dang, "2026-12-01", LICH_TRONG)).toMatchObject({ tt: "TAM_DINH_CHI", ngayTamDinhChi: 82 });
+    expect(hanDon({ ...dang, ketQua: "DINH_CHI", dinhChi: { truongHop: "a" } }, "2026-12-01", LICH_TRONG).tt).toBe("DA_GIAI_QUYET");
+  });
+  it("1.0.21 A3: hạn gửi QĐ giải quyết lần đầu 03, lần hai 07 ngày làm việc (điểm a k2 Điều 29 NĐ 124/2020)", () => {
+    const d = don({ ngayThuLy: "2026-10-05", ketQua: "SAI", ngayVb: "2026-10-16" });
+    expect(hanGuiQd(d, "2026-10-22", LICH_TRONG)).toMatchObject({ han: "2026-10-21", soNgay: 3, quaHan: true });
+    expect(hanGuiQd({ ...d, lan: 2 }, "2026-10-22", LICH_TRONG)).toMatchObject({ han: "2026-10-27", soNgay: 7, quaHan: false });
+    expect(hanGuiQd({ ...d, ngayGuiQd: "2026-10-19" }, "2026-10-22", LICH_TRONG)).toBeNull();
+    expect(hanGuiQd({ ...d, ketQua: "DINH_CHI" }, "2026-10-22", LICH_TRONG)).toBeNull();
   });
   it("chưa thụ lý: đơn nhận trước 01/7/2026 hạn 10 ngày làm việc (k1 Đ16 NĐ 124/2020), bỏ qua thứ Bảy, Chủ nhật", () => {
     const t = hanDon(don({ ngayNhan: "2026-06-01" }), "2026-06-02", LICH_TRONG);
@@ -67,6 +83,11 @@ describe("Cưỡng chế — Điều 88, 89, điểm b k7 Điều 87 LĐĐ 2024 
     const kd = kiemCuongChe({ id: "k", loai: "KIEM_DEM", soQd: "1", ngayQd: "2026-10-16" }, ho(), "2026-10-20", LICH_TRONG);
     expect(kd.some((k) => /truyền thanh/.test(k.noiDung) && k.canCu === "điểm b khoản 2 Điều 88 Luật Đất đai 2024")).toBe(true);
     expect(kd.some((k) => /bước 13/.test(k.noiDung))).toBe(false);
+  });
+  it("1.0.21 C2: nhắc gửi văn bản Công an trước thời điểm cưỡng chế 05 ngày làm việc (Điều 37 NĐ 102/2024)", () => {
+    const c: CuongChe = { id: "c", loai: "THU_HOI", ngayDuKien: "2026-11-09" };
+    const k = kiemCuongChe(c, ho(), "2026-10-20", LICH_TRONG).find((x) => x.canCu === "Điều 37 NĐ 102/2024/NĐ-CP");
+    expect(k?.noiDung).toContain("chậm nhất 02/11/2026");
   });
   it("hạn thi hành 10 ngày (hoặc dài hơn theo QĐ); ngày dự kiến ngày nghỉ, sau hạn; bàn giao 30 ngày sau chấp hành", () => {
     const c: CuongChe = { id: "c", loai: "THU_HOI", ngayNhanQd: "2026-10-05" };

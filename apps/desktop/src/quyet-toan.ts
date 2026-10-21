@@ -2,6 +2,9 @@
  * 1.0.20 — B3: kinh phí bảo đảm cho việc tổ chức thực hiện bồi thường, hỗ trợ, tái định cư (một phần của kinh phí bồi
  * thường, hỗ trợ, tái định cư — khoản 1 Điều 94 Luật Đất đai 2024); kinh phí cưỡng chế thu hồi đất được lập thành một
  * khoản trong kinh phí bồi thường, hỗ trợ, tái định cư (khoản 6 Điều 89). Mức trích, cơ sở tính, nội dung chi: phần mềm
+ * 1.0.21 (C2): đối chiếu toàn văn NĐ 88 — dự toán chi phí tổ chức thực hiện do đơn vị bồi thường lập theo định mức hiện hành / thực
+ * tế (k1 Điều 27), cơ quan phê duyệt phương án quyết định (k2, sửa bởi NĐ 226); dự toán kinh phí cưỡng chế trình cơ quan phê duyệt
+ * phương án quyết định, nguồn bố trí theo điểm a, b, c k3 Điều 27. Phần mềm
  * KHÔNG tự đặt — đơn vị nhập tỷ lệ kèm căn cứ (thiếu căn cứ thì không tính mức tối đa), lập dự toán, ghi giải ngân.
  * B4: tổng hợp chi trả theo bản phương án đã phê duyệt (phải trả, đã chi theo hình thức, gửi ngân hàng, còn phải chi,
  * tiền chậm trả tạm tính) để đối chiếu, quyết toán. Số tiền dùng Decimal.
@@ -50,8 +53,8 @@ export interface KinhPhiTcth {
   giaiNgan: GiaiNganKp[];
 }
 
-export const CAN_CU_KINH_PHI = "khoản 1 Điều 94 Luật Đất đai 2024";
-export const CAN_CU_KP_CUONG_CHE = "khoản 6 Điều 89 Luật Đất đai 2024";
+export const CAN_CU_KINH_PHI = "khoản 1 Điều 94 Luật Đất đai 2024; khoản 1, 2, 4 Điều 27 NĐ 88/2024/NĐ-CP (khoản 2 sửa bởi NĐ 226/2025)";
+export const CAN_CU_KP_CUONG_CHE = "khoản 6, điểm b khoản 5 Điều 89 Luật Đất đai 2024; khoản 3 Điều 27 NĐ 88/2024/NĐ-CP";
 
 const so = (s: string | undefined) => (s && /^-?\d+(\.\d+)?$/.test(s.trim()) ? D(s.trim()) : D(0));
 

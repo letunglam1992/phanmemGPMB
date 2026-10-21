@@ -4,10 +4,10 @@ import { ONgay } from "../../thanh-phan/ONgay";
 import { Chon } from "../../thanh-phan/Chon";
 import { taoId, type DuAn, type Ho } from "../../mo-hinh";
 import { homNayIso } from "../../trang-thai";
-import { TEN_KET_QUA_DON, TEN_LOAI_DON, TEN_TT_DON, hanDon, type DonKhieuNai, type KetQuaDon, type LoaiDon } from "../../khieu-nai";
+import { TEN_DINH_CHI, TEN_KET_QUA_DON, TEN_LOAI_DON, TEN_TDC, TEN_TT_DON, hanDon, hanGuiQd, type DonKhieuNai, type KetQuaDon, type LoaiDon, type TamDinhChi } from "../../khieu-nai";
 import { DIEU_CC, TEN_LOAI_CC, hanBanGiaoSauChapHanh, hanThiHanh, kiemCuongChe, ngaySomNhatQdThuHoi, type CuongChe, type LoaiCuongChe } from "../../cuong-che";
 
-const LOP_TT: Record<string, string> = { QUA_HAN: "nhan-do", QUA_HAN_THU_LY: "nhan-do", SAP_HET: "nhan-vang", CHO_THU_LY: "nhan-vang", DANG_GIAI_QUYET: "nhan-xanh", DA_GIAI_QUYET: "nhan-xam", KHONG_TINH_HAN: "nhan-xam" };
+const LOP_TT: Record<string, string> = { QUA_HAN: "nhan-do", QUA_HAN_THU_LY: "nhan-do", SAP_HET: "nhan-vang", CHO_THU_LY: "nhan-vang", DANG_GIAI_QUYET: "nhan-xanh", DA_GIAI_QUYET: "nhan-xam", KHONG_TINH_HAN: "nhan-xam", TAM_DINH_CHI: "nhan-vang" };
 const LOP_MUC = { CAO: "thong-bao-do", TRUNG_BINH: "thong-bao-vang", THONG_TIN: "thong-bao-xanh" } as const;
 
 /** 1.0.20 (B1, B2): thẻ Khiếu nại, cưỡng chế của hồ sơ hộ. */
@@ -46,6 +46,7 @@ export function TabKhieuNai({ h, duAn, doi, soanMau }: { h: Ho; duAn: DuAn; doi:
                 <span className={`nhan ${LOP_TT[t.tt]}`} data-tt-don={t.tt}>{TEN_TT_DON[t.tt]}</span>
                 {t.han && <span className="chu-nho">{t.tt === "CHO_THU_LY" || t.tt === "QUA_HAN_THU_LY" ? "Hạn thụ lý" : "Hạn giải quyết"} {ngayVN(t.han)} ({t.soNgay} {t.tt === "CHO_THU_LY" || t.tt === "QUA_HAN_THU_LY" ? "ngày làm việc" : "ngày"}{t.conLai !== undefined ? (t.conLai < 0 ? `, quá ${-t.conLai} ngày` : `, còn ${t.conLai} ngày`) : ""}) — {t.canCu}</span>}
                 <span style={{ flex: 1 }} />
+{t.tt === "TAM_DINH_CHI" && <span className="chu-nho">Đang tạm đình chỉ ({t.ngayTamDinhChi} ngày, không tính vào thời hạn giải quyết) — {t.canCu}</span>}
                 {soanMau && d.loai === "KHIEU_NAI" && (d.lan ?? 1) === 1 && <button className="nut nut-nho" data-soan-t14 onClick={() => soanMau("T14")}>Soạn QĐ giải quyết (T14)</button>}
                 <button className="nut nut-nho nut-nguy" onClick={() => xoa("đơn", ds, d.id, (m) => ({ ...h, khieuNai: m }))}>Xóa</button>
               </div>
@@ -71,7 +72,9 @@ export function TabKhieuNai({ h, duAn, doi, soanMau }: { h: Ho; duAn: DuAn; doi:
                   <label><input type="checkbox" checked={!!d.phucTap} onChange={(e) => datDon(d.id, { phucTap: e.target.checked })} /> Vụ việc phức tạp (người giải quyết xác định)</label>
                   <label><input type="checkbox" checked={!!d.vungKhoKhan} onChange={(e) => datDon(d.id, { vungKhoKhan: e.target.checked })} /> Vùng sâu, vùng xa đi lại khó khăn</label>
                 </div>
-              ) : (
+              ) : null}
+              {d.loai === "KHIEU_NAI" && <ThuTucDon d={d} dat={(p) => datDon(d.id, p)} soanMau={soanMau} />}
+              {d.loai !== "KHIEU_NAI" && (
                 <div className="luoi luoi-2">
                   <O nhan="Thời hạn trả lời (ngày)" goiY="Kiến nghị, phản ánh không thuộc Luật Khiếu nại — nhập số ngày kèm căn cứ (quy chế, văn bản chỉ đạo); trống thì không tính hạn">
                     <input type="number" min={1} aria-label="Thời hạn trả lời" value={d.hanNhap?.soNgay ?? ""} onChange={(e) => datDon(d.id, { hanNhap: { soNgay: Number(e.target.value) || 0, canCu: d.hanNhap?.canCu ?? "" } })} />
@@ -85,11 +88,12 @@ export function TabKhieuNai({ h, duAn, doi, soanMau }: { h: Ho; duAn: DuAn; doi:
                 <O nhan="Kết quả">
                   <Chon aria-label="Kết quả giải quyết" value={d.ketQua ?? ""} onChange={(e) => datDon(d.id, { ketQua: (e.target.value || undefined) as KetQuaDon | undefined })}>
                     <option value="">— Đang giải quyết —</option>
-                    {(Object.keys(TEN_KET_QUA_DON) as KetQuaDon[]).filter((k) => d.loai === "KHIEU_NAI" ? k !== "TRA_LOI" : true).map((k) => <option key={k} value={k}>{TEN_KET_QUA_DON[k]}</option>)}
+                    {(Object.keys(TEN_KET_QUA_DON) as KetQuaDon[]).filter((k) => (d.loai === "KHIEU_NAI" ? k !== "TRA_LOI" : !["DINH_CHI", "KHONG_THU_LY"].includes(k))).map((k) => <option key={k} value={k}>{TEN_KET_QUA_DON[k]}</option>)}
                   </Chon>
                 </O>
                 <O nhan="Ghi chú"><input value={d.ghiChu ?? ""} onChange={(e) => datDon(d.id, { ghiChu: e.target.value })} /></O>
               </div>
+              {d.loai === "KHIEU_NAI" && <KetThucDon d={d} dat={(p) => datDon(d.id, p)} homNay={homNay} />}
             </div>
           );
         })}
@@ -165,6 +169,79 @@ export function TabKhieuNai({ h, duAn, doi, soanMau }: { h: Ho; duAn: DuAn; doi:
           );
         })}
       </div>
+    </div>
+  );
+}
+
+/**
+ * 1.0.21 (A1): thông báo thụ lý / không thụ lý (Mẫu 03, 04 NĐ 155/2026), tạm đình chỉ — tiếp tục (k1, k4 Điều 11a Luật Khiếu nại;
+ * Mẫu 14a, 14b; Điều 28b NĐ 124/2020 bổ sung bởi NĐ 155), vắng đối thoại (k6 Điều 30; k5 Điều 28 NĐ 124 sửa bởi NĐ 155).
+ */
+function ThuTucDon({ d, dat, soanMau }: { d: DonKhieuNai; dat: (p: Partial<DonKhieuNai>) => void; soanMau?: (ma: string) => void }) {
+  const tdc = d.tamDinhChi ?? [];
+  const datTdc = (id: string, p: Partial<TamDinhChi>) => dat({ tamDinhChi: tdc.map((x) => (x.id === id ? { ...x, ...p } : x)) });
+  return (
+    <div className="khung-phu" data-thu-tuc-don style={{ border: "1px dashed var(--vien)", borderRadius: 6, padding: "6px 10px", margin: "4px 0 8px" }}>
+      <div className="luoi luoi-4">
+        <O nhan="Số thông báo thụ lý"><input aria-label="Số thông báo thụ lý" value={d.tbThuLy?.so ?? ""} onChange={(e) => dat({ tbThuLy: { so: e.target.value, ngay: d.tbThuLy?.ngay ?? "" } })} /></O>
+        <O nhan="Ngày thông báo thụ lý"><ONgay value={d.tbThuLy?.ngay ?? ""} onChange={(e) => dat({ tbThuLy: { so: d.tbThuLy?.so ?? "", ngay: e.target.value } })} /></O>
+        <O nhan="Người khiếu nại vắng đối thoại (ngày)" goiY="Không có lý do chính đáng thì vẫn tiếp tục giải quyết (k6 Điều 30 Luật Khiếu nại; k5 Điều 28 NĐ 124/2020 sửa bởi NĐ 155/2026)">
+          <ONgay aria-label="Ngày vắng đối thoại" value={d.vangDoiThoai?.ngay ?? ""} onChange={(e) => dat({ vangDoiThoai: e.target.value ? { ngay: e.target.value, coLyDo: d.vangDoiThoai?.coLyDo ?? false } : undefined })} />
+        </O>
+        {d.vangDoiThoai && <O nhan="Lý do vắng"><label className="chu-nho"><input type="checkbox" checked={d.vangDoiThoai.coLyDo} onChange={(e) => dat({ vangDoiThoai: { ...d.vangDoiThoai!, coLyDo: e.target.checked } })} /> Có lý do chính đáng (bất khả kháng, trở ngại khách quan — Điều 28a NĐ 124)</label></O>}
+      </div>
+      {d.vangDoiThoai && !d.vangDoiThoai.coLyDo && <div className="chu-nho mo">Vắng không có lý do chính đáng → người giải quyết vẫn tiếp tục giải quyết khiếu nại; biên bản ghi rõ vắng không có lý do (Mẫu 14).</div>}
+      {tdc.map((x) => (
+        <div key={x.id} className="luoi luoi-4" data-tam-dinh-chi>
+          <O nhan="Ngày QĐ tạm đình chỉ"><ONgay aria-label="Ngày QĐ tạm đình chỉ" value={x.tu} onChange={(e) => datTdc(x.id, { tu: e.target.value || x.tu })} /></O>
+          <O nhan="Trường hợp">
+            <Chon value={x.truongHop} onChange={(e) => datTdc(x.id, { truongHop: e.target.value as TamDinhChi["truongHop"] })}>
+              {(Object.keys(TEN_TDC) as TamDinhChi["truongHop"][]).map((k) => <option key={k} value={k}>{TEN_TDC[k]}</option>)}
+            </Chon>
+          </O>
+          <O nhan="Lý do, tài liệu chứng minh" goiY="Phải có căn cứ, tài liệu chứng minh, thể hiện trong hồ sơ (k4 Điều 28a NĐ 124)"><input aria-label="Lý do tạm đình chỉ" value={x.lyDo} onChange={(e) => datTdc(x.id, { lyDo: e.target.value })} /></O>
+          <O nhan="Số QĐ tạm đình chỉ"><input value={x.soQd ?? ""} onChange={(e) => datTdc(x.id, { soQd: e.target.value })} /></O>
+          <O nhan="Ngày QĐ tiếp tục giải quyết" goiY="Thời hạn tiếp tục tính từ ngày này (k2 Điều 28b NĐ 124); trống = đang tạm đình chỉ"><ONgay aria-label="Ngày QĐ tiếp tục giải quyết" value={x.den ?? ""} onChange={(e) => datTdc(x.id, { den: e.target.value || undefined })} /></O>
+          <O nhan="Số QĐ tiếp tục"><input value={x.soQdTiepTuc ?? ""} onChange={(e) => datTdc(x.id, { soQdTiepTuc: e.target.value })} /></O>
+          <O nhan=" "><button className="nut nut-nho nut-nguy" onClick={() => dat({ tamDinhChi: tdc.filter((y) => y.id !== x.id) })}>Xóa tạm đình chỉ</button></O>
+        </div>
+      ))}
+      <div className="nhom-nut" style={{ marginTop: 4, flexWrap: "wrap" }}>
+        <button className="nut nut-nho" disabled={!d.ngayThuLy || tdc.some((x) => !x.den)} title={!d.ngayThuLy ? "Ghi ngày thụ lý trước" : undefined} onClick={() => dat({ tamDinhChi: [...tdc, { id: taoId(), tu: homNayIso(), truongHop: "a", lyDo: "" }] })}>+ Tạm đình chỉ</button>
+        {soanMau && (
+          <>
+            <button className="nut nut-nho" onClick={() => soanMau("T18")}>TB thụ lý (T18)</button>
+            <button className="nut nut-nho" onClick={() => soanMau("T19")}>TB không thụ lý (T19)</button>
+            <button className="nut nut-nho" onClick={() => soanMau("T20")}>BB đối thoại (T20)</button>
+            <button className="nut nut-nho" onClick={() => soanMau("T21")}>QĐ tạm đình chỉ / đình chỉ (T21)</button>
+            <button className="nut nut-nho" onClick={() => soanMau("T22")}>QĐ tiếp tục giải quyết (T22)</button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** 1.0.21 (A1, A3): lý do không thụ lý, trường hợp đình chỉ; ngày gửi QĐ giải quyết (điểm a k2 Điều 29 NĐ 124/2020). */
+function KetThucDon({ d, dat, homNay }: { d: DonKhieuNai; dat: (p: Partial<DonKhieuNai>) => void; homNay: string }) {
+  const { lich } = useUngDung();
+  const g = hanGuiQd(d, homNay, lich);
+  return (
+    <div className="luoi luoi-4">
+      {d.ketQua === "KHONG_THU_LY" && <O nhan="Lý do không thụ lý" goiY="Các trường hợp tại Điều 11 Luật Khiếu nại (Mẫu 04)"><input aria-label="Lý do không thụ lý" value={d.lyDoKhongThuLy ?? ""} onChange={(e) => dat({ lyDoKhongThuLy: e.target.value })} /></O>}
+      {d.ketQua === "DINH_CHI" && (
+        <O nhan="Trường hợp đình chỉ (k2 Điều 11a)">
+          <Chon aria-label="Trường hợp đình chỉ" value={d.dinhChi?.truongHop ?? ""} onChange={(e) => dat({ dinhChi: e.target.value ? { ...d.dinhChi, truongHop: e.target.value as "a" } : undefined })}>
+            <option value="">— Chọn —</option>
+            {(Object.keys(TEN_DINH_CHI) as ("a" | "b" | "c" | "d")[]).map((k) => <option key={k} value={k}>{TEN_DINH_CHI[k]}</option>)}
+          </Chon>
+        </O>
+      )}
+      {d.ketQua && ["DUNG", "DUNG_MOT_PHAN", "SAI"].includes(d.ketQua) && (
+        <O nhan="Ngày gửi QĐ cho người khiếu nại" goiY={`Lần đầu 03, lần hai 07 ngày làm việc kể từ ngày ban hành (điểm a k2 Điều 29 NĐ 124/2020)${g ? ` — hạn ${ngayVN(g.han)}${g.quaHan ? " (đã quá)" : ""}` : ""}`}>
+          <ONgay aria-label="Ngày gửi QĐ giải quyết" value={d.ngayGuiQd ?? ""} onChange={(e) => dat({ ngayGuiQd: e.target.value || undefined })} />
+        </O>
+      )}
     </div>
   );
 }

@@ -14,7 +14,8 @@ import { canBoTriLo, quyCua, tenLo, trangThaiLo } from "../quy-tdc";
 import { tinhChiTra, type GiaiDoanTyLe } from "../chi-tra";
 import { canhBaoCanCu } from "../van-ban-can-cu";
 import { tinhThuong } from "../ban-giao";
-import { NGAY_HL_ND155 } from "../khieu-nai";
+import { NGAY_HL_ND155, TEN_DINH_CHI } from "../khieu-nai";
+import { donChoMau } from "../ghi-nguoc-van-ban";
 
 const soM2 = (v: Decimal) => dinhDang(v, 2);
 const tien = (v: Decimal) => dinhDang(v.toDecimalPlaces(0), 0);
@@ -266,6 +267,10 @@ export function kiemTraThongNhat(ma: string, duAn: DuAn, du: Record<string, unkn
   if (ma === "T14" && du.kn_khong_co_don) out.push("Hộ chưa có đơn khiếu nại lần đầu (Hồ sơ hộ → thẻ Khiếu nại) — nội dung đơn để trống.");
   else if (ma === "T14" && Number(du.kn_so_don) > 1) out.push(`Hộ có ${String(du.kn_so_don)} đơn khiếu nại lần đầu — mẫu lấy đơn nhận ngày ${String(du.kn_ngay_don_ngan)}; đơn khác soạn riêng, sửa nội dung ở ô nhập thêm.`);
   if (ma === "T14" && !du.kn_khong_co_don && !du.kn_da_thu_ly) out.push("Đơn chưa ghi ngày thụ lý — kiểm tra việc thụ lý (k1 Điều 16 NĐ 124/2020/NĐ-CP) trước khi ban hành quyết định giải quyết.");
+  if (/^T(1[89]|2[0-2])$/.test(ma) && du.kn_khong_co_don_kn) out.push("Hộ chưa có đơn khiếu nại (Hồ sơ hộ → thẻ Khiếu nại) — nội dung đơn để trống.");
+  if (ma === "T19" && !du.kn_khong_co_don_kn && !String(du.kn_ly_do_khong_thu_ly ?? "").trim()) out.push("Chưa ghi lý do không thụ lý (Điều 11 Luật Khiếu nại) — chọn kết quả \"Không thụ lý\" ở đơn và ghi lý do, hoặc nhập ở ô nhập thêm.");
+  if (ma === "T21" && !du.kn_khong_co_don_kn && !du.kn_co_tdc && du.kn_loai_dinh_chi === "tạm đình chỉ") out.push("Đơn chưa ghi tạm đình chỉ (thẻ Khiếu nại → \"+ Tạm đình chỉ\") và chưa có kết quả đình chỉ — lý do để trống.");
+  if (ma === "T22" && !du.kn_co_tdc) out.push("Đơn chưa ghi tạm đình chỉ — không có căn cứ ban hành quyết định tiếp tục giải quyết.");
   if (/^T1[5-7]$/.test(ma) && du.cc_khong_co) out.push("Hộ chưa có hồ sơ cưỡng chế thu hồi đất (Hồ sơ hộ → thẻ Khiếu nại → Cưỡng chế) — thời gian vận động, số QĐ cưỡng chế để trống.");
   if ((ma === "T16" || ma === "T17") && !du.cc_khong_co && !String(du.cc_so_qd ?? "").trim()) out.push("Chưa ghi số quyết định cưỡng chế thực hiện quyết định thu hồi đất ở hồ sơ cưỡng chế của hộ.");
   if (ma === "T16" && !(Array.isArray(du.thanh_vien_ban) && du.thanh_vien_ban.length)) out.push("Chưa nhập thành viên Ban cưỡng chế (điểm a khoản 4 Điều 89 Luật Đất đai 2024).");
@@ -447,19 +452,46 @@ export function duLieuThuong(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[]): Record<s
  * từ thẻ Khiếu nại của hộ. T14 lấy đơn khiếu nại lần đầu chưa có kết quả mới nhất (không có thì đơn mới nhất); T15–T17 lấy hồ
  * sơ cưỡng chế thu hồi đất mới nhất. Chỉ chép dữ kiện đã ghi — kết luận, biện pháp do cán bộ ghi.
  */
-export function duLieuKhieuNaiCuongChe(h: Ho, ngayKy: string, xa: string): Record<string, unknown> {
+export function duLieuKhieuNaiCuongChe(h: Ho, ngayKy: string, xa: string, ma = "T14"): Record<string, unknown> {
   const chu = (iso?: string) => (iso ? `ngày ${iso.slice(8, 10)} tháng ${iso.slice(5, 7)} năm ${iso.slice(0, 4)}` : "");
-  const lan1 = (h.khieuNai ?? []).filter((d) => d.loai === "KHIEU_NAI" && (d.lan ?? 1) === 1).sort((a, b) => a.ngayNhan.localeCompare(b.ngayNhan));
-  const don = [...lan1].reverse().find((d) => !d.ketQua) ?? lan1[lan1.length - 1];
+  const lan1 = (h.khieuNai ?? []).filter((d) => d.loai === "KHIEU_NAI" && (d.lan ?? 1) === 1);
+  const don = donChoMau(h, "T14");
   const ky = ngayKy || new Date().toISOString().slice(0, 10);
   const kn_can_cu = [
     "Căn cứ Luật Khiếu nại ngày 11 tháng 11 năm 2011;",
     ...(ky >= NGAY_HL_ND155 ? ["Căn cứ Luật sửa đổi, bổ sung một số điều của Luật Tiếp công dân, Luật Khiếu nại, Luật Tố cáo ngày 10 tháng 12 năm 2025;"] : []),
     `Căn cứ Nghị định số 124/2020/NĐ-CP ngày 19 tháng 10 năm 2020 của Chính phủ quy định chi tiết một số điều và biện pháp thi hành Luật Khiếu nại${ky >= NGAY_HL_ND155 ? "; Nghị định số 155/2026/NĐ-CP ngày 15 tháng 5 năm 2026 của Chính phủ sửa đổi, bổ sung một số điều của Nghị định số 124/2020/NĐ-CP" : ""};`,
   ];
+  // T18–T22: đơn khiếu nại (mọi lần) chưa có kết quả mới nhất, không có thì đơn mới nhất; T21 đình chỉ dùng cả đơn đã đình chỉ
+  const dk = donChoMau(h, "T18");
+  const tdc = [...(dk?.tamDinhChi ?? [])].sort((a, b) => a.tu.localeCompare(b.tu)).pop();
+  const dinhChi = dk?.ketQua === "DINH_CHI" || dk?.ketQua === "RUT";
+  const tb = dk?.tbThuLy?.so ? `Thông báo thụ lý giải quyết khiếu nại số ${dk.tbThuLy.so}${dk.tbThuLy.ngay ? ` ngày ${ngayVn(dk.tbThuLy.ngay)}` : ""} của Ủy ban nhân dân ${xa.charAt(0).toLowerCase()}${xa.slice(1)}` : "Thông báo thụ lý giải quyết khiếu nại số ………… ngày …………";
+  const canCuKn = [
+    "Căn cứ Luật Khiếu nại ngày 11 tháng 11 năm 2011; Luật sửa đổi, bổ sung một số điều của Luật Tiếp công dân, Luật Khiếu nại, Luật Tố cáo ngày 10 tháng 12 năm 2025;",
+    "Căn cứ Nghị định số 124/2020/NĐ-CP ngày 19 tháng 10 năm 2020 của Chính phủ quy định chi tiết một số điều và biện pháp thi hành Luật Khiếu nại; Nghị định số 155/2026/NĐ-CP ngày 15 tháng 5 năm 2026 của Chính phủ sửa đổi, bổ sung một số điều của Nghị định số 124/2020/NĐ-CP;",
+  ];
+  const vang = dk?.vangDoiThoai;
+  const knThem = {
+    kn_lan_chu: (dk?.lan ?? 1) === 2 ? "lần hai" : "lần đầu",
+    kn_ngay_nhan_ngan: ngayVn(dk?.ngayNhan),
+    kn_khong_co_don_kn: !dk,
+    kn_tdc_dang: !!tdc && !tdc.den,
+    kn_co_tdc: !!tdc,
+    kn_vang_doi_thoai: vang ? `(Người khiếu nại vắng mặt ngày ${ngayVn(vang.ngay)} — ${vang.coLyDo ? "có lý do chính đáng" : "không có lý do chính đáng; người giải quyết khiếu nại vẫn tiếp tục giải quyết khiếu nại theo khoản 6 Điều 30 Luật Khiếu nại"})` : "",
+    ...(dk?.lyDoKhongThuLy ? { kn_ly_do_khong_thu_ly: dk.lyDoKhongThuLy } : {}),
+    kn_loai_dinh_chi: dinhChi ? "đình chỉ" : "tạm đình chỉ",
+    kn_can_cu_dinh_chi: [...canCuKn, dinhChi ? "Căn cứ khoản 2 Điều 11a Luật Khiếu nại; Điều 28b Nghị định số 124/2020/NĐ-CP được bổ sung bởi Nghị định số 155/2026/NĐ-CP;" : "Căn cứ khoản 1 Điều 11a Luật Khiếu nại; Điều 28a, Điều 28b Nghị định số 124/2020/NĐ-CP được bổ sung bởi Nghị định số 155/2026/NĐ-CP;"],
+    kn_can_cu_tiep_tuc: [...canCuKn, `Căn cứ khoản 4 Điều 11a Luật Khiếu nại; khoản 2 Điều 28b Nghị định số 124/2020/NĐ-CP được bổ sung bởi Nghị định số 155/2026/NĐ-CP;${tdc?.soQd ? ` Quyết định tạm đình chỉ giải quyết khiếu nại số ${tdc.soQd} ngày ${ngayVn(tdc.tu)};` : ""}`],
+    kn_dieu_1_dinh_chi: `${dinhChi ? "Đình chỉ" : "Tạm đình chỉ"} giải quyết vụ việc khiếu nại của ${h.ten} theo ${tb}.`,
+    kn_ly_do_dinh_chi: dinhChi ? (dk?.ketQua === "RUT" ? TEN_DINH_CHI.a : dk?.dinhChi ? TEN_DINH_CHI[dk.dinhChi.truongHop] : "…………") : tdc ? `${(tdc.lyDo || "…………").replace(/[.;]$/, "")}; thuộc trường hợp quy định tại điểm ${tdc.truongHop} khoản 1 Điều 11a Luật Khiếu nại (${tdc.truongHop === "a" ? "sự kiện bất khả kháng, trở ngại khách quan" : "cần chờ kết quả giải quyết của cơ quan, tổ chức, cá nhân có thẩm quyền về vấn đề có liên quan trực tiếp"}).` : "…………",
+    kn_dieu_1_tiep_tuc: `Tiếp tục giải quyết vụ việc khiếu nại của ${h.ten} theo ${tb}. Thời hạn giải quyết khiếu nại tiếp tục được tính từ ngày ban hành Quyết định này (khoản 2 Điều 28b Nghị định số 124/2020/NĐ-CP được bổ sung bởi Nghị định số 155/2026/NĐ-CP).`,
+    kn_thi_hanh_dinh_chi: `Chánh Văn phòng Hội đồng nhân dân và Ủy ban nhân dân, ${h.ten} và các cơ quan, tổ chức, cá nhân có liên quan`,
+  };
   const cc = (h.cuongChe ?? []).filter((c) => c.loai === "THU_HOI").sort((a, b) => (a.ngayQd ?? a.vanDongTu ?? "").localeCompare(b.ngayQd ?? b.vanDongTu ?? "")).pop();
   return {
     kn_nguoi_khieu_nai: h.ten,
+    ...knThem,
     CHUC_DANH_GQKN: `CHỦ TỊCH ỦY BAN NHÂN DÂN ${xa.toUpperCase()}`,
     chuc_danh_gqkn: `Chủ tịch Ủy ban nhân dân ${xa.charAt(0).toLowerCase()}${xa.slice(1)}`,
     kn_can_cu,
@@ -480,6 +512,7 @@ export function duLieuKhieuNaiCuongChe(h: Ho, ngayKy: string, xa: string): Recor
     cc_ngay_qd: ngayVn(cc?.ngayQd),
     cc_ngay_du_kien: ngayVn(cc?.ngayDuKien),
     cc_qd_ban: cc?.qdBan ?? "",
+    ...(ma !== "T14" && dk ? { kn_noi_dung: dk.noiDung } : {}),
   };
 }
 
@@ -501,4 +534,11 @@ export function docDuToan(chu: string): { ds_du_toan: { stt: number; noi_dung: s
     ds.push({ stt: ds.length + 1, noi_dung: nd, so_tien: tien(D(so)) });
   }
   return { ds_du_toan: ds, tong_du_toan: tien(tong), tong_du_toan_chu: docSoTien(tong.toFixed(0)), du_toan_loi: loi };
+}
+
+/** 1.0.21 (B1): mẫu 07 / 22 — thời gian bắt đầu cưỡng chế = ngày dự kiến ở hồ sơ cưỡng chế (KIEM_DEM / THU_HOI) mới nhất của hộ. */
+export function duLieuCuongCheMau(h: Ho, ma: string): Record<string, unknown> {
+  const c = [...(h.cuongChe ?? [])].reverse().find((x) => x.loai === (ma === "07" ? "KIEM_DEM" : "THU_HOI"));
+  if (!c?.ngayDuKien) return {};
+  return ma === "07" ? { tg_tu: ngayVn(c.ngayDuKien) } : { tg_cuong_che_tu: ngayVn(c.ngayDuKien) };
 }

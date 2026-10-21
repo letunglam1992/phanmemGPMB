@@ -1,7 +1,7 @@
 /**
  * 1.0.15 — Tiến độ thủ tục theo bản phương án (cho lãnh đạo): mỗi bản (chưa hủy) một dòng — chốt, nhận đủ hồ sơ thẩm định,
  * thẩm định, tờ trình, phê duyệt, gửi QĐ đến từng người; hạn và số ngày làm việc chậm của từng khâu. Thời hạn theo docs/05:
- * thẩm định ≤ 30 NLV (k3 Đ3 NĐ 88/2024), phê duyệt ≤ 5 NLV (điểm c k3 Đ87 LĐĐ 2024), gửi QĐ ≤ 3 NLV (điểm b k4 Đ87).
+ * thẩm định ≤ 30 ngày (k3 Đ3 NĐ 88/2024), phê duyệt ≤ 5 NLV, gửi QĐ ≤ 3 NLV (Sổ tay QĐ 1966 — Điều 87 LĐĐ 2024 không quy định số ngày).
  * 1.0.16 — chi trả ≤ 30 ngày kể từ ngày QĐ phê duyệt có hiệu lực (điểm a k3 Đ94 LĐĐ 2024; cùng cách tính với thẻ Chi trả)
  * 1.0.17 — chỉnh lý hồ sơ địa chính (bước 15, ≤ 3 NLV sau chi trả — Mục XVIII Sổ tay) (thu-tuc-ban.ts),
  * và số hộ đã bàn giao mặt bằng (không có thời hạn chung — chỉ đếm, không tính chậm).
@@ -78,7 +78,7 @@ export async function xuatTienDoThuTuc(duAn: DuAn, hos: Ho[], homNay: string, li
   const ws = wb.addWorksheet("Tien do thu tuc");
   const ngay = (s: string | null) => (s ? s.split("-").reverse().join("/") : "");
   ws.addRow([`TIẾN ĐỘ THỦ TỤC THẨM ĐỊNH, PHÊ DUYỆT PHƯƠNG ÁN — ${duAn.ten}`]).font = { bold: true, size: 13 };
-  ws.addRow([`Tính đến ngày ${ngay(homNay)}. Thời hạn: thẩm định ≤ 30 ngày làm việc từ ngày nhận đủ hồ sơ (khoản 3 Điều 3 Nghị định 88/2024/NĐ-CP); phê duyệt ≤ 5 ngày làm việc từ ngày nhận tờ trình (điểm c khoản 3 Điều 87 Luật Đất đai 2024); gửi quyết định đến từng người ≤ 3 ngày làm việc từ ngày phê duyệt (điểm b khoản 4 Điều 87); chi trả ≤ 30 ngày kể từ ngày quyết định phê duyệt có hiệu lực (điểm a khoản 3 Điều 94), số ngày chậm tính theo ngày; chỉnh lý hồ sơ địa chính ≤ 3 ngày làm việc sau khi hoàn thành chi trả (Mục XVIII Sổ tay). Ô trống: chưa ghi ngày.`]).font = { italic: true };
+  ws.addRow([`Tính đến ngày ${ngay(homNay)}. Thời hạn: thẩm định ≤ 30 ngày từ ngày nhận đủ hồ sơ (khoản 3 Điều 3 Nghị định 88/2024/NĐ-CP); phê duyệt ≤ 5 ngày làm việc từ ngày nhận tờ trình (Sổ tay QĐ 1966/QĐ-UBND); gửi quyết định đến từng người ≤ 3 ngày làm việc từ ngày phê duyệt (điểm b khoản 4 Điều 87); chi trả ≤ 30 ngày kể từ ngày quyết định phê duyệt có hiệu lực (điểm a khoản 3 Điều 94), số ngày chậm tính theo ngày; chỉnh lý hồ sơ địa chính ≤ 3 ngày làm việc sau khi hoàn thành chi trả (Mục XVIII Sổ tay). Ô trống: chưa ghi ngày.`]).font = { italic: true };
   ws.addRow([]);
   const dau = ["Bản", "Tên", "Đợt", "Số hộ", "Tổng giá trị (đ)", "Trạng thái", "Ngày chốt", "Nhận đủ hồ sơ", "Hạn thẩm định", "Ngày thẩm định", "Chậm (NLV)", "Nhận tờ trình", "Hạn phê duyệt", "Ngày phê duyệt", "Chậm (NLV)", "Hạn gửi QĐ", "Gửi xong (hộ cuối)", "Chậm (NLV)", "Hạn chi trả", "Đã chi đủ (hộ)", "Chi xong (khoản cuối)", "Chậm (ngày)", "Hạn chỉnh lý HSĐC", "Đã chỉnh lý (hộ)", "Chỉnh lý xong (hộ cuối)", "Chậm (NLV)", "Đã bàn giao (hộ)", "Bàn giao xong"];
   const r = ws.addRow(dau);

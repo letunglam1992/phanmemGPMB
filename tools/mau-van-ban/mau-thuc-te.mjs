@@ -670,7 +670,132 @@ MAU.T17 = () => [
   ],
 ];
 
-const DANH_SACH = { T1: "tt-ke-hoach", T8: "tt-tb-du-kien-tdc", T9: "tt-tb-cong-bo-tdc", T10: "tt-to-trinh-cham-tra", T11: "tt-qd-cham-tra", T12: "tt-bb-doi-thoai", T13: "tt-bb-boc-tham-tdc", T14: "tt-qd-giai-quyet-kn", T15: "tt-bb-van-dong-ban-giao", T16: "tt-qd-ban-cuong-che", T17: "tt-pa-cuong-che", T2: "tt-to-trinh-tb", T3: "tt-thong-bao", T4: "tt-to-trinh-pa-ho", T5: "tt-qd-pa-ho", T6: "tt-to-trinh-thu-hoi", T7: "tt-qd-thu-hoi" };
+
+/**
+ * 1.0.21 (A2) — Mẫu thủ tục khiếu nại theo Phụ lục NĐ 155/2026/NĐ-CP (thay Mẫu 03, 04, 14 và bổ sung 14a, 14b của NĐ 124/2020):
+ * T18 Thông báo thụ lý (Mẫu 03), T19 Thông báo không thụ lý (Mẫu 04), T20 Biên bản đối thoại (Mẫu 14), T21 QĐ tạm đình chỉ/đình
+ * chỉ (Mẫu 14a), T22 QĐ tiếp tục giải quyết (Mẫu 14b). Giữ nguyên câu chữ mẫu; phần "…" là trường tự điền từ đơn hoặc cán bộ nhập.
+ */
+const KN_DAU = (kyHieu) => dauVanBan({ coQuan: UBND_XA, so: `Số: {so}/${kyHieu}` });
+const KN_NGUOI = () => [
+  P("Địa chỉ: {dia_chi}"),
+  P("Số căn cước/định danh cá nhân/giấy chứng nhận căn cước/hộ chiếu: {so_dinh_danh}, ngày cấp: {kn_ngay_cap_giay_to}, nơi cấp: {kn_noi_cap_giay_to}"),
+];
+MAU.T18 = () => [
+  [
+    KN_DAU("TB-UBND"),
+    ...tenVanBan("THÔNG BÁO", "Về việc thụ lý giải quyết khiếu nại {kn_lan_chu}"),
+    giua("Kính gửi: {kn_nguoi_khieu_nai}.", { truoc: 120 }),
+    P("Ngày {kn_ngay_nhan_ngan}, Ủy ban nhân dân {ten_xa} đã nhận được đơn khiếu nại của {kn_nguoi_khieu_nai}:"),
+    ...KN_NGUOI(),
+    P("Khiếu nại về việc: {kn_noi_dung}."),
+    P("Sau khi xem xét nội dung đơn khiếu nại của {kn_nguoi_khieu_nai}, căn cứ quy định của pháp luật về khiếu nại, Ủy ban nhân dân {ten_xa} nhận thấy đơn khiếu nại của {kn_nguoi_khieu_nai} đủ điều kiện thụ lý."),
+    P("Vậy thông báo để {kn_nguoi_khieu_nai} được biết./."),
+    kyVanBan(),
+  ],
+];
+MAU.T19 = () => [
+  [
+    KN_DAU("TB-UBND"),
+    ...tenVanBan("THÔNG BÁO", "Về việc không thụ lý giải quyết khiếu nại"),
+    giua("Kính gửi: {kn_nguoi_khieu_nai}.", { truoc: 120 }),
+    P("Ngày {kn_ngay_nhan_ngan}, Ủy ban nhân dân {ten_xa} đã nhận được đơn khiếu nại của {kn_nguoi_khieu_nai}"),
+    ...KN_NGUOI(),
+    P("Khiếu nại về việc: {kn_noi_dung}."),
+    P("Sau khi xem xét nội dung đơn khiếu nại, căn cứ Điều 11 của Luật Khiếu nại, Ủy ban nhân dân {ten_xa} nhận thấy, đơn khiếu nại của {kn_nguoi_khieu_nai} không đủ điều kiện để thụ lý giải quyết vì {kn_ly_do_khong_thu_ly}."),
+    P("Vậy thông báo để {kn_nguoi_khieu_nai} được biết."),
+    kyVanBan(),
+  ],
+];
+MAU.T20 = () => [
+  [
+    dauVanBan({ coQuan: UBND_XA, so: "", ngay: false }),
+    ...tenVanBan("BIÊN BẢN ĐỐI THOẠI VỚI NGƯỜI KHIẾU NẠI"),
+    P("Vào hồi {thoi_diem}, tại {dia_diem_lam_viec}", { truoc: 120 }),
+    P("**I. THÀNH PHẦN THAM GIA ĐỐI THOẠI**"),
+    P("1. Người giải quyết khiếu nại, người được phân công chủ trì đối thoại: {tp_chu_tri}"),
+    P("2. Người ghi biên bản: {tp_ghi_bien_ban}"),
+    P("3. Người khiếu nại (hoặc người đại diện, người được ủy quyền của người khiếu nại): {kn_nguoi_khieu_nai}"),
+    ...KN_NGUOI(),
+    P("{kn_vang_doi_thoai}", { nghieng: true }),
+    P("4. Người bị khiếu nại (hoặc người đại diện, người được ủy quyền khiếu nại của người bị khiếu nại (nếu có)): {tp_bi_khieu_nai}"),
+    P("5. Người có quyền, nghĩa vụ liên quan (nếu có): {tp_quyen_nghia_vu}"),
+    P("6. Đại diện cơ quan, tổ chức, cá nhân có liên quan (nếu có): {tp_khac}"),
+    P("**II. NỘI DUNG ĐỐI THOẠI**"),
+    P("1. Người giải quyết khiếu nại hoặc người được phân công chủ trì đối thoại nêu mục đích, yêu cầu của việc đối thoại, tóm tắt kết quả xác minh nội dung khiếu nại và những nội dung đối thoại: {noi_dung_doi_thoai}"),
+    P("2. Ý kiến của những người tham gia đối thoại về từng nội dung đối thoại: {y_kien}"),
+    P("**III. KẾT QUẢ ĐỐI THOẠI**"),
+    P("{ket_qua_doi_thoai}"),
+    P("Buổi đối thoại kết thúc hồi {gio_ket_thuc}."),
+    P("Biên bản đối thoại đã được đọc lại cho những người tham gia đối thoại nghe và ký xác nhận (trường hợp người tham gia đối thoại không ký xác nhận thì phải ghi rõ lý do)."),
+    P("Biên bản được lập thành {so_ban} bản; {nguoi_nhan_bien_ban} mỗi người nhận 01 bản./."),
+    kyBienBan([
+      "NGƯỜI BỊ KHIẾU NẠI",
+      "NGƯỜI GIẢI QUYẾT KHIẾU NẠI\n(HOẶC NGƯỜI ĐƯỢC PHÂN CÔNG\nCHỦ TRÌ ĐỐI THOẠI)",
+      "NGƯỜI KHIẾU NẠI\n(HOẶC NGƯỜI ĐẠI DIỆN,\nNGƯỜI ĐƯỢC ỦY QUYỀN)",
+      "ĐẠI DIỆN CƠ QUAN, TỔ CHỨC,\nCÁ NHÂN CÓ LIÊN QUAN",
+      "NGƯỜI CÓ QUYỀN VÀ\nNGHĨA VỤ LIÊN QUAN",
+      "NGƯỜI GHI BIÊN BẢN",
+    ]),
+  ],
+];
+MAU.T21 = () => [
+  [
+    KN_DAU("QĐ-UBND"),
+    ...tenVanBan("QUYẾT ĐỊNH", "Về việc {kn_loai_dinh_chi} giải quyết khiếu nại"),
+    giua("CHỦ TỊCH ỦY BAN NHÂN DÂN {TEN_XA}", { dam: true, truoc: 120 }),
+    ...lap("kn_can_cu_dinh_chi", "{.}", { nghieng: true, sau: 60 }),
+    P("Theo đề nghị của {chuc_danh_de_nghi}.", { nghieng: true }),
+    giua("QUYẾT ĐỊNH:", { dam: true, truoc: 120 }),
+    P("**Điều 1.** {kn_dieu_1_dinh_chi}"),
+    P("Lý do: {kn_ly_do_dinh_chi}"),
+    P("**Điều 2.** Quyết định này có hiệu lực thi hành kể từ ngày ký."),
+    P("**Điều 3.** {kn_thi_hanh_dinh_chi} chịu trách nhiệm thi hành Quyết định này./."),
+    kyVanBan(),
+  ],
+];
+MAU.T22 = () => [
+  [
+    KN_DAU("QĐ-UBND"),
+    ...tenVanBan("QUYẾT ĐỊNH", "Về việc tiếp tục giải quyết khiếu nại"),
+    giua("CHỦ TỊCH ỦY BAN NHÂN DÂN {TEN_XA}", { dam: true, truoc: 120 }),
+    ...lap("kn_can_cu_tiep_tuc", "{.}", { nghieng: true, sau: 60 }),
+    P("Theo đề nghị của {chuc_danh_de_nghi}.", { nghieng: true }),
+    giua("QUYẾT ĐỊNH:", { dam: true, truoc: 120 }),
+    P("**Điều 1.** {kn_dieu_1_tiep_tuc}"),
+    P("**Điều 2.** Quyết định này có hiệu lực thi hành kể từ ngày ký."),
+    P("**Điều 3.** {kn_thi_hanh_dinh_chi} chịu trách nhiệm thi hành Quyết định này./."),
+    kyVanBan(),
+  ],
+];
+
+
+/**
+ * 1.0.21 (B2) — Mẫu số 06 Phụ lục NĐ 102/2024/NĐ-CP "Biên bản bàn giao đất trên thực địa": bàn giao khu đất cho người được giao
+ * đất, cho thuê đất (thường là chủ đầu tư) theo quyết định giao đất/cho thuê đất — sau khi đã thu hồi, giải phóng mặt bằng.
+ */
+MAU.T23 = () => [
+  [
+    ...quocHieu(),
+    ...tenVanBan("BIÊN BẢN", "Bàn giao đất trên thực địa"),
+    P("Thực hiện Quyết định số {qd_giao_dat_so} ngày {qd_giao_dat_ngay} của {co_quan_giao_dat} về việc {loai_giao_dat}, hôm nay ngày {ngay} tháng {thang} năm {nam}, tại {dia_diem_lam_viec}, thành phần gồm:", { truoc: 120 }),
+    P("**I. ĐẠI DIỆN {CO_QUAN_BAN_GIAO}**"),
+    P("{tp_co_quan}", { trai: 567, thut: 0, canh: AlignmentType.LEFT }),
+    P("**II. ĐẠI DIỆN ỦY BAN NHÂN DÂN {TEN_XA}**"),
+    P("{tp_ubnd}", { trai: 567, thut: 0, canh: AlignmentType.LEFT }),
+    P("**III. BÊN NHẬN BÀN GIAO ĐẤT**"),
+    P("{ben_nhan}: {tp_ben_nhan}", { trai: 567, thut: 0, canh: AlignmentType.LEFT }),
+    P("**IV. CÁC BÊN TIẾN HÀNH BÀN GIAO ĐẤT TRÊN THỰC ĐỊA, CỤ THỂ NHƯ SAU:**"),
+    P("1. Giao nhận trên thực địa đối với {thua_khu_dat} tại {dia_diem_khu_dat} cho {ben_nhan} đã được {loai_giao_dat} theo Quyết định số {qd_giao_dat_so} ngày {qd_giao_dat_ngay} của {co_quan_giao_dat};"),
+    P("2. Giao nhận thửa đất/khu đất nêu tại mục 1 phần này theo các mốc giới, ranh giới thửa đất/khu đất, diện tích {dien_tich_giao} m² trên thực địa xác định theo {trich_do}, gồm:"),
+    ...lap("moc_gioi", "- {.};", { trai: 567, thut: 0 }),
+    P("3. Biên bản được lập hồi {gio_ket_thuc} cùng ngày, đã đọc cho các bên tham dự cùng nghe, nhất trí thông qua ký tên dưới đây."),
+    P("Biên bản này lập thành {so_ban} bản có giá trị như nhau, gửi {noi_gui}./."),
+    kyBienBan(["ĐẠI DIỆN {CO_QUAN_BAN_GIAO}", "ĐẠI DIỆN UBND {TEN_XA}", "BÊN NHẬN BÀN GIAO ĐẤT"], "(Ký và ghi rõ họ tên, đóng dấu)"),
+  ],
+];
+
+const DANH_SACH = { T1: "tt-ke-hoach", T8: "tt-tb-du-kien-tdc", T9: "tt-tb-cong-bo-tdc", T10: "tt-to-trinh-cham-tra", T11: "tt-qd-cham-tra", T12: "tt-bb-doi-thoai", T13: "tt-bb-boc-tham-tdc", T14: "tt-qd-giai-quyet-kn", T15: "tt-bb-van-dong-ban-giao", T16: "tt-qd-ban-cuong-che", T17: "tt-pa-cuong-che", T18: "tt-tb-thu-ly-kn", T19: "tt-tb-khong-thu-ly-kn", T20: "tt-bb-doi-thoai-kn", T21: "tt-qd-tam-dinh-chi-kn", T22: "tt-qd-tiep-tuc-kn", T23: "tt-bb-ban-giao-dat-thuc-dia", T2: "tt-to-trinh-tb", T3: "tt-thong-bao", T4: "tt-to-trinh-pa-ho", T5: "tt-qd-pa-ho", T6: "tt-to-trinh-thu-hoi", T7: "tt-qd-thu-hoi" };
 for (const [ma, tep] of Object.entries(DANH_SACH)) {
   const [chinh, phu] = MAU[ma]();
   const buf = await Packer.toBuffer(taoDoc(chinh, phu));

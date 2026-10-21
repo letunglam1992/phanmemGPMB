@@ -42,7 +42,7 @@ test("thẩm định: ghi nhận → trạng thái Đã thẩm định; ô đã 
   await nhs.locator("input").first().fill("01/09/2026");
   await nhs.locator("input").first().press("Tab");
   await nhs.getByRole("button", { name: /^Lưu cho \d+ hộ$/ }).click();
-  await expect(han).toContainText("Hạn thẩm định 13/10/2026");
+  await expect(han).toContainText("Hạn thẩm định 01/10/2026"); // 1.0.21: 30 ngày (k3 Đ3 NĐ 88)
   // chưa thẩm định: hộp phê duyệt nhắc
   await p.getByRole("button", { name: "Phê duyệt…" }).first().click();
   await expect(p.locator("[data-canh-bao-td]")).toContainText("Nghị định 88/2024");

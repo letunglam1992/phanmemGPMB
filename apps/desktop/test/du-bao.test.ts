@@ -13,7 +13,7 @@ describe("Dự báo tiến độ (§11.2)", () => {
     const r = duBaoHo(duAn, h, "2026-09-28", LICH_TRONG);
     expect(r.ngay).toBeNull();
     expect(r.thieu).toEqual({ buoc: "5", ten: "Lập phương án" });
-    expect(thoiGianBuoc(duAn, "8")).toMatchObject({ soNgay: 30, loai: "NLV", nguon: "LUAT" });
+    expect(thoiGianBuoc(duAn, "8")).toMatchObject({ soNgay: 30, loai: "N", nguon: "LUAT" });
     expect(thoiGianBuoc(duAn, "7")).toBeNull();
   });
   it("cộng lần lượt thời hạn luật định + dự kiến đơn vị từ ngày xong gần nhất; hộ chậm nhất là ngày dự án; kéo lùi so với kế hoạch", () => {

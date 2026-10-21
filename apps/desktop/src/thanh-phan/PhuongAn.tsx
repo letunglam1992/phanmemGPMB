@@ -126,7 +126,7 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
                     <span className={`nhan ${p.trangThai === "DA_CHOT" && p.thamDinh ? (p.thamDinh.yKien === "KHONG_THONG_NHAT" ? "nhan-do" : "nhan-tim") : NHAN_TT[p.trangThai]}`} data-tt-pa={p.so}>{tenTrangThai(p)}</span>
                     {p.thamDinh && <div className="mo chu-nho">Thẩm định: {moTaQd(p.thamDinh)}{p.thamDinh.coQuan ? ` (${p.thamDinh.coQuan})` : ""}</div>}
                     {(() => {
-                      // 1.0.12: hạn thẩm định ≤ 30 NLV từ ngày nhận đủ hồ sơ (k3 Đ3 NĐ 88/2024);
+                      // 1.0.12: hạn thẩm định ≤ 30 ngày từ ngày nhận đủ hồ sơ (k3 Đ3 NĐ 88/2024);
                       // 1.0.13: hạn phê duyệt ≤ 5 NLV từ ngày nhận tờ trình (điểm c k3 Đ87 LĐĐ 2024) — mặc định ngày tờ trình mẫu 13 / R4
                       const hos = kq.map((x) => hoHieuLuc(duAn, x.h));
                       const ttr = ngayToTrinhPA(duAn, p);
@@ -428,7 +428,7 @@ function HopPheDuyet({ duAn, p, boSung, dong: dongHop, luu }: { duAn: DuAn; p: P
       {!boSung && canhBaoTruocPheDuyet(p) && <div className="thong-bao thong-bao-vang chu-nho mb-8" role="status" data-canh-bao-td>{canhBaoTruocPheDuyet(p)}</div>}
       <p className="mt-0"><b>Đợt phê duyệt {dot}</b> · bản phương án {p.so}{tenDotThuHoi ? ` · ${tenDotThuHoi}` : ""} · {p.ho.length} hộ · {dong(p.tong)} đ</p>
       <p className="mo mt-0">
-        Phần mềm chỉ <b>ghi nhận</b> quyết định phê duyệt đã được cấp có thẩm quyền ký ban hành (điểm c khoản 3 Điều 87 Luật Đất đai 2024). Sau khi ghi nhận, bản {p.so} ({p.ho.length} hộ, {dong(p.tong)} đ) không sửa, không hủy được.
+        Phần mềm chỉ <b>ghi nhận</b> quyết định phê duyệt đã được cấp có thẩm quyền ký ban hành (Sổ tay QĐ 1966/QĐ-UBND). Sau khi ghi nhận, bản {p.so} ({p.ho.length} hộ, {dong(p.tong)} đ) không sửa, không hủy được.
       </p>
       <div className="luoi luoi-2">
         <O nhan="Số quyết định (có thể bổ sung sau)"><input value={so} placeholder="…/QĐ-UBND" disabled={boSung && !!p.pheDuyet?.so} onChange={(e) => setSo(e.target.value)} /></O>
@@ -476,7 +476,7 @@ function HopThamDinh({ p, canhBao, dong: dongHop, luu }: { p: PhienBanPA; canhBa
       }
     >
       <p className="mo mt-0">
-        Ghi theo báo cáo/văn bản thẩm định phương án của cơ quan chuyên môn (khoản 3 Điều 3 Nghị định 88/2024/NĐ-CP; Mục XII Sổ tay — thời hạn thẩm định theo docs/05: không quá 30 ngày làm việc kể từ khi nhận đủ hồ sơ). Phần mềm chỉ ghi nhận, không tự kết luận. Đã ghi thì không sửa ý kiến, ô đã điền; thẩm định lại = hủy bản, lập bản mới.
+        Ghi theo báo cáo/văn bản thẩm định phương án của cơ quan chuyên môn (khoản 3 Điều 3 Nghị định 88/2024/NĐ-CP; Mục XII Sổ tay — thời hạn thẩm định theo docs/05: không quá 30 ngày kể từ khi nhận đủ hồ sơ). Phần mềm chỉ ghi nhận, không tự kết luận. Đã ghi thì không sửa ý kiến, ô đã điền; thẩm định lại = hủy bản, lập bản mới.
       </p>
       <CanhBaoTruocTd ds={canhBao} />
       <div className="luoi luoi-2">
@@ -513,8 +513,8 @@ function HopNhanHoSo({ p, buoc, ngayDau, canhBao, dong: dongHop, luu }: { p: Phi
     >
       <p className="mo mt-0">
         {buoc === "8"
-          ? "Thời hạn thẩm định không quá 30 ngày làm việc kể từ ngày nhận đủ hồ sơ; thời gian bổ sung hồ sơ không tính (khoản 3 Điều 3 Nghị định 88/2024/NĐ-CP; docs/05). Ngày này ghi vào bước 8 của các hộ trong bản; khoảng bổ sung hồ sơ khai ở Tiến độ của hộ (“Thời gian không tính”)."
-          : "Thời hạn phê duyệt phương án không quá 5 ngày làm việc kể từ ngày nhận tờ trình (điểm c khoản 3 Điều 87 Luật Đất đai 2024; docs/05). Chưa ghi thì phần mềm lấy ngày Tờ trình đề nghị phê duyệt phương án (mẫu 13 / R4) đã ghi số, ngày. Ngày này ghi vào bước 9 của các hộ trong bản."}
+          ? "Thời hạn thẩm định không quá 30 ngày kể từ ngày nhận đủ hồ sơ; thời gian bổ sung hồ sơ không tính (khoản 3 Điều 3 Nghị định 88/2024/NĐ-CP; docs/05). Ngày này ghi vào bước 8 của các hộ trong bản; khoảng bổ sung hồ sơ khai ở Tiến độ của hộ (“Thời gian không tính”)."
+          : "Thời hạn phê duyệt phương án không quá 5 ngày làm việc kể từ ngày nhận tờ trình (Sổ tay QĐ 1966/QĐ-UBND — Luật Đất đai 2024 không quy định số ngày; docs/05). Chưa ghi thì phần mềm lấy ngày Tờ trình đề nghị phê duyệt phương án (mẫu 13 / R4) đã ghi số, ngày. Ngày này ghi vào bước 9 của các hộ trong bản."}
       </p>
       <O nhan={ten}><ONgay value={ngay} onChange={(e) => setNgay(e.target.value)} /></O>
       {canhBao && <CanhBaoTruocTd ds={canhBao(ngay)} />}

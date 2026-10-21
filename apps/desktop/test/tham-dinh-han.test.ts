@@ -17,7 +17,7 @@ const cs = cs0 as unknown as BoChinhSach;
 const O = { ten: "PA 1", lyDo: "", nguoi: "A", luc: "2026-09-27T08:00:00.000Z" };
 const datMoc = (h: Ho, ngay: string): Ho => ({ ...h, tienDo: { ...h.tienDo, "8": { ...(h.tienDo["8"] ?? { trangThai: "CHUA" as const }), mocHan: ngay } } });
 
-describe("1.0.12 — thẩm định: mẫu tự điền, hạn 30 ngày làm việc, đếm trong báo cáo", () => {
+describe("1.0.12 — thẩm định: mẫu tự điền, hạn 30 ngày, đếm trong báo cáo", () => {
   it("mẫu 13, R4 tự điền Kết quả thẩm định từ bản phương án (ưu tiên hơn giá trị lưu tay)", async () => {
     const { duAn, ho } = taoDuAnMau();
     const p = ghiThamDinh(await chotPhuongAn(cs, duAn, [ho[0]!], O), { so: "45/BC-KT", ngay: "2026-09-30", coQuan: "Phòng Kinh tế", yKien: "THONG_NHAT_CO_Y_KIEN", noiDung: "Bổ sung giá cây trồng" }, "B");
@@ -30,13 +30,13 @@ describe("1.0.12 — thẩm định: mẫu tự điền, hạn 30 ngày làm vi�
     expect(giaTriNhapThem(mauTheoMa("13"), { ...duAn, vanBan: { ket_qua_tham_dinh: "cũ" } }, ds).ket_qua_tham_dinh).toBe("cũ");
   });
 
-  it("hạn thẩm định theo bản: 30 NLV từ ngày nhận đủ hồ sơ; cảnh báo một lần cho cả bản; hết khi đã ghi thẩm định", async () => {
+  it("hạn thẩm định theo bản: 30 ngày (k3 Đ3 NĐ 88) từ ngày nhận đủ hồ sơ; cảnh báo một lần cho cả bản; hết khi đã ghi thẩm định", async () => {
     const { duAn, ho } = taoDuAnMau();
     const p = await chotPhuongAn(cs, duAn, [ho[0]!], O);
     expect(hanThamDinhBan(p, ho, "2026-10-01", LICH_TRONG)?.trangThai).toBe("CHUA_CO_MOC");
     const hos = [datMoc(ho[0]!, "2026-09-01"), ...ho.slice(1)];
     const t = hanThamDinhBan(p, hos, "2026-10-20", LICH_TRONG)!;
-    expect(t.hanChot).toBe("2026-10-13"); // 30 ngày làm việc (trừ T7, CN) kể từ sau 01/09/2026
+    expect(t.hanChot).toBe("2026-10-01"); // 1.0.21: 30 ngày (k3 Đ3 NĐ 88 "không quá 30 ngày") kể từ sau 01/09/2026
     expect(t.trangThai).toBe("QUA_HAN");
     const da = { ...duAn, phuongAn: [p] };
     const cb = canhBaoDuAn(da, hos.map((h) => ({ h, k: tinhHo(cs, da, h) })), "2026-10-20");

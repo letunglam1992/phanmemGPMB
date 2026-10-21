@@ -9,7 +9,7 @@ import { Chon } from "./Chon";
 import { taoId, type DuAn } from "../mo-hinh";
 import { homNayIso } from "../trang-thai";
 import { moTaQd } from "../phuong-an";
-import { CAN_CU_KINH_PHI, TEN_LOAI_KHOAN_KP, giaiNganHieuLuc, kinhPhiRong, quyetToanChiTra, tinhKinhPhi, type KinhPhiTcth, type LoaiKhoanKp } from "../quyet-toan";
+import { CAN_CU_KINH_PHI, CAN_CU_KP_CUONG_CHE, TEN_LOAI_KHOAN_KP, giaiNganHieuLuc, kinhPhiRong, quyetToanChiTra, tinhKinhPhi, type KinhPhiTcth, type LoaiKhoanKp } from "../quyet-toan";
 import { xuatExcelQuyetToan } from "../xuat-excel";
 
 const tien = (d: Decimal | null | undefined) => (d ? dinhDang(d, 0) : "—");
@@ -77,7 +77,7 @@ export function TheChiTraKinhPhi({ duAn }: { duAn: DuAn }) {
       <div className="the" data-kinh-phi>
         <div className="the-dau">
           <h3>Kinh phí tổ chức thực hiện bồi thường, hỗ trợ, tái định cư</h3>
-          <span className="mo chu-nho">{CAN_CU_KINH_PHI}; kinh phí cưỡng chế: khoản 6 Điều 89 — tỷ lệ, cơ sở tính, nội dung chi do đơn vị nhập kèm căn cứ</span>
+          <span className="mo chu-nho">{CAN_CU_KINH_PHI}; kinh phí cưỡng chế: {CAN_CU_KP_CUONG_CHE} — đơn vị bồi thường lập dự toán, cơ quan phê duyệt phương án quyết định; bố trí vào vốn đầu tư dự án / ứng từ Quỹ phát triển đất / trừ vào tiền SDĐ, tiền thuê đất khi nhà đầu tư ứng trước (điểm a, b, c k3 Điều 27 NĐ 88). Tỷ lệ, cơ sở tính, nội dung chi do đơn vị nhập kèm căn cứ</span>
         </div>
         <fieldset className="khung-quyen" disabled={!choSua}>
           <div className="the-than luoi luoi-4">
