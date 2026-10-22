@@ -1,5 +1,6 @@
 """Hàm dùng chung cho các script dựng mẫu văn bản riêng của địa phương (mau-rieng.py, mau-rieng-pa.py)."""
 import copy
+import re
 
 from docx.oxml.ns import qn
 
@@ -119,7 +120,23 @@ def dong_goi_lai(path):
             muc[info.filename] = (info, z.read(info))
     with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
         for ten, (info, du) in muc.items():
+            if ten in ("word/document.xml", "word/styles.xml", "word/numbering.xml", "word/fontTable.xml") or ten.startswith(("word/header", "word/footer")):
+                du = chuan_phong(du.decode("utf8")).encode("utf8")
             z.writestr(ten, du)
+
+
+# 1.1.0 (D2): phông chữ Times New Roman theo Phụ lục I NĐ 30/2020/NĐ-CP (bộ mã Unicode TCVN 6909:2001).
+# Tệp gốc chuyển từ .doc còn khai báo .VnTime, Liberation Serif, Calibri… (máy không có phông này thì Word thay phông khác).
+# Giữ Symbol, Wingdings (ký hiệu đầu dòng của danh sách).
+PHONG_GIU = {"Symbol", "Wingdings", "Times New Roman"}
+
+
+def chuan_phong(xml):
+    def thay(m):
+        return m.group(0) if m.group(2) in PHONG_GIU else f'{m.group(1)}="Times New Roman"'
+
+    xml = re.sub(r'(w:(?:ascii|hAnsi|cs|eastAsia))="([^"]+)"', thay, xml)
+    return re.sub(r'\s+w:(?:ascii|hAnsi|cs|eastAsia)Theme="[^"]+"', "", xml)
 
 
 def khoi_phap_ly(p_sau):
