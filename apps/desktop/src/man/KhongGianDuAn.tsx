@@ -43,6 +43,7 @@ import { TheQuyTdc } from "../thanh-phan/QuyTdc";
 import { TheChiTraKinhPhi } from "../thanh-phan/KinhPhi";
 import { TheKhieuNaiDuAn } from "../thanh-phan/KhieuNaiDuAn";
 import { TheBanGiaoThucDia } from "../thanh-phan/BanGiaoThucDia";
+import { HopDoiChieuQuyTrinh } from "../thanh-phan/DoiChieuQuyTrinh";
 import { HopPhanCong } from "../thanh-phan/PhanCong";
 import { ChonDot, HopXepDot, TheDotThuHoi, TheHanThuHoi, TheTongHopDot, loiDsDot } from "../thanh-phan/DotThuHoi";
 import { coDot, duAnTheoBoHo, khopDot } from "../dot-thu-hoi";
@@ -174,6 +175,7 @@ type Kq = { h: import("../mo-hinh").Ho; k: import("../tinh-ho").KetQuaHo }[];
 function TheTongQuan({ duAn, kq, moHo, moDot, capNhatTd, keHoach }: { duAn: DuAn; kq: Kq; moHo: (t: TrangThaiGpmb) => void; moDot: (dotId: string) => void; capNhatTd: (t: "chung" | "hang-loat") => void; keHoach: () => void }) {
   const { di, quyen } = useUngDung();
   const [ghiLt, setGhiLt] = useState(false);
+  const [doiChieuQt, setDoiChieuQt] = useState(false);
   const homNay = homNayIso();
   const tk = thongKe(duAn, kq, homNay);
   const moc = mocTienDo(duAn, kq.map((x) => x.h), homNay);
@@ -215,7 +217,7 @@ function TheTongQuan({ duAn, kq, moHo, moDot, capNhatTd, keHoach }: { duAn: DuAn
           <div style={{ padding: "0 8px 10px" }}><DaiChang chang={tk.chang} soHo={tk.soHo} bieuTuong={["hoSo", "kiemDem", "phuongAn", "pheDuyet", "chiTra", "banGiao"]} bam={(i) => di({ ten: "ds-ho", duAnId: duAn.id, chang: tk.chang[i]!.buoc })} /></div>
         </div>
         <div className="the">
-          <div className="the-dau"><h3>Mốc tiến độ dự án</h3><div className="phai"><button className="nut nut-nho" onClick={keHoach}>Lập kế hoạch</button>{quyen("SUA_HO_SO") && <button className="nut nut-nho nut-chinh" onClick={() => capNhatTd("chung")}>Cập nhật tiến độ</button>}</div></div>
+          <div className="the-dau"><h3>Mốc tiến độ dự án</h3><div className="phai"><button className="nut nut-nho" title="Đối chiếu 16 bước với NĐ 151/2025 và Sổ tay QĐ 1966" onClick={() => setDoiChieuQt(true)}>Căn cứ thời hạn</button><button className="nut nut-nho" onClick={keHoach}>Lập kế hoạch</button>{quyen("SUA_HO_SO") && <button className="nut nut-nho nut-chinh" onClick={() => capNhatTd("chung")}>Cập nhật tiến độ</button>}</div></div>
           <div className="bang-cuon" style={{ maxHeight: 420, padding: "6px 10px" }}><DongMoc moc={moc} chon={quyen("SUA_HO_SO") ? (ma) => capNhatTd(["1", "2", "3", "4"].includes(ma) ? "chung" : "hang-loat") : undefined} /></div>
         </div>
       </div>
@@ -225,6 +227,7 @@ function TheTongQuan({ duAn, kq, moHo, moDot, capNhatTd, keHoach }: { duAn: DuAn
       <ThePhuongAn duAn={duAn} kq={kq} />
       <TheKhieuNaiDuAn duAn={duAn} hos={kq.map((x) => x.h)} />
       <TheBanGiaoThucDia duAn={duAn} />
+      {doiChieuQt && <HopDoiChieuQuyTrinh dong={() => setDoiChieuQt(false)} />}
       {ghiLt && <HopGhiLyTrinh hos={kq.map((x) => x.h)} dong={() => setGhiLt(false)} />}
     </>
   );
