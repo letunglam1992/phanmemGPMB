@@ -58,7 +58,26 @@ describe("Khiếu nại — Điều 27, 28, 36, 37 Luật Khiếu nại 2011 (1.
   });
   it("thống kê đơn theo dự án", () => {
     const hos = [ho({ khieuNai: [don({ ngayThuLy: "2026-10-05" }), don({ id: "k2", ketQua: "DUNG" })] }), ho({ id: "h2" })];
-    expect(thongKeDon(hos, "2026-11-10", LICH_TRONG)).toEqual({ tong: 2, dangGiaiQuyet: 1, quaHan: 1, daGiaiQuyet: 1, soHo: 1 });
+    expect(thongKeDon(hos, "2026-11-10", LICH_TRONG)).toEqual({ tong: 2, dangGiaiQuyet: 1, quaHan: 1, daGiaiQuyet: 1, soHo: 1, tamDinhChi: 0, thuTucCham: 0 });
+  });
+  it("1.1.0 A4: thống kê tạm đình chỉ, gửi văn bản chậm; Excel khiếu nại, cưỡng chế của dự án", async () => {
+    const tdc = don({ ngayThuLy: "2026-10-05", tamDinhChi: [{ id: "t", tu: "2026-10-10", truongHop: "b", lyDo: "Chờ kết quả đo đạc", soQd: "20/QĐ-UBND" }] });
+    const hos = [ho({ khieuNai: [tdc, don({ id: "k2", ngayNhan: "2026-10-02" })], cuongChe: [{ id: "c", loai: "THU_HOI", soQd: "88/QĐ-UBND", ngayQd: "2026-10-21" }] })];
+    const tk = thongKeDon(hos, "2026-10-30", LICH_TRONG);
+    expect(tk).toMatchObject({ tong: 2, dangGiaiQuyet: 2, tamDinhChi: 1, quaHan: 1, thuTucCham: 1 });
+    const { taoWorkbookKhieuNai } = await import("../src/xuat-excel");
+    const wb = await taoWorkbookKhieuNai({ id: "d1", ten: "Đường thử" } as never, hos, "2026-10-30", LICH_TRONG);
+    expect(wb.worksheets.map((w) => w.name)).toEqual(["Tổng hợp", "Đơn", "Cưỡng chế"]);
+    const th = wb.getWorksheet("Tổng hợp")!;
+    expect(th.getCell(1, 1).value).toBe("TỔNG HỢP KHIẾU NẠI, KIẾN NGHỊ, CƯỠNG CHẾ – ĐƯỜNG THỬ (đến ngày 30/10/2026)");
+    expect(th.getRow(9).values).toEqual([undefined, "– trong đó đang tạm đình chỉ", 1, "k1, k4 Điều 11a Luật Khiếu nại (bổ sung bởi Luật 136/2025/QH15)"]);
+    const d = wb.getWorksheet("Đơn")!;
+    expect(d.getCell(4, 10).value).toBe("Tạm đình chỉ");
+    expect(d.getCell(4, 12).value).toBe("10/10/2026 – đang tạm đình chỉ; 20/QĐ-UBND");
+    expect(String(d.getCell(4, 15).value)).toContain("Chưa ghi ngày gửi QĐ tạm đình chỉ");
+    expect(d.getCell(5, 10).value).toBe("Quá hạn thụ lý");
+    const c = wb.getWorksheet("Cưỡng chế")!;
+    expect(c.getCell(4, 6).value).toBe("88/QĐ-UBND");
   });
 });
 

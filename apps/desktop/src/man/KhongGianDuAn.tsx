@@ -41,6 +41,7 @@ import { TheDoiChieuDt } from "../thanh-phan/DoiChieuDt";
 import { TheDuBao } from "../thanh-phan/DuBao";
 import { TheQuyTdc } from "../thanh-phan/QuyTdc";
 import { TheChiTraKinhPhi } from "../thanh-phan/KinhPhi";
+import { TheKhieuNaiDuAn } from "../thanh-phan/KhieuNaiDuAn";
 import { HopPhanCong } from "../thanh-phan/PhanCong";
 import { ChonDot, HopXepDot, TheDotThuHoi, TheHanThuHoi, TheTongHopDot, loiDsDot } from "../thanh-phan/DotThuHoi";
 import { coDot, duAnTheoBoHo, khopDot } from "../dot-thu-hoi";
@@ -221,6 +222,7 @@ function TheTongQuan({ duAn, kq, moHo, moDot, capNhatTd, keHoach }: { duAn: DuAn
       <TheLyTrinh duAn={duAn} hos={kq.map((x) => x.h)} ghi={quyen("SUA_HO_SO") ? () => setGhiLt(true) : undefined}
         doan={(dongTheoDoan(duAn, kq, homNay) ?? []).map((d) => ({ ten: d.ten, soHo: d.soHo, banGiao: d.theoTrangThai.HOAN_THANH, dtThuHoi: d.dtThuHoi.toString(), tamTinh: d.tamTinh.toString(), daDuyet: d.daDuyet.toString(), mCoGhi: d.mCoGhi, mSach: d.mSach }))} />
       <ThePhuongAn duAn={duAn} kq={kq} />
+      <TheKhieuNaiDuAn duAn={duAn} hos={kq.map((x) => x.h)} />
       {ghiLt && <HopGhiLyTrinh hos={kq.map((x) => x.h)} dong={() => setGhiLt(false)} />}
     </>
   );

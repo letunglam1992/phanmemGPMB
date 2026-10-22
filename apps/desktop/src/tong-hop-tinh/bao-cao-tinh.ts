@@ -51,7 +51,10 @@ export function duLieuBaoCaoTinh(dong: DongBaoCao[], t: ThongTinBaoCaoTinh, o: {
     (() => {
       const kn = dong.filter((d) => d.khieuNai?.tong);
       const cc = dong.filter((d) => d.cuongChe);
-      const a = kn.length ? `${cong((d) => d.khieuNai?.tong ?? 0)} đơn khiếu nại, kiến nghị (đã giải quyết ${cong((d) => d.khieuNai?.daGiaiQuyet ?? 0)}, đang giải quyết ${cong((d) => d.khieuNai?.dangGiaiQuyet ?? 0)}${cong((d) => d.khieuNai?.quaHan ?? 0) ? `, trong đó ${cong((d) => d.khieuNai?.quaHan ?? 0)} đơn quá hạn` : ""})` : "";
+      const a = kn.length ? `${cong((d) => d.khieuNai?.tong ?? 0)} đơn khiếu nại, kiến nghị (đã giải quyết ${cong((d) => d.khieuNai?.daGiaiQuyet ?? 0)}, đang giải quyết ${cong((d) => d.khieuNai?.dangGiaiQuyet ?? 0)}${(() => {
+        const ct = [cong((d) => d.khieuNai?.quaHan ?? 0) && `${cong((d) => d.khieuNai?.quaHan ?? 0)} đơn quá hạn`, cong((d) => d.khieuNai?.tamDinhChi ?? 0) && `${cong((d) => d.khieuNai?.tamDinhChi ?? 0)} đơn tạm đình chỉ`].filter(Boolean);
+        return ct.length ? `, trong đó ${ct.join(", ")}` : "";
+      })()})` : "";
       const b = cc.length ? `${cong((d) => (d.cuongChe?.kiemDem ?? 0) + (d.cuongChe?.thuHoi ?? 0))} hồ sơ cưỡng chế (kiểm đếm bắt buộc ${cong((d) => d.cuongChe?.kiemDem ?? 0)}, thu hồi đất ${cong((d) => d.cuongChe?.thuHoi ?? 0)}; đang thực hiện ${cong((d) => d.cuongChe?.dangThucHien ?? 0)})` : "";
       return a || b ? `Khiếu nại, cưỡng chế (đơn vị gửi từ bản 1.0.20): ${[a, b].filter(Boolean).join("; ")}.` : "";
     })(),

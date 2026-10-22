@@ -19,6 +19,9 @@ import { TEN_TINH_TRANG, type BaoCao, type SoLieu } from "./bao-cao";
 import { sapXepKy, tongKy, type KyBaoCao } from "./ky-bao-cao";
 import { taiXuong } from "./tai-xuong";
 import { dienMauExcel, type DongMau, type DuLieuMauExcel } from "./mau-excel";
+import { TEN_KET_QUA_DON, TEN_LOAI_DON, TEN_TT_DON, canhBaoThuTucDon, hanDon, thongKeDon } from "./khieu-nai";
+import { TEN_LOAI_CC, kiemCuongChe } from "./cuong-che";
+import type { LichLamViec } from "./lich-lam-viec";
 import { quyCua, tenLo, trangThaiLo, TEN_TT_LO, TEN_LOAI_LO, TEN_HINH_THUC_GIAO, canBoTriLo } from "./quy-tdc";
 
 const FONT = "Times New Roman";
@@ -1022,6 +1025,29 @@ export async function taoWorkbookBaoCao(bc: BaoCao, coQuan: string, dsKy: KyBaoC
   return wb;
 }
 
+type CotTrang = { t: string; w: number; tien?: boolean };
+/** Một trang bảng đơn giản: tiêu đề dòng 1, tên cột dòng 3, dữ liệu từ dòng 4, khổ A4 ngang. */
+function themTrang(wb: ExcelJS.Workbook, ten: string, tieuDe: string, cot: CotTrang[], dong: (string | number | null)[][]) {
+  const ws = wb.addWorksheet(ten, { pageSetup: { orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
+  ws.mergeCells(1, 1, 1, cot.length);
+  ws.getCell(1, 1).value = tieuDe;
+  ws.getCell(1, 1).font = { name: FONT, bold: true, size: 13 };
+  ws.getCell(1, 1).alignment = { horizontal: "center" };
+  ws.getRow(3).values = cot.map((c) => c.t);
+  ws.getRow(3).font = { name: FONT, bold: true };
+  cot.forEach((c, i) => (ws.getColumn(i + 1).width = c.w));
+  dong.forEach((d, i) => (ws.getRow(4 + i).values = d));
+  for (let r = 3; r < 4 + dong.length; r++)
+    for (let c = 1; c <= cot.length; c++) {
+      const o = ws.getCell(r, c);
+      o.border = VIEN;
+      o.font = { name: FONT, bold: r === 3 };
+      o.alignment = { vertical: "middle", wrapText: true, horizontal: r === 3 ? "center" : undefined };
+      if (cot[c - 1]!.tien && r > 3) o.numFmt = DINH_DANG_TIEN;
+    }
+  return ws;
+}
+
 /**
  * P3-3: quỹ tái định cư — trang "Quỹ TĐC" (mọi lô, trạng thái, hộ được giao), "Hộ chờ bố trí" (hộ có TĐC giao đất ở /
  * nhà ở chưa có lô — dùng lập danh sách bốc thăm), "Lô trống", "Kết quả bốc thăm" (theo biên bản đã ghi nhận).
@@ -1036,26 +1062,7 @@ export async function taoWorkbookQuyTdc(duAn: DuAn, hos: Ho[]): Promise<ExcelJS.
   const soN = (v?: string) => (v && /^-?\d+(\.\d+)?$/.test(v.trim()) ? Number(v) : null);
   const wb = new Excel.Workbook();
   wb.creator = "GPMB Sơn La";
-  const trang = (ten: string, tieuDe: string, cot: { t: string; w: number; tien?: boolean }[], dong: (string | number | null)[][]) => {
-    const ws = wb.addWorksheet(ten, { pageSetup: { orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
-    ws.mergeCells(1, 1, 1, cot.length);
-    ws.getCell(1, 1).value = tieuDe;
-    ws.getCell(1, 1).font = { name: FONT, bold: true, size: 13 };
-    ws.getCell(1, 1).alignment = { horizontal: "center" };
-    ws.getRow(3).values = cot.map((c) => c.t);
-    ws.getRow(3).font = { name: FONT, bold: true };
-    cot.forEach((c, i) => (ws.getColumn(i + 1).width = c.w));
-    dong.forEach((d, i) => (ws.getRow(4 + i).values = d));
-    for (let r = 3; r < 4 + dong.length; r++)
-      for (let c = 1; c <= cot.length; c++) {
-        const o = ws.getCell(r, c);
-        o.border = VIEN;
-        o.font = { name: FONT, bold: r === 3 };
-        o.alignment = { vertical: "middle", wrapText: true, horizontal: r === 3 ? "center" : undefined };
-        if (cot[c - 1]!.tien && r > 3) o.numFmt = DINH_DANG_TIEN;
-      }
-    return ws;
-  };
+  const trang = (ten: string, tieuDe: string, cot: CotTrang[], dong: (string | number | null)[][]) => themTrang(wb, ten, tieuDe, cot, dong);
   const lo = [...q.lo].sort((a, b) => `${a.khu}|${a.soLo}`.localeCompare(`${b.khu}|${b.soLo}`, "vi", { numeric: true }));
   trang("Quỹ TĐC", `QUỸ ĐẤT Ở, NHÀ Ở TÁI ĐỊNH CƯ – ${duAn.ten.toUpperCase()}`, [
     { t: "STT", w: 6 }, { t: "Khu, điểm TĐC", w: 26 }, { t: "Lô / căn", w: 10 }, { t: "Loại", w: 12 }, { t: "DT (m²)", w: 10, tien: true }, { t: "Giá (đ/m²)", w: 14, tien: true }, { t: "Căn cứ giá", w: 34 }, { t: "Trạng thái", w: 12 }, { t: "Hộ được giao", w: 30 }, { t: "Hình thức, căn cứ giao", w: 36 },
@@ -1128,4 +1135,49 @@ export async function taoWorkbookDsHoChon(ds: { h: Ho; k: KetQuaHo; duAn: DuAn; 
 export async function xuatExcelDsHoChon(ds: Parameters<typeof taoWorkbookDsHoChon>[0]) {
   const buf = await (await taoWorkbookDsHoChon(ds)).xlsx.writeBuffer();
   return taiXuong(new Uint8Array(buf as ArrayBuffer), `Ho-so-da-chon_${ds.length}-ho.xlsx`, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+}
+
+/**
+ * 1.1.0 (A4) — Báo cáo khiếu nại, kiến nghị, cưỡng chế của dự án: tổng hợp; từng đơn (trạng thái, hạn, tạm đình chỉ, kết quả,
+ * việc gửi văn bản chậm, căn cứ); từng hồ sơ cưỡng chế. Số liệu lấy từ thẻ "Khiếu nại" của từng hộ — phần mềm ghi nhận, nhắc hạn,
+ * không kết luận đúng sai.
+ */
+export async function taoWorkbookKhieuNai(duAn: DuAn, hos: Ho[], homNay: string, lich: LichLamViec): Promise<ExcelJS.Workbook> {
+  const { default: Excel } = await import("exceljs");
+  const vn = (iso?: string) => (iso ? iso.split("-").reverse().join("/") : "");
+  const wb = new Excel.Workbook();
+  wb.creator = "GPMB Sơn La";
+  const tk = thongKeDon(hos, homNay, lich);
+  const cc = hos.flatMap((h) => (h.cuongChe ?? []).map((c) => ({ h, c })));
+  const tieuDe = (t: string) => `${t} – ${duAn.ten.toUpperCase()} (đến ngày ${vn(homNay)})`;
+  themTrang(wb, "Tổng hợp", tieuDe("TỔNG HỢP KHIẾU NẠI, KIẾN NGHỊ, CƯỠNG CHẾ"), [{ t: "Nội dung", w: 60 }, { t: "Số lượng", w: 12 }, { t: "Căn cứ", w: 60 }], [
+    ["Số hộ có đơn", tk.soHo, ""],
+    ["Tổng số đơn khiếu nại, kiến nghị", tk.tong, ""],
+    ["Đã giải quyết, trả lời", tk.daGiaiQuyet, ""],
+    ["Đang giải quyết", tk.dangGiaiQuyet, ""],
+    ["– trong đó quá hạn thụ lý / giải quyết", tk.quaHan, "Điều 27, 28, 36, 37 Luật Khiếu nại; k1 Điều 16 NĐ 124/2020 (sửa bởi NĐ 155/2026)"],
+    ["– trong đó đang tạm đình chỉ", tk.tamDinhChi ?? 0, "k1, k4 Điều 11a Luật Khiếu nại (bổ sung bởi Luật 136/2025/QH15)"],
+    ["Đơn có văn bản, thông báo gửi quá hạn / chưa ghi ngày gửi", tk.thuTucCham ?? 0, "k1 Điều 28, Điều 28b NĐ 124/2020 (sửa đổi, bổ sung bởi NĐ 155/2026)"],
+    ["Hồ sơ cưỡng chế kiểm đếm bắt buộc", cc.filter((x) => x.c.loai === "KIEM_DEM").length, "Điều 88 Luật Đất đai 2024"],
+    ["Hồ sơ cưỡng chế thu hồi đất", cc.filter((x) => x.c.loai === "THU_HOI").length, "Điều 89 Luật Đất đai 2024"],
+    ["– trong đó chưa kết thúc", cc.filter((x) => !x.c.ketQua).length, ""],
+  ]);
+  const don = hos.flatMap((h) => (h.khieuNai ?? []).map((d) => ({ h, d }))).sort((a, b) => a.d.ngayNhan.localeCompare(b.d.ngayNhan) || a.h.ma.localeCompare(b.h.ma, "vi", { numeric: true }));
+  themTrang(wb, "Đơn", tieuDe("DANH SÁCH ĐƠN KHIẾU NẠI, KIẾN NGHỊ"), [
+    { t: "STT", w: 6 }, { t: "Mã hồ sơ", w: 11 }, { t: "Họ tên", w: 24 }, { t: "Loại", w: 12 }, { t: "Lần", w: 6 }, { t: "Ngày nhận", w: 11 }, { t: "Ngày thụ lý", w: 11 }, { t: "Đối tượng khiếu nại", w: 28 }, { t: "Nội dung", w: 34 },
+    { t: "Trạng thái", w: 16 }, { t: "Hạn", w: 11 }, { t: "Tạm đình chỉ (từ – đến; số QĐ)", w: 30 }, { t: "Kết quả", w: 18 }, { t: "Số, ngày văn bản", w: 22 }, { t: "Việc gửi văn bản, thông báo chưa đúng hạn", w: 44 }, { t: "Căn cứ thời hạn", w: 44 },
+  ], don.map(({ h, d }, i) => {
+    const hd = hanDon(d, homNay, lich);
+    const tdc = (d.tamDinhChi ?? []).map((t) => `${vn(t.tu)} – ${t.den ? vn(t.den) : "đang tạm đình chỉ"}${t.soQd ? `; ${t.soQd}` : ""}${t.soQdTiepTuc ? `; ${t.soQdTiepTuc}` : ""}`).join("\n");
+    const tt = canhBaoThuTucDon(d, homNay, lich).map((c) => c.noiDung).join("\n");
+    return [i + 1, h.ma, h.ten, TEN_LOAI_DON[d.loai], d.loai === "KHIEU_NAI" ? (d.lan ?? 1) : "", vn(d.ngayNhan), vn(d.ngayThuLy), d.doiTuong ?? "", d.noiDung, TEN_TT_DON[hd.tt], vn(hd.han), tdc, d.ketQua ? TEN_KET_QUA_DON[d.ketQua] ?? d.ketQua : "", [d.soVb, vn(d.ngayVb)].filter(Boolean).join(" ngày "), tt, hd.canCu ?? ""];
+  }));
+  themTrang(wb, "Cưỡng chế", tieuDe("DANH SÁCH HỒ SƠ CƯỠNG CHẾ"), [
+    { t: "STT", w: 6 }, { t: "Mã hồ sơ", w: 11 }, { t: "Họ tên", w: 24 }, { t: "Loại", w: 34 }, { t: "Vận động (từ – đến)", w: 22 }, { t: "Số QĐ cưỡng chế", w: 16 }, { t: "Ngày QĐ", w: 11 }, { t: "QĐ thành lập Ban cưỡng chế", w: 26 }, { t: "Ngày dự kiến", w: 11 }, { t: "Kết quả", w: 20 }, { t: "Điều kiện, thời hạn cần lưu ý", w: 50 },
+  ], cc.map(({ h, c }, i) => [i + 1, h.ma, h.ten, TEN_LOAI_CC[c.loai], c.vanDongTu ? `${vn(c.vanDongTu)} – ${vn(c.vanDongDen)}` : "", c.soQd ?? "", vn(c.ngayQd), c.qdBan ?? "", vn(c.ngayDuKien), c.ketQua ? `${c.ketQua === "CHAP_HANH" ? "Đã chấp hành" : "Đã cưỡng chế"} ${vn(c.ngayKetQua)}` : "", kiemCuongChe(c, h, homNay, lich).filter((m) => m.muc === "CAO").map((m) => m.noiDung).join("\n")]));
+  return wb;
+}
+
+export async function xuatExcelKhieuNai(duAn: DuAn, hos: Ho[], homNay: string, lich: LichLamViec) {
+  await taiVe(await taoWorkbookKhieuNai(duAn, hos, homNay, lich), `Khieu-nai-cuong-che_${tenAnToan(duAn.ten)}.xlsx`);
 }

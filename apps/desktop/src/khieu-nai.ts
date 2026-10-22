@@ -179,10 +179,14 @@ export interface ThongKeDon {
   quaHan: number;
   daGiaiQuyet: number;
   soHo: number;
+  /** 1.1.0 (A4): đơn đang tạm đình chỉ (k1 Điều 11a Luật Khiếu nại); gói tỉnh trước 1.1.0 không có */
+  tamDinhChi?: number;
+  /** 1.1.0 (A4): đơn có việc gửi văn bản / thông báo quá hạn (Điều 28, 28b NĐ 124 sửa, bổ sung bởi NĐ 155) */
+  thuTucCham?: number;
 }
 
 export function thongKeDon(hos: Ho[], homNay: string, lich: LichLamViec): ThongKeDon {
-  const tk: ThongKeDon = { tong: 0, dangGiaiQuyet: 0, quaHan: 0, daGiaiQuyet: 0, soHo: 0 };
+  const tk: ThongKeDon = { tong: 0, dangGiaiQuyet: 0, quaHan: 0, daGiaiQuyet: 0, soHo: 0, tamDinhChi: 0, thuTucCham: 0 };
   for (const h of hos) {
     const ds = h.khieuNai ?? [];
     if (ds.length) tk.soHo++;
@@ -193,7 +197,9 @@ export function thongKeDon(hos: Ho[], homNay: string, lich: LichLamViec): ThongK
       else {
         tk.dangGiaiQuyet++;
         if (t === "QUA_HAN" || t === "QUA_HAN_THU_LY") tk.quaHan++;
+        if (t === "TAM_DINH_CHI") tk.tamDinhChi!++;
       }
+      if (canhBaoThuTucDon(d, homNay, lich).some((c) => c.muc === "CAO")) tk.thuTucCham!++;
     }
   }
   return tk;
