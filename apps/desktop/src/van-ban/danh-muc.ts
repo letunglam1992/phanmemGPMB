@@ -351,8 +351,8 @@ export const tepMau = (m: MauVanBan) => m.tep ?? `mau-${m.ma}.docx`;
 
 /**
  * 1.0.21 (B2) — Văn bản khiếu nại, cưỡng chế của hộ: tự điền từ thẻ Khiếu nại của hồ sơ hộ. Thẩm quyền ban hành quyết định
- * cưỡng chế, thành lập Ban cưỡng chế ghi trong Luật là Chủ tịch UBND cấp huyện — thực hiện theo văn bản phân định thẩm quyền
- * hiện hành; mẫu để mặc định Chủ tịch UBND xã, cán bộ sửa khi khác. Kết luận, biện pháp, kinh phí do cán bộ ghi.
+ * cưỡng chế, thành lập Ban cưỡng chế, phê duyệt phương án và kinh phí cưỡng chế: Chủ tịch UBND cấp xã (điểm d khoản 2, điểm đ
+ * khoản 1 Điều 5 NĐ 151/2025/NĐ-CP — chuyển giao từ cấp huyện). Kết luận, biện pháp, kinh phí do cán bộ ghi.
  */
 DANH_MUC_MAU.push(
   {
@@ -395,7 +395,7 @@ DANH_MUC_MAU.push(
   },
   {
     ma: "T16", ten: "Quyết định thành lập Ban cưỡng chế thu hồi đất", buoc: "14", phamVi: "HO", coQuan: "UBND", nguon: "THUC_TE", tep: "tt-qd-ban-cuong-che.docx",
-    moTa: "Điểm a khoản 4 Điều 89 Luật Đất đai 2024. Số, ngày quyết định cưỡng chế lấy từ hồ sơ cưỡng chế của hộ; nhiệm vụ của Ban trích điểm b, c, d khoản 4 và điểm b khoản 5 Điều 89. Thẩm quyền theo văn bản phân định thẩm quyền hiện hành.",
+    moTa: "Điểm a khoản 4 Điều 89 Luật Đất đai 2024. Số, ngày quyết định cưỡng chế lấy từ hồ sơ cưỡng chế của hộ; nhiệm vụ của Ban trích điểm b, c, d khoản 4 và điểm b khoản 5 Điều 89. Thẩm quyền: Chủ tịch UBND cấp xã (điểm d khoản 2 Điều 5 NĐ 151/2025/NĐ-CP).",
     ghiLai: { khoa: "qd_ban_cc", capDo: "HO", kyHieu: "QĐ-UBND" },
     nhapThem: [
       { truong: "chuc_danh_de_nghi", nhan: "Chức danh người đề nghị", goiY: "Để trống = Trưởng + tên phòng" },
@@ -408,7 +408,7 @@ DANH_MUC_MAU.push(
   },
   {
     ma: "T17", ten: "Phương án cưỡng chế, dự toán kinh phí cưỡng chế", buoc: "14", phamVi: "HO", coQuan: "BIEN_BAN", nguon: "THUC_TE", tep: "tt-pa-cuong-che.docx",
-    moTa: "Điểm b khoản 5 Điều 89 Luật Đất đai 2024: Ban cưỡng chế lập phương án và dự toán kinh phí trình phê duyệt; khoản 6 Điều 89: kinh phí là một khoản trong kinh phí bồi thường. Thửa đất, QĐ thu hồi, QĐ cưỡng chế, ngày dự kiến lấy từ hồ sơ hộ; dự toán do cán bộ nhập từng dòng, phần mềm cộng tổng.",
+    moTa: "Điểm b khoản 5 Điều 89 Luật Đất đai 2024: Ban cưỡng chế lập phương án và dự toán kinh phí trình Chủ tịch UBND cấp xã phê duyệt (điểm đ khoản 1 Điều 5 NĐ 151/2025); khoản 6 Điều 89: kinh phí là một khoản trong kinh phí bồi thường. Thửa đất, QĐ thu hồi, QĐ cưỡng chế, ngày dự kiến lấy từ hồ sơ hộ; dự toán do cán bộ nhập từng dòng, phần mềm cộng tổng.",
     nhapThem: [
       { truong: "xu_ly_tai_san", nhan: "Tài sản trên đất, phương án di chuyển, bảo quản", nhieuDong: true, goiY: "Điểm c k4, điểm b k5 Đ89: chi phí bảo quản tài sản do chủ sở hữu thanh toán" },
       { truong: "luc_luong", nhan: "Lực lượng, phân công nhiệm vụ", nhieuDong: true },

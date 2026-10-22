@@ -2,8 +2,8 @@
  * 1.0.20 (B2) — Theo dõi cưỡng chế của hộ: cưỡng chế thực hiện quyết định kiểm đếm bắt buộc (Điều 88 Luật Đất đai 2024)
  * và cưỡng chế thực hiện quyết định thu hồi đất (Điều 89; vận động trước khi ban hành quyết định cưỡng chế — khoản 7 Điều 87).
  * Phần mềm đối chiếu các điều kiện, thời hạn theo ngày cán bộ đã ghi; KHÔNG thay việc xem xét của người có thẩm quyền.
- * Thẩm quyền ban hành ghi trong Luật là Chủ tịch UBND cấp huyện — từ 01/7/2025 thực hiện theo văn bản phân định thẩm quyền
- * của chính quyền địa phương hai cấp; phần mềm không tự xác định cấp ban hành.
+ * Thẩm quyền: Luật ghi Chủ tịch UBND cấp huyện — chuyển giao cho Chủ tịch UBND cấp xã (quyết định kiểm đếm bắt buộc, cưỡng chế
+ * kiểm đếm, cưỡng chế thu hồi, thành lập Ban cưỡng chế — điểm b, c, d khoản 2 Điều 5 NĐ 151/2025/NĐ-CP).
  */
 import { amSangDuong } from "./am-lich";
 import { hanChot, hanChotNgay, laNgayLamViec, type LichLamViec } from "./lich-lam-viec";

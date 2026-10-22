@@ -16,11 +16,11 @@ export interface HanBuoc {
 }
 
 export const HAN_BUOC: HanBuoc[] = [
-  { buoc: "8", soNgay: 30, loai: "N", moc: { loai: "NHAP", nhan: "Ngày nhận đủ hồ sơ thẩm định (thời gian bổ sung hồ sơ không tính — khai báo ở \"Thời gian không tính\")" }, canCu: "khoản 3 Điều 3 NĐ 88/2024/NĐ-CP — \"không quá 30 ngày\" (1.0.21: trước đây đếm 30 ngày làm việc)" },
-  { buoc: "9", soNgay: 5, loai: "NLV", moc: { loai: "NHAP", nhan: "Ngày nhận tờ trình phê duyệt phương án" }, canCu: "Sổ tay QĐ 1966/QĐ-UBND (điểm c khoản 3 Điều 87 Luật Đất đai 2024 không quy định số ngày)" },
-  { buoc: "11", soNgay: 3, loai: "NLV", moc: { loai: "BUOC", buoc: "9", nhan: "ngày phê duyệt phương án (bước 9)" }, canCu: "Sổ tay QĐ 1966/QĐ-UBND (điểm b khoản 4 Điều 87 Luật Đất đai 2024 không quy định số ngày)" },
+  { buoc: "8", soNgay: 30, loai: "N", moc: { loai: "NHAP", nhan: "Ngày nhận đủ hồ sơ thẩm định (thời gian bổ sung hồ sơ không tính — khai báo ở \"Thời gian không tính\")" }, canCu: "khoản 3 Điều 3 NĐ 88/2024/NĐ-CP; mục 8 Phần II Phụ lục I NĐ 151/2025/NĐ-CP — \"không quá 30 ngày\" (Sổ tay QĐ 1966 điểm a khoản 2 Mục XII ghi 30 ngày làm việc; phần mềm theo nghị định)" },
+  { buoc: "9", soNgay: 5, loai: "NLV", moc: { loai: "NHAP", nhan: "Ngày nhận tờ trình phê duyệt phương án" }, canCu: "điểm d khoản 2 Mục XII Phần II Sổ tay QĐ 1966/QĐ-UBND (Điều 87 Luật Đất đai 2024 không quy định số ngày)" },
+  { buoc: "11", soNgay: 3, loai: "NLV", moc: { loai: "BUOC", buoc: "9", nhan: "ngày phê duyệt phương án (bước 9)" }, canCu: "Mục XV Phần II Sổ tay QĐ 1966/QĐ-UBND (Điều 87 Luật Đất đai 2024 không quy định số ngày)" },
   { buoc: "13", soNgay: 10, loai: "N", moc: { loai: "NHAP", nhan: "Ngày đủ điều kiện ban hành QĐ thu hồi (khoản 5 Điều 87)" }, canCu: "khoản 5, 6 Điều 87 Luật Đất đai 2024" },
-  { buoc: "15", soNgay: 3, loai: "NLV", moc: { loai: "BUOC", buoc: "12", nhan: "ngày hoàn thành chi trả (bước 12)" }, canCu: "Mục XVIII Sổ tay" },
+  { buoc: "15", soNgay: 3, loai: "NLV", moc: { loai: "BUOC", buoc: "12", nhan: "ngày hoàn thành chi trả (bước 12)" }, canCu: "khoản 1 Mục XVIII Phần II Sổ tay QĐ 1966/QĐ-UBND" },
 ];
 
 export const hanCuaBuoc = (buoc: string) => HAN_BUOC.find((x) => x.buoc === buoc);

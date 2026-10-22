@@ -514,7 +514,7 @@ function HopNhanHoSo({ p, buoc, ngayDau, canhBao, dong: dongHop, luu }: { p: Phi
       <p className="mo mt-0">
         {buoc === "8"
           ? "Thời hạn thẩm định không quá 30 ngày kể từ ngày nhận đủ hồ sơ; thời gian bổ sung hồ sơ không tính (khoản 3 Điều 3 Nghị định 88/2024/NĐ-CP; docs/05). Ngày này ghi vào bước 8 của các hộ trong bản; khoảng bổ sung hồ sơ khai ở Tiến độ của hộ (“Thời gian không tính”)."
-          : "Thời hạn phê duyệt phương án không quá 5 ngày làm việc kể từ ngày nhận tờ trình (Sổ tay QĐ 1966/QĐ-UBND — Luật Đất đai 2024 không quy định số ngày; docs/05). Chưa ghi thì phần mềm lấy ngày Tờ trình đề nghị phê duyệt phương án (mẫu 13 / R4) đã ghi số, ngày. Ngày này ghi vào bước 9 của các hộ trong bản."}
+          : "Thời hạn phê duyệt phương án không quá 5 ngày làm việc kể từ ngày nhận tờ trình (điểm d khoản 2 Mục XII Phần II Sổ tay QĐ 1966/QĐ-UBND — Luật Đất đai 2024 không quy định số ngày). Chưa ghi thì phần mềm lấy ngày Tờ trình đề nghị phê duyệt phương án (mẫu 13 / R4) đã ghi số, ngày. Ngày này ghi vào bước 9 của các hộ trong bản."}
       </p>
       <O nhan={ten}><ONgay value={ngay} onChange={(e) => setNgay(e.target.value)} /></O>
       {canhBao && <CanhBaoTruocTd ds={canhBao(ngay)} />}

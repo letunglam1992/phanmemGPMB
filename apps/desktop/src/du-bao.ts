@@ -19,9 +19,9 @@ export interface ThoiGianBuoc {
 /** Thời hạn luật định dùng cho dự báo (đồng bộ han-buoc.ts, docs/05). */
 export const THOI_HAN_LUAT: Record<string, Omit<ThoiGianBuoc, "nguon">> = {
   "6": { soNgay: 30, loai: "N", canCu: "điểm a khoản 3 Điều 87 Luật Đất đai 2024 (niêm yết công khai 30 ngày)" },
-  "8": { soNgay: 30, loai: "N", canCu: "khoản 3 Điều 3 NĐ 88/2024/NĐ-CP" },
-  "9": { soNgay: 5, loai: "NLV", canCu: "Sổ tay QĐ 1966/QĐ-UBND" },
-  "11": { soNgay: 3, loai: "NLV", canCu: "Sổ tay QĐ 1966/QĐ-UBND" },
+  "8": { soNgay: 30, loai: "N", canCu: "khoản 3 Điều 3 NĐ 88/2024/NĐ-CP; mục 8 Phần II Phụ lục I NĐ 151/2025/NĐ-CP" },
+  "9": { soNgay: 5, loai: "NLV", canCu: "điểm d khoản 2 Mục XII Phần II Sổ tay QĐ 1966/QĐ-UBND" },
+  "11": { soNgay: 3, loai: "NLV", canCu: "Mục XV Phần II Sổ tay QĐ 1966/QĐ-UBND" },
   "12": { soNgay: 30, loai: "N", canCu: "khoản 3 Điều 94 Luật Đất đai 2024 (chi trả trong 30 ngày từ khi phê duyệt phương án)" },
   "13": { soNgay: 10, loai: "N", canCu: "khoản 5, 6 Điều 87 Luật Đất đai 2024" },
 };

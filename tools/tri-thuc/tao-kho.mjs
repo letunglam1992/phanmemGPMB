@@ -8,8 +8,9 @@ import { fileURLToPath } from "node:url";
 
 const goc = join(dirname(fileURLToPath(import.meta.url)), "../..");
 /**
- * [tệp, tên nguồn hiển thị, loại, dòng dừng (tùy chọn)] — VAN_BAN: văn bản pháp luật nguyên văn; NGHIEP_VU: tài liệu nghiệp vụ,
- * hướng dẫn. Dòng dừng: bỏ từ dòng này trở đi (phụ lục biểu mẫu — tra ở policy/nguon, không đưa vào kho Hỏi đáp).
+ * [tệp, tên nguồn hiển thị, loại, dòng dừng (tùy chọn), [dòng bắt đầu, dòng kết thúc] (tùy chọn)] — VAN_BAN: văn bản pháp luật
+ * nguyên văn; NGHIEP_VU: tài liệu nghiệp vụ, hướng dẫn. Dòng dừng: bỏ từ dòng này trở đi (phụ lục biểu mẫu — tra ở policy/nguon,
+ * không đưa vào kho Hỏi đáp). Đoạn thêm: lấy thêm các dòng từ dòng bắt đầu (lần xuất hiện đầu sau dòng dừng) đến trước dòng kết thúc.
  */
 export const NGUON = [
   ["policy/nguon/luat-dat-dai-vbhn-44-2026.md", "Luật Đất đai (VBHN 44/VBHN-VPQH ngày 16/3/2026)", "VAN_BAN"],
@@ -24,6 +25,8 @@ export const NGUON = [
   ["policy/nguon/luat-136-2025-sua-luat-khieu-nai.md", "Luật 136/2025/QH15 (sửa Luật Tiếp công dân, Khiếu nại, Tố cáo; hiệu lực 01/7/2026)", "VAN_BAN"],
   ["policy/nguon/nd124-2020-khieu-nai.md", "Nghị định 124/2020/NĐ-CP (thi hành Luật Khiếu nại)", "VAN_BAN", "Phụ lục"],
   ["policy/nguon/nd155-2026-sua-nd124.md", "Nghị định 155/2026/NĐ-CP (sửa NĐ 124/2020, hiệu lực 01/7/2026)", "VAN_BAN", "PHỤ LỤC"],
+  ["policy/nguon/nd151-2025-phan-dinh-tham-quyen-dat-dai.md", "Nghị định 151/2025/NĐ-CP (phân định thẩm quyền đất đai; Phụ lục I Phần II — thu hồi đất, bồi thường)", "VAN_BAN", "PHỤ LỤC I", ["Phần II", "Phần III"]],
+  ["policy/nguon/qd1966-2025-so-tay-gpmb.md", "QĐ 1966/QĐ-UBND – Sổ tay trình tự, thủ tục bồi thường, hỗ trợ, TĐC (tỉnh Sơn La)", "VAN_BAN", "PHẦN III"],
   ["policy/nguon/nq152-can-doi-chieu.md", "NQ 152/2025 – bảng giá đất (dòng cần đối chiếu)", "VAN_BAN"],
   ["docs/05-quy-trinh-thoi-han.md", "Quy trình, thời hạn (tài liệu phần mềm)", "NGHIEP_VU"],
   ["docs/06-quyet-dinh-nghiep-vu.md", "Quyết định nghiệp vụ đã xác nhận (QD-xx)", "NGHIEP_VU"],
@@ -66,11 +69,19 @@ export function chiaDoan(text, nguon, loai) {
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const doan = [];
-  for (const [tep, ten, loai, dung] of NGUON) {
+  for (const [tep, ten, loai, dung, them] of NGUON) {
     let text = readFileSync(join(goc, tep), "utf8");
     if (dung) {
-      const i = text.split("\n").findIndex((l) => l.trim() === dung);
-      if (i > 0) text = text.split("\n").slice(0, i).join("\n");
+      const dong = text.split("\n");
+      const i = dong.findIndex((l) => l.trim() === dung);
+      if (i > 0) {
+        text = dong.slice(0, i).join("\n");
+        if (them) {
+          const a = dong.findIndex((l, k) => k > i && l.trim() === them[0]);
+          const b = dong.findIndex((l, k) => k > a && l.trim() === them[1]);
+          if (a > 0 && b > a) text += "\n" + dong.slice(a, b).join("\n");
+        }
+      }
     }
     doan.push(...chiaDoan(text, ten, loai));
   }
