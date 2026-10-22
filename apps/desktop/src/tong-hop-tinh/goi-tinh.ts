@@ -13,7 +13,8 @@
  * gói trước đó của cùng đơn vị — phát hiện gói giả danh (khóa ký khác lần trước). Đây là chữ ký kỹ thuật của bản cài phần
  * mềm, không thay chữ ký số của cơ quan theo pháp luật về giao dịch điện tử.
  */
-import { thongKeDon } from "../khieu-nai";
+import { hanDon, thongKeDon } from "../khieu-nai";
+const congNgay = (iso: string, n: number) => new Date(Date.parse(iso) + n * 86400000).toISOString().slice(0, 10);
 import { dsDoan, matBangTheoLyTrinh } from "../ly-trinh";
 import { CAN_CU_CHI_TRA, hanChinhLyBan, khauChiTra } from "../thu-tuc-ban";
 import { hanGuiQdBan, hanPheDuyetBan, hanThamDinhBan, hanThuHoiNhom, ngayToTrinhPA, nhomThuHoi, type TinhHan } from "../han-buoc";
@@ -146,7 +147,7 @@ export interface TomTatDuAn {
   quaHan?: { doiTuong: string; khau: string; han: string; canCu: string }[];
   /** 1.0.20: đơn khiếu nại, kiến nghị (B1) và hồ sơ cưỡng chế (B2) — chỉ số lượng (gói cũ không có) */
   khieuNai?: import("../khieu-nai").ThongKeDon;
-  cuongChe?: { kiemDem: number; thuHoi: number; dangThucHien: number };
+  cuongChe?: { kiemDem: number; thuHoi: number; dangThucHien: number; /** 1.2.0 (B2): số hồ sơ có ngày dự kiến cưỡng chế trong 30 ngày tới */ duKien30Ngay?: number };
   /** 1.1.0 (D3): bàn giao đất trên thực địa cho chủ đầu tư (Mẫu 06 NĐ 102/2024) — số lần, ngày gần nhất (gói cũ không có) */
   banGiaoThucDia?: { lan: number; ngayCuoi: string };
   /** 1.0.4: mặt bằng theo lý trình (chỉ khi xã có ghi lý trình thửa) — mét */
@@ -223,6 +224,13 @@ export function tomTatDuAn(duAn: DuAn[], ho: Ho[], soTep: (duAnId: string) => nu
           them(ten, "Chỉnh lý hồ sơ địa chính", hanChinhLyBan(p, hos, d.phuongAn ?? [], homNay, lich));
         }
         for (const n of nhomThuHoi(d, hos)) them(n.ten, "Ban hành QĐ thu hồi đất", hanThuHoiNhom(n.hos, homNay, lich));
+        // 1.2.0 (B1): đơn khiếu nại quá hạn thụ lý / giải quyết — chỉ ngày nhận đơn, lần, khâu, hạn, căn cứ (không gửi tên hộ, nội dung đơn)
+        for (const h of hs)
+          for (const don of h.khieuNai ?? []) {
+            const hd = hanDon(don, homNay, lich);
+            if ((hd.tt === "QUA_HAN" || hd.tt === "QUA_HAN_THU_LY") && hd.han)
+              out.push({ doiTuong: `Đơn ${don.loai === "KHIEU_NAI" ? `khiếu nại lần ${don.lan ?? 1}` : "kiến nghị"} nhận ${don.ngayNhan.split("-").reverse().join("/")}`, khau: hd.tt === "QUA_HAN_THU_LY" ? "Thụ lý đơn" : "Giải quyết, trả lời đơn", han: hd.han, canCu: hd.canCu ?? "" });
+          }
         return out.length ? { quaHan: out } : {};
       })(),
       ...(() => {
@@ -230,7 +238,7 @@ export function tomTatDuAn(duAn: DuAn[], ho: Ho[], soTep: (duAnId: string) => nu
         const cc = hs.flatMap((h) => h.cuongChe ?? []);
         return {
           ...(kn.tong ? { khieuNai: kn } : {}),
-          ...(cc.length ? { cuongChe: { kiemDem: cc.filter((c) => c.loai === "KIEM_DEM").length, thuHoi: cc.filter((c) => c.loai === "THU_HOI").length, dangThucHien: cc.filter((c) => !c.ketQua).length } } : {}),
+          ...(cc.length ? { cuongChe: { kiemDem: cc.filter((c) => c.loai === "KIEM_DEM").length, thuHoi: cc.filter((c) => c.loai === "THU_HOI").length, dangThucHien: cc.filter((c) => !c.ketQua).length, duKien30Ngay: cc.filter((c) => !c.ketQua && c.ngayDuKien && c.ngayDuKien >= homNay && c.ngayDuKien <= congNgay(homNay, 30)).length } } : {}),
         };
       })(),
       ...((d.banGiaoThucDia ?? []).length ? { banGiaoThucDia: { lan: d.banGiaoThucDia!.length, ngayCuoi: d.banGiaoThucDia!.reduce((a, b) => (b.ngay > a ? b.ngay : a), "") } } : {}),

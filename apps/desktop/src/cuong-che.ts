@@ -94,6 +94,38 @@ export const hanThiHanh = (c: CuongChe, lich: LichLamViec) => (c.ngayNhanQd ? ha
 /** Hạn bàn giao đất sau khi người bị cưỡng chế chấp hành: chậm nhất 30 ngày kể từ ngày lập biên bản (điểm b k4 Đ89). */
 export const hanBanGiaoSauChapHanh = (c: CuongChe, lich: LichLamViec) => (c.loai === "THU_HOI" && c.ketQua === "CHAP_HANH" && c.ngayKetQua ? hanChotNgay(c.ngayKetQua, 30, lich) : null);
 
+/** Hạn gửi văn bản đề nghị Công an bảo đảm trật tự: trước thời điểm cưỡng chế 05 ngày làm việc (Điều 37 NĐ 102/2024/NĐ-CP). */
+export function hanGuiCongAn(ngayDuKien: string, lich: LichLamViec): string {
+  let cs = ngayDuKien;
+  for (let i = 0; i < 5; i++) do cs = hanChot(cs, -1, "N", lich); while (!laNgayLamViec(cs, lich));
+  return cs;
+}
+
+export interface DongLichCuongChe {
+  ngayDuKien: string;
+  thang: string;
+  c: CuongChe;
+  h: Ho;
+  hanCongAn: string;
+  /** Điều kiện về thời điểm bị vi phạm (ngày nghỉ, khoảng Tết, sau hạn thi hành…) */
+  canhBao: string[];
+}
+
+/** 1.2.0 (B2): lịch cưỡng chế — hồ sơ chưa kết thúc có ngày dự kiến, theo thứ tự ngày, kèm hạn gửi Công an và cảnh báo thời điểm. */
+export function lichCuongChe(hos: Ho[], homNay: string, lich: LichLamViec): DongLichCuongChe[] {
+  return hos
+    .flatMap((h) => (h.cuongChe ?? []).filter((c) => c.ngayDuKien && !c.ketQua).map((c) => ({ h, c })))
+    .map(({ h, c }) => ({
+      ngayDuKien: c.ngayDuKien!,
+      thang: c.ngayDuKien!.slice(0, 7),
+      c,
+      h,
+      hanCongAn: hanGuiCongAn(c.ngayDuKien!, lich),
+      canhBao: kiemCuongChe(c, h, homNay, lich).filter((m) => m.muc === "CAO" && /dự kiến/.test(m.noiDung)).map((m) => m.noiDung),
+    }))
+    .sort((a, b) => a.ngayDuKien.localeCompare(b.ngayDuKien));
+}
+
 /** Đối chiếu điều kiện, thời hạn của một hồ sơ cưỡng chế. */
 export function kiemCuongChe(c: CuongChe, h: Ho, homNay: string, lich: LichLamViec): MucKiemCc[] {
   const out: MucKiemCc[] = [];
@@ -120,8 +152,7 @@ export function kiemCuongChe(c: CuongChe, h: Ho, homNay: string, lich: LichLamVi
     out.push({ muc: "CAO", noiDung: `Quá hạn thi hành quyết định cưỡng chế (hạn ${vn(han)}, ${Math.max(10, c.hanThiHanhNgay ?? 10)} ngày kể từ ngày nhận quyết định / lập biên bản)`, canCu: cc("khoản 3") });
   if (c.ngayDuKien && !c.ketQua) {
     // 1.0.21 (C2): đề nghị Công an bảo đảm trật tự phải gửi trước thời điểm cưỡng chế 05 ngày làm việc (Điều 37 NĐ 102/2024)
-    let cs = c.ngayDuKien;
-    for (let i = 0; i < 5; i++) do cs = hanChot(cs, -1, "N", lich); while (!laNgayLamViec(cs, lich));
+    const cs = hanGuiCongAn(c.ngayDuKien, lich);
     out.push({ muc: "THONG_TIN", noiDung: `Nếu cần Công an tham gia bảo đảm trật tự: gửi văn bản đến cơ quan Công an cùng cấp chậm nhất ${vn(cs)} (trước thời điểm cưỡng chế 05 ngày làm việc)${c.loai === "KIEM_DEM" ? "; Ban cưỡng chế kiểm đếm bắt buộc vận động, thuyết phục, đối thoại trong 05 ngày làm việc (k2 Điều 36 NĐ 102/2024)" : ""}`, canCu: "Điều 37 NĐ 102/2024/NĐ-CP" });
     if (han && c.ngayDuKien > han) out.push({ muc: "CAO", noiDung: `Ngày dự kiến cưỡng chế ${vn(c.ngayDuKien)} sau hạn thi hành ${vn(han)}`, canCu: cc("khoản 3") });
     if (c.ngayHieuLuc && c.ngayDuKien < c.ngayHieuLuc) out.push({ muc: "CAO", noiDung: `Ngày dự kiến cưỡng chế ${vn(c.ngayDuKien)} trước ngày quyết định có hiệu lực ${vn(c.ngayHieuLuc)}`, canCu: cc("điểm c khoản 2") });

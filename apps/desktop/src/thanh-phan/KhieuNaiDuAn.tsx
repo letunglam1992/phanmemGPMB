@@ -4,6 +4,7 @@ import type { DuAn, Ho } from "../mo-hinh";
 import { TEN_TT_DON, canhBaoThuTucDon, hanDon, thongKeDon } from "../khieu-nai";
 import { homNayIso } from "../trang-thai";
 import { xuatExcelKhieuNai } from "../xuat-excel";
+import { TEN_LOAI_CC, lichCuongChe } from "../cuong-che";
 
 const vn = (iso?: string) => (iso ? iso.split("-").reverse().join("/") : "");
 
@@ -24,6 +25,7 @@ export function TheKhieuNaiDuAn({ duAn, hos }: { duAn: DuAn; hos: Ho[] }) {
         .filter((x) => x.tt === "QUA_HAN" || x.tt === "QUA_HAN_THU_LY" || x.tt === "TAM_DINH_CHI" || x.thuTuc.length),
     [hos, homNay, lich],
   );
+  const lichCc = useMemo(() => lichCuongChe(hos, homNay, lich), [hos, homNay, lich]);
   if (!tk.tong && !cc.length) return null;
   return (
     <div className="the" data-the-khieu-nai-du-an>
@@ -51,6 +53,25 @@ export function TheKhieuNaiDuAn({ duAn, hos }: { duAn: DuAn; hos: Ho[] }) {
             ))}
             {canChu.length > 8 && <li>… và {canChu.length - 8} đơn khác (xem trong tệp Excel)</li>}
           </ul>
+        )}
+        {lichCc.length > 0 && (
+          <div data-lich-cuong-che style={{ marginTop: 8 }}>
+            <b className="chu-nho">Lịch cưỡng chế (hồ sơ chưa kết thúc)</b>
+            <table className="bang chu-nho" style={{ marginTop: 4 }}>
+              <thead><tr><th>Ngày dự kiến</th><th>Hộ</th><th>Loại</th><th title="Điều 37 NĐ 102/2024: trước thời điểm cưỡng chế 05 ngày làm việc">Gửi Công an chậm nhất</th><th>Lưu ý thời điểm</th></tr></thead>
+              <tbody>
+                {lichCc.map((x) => (
+                  <tr key={x.c.id} data-thang={x.thang}>
+                    <td>{vn(x.ngayDuKien)}</td>
+                    <td><button className="nut nut-nho nut-chu" onClick={() => di({ ten: "ho", duAnId: duAn.id, hoId: x.h.id, tab: "khieu-nai" })}>{x.h.ma} – {x.h.ten}</button></td>
+                    <td>{TEN_LOAI_CC[x.c.loai].replace("Cưỡng chế thực hiện quyết định ", "")}</td>
+                    <td style={x.hanCongAn < homNay ? { color: "var(--do-to)" } : undefined}>{vn(x.hanCongAn)}</td>
+                    <td style={x.canhBao.length ? { color: "var(--do-to)" } : undefined}>{x.canhBao.join("; ") || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { hanDon, hanGuiQd, soNgayGiaiQuyet, soNgayThuLy, thongKeDon, type DonKhieuNai } from "../src/khieu-nai";
-import { hanBanGiaoSauChapHanh, hanThiHanh, kiemCuongChe, nghiTet, ngaySomNhatQdThuHoi, trongKhoangTet, type CuongChe } from "../src/cuong-che";
+import { hanGuiCongAn, lichCuongChe, hanBanGiaoSauChapHanh, hanThiHanh, kiemCuongChe, nghiTet, ngaySomNhatQdThuHoi, trongKhoangTet, type CuongChe } from "../src/cuong-che";
 import { LICH_TRONG, hanChotNgay, type LichLamViec } from "../src/lich-lam-viec";
 import type { Ho } from "../src/mo-hinh";
 
@@ -140,5 +140,19 @@ describe("Cưỡng chế — Điều 88, 89, điểm b k7 Điều 87 LĐĐ 2024 
     expect(trongKhoangTet("2028-02-11", LICH_TRONG)).toBeNull();
     const c: CuongChe = { id: "c", loai: "THU_HOI", ngayDuKien: "2027-02-15" };
     expect(kiemCuongChe(c, ho(), "2027-01-01", lich).some((k) => /nghỉ Tết Âm lịch/.test(k.noiDung) && k.canCu === "điểm b khoản 1 Điều 89 Luật Đất đai 2024")).toBe(true);
+  });
+  it("1.2.0 (B2): lịch cưỡng chế — theo ngày dự kiến, hạn gửi Công an 05 ngày làm việc trước, cảnh báo ngày nghỉ", () => {
+    // thứ Hai 16/11/2026 → lùi 05 ngày làm việc: 13, 12, 11, 10, 09/11 → 09/11/2026
+    expect(hanGuiCongAn("2026-11-16", LICH_TRONG)).toBe("2026-11-09");
+    const hos = [
+      ho({ id: "a", cuongChe: [{ id: "c1", loai: "THU_HOI", ngayDuKien: "2026-11-21" }, { id: "c2", loai: "THU_HOI", ngayDuKien: "2026-11-30", ketQua: "CHAP_HANH" }] }),
+      ho({ id: "b", cuongChe: [{ id: "c3", loai: "KIEM_DEM", ngayDuKien: "2026-11-16" }] }),
+    ];
+    const l = lichCuongChe(hos, "2026-11-01", LICH_TRONG);
+    expect(l.map((x) => x.c.id)).toEqual(["c3", "c1"]);
+    expect(l[0]!.thang).toBe("2026-11");
+    // 21/11/2026 là thứ Bảy → cảnh báo ngày nghỉ
+    expect(l[1]!.canhBao.some((c) => c.includes("ngày nghỉ"))).toBe(true);
+    expect(l[0]!.canhBao).toEqual([]);
   });
 });

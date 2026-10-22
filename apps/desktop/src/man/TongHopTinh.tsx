@@ -498,6 +498,8 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
   };
 
   const tong = (f: (d: DongTongHop) => number) => hien.reduce((s, d) => s + f(d), 0);
+  // 1.2.0 (B1): đơn khiếu nại quá hạn của các đơn vị (gói từ 1.2.0 — chỉ ngày nhận, khâu, hạn, căn cứ)
+  const donQuaHan = hien.filter((d) => d.quaHan?.some((q) => q.doiTuong.startsWith("Đơn "))).map((d) => ({ ...d, quaHan: d.quaHan!.filter((q) => q.doiTuong.startsWith("Đơn ")) }));
   const tongTien = hien.reduce((s, d) => s.plus(D(d.tongTamTinh)), D(0));
 
   return (
@@ -579,9 +581,9 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
             <div><b>{tong((d) => d.theoTrangThai.HOAN_THANH ?? 0)}</b><span>đã bàn giao mặt bằng</span></div>
             <div><b>{tong((d) => d.soVuongMac)}</b><span>hộ có vướng mắc</span></div>
             <div><b>{dinhDang(tongTien.div(1e9), 2)}</b><span>tỷ đồng tạm tính</span></div>
-            {hien.some((d) => d.khieuNai?.tong) && <div data-tong-khieu-nai title={`Đã giải quyết ${tong((d) => d.khieuNai?.daGiaiQuyet ?? 0)} đơn (gói từ bản 1.0.20)`}><b style={tong((d) => d.khieuNai?.quaHan ?? 0) ? { color: "var(--do-to)" } : undefined}>{tong((d) => d.khieuNai?.dangGiaiQuyet ?? 0)}</b><span>đơn khiếu nại, kiến nghị đang giải quyết{tong((d) => d.khieuNai?.quaHan ?? 0) ? ` (${tong((d) => d.khieuNai?.quaHan ?? 0)} quá hạn)` : ""}{tong((d) => d.khieuNai?.tamDinhChi ?? 0) ? ` (${tong((d) => d.khieuNai?.tamDinhChi ?? 0)} tạm đình chỉ — gói từ bản 1.1.0)` : ""}</span></div>}
+            {hien.some((d) => d.khieuNai?.tong) && <div data-tong-khieu-nai className={donQuaHan.length ? "co-the-chon" : undefined} role={donQuaHan.length ? "button" : undefined} tabIndex={donQuaHan.length ? 0 : undefined} onClick={() => donQuaHan.length && setXemQuaHan(donQuaHan)} onKeyDown={(e) => e.key === "Enter" && donQuaHan.length && setXemQuaHan(donQuaHan)} title={`Đã giải quyết ${tong((d) => d.khieuNai?.daGiaiQuyet ?? 0)} đơn (gói từ bản 1.0.20)${donQuaHan.length ? " — bấm để xem đơn quá hạn (không có tên hộ; gói từ bản 1.2.0)" : ""}`}><b style={tong((d) => d.khieuNai?.quaHan ?? 0) ? { color: "var(--do-to)" } : undefined}>{tong((d) => d.khieuNai?.dangGiaiQuyet ?? 0)}</b><span>đơn khiếu nại, kiến nghị đang giải quyết{tong((d) => d.khieuNai?.quaHan ?? 0) ? ` (${tong((d) => d.khieuNai?.quaHan ?? 0)} quá hạn)` : ""}{tong((d) => d.khieuNai?.tamDinhChi ?? 0) ? ` (${tong((d) => d.khieuNai?.tamDinhChi ?? 0)} tạm đình chỉ — gói từ bản 1.1.0)` : ""}</span></div>}
             {hien.some((d) => d.banGiaoThucDia) && <div data-tong-ban-giao-thuc-dia title="Mẫu 06 NĐ 102/2024/NĐ-CP (gói từ bản 1.1.0)"><b>{hien.filter((d) => d.banGiaoThucDia).length}</b><span>dự án đã bàn giao đất trên thực địa cho chủ đầu tư</span></div>}
-            {hien.some((d) => d.cuongChe) && <div data-tong-cuong-che title={`Cưỡng chế kiểm đếm ${tong((d) => d.cuongChe?.kiemDem ?? 0)}, cưỡng chế thu hồi ${tong((d) => d.cuongChe?.thuHoi ?? 0)} hồ sơ`}><b>{tong((d) => d.cuongChe?.dangThucHien ?? 0)}</b><span>hồ sơ cưỡng chế đang thực hiện</span></div>}
+            {hien.some((d) => d.cuongChe) && <div data-tong-cuong-che title={`Cưỡng chế kiểm đếm ${tong((d) => d.cuongChe?.kiemDem ?? 0)}, cưỡng chế thu hồi ${tong((d) => d.cuongChe?.thuHoi ?? 0)} hồ sơ`}><b>{tong((d) => d.cuongChe?.dangThucHien ?? 0)}</b><span>hồ sơ cưỡng chế đang thực hiện{tong((d) => d.cuongChe?.duKien30Ngay ?? 0) ? ` (${tong((d) => d.cuongChe?.duKien30Ngay ?? 0)} dự kiến trong 30 ngày tới)` : ""}</span></div>}
             {hien.some((d) => d.quaHan?.length) && <div className="co-the-chon" role="button" tabIndex={0} data-tong-qua-han title="Bấm để xem chi tiết" onClick={() => setXemQuaHan(hien.filter((d) => d.quaHan?.length))} onKeyDown={(e) => e.key === "Enter" && setXemQuaHan(hien.filter((d) => d.quaHan?.length))}><b style={{ color: "var(--do-to)" }}>{tong((d) => d.quaHan?.length ?? 0)}</b><span>khâu thủ tục quá hạn</span></div>}
           </div>
           {!dong.length ? <div className="trong">Chưa nhận gói nào. Gửi tệp khóa công khai cho các xã, phường; khi nhận được gói, chọn tệp ở ô "Nhận gói".</div> : (
