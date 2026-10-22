@@ -26,6 +26,7 @@ export const NGUON = [
   ["policy/nguon/nd124-2020-khieu-nai.md", "Nghị định 124/2020/NĐ-CP (thi hành Luật Khiếu nại)", "VAN_BAN", "Phụ lục"],
   ["policy/nguon/nd155-2026-sua-nd124.md", "Nghị định 155/2026/NĐ-CP (sửa NĐ 124/2020, hiệu lực 01/7/2026)", "VAN_BAN", "PHỤ LỤC"],
   ["policy/nguon/nd151-2025-phan-dinh-tham-quyen-dat-dai.md", "Nghị định 151/2025/NĐ-CP (phân định thẩm quyền đất đai; Phụ lục I Phần II — thu hồi đất, bồi thường)", "VAN_BAN", "PHỤ LỤC I", ["Phần II", "Phần III"]],
+  ["policy/nguon/luat-to-tung-hanh-chinh-vbhn-109-2025.md", "Luật Tố tụng hành chính (VBHN 109/VBHN-VPQH ngày 27/8/2025) — Chương I, II, IX", "VAN_BAN", "Chương III", ["Chương IX", "Chương X"]],
   ["policy/nguon/qd1966-2025-so-tay-gpmb.md", "QĐ 1966/QĐ-UBND – Sổ tay trình tự, thủ tục bồi thường, hỗ trợ, TĐC (tỉnh Sơn La)", "VAN_BAN", "PHẦN III"],
   ["policy/nguon/nq152-can-doi-chieu.md", "NQ 152/2025 – bảng giá đất (dòng cần đối chiếu)", "VAN_BAN"],
   ["docs/05-quy-trinh-thoi-han.md", "Quy trình, thời hạn (tài liệu phần mềm)", "NGHIEP_VU"],

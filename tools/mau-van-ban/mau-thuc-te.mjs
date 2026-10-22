@@ -845,7 +845,120 @@ MAU.T25 = () => [
   ],
 ];
 
-const DANH_SACH = { T1: "tt-ke-hoach", T8: "tt-tb-du-kien-tdc", T9: "tt-tb-cong-bo-tdc", T10: "tt-to-trinh-cham-tra", T11: "tt-qd-cham-tra", T12: "tt-bb-doi-thoai", T13: "tt-bb-boc-tham-tdc", T14: "tt-qd-giai-quyet-kn", T15: "tt-bb-van-dong-ban-giao", T16: "tt-qd-ban-cuong-che", T17: "tt-pa-cuong-che", T18: "tt-tb-thu-ly-kn", T19: "tt-tb-khong-thu-ly-kn", T20: "tt-bb-doi-thoai-kn", T21: "tt-qd-tam-dinh-chi-kn", T22: "tt-qd-tiep-tuc-kn", T23: "tt-bb-ban-giao-dat-thuc-dia", T24: "tt-tb-doi-thoai-kn", T25: "tt-qd-giai-quyet-kn-lan-hai", T2: "tt-to-trinh-tb", T3: "tt-thong-bao", T4: "tt-to-trinh-pa-ho", T5: "tt-qd-pa-ho", T6: "tt-to-trinh-thu-hoi", T7: "tt-qd-thu-hoi" };
+
+/**
+ * 1.2.0 (A2) — T26 Quyết định phê duyệt phương án theo Mẫu số 44 Phụ lục II NĐ 151/2025/NĐ-CP (thẩm quyền Chủ tịch UBND cấp xã —
+ * điểm d khoản 1 Điều 5): Điều 1 gồm (1) phương án đối với dự án (khoản 1 Điều 3 NĐ 88/2024), (2) phương án chi tiết đối với từng người
+ * có đất thu hồi (khoản 2 Điều 3 NĐ 88/2024) — biểu kèm theo từng người, số tiền lấy từ kết quả tính của hộ.
+ */
+MAU.T26 = () => [
+  [
+    dauVanBan({ coQuan: UBND_XA, so: "Số: {so}/QĐ-UBND" }),
+    ...tenVanBan("QUYẾT ĐỊNH", "Về việc phê duyệt phương án bồi thường, hỗ trợ, tái định cư khi Nhà nước thu hồi đất\nđể thực hiện dự án {ten_du_an}{#co_pham_vi} ({pham_vi_dot}){/co_pham_vi}"),
+    giua("CHỦ TỊCH ỦY BAN NHÂN DÂN {TEN_XA}", { dam: true, truoc: 120 }),
+    ...CAN_CU(),
+    P("Theo đề nghị của {ten_phong} tại Tờ trình số {to_trinh_so} ngày {to_trinh_ngay},", { nghieng: true }),
+    giua("QUYẾT ĐỊNH:", { dam: true, truoc: 120 }),
+    P("**Điều 1.** Phê duyệt phương án bồi thường, hỗ trợ, tái định cư khi Nhà nước thu hồi đất để thực hiện dự án {ten_du_an}{#co_pham_vi} ({pham_vi_dot}){/co_pham_vi}, bao gồm:"),
+    P("**1. Phương án bồi thường, hỗ trợ, tái định cư đối với dự án {ten_du_an} theo quy định tại khoản 1 Điều 3 của Nghị định số 88/2024/NĐ-CP ngày 15 tháng 7 năm 2024 của Chính phủ quy định về bồi thường, hỗ trợ, tái định cư khi Nhà nước thu hồi đất:**"),
+    muc("a) Tổng diện tích đất thu hồi: {tong_dt_thu_hoi} m²; số đối tượng có đất thu hồi: {so_doi_tuong_pa}; địa điểm: {dia_diem_du_an};"),
+    muc("b) Phương án đào tạo, chuyển đổi nghề và tìm kiếm việc làm: {pa_chuyen_doi_nghe};"),
+    muc("c) Phương án bố trí tái định cư: {pa_tai_dinh_cu};"),
+    muc("d) Phương án bồi thường bằng đất: {pa_boi_thuong_dat};"),
+    muc("đ) Phương án di dời mồ mả: {pa_mo_ma};"),
+    muc("e) Phương án di chuyển công trình hạ tầng: {pa_ha_tang};"),
+    muc("g) Tổng kinh phí bồi thường, hỗ trợ, tái định cư: {tong_gia_tri} đồng (bằng chữ: {tong_gia_tri_chu}); chi phí bảo đảm cho việc tổ chức thực hiện bồi thường, hỗ trợ, tái định cư: {chi_phi_to_chuc} đồng; chi phí khác: {chi_phi_khac};"),
+    muc("h) Tiến độ thực hiện: {tien_do_thuc_hien}."),
+    P("**2. Phương án chi tiết bồi thường, hỗ trợ, tái định cư đối với từng người có đất thu hồi, chủ sở hữu tài sản theo quy định tại khoản 2 Điều 3 của Nghị định số 88/2024/NĐ-CP ngày 15 tháng 7 năm 2024 của Chính phủ quy định về bồi thường, hỗ trợ, tái định cư khi Nhà nước thu hồi đất:** {so_doi_tuong_pa}; tổng kinh phí {tong_gia_tri} đồng (chi tiết tại biểu kèm theo)."),
+    P("**3. Các nội dung khác (nếu có):** {noi_dung_khac}"),
+    P("**Điều 2.** Nhiệm vụ, trách nhiệm của các bên có liên quan:"),
+    P("1. {ten_don_vi_bt} có trách nhiệm phối hợp với chủ đầu tư dự án, {ten_phong} và Ủy ban nhân dân {ten_xa} phổ biến và niêm yết công khai quyết định này; giao quyết định này đến từng người có đất thu hồi, chủ sở hữu tài sản; chi trả tiền bồi thường, hỗ trợ, tái định cư theo phương án được phê duyệt trong thời hạn 30 ngày kể từ ngày quyết định này có hiệu lực."),
+    P("2. {trach_nhiem_nguoi_co_dat}"),
+    P("**Điều 3.** Quyết định này có hiệu lực kể từ ngày {ngay_hieu_luc}."),
+    P("**Điều 4.** {co_quan_thi_hanh} và các tổ chức, cá nhân có tên tại biểu kèm theo chịu trách nhiệm thi hành Quyết định này./."),
+    kyVanBan(),
+  ],
+  [
+    ...TIEU_DE_BIEU("PHƯƠNG ÁN CHI TIẾT BỒI THƯỜNG, HỖ TRỢ, TÁI ĐỊNH CƯ ĐỐI VỚI TỪNG NGƯỜI CÓ ĐẤT THU HỒI", KT.QD),
+    bieu(
+      "ds_ho_pa",
+      [
+        { tieuDe: "STT", truong: "{stt}", rong: 5 },
+        { tieuDe: "Họ và tên", truong: "{ho_ten}", rong: 22, canh: AlignmentType.LEFT },
+        { tieuDe: "Địa chỉ", truong: "{dia_chi}", rong: 20, canh: AlignmentType.LEFT },
+        { tieuDe: "Tờ/thửa", truong: "{to_thua}", rong: 12, canh: AlignmentType.LEFT },
+        { tieuDe: "Diện tích thu hồi (m²)", truong: "{dt_thu_hoi}", rong: 11, canh: AlignmentType.RIGHT, tong: "ds_ho_pa_tong_dt" },
+        { tieuDe: "Kinh phí bồi thường, hỗ trợ, tái định cư (đồng)", truong: "{tong_tien}", rong: 16, canh: AlignmentType.RIGHT, tong: "ds_ho_pa_tong_tien" },
+        { tieuDe: "Ghi chú", truong: "{ghi_chu}", rong: 14, canh: AlignmentType.LEFT },
+      ],
+      true,
+    ),
+  ],
+];
+
+/**
+ * 1.2.0 (B3) — T27 Biên bản cưỡng chế thu hồi đất: ghi nhận sự chấp hành hoặc việc tổ chức thực hiện cưỡng chế (điểm b, c, d khoản 4
+ * Điều 89 Luật Đất đai 2024); T28 Biên bản bàn giao bảo quản tài sản (khoản 2 Điều 38 NĐ 102/2024 — nội dung bắt buộc của biên bản).
+ * Không có mẫu luật định — bố cục theo NĐ 30/2020, câu chữ nghĩa vụ trích nguyên văn.
+ */
+MAU.T27 = () => [
+  [
+    ...quocHieu({ ngay: true }),
+    ...tenVanBan("BIÊN BẢN", "Cưỡng chế thực hiện quyết định thu hồi đất\nđối với {doi_tuong_goi} {ho_ten}"),
+    P("Căn cứ khoản 4 Điều 89 Luật Đất đai năm 2024;", { nghieng: true, truoc: 120 }),
+    CC_QD_THU_HOI(),
+    CC_QD_CUONG_CHE(),
+    P("Căn cứ Quyết định số {cc_qd_ban} về việc thành lập Ban cưỡng chế thu hồi đất;", { nghieng: true }),
+    P("Hôm nay, vào hồi {thoi_diem}, tại {dia_diem_lam_viec}, Ban cưỡng chế thu hồi đất tổ chức thực hiện Quyết định cưỡng chế số {cc_so_qd} ngày {cc_ngay_qd}, gồm:"),
+    P("**I. THÀNH PHẦN**"),
+    ...thanhPhan([
+      ["Ban cưỡng chế thu hồi đất:", "tp_ban"],
+      ["Đại diện Ủy ban Mặt trận Tổ quốc Việt Nam (giám sát — điểm d khoản 4 Điều 89):", "tp_mttq"],
+      ["Lực lượng bảo vệ trật tự, an toàn (nếu có):", "tp_cong_an"],
+      ["Người bị cưỡng chế, người có liên quan:", "tp_nguoi_bi_cc"],
+      ["Người chứng kiến:", "tp_chung_kien"],
+    ]),
+    P("**II. NỘI DUNG**"),
+    P("1. Khu đất cưỡng chế: {thua_mo_ta}; diện tích thu hồi {dt_thu_hoi} m² (chi tiết tại bảng dưới)."),
+    BANG_THUA_HO(),
+    P("2. Kết quả vận động, thuyết phục, đối thoại với người bị cưỡng chế: {ket_qua_van_dong}", { truoc: 120 }),
+    P("3. Kết quả: {ket_qua_cc_chu}"),
+    P("{dien_bien_cc}"),
+    P("4. Tài sản trên đất: {tai_san_tren_dat}"),
+    P("5. Ý kiến của người bị cưỡng chế, người có liên quan: {y_kien}"),
+    P("Trường hợp người bị cưỡng chế chấp hành: việc bàn giao đất được thực hiện chậm nhất là 30 ngày kể từ ngày lập biên bản này (điểm b khoản 4 Điều 89 Luật Đất đai năm 2024).", { nghieng: true }),
+    P("Biên bản kết thúc vào hồi {gio_ket_thuc} cùng ngày, đã đọc lại cho các thành phần tham gia cùng nghe và ký tên dưới đây. Người vắng mặt hoặc từ chối ký: {tu_choi_ky}./."),
+    kyBienBan(["TRƯỞNG BAN CƯỠNG CHẾ\nTHU HỒI ĐẤT", "ĐẠI DIỆN ỦY BAN MTTQ VIỆT NAM", "NGƯỜI BỊ CƯỠNG CHẾ", "NGƯỜI CHỨNG KIẾN"]),
+  ],
+];
+
+MAU.T28 = () => [
+  [
+    ...quocHieu({ ngay: true }),
+    ...tenVanBan("BIÊN BẢN", "Bàn giao bảo quản tài sản khi cưỡng chế thu hồi đất\nđối với {doi_tuong_goi} {ho_ten}"),
+    P("Căn cứ điểm c khoản 4, điểm b khoản 5 Điều 89 Luật Đất đai năm 2024; Điều 38 Nghị định số 102/2024/NĐ-CP ngày 30 tháng 7 năm 2024 của Chính phủ;", { nghieng: true, truoc: 120 }),
+    CC_QD_CUONG_CHE(),
+    P("Hôm nay, vào hồi {thoi_diem}, tại {dia_diem_lam_viec}, Ban cưỡng chế thu hồi đất tiến hành bàn giao bảo quản tài sản của người bị cưỡng chế, gồm:"),
+    P("**I. THÀNH PHẦN**"),
+    ...thanhPhan([
+      ["Người chủ trì thực hiện quyết định cưỡng chế:", "tp_chu_tri"],
+      ["Cá nhân, đại diện tổ chức bị cưỡng chế:", "tp_nguoi_bi_cc"],
+      ["Người được giao bảo quản tài sản:", "tp_bao_quan"],
+      ["Người chứng kiến việc bàn giao:", "tp_chung_kien"],
+    ]),
+    P("**II. TÀI SẢN BÀN GIAO BẢO QUẢN** (số lượng, tình trạng (chất lượng) tài sản)"),
+    ...lap("ds_tai_san_bq", "- {.}", { trai: 567, thut: 0, sau: 40 }),
+    P("**III. QUYỀN VÀ NGHĨA VỤ CỦA NGƯỜI ĐƯỢC GIAO BẢO QUẢN TÀI SẢN**", { truoc: 120 }),
+    P("{quyen_nghia_vu_bao_quan}"),
+    P("Người được giao bảo quản tài sản gây hư hỏng, đánh tráo, làm mất hoặc hủy hoại tài sản thì phải chịu trách nhiệm bồi thường và tùy theo tính chất, mức độ vi phạm sẽ bị xử lý theo quy định của pháp luật (điểm d khoản 2 Điều 38 Nghị định số 102/2024/NĐ-CP). Chi phí bảo quản tài sản (nếu có) do chủ sở hữu chịu trách nhiệm thanh toán và được trừ vào tiền bồi thường, hỗ trợ, tái định cư trước khi chi trả (điểm c khoản 2 Điều 38)."),
+    P("**IV. THỜI GIAN BÀN GIAO BẢO QUẢN:** {thoi_gian_bao_quan}"),
+    P("Sau khi bàn giao, Ban cưỡng chế thu hồi đất gửi thông báo cho chủ sở hữu tài sản đến nhận tài sản trong thời hạn 60 ngày (khoản 3 Điều 38 Nghị định số 102/2024/NĐ-CP)."),
+    P("Biên bản lập thành {so_ban} bản, giao cho người được giao bảo quản tài sản, cá nhân, đại diện tổ chức bị cưỡng chế, người chứng kiến và người chủ trì thực hiện mỗi người giữ 01 bản. Người vắng mặt hoặc từ chối ký: {tu_choi_ky}./."),
+    kyBienBan(["TRƯỞNG BAN CƯỠNG CHẾ\nTHU HỒI ĐẤT", "NGƯỜI ĐƯỢC GIAO\nBẢO QUẢN TÀI SẢN", "NGƯỜI BỊ CƯỠNG CHẾ", "NGƯỜI CHỨNG KIẾN"]),
+  ],
+];
+
+const DANH_SACH = { T1: "tt-ke-hoach", T8: "tt-tb-du-kien-tdc", T9: "tt-tb-cong-bo-tdc", T10: "tt-to-trinh-cham-tra", T11: "tt-qd-cham-tra", T12: "tt-bb-doi-thoai", T13: "tt-bb-boc-tham-tdc", T14: "tt-qd-giai-quyet-kn", T15: "tt-bb-van-dong-ban-giao", T16: "tt-qd-ban-cuong-che", T17: "tt-pa-cuong-che", T18: "tt-tb-thu-ly-kn", T19: "tt-tb-khong-thu-ly-kn", T20: "tt-bb-doi-thoai-kn", T21: "tt-qd-tam-dinh-chi-kn", T22: "tt-qd-tiep-tuc-kn", T23: "tt-bb-ban-giao-dat-thuc-dia", T24: "tt-tb-doi-thoai-kn", T25: "tt-qd-giai-quyet-kn-lan-hai", T26: "tt-qd-pa-mau-44", T27: "tt-bb-cuong-che-thu-hoi", T28: "tt-bb-bao-quan-tai-san", T2: "tt-to-trinh-tb", T3: "tt-thong-bao", T4: "tt-to-trinh-pa-ho", T5: "tt-qd-pa-ho", T6: "tt-to-trinh-thu-hoi", T7: "tt-qd-thu-hoi" };
 for (const [ma, tep] of Object.entries(DANH_SACH)) {
   const [chinh, phu] = MAU[ma]();
   const buf = await Packer.toBuffer(taoDoc(chinh, phu));

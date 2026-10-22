@@ -154,15 +154,16 @@ describe("1.0.21 (B2) — mẫu văn bản khiếu nại, cưỡng chế tự đ
         { id: "k2", loai: "KHIEU_NAI", lan: 2, ngayNhan: "2026-10-10", doiTuong: "Quyết định số 30/QĐ-UBND", noiDung: "Không đồng ý kết quả lần đầu" },
       ],
     };
-    const t25 = tao("T25", h2, duAn, { kn2_thoi_han_khoi_kien: "theo Luật Tố tụng hành chính" });
+    const t25 = tao("T25", h2, duAn, {});
     expect(t25.chu).toContain("CHỦ TỊCH ỦY BAN NHÂN DÂN TỈNH SƠN LA");
     expect(t25.chu).toContain("Không đồng ý kết quả lần đầu");
     expect(t25.chu).toContain("Quyết định số 30/QĐ-UBND ngày 01/10/2026");
     expect(t25.chu).not.toContain("{");
+    expect(t25.chu).toContain("Trong thời hạn 01 năm, kể từ ngày nhận được Quyết định này");
     expect(t25.canhBao.filter((c) => /lần hai|lần đầu|khởi kiện/.test(c))).toEqual([]);
     const thieu = tao("T25", h, duAn, {}).canhBao;
     expect(thieu.some((c) => c.includes("chưa có đơn khiếu nại lần hai"))).toBe(true);
-    expect(thieu.some((c) => c.includes("thời hạn khởi kiện"))).toBe(true);
+    expect(tao("T25", h2, duAn, { kn2_thoi_han_khoi_kien: "30 ngày" }).canhBao.some((c) => c.includes("Điều 116 Luật Tố tụng hành chính"))).toBe(true);
     const { ghiNguocVanBan } = await import("../src/ghi-nguoc-van-ban");
     const g = ghiNguocVanBan(h2, "T25", "45/QĐ-UBND", "2026-11-20")!.khieuNai!;
     expect(g[1]).toMatchObject({ soVb: "45/QĐ-UBND", ngayVb: "2026-11-20" });
@@ -193,5 +194,27 @@ describe("1.0.21 (B2) — mẫu văn bản khiếu nại, cưỡng chế tự đ
     expect(canhBaoThuTucDon({ ...dt, doiThoai: { ngay: "2026-10-15", ngayTb: "2026-10-10" } }, "2026-10-11", lich)).toEqual([]);
     expect(canhBaoThuTucDon({ ...dt, doiThoai: { ngay: "2026-10-15", ngayTb: "2026-10-12" } }, "2026-10-11", lich)[0]!.noiDung).toContain("chưa đủ 05 ngày");
     expect(canhBaoThuTucDon({ ...dt, ketQua: "DUNG" }, "2026-10-11", lich)).toEqual([]);
+  });
+
+  it("1.2.0 A2, B3 — T26 Mẫu 44 NĐ 151 (phương án dự án + biểu chi tiết từng người); T27 biên bản cưỡng chế; T28 bảo quản tài sản", () => {
+    const t26 = tao("T26", h, duAn, { trach_nhiem_nguoi_co_dat: "Người có đất thu hồi bàn giao đất theo quy định." });
+    expect(t26.chu).toContain("theo quy định tại khoản 1 Điều 3 của Nghị định số 88/2024/NĐ-CP");
+    expect(t26.chu).toContain("khoản 2 Điều 3 của Nghị định số 88/2024/NĐ-CP");
+    expect(t26.chu).toContain(h.ten);
+    expect(t26.chu).toContain("TỔNG CỘNG");
+    expect(t26.chu).not.toContain("{");
+    expect(DANH_MUC_MAU.find((m) => m.ma === "15")!.moTa).toContain("Mẫu số 47 Phụ lục II NĐ 151/2025/NĐ-CP");
+    expect(tao("T26", h, duAn, {}).canhBao.some((c) => c.includes("ghi chú 11 Mẫu 44"))).toBe(true);
+    const hc: Ho = { ...h, cuongChe: [{ ...h.cuongChe![0]!, ketQua: "CHAP_HANH", ngayKetQua: "2026-11-06" }] };
+    const t27 = tao("T27", hc, duAn, { tp_ban: "Ông A – Phó Chủ tịch UBND xã, Trưởng ban" });
+    expect(t27.chu).toContain("Người bị cưỡng chế chấp hành (ngày 06/11/2026)");
+    expect(t27.chu).toContain("Căn cứ Quyết định số 90/QĐ-UBND ngày 22/10/2026 về việc thành lập Ban cưỡng chế");
+    expect(t27.chu).toContain("chậm nhất là 30 ngày kể từ ngày lập biên bản");
+    expect(t27.chu).not.toContain("{");
+    expect(tao("T27", { ...h, cuongChe: [] }, duAn, {}).canhBao.some((c) => c.includes("chưa có hồ sơ cưỡng chế"))).toBe(true);
+    const t28 = tao("T28", h, duAn, { ds_tai_san_bq: "Tủ gỗ, 01 chiếc, còn tốt\nBàn ghế, 01 bộ, cũ" });
+    expect(t28.chu).toContain("- Tủ gỗ, 01 chiếc, còn tốt");
+    expect(t28.chu).toContain("trong thời hạn 60 ngày (khoản 3 Điều 38 Nghị định số 102/2024/NĐ-CP)");
+    expect(t28.chu).not.toContain("{");
   });
 });

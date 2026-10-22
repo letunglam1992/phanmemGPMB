@@ -124,6 +124,8 @@ export function TabKhieuNai({ h, duAn, doi, soanMau }: { h: Ho; duAn: DuAn; doi:
                     <button className="nut nut-nho" title="Điểm a, b khoản 7 Điều 87" onClick={() => soanMau("T15")}>Biên bản vận động (T15)</button>
                     <button className="nut nut-nho" title="Điểm a khoản 4 Điều 89" onClick={() => soanMau("T16")}>QĐ thành lập Ban (T16)</button>
                     <button className="nut nut-nho" title="Điểm b khoản 5, khoản 6 Điều 89" onClick={() => soanMau("T17")}>Phương án, dự toán (T17)</button>
+                    <button className="nut nut-nho" title="Điểm b, c khoản 4 Điều 89 — ghi nhận chấp hành / thực hiện cưỡng chế" onClick={() => soanMau("T27")}>Biên bản cưỡng chế (T27)</button>
+                    <button className="nut nut-nho" title="Khoản 2 Điều 38 NĐ 102/2024" onClick={() => soanMau("T28")}>BB bảo quản tài sản (T28)</button>
                   </>
                 )}
                 <button className="nut nut-nho nut-nguy" onClick={() => xoa("hồ sơ cưỡng chế", dsCc, c.id, (m) => ({ ...h, cuongChe: m }))}>Xóa</button>

@@ -349,7 +349,7 @@ export function ghepDuLieu(p: {
   }
   // 1.0.15: Quyết định phê duyệt phương án (mẫu 14) — căn cứ văn bản thẩm định đã ghi nhận ở bản phương án; số, ngày tờ trình
   // đề nghị phê duyệt (mẫu 13 / R4 đã ghi lại) điền ô "Tờ trình số" nếu còn trống. Chỉ dữ kiện đã ghi, không tự đặt nội dung.
-  if (p.mau.ma === "14") {
+  if (p.mau.ma === "14" || p.mau.ma === "T26") {
     const ban = banDaThamDinhVb(p.duAn, p.ds.map((x) => x.h.id));
     const t = ban?.thamDinh;
     if (t && t.yKien !== "KHONG_THONG_NHAT" && (t.so || t.ngay)) {
@@ -397,6 +397,29 @@ export function ghepDuLieu(p: {
     kq.moc_gioi = String(p.rieng.moc_gioi ?? "").split("\n").map((x) => x.trim().replace(/[;.]$/, "")).filter(Boolean);
     if (!String(kq.CO_QUAN_BAN_GIAO ?? "").trim()) kq.CO_QUAN_BAN_GIAO = "CƠ QUAN …………";
   }
+  // 1.2.0 (A2): T26 — biểu phương án chi tiết từng người (khoản 2 Điều 3 NĐ 88/2024): tổng tiền đã làm tròn của hộ (khoản Tạm tính)
+  if (p.mau.ma === "T26") {
+    kq.ds_ho_pa = p.ds.map(({ h, k }, i) => ({
+      stt: i + 1,
+      ho_ten: h.ten,
+      dia_chi: h.diaChi,
+      to_thua: h.thua.filter((t) => soD(t.dienTichThuHoi).gt(0)).map((t) => `${t.soTo}/${t.soThua}`).join(", "),
+      dt_thu_hoi: soM2(h.thua.reduce((s, t) => s.plus(soD(t.dienTichThuHoi)), D(0))),
+      tong_tien: tien(k.tong.tongLamTron),
+      ghi_chu: k.tong.duocChot ? "" : `${k.tong.soDongCanXacNhan + k.tong.soDongThieuCanCu} khoản chưa đủ căn cứ`,
+    }));
+    kq.ds_ho_pa_tong_dt = soM2(p.ds.reduce((s, { h }) => s.plus(h.thua.reduce((a, t) => a.plus(soD(t.dienTichThuHoi)), D(0))), D(0)));
+    kq.ds_ho_pa_tong_tien = tien(p.ds.reduce((s, { k }) => s.plus(k.tong.tongLamTron), D(0)));
+    if (!String(p.rieng.trach_nhiem_nguoi_co_dat ?? "").trim()) kq.trach_nhiem_nguoi_co_dat = "…………………………………………";
+  }
+  // 1.2.0 (B3): T27, T28 — người bị cưỡng chế mặc định là hộ; kết quả theo hồ sơ cưỡng chế thu hồi đất mới nhất
+  if (p.mau.ma === "T27" || p.mau.ma === "T28") {
+    if (!String(p.rieng.tp_nguoi_bi_cc ?? "").trim() && p.ho) kq.tp_nguoi_bi_cc = `${p.ho.h.ten}; địa chỉ: ${p.ho.h.diaChi || "…………"}`;
+    for (const t of ["tp_ban", "tp_mttq", "tp_cong_an", "tp_chung_kien", "tp_chu_tri", "tp_bao_quan", "ket_qua_van_dong", "dien_bien_cc", "tai_san_tren_dat", "y_kien", "quyen_nghia_vu_bao_quan", "thoi_gian_bao_quan"])
+      if (!String(kq[t] ?? "").trim()) kq[t] = "…………";
+    kq.ds_tai_san_bq = String(p.rieng.ds_tai_san_bq ?? "").split("\n").map((x) => x.trim()).filter(Boolean);
+    if (!(kq.ds_tai_san_bq as string[]).length) kq.ds_tai_san_bq = ["…………"];
+  }
   if (p.mau.ma === "T16") kq.thanh_vien_ban = String(p.rieng.thanh_vien_ban ?? "").split("\n").map((s) => s.trim()).filter(Boolean);
   if (p.mau.ma === "T17") Object.assign(kq, docDuToan(String(p.rieng.du_toan_kinh_phi ?? "")));
   const tenTo = (p.rieng.ten_to_ban_do || "tờ bản đồ số").trim();
@@ -433,7 +456,7 @@ function duLieuThucTe(p: { mau: MauVanBan; duAn: DuAn; ds: { h: Ho; k: KetQuaHo 
     ...(p.mau.ma === "T8" || p.mau.ma === "T9" ? duLieuBoTriTdc(p.duAn, p.ds) : {}),
     ...(p.mau.ma === "T12" && p.ho ? duLieuDoiThoai(p.ho.h) : {}),
     ...(p.mau.ma === "T13" ? duLieuBocTham(p.duAn, p.ds) : {}),
-    ...(p.ho && /^T(1[4-9]|2[0-2]|2[45])$/.test(p.mau.ma) ? duLieuKhieuNaiCuongChe(p.ho.h, p.ngayKy, p.duAn.xa, p.mau.ma) : {}),
+    ...(p.ho && /^T(1[4-9]|2[0-2]|2[4578])$/.test(p.mau.ma) ? duLieuKhieuNaiCuongChe(p.ho.h, p.ngayKy, p.duAn.xa, p.mau.ma) : {}),
     ...(p.mau.ma === "T10" ? { kinh_gui: `Chủ tịch Ủy ban nhân dân ${lower1(p.duAn.xa)}` } : {}),
     ...(p.mau.ma === "T10" || p.mau.ma === "T11" ? duLieuChamTra(p.duAn, p.ds, p.tyLeCham ?? [], p.ngayKy || new Date().toISOString().slice(0, 10)) : {}),
   };

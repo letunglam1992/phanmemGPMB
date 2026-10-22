@@ -272,9 +272,13 @@ export function kiemTraThongNhat(ma: string, duAn: DuAn, du: Record<string, unkn
   if (ma === "T21" && !du.kn_khong_co_don_kn && !du.kn_co_tdc && du.kn_loai_dinh_chi === "tạm đình chỉ") out.push("Đơn chưa ghi tạm đình chỉ (thẻ Khiếu nại → \"+ Tạm đình chỉ\") và chưa có kết quả đình chỉ — lý do để trống.");
   if (ma === "T22" && !du.kn_co_tdc) out.push("Đơn chưa ghi tạm đình chỉ — không có căn cứ ban hành quyết định tiếp tục giải quyết.");
   if (ma === "T24" && du.kn_tb_doi_thoai_thieu) out.push("Đơn chưa ghi ngày tổ chức đối thoại (thẻ Khiếu nại) — thời gian để trống; thông báo phải gửi trước ngày đối thoại ít nhất 05 ngày (khoản 1 Điều 28 NĐ 124/2020 sửa bởi NĐ 155/2026).");
+  if ((ma === "T27" || ma === "T28") && du.cc_khong_co) out.push("Hộ chưa có hồ sơ cưỡng chế thu hồi đất (thẻ Khiếu nại → + Cưỡng chế thu hồi đất) — số, ngày quyết định để trống.");
+  if (ma === "T27" && du.cc_khong_co !== true && !String(du.cc_qd_ban ?? "").trim()) out.push("Chưa ghi quyết định thành lập Ban cưỡng chế thu hồi đất (điểm a khoản 4 Điều 89 Luật Đất đai) ở hồ sơ cưỡng chế.");
+  if (ma === "T26" && /^…/.test(String(du.trach_nhiem_nguoi_co_dat ?? ""))) out.push("Chưa ghi trách nhiệm của người có đất thu hồi (khoản 2 Điều 2 — ghi chú 11 Mẫu 44 NĐ 151/2025).");
+  if (ma === "T26" && (du.ds_ho_pa as { ghi_chu: string }[] | undefined)?.some((x) => x.ghi_chu)) out.push("Có hộ còn khoản chưa đủ căn cứ — số tiền trong biểu chỉ gồm khoản Tạm tính; nên chốt phương án trước khi trình ký.");
   if (ma === "T25" && du.kn2_khong_co_don) out.push("Hộ chưa có đơn khiếu nại lần hai (thẻ Khiếu nại → Lần giải quyết: Lần hai) — nội dung đơn để trống.");
   if (ma === "T25" && du.kn2_khong_co_lan_dau) out.push("Chưa có đơn lần đầu đã ghi kết quả — mục II (kết quả giải quyết lần đầu) để trống, cán bộ ghi.");
-  if (ma === "T25" && !String(du.kn2_thoi_han_khoi_kien ?? "").trim()) out.push("Chưa ghi thời hạn khởi kiện ở Điều 3 — ghi theo Luật Tố tụng hành chính (phần mềm chưa có nguyên văn).");
+  if (ma === "T25" && !/01 năm|một năm/.test(String(du.kn2_thoi_han_khoi_kien ?? ""))) out.push("Thời hạn khởi kiện ở Điều 3 khác \"01 năm\" — thời hiệu khởi kiện quyết định giải quyết khiếu nại là 01 năm (điểm a khoản 3 Điều 116 Luật Tố tụng hành chính); kiểm tra lại.");
   if (/^T1[5-7]$/.test(ma) && du.cc_khong_co) out.push("Hộ chưa có hồ sơ cưỡng chế thu hồi đất (Hồ sơ hộ → thẻ Khiếu nại → Cưỡng chế) — thời gian vận động, số QĐ cưỡng chế để trống.");
   if ((ma === "T16" || ma === "T17") && !du.cc_khong_co && !String(du.cc_so_qd ?? "").trim()) out.push("Chưa ghi số quyết định cưỡng chế thực hiện quyết định thu hồi đất ở hồ sơ cưỡng chế của hộ.");
   if (ma === "T16" && !(Array.isArray(du.thanh_vien_ban) && du.thanh_vien_ban.length)) out.push("Chưa nhập thành viên Ban cưỡng chế (điểm a khoản 4 Điều 89 Luật Đất đai 2024).");
@@ -516,6 +520,8 @@ export function duLieuKhieuNaiCuongChe(h: Ho, ngayKy: string, xa: string, ma = "
     cc_ngay_qd: ngayVn(cc?.ngayQd),
     cc_ngay_du_kien: ngayVn(cc?.ngayDuKien),
     cc_qd_ban: cc?.qdBan ?? "",
+    // 1.2.0 (B3): T27 — kết quả theo hồ sơ cưỡng chế (điểm b khoản 4 Điều 89)
+    ket_qua_cc_chu: cc?.ketQua === "CHAP_HANH" ? `Người bị cưỡng chế chấp hành${cc.ngayKetQua ? ` (ngày ${ngayVn(cc.ngayKetQua)})` : ""}; Ban cưỡng chế lập biên bản ghi nhận sự chấp hành.` : cc?.ketQua === "DA_CUONG_CHE" ? `Người bị cưỡng chế không chấp hành; Ban cưỡng chế tổ chức thực hiện cưỡng chế${cc.ngayKetQua ? ` ngày ${ngayVn(cc.ngayKetQua)}` : ""}.` : "…………",
     ...(ma !== "T14" && ma !== "T25" && dk ? { kn_noi_dung: dk.noiDung } : {}),
     ...(ma === "T24" ? duLieuThongBaoDoiThoai(h, dk) : {}),
     ...(ma === "T25" ? duLieuLanHai(h, chu) : {}),
@@ -563,7 +569,7 @@ function duLieuThongBaoDoiThoai(h: Ho, dk: DonKhieuNai | undefined): Record<stri
 /**
  * 1.1.0 (A3): T25 — QĐ giải quyết khiếu nại lần hai (Mẫu 16 NĐ 124/2020): đơn lần hai mới nhất; mục II lấy kết quả đơn lần đầu
  * đã ghi. Người giải quyết lần hai mặc định Chủ tịch UBND tỉnh (khoản 2 Điều 21 Luật Khiếu nại sửa bởi Luật 136/2025 — trường hợp
- * người giải quyết lần đầu là Chủ tịch UBND cấp xã); thời hạn khởi kiện do cán bộ ghi theo Luật Tố tụng hành chính.
+ * người giải quyết lần đầu là Chủ tịch UBND cấp xã); thời hạn khởi kiện mặc định 01 năm (điểm a k3 Điều 116 Luật Tố tụng hành chính).
  */
 function duLieuLanHai(h: Ho, chu: (iso?: string) => string): Record<string, unknown> {
   const d2 = donChoMau(h, "T25");
@@ -580,5 +586,8 @@ function duLieuLanHai(h: Ho, chu: (iso?: string) => string): Record<string, unkn
     KN2_CHUC_DANH: "CHỦ TỊCH ỦY BAN NHÂN DÂN TỈNH SƠN LA",
     kn2_co_quan: "Chủ tịch Ủy ban nhân dân tỉnh Sơn La",
     kn2_ky_hieu: "UBND",
+    // 1.2.0 (A1): thời hiệu khởi kiện 01 năm kể từ ngày nhận được hoặc biết được QĐ giải quyết khiếu nại lần hai
+    // (điểm a khoản 3 Điều 116 Luật Tố tụng hành chính — VBHN 109/VBHN-VPQH ngày 27/8/2025); cán bộ sửa được
+    kn2_thoi_han_khoi_kien: "01 năm",
   };
 }

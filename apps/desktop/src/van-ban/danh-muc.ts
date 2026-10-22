@@ -94,15 +94,16 @@ export const DANH_MUC_MAU: MauVanBan[] = [
  * 1.0.21 (B1) — Đối chiếu Phụ lục NĐ 102/2024/NĐ-CP: mẫu 06, 07, 15, 22 của Sổ tay có bố cục theo Mẫu 01a, 01b, 01c, 01đ (cùng các
  * điều, khoản). Mẫu 07, 22: số liệu thời gian, ghi ngược số QĐ cưỡng chế vào hồ sơ cưỡng chế của hộ (thẻ Khiếu nại).
  */
-for (const [ma, mauNd102, ghiLai] of [
-  ["06", "01a (Quyết định kiểm đếm bắt buộc)", undefined],
-  ["07", "01b (Quyết định cưỡng chế kiểm đếm bắt buộc)", { khoa: "qd_cc_kiem_dem", capDo: "HO", kyHieu: "QĐ-UBND" }],
-  ["15", "01c (Quyết định thu hồi đất)", undefined],
-  ["22", "01đ (Quyết định cưỡng chế thu hồi đất)", { khoa: "qd_cc_thu_hoi", capDo: "HO", kyHieu: "QĐ-UBND" }],
+// 1.2.0 (A2): cùng bố cục Mẫu số 45, 46, 47, 48 Phụ lục II NĐ 151/2025/NĐ-CP (thẩm quyền Chủ tịch UBND cấp xã — Điều 5).
+for (const [ma, mauNd102, mauNd151, ghiLai] of [
+  ["06", "01a (Quyết định kiểm đếm bắt buộc)", "45", undefined],
+  ["07", "01b (Quyết định cưỡng chế kiểm đếm bắt buộc)", "46", { khoa: "qd_cc_kiem_dem", capDo: "HO", kyHieu: "QĐ-UBND" }],
+  ["15", "01c (Quyết định thu hồi đất)", "47", undefined],
+  ["22", "01đ (Quyết định cưỡng chế thu hồi đất)", "48", { khoa: "qd_cc_thu_hoi", capDo: "HO", kyHieu: "QĐ-UBND" }],
 ] as const) {
   const m = DANH_MUC_MAU.find((x) => x.ma === ma)!;
   const them = ma === "07" || ma === "22" ? " Thời gian bắt đầu lấy từ ngày dự kiến ở hồ sơ cưỡng chế của hộ (thẻ Khiếu nại); cấp số thì số, ngày được ghi vào hồ sơ cưỡng chế." : "";
-  m.moTa = `${m.moTa ? m.moTa + " " : ""}Bố cục tương ứng Mẫu số ${mauNd102} Phụ lục NĐ 102/2024/NĐ-CP.${them}`;
+  m.moTa = `${m.moTa ? m.moTa + " " : ""}Bố cục tương ứng Mẫu số ${mauNd151} Phụ lục II NĐ 151/2025/NĐ-CP (Mẫu số ${mauNd102} Phụ lục NĐ 102/2024/NĐ-CP).${them}`;
   if (ghiLai) m.ghiLai = { ...ghiLai };
 }
 
@@ -514,7 +515,7 @@ DANH_MUC_MAU.push(
   },
   {
     ma: "T25", ten: "Quyết định giải quyết khiếu nại (lần hai)", buoc: "9", phamVi: "HO", coQuan: "UBND", nguon: "THUC_TE", tep: "tt-qd-giai-quyet-kn-lan-hai.docx",
-    moTa: "Mẫu số 16 Phụ lục NĐ 124/2020/NĐ-CP (Điều 40 Luật Khiếu nại). Người giải quyết lần hai mặc định Chủ tịch UBND tỉnh (khoản 2 Điều 21 Luật Khiếu nại sửa bởi Luật 136/2025 — khi người giải quyết lần đầu là Chủ tịch UBND cấp xã). Đơn lần hai lấy từ thẻ Khiếu nại; mục II lấy kết quả đơn lần đầu. Thời hạn khởi kiện (Điều 3) do cán bộ ghi theo Luật Tố tụng hành chính.",
+    moTa: "Mẫu số 16 Phụ lục NĐ 124/2020/NĐ-CP (Điều 40 Luật Khiếu nại). Người giải quyết lần hai mặc định Chủ tịch UBND tỉnh (khoản 2 Điều 21 Luật Khiếu nại sửa bởi Luật 136/2025 — khi người giải quyết lần đầu là Chủ tịch UBND cấp xã). Đơn lần hai lấy từ thẻ Khiếu nại; mục II lấy kết quả đơn lần đầu. Thời hạn khởi kiện (Điều 3) mặc định 01 năm kể từ ngày nhận được hoặc biết được quyết định (điểm a khoản 3 Điều 116 Luật Tố tụng hành chính, VBHN 109/VBHN-VPQH).",
     ghiLai: { khoa: "qd_gqkn2", capDo: "HO", kyHieu: "QĐ-UBND" },
     nhapThem: [
       { truong: "KN2_CO_QUAN", nhan: "Cơ quan ban hành (in hoa)", goiY: "Để trống = ỦY BAN NHÂN DÂN TỈNH SƠN LA" },
@@ -530,9 +531,63 @@ DANH_MUC_MAU.push(
       { truong: "kn_ket_luan", nhan: "V. Kết luận", nhieuDong: true },
       { truong: "kn_dieu_1", nhan: "Điều 1", nhieuDong: true, goiY: "Đúng/đúng một phần: yêu cầu sửa đổi, hủy bỏ QĐ, chấm dứt hành vi; sai toàn bộ: công nhận, giữ nguyên QĐ giải quyết lần đầu (Mẫu 16)" },
       { truong: "kn_dieu_2", nhan: "Điều 2", nhieuDong: true },
-      { truong: "kn2_thoi_han_khoi_kien", nhan: "Thời hạn khởi kiện (Điều 3)", goiY: "Theo Luật Tố tụng hành chính — phần mềm chưa có nguyên văn, cán bộ ghi" },
+      { truong: "kn2_thoi_han_khoi_kien", nhan: "Thời hạn khởi kiện (Điều 3)", goiY: "Để trống = 01 năm (điểm a khoản 3 Điều 116 Luật Tố tụng hành chính)" },
       { truong: "kn_thi_hanh", nhan: "Người chịu trách nhiệm thi hành (Điều 4)", macDinh: "Người khiếu nại, người bị khiếu nại, người giải quyết khiếu nại lần đầu và các cơ quan, tổ chức, cá nhân có liên quan" },
       NOI_NHAN("Như Điều 4\nNgười có quyền, nghĩa vụ liên quan\nCơ quan thanh tra nhà nước cùng cấp\nLưu: VT, hồ sơ"),
+    ],
+  },
+);
+
+/**
+ * 1.2.0 (A2, B3) — T26 QĐ phê duyệt phương án theo Mẫu số 44 Phụ lục II NĐ 151/2025/NĐ-CP; T27 Biên bản cưỡng chế thu hồi đất
+ * (khoản 4 Điều 89 Luật Đất đai 2024); T28 Biên bản bàn giao bảo quản tài sản (khoản 2 Điều 38 NĐ 102/2024/NĐ-CP).
+ */
+DANH_MUC_MAU.push(
+  {
+    ma: "T26", ten: "Quyết định phê duyệt phương án (Mẫu 44 NĐ 151/2025)", buoc: "9", phamVi: "DOT", coQuan: "UBND", nguon: "THUC_TE", tep: "tt-qd-pa-mau-44.docx",
+    moTa: "Mẫu số 44 Phụ lục II NĐ 151/2025/NĐ-CP — Chủ tịch UBND cấp xã phê duyệt (điểm d khoản 1 Điều 5). Điều 1: (1) phương án đối với dự án (khoản 1 Điều 3 NĐ 88/2024), (2) phương án chi tiết từng người có đất thu hồi (khoản 2 Điều 3) — biểu kèm theo, số tiền theo kết quả tính của hộ (chỉ khoản Tạm tính). Căn cứ văn bản thẩm định, số Tờ trình lấy như mẫu 14.",
+    ghiLai: { khoa: "qd_phe_duyet", capDo: "DU_AN", kyHieu: "QĐ-UBND" },
+    nhapThem: [
+      ...TRUONG_DOT,
+      ...PHUONG_AN(),
+      { truong: "trach_nhiem_nguoi_co_dat", nhan: "Điều 2 khoản 2 — trách nhiệm của người có đất thu hồi, chủ sở hữu tài sản", nhieuDong: true, goiY: "Ghi chú 11 Mẫu 44: ghi trách nhiệm của người có đất thu hồi, chủ sở hữu tài sản, người có quyền lợi và nghĩa vụ liên quan (nếu có)" },
+      HIEU_LUC,
+      { truong: "co_quan_thi_hanh", nhan: "Cơ quan thi hành (Điều 4)", nhieuDong: true, macDinh: "Chánh Văn phòng Hội đồng nhân dân và Ủy ban nhân dân, Thủ trưởng đơn vị thực hiện nhiệm vụ bồi thường, hỗ trợ, tái định cư, các cơ quan, đơn vị có liên quan" },
+      NOI_NHAN("Như Điều 4\nLưu: VT"),
+    ],
+  },
+  {
+    ma: "T27", ten: "Biên bản cưỡng chế thu hồi đất", buoc: "14", phamVi: "HO", coQuan: "BIEN_BAN", nguon: "THUC_TE", tep: "tt-bb-cuong-che-thu-hoi.docx",
+    moTa: "Điểm b, c, d khoản 4 Điều 89 Luật Đất đai 2024: Ban cưỡng chế lập biên bản ghi nhận sự chấp hành (bàn giao đất chậm nhất 30 ngày) hoặc việc tổ chức thực hiện cưỡng chế; mời Ủy ban MTTQ giám sát. Không có mẫu luật định. Số, ngày QĐ thu hồi, QĐ cưỡng chế, QĐ thành lập Ban, kết quả lấy từ hồ sơ cưỡng chế của hộ.",
+    nhapThem: [
+      THOI_DIEM, DIA_DIEM,
+      { truong: "tp_ban", nhan: "Ban cưỡng chế (họ tên, chức vụ)", nhieuDong: true },
+      { truong: "tp_mttq", nhan: "Đại diện Ủy ban MTTQ Việt Nam", nhieuDong: true },
+      { truong: "tp_cong_an", nhan: "Lực lượng bảo vệ trật tự (nếu có)", nhieuDong: true },
+      { truong: "tp_nguoi_bi_cc", nhan: "Người bị cưỡng chế, người có liên quan", nhieuDong: true, goiY: "Để trống = họ tên hộ" },
+      { truong: "tp_chung_kien", nhan: "Người chứng kiến", nhieuDong: true },
+      { truong: "ket_qua_van_dong", nhan: "Kết quả vận động, thuyết phục, đối thoại", nhieuDong: true },
+      { truong: "dien_bien_cc", nhan: "Diễn biến (nếu tổ chức cưỡng chế)", nhieuDong: true, goiY: "Việc buộc ra khỏi khu đất, di chuyển người, tài sản (điểm c khoản 4 Điều 89)" },
+      { truong: "tai_san_tren_dat", nhan: "Tài sản trên đất", nhieuDong: true, goiY: "Người bị cưỡng chế từ chối nhận tài sản → lập biên bản bảo quản (T28)" },
+      { truong: "y_kien", nhan: "Ý kiến của người bị cưỡng chế", nhieuDong: true },
+      { truong: "tu_choi_ky", nhan: "Người vắng mặt / từ chối ký (lý do)", macDinh: "Không" },
+      GIO_KT,
+    ],
+  },
+  {
+    ma: "T28", ten: "Biên bản bàn giao bảo quản tài sản khi cưỡng chế", buoc: "14", phamVi: "HO", coQuan: "BIEN_BAN", nguon: "THUC_TE", tep: "tt-bb-bao-quan-tai-san.docx",
+    moTa: "Khoản 2 Điều 38 NĐ 102/2024/NĐ-CP: biên bản ghi rõ người chủ trì, người bị cưỡng chế, người được giao bảo quản, người chứng kiến; số lượng, tình trạng tài sản; quyền, nghĩa vụ của người bảo quản; thời gian bàn giao. Sau bàn giao, thông báo chủ sở hữu nhận tài sản trong 60 ngày (khoản 3). Không có mẫu luật định.",
+    nhapThem: [
+      THOI_DIEM, DIA_DIEM,
+      { truong: "tp_chu_tri", nhan: "Người chủ trì thực hiện quyết định cưỡng chế", nhieuDong: true },
+      { truong: "tp_nguoi_bi_cc", nhan: "Cá nhân, đại diện tổ chức bị cưỡng chế", nhieuDong: true, goiY: "Để trống = họ tên hộ" },
+      { truong: "tp_bao_quan", nhan: "Người được giao bảo quản tài sản", nhieuDong: true, goiY: "Khoản 1 Điều 38 NĐ 102: tổ chức có chức năng, cơ quan chuyên ngành, kiểm lâm, hoặc UBND cấp xã" },
+      { truong: "tp_chung_kien", nhan: "Người chứng kiến", nhieuDong: true },
+      { truong: "ds_tai_san_bq", nhan: "Tài sản (mỗi dòng: tên, số lượng, tình trạng)", nhieuDong: true },
+      { truong: "quyen_nghia_vu_bao_quan", nhan: "Quyền và nghĩa vụ của người được giao bảo quản", nhieuDong: true },
+      { truong: "thoi_gian_bao_quan", nhan: "Thời gian bàn giao bảo quản" },
+      { truong: "so_ban", nhan: "Số bản", macDinh: "04" },
+      { truong: "tu_choi_ky", nhan: "Người vắng mặt / từ chối ký (lý do)", macDinh: "Không" },
     ],
   },
 );
