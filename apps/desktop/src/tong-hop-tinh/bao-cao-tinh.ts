@@ -58,6 +58,10 @@ export function duLieuBaoCaoTinh(dong: DongBaoCao[], t: ThongTinBaoCaoTinh, o: {
       const b = cc.length ? `${cong((d) => (d.cuongChe?.kiemDem ?? 0) + (d.cuongChe?.thuHoi ?? 0))} hồ sơ cưỡng chế (kiểm đếm bắt buộc ${cong((d) => d.cuongChe?.kiemDem ?? 0)}, thu hồi đất ${cong((d) => d.cuongChe?.thuHoi ?? 0)}; đang thực hiện ${cong((d) => d.cuongChe?.dangThucHien ?? 0)})` : "";
       return a || b ? `Khiếu nại, cưỡng chế (đơn vị gửi từ bản 1.0.20): ${[a, b].filter(Boolean).join("; ")}.` : "";
     })(),
+    (() => {
+      const bg = dong.filter((d) => d.banGiaoThucDia);
+      return bg.length ? `Đã bàn giao đất trên thực địa cho chủ đầu tư (Mẫu 06 NĐ 102/2024/NĐ-CP; đơn vị gửi từ bản 1.1.0): ${bg.length} dự án.` : "";
+    })(),
     `Giá trị bồi thường, hỗ trợ tạm tính theo hồ sơ ${tien(tamTinh(dong))} đồng (chưa phải số đã phê duyệt).`,
     cauLienXa,
   ].filter(Boolean).join(" ");

@@ -663,6 +663,8 @@ export interface DuAn {
   quyTdc?: import("./quy-tdc").QuyTdc;
   /** 1.0.20 (B3): kinh phí tổ chức thực hiện bồi thường, hỗ trợ, TĐC — dự toán, giải ngân (quyet-toan.ts). */
   kinhPhi?: import("./quyet-toan").KinhPhiTcth;
+  /** 1.1.0 (D3): mốc bàn giao đất trên thực địa cho chủ đầu tư (Mẫu 06 NĐ 102/2024 — T23) */
+  banGiaoThucDia?: import("./ban-giao-thuc-dia").BanGiaoThucDia[];
   taoLuc: string;
 }
 

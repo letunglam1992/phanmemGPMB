@@ -147,6 +147,8 @@ export interface TomTatDuAn {
   /** 1.0.20: đơn khiếu nại, kiến nghị (B1) và hồ sơ cưỡng chế (B2) — chỉ số lượng (gói cũ không có) */
   khieuNai?: import("../khieu-nai").ThongKeDon;
   cuongChe?: { kiemDem: number; thuHoi: number; dangThucHien: number };
+  /** 1.1.0 (D3): bàn giao đất trên thực địa cho chủ đầu tư (Mẫu 06 NĐ 102/2024) — số lần, ngày gần nhất (gói cũ không có) */
+  banGiaoThucDia?: { lan: number; ngayCuoi: string };
   /** 1.0.4: mặt bằng theo lý trình (chỉ khi xã có ghi lý trình thửa) — mét */
   lyTrinh?: { tongM: number; sachM: number; chua: [number, number][] };
 }
@@ -231,6 +233,7 @@ export function tomTatDuAn(duAn: DuAn[], ho: Ho[], soTep: (duAnId: string) => nu
           ...(cc.length ? { cuongChe: { kiemDem: cc.filter((c) => c.loai === "KIEM_DEM").length, thuHoi: cc.filter((c) => c.loai === "THU_HOI").length, dangThucHien: cc.filter((c) => !c.ketQua).length } } : {}),
         };
       })(),
+      ...((d.banGiaoThucDia ?? []).length ? { banGiaoThucDia: { lan: d.banGiaoThucDia!.length, ngayCuoi: d.banGiaoThucDia!.reduce((a, b) => (b.ngay > a ? b.ngay : a), "") } } : {}),
       ...(d.lienXa?.ma?.trim() ? { lienXa: d.lienXa } : {}),
       ...(() => {
         const ds = dsDoan(hs, (h) => !!h.banGiao?.ngay);

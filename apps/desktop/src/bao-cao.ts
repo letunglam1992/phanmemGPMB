@@ -107,6 +107,14 @@ function cong(a: SoLieu, b: SoLieu): SoLieu {
 /** Chỉ giữ các đợt chi trả đến hết ngày báo cáo. */
 const hoDenNgay = (h: Ho, denNgay: string): Ho => (h.chiTra ? { ...h, chiTra: { ...h.chiTra, dot: h.chiTra.dot.filter((d) => d.ngay <= denNgay) } } : h);
 
+/** 1.1.0 (D3): mốc bàn giao đất trên thực địa cho chủ đầu tư (Mẫu 06 NĐ 102/2024) đến ngày báo cáo. */
+function chuBanGiaoThucDia(duAn: DuAn, denNgay: string): string {
+  const ds = (duAn.banGiaoThucDia ?? []).filter((x) => x.ngay <= denNgay);
+  if (!ds.length) return "";
+  const cuoi = ds[ds.length - 1]!;
+  return `; đã bàn giao đất trên thực địa ${ds.length > 1 ? `${ds.length} lần, lần gần nhất ` : ""}ngày ${cuoi.ngay.split("-").reverse().join("/")}`;
+}
+
 export function dongDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], denNgay: string, lich?: LichLamViec, tyLeCham: GiaiDoanTyLe[] = []): DongBaoCao {
   const tk = thongKe(duAn, ds, denNgay);
   const cb = canhBaoDuAn(duAn, ds, denNgay, lich, tyLeCham);
@@ -141,7 +149,7 @@ export function dongDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], denNgay: stri
     tinhTrang,
     tyLeHoanThanh: ds.length ? hoanThanh / ds.length : 0,
     tienDoChung: tk.tienDoChung,
-    changHienTai: changDaQua ? `${changDaQua.ten} (${changDaQua.soHo}/${ds.length} hộ)` : "Chưa bắt đầu",
+    changHienTai: (changDaQua ? `${changDaQua.ten} (${changDaQua.soHo}/${ds.length} hộ)` : "Chưa bắt đầu") + chuBanGiaoThucDia(duAn, denNgay),
     vuongMac: cb.filter((c) => c.muc === "CAO"),
     banPA: (() => {
       const hos = ds.map((x) => hoHieuLuc(duAn, hoDenNgay(x.h, denNgay)));

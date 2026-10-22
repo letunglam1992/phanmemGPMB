@@ -1,3 +1,4 @@
+import { ghiBanGiaoThucDia } from "../ban-giao-thuc-dia";
 import { ONgay } from "../thanh-phan/ONgay";
 import { dotPheDuyet, moTaQd, tenTrangThai } from "../phuong-an";
 import { khopLocHo } from "../van-ban/loc-ho";
@@ -190,7 +191,13 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
         const out = dienMau(mauBytes, ghepDuLieu({ mau, duAn: duAnVb, ds: dsDot_, chung: chungVb, rieng, so, ngayKy, tyLeCham }));
         if (!(await taiXuong(out, `Mau-${ma}_${tenAnToan(mau.ten)}_${tenAnToan(duAn.ten)}${dotChon ? `_${tenAnToan(tenDot(dotChon))}` : ""}.docx`, DOCX))) return setThongBao({ loai: "vang", noiDung: "Đã hủy lưu tệp — chưa ghi số, ngày văn bản." });
         if (mau.ghiLai && so.trim()) await luuDuAn(vanBanGhi({ [`${mau.ghiLai.khoa}_so`]: `${so.trim()}/${kyHieu}`, [`${mau.ghiLai.khoa}_ngay`]: ngayChu(ngayKy) }));
-        setThongBao({ loai: "xanh", noiDung: `Đã tạo Mẫu ${ma} cho dự án.` });
+        // 1.1.0 (D3): biên bản bàn giao đất trên thực địa → ghi mốc của dự án (đợt) cho Tổng quan, báo cáo, gói tỉnh
+        if (ma === "T23" && ngayKy) {
+          const du = ghepDuLieu({ mau, duAn: duAnVb, ds: dsDot_, chung: chungVb, rieng, so, ngayKy, tyLeCham });
+          const qd = [rieng.qd_giao_dat_so, rieng.qd_giao_dat_ngay].map((x) => (x ?? "").trim());
+          await luuDuAn(ghiBanGiaoThucDia(vanBanGhi({}), { ngay: ngayKy, dotId: dotChon?.id, benNhan: String(du.ben_nhan ?? ""), dienTich: String(du.dien_tich_giao ?? ""), ...(qd[0] ? { qdGiaoDat: `${qd[0]}${qd[1] ? ` ngày ${qd[1]}` : ""}` } : {}) }));
+        }
+        setThongBao({ loai: "xanh", noiDung: `Đã tạo Mẫu ${ma} cho dự án.${ma === "T23" && ngayKy ? " Đã ghi mốc bàn giao đất trên thực địa (Tổng quan dự án)." : ""}` });
       } else {
         if (!dsHoChon.length) throw new Error("Chọn ít nhất một hộ, tổ chức.");
         const tep: { ten: string; noiDung: Uint8Array }[] = [];
@@ -355,7 +362,7 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
               )}
               <div className="luoi luoi-3">
                 <O nhan="Số văn bản" goiY={mau.phamVi === "HO" && chonHo.size > 1 ? "Nhập số → tăng dần cho từng hộ. Để trống để văn thư ghi khi ký." : "Để trống để văn thư ghi khi ký"}><input value={so} onChange={(e) => setSo(e.target.value)} /></O>
-                <O nhan="Ngày ký" goiY="Để trống = để trống ngày tháng"><ONgay value={ngayKy} onChange={(e) => setNgayKy(e.target.value)} /></O>
+                <O nhan="Ngày ký" goiY="Để trống = để trống ngày tháng"><ONgay aria-label="Ngày ký" value={ngayKy} onChange={(e) => setNgayKy(e.target.value)} /></O>
               </div>
               {mau.nhapThem.length > 0 && (
                 <div className="luoi luoi-2">
