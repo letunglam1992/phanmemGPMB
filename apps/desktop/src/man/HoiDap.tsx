@@ -56,6 +56,7 @@ export function HoiDap({ dong, hien = true }: { dong?: () => void; hien?: boolea
   const [duAnId, setDuAnId] = useState(dsDuAn[0]?.id ?? "");
   const [cm, setCm] = useState<ChiMuc | null>(null);
   const [loiKho, setLoiKho] = useState("");
+  const [dangNapKho, setDangNapKho] = useState(false);
   useEffect(() => { napChiMuc().then(setCm).catch((e) => setLoiKho(String((e as Error).message ?? e))); }, []);
   const [cauHoi, setCauHoi] = useState("");
   const [luot, setLuot] = useState<Luot[]>([]);
@@ -79,13 +80,26 @@ export function HoiDap({ dong, hien = true }: { dong?: () => void; hien?: boolea
 
   const hoi = async (q0?: string) => {
     const q = (q0 ?? cauHoi).trim();
-    if (!q || !cm) return;
+    if (!q) return;
+    // 1.1.0: hỏi khi kho tri thức đang nạp (nạp ngầm chưa xong) thì chờ nạp xong rồi trả lời — không bỏ qua câu hỏi
+    let chiMuc = cm;
+    if (!chiMuc) {
+      try {
+        setDangNapKho(true);
+        chiMuc = await napChiMuc();
+        setCm(chiMuc);
+      } catch (e) {
+        return setLoiKho(String((e as Error).message ?? e));
+      } finally {
+        setDangNapKho(false);
+      }
+    }
     if (cheDo === "GEMINI" && (!cg.khoa || !cg.dongY)) {
       setMoCaiDat(true);
       return bao(!cg.khoa ? "Chưa có khóa API Gemini — xem hướng dẫn, dán khóa rồi lưu" : "Cần đánh dấu đồng ý điều kiện gửi dữ liệu trước khi dùng Gemini", "loi");
     }
     setCauHoi("");
-    const doan = timDoan(cm, q, cheDo === "GEMINI" ? 8 : 5);
+    const doan = timDoan(chiMuc, q, cheDo === "GEMINI" ? 8 : 5);
     const yd = nhanYDinh(q);
     const soLieu = yd.length && duLieu.length ? traLoiSoLieu(yd, duLieu, homNayIso()) : undefined;
     const i = luot.length;
@@ -197,7 +211,7 @@ export function HoiDap({ dong, hien = true }: { dong?: () => void; hien?: boolea
           {!luot.length && (
             <div className="hd-goi-y">
               <div className="mo chu-nho">Câu hỏi mẫu:</div>
-              <div className="nhom-nut">{CAU_MAU.map((c) => <button key={c} className="nut nut-nho" disabled={!cm} onClick={() => void hoi(c)}>{c}</button>)}</div>
+              <div className="nhom-nut">{CAU_MAU.map((c) => <button key={c} className="nut nut-nho" disabled={dangNapKho} onClick={() => void hoi(c)}>{c}</button>)}</div>
             </div>
           )}
           {luot.map((x, i) => (
@@ -229,7 +243,7 @@ export function HoiDap({ dong, hien = true }: { dong?: () => void; hien?: boolea
         </Chon>
         <div className="tl-o-hoi">
           <textarea ref={oHoi} aria-label="Câu hỏi" rows={2} placeholder="Nhập câu hỏi (Enter để gửi, Shift+Enter xuống dòng)…" value={cauHoi} onChange={(e) => setCauHoi(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void hoi(); } }} />
-          <button className="nut nut-chinh" disabled={!cauHoi.trim() || !cm} onClick={() => void hoi()}>Gửi</button>
+          <button className="nut nut-chinh" disabled={!cauHoi.trim() || dangNapKho} onClick={() => void hoi()}>{dangNapKho ? "Đang nạp kho…" : "Gửi"}</button>
         </div>
       </div>
     </div>
