@@ -98,10 +98,12 @@ export const CHUONG = [
   },
   {
     ten: "Soạn văn bản",
-    doan: ["Hồ sơ hộ → thẻ **Văn bản**: 22 mẫu Sổ tay, 13 mẫu theo văn bản thực tế, mẫu riêng của đơn vị; tự điền thông tin hộ, thửa, tài sản, số tiền theo kết quả tính."],
+    doan: ["Hồ sơ hộ → thẻ **Văn bản**: 22 mẫu Sổ tay, 25 mẫu theo văn bản thực tế (T1–T25), mẫu riêng của đơn vị; tự điền thông tin hộ, thửa, tài sản, số tiền theo kết quả tính."],
     buoc: [
       "Chọn mẫu → điền số, ngày → tải .docx (hoặc PDF). Hồ sơ đang sửa chưa lưu thì phải lưu trước.",
       "Văn bản cấp dự án, theo đợt: nút **Văn bản dự án, đợt** ở đầu không gian dự án.",
+      "Tạo một mẫu cho nhiều hộ một lần (1.1.0): ở danh sách hộ của mẫu, lọc mã/tên rồi Enter để chọn thêm; nhập số đầu tiên → số tăng dần cho từng hộ; nhiều hộ ra một tệp .zip. Số, ngày văn bản ghi ngược vào từng đơn khiếu nại, hồ sơ cưỡng chế (chỉ ô còn trống).",
+      "Biên bản bàn giao đất trên thực địa (T23, Mẫu 06 NĐ 102/2024) tạo xong thì phần mềm ghi mốc ở thẻ **Bàn giao đất trên thực địa** của Tổng quan dự án; bàn giao làm ngoài phần mềm thì bấm **Ghi mốc**. Mốc có trong báo cáo tiến độ và gói gửi tỉnh.",
       "Trước khi tạo văn bản, phần mềm hiện bảng kiểm tra thống nhất (tên đơn vị hành chính, chức danh…) — chỉ nhắc.",
     ],
     anh: [["ho-van-ban", "Thẻ Văn bản của hồ sơ hộ"]],
@@ -121,6 +123,8 @@ export const CHUONG = [
     doan: ["Hồ sơ hộ → thẻ **Khiếu nại**. Phần mềm ghi nhận, đối chiếu thời hạn, điều kiện theo ngày cán bộ đã ghi; không kết luận đúng sai, không thay việc xem xét của người có thẩm quyền."],
     buoc: [
       "**+ Ghi đơn khiếu nại**: ngày nhận, ngày thụ lý, quyết định/hành vi bị khiếu nại, nội dung. Hạn thụ lý 10 ngày làm việc; đơn nhận từ 01/7/2026: 07 ngày làm việc (k1 Đ16 NĐ 124/2020/NĐ-CP, sửa bởi Điều 10 NĐ 155/2026/NĐ-CP); hạn giải quyết lần đầu 30 ngày, phức tạp 45 ngày, vùng sâu vùng xa 45/60 ngày (Điều 28); lần hai 45/60, vùng sâu vùng xa 60/70 ngày (Điều 37). Cán bộ đánh dấu “phức tạp”, “vùng sâu, vùng xa”. Nút “Soạn QĐ giải quyết (T14)” mở mẫu Quyết định giải quyết khiếu nại lần đầu (Mẫu 15 NĐ 124/2020) đã điền đơn; hồ sơ cưỡng chế thu hồi đất có nút T15 (biên bản vận động), T16 (QĐ thành lập Ban cưỡng chế), T17 (phương án, dự toán kinh phí). Khung thủ tục của đơn: số, ngày thông báo thụ lý; “+ Tạm đình chỉ” (thời gian tạm đình chỉ không tính vào hạn — k4 Điều 11a Luật Khiếu nại); vắng đối thoại; nút T18–T22 (thông báo thụ lý, không thụ lý, biên bản đối thoại, QĐ tạm đình chỉ/đình chỉ, QĐ tiếp tục — Phụ lục NĐ 155/2026).",
+      "Từ bản 1.1.0: ghi **Ngày tổ chức đối thoại**, **Ngày gửi thông báo đối thoại** — phần mềm nhắc gửi thông báo trước ngày đối thoại ít nhất 05 ngày (k1 Điều 28 NĐ 124/2020 sửa bởi NĐ 155/2026), nút T24 soạn thông báo; ghi ngày gửi QĐ tạm đình chỉ, QĐ tiếp tục, QĐ đình chỉ — nhắc khi quá 03 ngày làm việc kể từ ngày ban hành (k1, k2 Điều 28b). Đơn lần hai có nút T25 (QĐ giải quyết khiếu nại lần hai, Mẫu 16 NĐ 124/2020; người giải quyết mặc định Chủ tịch UBND tỉnh — sửa nếu khác; thời hạn khởi kiện cán bộ ghi theo Luật Tố tụng hành chính).",
+      "Tổng quan dự án → thẻ **Khiếu nại, cưỡng chế**: số đơn theo trạng thái (gồm tạm đình chỉ), đơn quá hạn, đơn gửi văn bản chậm, hồ sơ cưỡng chế; bấm tên hộ để mở thẻ Khiếu nại; **Xuất Excel** (tổng hợp, từng đơn, từng hồ sơ cưỡng chế, kèm căn cứ). Số đơn tạm đình chỉ có trong gói gửi tỉnh.",
       "**+ Ghi kiến nghị, phản ánh**: thời hạn trả lời do đơn vị nhập kèm căn cứ (không nhập thì không tính hạn).",
       "**+ Cưỡng chế kiểm đếm bắt buộc** (Điều 88) / **+ Cưỡng chế thu hồi đất** (Điều 89): ghi vận động, quyết định cưỡng chế, niêm yết, hiệu lực, ngày nhận quyết định, Ban cưỡng chế, ngày dự kiến, kết quả. Phần mềm nhắc: quyết định cưỡng chế thu hồi chỉ ban hành sau 10 ngày kể từ khi kết thúc vận động (điểm b khoản 7 Điều 87); hạn thi hành 10 ngày (khoản 3 Điều 89); không cưỡng chế ngày nghỉ, lễ, 15 ngày trước và sau thời gian nghỉ Tết Âm lịch (điểm b khoản 1 Điều 89); bàn giao đất chậm nhất 30 ngày sau biên bản chấp hành (điểm b khoản 4 Điều 89).",
       "Đơn quá hạn, cưỡng chế không đủ điều kiện hiện ở chuông thông báo; số lượng (không có thông tin cá nhân) được gửi lên tỉnh.",

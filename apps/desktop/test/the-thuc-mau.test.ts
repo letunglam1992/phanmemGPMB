@@ -1,7 +1,7 @@
 /**
  * 1.1.0 (D2) — Thể thức mọi mẫu Word theo Phụ lục I NĐ 30/2020/NĐ-CP (kỹ thuật trình bày văn bản hành chính): khổ A4; lề trên,
  * dưới 20–25 mm, trái 30–35 mm, phải 15–20 mm; phông Times New Roman (Symbol, Wingdings chỉ dùng cho ký hiệu đầu dòng); cỡ chữ
- * phần nội dung 13–14 — kiểm cỡ mặc định của tài liệu. In thử bằng LibreOffice: xem docs/22.
+ * phần nội dung 13–14 — kiểm cỡ mặc định của tài liệu. In bằng Word trên máy thật: docs/22 mục A8.
  */
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";

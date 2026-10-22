@@ -1,7 +1,8 @@
 /**
  * Quay video hướng dẫn thao tác (D3, 1.0.20) bằng Playwright trên bản build (vite preview) — dữ liệu mẫu ẩn danh, bản đồ
  * DXF giả lập; con trỏ chuột, vòng bấm và phụ đề từng bước được vẽ chồng trong trang. Ra tệp .webm → đổi .mp4 bằng ffmpeg:
- *   PW_CHROMIUM=... node tools/huong-dan/quay-video.mjs <thư mục ra> [1|2|3]
+ *   PW_CHROMIUM=... node tools/huong-dan/quay-video.mjs <thư mục ra> [1|2|3|4]
+ * 1.1.0 (E1): video 4 — khiếu nại (thụ lý, tạm đình chỉ, đối thoại), mẫu T18–T25, cưỡng chế, báo cáo khiếu nại của dự án.
  */
 import { chromium } from "@playwright/test";
 import { mkdirSync, renameSync, writeFileSync } from "node:fs";
@@ -257,5 +258,55 @@ if (!chiQuay || chiQuay === "3") {
   await h.phuDe("", 0);
   await h.bia("PHẦN MỀM GPMB SƠN LA", "An toàn · Chính xác · Đúng quy định", "Tài liệu đầy đủ: Hướng dẫn sử dụng (Word, có ảnh) trong phần mềm", 3000);
   await ket(h, "3-Gui-so-lieu-len-tinh");
+}
+// ---------------- Video 4 (1.1.0): khiếu nại, cưỡng chế ----------------
+if (!chiQuay || chiQuay === "4") {
+  const h = await moi(trinh, "4");
+  const { p } = h;
+  await batDau(h);
+  await h.bia("HƯỚNG DẪN THAO TÁC · 4", "Theo dõi khiếu nại, cưỡng chế của hộ", "Luật Khiếu nại (sửa bởi Luật 136/2025) · NĐ 124/2020 (sửa bởi NĐ 155/2026) · Điều 88, 89 Luật Đất đai 2024");
+  await h.phuDe("Hồ sơ hộ → thẻ <b>Khiếu nại</b> → <b>+ Ghi đơn khiếu nại</b>", 300);
+  await h.bam(nutBen(p, "Hồ sơ"));
+  await h.bam(the(p, "Hộ, cá nhân"));
+  await h.bam(p.locator("tr[data-ho-id]").first(), 1000);
+  await h.bam(the(p, "Khiếu nại"));
+  await h.bam(p.getByRole("button", { name: "+ Ghi đơn khiếu nại" }), 900);
+  const don = p.locator("[data-don]").first();
+  // ô ngày tự chèn dấu "/" khi gõ → điền cả chuỗi
+  const ngay = async (nhan, gt, khung = don) => { const o = khung.getByLabel(nhan, { exact: true }).first(); await h.bam(o, 200); await o.fill(gt); await o.press("Tab"); await h.cho(700); };
+  await ngay("Ngày nhận đơn", "09/10/2026");
+  await h.go(don.getByLabel("Nội dung đơn"), "Không đồng ý đơn giá cây trồng (minh họa)");
+  await h.phuDe("Hạn thụ lý <b>07 ngày làm việc</b> (đơn nhận từ 01/7/2026) — phần mềm đếm theo lịch nghỉ", 300);
+  await h.den(don.getByText(/Hạn thụ lý/).first());
+  await h.cho(2600);
+  await ngay("Ngày thụ lý", "13/10/2026");
+  await h.phuDe("Đã thụ lý: hạn giải quyết theo Điều 28 Luật Khiếu nại; thông báo thụ lý bằng mẫu <b>T18</b>", 2600);
+  await h.phuDe("Ghi ngày đối thoại → phần mềm nhắc gửi thông báo <b>trước ít nhất 05 ngày</b> (mẫu T24)", 300);
+  await ngay("Ngày tổ chức đối thoại", "22/10/2026");
+  await h.den(don.locator("[data-canh-bao-thu-tuc]"));
+  await h.cho(2800);
+  await ngay("Ngày gửi thông báo đối thoại", "16/10/2026");
+  await h.phuDe("<b>+ Tạm đình chỉ</b>: thời gian tạm đình chỉ không tính vào thời hạn; QĐ gửi trong 03 ngày làm việc", 300);
+  await h.bam(don.getByRole("button", { name: "+ Tạm đình chỉ" }), 800);
+  const tdc = don.locator("[data-tam-dinh-chi]");
+  await ngay("Ngày QĐ tạm đình chỉ", "15/10/2026", tdc);
+  await h.go(tdc.getByLabel("Lý do tạm đình chỉ"), "Chờ kết quả đo đạc lại (minh họa)");
+  await h.den(don.locator("[data-tt-don]"));
+  await h.cho(2400);
+  await h.phuDe("Các nút <b>T18–T25</b> soạn văn bản theo Phụ lục NĐ 155/2026, tự điền từ đơn", 300);
+  await h.den(don.getByRole("button", { name: "TB thụ lý (T18)" }));
+  await h.cho(2400);
+  await h.bam(p.getByRole("button", { name: "Lưu hồ sơ" }), 900);
+  await h.phuDe("Cưỡng chế thu hồi đất: ghi vận động 10 ngày, QĐ cưỡng chế, Ban cưỡng chế — phần mềm đối chiếu Điều 89", 300);
+  await h.bam(p.getByRole("button", { name: "+ Cưỡng chế thu hồi đất" }), 1800);
+  await h.bam(p.getByRole("button", { name: "Lưu hồ sơ" }), 900);
+  await h.phuDe("<b>Tổng quan dự án</b>: thẻ Khiếu nại, cưỡng chế — đơn quá hạn, tạm đình chỉ; <b>Xuất Excel</b>", 300);
+  await h.bam(nutBen(p, "Hồ sơ"));
+  await h.bam(the(p, "Tổng quan dự án"), 800);
+  await h.den(p.locator("[data-the-khieu-nai-du-an]"));
+  await h.cho(3000);
+  await h.phuDe("", 0);
+  await h.bia("PHẦN MỀM GPMB SƠN LA", "Phần mềm ghi nhận, nhắc hạn — không kết luận đúng sai", "Người có thẩm quyền xem xét, quyết định", 3000);
+  await ket(h, "4-Khieu-nai-cuong-che");
 }
 await trinh.close();

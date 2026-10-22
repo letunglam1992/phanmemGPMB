@@ -4,6 +4,26 @@ Mỗi phiên bản một mục `## X.Y.Z`. Khi phát hành, quy trình đóng g�
 (`tools/ghi-chu-phat-hanh.mjs`) — thiếu mục của phiên bản đang phát hành thì dừng, không phát hành. Phần mềm hiện các mục
 mới hơn bản đang dùng khi có bản cập nhật.
 
+## 1.1.0
+
+- Khiếu nại: ghi ngày tổ chức đối thoại, ngày gửi thông báo — phần mềm nhắc gửi thông báo trước ngày đối thoại ít nhất 05 ngày
+  (khoản 1 Điều 28 Nghị định 124/2020/NĐ-CP sửa bởi Nghị định 155/2026/NĐ-CP); mẫu T24 thông báo tổ chức đối thoại.
+- Ghi ngày gửi quyết định tạm đình chỉ, tiếp tục giải quyết, đình chỉ — nhắc khi quá 03 ngày làm việc kể từ ngày ban hành
+  (khoản 1, 2 Điều 28b Nghị định 124/2020 bổ sung bởi Nghị định 155/2026).
+- Mẫu T25 Quyết định giải quyết khiếu nại lần hai (Mẫu số 16 Nghị định 124/2020), mặc định Chủ tịch UBND tỉnh; thời hạn khởi
+  kiện do cán bộ ghi.
+- Tổng quan dự án có thẻ **Khiếu nại, cưỡng chế** (đơn quá hạn, tạm đình chỉ, gửi văn bản chậm) và nút Xuất Excel; gói gửi tỉnh
+  có số đơn tạm đình chỉ.
+- Thẻ **Bàn giao đất trên thực địa** ở Tổng quan dự án: tạo biên bản T23 thì tự ghi mốc, hoặc ghi tay; mốc có trong báo cáo
+  tiến độ và gói gửi tỉnh.
+- Mẫu cấp hộ tạo cho nhiều hộ một lần: số tăng dần từng hộ, một tệp .zip, số và ngày văn bản ghi vào từng đơn.
+- Nguyên văn Nghị định 151/2025/NĐ-CP (phân định thẩm quyền đất đai) và Sổ tay nghiệp vụ (QĐ 1966/QĐ-UBND) vào Hỏi đáp; mẫu
+  cưỡng chế ghi thẩm quyền Chủ tịch UBND cấp xã (Điều 5 Nghị định 151/2025); thời hạn các bước dẫn đúng mục Sổ tay.
+- Bản phương án chuyển sang quá hạn thẩm định do đổi cách đếm (30 ngày thay cho 30 ngày làm việc): phần mềm hiện giải thích.
+- Hỏi đáp mở nhanh hơn (kho tri thức nạp ngầm khi mở phần mềm).
+- Rà thể thức 54 mẫu Word theo Nghị định 30/2020/NĐ-CP; 5 mẫu riêng của địa phương đổi phông còn sót sang Times New Roman.
+- Thêm video hướng dẫn khiếu nại, cưỡng chế; danh mục kiểm tra trên máy Windows (Giới thiệu → Biểu ghi kết quả thử).
+
 ## 1.0.21
 
 - Sửa hạn thụ lý đơn khiếu nại: tính theo **ngày làm việc** — 10 ngày làm việc (khoản 1 Điều 16 Nghị định 124/2020/NĐ-CP);

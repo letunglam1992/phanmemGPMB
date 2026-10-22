@@ -1,7 +1,7 @@
 /**
  * 1.1.0 (C2) — Thử dữ liệu lớn: 20.000 hộ (nhân bản từ dữ liệu mẫu ẩn danh), 1/5 số hộ có đơn khiếu nại (một phần tạm đình chỉ,
  * có lịch đối thoại), 1/20 có hồ sơ cưỡng chế. Đo thời gian thống kê, cảnh báo dự án, xuất Excel khiếu nại, tạo mẫu T18/T21/T24
- * cho nhiều hộ; giới hạn đặt rộng để chạy được trên máy CI (máy Windows thật cần đo lại — docs/22).
+ * cho nhiều hộ; giới hạn đặt rộng để chạy được trên máy CI (máy Windows thật cần đo lại — docs/22 mục A8).
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";

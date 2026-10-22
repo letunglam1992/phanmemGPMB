@@ -1,6 +1,6 @@
 # 22. Ghi chú tiến độ — đọc file này trước khi làm tiếp
 
-Cập nhật: 07/10/2026. Bản mới nhất đã phát hành: **1.0.3**. Nhánh làm việc: `claude/great-rubin-4x4alw`; mọi thay đổi đã commit và đẩy lên.
+Cập nhật: 22/10/2026. Bản mới nhất đã phát hành: **1.1.0** (các mục dưới đây ghi từ bản 1.0.3 — trạng thái chức năng mới nhất xem `docs/09`, thay đổi từng bản xem `docs/nhung-thay-doi.md`). Nhánh làm việc: `claude/great-rubin-4x4alw`; mọi thay đổi đã commit và đẩy lên.
 
 Tài liệu nên đọc trước:
 - `CLAUDE.md`: quy tắc, lệnh.
@@ -207,6 +207,21 @@ Gặp lỗi: bấm **"Chép chi tiết lỗi"** (nếu có), hoặc chụp màn 
 - [ ] Nạp gói có bảng đơn giá → Tra cứu → "Bảng theo" chọn gói: thấy dòng của gói, "Thuộc văn bản" ghi văn bản của gói.
 - [ ] Máy có dữ liệu lớn (hàng nghìn hộ): đăng nhập → Tổng quan hiện nhanh với thanh "Đang tính phương án các hộ lần đầu"; bấm được menu trong lúc tính; tính xong có đủ số liệu.
 
+
+### A8. Thử bản 1.1.0 trên máy Windows thật (E2 — chưa chạy được trên máy CI)
+
+- [ ] Cài bản 1.1.0 đè lên bản cũ (hoặc nhận bản cập nhật trong phần mềm): dữ liệu cũ còn nguyên; Giới thiệu ghi đúng 1.1.0; "Những thay đổi" hiện mục 1.1.0.
+- [ ] Mở phần mềm, chờ khoảng 5 giây rồi mở Trợ lý AI (Hỏi đáp): hỏi "Điều 5 Nghị định 151" → trả lời ngay, không phải chờ "Đang nạp kho". Ghi thời gian chờ nếu có.
+- [ ] Hồ sơ hộ → Khiếu nại: ghi đơn, ngày tổ chức đối thoại cách hôm nay ít hơn 05 ngày, chưa ghi ngày gửi thông báo → thấy nhắc (khoản 1 Điều 28 NĐ 124 sửa bởi NĐ 155); soạn T24 → mở bằng Word, thời gian, địa điểm đúng.
+- [ ] Tạm đình chỉ một đơn, chưa ghi ngày gửi QĐ, quá 03 ngày làm việc → thấy nhắc; ghi ngày gửi → hết nhắc. Đình chỉ: tương tự với "Ngày gửi QĐ đình chỉ".
+- [ ] Đơn lần hai (đã có đơn lần đầu ghi kết quả, số QĐ) → nút T25 → mục II ghi đúng QĐ lần đầu; Điều 3 ghi thời hạn khởi kiện; cấp số → số ghi vào đơn lần hai.
+- [ ] Tổng quan dự án → thẻ "Khiếu nại, cưỡng chế" → Xuất Excel → mở bằng Excel: 3 trang Tổng hợp, Đơn, Cưỡng chế; tiếng Việt đúng, in vừa khổ A4 ngang.
+- [ ] Thẻ Văn bản của hộ → mẫu T18 → chọn thêm 5–10 hộ (lọc, Enter) → số 15 → tạo → tệp .zip giải nén được trong Windows Explorer; số 15, 16, 17… đúng thứ tự mã hộ; mở từng hộ: số thông báo thụ lý đã ghi.
+- [ ] Tổng quan dự án → "Bàn giao đất trên thực địa" → Ghi mốc; soạn T23 có ngày ký → mốc thứ hai tự hiện. Báo cáo tổng hợp (Excel, Word): cột chặng hiện tại có "đã bàn giao đất trên thực địa ngày …". Gửi gói lên tỉnh → máy tỉnh thấy "dự án đã bàn giao đất trên thực địa".
+- [ ] In thử bằng Word (máy có Times New Roman) 5 mẫu: T5, T7, T14, T25, R2 (mẫu riêng) — lề trái 30 mm, phải 15–20 mm, phông Times New Roman, không có chữ lỗi phông; mẫu R1–R5 không còn phông .VnTime.
+- [ ] Dữ liệu lớn (dự án ≥ 5.000 hộ): mở Tổng quan dự án, thẻ Khiếu nại; xuất Excel khiếu nại; tạo T18 cho 200 hộ — ghi thời gian từng việc (máy CI với 20.000 hộ: thống kê 0,05 giây, Excel 1,4 giây, 200 × T18 1,6 giây).
+- [ ] Máy tỉnh: nhận gói của xã bản 1.1.0 và gói bản cũ cùng lúc → không lỗi; số đơn tạm đình chỉ hiện với gói 1.1.0.
+- [ ] Bản phương án đã chuyển "quá hạn thẩm định" sau khi lên 1.0.21/1.1.0 → thẻ Phương án có dòng giải thích hạn theo cách đếm cũ.
 ## 3. Quy trình mỗi lần sửa (để phiên mới làm đúng ngay)
 
 1. Sửa mã. Cập nhật `docs/09`, ghi chú này, `docs/13`/`docs/21` nếu đổi cách dùng.
