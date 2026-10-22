@@ -409,6 +409,9 @@ export function taoKhoMang(ketNoi: KetNoi, gui: GuiYeuCau = guiQuaVo(ketNoi)): K
     async luuCaiDat(khoa, giaTri) {
       await goi("PUT", `/api/cai-dat/${ma(khoa)}`, { json: giaTri });
     },
+    async capSo(ds) {
+      return json<import("./so-van-ban").KetQuaCapSo>("POST", "/api/so-van-ban", { json: { ds } });
+    },
   };
 }
 

@@ -399,10 +399,11 @@ async fn may_chu_lich_su_luoc_do() {
     let d = may_chu::khoi_dong(dir.clone(), cong).await.unwrap();
     let m = May { dia_chi: format!("127.0.0.1:{cong}"), van_tay: d.van_tay.clone() };
     let qt = m.goi("POST", "/api/khoi-tao", None, tai_khoan("quantri", "QUAN_TRI", "Gpmb2026qt")).await.1["token"].as_str().unwrap().to_string();
-    for (t, vt) in [("lanhdao", "LANH_DAO"), ("canbo1", "CAN_BO")] {
+    for (t, vt) in [("lanhdao", "LANH_DAO"), ("canbo1", "CAN_BO"), ("xem1", "XEM")] {
         assert_eq!(m.goi("PUT", &format!("/api/nguoi-dung/{t}"), Some(&qt), tai_khoan(t, vt, "Matkhau2026")).await.0, 200);
     }
     let (ld, cb) = (m.dang_nhap("lanhdao", "Matkhau2026").await, m.dang_nhap("canbo1", "Matkhau2026").await);
+    let xem = m.dang_nhap("xem1", "Matkhau2026").await;
     assert_eq!(m.goi("PUT", "/api/du-an/da1", Some(&cb), json!({ "duLieu": { "id": "da1", "ten": "Dự án", "giaGao": { "dongKg": "15000" } } })).await.0, 200);
 
     // P1-8: sai cấu trúc, ô số sai định dạng → 400; dự án giá gạo "15.000,5" → 400
@@ -556,6 +557,19 @@ async fn may_chu_lich_su_luoc_do() {
     let (ma, v) = m.goi("POST", "/api/lich-su/nap", Some(&qt), json!({ "ds": [moi] })).await;
     assert_eq!((ma, v["them"].as_i64()), (200, Some(1)), "{v}");
     assert_eq!(m.goi("POST", "/api/lich-su/nap", Some(&qt), json!({ "ds": [{ "loai": "xyz", "id": "a", "luuLuc": "x", "duLieu": {} }] })).await.0, 400);
+
+    // 1.2.0 (C1): cấp số văn bản đi — ghi tập trung; số trùng (cùng ký hiệu, năm) trả danh sách trùng; xem không có quyền
+    let vb = |so: i64| json!({ "so": so, "kyHieu": "TB-UBND", "soDayDu": format!("{so}/TB-UBND"), "ngay": "2026-10-20", "ma": "T18", "duAnId": "da1" });
+    assert_eq!(m.goi("POST", "/api/so-van-ban", Some(&xem), json!({ "ds": [vb(15)] })).await.0, 403);
+    let (ma, v) = m.goi("POST", "/api/so-van-ban", Some(&cb), json!({ "ds": [vb(15), vb(16)] })).await;
+    assert_eq!((ma, v["trung"].as_array().map(|x| x.len())), (200, Some(0)), "{v}");
+    assert_eq!(v["ds"][0]["nguoi"], json!("canbo1"));
+    let (_, v) = m.goi("POST", "/api/so-van-ban", Some(&ld), json!({ "ds": [vb(16), vb(17)] })).await;
+    assert_eq!(v["trung"][0]["soDayDu"], json!("16/TB-UBND"), "{v}");
+    assert_eq!(v["trung"][0]["daCap"]["nguoi"], json!("canbo1"));
+    let (_, so) = m.goi("GET", "/api/cai-dat/soVanBanDi", Some(&cb), Value::Null).await;
+    assert_eq!(so["ds"].as_array().unwrap().len(), 4);
+    assert_eq!(m.goi("POST", "/api/so-van-ban", Some(&cb), json!({ "ds": [{ "so": 1 }] })).await.0, 400);
 
     // thời hạn giữ lịch sử: chỉ quản trị đặt; ngoài khoảng 0–100 → 400
     assert_eq!(m.goi("PUT", "/api/cai-dat/giuLichSu", Some(&ld), json!({ "soNam": 5 })).await.0, 403);

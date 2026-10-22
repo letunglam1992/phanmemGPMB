@@ -1596,6 +1596,52 @@ async fn luu_cai_dat(State(st): State<St>, h: HeaderMap, Path(khoa): Path<String
     Ok(Json(json!({})))
 }
 
+/// 1.2.0 (C1): sổ văn bản đi của đơn vị — ghi số đã cấp. Kiểm trùng (ký hiệu, năm, số) và ghi trong cùng khóa CSDL nên hai máy trạm
+/// cấp cùng lúc không bị ghi đè; số trùng vẫn ghi (văn bản đã tạo) nhưng trả danh sách trùng để máy trạm cảnh báo.
+async fn cap_so(State(st): State<St>, h: HeaderMap, b: Bytes) -> Kq<Json<Value>> {
+    let u = xac_thuc(&st, &h)?;
+    can(&st, &u, "SUA_HO_SO")?;
+    let v = tach(&b)?;
+    let moi = v["ds"].as_array().cloned().ok_or_else(|| loi(StatusCode::BAD_REQUEST, "Thiếu danh sách văn bản"))?;
+    if moi.len() > 5000 {
+        return Err(loi(StatusCode::BAD_REQUEST, "Quá nhiều văn bản trong một lần ghi"));
+    }
+    let c = st.db.lock().unwrap();
+    let mut so: Value = c
+        .query_row("SELECT noi_dung FROM cai_dat WHERE khoa = 'soVanBanDi'", [], |r| r.get::<_, String>(0))
+        .optional()
+        .map_err(loi_db)?
+        .and_then(|s| serde_json::from_str(&s).ok())
+        .unwrap_or_else(|| json!({ "ds": [] }));
+    if !so["ds"].is_array() {
+        so = json!({ "ds": [] });
+    }
+    let khoa = |x: &Value| -> Option<String> {
+        let n = x["so"].as_i64()?;
+        Some(format!("{}|{}|{n}", x["kyHieu"].as_str().unwrap_or(""), x["ngay"].as_str().unwrap_or("").get(0..4).unwrap_or("")))
+    };
+    let mut trung = vec![];
+    let mut da_ghi = vec![];
+    let ds = so["ds"].as_array_mut().unwrap();
+    for mut x in moi {
+        if !x.is_object() || !x["soDayDu"].is_string() {
+            return Err(loi(StatusCode::BAD_REQUEST, "Văn bản thiếu số"));
+        }
+        if let Some(k) = khoa(&x) {
+            if let Some(y) = ds.iter().find(|y| khoa(y).as_deref() == Some(k.as_str())) {
+                trung.push(json!({ "soDayDu": x["soDayDu"], "daCap": y }));
+            }
+        }
+        x["nguoi"] = json!(u.ten);
+        x["luc"] = json!(bay_gio());
+        ds.push(x.clone());
+        da_ghi.push(x);
+    }
+    c.execute("INSERT OR REPLACE INTO cai_dat(khoa, noi_dung) VALUES ('soVanBanDi', ?1)", params![so.to_string()]).map_err(loi_db)?;
+    MayChu::ghi_thay_doi(&c, "caiDat", "soVanBanDi", "", &u.ten).map_err(loi_db)?;
+    Ok(Json(json!({ "ds": da_ghi, "trung": trung })))
+}
+
 async fn xoa_tat_ca(State(st): State<St>, h: HeaderMap) -> Kq<Json<Value>> {
     let u = xac_thuc(&st, &h)?;
     can(&st, &u, "KHOI_PHUC")?;
@@ -1960,6 +2006,7 @@ pub fn dinh_tuyen(st: St) -> Router {
         .route("/api/nhat-ky", get(ds_nhat_ky).post(ghi_nhat_ky))
         .route("/api/nhat-ky-loi", get(ds_loi_he_thong))
         .route("/api/cai-dat/:khoa", get(doc_cai_dat).put(luu_cai_dat))
+        .route("/api/so-van-ban", post(cap_so))
         .route("/api/xoa-tat-ca", post(xoa_tat_ca))
         .route("/api/lo", post(ghi_lo))
         .route("/api/thay-doi", get(thay_doi))

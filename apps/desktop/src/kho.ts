@@ -129,6 +129,8 @@ export interface Kho {
   /** Cài đặt dùng chung (lịch ngày nghỉ, tự động sao lưu…). */
   docCaiDat<T>(khoa: string): Promise<T | null>;
   luuCaiDat(khoa: string, giaTri: unknown): Promise<void>;
+  /** 1.2.0 (C1): ghi số văn bản đi vào sổ chung của đơn vị (mạng nội bộ: máy chủ ghi nguyên tử, báo số trùng). */
+  capSo(ds: import("./so-van-ban").VanBanDi[]): Promise<import("./so-van-ban").KetQuaCapSo>;
 }
 
 const TEN_CSDL = "gpmb-sonla";
@@ -407,6 +409,14 @@ export function taoKhoIndexedDb(): Kho {
       await yc((await store("caiDat", "readwrite")).put(giaTri, khoa));
       if (khoa === "giuLichSu") await donLichSu();
     },
+    async capSo(ds) {
+      const { ghiVaoSo, KHOA_SO_VB } = await import("./so-van-ban");
+      const st = await store("caiDat", "readwrite");
+      const cu = ((await yc(st.get(KHOA_SO_VB))) as import("./so-van-ban").SoVanBanDi | undefined) ?? null;
+      const { so, kq } = ghiVaoSo(cu, ds, nguoi);
+      await yc((await store("caiDat", "readwrite")).put(so, KHOA_SO_VB));
+      return kq;
+    },
   };
   return kho;
 }
@@ -608,6 +618,12 @@ export function taoKhoBoNho(tuyChon: { thuLoi?: (buoc: number) => void } = {}): 
       caiDat.set(khoa, structuredClone(giaTri));
       const n = (giaTri as { soNam?: number } | null)?.soNam ?? 0;
       if (khoa === "giuLichSu" && n > 0) lichSu = lichSu.filter((x) => x.luuLuc >= nam(n));
+    },
+    async capSo(ds) {
+      const { ghiVaoSo, KHOA_SO_VB } = await import("./so-van-ban");
+      const { so, kq } = ghiVaoSo((caiDat.get(KHOA_SO_VB) as import("./so-van-ban").SoVanBanDi | undefined) ?? null, ds, "");
+      caiDat.set(KHOA_SO_VB, so);
+      return structuredClone(kq);
     },
   };
 }

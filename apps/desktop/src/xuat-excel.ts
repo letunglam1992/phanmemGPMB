@@ -1181,3 +1181,15 @@ export async function taoWorkbookKhieuNai(duAn: DuAn, hos: Ho[], homNay: string,
 export async function xuatExcelKhieuNai(duAn: DuAn, hos: Ho[], homNay: string, lich: LichLamViec) {
   await taiVe(await taoWorkbookKhieuNai(duAn, hos, homNay, lich), `Khieu-nai-cuong-che_${tenAnToan(duAn.ten)}.xlsx`);
 }
+
+/** 1.2.0 (C1) — Sổ văn bản đi của đơn vị (đã lọc): số, ký hiệu, ngày, mẫu, dự án, hộ, người cấp số. */
+export async function xuatExcelSoVanBan(ds: import("./so-van-ban").VanBanDi[], tieuDe: string) {
+  const { default: Excel } = await import("exceljs");
+  const wb = new Excel.Workbook();
+  wb.creator = "GPMB Sơn La";
+  const vn = (iso?: string) => (iso ? iso.slice(0, 10).split("-").reverse().join("/") : "");
+  themTrang(wb, "Sổ văn bản đi", tieuDe, [
+    { t: "STT", w: 6 }, { t: "Số, ký hiệu", w: 18 }, { t: "Ngày ký", w: 11 }, { t: "Mẫu", w: 8 }, { t: "Tên văn bản", w: 44 }, { t: "Dự án", w: 34 }, { t: "Hộ (mã)", w: 10 }, { t: "Người cấp số", w: 16 }, { t: "Thời điểm ghi sổ", w: 18 },
+  ], ds.map((x, i) => [i + 1, x.soDayDu, vn(x.ngay), x.ma, x.tenMau, x.duAnTen, x.hoMa ?? "", x.nguoi ?? "", x.luc ? new Date(x.luc).toLocaleString("vi-VN") : ""]));
+  await taiVe(wb, `So-van-ban-di_${new Date().toISOString().slice(0, 10)}.xlsx`);
+}

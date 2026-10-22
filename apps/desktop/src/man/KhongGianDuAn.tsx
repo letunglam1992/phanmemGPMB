@@ -44,6 +44,7 @@ import { TheChiTraKinhPhi } from "../thanh-phan/KinhPhi";
 import { TheKhieuNaiDuAn } from "../thanh-phan/KhieuNaiDuAn";
 import { TheBanGiaoThucDia } from "../thanh-phan/BanGiaoThucDia";
 import { HopDoiChieuQuyTrinh } from "../thanh-phan/DoiChieuQuyTrinh";
+import { TheSoVanBanDi } from "../thanh-phan/SoVanBanDi";
 import { HopPhanCong } from "../thanh-phan/PhanCong";
 import { ChonDot, HopXepDot, TheDotThuHoi, TheHanThuHoi, TheTongHopDot, loiDsDot } from "../thanh-phan/DotThuHoi";
 import { coDot, duAnTheoBoHo, khopDot } from "../dot-thu-hoi";
@@ -155,7 +156,7 @@ export function KhongGianDuAn({ duAnId, tab = "tong-quan", ma, hoId }: { duAnId:
         </div>
       )}
       {tab === "ho" && <TheHo duAn={duAn} kq={kq} />}
-      {tab === "tai-lieu" && <TaiLieuDuAn duAn={duAn} />}
+      {tab === "tai-lieu" && <><TheSoVanBanDi duAn={duAn} /><TaiLieuDuAn duAn={duAn} /></>}
       {tab === "tai-dinh-cu" && <TheQuyTdc duAn={duAn} hos={hoCua(duAnId, true)} />}
       {tab === "kinh-phi" && <TheChiTraKinhPhi key={duAn.id} duAn={duAn} />}
       {tab === "ban-do" && <div className="kg-nhung"><BanDo duAnId={duAnId} /></div>}

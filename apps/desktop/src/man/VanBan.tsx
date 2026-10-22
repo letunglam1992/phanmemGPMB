@@ -1,4 +1,5 @@
 import { ghiBanGiaoThucDia } from "../ban-giao-thuc-dia";
+import { KHOA_SO_VB, kyHieuMau, soThuTu, soTiepTheo, timTrung, type SoVanBanDi, type VanBanDi } from "../so-van-ban";
 import { ONgay } from "../thanh-phan/ONgay";
 import { dotPheDuyet, moTaQd, tenTrangThai } from "../phuong-an";
 import { khopLocHo } from "../van-ban/loc-ho";
@@ -12,6 +13,7 @@ import { truongVanBanTuDonVi } from "../don-vi";
 import { dienMau, dongGoiZip, truongTrongMau } from "../van-ban/dien-mau";
 import { HopThoai, O } from "../thanh-phan/chung";
 import { ghiNguocVanBan } from "../ghi-nguoc-van-ban";
+import { CSS_XEM_TRUOC, docxSangHtml } from "../van-ban/xem-truoc";
 import { taiXuong } from "../tai-xuong";
 import { tenTep } from "../ten-tep";
 import { giaTriNhapThem } from "../van-ban/tao-nhanh";
@@ -127,6 +129,12 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
   useEffect(() => {
     void kho.dsMauTuy().then(setMauTuy);
   }, [kho]);
+  // 1.2.0 (C1): sổ văn bản đi của đơn vị — gợi ý số tiếp theo, cảnh báo số đã cấp, ghi sổ sau khi tạo
+  const [soDi, setSoDi] = useState<SoVanBanDi | null>(null);
+  const [xemTruoc, setXemTruoc] = useState<string | null>(null);
+  useEffect(() => {
+    void kho.docCaiDat<SoVanBanDi>(KHOA_SO_VB).then(setSoDi).catch(() => setSoDi(null));
+  }, [kho]);
 
   if (!duAn) return <div className="trang trong">Chọn dự án trước.</div>;
   const dotChon = timDot(duAn, dotVb);
@@ -156,13 +164,50 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
     : ghepDuLieu({ mau, duAn: duAnVb, ds: mau.phamVi === "DOT" ? dsHoChon : dsDot_, chung: chungVb, rieng, so, ngayKy, tyLeCham });
 
   // Kiểm tra thống nhất trước khi tạo (docs/19 §5.4): cơ quan ban hành, số trong "(Kèm theo …)", bằng chữ, diện tích
-  const canhBaoTN = (() => {
+  const canhBaoTN = [
+    ...(() => {
+      try {
+        return kiemTraThongNhat(ma, duAn, duLieuXem);
+      } catch {
+        return [];
+      }
+    })(),
+  ];
+  const kyHieuVb = kyHieuMau(mau, chung.ky_hieu_phong || "");
+  const ngaySo = ngayKy || new Date().toISOString().slice(0, 10);
+  const soDayDu = (x: string) => (x.includes("/") ? x.trim() : `${x.trim()}/${kyHieuVb}`);
+  /** Số sẽ cấp: văn bản của hộ, số nhập là số thuần → tăng dần từng hộ (như khi tạo) */
+  const soSeCap = (): string[] => {
+    if (!kyHieuVb || !so.trim()) return [];
+    if (mau.phamVi !== "HO") return [so.trim()];
+    const n = /^\d+$/.test(so.trim()) ? Number(so.trim()) : null;
+    return dsHoChon.map((_, i) => (n !== null ? String(n + i) : so.trim()));
+  };
+  const canhBaoSo = soSeCap()
+    .map((x) => timTrung(soDi, { so: soThuTu(x), kyHieu: kyHieuVb, ngay: ngaySo }))
+    .filter((t): t is VanBanDi => !!t)
+    .map((t) => `Số ${t.soDayDu} đã cấp cho ${t.tenMau} (${t.duAnTen}${t.hoMa ? `, hộ ${t.hoMa}` : ""}) ngày ${t.ngay.split("-").reverse().join("/")}${t.nguoi ? ` — ${t.nguoi}` : ""} — sổ văn bản đi của đơn vị.`);
+  canhBaoTN.push(...canhBaoSo);
+  const ghiSo = async (ds: { so: string; hoMa?: string }[]) => {
+    if (!coGhi || !kyHieuVb) return "";
+    const vb: VanBanDi[] = ds.filter((x) => x.so.trim()).map((x) => ({ so: soThuTu(x.so), kyHieu: kyHieuVb, soDayDu: soDayDu(x.so), ngay: ngaySo, ma, tenMau: mau.ten, duAnId: duAn.id, duAnTen: duAn.ten, ...(x.hoMa ? { hoMa: x.hoMa } : {}) }));
+    if (!vb.length) return "";
     try {
-      return kiemTraThongNhat(ma, duAn, duLieuXem);
-    } catch {
-      return [];
+      const kq = await kho.capSo(vb);
+      setSoDi(await kho.docCaiDat<SoVanBanDi>(KHOA_SO_VB));
+      return kq.trung.length ? ` Lưu ý: số ${kq.trung.map((t) => t.soDayDu).join(", ")} đã cấp trước đó (${kq.trung[0]!.daCap.tenMau}, ${kq.trung[0]!.daCap.duAnTen}) — kiểm tra sổ văn bản đi.` : " Đã ghi sổ văn bản đi."
+    } catch (e) {
+      return ` Chưa ghi được sổ văn bản đi: ${(e as Error).message}.`;
     }
-  })();
+  };
+  // 1.2.0 (C2): xem trước văn bản đã điền (hộ đầu tiên khi tạo cho nhiều hộ) trước khi tải
+  const moXemTruoc = async () => {
+    try {
+      setXemTruoc(docxSangHtml(dienMau(await napMau(), duLieuXem)));
+    } catch (e) {
+      setThongBao({ loai: "do", noiDung: `Không xem trước được: ${(e as Error).message}` });
+    }
+  };
   const napMau = async () => (await kho.docMau(ma))?.bytes ?? (await napMauGoc(ma));
 
   const tao = async () => {
@@ -186,7 +231,8 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
           if (mau.ghiLai?.capDo === "HO" && so.trim()) ghi.vanBan = { ...(x.h.vanBan ?? {}), [`${mau.ghiLai.khoa}_so`]: `${so.trim()}/${kyHieu}`, [`${mau.ghiLai.khoa}_ngay`]: ngayChu(ngayKy) };
           await luuHo({ ...x.h, ...ghi });
         }
-        setThongBao({ loai: "xanh", noiDung: `Đã tạo ${mau.ten} cho ${dsHoChon.length} hộ, tổ chức.` });
+        const ghiChuSo = await ghiSo([{ so }]);
+        setThongBao({ loai: "xanh", noiDung: `Đã tạo ${mau.ten} cho ${dsHoChon.length} hộ, tổ chức.${ghiChuSo}` });
       } else if (mau.phamVi === "DU_AN") {
         const out = dienMau(mauBytes, ghepDuLieu({ mau, duAn: duAnVb, ds: dsDot_, chung: chungVb, rieng, so, ngayKy, tyLeCham }));
         if (!(await taiXuong(out, `Mau-${ma}_${tenAnToan(mau.ten)}_${tenAnToan(duAn.ten)}${dotChon ? `_${tenAnToan(tenDot(dotChon))}` : ""}.docx`, DOCX))) return setThongBao({ loai: "vang", noiDung: "Đã hủy lưu tệp — chưa ghi số, ngày văn bản." });
@@ -197,7 +243,8 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
           const qd = [rieng.qd_giao_dat_so, rieng.qd_giao_dat_ngay].map((x) => (x ?? "").trim());
           await luuDuAn(ghiBanGiaoThucDia(vanBanGhi({}), { ngay: ngayKy, dotId: dotChon?.id, benNhan: String(du.ben_nhan ?? ""), dienTich: String(du.dien_tich_giao ?? ""), ...(qd[0] ? { qdGiaoDat: `${qd[0]}${qd[1] ? ` ngày ${qd[1]}` : ""}` } : {}) }));
         }
-        setThongBao({ loai: "xanh", noiDung: `Đã tạo Mẫu ${ma} cho dự án.${ma === "T23" && ngayKy ? " Đã ghi mốc bàn giao đất trên thực địa (Tổng quan dự án)." : ""}` });
+        const ghiChuSo = await ghiSo([{ so }]);
+        setThongBao({ loai: "xanh", noiDung: `Đã tạo Mẫu ${ma} cho dự án.${ma === "T23" && ngayKy ? " Đã ghi mốc bàn giao đất trên thực địa (Tổng quan dự án)." : ""}${ghiChuSo}` });
       } else {
         if (!dsHoChon.length) throw new Error("Chọn ít nhất một hộ, tổ chức.");
         const tep: { ten: string; noiDung: Uint8Array }[] = [];
@@ -216,7 +263,8 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
         if (!daLuu) return setThongBao({ loai: "vang", noiDung: "Đã hủy lưu tệp — chưa ghi số, ngày văn bản và nhật ký hồ sơ." });
         // Ghi số, ngày, nhật ký hồ sơ sau khi đã lưu được tệp
         for (const x of ghiHo) await luuHo(x);
-        setThongBao({ loai: "xanh", noiDung: `Đã tạo ${tep.length} văn bản Mẫu ${ma}${tep.length > 1 ? " (tệp .zip)" : ""}${coGhi ? "; đã ghi nhật ký hồ sơ." : "."}` });
+        const ghiChuSo = await ghiSo(dsHoChon.map((x, i) => ({ so: soSo !== null ? String(soSo + i) : so, hoMa: x.h.ma })));
+        setThongBao({ loai: "xanh", noiDung: `Đã tạo ${tep.length} văn bản Mẫu ${ma}${tep.length > 1 ? " (tệp .zip)" : ""}${coGhi ? "; đã ghi nhật ký hồ sơ." : "."}${ghiChuSo}` });
       }
       if (!coGhi) setThongBao({ loai: "xanh", noiDung: "Đã tạo bản dự thảo. Tài khoản chỉ xem: không ghi số, ngày văn bản và nhật ký vào hồ sơ." });
     } catch (e) {
@@ -361,7 +409,7 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
                 </div>
               )}
               <div className="luoi luoi-3">
-                <O nhan="Số văn bản" goiY={mau.phamVi === "HO" && chonHo.size > 1 ? "Nhập số → tăng dần cho từng hộ. Để trống để văn thư ghi khi ký." : "Để trống để văn thư ghi khi ký"}><input value={so} onChange={(e) => setSo(e.target.value)} /></O>
+                <O nhan="Số văn bản" goiY={<>{mau.phamVi === "HO" && chonHo.size > 1 ? "Nhập số → tăng dần cho từng hộ. Để trống để văn thư ghi khi ký." : "Để trống để văn thư ghi khi ký"}{kyHieuVb && coGhi ? <> · <button type="button" className="nut-chu chu-nho" data-so-tiep-theo onClick={() => setSo(String(soTiepTheo(soDi, kyHieuVb, ngaySo)))}>Số tiếp theo theo sổ: {soTiepTheo(soDi, kyHieuVb, ngaySo)}/{kyHieuVb}</button></> : null}</>}><input value={so} onChange={(e) => setSo(e.target.value)} /></O>
                 <O nhan="Ngày ký" goiY="Để trống = để trống ngày tháng"><ONgay aria-label="Ngày ký" value={ngayKy} onChange={(e) => setNgayKy(e.target.value)} /></O>
               </div>
               {mau.nhapThem.length > 0 && (
@@ -381,6 +429,15 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
                   ))}
                 </div>
               )}
+              {xemTruoc !== null && (
+                <HopThoai tieuDe={`Xem trước: ${mau.ma} – ${mau.ten}${mau.phamVi === "HO" && hoXemTruoc ? ` (${hoXemTruoc.h.ma} – ${hoXemTruoc.h.ten})` : ""}`} dong={() => setXemTruoc(null)} rong={980}>
+                  <style>{CSS_XEM_TRUOC}</style>
+                  <p className="chu-nho mo">Bản xem nhanh để soát số liệu, câu chữ — bố cục trang, ngắt trang chính xác xem khi mở bằng Word.</p>
+                  <div style={{ background: "#e9e9e9", padding: 12, maxHeight: "70vh", overflow: "auto" }}>
+                    <div className="xt-giay" data-noi-dung-xem-truoc dangerouslySetInnerHTML={{ __html: xemTruoc }} />
+                  </div>
+                </HopThoai>
+              )}
               {canhBaoTN.length > 0 && (
                 <div className="thong-bao thong-bao-vang" style={{ marginBottom: 0 }} aria-label="Kiểm tra thống nhất">
                   <b>Kiểm tra thống nhất trước khi tạo</b> (không chặn — văn bản là dự thảo):
@@ -388,6 +445,7 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
                 </div>
               )}
               <div className="nhom-nut">
+                <button className="nut" data-xem-truoc disabled={mau.phamVi !== "DU_AN" && chonHo.size === 0} title={mau.phamVi === "HO" && chonHo.size > 1 ? "Xem văn bản của hộ đầu tiên đã chọn" : undefined} onClick={() => void moXemTruoc()}>Xem trước</button>
                 <button className="nut nut-chinh" disabled={dangTao || chanSua || (mau.phamVi !== "DU_AN" && chonHo.size === 0)} title={chanSua ? "Lưu hồ sơ trước khi tạo văn bản" : undefined} onClick={tao}>
                   {dangTao ? "Đang tạo…" : mau.phamVi === "HO" ? `Tạo văn bản cho ${chonHo.size} hộ` : mau.phamVi === "DOT" ? `Tạo văn bản cho đợt (${chonHo.size} hộ)` : "Tạo văn bản cấp dự án (.docx)"}
                 </button>
