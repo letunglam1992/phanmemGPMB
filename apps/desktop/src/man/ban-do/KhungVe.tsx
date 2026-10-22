@@ -80,6 +80,8 @@ export function KhungVe(p: {
   setChon: (t: ThuaBanDo | null) => void;
   daLienKet: Map<string, Ho>;
   ttThua: Map<string, TrangThaiGpmb>;
+  /** 1.2.0 (D1): mã thửa bản đồ thuộc dự án/đợt đã bàn giao đất trên thực địa cho chủ đầu tư (Mẫu 06 NĐ 102/2024) — viền xanh đậm */
+  thuaDaGiaoCdt?: Set<string>;
   /** Khóa lưu tùy chọn hiển thị (lớp tắt, nền) theo dự án, trên máy này. */
   khoaLuu?: string;
   /** Ranh GPMB nhập ngoài (bảng mốc, DGN khác, vẽ) — vẽ như ranh đã chọn. */
@@ -364,6 +366,11 @@ export function KhungVe(p: {
         ctx.lineWidth = coAnh ? 1.2 : 0.8;
         ctx.strokeStyle = coAnh ? "#ffe066" : nenToi ? "#9fb0a9" : "#6f7d77";
         ctx.stroke();
+        if (cheDo === "HIEN_TRANG" && p.thuaDaGiaoCdt?.has(t.ma)) {
+          ctx.lineWidth = 2.6;
+          ctx.strokeStyle = coAnh ? "#7dffb0" : "#0b6b3a";
+          ctx.stroke();
+        }
       }
       // 3. Ranh GPMB
       for (const vg of lop.ranh ? p.dl.kq.vungGpmb : []) {
@@ -895,6 +902,7 @@ export function KhungVe(p: {
               <>
                 {THU_TU_TRANG_THAI.map((t) => <span key={t}><i style={{ background: TT_GPMB[t].nen }} />{TT_GPMB[t].bieuTuong} {TT_GPMB[t].ten}</span>)}
                 <span><i style={{ background: "rgba(170,181,176,0.22)" }} />Trong ranh, chưa lập hồ sơ</span>
+                {(p.thuaDaGiaoCdt?.size ?? 0) > 0 && <span data-chu-giai-giao-cdt><i style={{ background: "#fff", borderColor: "#0b6b3a", borderWidth: 3 }} />Đã bàn giao đất trên thực địa cho chủ đầu tư ({p.thuaDaGiaoCdt!.size} thửa)</span>}
               </>
             ) : (
               <>

@@ -45,6 +45,7 @@ import { TheKhieuNaiDuAn } from "../thanh-phan/KhieuNaiDuAn";
 import { TheBanGiaoThucDia } from "../thanh-phan/BanGiaoThucDia";
 import { HopDoiChieuQuyTrinh } from "../thanh-phan/DoiChieuQuyTrinh";
 import { TheSoVanBanDi } from "../thanh-phan/SoVanBanDi";
+import { TheDienBienDuAn } from "../thanh-phan/DienBienDuAn";
 import { HopPhanCong } from "../thanh-phan/PhanCong";
 import { ChonDot, HopXepDot, TheDotThuHoi, TheHanThuHoi, TheTongHopDot, loiDsDot } from "../thanh-phan/DotThuHoi";
 import { coDot, duAnTheoBoHo, khopDot } from "../dot-thu-hoi";
@@ -228,6 +229,7 @@ function TheTongQuan({ duAn, kq, moHo, moDot, capNhatTd, keHoach }: { duAn: DuAn
       <ThePhuongAn duAn={duAn} kq={kq} />
       <TheKhieuNaiDuAn duAn={duAn} hos={kq.map((x) => x.h)} />
       <TheBanGiaoThucDia duAn={duAn} />
+      <TheDienBienDuAn duAn={duAn} hos={kq.map((x) => x.h)} />
       {doiChieuQt && <HopDoiChieuQuyTrinh dong={() => setDoiChieuQt(false)} />}
       {ghiLt && <HopGhiLyTrinh hos={kq.map((x) => x.h)} dong={() => setGhiLt(false)} />}
     </>

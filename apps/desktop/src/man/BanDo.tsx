@@ -197,6 +197,16 @@ export function BanDo({ duAnId }: { duAnId: string }) {
   const batTatThua = (t: ThuaBanDo) => { const s = new Set(thuaChon); if (s.has(t.ma)) s.delete(t.ma); else s.add(t.ma); doiThuaChon([...s]); };
 
   const hos = hoCua(duAnId);
+  // 1.2.0 (D1): thửa của dự án (đợt) đã có mốc bàn giao đất trên thực địa cho chủ đầu tư
+  const thuaDaGiaoCdt = useMemo(() => {
+    const s = new Set<string>();
+    const ds = duAn?.banGiaoThucDia ?? [];
+    if (!duAn || !ds.length) return s;
+    const caDuAn = ds.some((x) => !x.dotId);
+    const dot = new Set(ds.map((x) => x.dotId).filter(Boolean));
+    for (const h of hos) if (caDuAn || (h.dotId && dot.has(h.dotId))) for (const t of h.thua) if (t.maBanDo && Number(t.dienTichThuHoi || 0) > 0) s.add(t.maBanDo);
+    return s;
+  }, [duAn, hos]);
   const ttThua = useMemo(() => {
     const m = new Map<string, TrangThaiGpmb>();
     if (!duAn) return m;
@@ -375,7 +385,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
       )}
       {dl && (
         <div className="ban-do-khung">
-          <KhungVe key={khoaNap} khungNhin={khungNhin} khungIn={khungIn} datKhungIn={(r) => { setKhungIn(r); if (r) setPhamViIn("VE"); }} xaDuAn={duAn.xa} dl={dl} vungChon={maVungChon} thuHoi={thuHoi} khoaThua={khoaThua} chon={chon} setChon={setChon} daLienKet={daLienKet} ttThua={ttThua} bamThua={cheDoChonThua && quyen("SUA_HO_SO") ? batTatThua : undefined} thuaChon={thuaChon} khoaLuu={duAnId} ranhThem={ranhVe} luuVung={quyen("SUA_HO_SO") ? luuRanhVe : undefined} batVeVung={veRanh} quet={(ds, them) => setQuet(new Set([...(them ? quet : []), ...ds.map(khoaThua)]))} thuaQuet={quet} phongToi={phongToi} lopPhu={lopPhu} batGhiChu={batGhiChu}
+          <KhungVe key={khoaNap} khungNhin={khungNhin} khungIn={khungIn} datKhungIn={(r) => { setKhungIn(r); if (r) setPhamViIn("VE"); }} xaDuAn={duAn.xa} dl={dl} vungChon={maVungChon} thuHoi={thuHoi} khoaThua={khoaThua} chon={chon} setChon={setChon} daLienKet={daLienKet} ttThua={ttThua} thuaDaGiaoCdt={thuaDaGiaoCdt} bamThua={cheDoChonThua && quyen("SUA_HO_SO") ? batTatThua : undefined} thuaChon={thuaChon} khoaLuu={duAnId} ranhThem={ranhVe} luuVung={quyen("SUA_HO_SO") ? luuRanhVe : undefined} batVeVung={veRanh} quet={(ds, them) => setQuet(new Set([...(them ? quet : []), ...ds.map(khoaThua)]))} thuaQuet={quet} phongToi={phongToi} lopPhu={lopPhu} batGhiChu={batGhiChu}
             themGhiChu={quyen("SUA_HO_SO") ? (loai, diem) => setGhiChuMoi({ loai, diem }) : undefined}
             luuDo={quyen("SUA_HO_SO") ? (loai, diem, giaTri) => void luuBanDoDa({ ketQuaDo: [...lopPhu.ketQuaDo, taoKetQuaDo(lopPhu.ketQuaDo, loai, diem, giaTri, nguoiDung)] }) : undefined} />
           <div className="ben-phai">
