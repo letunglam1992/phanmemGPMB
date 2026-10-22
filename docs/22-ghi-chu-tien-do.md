@@ -222,6 +222,19 @@ Gặp lỗi: bấm **"Chép chi tiết lỗi"** (nếu có), hoặc chụp màn 
 - [ ] Dữ liệu lớn (dự án ≥ 5.000 hộ): mở Tổng quan dự án, thẻ Khiếu nại; xuất Excel khiếu nại; tạo T18 cho 200 hộ — ghi thời gian từng việc (máy CI với 20.000 hộ: thống kê 0,05 giây, Excel 1,4 giây, 200 × T18 1,6 giây).
 - [ ] Máy tỉnh: nhận gói của xã bản 1.1.0 và gói bản cũ cùng lúc → không lỗi; số đơn tạm đình chỉ hiện với gói 1.1.0.
 - [ ] Bản phương án đã chuyển "quá hạn thẩm định" sau khi lên 1.0.21/1.1.0 → thẻ Phương án có dòng giải thích hạn theo cách đếm cũ.
+### A9. Thử bản 1.2.0 trên máy Windows thật (khi phát hành)
+
+- [ ] Tổng quan dự án → **Căn cứ thời hạn**: bảng 16 bước đọc rõ; đối chiếu một vài dòng với bản giấy NĐ 151/2025, Sổ tay.
+- [ ] Văn bản → T18 cho một hộ: bấm **Số tiếp theo theo sổ** → tạo → thông báo "Đã ghi sổ văn bản đi"; tạo lại cùng số → khung kiểm tra báo số đã cấp.
+- [ ] Mạng nội bộ: hai máy trạm cùng tạo văn bản cùng ký hiệu gần như cùng lúc → sổ có đủ hai dòng; số trùng tô đỏ ở thẻ Sổ văn bản đi.
+- [ ] Thẻ **Sổ văn bản đi** (Tài liệu, văn bản) → Xuất Excel mở được; lọc năm, ký hiệu, "Cả đơn vị".
+- [ ] Nút **Xem trước** với T5, T7, R1 (biểu dài), T26: nội dung, bảng hiện đủ; so với bản Word mở bằng Word.
+- [ ] T26 (Mẫu 44) cho đợt đã chốt phương án: biểu kèm theo từng hộ, tổng tiền khớp mẫu 14/R5.
+- [ ] Hồ sơ cưỡng chế có ngày dự kiến → Tổng quan dự án: **Lịch cưỡng chế** có hạn gửi Công an; T27, T28 mở bằng Word.
+- [ ] Máy tỉnh nhận gói 1.2.0 có đơn quá hạn: bấm ô "đơn khiếu nại, kiến nghị đang giải quyết" → danh sách đơn quá hạn không có tên hộ.
+- [ ] Bản đồ dự án đã ghi mốc bàn giao đất thực địa: thửa có viền xanh đậm, chú giải ghi số thửa.
+- [ ] Dự án có ngày ở bước 9, 12, 13 qua nhiều tháng: thẻ **Tiến độ theo tháng** vẽ đúng.
+- [ ] T25: Điều 3 ghi "Trong thời hạn 01 năm"; Hỏi đáp: hỏi "thời hiệu khởi kiện" → trích Điều 116 Luật Tố tụng hành chính.
 ## 3. Quy trình mỗi lần sửa (để phiên mới làm đúng ngay)
 
 1. Sửa mã. Cập nhật `docs/09`, ghi chú này, `docs/13`/`docs/21` nếu đổi cách dùng.

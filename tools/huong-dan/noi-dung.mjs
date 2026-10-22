@@ -98,11 +98,12 @@ export const CHUONG = [
   },
   {
     ten: "Soạn văn bản",
-    doan: ["Hồ sơ hộ → thẻ **Văn bản**: 22 mẫu Sổ tay, 25 mẫu theo văn bản thực tế (T1–T25), mẫu riêng của đơn vị; tự điền thông tin hộ, thửa, tài sản, số tiền theo kết quả tính."],
+    doan: ["Hồ sơ hộ → thẻ **Văn bản**: 22 mẫu Sổ tay, 28 mẫu theo văn bản thực tế (T1–T28), mẫu riêng của đơn vị; tự điền thông tin hộ, thửa, tài sản, số tiền theo kết quả tính."],
     buoc: [
       "Chọn mẫu → điền số, ngày → tải .docx (hoặc PDF). Hồ sơ đang sửa chưa lưu thì phải lưu trước.",
       "Văn bản cấp dự án, theo đợt: nút **Văn bản dự án, đợt** ở đầu không gian dự án.",
       "Tạo một mẫu cho nhiều hộ một lần (1.1.0): ở danh sách hộ của mẫu, lọc mã/tên rồi Enter để chọn thêm; nhập số đầu tiên → số tăng dần cho từng hộ; nhiều hộ ra một tệp .zip. Số, ngày văn bản ghi ngược vào từng đơn khiếu nại, hồ sơ cưỡng chế (chỉ ô còn trống).",
+      "Từ bản 1.2.0: ô Số văn bản có nút **Số tiếp theo theo sổ**; số đã cấp (cùng ký hiệu, năm) được nhắc trong khung kiểm tra; tạo xong tự ghi **Sổ văn bản đi** (dự án → Tài liệu, văn bản; xuất Excel). Nút **Xem trước** để soát nội dung trước khi tải. T26: QĐ phê duyệt phương án theo Mẫu 44 NĐ 151/2025; T27, T28: biên bản cưỡng chế, biên bản bảo quản tài sản.",
       "Biên bản bàn giao đất trên thực địa (T23, Mẫu 06 NĐ 102/2024) tạo xong thì phần mềm ghi mốc ở thẻ **Bàn giao đất trên thực địa** của Tổng quan dự án; bàn giao làm ngoài phần mềm thì bấm **Ghi mốc**. Mốc có trong báo cáo tiến độ và gói gửi tỉnh.",
       "Trước khi tạo văn bản, phần mềm hiện bảng kiểm tra thống nhất (tên đơn vị hành chính, chức danh…) — chỉ nhắc.",
     ],
