@@ -3,6 +3,7 @@ import { HopGioiHanDuAn } from "./thanh-phan/GiayPhep";
 import { CongTinhNen } from "./thanh-phan/CongTinhNen";
 import { ViecCuaToi } from "./man/ViecCuaToi";
 import { TroLyAi, moTroLy } from "./man/HoiDap";
+import { napNgamChiMuc } from "./hoi-dap/tim-kiem";
 import { TuDongGuiTinh } from "./thanh-phan/TuDongGuiTinh";
 import { TheoDoiGoiTinh } from "./thanh-phan/TheoDoiGoiTinh";
 import { TongHopTinh } from "./man/TongHopTinh";
@@ -65,6 +66,8 @@ export function UngDung() {
   const [duAnGanNhat, setDuAnGanNhat] = useState<string | null>(null);
   useEffect(() => { if ("duAnId" in man && man.duAnId) setDuAnGanNhat(man.duAnId); }, [man]);
   const { canhBao, mo: moCanhBao } = useTongHop();
+  // 1.1.0 (C1): nạp ngầm kho tri thức Hỏi đáp khi máy rảnh — mở trợ lý là tra được ngay
+  useEffect(() => napNgamChiMuc(), []);
   // Phím Quay lại: Alt + ←, nút lùi của chuột (không bắt Backspace để tránh mất thao tác khi đang nhập)
   useEffect(() => {
     const phim = (e: KeyboardEvent) => { if (e.altKey && e.key === "ArrowLeft") { e.preventDefault(); quayLai(); } };

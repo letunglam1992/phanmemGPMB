@@ -37,18 +37,30 @@ export interface ChiMuc {
 }
 
 export function taoChiMuc(doan: DoanTriThuc[]): ChiMuc {
-  const tf: Map<string, number>[] = [];
-  const dai: number[] = [];
-  const df = new Map<string, number>();
-  for (const d of doan) {
-    const m = new Map<string, number>();
-    const ts = tachTu(`${d.tieuDe} ${d.tieuDe} ${d.noiDung}`);
-    for (const t of ts) m.set(t, (m.get(t) ?? 0) + 1);
-    for (const t of m.keys()) df.set(t, (df.get(t) ?? 0) + 1);
-    tf.push(m);
-    dai.push(ts.length);
+  const cm = chiMucRong(doan);
+  for (const d of doan) themDoan(cm, d);
+  return xongChiMuc(cm);
+}
+
+const chiMucRong = (doan: DoanTriThuc[]): ChiMuc => ({ doan, tf: [], dai: [], df: new Map(), daiTb: 0 });
+function themDoan(cm: ChiMuc, d: DoanTriThuc) {
+  const m = new Map<string, number>();
+  const ts = tachTu(`${d.tieuDe} ${d.tieuDe} ${d.noiDung}`);
+  for (const t of ts) m.set(t, (m.get(t) ?? 0) + 1);
+  for (const t of m.keys()) cm.df.set(t, (cm.df.get(t) ?? 0) + 1);
+  cm.tf.push(m);
+  cm.dai.push(ts.length);
+}
+const xongChiMuc = (cm: ChiMuc): ChiMuc => ({ ...cm, daiTb: cm.dai.reduce((s, x) => s + x, 0) / Math.max(1, cm.dai.length) });
+
+/** 1.1.0 (C1): dựng chỉ mục từng phần (200 đoạn một lượt, nhường luồng giữa các lượt) — nạp ngầm không làm khựng giao diện. */
+export async function taoChiMucDan(doan: DoanTriThuc[], moiLuot = 200): Promise<ChiMuc> {
+  const cm = chiMucRong(doan);
+  for (let i = 0; i < doan.length; i += moiLuot) {
+    for (const d of doan.slice(i, i + moiLuot)) themDoan(cm, d);
+    await new Promise((r) => setTimeout(r, 0));
   }
-  return { doan, tf, dai, df, daiTb: dai.reduce((s, x) => s + x, 0) / Math.max(1, dai.length) };
+  return xongChiMuc(cm);
 }
 
 export interface KetQuaTim {
@@ -91,7 +103,20 @@ export function napChiMuc(): Promise<ChiMuc> {
       if (!r.ok) throw new Error(`Không đọc được kho tri thức (${r.status})`);
       return r.json() as Promise<KhoTriThuc>;
     })
-    .then((k) => taoChiMuc(k.doan));
+    .then((k) => taoChiMucDan(k.doan));
   dangNap.catch(() => { dangNap = null; });
   return dangNap;
+}
+
+/**
+ * 1.1.0 (C1): nạp ngầm kho tri thức (~2,2 MB) khi máy rảnh sau lúc mở phần mềm — mở Hỏi đáp là tra được ngay. Kho là tệp đi kèm
+ * phần mềm, đọc tại chỗ (không gửi gì ra ngoài). Lỗi thì bỏ qua: mở Hỏi đáp sẽ nạp lại và báo lỗi ở đó.
+ */
+export function napNgamChiMuc(treMs = 3000) {
+  const chay = () => void napChiMuc().catch(() => undefined);
+  setTimeout(() => {
+    const w = window as Window & { requestIdleCallback?: (f: () => void, o?: { timeout: number }) => number };
+    if (w.requestIdleCallback) w.requestIdleCallback(chay, { timeout: 5000 });
+    else chay();
+  }, treMs);
 }

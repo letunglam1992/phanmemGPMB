@@ -1,7 +1,7 @@
 /** Hỏi đáp: tìm đoạn văn bản liên quan trong kho tri thức (chạy trên máy). */
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { taoChiMuc, timDoan, tachTu, boDau, type KhoTriThuc } from "../src/hoi-dap/tim-kiem";
+import { taoChiMuc, taoChiMucDan, timDoan, tachTu, boDau, type KhoTriThuc } from "../src/hoi-dap/tim-kiem";
 
 const kho = JSON.parse(readFileSync(new URL("../public/tri-thuc/kho.json", import.meta.url), "utf8")) as KhoTriThuc;
 const cm = taoChiMuc(kho.doan);
@@ -31,5 +31,14 @@ describe("Tìm đoạn tri thức", () => {
     expect(r.some((x) => x.doan.nguon.startsWith("Luật Đất đai") && /^Điều 87\./.test(x.doan.tieuDe))).toBe(true);
     const r2 = timDoan(cm, "điều kiện được bồi thường về đất khi Nhà nước thu hồi đất", 5);
     expect(r2.some((x) => x.doan.nguon.startsWith("Luật Đất đai") && /^Điều 95\./.test(x.doan.tieuDe))).toBe(true);
+  });
+});
+
+describe("1.1.0 (C1) — dựng chỉ mục từng phần cho nạp ngầm", () => {
+  it("cho cùng kết quả với cách dựng một lượt", async () => {
+    const dan = await taoChiMucDan(kho.doan, 300);
+    expect(dan.daiTb).toBe(cm.daiTb);
+    expect(dan.df.size).toBe(cm.df.size);
+    expect(timDoan(dan, "thời hạn thẩm định phương án").map((x) => x.doan.id)).toEqual(timDoan(cm, "thời hạn thẩm định phương án").map((x) => x.doan.id));
   });
 });
