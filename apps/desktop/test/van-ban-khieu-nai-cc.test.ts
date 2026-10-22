@@ -137,4 +137,61 @@ describe("1.0.21 (B2) — mẫu văn bản khiếu nại, cưỡng chế tự đ
     expect(t23.chu).toContain("- Mốc 2 – mốc 3: 40,0 m;");
     expect(t23.chu).not.toContain("{");
   });
+
+  it("1.1.0 A2, A3 — T24 thông báo tổ chức đối thoại; T25 QĐ giải quyết lần hai (Mẫu 16), mặc định Chủ tịch UBND tỉnh", async () => {
+    const d0 = h.khieuNai![0]!;
+    const hd: Ho = { ...h, khieuNai: [{ ...d0, doiThoai: { ngay: "2026-10-15", diaDiem: "Nhà văn hóa bản Mòng" } }] };
+    const t24 = tao("T24", hd, duAn, {});
+    expect(t24.chu).toContain("ngày 15/10/2026");
+    expect(t24.chu).toContain("Nhà văn hóa bản Mòng");
+    expect(t24.chu).toContain(h.ten);
+    expect(t24.chu).not.toContain("{");
+    expect(tao("T24", h, duAn, {}).canhBao.some((c) => c.includes("chưa ghi ngày tổ chức đối thoại"))).toBe(true);
+    const h2: Ho = {
+      ...h,
+      khieuNai: [
+        { ...d0, ketQua: "SAI", soVb: "30/QĐ-UBND", ngayVb: "2026-10-01" },
+        { id: "k2", loai: "KHIEU_NAI", lan: 2, ngayNhan: "2026-10-10", doiTuong: "Quyết định số 30/QĐ-UBND", noiDung: "Không đồng ý kết quả lần đầu" },
+      ],
+    };
+    const t25 = tao("T25", h2, duAn, { kn2_thoi_han_khoi_kien: "theo Luật Tố tụng hành chính" });
+    expect(t25.chu).toContain("CHỦ TỊCH ỦY BAN NHÂN DÂN TỈNH SƠN LA");
+    expect(t25.chu).toContain("Không đồng ý kết quả lần đầu");
+    expect(t25.chu).toContain("Quyết định số 30/QĐ-UBND ngày 01/10/2026");
+    expect(t25.chu).not.toContain("{");
+    expect(t25.canhBao.filter((c) => /lần hai|lần đầu|khởi kiện/.test(c))).toEqual([]);
+    const thieu = tao("T25", h, duAn, {}).canhBao;
+    expect(thieu.some((c) => c.includes("chưa có đơn khiếu nại lần hai"))).toBe(true);
+    expect(thieu.some((c) => c.includes("thời hạn khởi kiện"))).toBe(true);
+    const { ghiNguocVanBan } = await import("../src/ghi-nguoc-van-ban");
+    const g = ghiNguocVanBan(h2, "T25", "45/QĐ-UBND", "2026-11-20")!.khieuNai!;
+    expect(g[1]).toMatchObject({ soVb: "45/QĐ-UBND", ngayVb: "2026-11-20" });
+    expect(g[0]!.soVb).toBe("30/QĐ-UBND");
+  });
+
+  it("1.1.0 A1, A2 — nhắc gửi QĐ tạm đình chỉ/tiếp tục/đình chỉ trong 03 ngày làm việc; thông báo đối thoại trước ít nhất 05 ngày", async () => {
+    const { canhBaoThuTucDon } = await import("../src/khieu-nai");
+    const { LICH_TRONG: lich } = await import("../src/lich-lam-viec");
+    const d0 = h.khieuNai![0]!;
+    // QĐ tạm đình chỉ ngày thứ Năm 01/10/2026 → hạn gửi thứ Ba 06/10/2026
+    const tdc = { ...d0, tamDinhChi: [{ id: "t", tu: "2026-10-01", truongHop: "a" as const, lyDo: "x" }] };
+    expect(canhBaoThuTucDon(tdc, "2026-10-06", lich)).toEqual([]);
+    const c = canhBaoThuTucDon(tdc, "2026-10-07", lich);
+    expect(c).toHaveLength(1);
+    expect(c[0]!.muc).toBe("CAO");
+    expect(c[0]!.noiDung).toContain("06/10/2026");
+    expect(c[0]!.canCu).toContain("28b");
+    expect(canhBaoThuTucDon({ ...tdc, tamDinhChi: [{ ...tdc.tamDinhChi[0]!, ngayGui: "2026-10-05" }] }, "2026-10-20", lich)).toEqual([]);
+    expect(canhBaoThuTucDon({ ...tdc, tamDinhChi: [{ ...tdc.tamDinhChi[0]!, ngayGui: "2026-10-08" }] }, "2026-10-20", lich)[0]!.noiDung).toContain("quá hạn");
+    // đình chỉ
+    expect(canhBaoThuTucDon({ ...d0, ketQua: "DINH_CHI", dinhChi: { ngay: "2026-10-01" } as never }, "2026-10-20", lich)[0]!.noiDung).toContain("QĐ đình chỉ");
+    // đối thoại 15/10/2026 → thông báo chậm nhất 10/10/2026
+    const dt = { ...d0, doiThoai: { ngay: "2026-10-15" } };
+    expect(canhBaoThuTucDon(dt, "2026-10-05", lich)[0]).toMatchObject({ muc: "TRUNG_BINH" });
+    expect(canhBaoThuTucDon(dt, "2026-10-05", lich)[0]!.noiDung).toContain("10/10/2026");
+    expect(canhBaoThuTucDon(dt, "2026-10-11", lich)[0]).toMatchObject({ muc: "CAO" });
+    expect(canhBaoThuTucDon({ ...dt, doiThoai: { ngay: "2026-10-15", ngayTb: "2026-10-10" } }, "2026-10-11", lich)).toEqual([]);
+    expect(canhBaoThuTucDon({ ...dt, doiThoai: { ngay: "2026-10-15", ngayTb: "2026-10-12" } }, "2026-10-11", lich)[0]!.noiDung).toContain("chưa đủ 05 ngày");
+    expect(canhBaoThuTucDon({ ...dt, ketQua: "DUNG" }, "2026-10-11", lich)).toEqual([]);
+  });
 });

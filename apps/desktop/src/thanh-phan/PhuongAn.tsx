@@ -11,7 +11,7 @@ import { homNayIso } from "../trang-thai";
 import { xuatTienDoThuTuc } from "../tien-do-thu-tuc";
 import { GOI_CO_SAN } from "../goi-chinh-sach";
 import { CAN_CU_TRUOC_THAM_DINH, kiemTraTruocThamDinh } from "../thu-tuc-ban";
-import { hanGuiQdBan, hanPheDuyetBan, hanThamDinhBan, ngayToTrinhPA, type TinhHan } from "../han-buoc";
+import { hanGuiQdBan, hanPheDuyetBan, hanThamDinhBan, ngayToTrinhPA, type TinhHan, ghiChuDoiHanThamDinh } from "../han-buoc";
 import { hoHieuLuc } from "../mo-hinh";
 import { ngayChu } from "../van-ban/du-lieu";
 import {
@@ -140,7 +140,7 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
                           <div className="chu-nho" {...data} title={t.han.canCu}>
                             {t.trangThai === "CHUA_CO_MOC" ? <span className="mo">{ten}: {chuaMoc}</span>
                               : t.trangThai === "TAM_DUNG" ? <span className="mo">{ten}: tạm dừng (thời gian không tính)</span>
-                              : <span className={lop ? `nhan ${lop}` : "mo"}>{ten} {ngay(t.hanChot!)}{t.trangThai === "QUA_HAN" ? " — quá hạn" : t.conLai !== null ? ` (còn ${t.conLai} NLV)` : ""}</span>}
+                              : <span className={lop ? `nhan ${lop}` : "mo"}>{ten} {ngay(t.hanChot!)}{t.trangThai === "QUA_HAN" ? " — quá hạn" : t.conLai !== null ? ` (còn ${t.conLai} ${t.han.loai === "NLV" ? "NLV" : "ngày"})` : ""}</span>}
                             {quyen("SUA_HO_SO") && <> <button className="nut nut-chu nut-nho" onClick={() => setHop({ loai: "nhan-ho-so", p, buoc })}>{t.moc ? nutSua : nutMoi}</button></>}
                           </div>
                         );
@@ -148,6 +148,7 @@ export function ThePhuongAn({ duAn, kq }: { duAn: DuAn; kq: { h: Ho; k: KetQuaHo
                       return (
                         <>
                           {td && dong(td, "Hạn thẩm định", "chưa ghi ngày nhận đủ hồ sơ", "8", "Ngày nhận đủ hồ sơ…", "Sửa ngày nhận hồ sơ…", { "data-han-td": p.so })}
+                          {(() => { const gc = ghiChuDoiHanThamDinh(td, homNayIso(), lich); return gc ? <div className="thong-bao thong-bao-vang chu-nho" data-doi-han-td>{gc}</div> : null; })()}
                           {gq && gq.hanChot && (
                             <div className="chu-nho" data-han-gq={p.so} title={gq.han.canCu}>
                               <span className={gq.trangThai === "QUA_HAN" ? "nhan nhan-do" : gq.trangThai === "SAP_HET" ? "nhan nhan-vang" : "mo"}>

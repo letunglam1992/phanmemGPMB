@@ -433,7 +433,7 @@ function duLieuThucTe(p: { mau: MauVanBan; duAn: DuAn; ds: { h: Ho; k: KetQuaHo 
     ...(p.mau.ma === "T8" || p.mau.ma === "T9" ? duLieuBoTriTdc(p.duAn, p.ds) : {}),
     ...(p.mau.ma === "T12" && p.ho ? duLieuDoiThoai(p.ho.h) : {}),
     ...(p.mau.ma === "T13" ? duLieuBocTham(p.duAn, p.ds) : {}),
-    ...(p.ho && /^T(1[4-9]|2[0-2])$/.test(p.mau.ma) ? duLieuKhieuNaiCuongChe(p.ho.h, p.ngayKy, p.duAn.xa, p.mau.ma) : {}),
+    ...(p.ho && /^T(1[4-9]|2[0-2]|2[45])$/.test(p.mau.ma) ? duLieuKhieuNaiCuongChe(p.ho.h, p.ngayKy, p.duAn.xa, p.mau.ma) : {}),
     ...(p.mau.ma === "T10" ? { kinh_gui: `Chủ tịch Ủy ban nhân dân ${lower1(p.duAn.xa)}` } : {}),
     ...(p.mau.ma === "T10" || p.mau.ma === "T11" ? duLieuChamTra(p.duAn, p.ds, p.tyLeCham ?? [], p.ngayKy || new Date().toISOString().slice(0, 10)) : {}),
   };

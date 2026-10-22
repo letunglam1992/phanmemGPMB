@@ -15,12 +15,12 @@ import type { KetQuaHo } from "./tinh-ho";
 
 import { hoDaPheDuyet, hoLechSauPheDuyet } from "./phuong-an";
 import { CAN_CU_THONG_BAO, hanChinhLyBan, laDatNongNghiep, thongBaoNhom } from "./thu-tuc-ban";
-import { HAN_BUOC, hanThuHoiNhom, nhomThuHoi, hanGuiQdBan, hanPheDuyetBan, hanThamDinhBan, ngayToTrinhPA, tinhHanBuoc } from "./han-buoc";
+import { HAN_BUOC, hanThuHoiNhom, nhomThuHoi, hanGuiQdBan, hanPheDuyetBan, hanThamDinhBan, ngayToTrinhPA, tinhHanBuoc, ghiChuDoiHanThamDinh } from "./han-buoc";
 import { LICH_TRONG, type LichLamViec } from "./lich-lam-viec";
 import { tinhChiTra, type GiaiDoanTyLe } from "./chi-tra";
 import { dinhDang } from "@gpmb/core";
 import { dtDaBanGiao, dtThuHoiHo } from "./ban-giao";
-import { TEN_LOAI_DON, hanDon, hanGuiQd } from "./khieu-nai";
+import { TEN_LOAI_DON, canhBaoThuTucDon, hanDon, hanGuiQd } from "./khieu-nai";
 import { TEN_LOAI_CC, cuongCheDangMo, kiemCuongChe } from "./cuong-che";
 export type TrangThaiGpmb = "HOAN_THANH" | "CHO_BAN_GIAO" | "DANG_XU_LY" | "DA_KIEM_DEM" | "VUONG_MAC" | "CHUA_KIEM_DEM";
 
@@ -223,8 +223,9 @@ export function canhBaoDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: st
     const t = hanThamDinhBan(p, ds.map((x) => hoHieuLuc(duAn, x.h)), homNay, lich);
     if (!t?.hanChot) continue;
     const hc = t.hanChot.split("-").reverse().join("/");
-    if (t.trangThai === "QUA_HAN") out.push({ muc: "CAO", duAnId: duAn.id, noiDung: `Phương án bản ${p.so}: quá hạn thẩm định (hạn ${hc}, 30 ngày từ ngày nhận đủ hồ sơ) — chưa ghi nhận kết quả thẩm định`, canCu: t.han.canCu });
-    else if (t.trangThai === "SAP_HET") out.push({ muc: "TRUNG_BINH", duAnId: duAn.id, noiDung: `Phương án bản ${p.so}: sắp hết hạn thẩm định (${hc}, còn ${t.conLai} ngày làm việc)`, canCu: t.han.canCu });
+    const gc = ghiChuDoiHanThamDinh(t, homNay, lich);
+    if (t.trangThai === "QUA_HAN") out.push({ muc: "CAO", duAnId: duAn.id, noiDung: `Phương án bản ${p.so}: quá hạn thẩm định (hạn ${hc}, 30 ngày từ ngày nhận đủ hồ sơ) — chưa ghi nhận kết quả thẩm định${gc ? `. ${gc}` : ""}`, canCu: t.han.canCu });
+    else if (t.trangThai === "SAP_HET") out.push({ muc: "TRUNG_BINH", duAnId: duAn.id, noiDung: `Phương án bản ${p.so}: sắp hết hạn thẩm định (${hc}, còn ${t.conLai} ngày)${gc ? `. ${gc}` : ""}`, canCu: t.han.canCu });
   }
   // 1.0.13: hạn phê duyệt theo bản (5 ngày làm việc từ ngày nhận tờ trình — mặc định ngày tờ trình mẫu 13 / R4)
   for (const p of duAn.phuongAn ?? []) {
@@ -310,6 +311,7 @@ export function canhBaoDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: st
       if (t.tt === "QUA_HAN_THU_LY") out.push({ muc: "CAO", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: ${ten} quá hạn thụ lý (hạn ${hc})`, canCu: t.canCu });
       else if (t.tt === "QUA_HAN") out.push({ muc: "CAO", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: ${ten} quá hạn giải quyết (hạn ${hc}, ${t.soNgay} ngày)`, canCu: t.canCu });
       else if (t.tt === "SAP_HET") out.push({ muc: "TRUNG_BINH", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: ${ten} sắp hết hạn giải quyết (${hc}, còn ${t.conLai} ngày)`, canCu: t.canCu });
+      for (const c of canhBaoThuTucDon(d, homNay, lich)) if (c.muc === "CAO") out.push({ muc: "TRUNG_BINH", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: ${ten} — ${c.noiDung}`, canCu: c.canCu });
       const g = hanGuiQd(d, homNay, lich);
       if (g?.quaHan) out.push({ muc: "TRUNG_BINH", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: ${ten} — chưa ghi ngày gửi quyết định giải quyết (hạn ${g.han.split("-").reverse().join("/")}, ${g.soNgay} ngày làm việc từ ngày ban hành)`, canCu: g.canCu });
     }

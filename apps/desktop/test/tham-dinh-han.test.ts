@@ -5,7 +5,7 @@ import { taoDuAnMau } from "../src/du-lieu-mau";
 import { chotPhuongAn, demBanPA, ghiThamDinh, moTaDemBanPA, pheDuyet } from "../src/phuong-an";
 import { giaTriNhapThem, ketQuaThamDinh } from "../src/van-ban/tao-nhanh";
 import { mauTheoMa } from "../src/van-ban/danh-muc";
-import { hanThamDinhBan } from "../src/han-buoc";
+import { hanThamDinhBan, ghiChuDoiHanThamDinh } from "../src/han-buoc";
 import { LICH_TRONG } from "../src/lich-lam-viec";
 import { canhBaoDuAn } from "../src/trang-thai";
 import { tinhHo } from "../src/tinh-ho";
@@ -38,6 +38,10 @@ describe("1.0.12 — thẩm định: mẫu tự điền, hạn 30 ngày, đếm 
     const t = hanThamDinhBan(p, hos, "2026-10-20", LICH_TRONG)!;
     expect(t.hanChot).toBe("2026-10-01"); // 1.0.21: 30 ngày (k3 Đ3 NĐ 88 "không quá 30 ngày") kể từ sau 01/09/2026
     expect(t.trangThai).toBe("QUA_HAN");
+    // 1.1.0 (B3): còn trong hạn nếu đếm 30 ngày làm việc (13/10/2026) → ghi chú giải thích; quá cả hạn cũ thì không ghi chú
+    const t2 = hanThamDinhBan(p, hos, "2026-10-05", LICH_TRONG)!;
+    expect(ghiChuDoiHanThamDinh(t2, "2026-10-05", LICH_TRONG)).toContain("hạn là 13/10/2026");
+    expect(ghiChuDoiHanThamDinh(t, "2026-10-20", LICH_TRONG)).toBeNull();
     const da = { ...duAn, phuongAn: [p] };
     const cb = canhBaoDuAn(da, hos.map((h) => ({ h, k: tinhHo(cs, da, h) })), "2026-10-20");
     expect(cb.filter((c) => /thẩm định/.test(c.noiDung) && /quá hạn/.test(c.noiDung))).toHaveLength(1);

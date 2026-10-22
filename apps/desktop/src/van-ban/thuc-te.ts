@@ -14,7 +14,7 @@ import { canBoTriLo, quyCua, tenLo, trangThaiLo } from "../quy-tdc";
 import { tinhChiTra, type GiaiDoanTyLe } from "../chi-tra";
 import { canhBaoCanCu } from "../van-ban-can-cu";
 import { tinhThuong } from "../ban-giao";
-import { NGAY_HL_ND155, TEN_DINH_CHI } from "../khieu-nai";
+import { NGAY_HL_ND155, TEN_DINH_CHI, TEN_KET_QUA_DON, type DonKhieuNai } from "../khieu-nai";
 import { donChoMau } from "../ghi-nguoc-van-ban";
 
 const soM2 = (v: Decimal) => dinhDang(v, 2);
@@ -271,6 +271,10 @@ export function kiemTraThongNhat(ma: string, duAn: DuAn, du: Record<string, unkn
   if (ma === "T19" && !du.kn_khong_co_don_kn && !String(du.kn_ly_do_khong_thu_ly ?? "").trim()) out.push("Chưa ghi lý do không thụ lý (Điều 11 Luật Khiếu nại) — chọn kết quả \"Không thụ lý\" ở đơn và ghi lý do, hoặc nhập ở ô nhập thêm.");
   if (ma === "T21" && !du.kn_khong_co_don_kn && !du.kn_co_tdc && du.kn_loai_dinh_chi === "tạm đình chỉ") out.push("Đơn chưa ghi tạm đình chỉ (thẻ Khiếu nại → \"+ Tạm đình chỉ\") và chưa có kết quả đình chỉ — lý do để trống.");
   if (ma === "T22" && !du.kn_co_tdc) out.push("Đơn chưa ghi tạm đình chỉ — không có căn cứ ban hành quyết định tiếp tục giải quyết.");
+  if (ma === "T24" && du.kn_tb_doi_thoai_thieu) out.push("Đơn chưa ghi ngày tổ chức đối thoại (thẻ Khiếu nại) — thời gian để trống; thông báo phải gửi trước ngày đối thoại ít nhất 05 ngày (khoản 1 Điều 28 NĐ 124/2020 sửa bởi NĐ 155/2026).");
+  if (ma === "T25" && du.kn2_khong_co_don) out.push("Hộ chưa có đơn khiếu nại lần hai (thẻ Khiếu nại → Lần giải quyết: Lần hai) — nội dung đơn để trống.");
+  if (ma === "T25" && du.kn2_khong_co_lan_dau) out.push("Chưa có đơn lần đầu đã ghi kết quả — mục II (kết quả giải quyết lần đầu) để trống, cán bộ ghi.");
+  if (ma === "T25" && !String(du.kn2_thoi_han_khoi_kien ?? "").trim()) out.push("Chưa ghi thời hạn khởi kiện ở Điều 3 — ghi theo Luật Tố tụng hành chính (phần mềm chưa có nguyên văn).");
   if (/^T1[5-7]$/.test(ma) && du.cc_khong_co) out.push("Hộ chưa có hồ sơ cưỡng chế thu hồi đất (Hồ sơ hộ → thẻ Khiếu nại → Cưỡng chế) — thời gian vận động, số QĐ cưỡng chế để trống.");
   if ((ma === "T16" || ma === "T17") && !du.cc_khong_co && !String(du.cc_so_qd ?? "").trim()) out.push("Chưa ghi số quyết định cưỡng chế thực hiện quyết định thu hồi đất ở hồ sơ cưỡng chế của hộ.");
   if (ma === "T16" && !(Array.isArray(du.thanh_vien_ban) && du.thanh_vien_ban.length)) out.push("Chưa nhập thành viên Ban cưỡng chế (điểm a khoản 4 Điều 89 Luật Đất đai 2024).");
@@ -512,7 +516,9 @@ export function duLieuKhieuNaiCuongChe(h: Ho, ngayKy: string, xa: string, ma = "
     cc_ngay_qd: ngayVn(cc?.ngayQd),
     cc_ngay_du_kien: ngayVn(cc?.ngayDuKien),
     cc_qd_ban: cc?.qdBan ?? "",
-    ...(ma !== "T14" && dk ? { kn_noi_dung: dk.noiDung } : {}),
+    ...(ma !== "T14" && ma !== "T25" && dk ? { kn_noi_dung: dk.noiDung } : {}),
+    ...(ma === "T24" ? duLieuThongBaoDoiThoai(h, dk) : {}),
+    ...(ma === "T25" ? duLieuLanHai(h, chu) : {}),
   };
 }
 
@@ -541,4 +547,38 @@ export function duLieuCuongCheMau(h: Ho, ma: string): Record<string, unknown> {
   const c = [...(h.cuongChe ?? [])].reverse().find((x) => x.loai === (ma === "07" ? "KIEM_DEM" : "THU_HOI"));
   if (!c?.ngayDuKien) return {};
   return ma === "07" ? { tg_tu: ngayVn(c.ngayDuKien) } : { tg_cuong_che_tu: ngayVn(c.ngayDuKien) };
+}
+
+/** 1.1.0 (A2): T24 — thời gian, địa điểm đối thoại đã ghi ở đơn (k1 Điều 28 NĐ 124 sửa bởi NĐ 155). */
+function duLieuThongBaoDoiThoai(h: Ho, dk: DonKhieuNai | undefined): Record<string, unknown> {
+  const dt = dk?.doiThoai;
+  return {
+    kn_nguoi_nhan_tb: h.ten,
+    ...(dt?.ngay ? { dt_thoi_gian: `ngày ${ngayVn(dt.ngay)}` } : {}),
+    ...(dt?.diaDiem ? { dt_dia_diem: dt.diaDiem } : {}),
+    kn_tb_doi_thoai_thieu: !dt?.ngay,
+  };
+}
+
+/**
+ * 1.1.0 (A3): T25 — QĐ giải quyết khiếu nại lần hai (Mẫu 16 NĐ 124/2020): đơn lần hai mới nhất; mục II lấy kết quả đơn lần đầu
+ * đã ghi. Người giải quyết lần hai mặc định Chủ tịch UBND tỉnh (khoản 2 Điều 21 Luật Khiếu nại sửa bởi Luật 136/2025 — trường hợp
+ * người giải quyết lần đầu là Chủ tịch UBND cấp xã); thời hạn khởi kiện do cán bộ ghi theo Luật Tố tụng hành chính.
+ */
+function duLieuLanHai(h: Ho, chu: (iso?: string) => string): Record<string, unknown> {
+  const d2 = donChoMau(h, "T25");
+  const d1 = (h.khieuNai ?? []).filter((d) => d.loai === "KHIEU_NAI" && (d.lan ?? 1) === 1 && d.ketQua).sort((a, b) => a.ngayNhan.localeCompare(b.ngayNhan)).pop();
+  return {
+    kn2_khong_co_don: !d2,
+    kn_ngay_don: chu(d2?.ngayNhan),
+    kn_doi_tuong: d2?.doiTuong ?? "",
+    kn_noi_dung: d2?.noiDung ?? "",
+    kn_kq_lan_dau: d1 ? `${d1.soVb ? `Quyết định số ${d1.soVb}${d1.ngayVb ? ` ngày ${ngayVn(d1.ngayVb)}` : ""}` : "Quyết định giải quyết khiếu nại lần đầu"}: ${(TEN_KET_QUA_DON[d1.ketQua!] ?? d1.ketQua!).toLowerCase()}.` : "",
+    kn2_khong_co_lan_dau: !d1,
+    KN2_CO_QUAN: "ỦY BAN NHÂN DÂN TỈNH SƠN LA",
+    kn2_co_quan_cap_tren: "",
+    KN2_CHUC_DANH: "CHỦ TỊCH ỦY BAN NHÂN DÂN TỈNH SƠN LA",
+    kn2_co_quan: "Chủ tịch Ủy ban nhân dân tỉnh Sơn La",
+    kn2_ky_hieu: "UBND",
+  };
 }

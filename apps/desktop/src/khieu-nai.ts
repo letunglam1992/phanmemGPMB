@@ -67,6 +67,10 @@ export interface DonKhieuNai {
   vangDoiThoai?: { ngay: string; coLyDo: boolean };
   /** Ngày gửi QĐ giải quyết cho người khiếu nại (điểm a k2 Điều 29 NĐ 124/2020) */
   ngayGuiQd?: string;
+  /** 1.1.0 (A2): tổ chức đối thoại — ngày đối thoại, ngày gửi thông báo (trước ít nhất 05 ngày — k1 Điều 28 NĐ 124 sửa bởi NĐ 155) */
+  doiThoai?: { ngay: string; ngayTb?: string; diaDiem?: string };
+  /** Đình chỉ: ngày gửi QĐ đình chỉ (k1 Điều 28b) */
+  ngayGuiDinhChi?: string;
 }
 
 export interface TamDinhChi {
@@ -80,6 +84,9 @@ export interface TamDinhChi {
   lyDo: string;
   soQd?: string;
   soQdTiepTuc?: string;
+  /** 1.1.0 (A1): ngày gửi QĐ tạm đình chỉ / QĐ tiếp tục cho người khiếu nại và các bên (k1, k2 Điều 28b NĐ 124 bổ sung bởi NĐ 155) */
+  ngayGui?: string;
+  ngayGuiTiepTuc?: string;
 }
 
 export const TEN_TDC: Record<TamDinhChi["truongHop"], string> = {
@@ -201,4 +208,48 @@ export function hanGuiQd(d: DonKhieuNai, homNay: string, lich: LichLamViec): { h
   const n = (d.lan ?? 1) === 2 ? 7 : 3;
   const han = hanChot(d.ngayVb, n, "NLV", lich);
   return { han, soNgay: n, quaHan: homNay > han, canCu: "điểm a khoản 2 Điều 29 NĐ 124/2020/NĐ-CP" };
+}
+
+export interface CanhBaoThuTuc {
+  muc: "CAO" | "TRUNG_BINH";
+  noiDung: string;
+  canCu: string;
+}
+
+const CC_28B = "khoản 1, 2 Điều 28b NĐ 124/2020/NĐ-CP (bổ sung bởi NĐ 155/2026/NĐ-CP)";
+const CC_28 = "khoản 1 Điều 28 NĐ 124/2020/NĐ-CP (sửa bởi NĐ 155/2026/NĐ-CP)";
+
+/**
+ * 1.1.0 (A1, A2): nhắc thủ tục của đơn khiếu nại — gửi QĐ tạm đình chỉ, đình chỉ, tiếp tục giải quyết trong 03 ngày làm việc kể từ
+ * ngày ban hành (k1, k2 Điều 28b); gửi thông báo tổ chức đối thoại trước ngày đối thoại ít nhất 05 ngày (k1 Điều 28).
+ */
+export function canhBaoThuTucDon(d: DonKhieuNai, homNay: string, lich: LichLamViec): CanhBaoThuTuc[] {
+  if (d.loai !== "KHIEU_NAI") return [];
+  const out: CanhBaoThuTuc[] = [];
+  const vn = (iso: string) => iso.split("-").reverse().join("/");
+  const gui = (moc: string | undefined, da: string | undefined, ten: string) => {
+    if (!moc || da) {
+      if (moc && da) {
+        const han = hanChot(moc, 3, "NLV", lich);
+        if (da > han) out.push({ muc: "TRUNG_BINH", noiDung: `${ten} gửi ngày ${vn(da)}, quá hạn ${vn(han)} (03 ngày làm việc kể từ ngày ban hành)`, canCu: CC_28B });
+      }
+      return;
+    }
+    const han = hanChot(moc, 3, "NLV", lich);
+    if (homNay > han) out.push({ muc: "CAO", noiDung: `Chưa ghi ngày gửi ${ten} (hạn ${vn(han)}, 03 ngày làm việc kể từ ngày ban hành ${vn(moc)})`, canCu: CC_28B });
+  };
+  for (const t of d.tamDinhChi ?? []) {
+    gui(t.tu, t.ngayGui, "QĐ tạm đình chỉ");
+    gui(t.den, t.ngayGuiTiepTuc, "QĐ tiếp tục giải quyết");
+  }
+  if (d.ketQua === "DINH_CHI") gui(d.dinhChi?.ngay, d.ngayGuiDinhChi, "QĐ đình chỉ");
+  const dt = d.doiThoai;
+  if (dt?.ngay && !d.ketQua) {
+    const tbMuonNhat = hanChot(dt.ngay, -5, "N", lich);
+    if (!dt.ngayTb) {
+      if (homNay > tbMuonNhat) out.push({ muc: "CAO", noiDung: `Chưa ghi ngày gửi thông báo tổ chức đối thoại (đối thoại ${vn(dt.ngay)}; phải gửi chậm nhất ${vn(tbMuonNhat)} — trước ít nhất 05 ngày)`, canCu: CC_28 });
+      else out.push({ muc: "TRUNG_BINH", noiDung: `Gửi thông báo tổ chức đối thoại chậm nhất ${vn(tbMuonNhat)} (đối thoại ${vn(dt.ngay)}, trước ít nhất 05 ngày)`, canCu: CC_28 });
+    } else if (dt.ngayTb > tbMuonNhat) out.push({ muc: "CAO", noiDung: `Thông báo đối thoại gửi ${vn(dt.ngayTb)} — chưa đủ 05 ngày trước ngày đối thoại ${vn(dt.ngay)} (chậm nhất ${vn(tbMuonNhat)})`, canCu: CC_28 });
+  }
+  return out;
 }

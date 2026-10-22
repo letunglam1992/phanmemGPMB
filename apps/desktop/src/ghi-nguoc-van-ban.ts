@@ -1,7 +1,8 @@
 /**
  * 1.0.21 (A3, B1) — Khi tạo văn bản của hộ có số (Văn bản → "Soạn, cấp số"), ghi ngược số, ngày vào đơn khiếu nại / hồ sơ
  * cưỡng chế để phần mềm tính hạn, khỏi nhập lại. Chỉ điền ô còn trống — không ghi đè số liệu cán bộ đã nhập.
- * Đơn được chọn giống khi tự điền mẫu (van-ban/thuc-te.ts): T14 đơn lần đầu, T18–T22 đơn khiếu nại chưa có kết quả mới nhất.
+ * Đơn được chọn giống khi tự điền mẫu (van-ban/thuc-te.ts): T14 đơn lần đầu, T25 đơn lần hai, T18–T24 đơn khiếu nại chưa có kết
+ * quả mới nhất.
  */
 import type { DonKhieuNai } from "./khieu-nai";
 import type { CuongChe } from "./cuong-che";
@@ -10,7 +11,8 @@ import type { Ho } from "./mo-hinh";
 const moiNhat = <T>(ds: T[], chuaXong: (x: T) => boolean): T | undefined => [...ds].reverse().find(chuaXong) ?? ds[ds.length - 1];
 
 export function donChoMau(h: Ho, ma: string): DonKhieuNai | undefined {
-  const kn = (h.khieuNai ?? []).filter((d) => d.loai === "KHIEU_NAI" && (ma !== "T14" || (d.lan ?? 1) === 1)).sort((a, b) => a.ngayNhan.localeCompare(b.ngayNhan));
+  const lan = ma === "T14" ? 1 : ma === "T25" ? 2 : 0;
+  const kn = (h.khieuNai ?? []).filter((d) => d.loai === "KHIEU_NAI" && (!lan || (d.lan ?? 1) === lan)).sort((a, b) => a.ngayNhan.localeCompare(b.ngayNhan));
   return moiNhat(kn, (d) => !d.ketQua);
 }
 
@@ -21,7 +23,7 @@ export function ghiNguocVanBan(h: Ho, ma: string, so: string, ngay: string): Par
     const moi = d && p(d);
     return moi && Object.keys(moi).length ? { khieuNai: (h.khieuNai ?? []).map((x) => (x.id === d!.id ? { ...x, ...moi } : x)) } : null;
   };
-  if (ma === "T14") return doiDon(donChoMau(h, ma), (d) => ({ ...(!d.soVb ? { soVb: so } : {}), ...(!d.ngayVb ? { ngayVb: ngay } : {}) }));
+  if (ma === "T14" || ma === "T25") return doiDon(donChoMau(h, ma), (d) => ({ ...(!d.soVb ? { soVb: so } : {}), ...(!d.ngayVb ? { ngayVb: ngay } : {}) }));
   if (ma === "T18") return doiDon(donChoMau(h, ma), (d) => (d.tbThuLy?.so ? null : { tbThuLy: { so, ngay }, ...(!d.ngayThuLy ? { ngayThuLy: ngay } : {}) }));
   if (ma === "T21")
     return doiDon(donChoMau(h, ma), (d) => {

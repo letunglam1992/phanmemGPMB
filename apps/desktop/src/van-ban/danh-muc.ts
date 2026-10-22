@@ -496,3 +496,43 @@ DANH_MUC_MAU.push({
     { truong: "noi_gui", nhan: "Gửi", macDinh: "các bên tham dự, lưu hồ sơ" },
   ],
 });
+
+/** 1.1.0 (A2, A3) — thông báo tổ chức đối thoại; QĐ giải quyết khiếu nại lần hai (Mẫu số 16 NĐ 124/2020). */
+DANH_MUC_MAU.push(
+  {
+    ma: "T24", ten: "Thông báo tổ chức đối thoại giải quyết khiếu nại", buoc: "9", phamVi: "HO", coQuan: "UBND", nguon: "THUC_TE", tep: "tt-tb-doi-thoai-kn.docx",
+    moTa: "Khoản 1 Điều 28 NĐ 124/2020/NĐ-CP sửa bởi NĐ 155/2026/NĐ-CP: gửi người khiếu nại, người bị khiếu nại, người có quyền, nghĩa vụ liên quan, cơ quan, tổ chức liên quan trước ngày đối thoại ít nhất 05 ngày; ghi rõ thời gian, địa điểm, nội dung. Nghị định không ban hành mẫu — bố cục thông báo theo NĐ 30/2020. Ngày, địa điểm lấy từ đơn (thẻ Khiếu nại).",
+    ghiLai: { khoa: "tb_doi_thoai_kn", capDo: "HO", kyHieu: "TB-UBND" },
+    nhapThem: [
+      { truong: "kn_nguoi_nhan_tb", nhan: "Kính gửi", goiY: "Để trống = người khiếu nại; có thể ghi thêm người bị khiếu nại, người có quyền, nghĩa vụ liên quan" },
+      { truong: "dt_thoi_gian", nhan: "Thời gian đối thoại", goiY: "Để trống = ngày đã ghi ở đơn; ghi đủ giờ, vd. 08 giờ 00 phút, ngày …" },
+      { truong: "dt_dia_diem", nhan: "Địa điểm", goiY: "Để trống = địa điểm đã ghi ở đơn" },
+      { truong: "dt_noi_dung", nhan: "Nội dung đối thoại", nhieuDong: true },
+      { truong: "dt_thanh_phan", nhan: "Thành phần", nhieuDong: true },
+      NOI_NHAN("Như trên\nNgười bị khiếu nại\nNgười có quyền, nghĩa vụ liên quan\nLưu: VT, hồ sơ"),
+    ],
+  },
+  {
+    ma: "T25", ten: "Quyết định giải quyết khiếu nại (lần hai)", buoc: "9", phamVi: "HO", coQuan: "UBND", nguon: "THUC_TE", tep: "tt-qd-giai-quyet-kn-lan-hai.docx",
+    moTa: "Mẫu số 16 Phụ lục NĐ 124/2020/NĐ-CP (Điều 40 Luật Khiếu nại). Người giải quyết lần hai mặc định Chủ tịch UBND tỉnh (khoản 2 Điều 21 Luật Khiếu nại sửa bởi Luật 136/2025 — khi người giải quyết lần đầu là Chủ tịch UBND cấp xã). Đơn lần hai lấy từ thẻ Khiếu nại; mục II lấy kết quả đơn lần đầu. Thời hạn khởi kiện (Điều 3) do cán bộ ghi theo Luật Tố tụng hành chính.",
+    ghiLai: { khoa: "qd_gqkn2", capDo: "HO", kyHieu: "QĐ-UBND" },
+    nhapThem: [
+      { truong: "KN2_CO_QUAN", nhan: "Cơ quan ban hành (in hoa)", goiY: "Để trống = ỦY BAN NHÂN DÂN TỈNH SƠN LA" },
+      { truong: "KN2_CHUC_DANH", nhan: "Chức danh người giải quyết (in hoa)", goiY: "Để trống = CHỦ TỊCH ỦY BAN NHÂN DÂN TỈNH SƠN LA" },
+      { truong: "kn2_co_quan", nhan: "Người, cơ quan giải quyết (trong Điều 3)", goiY: "Để trống = Chủ tịch Ủy ban nhân dân tỉnh Sơn La" },
+      { truong: "can_cu_tham_quyen", nhan: "Căn cứ chức năng, nhiệm vụ, quyền hạn", goiY: "Ghi chú (5) Mẫu 16" },
+      { truong: "kn_tham_muu", nhan: "Cơ quan tham mưu giải quyết" },
+      { truong: "kn_bc_so", nhan: "Báo cáo kết quả xác minh số" }, { truong: "kn_bc_ngay", nhan: "ngày" },
+      { truong: "kn_noi_dung", nhan: "I. Nội dung khiếu nại", nhieuDong: true, goiY: "Để trống = nội dung đơn lần hai" },
+      { truong: "kn_kq_lan_dau", nhan: "II. Kết quả giải quyết lần đầu", nhieuDong: true, goiY: "Để trống = theo đơn lần đầu đã ghi kết quả" },
+      { truong: "kn_xac_minh", nhan: "III. Kết quả xác minh", nhieuDong: true },
+      { truong: "kn_doi_thoai", nhan: "IV. Kết quả đối thoại", nhieuDong: true, goiY: "Lần hai bắt buộc đối thoại (k2 Điều 28 NĐ 124 sửa bởi NĐ 155)" },
+      { truong: "kn_ket_luan", nhan: "V. Kết luận", nhieuDong: true },
+      { truong: "kn_dieu_1", nhan: "Điều 1", nhieuDong: true, goiY: "Đúng/đúng một phần: yêu cầu sửa đổi, hủy bỏ QĐ, chấm dứt hành vi; sai toàn bộ: công nhận, giữ nguyên QĐ giải quyết lần đầu (Mẫu 16)" },
+      { truong: "kn_dieu_2", nhan: "Điều 2", nhieuDong: true },
+      { truong: "kn2_thoi_han_khoi_kien", nhan: "Thời hạn khởi kiện (Điều 3)", goiY: "Theo Luật Tố tụng hành chính — phần mềm chưa có nguyên văn, cán bộ ghi" },
+      { truong: "kn_thi_hanh", nhan: "Người chịu trách nhiệm thi hành (Điều 4)", macDinh: "Người khiếu nại, người bị khiếu nại, người giải quyết khiếu nại lần đầu và các cơ quan, tổ chức, cá nhân có liên quan" },
+      NOI_NHAN("Như Điều 4\nNgười có quyền, nghĩa vụ liên quan\nCơ quan thanh tra nhà nước cùng cấp\nLưu: VT, hồ sơ"),
+    ],
+  },
+);

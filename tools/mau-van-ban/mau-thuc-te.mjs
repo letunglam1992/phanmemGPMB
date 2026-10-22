@@ -795,7 +795,57 @@ MAU.T23 = () => [
   ],
 ];
 
-const DANH_SACH = { T1: "tt-ke-hoach", T8: "tt-tb-du-kien-tdc", T9: "tt-tb-cong-bo-tdc", T10: "tt-to-trinh-cham-tra", T11: "tt-qd-cham-tra", T12: "tt-bb-doi-thoai", T13: "tt-bb-boc-tham-tdc", T14: "tt-qd-giai-quyet-kn", T15: "tt-bb-van-dong-ban-giao", T16: "tt-qd-ban-cuong-che", T17: "tt-pa-cuong-che", T18: "tt-tb-thu-ly-kn", T19: "tt-tb-khong-thu-ly-kn", T20: "tt-bb-doi-thoai-kn", T21: "tt-qd-tam-dinh-chi-kn", T22: "tt-qd-tiep-tuc-kn", T23: "tt-bb-ban-giao-dat-thuc-dia", T2: "tt-to-trinh-tb", T3: "tt-thong-bao", T4: "tt-to-trinh-pa-ho", T5: "tt-qd-pa-ho", T6: "tt-to-trinh-thu-hoi", T7: "tt-qd-thu-hoi" };
+
+/**
+ * 1.1.0 (A2, A3) — T24 Thông báo tổ chức đối thoại (khoản 1 Điều 28 NĐ 124/2020 sửa bởi NĐ 155/2026: gửi trước ngày đối thoại ít
+ * nhất 05 ngày, ghi rõ thời gian, địa điểm, nội dung — nghị định không ban hành mẫu, bố cục thông báo theo NĐ 30/2020);
+ * T25 Quyết định giải quyết khiếu nại lần hai (Mẫu số 16 Phụ lục NĐ 124/2020).
+ */
+MAU.T24 = () => [
+  [
+    KN_DAU("TB-UBND"),
+    ...tenVanBan("THÔNG BÁO", "Về việc tổ chức đối thoại giải quyết khiếu nại {kn_lan_chu}"),
+    giua("Kính gửi: {kn_nguoi_nhan_tb}.", { truoc: 120 }),
+    P("Căn cứ Luật Khiếu nại ngày 11 tháng 11 năm 2011 và các văn bản sửa đổi, bổ sung; khoản 1 Điều 28 Nghị định số 124/2020/NĐ-CP được sửa đổi, bổ sung bởi Nghị định số 155/2026/NĐ-CP;", { nghieng: true }),
+    P("Trong quá trình giải quyết đơn khiếu nại ngày {kn_ngay_nhan_ngan} của {kn_nguoi_khieu_nai} (địa chỉ: {dia_chi}) về việc: {kn_noi_dung}, Ủy ban nhân dân {ten_xa} tổ chức đối thoại như sau:"),
+    P("1. Thời gian: {dt_thoi_gian}."),
+    P("2. Địa điểm: {dt_dia_diem}."),
+    P("3. Nội dung đối thoại: {dt_noi_dung}"),
+    P("4. Thành phần: {dt_thanh_phan}"),
+    P("Đề nghị người khiếu nại, người bị khiếu nại, người có quyền, nghĩa vụ liên quan, cơ quan, tổ chức có liên quan có mặt đúng thời gian, địa điểm nêu trên. Trường hợp người khiếu nại đã được mời đối thoại nhưng không tham gia mà không có lý do chính đáng thì người giải quyết khiếu nại vẫn tiếp tục giải quyết khiếu nại (khoản 6 Điều 30 Luật Khiếu nại; khoản 5 Điều 28 Nghị định số 124/2020/NĐ-CP được sửa đổi, bổ sung bởi Nghị định số 155/2026/NĐ-CP)./."),
+    kyVanBan(),
+  ],
+];
+
+MAU.T25 = () => [
+  [
+    dauVanBan({ coQuan: ["{kn2_co_quan_cap_tren}", "{KN2_CO_QUAN}"], so: "Số: {so}/QĐ-{kn2_ky_hieu}" }),
+    ...tenVanBan("QUYẾT ĐỊNH", "Về việc giải quyết khiếu nại của {kn_nguoi_khieu_nai}\n(lần hai)"),
+    giua("{KN2_CHUC_DANH}", { dam: true, truoc: 120 }),
+    ...lap("kn_can_cu", "{.}", { nghieng: true, sau: 60 }),
+    P("Xét đơn khiếu nại {kn_ngay_don} của {kn_nguoi_khieu_nai} (địa chỉ: {dia_chi}).", { nghieng: true }),
+    P("Theo báo cáo của {kn_tham_muu} tại Văn bản số {kn_bc_so} ngày {kn_bc_ngay} về việc giải quyết khiếu nại của {kn_nguoi_khieu_nai} với các nội dung sau đây:"),
+    P("**I. Nội dung khiếu nại:**"),
+    P("{kn_noi_dung}"),
+    P("**II. Kết quả giải quyết khiếu nại của người đã giải quyết khiếu nại lần đầu:**"),
+    P("{kn_kq_lan_dau}"),
+    P("**III. Kết quả xác minh nội dung khiếu nại:**"),
+    P("{kn_xac_minh}"),
+    P("**IV. Kết quả đối thoại:**"),
+    P("{kn_doi_thoai}"),
+    P("**V. Kết luận:**"),
+    P("{kn_ket_luan}"),
+    P("Từ những nhận định và căn cứ trên,"),
+    giua("QUYẾT ĐỊNH:", { dam: true, truoc: 120 }),
+    P("**Điều 1.** {kn_dieu_1}"),
+    P("**Điều 2.** {kn_dieu_2}"),
+    P("**Điều 3.** Trong thời hạn {kn2_thoi_han_khoi_kien}, kể từ ngày nhận được Quyết định này, nếu {kn_nguoi_khieu_nai} không đồng ý với giải quyết khiếu nại của {kn2_co_quan} thì {kn_nguoi_khieu_nai} có quyền khởi kiện {kn2_co_quan} tại Tòa án theo quy định của pháp luật về tố tụng hành chính."),
+    P("**Điều 4.** {kn_thi_hanh} chịu trách nhiệm thi hành Quyết định này./."),
+    kyVanBan(),
+  ],
+];
+
+const DANH_SACH = { T1: "tt-ke-hoach", T8: "tt-tb-du-kien-tdc", T9: "tt-tb-cong-bo-tdc", T10: "tt-to-trinh-cham-tra", T11: "tt-qd-cham-tra", T12: "tt-bb-doi-thoai", T13: "tt-bb-boc-tham-tdc", T14: "tt-qd-giai-quyet-kn", T15: "tt-bb-van-dong-ban-giao", T16: "tt-qd-ban-cuong-che", T17: "tt-pa-cuong-che", T18: "tt-tb-thu-ly-kn", T19: "tt-tb-khong-thu-ly-kn", T20: "tt-bb-doi-thoai-kn", T21: "tt-qd-tam-dinh-chi-kn", T22: "tt-qd-tiep-tuc-kn", T23: "tt-bb-ban-giao-dat-thuc-dia", T24: "tt-tb-doi-thoai-kn", T25: "tt-qd-giai-quyet-kn-lan-hai", T2: "tt-to-trinh-tb", T3: "tt-thong-bao", T4: "tt-to-trinh-pa-ho", T5: "tt-qd-pa-ho", T6: "tt-to-trinh-thu-hoi", T7: "tt-qd-thu-hoi" };
 for (const [ma, tep] of Object.entries(DANH_SACH)) {
   const [chinh, phu] = MAU[ma]();
   const buf = await Packer.toBuffer(taoDoc(chinh, phu));

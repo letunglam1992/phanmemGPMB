@@ -179,3 +179,16 @@ export function nhomThuHoi(duAn: { dotThuHoi?: { id: string; so: number; ten: st
   if (con.length) out.push({ id: NHOM_KHONG_DOT, ten: dots.length ? "Hộ chưa xếp đợt" : "Cả dự án", hos: con });
   return out;
 }
+
+/**
+ * 1.1.0 (B3) — Ghi chú khi đổi cách đếm hạn thẩm định (từ 1.0.21: 30 ngày theo k3 Đ3 NĐ 88, mục 8 Phần II PL I NĐ 151; bản
+ * 1.0.12–1.0.20 đếm 30 ngày làm việc theo điểm a khoản 2 Mục XII Sổ tay QĐ 1966). Chỉ trả về khi bản đang quá hạn / sắp hết theo
+ * cách đếm mới nhưng chưa quá hạn nếu đếm ngày làm việc — để cán bộ biết vì sao bản chuyển trạng thái sau khi cập nhật.
+ */
+export function ghiChuDoiHanThamDinh(t: TinhHan | null, homNay: string, lich: LichLamViec): string | null {
+  if (!t?.moc || !t.hanChot || (t.trangThai !== "QUA_HAN" && t.trangThai !== "SAP_HET")) return null;
+  const hcCu = hanChot(hanChot(t.moc, 30, "NLV", lich), t.khongTinh, "N", lich);
+  if (homNay > hcCu) return null;
+  const vn = (s: string) => s.split("-").reverse().join("/");
+  return `Từ bản 1.0.21 hạn thẩm định tính 30 ngày (khoản 3 Điều 3 NĐ 88/2024; mục 8 Phần II Phụ lục I NĐ 151/2025: "không quá 30 ngày"). Sổ tay QĐ 1966 (điểm a khoản 2 Mục XII) ghi 30 ngày làm việc — nếu đếm theo cách đó thì hạn là ${vn(hcCu)}. Đơn vị kiểm tra, áp dụng theo nghị định.`;
+}
