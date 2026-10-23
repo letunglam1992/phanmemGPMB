@@ -81,3 +81,19 @@ export const soThuTu = (s: string): number | null => {
   const m = /^\s*(\d{1,6})\s*(\/|$)/.exec(s);
   return m ? Number(m[1]) : null;
 };
+
+/** 1.2.0 (C1) — văn bản soạn ngoài phần mềm, văn thư ghi tay vào sổ (mã "NGOAI"). */
+export const MA_NGOAI = "NGOAI";
+
+/** Dựng dòng sổ cho văn bản ghi tay: số "15" hoặc "15/TB-UBND" (ký hiệu trong số được ưu tiên). */
+export function vanBanGhiTay(p: { so: string; kyHieu: string; ngay: string; trichYeu: string; duAn: { id: string; ten: string } }): VanBanDi | string {
+  const so = p.so.trim();
+  const tach = /^(\d{1,6})\s*\/\s*(.+)$/.exec(so);
+  const kyHieu = (tach ? tach[2]! : p.kyHieu).trim();
+  const n = soThuTu(so);
+  if (n === null) return "Số văn bản phải bắt đầu bằng số thứ tự (vd. 15 hoặc 15/TB-UBND)";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(p.ngay)) return "Chưa nhập ngày ký";
+  if (!p.trichYeu.trim()) return "Chưa nhập trích yếu";
+  return { so: n, kyHieu, soDayDu: kyHieu ? `${n}/${kyHieu}` : String(n), ngay: p.ngay, ma: MA_NGOAI, tenMau: p.trichYeu.trim(), duAnId: p.duAn.id, duAnTen: p.duAn.ten };
+}
+

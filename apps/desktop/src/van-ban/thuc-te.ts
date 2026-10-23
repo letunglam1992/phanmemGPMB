@@ -280,7 +280,7 @@ export function kiemTraThongNhat(ma: string, duAn: DuAn, du: Record<string, unkn
   if (ma === "T24" && du.kn_tb_doi_thoai_thieu) out.push("Đơn chưa ghi ngày tổ chức đối thoại (thẻ Khiếu nại) — thời gian để trống; thông báo phải gửi trước ngày đối thoại ít nhất 05 ngày (khoản 1 Điều 28 NĐ 124/2020 sửa bởi NĐ 155/2026).");
   if ((ma === "T27" || ma === "T28") && du.cc_khong_co) out.push("Hộ chưa có hồ sơ cưỡng chế thu hồi đất (thẻ Khiếu nại → + Cưỡng chế thu hồi đất) — số, ngày quyết định để trống.");
   if (ma === "T27" && du.cc_khong_co !== true && !String(du.cc_qd_ban ?? "").trim()) out.push("Chưa ghi quyết định thành lập Ban cưỡng chế thu hồi đất (điểm a khoản 4 Điều 89 Luật Đất đai) ở hồ sơ cưỡng chế.");
-  if (ma === "T26" && /^…/.test(String(du.trach_nhiem_nguoi_co_dat ?? ""))) out.push("Chưa ghi trách nhiệm của người có đất thu hồi (khoản 2 Điều 2 — ghi chú 11 Mẫu 44 NĐ 151/2025).");
+  if ((ma === "T26" || ma === "14" || ma === "R5") && /^…/.test(String(du.trach_nhiem_nguoi_co_dat ?? ""))) out.push(`Chưa ghi trách nhiệm của người có đất thu hồi (${ma === "T26" ? "khoản 2" : "khoản 4"} Điều 2 — ghi chú 11 Mẫu 44 NĐ 151/2025).`);
   if (ma === "T26" && (du.ds_ho_pa as { ghi_chu: string }[] | undefined)?.some((x) => x.ghi_chu)) out.push("Có hộ còn khoản chưa đủ căn cứ — số tiền trong biểu chỉ gồm khoản Tạm tính; nên chốt phương án trước khi trình ký.");
   if (ma === "T25" && du.kn2_khong_co_don) out.push("Hộ chưa có đơn khiếu nại lần hai (thẻ Khiếu nại → Lần giải quyết: Lần hai) — nội dung đơn để trống.");
   if (ma === "T25" && du.kn2_khong_co_lan_dau) out.push("Chưa có đơn lần đầu đã ghi kết quả — mục II (kết quả giải quyết lần đầu) để trống, cán bộ ghi.");

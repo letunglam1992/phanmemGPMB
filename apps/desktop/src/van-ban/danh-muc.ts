@@ -80,7 +80,7 @@ export const DANH_MUC_MAU: MauVanBan[] = [
   { ma: "11", ten: "Tờ trình đề nghị thẩm định phương án", buoc: "8", phamVi: "DU_AN", coQuan: "DON_VI_BT", nhapThem: [...PHUONG_AN(), NOI_NHAN("Như trên\nLưu: VT")] },
   { ma: "12", ten: "Tờ trình thu hồi đất", buoc: "8", phamVi: "DU_AN", coQuan: "PHONG", nhapThem: [{ truong: "co_quan_quan_ly_dat", nhan: "Cơ quan được giao quản lý đất đã thu hồi" }, NOI_NHAN("Như trên\nLưu: VT")] },
   { ma: "13", ten: "Tờ trình đề nghị phê duyệt phương án", buoc: "8", phamVi: "DU_AN", coQuan: "PHONG", ghiLai: { khoa: "tt_phe_duyet_pa", capDo: "DU_AN", kyHieu: "TTr-{ky_hieu_phong}" }, nhapThem: [{ truong: "ket_qua_tham_dinh", nhan: "Kết quả thẩm định (số, ngày văn bản)", goiY: "Ghi tên cơ quan chủ trì thẩm định và văn bản thẩm định." }, ...PHUONG_AN(), NOI_NHAN("Như trên\nLưu: VT")] },
-  { ma: "14", ten: "Quyết định phê duyệt phương án", buoc: "9", phamVi: "DU_AN", coQuan: "UBND", ghiLai: { khoa: "qd_phe_duyet", capDo: "DU_AN", kyHieu: "QĐ-UBND" }, nhapThem: [...PHUONG_AN(), HIEU_LUC, { truong: "co_quan_thi_hanh", nhan: "Các cơ quan chịu trách nhiệm thi hành" }, NOI_NHAN("Như Điều 4\nLưu: VT")] },
+  { ma: "14", ten: "Quyết định phê duyệt phương án", buoc: "9", phamVi: "DU_AN", coQuan: "UBND", ghiLai: { khoa: "qd_phe_duyet", capDo: "DU_AN", kyHieu: "QĐ-UBND" }, nhapThem: [{ truong: "trach_nhiem_nguoi_co_dat", nhan: "Điều 2 — trách nhiệm của người có đất thu hồi, chủ sở hữu tài sản", nhieuDong: true, goiY: "Ghi chú 11 Mẫu số 44 Phụ lục II NĐ 151/2025/NĐ-CP: ghi trách nhiệm của người có đất thu hồi, chủ sở hữu tài sản, người có quyền lợi và nghĩa vụ liên quan (nếu có)" }, ...PHUONG_AN(), HIEU_LUC, { truong: "co_quan_thi_hanh", nhan: "Các cơ quan chịu trách nhiệm thi hành" }, NOI_NHAN("Như Điều 4\nLưu: VT")] },
   { ma: "15", ten: "Quyết định thu hồi đất", buoc: "13", phamVi: "HO", coQuan: "UBND", ghiLai: { khoa: "qd_thu_hoi", capDo: "HO", kyHieu: "QĐ-UBND" }, nhapThem: [HIEU_LUC, { truong: "co_quan_quan_ly_dat", nhan: "Cơ quan phối hợp quản lý quỹ đất" }, NOI_NHAN("Như Điều 2\nLưu: VT")] },
   { ma: "16", ten: "Biên bản giao quyết định", buoc: "11", phamVi: "HO", coQuan: "BIEN_BAN", nhapThem: [{ truong: "loai_qd_giao", nhan: "Quyết định được giao", macDinh: "QD_PHE_DUYET", luaChon: [{ giaTri: "QD_PHE_DUYET", nhan: "QĐ phê duyệt phương án" }, { giaTri: "QD_THU_HOI", nhan: "QĐ thu hồi đất" }], goiY: "Ghi tên Quyết định thu hồi đất, Quyết định phê duyệt phương án bồi thường, hỗ trợ, tái định cư" }, THOI_DIEM, DIA_DIEM, { truong: "tp_nguoi_co_dat", nhan: "Đại diện tổ chức/hộ gia đình/cá nhân", nhieuDong: true }, { truong: "tg_nhan_tien", nhan: "Thời gian nhận tiền" }, { truong: "dia_diem_nhan_tien", nhan: "Địa điểm nhận tiền" }, { truong: "so_ngay_ban_giao", nhan: "Số ngày bàn giao mặt bằng sau khi nhận tiền" }, { truong: "ben_nhan_mat_bang", nhan: "Đơn vị nhận bàn giao mặt bằng" }, GIO_KT] },
   { ma: "17", ten: "Biên bản vận động nhận tiền, bàn giao mặt bằng", buoc: "12", phamVi: "HO", coQuan: "BIEN_BAN", nhapThem: [{ truong: "lan_thu", nhan: "Lần thứ", macDinh: "1" }, THOI_DIEM, DIA_DIEM, Y_KIEN, GIO_KT] },
@@ -176,11 +176,12 @@ DANH_MUC_MAU.push(
   },
   {
     ma: "R5", ten: "Quyết định phê duyệt phương án (mẫu của xã)", buoc: "9", phamVi: "DOT", coQuan: "UBND", nguon: "RIENG", tep: "rieng-qd-pa.docx",
-    moTa: "Chủ tịch UBND xã phê duyệt phương án; dẫn số Tờ trình (mẫu R4) đã ghi. Điều 4 dẫn “có tên tại Phụ lục kèm theo”; nơi nhận mặc định “Như Điều 4”.",
+    moTa: "Chủ tịch UBND xã phê duyệt phương án; dẫn số Tờ trình (mẫu R4) đã ghi. 1.2.0: khoản 11 Điều 1 dẫn khoản 2 Điều 3 NĐ 88/2024, Điều 2 thêm trách nhiệm của người có đất thu hồi (Mẫu số 44 NĐ 151/2025). Điều 4 dẫn “có tên tại Phụ lục kèm theo”; nơi nhận mặc định “Như Điều 4”.",
     ghiLai: { khoa: "qd_phe_duyet", capDo: "DU_AN", kyHieu: "QĐ-UBND" },
     nhapThem: [
       { truong: "chuc_danh_de_nghi", nhan: "Chức danh người đề nghị", goiY: "Để trống = Trưởng + tên phòng" },
       ...PA_RIENG(),
+      { truong: "trach_nhiem_nguoi_co_dat", nhan: "Điều 2 — trách nhiệm của người có đất thu hồi, chủ sở hữu tài sản", nhieuDong: true, goiY: "Ghi chú 11 Mẫu số 44 Phụ lục II NĐ 151/2025/NĐ-CP: ghi trách nhiệm của người có đất thu hồi, chủ sở hữu tài sản, người có quyền lợi và nghĩa vụ liên quan (nếu có)" },
       { truong: "ben_nhan_mat_bang", nhan: "Đơn vị nhận bàn giao mặt bằng", macDinh: "đơn vị thi công thực hiện dự án" },
       HIEU_LUC,
       { truong: "co_quan_thi_hanh", nhan: "Các cơ quan chịu trách nhiệm thi hành (Điều 4)", nhieuDong: true, macDinh: "Chánh Văn phòng Hội đồng nhân dân và Ủy ban nhân dân; Trưởng Phòng Kinh tế; Trưởng Phòng Văn hóa - Xã hội; Thủ trưởng đơn vị thực hiện nhiệm vụ bồi thường, giải phóng mặt bằng; Hội đồng bồi thường, hỗ trợ, tái định cư dự án; các cơ quan, đơn vị liên quan" },
@@ -598,3 +599,7 @@ for (const m of DANH_MUC_MAU) {
   const g = ghiChuThamQuyen(m.ma);
   if (g) m.moTa = `${m.moTa ? m.moTa + " " : ""}${g}`;
 }
+
+// 1.2.0 (C2): mẫu 14 — Điều 1 theo Mẫu số 44 Phụ lục II NĐ 151/2025/NĐ-CP
+mauTheoMa("14").moTa = `Điều 1 theo Mẫu số 44 Phụ lục II NĐ 151/2025/NĐ-CP: (1) phương án đối với dự án (khoản 1 Điều 3 NĐ 88/2024 — các mục 1.1–1.11 theo Mẫu 14 Sổ tay), (2) phương án chi tiết từng người (khoản 2 Điều 3 — Phụ lục kèm theo), (3) nội dung khác; Điều 2 có trách nhiệm của người có đất thu hồi. ${mauTheoMa("14").moTa ?? ""}`.trim();
+

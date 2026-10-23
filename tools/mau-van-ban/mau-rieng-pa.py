@@ -149,6 +149,14 @@ TEP = ["rieng-to-trinh-pa.docx", "rieng-qd-pa.docx"]
 for f in TEP:
     dong_goi_lai(RA / f)
 
+# 1.2.0 (C2): bổ sung theo Mẫu số 44 NĐ 151/2025 (khoản 2 Điều 3 NĐ 88; trách nhiệm người có đất thu hồi)
+import importlib.util  # noqa: E402
+
+_spec = importlib.util.spec_from_file_location("r5_mau_44", Path(__file__).resolve().parent / "r5-theo-mau-44.py")
+_m = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_m)
+_m.bo_sung(RA / "rieng-qd-pa.docx")
+
 # Kiểm tra: không còn tên người, số liệu của hồ sơ gốc; không còn ảnh nhúng
 CAM = TT["cam"] + ["@"]
 for f in TEP:

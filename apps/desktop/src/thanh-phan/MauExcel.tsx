@@ -9,7 +9,8 @@ import type { KetQuaHo } from "../tinh-ho";
 import { HopThoai } from "./chung";
 import { taiXuong } from "../tai-xuong";
 import { MA_MAU_EXCEL, dienMauExcel } from "../mau-excel";
-import { TRUONG_MAU_EXCEL, duLieuMauExcel, taoMauExcelMacDinh } from "../xuat-excel";
+import { TRUONG_MAU_EXCEL, duLieuMauExcel, taoMauExcelMacDinh, taoWorkbook } from "../xuat-excel";
+import { CSS_XEM_TRUOC_EXCEL, workbookSangHtml, type TrangXemTruoc } from "../xem-truoc-excel";
 
 const XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
@@ -23,6 +24,17 @@ export function HopMauExcel({ duAn, ds, dong }: { duAn: DuAn; ds: { h: Ho; k: Ke
   const { kho, quyen, bao, ghiNhatKy } = useUngDung();
   const [mau, setMau] = useState<{ tenTep: string; luc: string } | null | undefined>(undefined);
   const [canhBao, setCanhBao] = useState<string[]>([]);
+  const [xem, setXem] = useState<{ ds: TrangXemTruoc[]; chon: number } | null>(null);
+  /** 1.2.0 (C3): điền mẫu đang dùng (hoặc bố cục của phần mềm) bằng số liệu dự án rồi xem trong phần mềm */
+  const xemTruoc = async () => {
+    try {
+      const m = await kho.docMau(MA_MAU_EXCEL);
+      const wb = m ? (await dienMauExcel(m.bytes, duLieuMauExcel(duAn, ds))).wb : await taoWorkbook(duAn, ds);
+      setXem({ ds: workbookSangHtml(wb), chon: 0 });
+    } catch (e) {
+      bao(`Không xem trước được — ${(e as Error).message}`, "loi");
+    }
+  };
   const tai = async () => {
     const m = await kho.docMau(MA_MAU_EXCEL);
     setMau(m ? { tenTep: m.tenTep, luc: m.luc } : null);
@@ -58,11 +70,22 @@ export function HopMauExcel({ duAn, ds, dong }: { duAn: DuAn; ds: { h: Ho; k: Ke
         )}
       </div>
       <div className="nhom-nut mt-8">
+        <button className="nut nut-nho" data-xem-truoc-excel onClick={() => void xemTruoc()}>Xem trước (số liệu dự án)</button>
         <button className="nut nut-nho" onClick={async () => taiXuong(await taoMauExcelMacDinh(), "Mau-Excel-phuong-an_mac-dinh.xlsx", XLSX)}>Tải mẫu mặc định (có trường)</button>
         {mau && <button className="nut nut-nho" onClick={async () => { const m = await kho.docMau(MA_MAU_EXCEL); if (m) await taiXuong(m.bytes, m.tenTep || "Mau-Excel-phuong-an.xlsx", XLSX); }}>Tải mẫu đang dùng</button>}
         {sua && <label className="nut nut-nho">Thay mẫu…<input type="file" accept=".xlsx" className="an" aria-label="Chọn tệp mẫu Excel" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void thayMau(f); }} /></label>}
         {sua && mau && <button className="nut nut-nho" onClick={async () => { if (!confirm("Bỏ mẫu của đơn vị, dùng lại bố cục của phần mềm?")) return; await kho.xoaMau(MA_MAU_EXCEL); await ghiNhatKy("Khôi phục bố cục Excel của phần mềm"); setCanhBao([]); await tai(); }}>Khôi phục bố cục của phần mềm</button>}
       </div>
+      {xem && (
+        <HopThoai tieuDe="Xem trước biểu Excel" dong={() => setXem(null)} rong={1200}>
+          <style>{CSS_XEM_TRUOC_EXCEL}</style>
+          <div className="nhom-nut" style={{ flexWrap: "wrap", marginBottom: 6 }}>
+            {xem.ds.map((t, i) => <button key={t.ten + i} className={`nut nut-nho ${i === xem.chon ? "nut-chinh" : ""}`} onClick={() => setXem({ ...xem, chon: i })}>{t.ten}</button>)}
+          </div>
+          <div className="chu-nho mo" style={{ marginBottom: 4 }}>Chỉ để soát số liệu; độ rộng cột, khung, trang in xem trong Excel.{xem.ds[xem.chon]!.soDong > 300 ? ` Trang có ${xem.ds[xem.chon]!.soDong} dòng — hiện 300 dòng đầu.` : ""}</div>
+          <div style={{ overflow: "auto", maxHeight: "70vh", background: "#fff", padding: 8 }} data-noi-dung-xem-truoc-excel dangerouslySetInnerHTML={{ __html: xem.ds[xem.chon]!.html }} />
+        </HopThoai>
+      )}
       {canhBao.length > 0 && <div className="chu-do chu-nho mt-6">Trường có trong mẫu nhưng phần mềm không có dữ liệu: {canhBao.map((t) => `{{${t}}}`).join(", ")}</div>}
       <div className="mo chu-nho mt-8">
         Sửa mẫu trong Excel: đổi tiêu đề, phông chữ, độ rộng cột, ô gộp, khung, chữ ký, thiết lập trang in… và giữ các trường {"{{…}}"}. Dòng có ô đầu bắt đầu bằng {"{{#bang}}"} được nhân theo từng dòng dữ liệu (giữ định dạng dòng); trang có tên chứa {"{{…}}"} được nhân thành một trang cho mỗi hộ. Công thức phía dưới dòng lặp tự dời; vùng SUM kết thúc tại dòng lặp tự mở rộng. Mẫu tải lên được điền thử bằng số liệu dự án đang mở trước khi lưu.

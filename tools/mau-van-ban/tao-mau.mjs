@@ -241,13 +241,18 @@ const MAU = {
     ...CAN_CU(),
     P("Theo đề nghị của {ten_phong} tại Tờ trình số {to_trinh_so} ngày {to_trinh_ngay}.", { nghieng: true }),
     giua("QUYẾT ĐỊNH:", { dam: true, truoc: 120 }),
-    P("**Điều 1.** Phê duyệt phương án bồi thường, hỗ trợ, tái định cư khi Nhà nước thu hồi đất để thực hiện dự án {ten_du_an}, cụ thể như sau:"),
+    // 1.2.0 (C2): Điều 1 theo Mẫu số 44 Phụ lục II NĐ 151/2025/NĐ-CP — (1) phương án đối với dự án (khoản 1 Điều 3 NĐ 88/2024),
+    // nội dung các mục theo Mẫu 14 Sổ tay; (2) phương án chi tiết từng người (khoản 2 Điều 3); (3) nội dung khác
+    P("**Điều 1.** Phê duyệt phương án bồi thường, hỗ trợ, tái định cư khi Nhà nước thu hồi đất để thực hiện dự án {ten_du_an}, bao gồm:"),
+    P("**1. Phương án bồi thường, hỗ trợ, tái định cư đối với dự án** {ten_du_an} theo quy định tại khoản 1 Điều 3 của Nghị định số 88/2024/NĐ-CP ngày 15 tháng 7 năm 2024 của Chính phủ quy định về bồi thường, hỗ trợ, tái định cư khi Nhà nước thu hồi đất:"),
     ...noiDungPhuongAn({ cho: "14" }),
-    P("(Có phương án bồi thường, hỗ trợ và tái định cư chi tiết kèm theo)", { nghieng: true, canh: AlignmentType.CENTER, thut: 0 }),
+    P("**2. Phương án chi tiết bồi thường, hỗ trợ, tái định cư đối với từng người có đất thu hồi, chủ sở hữu tài sản** theo quy định tại khoản 2 Điều 3 của Nghị định số 88/2024/NĐ-CP ngày 15 tháng 7 năm 2024 của Chính phủ (có Phụ lục chi tiết kèm theo)."),
+    P("**3. Các nội dung khác (nếu có):** {noi_dung_khac}."),
     P("**Điều 2.** Nhiệm vụ, trách nhiệm của các bên có liên quan:"),
     P("1. {ten_don_vi_bt} có trách nhiệm phối hợp với chủ đầu tư dự án, {ten_phong} và Ủy ban nhân dân {ten_xa} nơi có đất Nhà nước thu hồi phổ biến và niêm yết công khai quyết định này; giao quyết định này đến từng tổ chức, hộ gia đình, cá nhân; trường hợp tổ chức, hộ gia đình, cá nhân không nhận quyết định này hoặc vắng mặt thì phải lập biên bản."),
     P("2. {ten_don_vi_bt} có trách nhiệm phối hợp với các cơ quan có liên quan chi trả tiền bồi thường, hỗ trợ, tái định cư theo phương án được phê duyệt trong thời hạn 30 ngày kể từ ngày quyết định này có hiệu lực."),
     P("3. Văn phòng {co_quan_dang_tai} có trách nhiệm đăng tải quyết định này trên trang thông tin điện tử của Ủy ban nhân dân {ten_xa}."),
+    P("4. {trach_nhiem_nguoi_co_dat}"),
     P("**Điều 3.** Quyết định này có hiệu lực kể từ ngày {ngay_hieu_luc}."),
     P("**Điều 4.** {co_quan_thi_hanh}, Ủy ban nhân dân {ten_xa} nơi có đất Nhà nước thu hồi và các tổ chức, hộ gia đình, cá nhân có tên trong phương án bồi thường, hỗ trợ, tái định cư chịu trách nhiệm thi hành Quyết định này./."),
     kyVanBan(),
@@ -457,31 +462,34 @@ function niemYet(ketThuc) {
 
 /** Nội dung phương án dùng chung cho Mẫu 11, 13, 14. */
 function noiDungPhuongAn({ cho }) {
-  const out = [
-    P("**1. Tổng diện tích đất thu hồi:** {tong_dt_thu_hoi} m², trong đó diện tích từng loại đất thu hồi như sau:"),
-    ...lap("dt_theo_loai", "- {loai}: {dien_tich} m²;", { trai: 567, thut: 0, sau: 40 }),
-    P("**2. Tổng số đối tượng có đất thu hồi:** {so_doi_tuong} đối tượng. Trong đó gồm: tổ chức {so_to_chuc}; hộ gia đình, cá nhân {so_ca_nhan}."),
-    P("**3. Địa điểm:** {dia_diem_du_an}."),
-    P("**4. Phương án đào tạo, chuyển đổi nghề và tìm kiếm việc làm (nếu có):** {pa_chuyen_doi_nghe}."),
-    P("**5. Phương án bố trí tái định cư (nếu có):** {pa_tai_dinh_cu}."),
-    P("**6. Phương án bồi thường bằng đất (nếu có):** {pa_boi_thuong_dat}."),
-    P("**7. Phương án di dời mồ mả trong phạm vi đất thu hồi (nếu có):** {pa_mo_ma}."),
-    P("**8. Phương án di chuyển các công trình hạ tầng trong phạm vi đất thu hồi (nếu có):** {pa_ha_tang}."),
-    P("**9. Kinh phí bồi thường, hỗ trợ, tái định cư**"),
-    P("Tổng giá trị phương án: **{tong_gia_tri}** đồng (bằng chữ: {tong_gia_tri_chu}). Trong đó:"),
-    P("9.1. Tiền bồi thường, hỗ trợ, tái định cư khi Nhà nước thu hồi đất: {tien_bthttdc} đồng (bằng chữ: {tien_bthttdc_chu}), gồm:"),
-    P("a) Kinh phí bồi thường về đất: {bt_dat} đồng;", { trai: 567, thut: 0 }),
-    P("b) Kinh phí bồi thường hoa màu, tài sản trên đất: {bt_tai_san} đồng;", { trai: 567, thut: 0 }),
-    P("c) Kinh phí bồi thường chi phí đầu tư vào đất còn lại (nếu có): {bt_dau_tu_con_lai} đồng;", { trai: 567, thut: 0 }),
-    P("d) Các khoản hỗ trợ: {ho_tro} đồng;", { trai: 567, thut: 0 }),
-    P("đ) Kinh phí hỗ trợ bàn giao mặt bằng sớm (khuyến khích tiến độ, trường hợp đã xác định được): {ho_tro_ban_giao_som} đồng.", { trai: 567, thut: 0 }),
-    P("9.2. Chi phí bảo đảm cho việc tổ chức thực hiện bồi thường, hỗ trợ, tái định cư: {chi_phi_to_chuc} đồng."),
-    P("9.3. Các chi phí khác: {chi_phi_khac}."),
-    P("**10. Tiến độ thực hiện phương án bồi thường, hỗ trợ, tái định cư:** {tien_do_thuc_hien}."),
-    P("**11. Ý kiến, kiến nghị của tổ chức/hộ gia đình/cá nhân về phương án bồi thường, hỗ trợ và tái định cư; kết quả giải quyết (nếu có):** {y_kien_kien_nghi}."),
-    P("**12. Các nội dung khác liên quan đến bồi thường, hỗ trợ, tái định cư (nếu có):** {noi_dung_khac}."),
+  const ds = [
+    ["**1. Tổng diện tích đất thu hồi:** {tong_dt_thu_hoi} m², trong đó diện tích từng loại đất thu hồi như sau:"],
+    { lap: ["dt_theo_loai", "- {loai}: {dien_tich} m²;", { trai: 567, thut: 0, sau: 40 }] },
+    ["**2. Tổng số đối tượng có đất thu hồi:** {so_doi_tuong} đối tượng. Trong đó gồm: tổ chức {so_to_chuc}; hộ gia đình, cá nhân {so_ca_nhan}."],
+    ["**3. Địa điểm:** {dia_diem_du_an}."],
+    ["**4. Phương án đào tạo, chuyển đổi nghề và tìm kiếm việc làm (nếu có):** {pa_chuyen_doi_nghe}."],
+    ["**5. Phương án bố trí tái định cư (nếu có):** {pa_tai_dinh_cu}."],
+    ["**6. Phương án bồi thường bằng đất (nếu có):** {pa_boi_thuong_dat}."],
+    ["**7. Phương án di dời mồ mả trong phạm vi đất thu hồi (nếu có):** {pa_mo_ma}."],
+    ["**8. Phương án di chuyển các công trình hạ tầng trong phạm vi đất thu hồi (nếu có):** {pa_ha_tang}."],
+    ["**9. Kinh phí bồi thường, hỗ trợ, tái định cư**"],
+    ["Tổng giá trị phương án: **{tong_gia_tri}** đồng (bằng chữ: {tong_gia_tri_chu}). Trong đó:"],
+    ["9.1. Tiền bồi thường, hỗ trợ, tái định cư khi Nhà nước thu hồi đất: {tien_bthttdc} đồng (bằng chữ: {tien_bthttdc_chu}), gồm:"],
+    ["a) Kinh phí bồi thường về đất: {bt_dat} đồng;", { trai: 567, thut: 0 }],
+    ["b) Kinh phí bồi thường hoa màu, tài sản trên đất: {bt_tai_san} đồng;", { trai: 567, thut: 0 }],
+    ["c) Kinh phí bồi thường chi phí đầu tư vào đất còn lại (nếu có): {bt_dau_tu_con_lai} đồng;", { trai: 567, thut: 0 }],
+    ["d) Các khoản hỗ trợ: {ho_tro} đồng;", { trai: 567, thut: 0 }],
+    ["đ) Kinh phí hỗ trợ bàn giao mặt bằng sớm (khuyến khích tiến độ, trường hợp đã xác định được): {ho_tro_ban_giao_som} đồng.", { trai: 567, thut: 0 }],
+    ["9.2. Chi phí bảo đảm cho việc tổ chức thực hiện bồi thường, hỗ trợ, tái định cư: {chi_phi_to_chuc} đồng."],
+    ["9.3. Các chi phí khác: {chi_phi_khac}."],
+    ["**10. Tiến độ thực hiện phương án bồi thường, hỗ trợ, tái định cư:** {tien_do_thuc_hien}."],
+    ["**11. Ý kiến, kiến nghị của tổ chức/hộ gia đình/cá nhân về phương án bồi thường, hỗ trợ và tái định cư; kết quả giải quyết (nếu có):** {y_kien_kien_nghi}."],
+    ["**12. Các nội dung khác liên quan đến bồi thường, hỗ trợ, tái định cư (nếu có):** {noi_dung_khac}."],
   ];
-  return out;
+  // Mẫu 14 (1.2.0, C2): các mục là phần 1 của Điều 1 (Mẫu 44 NĐ 151) → đánh số 1.1–1.11; mục 12 thành khoản 3 Điều 1
+  const so = (t) => t.replace(/^(\*\*)?(\d+)\.(\d+\.)?/, (_m, dam, a, b) => `${dam ?? ""}1.${a}.${b ?? ""}`);
+  const dung = cho === "14" ? ds.slice(0, -1) : ds;
+  return dung.flatMap((x) => (Array.isArray(x) ? [P(cho === "14" ? so(x[0]) : x[0], x[1])] : lap(...x.lap)));
 }
 
 const DANH_SACH = [

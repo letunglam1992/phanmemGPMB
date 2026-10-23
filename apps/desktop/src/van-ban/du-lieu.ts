@@ -411,8 +411,9 @@ export function ghepDuLieu(p: {
     }));
     kq.ds_ho_pa_tong_dt = soM2(p.ds.reduce((s, { h }) => s.plus(h.thua.reduce((a, t) => a.plus(soD(t.dienTichThuHoi)), D(0))), D(0)));
     kq.ds_ho_pa_tong_tien = tien(p.ds.reduce((s, { k }) => s.plus(k.tong.tongLamTron), D(0)));
-    if (!String(p.rieng.trach_nhiem_nguoi_co_dat ?? "").trim()) kq.trach_nhiem_nguoi_co_dat = "…………………………………………";
   }
+  // 1.2.0 (C2): mẫu 14, R5, T26 — Điều 2 có trách nhiệm của người có đất thu hồi (ghi chú 11 Mẫu 44 NĐ 151/2025)
+  if ((p.mau.ma === "14" || p.mau.ma === "R5" || p.mau.ma === "T26") && !String(p.rieng.trach_nhiem_nguoi_co_dat ?? "").trim()) kq.trach_nhiem_nguoi_co_dat = "…………………………………………";
   // 1.2.0 (B3): T27, T28 — người bị cưỡng chế mặc định là hộ; kết quả theo hồ sơ cưỡng chế thu hồi đất mới nhất
   if (p.mau.ma === "T27" || p.mau.ma === "T28") {
     if (!String(p.rieng.tp_nguoi_bi_cc ?? "").trim() && p.ho) kq.tp_nguoi_bi_cc = `${p.ho.h.ten}; địa chỉ: ${p.ho.h.diaChi || "…………"}`;

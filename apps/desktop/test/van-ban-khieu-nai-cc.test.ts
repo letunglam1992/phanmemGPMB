@@ -196,6 +196,23 @@ describe("1.0.21 (B2) — mẫu văn bản khiếu nại, cưỡng chế tự đ
     expect(canhBaoThuTucDon({ ...dt, ketQua: "DUNG" }, "2026-10-11", lich)).toEqual([]);
   });
 
+  it("1.2.0 C2 — mẫu 14, R5 theo Mẫu 44 NĐ 151: Điều 1 tách khoản 1, 2 Điều 3 NĐ 88; Điều 2 có trách nhiệm người có đất", () => {
+    const m14 = tao("14", h, duAn, { trach_nhiem_nguoi_co_dat: "Người có đất thu hồi nhận tiền, bàn giao đất đúng thời hạn." });
+    expect(m14.chu).toContain("1. Phương án bồi thường, hỗ trợ, tái định cư đối với dự án");
+    expect(m14.chu).toContain("theo quy định tại khoản 1 Điều 3 của Nghị định số 88/2024/NĐ-CP");
+    expect(m14.chu).toContain("1.1. Tổng diện tích đất thu hồi:");
+    expect(m14.chu).toContain("1.9.1. Tiền bồi thường");
+    expect(m14.chu).toContain("2. Phương án chi tiết bồi thường, hỗ trợ, tái định cư đối với từng người có đất thu hồi, chủ sở hữu tài sản theo quy định tại khoản 2 Điều 3");
+    expect(m14.chu).toContain("3. Các nội dung khác (nếu có):");
+    expect(m14.chu).toContain("4. Người có đất thu hồi nhận tiền, bàn giao đất đúng thời hạn.");
+    expect(m14.chu).not.toContain("1.12.");
+    expect(tao("14", h, duAn, {}).canhBao.some((c) => c.includes("khoản 4 Điều 2"))).toBe(true);
+    const r5 = tao("R5", h, duAn, { trach_nhiem_nguoi_co_dat: "Hộ bàn giao mặt bằng." });
+    expect(r5.chu).toContain("chủ sở hữu tài sản theo quy định tại khoản 2 Điều 3 của Nghị định số 88/2024/NĐ-CP");
+    expect(r5.chu).toContain("4. Hộ bàn giao mặt bằng.");
+    expect(r5.chu).not.toContain("{");
+  });
+
   it("1.2.0 A2, B3 — T26 Mẫu 44 NĐ 151 (phương án dự án + biểu chi tiết từng người); T27 biên bản cưỡng chế; T28 bảo quản tài sản", () => {
     const t26 = tao("T26", h, duAn, { trach_nhiem_nguoi_co_dat: "Người có đất thu hồi bàn giao đất theo quy định." });
     expect(t26.chu).toContain("theo quy định tại khoản 1 Điều 3 của Nghị định số 88/2024/NĐ-CP");
