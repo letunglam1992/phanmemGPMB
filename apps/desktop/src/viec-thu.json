@@ -143,5 +143,17 @@
    "Báo cáo Word cấp xã: mục Tiến độ theo tháng có biểu đồ; đơn quá hạn, lịch cưỡng chế. Máy tỉnh: biểu đồ đơn theo tháng; báo cáo tỉnh có lịch cưỡng chế.",
    "PDF bản đồ tiến độ: thửa đã giao chủ đầu tư có viền xanh đậm, chú giải."
   ]
+ },
+ {
+  "ten": "A10. Thử bản 1.3.0 trên máy Windows thật (khi phát hành)",
+  "viec": [
+   "Báo cáo tổng hợp → Báo cáo phân cấp (06 tháng): kỳ mặc định đúng hạn gần nhất; số văn bản từng nhiệm vụ khớp Sổ văn bản đi; tệp Word mở đúng thể thức.",
+   "Soạn T29, T30 (hộ có hồ sơ cưỡng chế kiểm đếm), T31 (ghi xã khác → cảnh báo thẩm quyền Chủ tịch UBND tỉnh); mở bằng Word.",
+   "Cài đặt → Thẩm quyền phân cấp: nhập văn bản giả định thay thế → mô tả mẫu 15 đổi theo; Dùng lại QĐ 27/2026.",
+   "Tạo Mẫu 22 có số cho hộ có hồ sơ cưỡng chế thu hồi chưa ghi số → thẻ Khiếu nại hiện \"Theo văn bản đã ghi số\", hạn giao QĐ tính được.",
+   "Phiếu kiểm tra (Word) với văn bản có cảnh báo (số trùng, căn cứ) → in được, đủ dòng.",
+   "Máy tỉnh nhận gói 1.3.0: thẻ Kết quả phân cấp theo xã có số; Xuất Excel có hai trang (phân cấp, lịch cưỡng chế).",
+   "Đo thời gian trên máy cấu hình thấp: mở Sổ văn bản đi nhiều nghìn dòng; Xuất gói gửi tỉnh dự án lớn (so với số đo CI trong tai-lon-1-3-0.test.ts: sổ 5.000 dòng < 0,3 giây; diễn biến 20.000 hộ ~0,3 giây; tóm tắt gói 20.000 hộ ~11 giây lần đầu)."
+  ]
  }
 ]

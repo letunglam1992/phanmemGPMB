@@ -80,3 +80,23 @@ export function donTinhTheoThang(tomTat: Pick<TomTatDuAn, "khieuNai">[]): import
   return [...m.values()].sort((a, b) => a.ky.localeCompare(b.ky));
 }
 
+/** 1.3.0 (D1) — số văn bản thuộc từng nhiệm vụ phân cấp theo xã, trong kỳ [tu, den] (gói gửi từ 1.3.0). */
+export function phanCapTheoXa(dong: Pick<TomTatDuAn, "xa" | "phanCap">[], tu: string, den: string): { xa: string; theoNv: Record<string, number>; tong: number }[] {
+  const m = new Map<string, Record<string, number>>();
+  for (const d of dong) {
+    const xa = d.xa || "(Chưa ghi xã, phường)";
+    const r = m.get(xa) ?? {};
+    for (const x of d.phanCap ?? []) if (x.ngay >= tu && x.ngay <= den) r[x.nv] = (r[x.nv] ?? 0) + 1;
+    m.set(xa, r);
+  }
+  return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0], "vi")).map(([xa, theoNv]) => ({ xa, theoNv, tong: Object.values(theoNv).reduce((s, n) => s + n, 0) }));
+}
+
+/** 1.3.0 (D2) — lịch cưỡng chế toàn tỉnh (ngày, xã, dự án, loại; gói không có tên hộ), theo thứ tự ngày. */
+export function lichCuongCheTinh(dong: Pick<TomTatDuAn, "xa" | "ten" | "cuongChe">[], tuNgay = ""): { ngay: string; xa: string; duAn: string; loai: "KIEM_DEM" | "THU_HOI" }[] {
+  return dong
+    .flatMap((d) => (d.cuongChe?.lich ?? []).map((c) => ({ ngay: c.ngay, xa: d.xa || "(Chưa ghi xã, phường)", duAn: d.ten, loai: c.loai })))
+    .filter((x) => x.ngay >= tuNgay)
+    .sort((a, b) => a.ngay.localeCompare(b.ngay) || a.xa.localeCompare(b.xa, "vi"));
+}
+

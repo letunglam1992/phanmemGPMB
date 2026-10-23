@@ -1193,3 +1193,27 @@ export async function xuatExcelSoVanBan(ds: import("./so-van-ban").VanBanDi[], t
   ], ds.map((x, i) => [i + 1, x.soDayDu, vn(x.ngay), x.ma, x.tenMau, x.duAnTen, x.hoMa ?? "", x.nguoi ?? "", x.luc ? new Date(x.luc).toLocaleString("vi-VN") : ""]));
   await taiVe(wb, `So-van-ban-di_${new Date().toISOString().slice(0, 10)}.xlsx`);
 }
+
+/** 1.3.0 (D1, D2): Excel cấp tỉnh — kết quả phân cấp theo xã; lịch cưỡng chế toàn tỉnh (hạn gửi Công an theo lịch nghỉ của máy tỉnh). */
+export async function xuatExcelPhanCapTinh(
+  phanCap: { xa: string; theoNv: Record<string, number>; tong: number }[],
+  nhiemVu: { ma: string; noiDung: string; viTri: string }[],
+  lich: { ngay: string; xa: string; duAn: string; loai: "KIEM_DEM" | "THU_HOI"; hanCongAn: string }[],
+  tieuDe: { ky: string; qd: string },
+) {
+  const { default: Excel } = await import("exceljs");
+  const wb = new Excel.Workbook();
+  wb.creator = "GPMB Sơn La";
+  const vn = (iso: string) => iso.split("-").reverse().join("/");
+  if (phanCap.length)
+    themTrang(wb, "Ket qua phan cap", `KẾT QUẢ THỰC HIỆN NHIỆM VỤ ĐƯỢC PHÂN CẤP THEO XÃ, PHƯỜNG (${tieuDe.ky}) — QĐ ${tieuDe.qd}`,
+      [{ t: "STT", w: 6 }, { t: "Xã, phường", w: 24 }, ...nhiemVu.map((n) => ({ t: `${n.noiDung} (${n.viTri})`, w: 16 })), { t: "Tổng", w: 9 }],
+      [...phanCap.map((x, i) => [i + 1, x.xa, ...nhiemVu.map((n) => x.theoNv[n.ma] ?? 0), x.tong]), ["", "Cộng", ...nhiemVu.map((n) => phanCap.reduce((s, x) => s + (x.theoNv[n.ma] ?? 0), 0)), phanCap.reduce((s, x) => s + x.tong, 0)]]);
+  if (lich.length)
+    themTrang(wb, "Lich cuong che", "LỊCH CƯỠNG CHẾ TOÀN TỈNH (hồ sơ chưa kết thúc, đơn vị đã ghi ngày dự kiến)",
+      [{ t: "STT", w: 6 }, { t: "Ngày dự kiến", w: 13 }, { t: "Xã, phường", w: 22 }, { t: "Dự án", w: 46 }, { t: "Loại", w: 30 }, { t: "Đề nghị Công an chậm nhất (05 ngày làm việc — Điều 37 NĐ 102/2024)", w: 22 }],
+      lich.map((x, i) => [i + 1, vn(x.ngay), x.xa, x.duAn, x.loai === "KIEM_DEM" ? "Cưỡng chế kiểm đếm bắt buộc" : "Cưỡng chế thu hồi đất", vn(x.hanCongAn)]));
+  if (!wb.worksheets.length) themTrang(wb, "Trong", "Không có số liệu", [{ t: "Ghi chú", w: 40 }], [["Các gói đã nhận chưa có số liệu phân cấp, lịch cưỡng chế (gói gửi từ bản 1.3.0, 1.2.0)"]]);
+  await taiVe(wb, `Phan-cap-lich-cuong-che-toan-tinh_${new Date().toISOString().slice(0, 10)}.xlsx`);
+}
+

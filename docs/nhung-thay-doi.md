@@ -4,6 +4,19 @@ Mỗi phiên bản một mục `## X.Y.Z`. Khi phát hành, quy trình đóng g�
 (`tools/ghi-chu-phat-hanh.mjs`) — thiếu mục của phiên bản đang phát hành thì dừng, không phát hành. Phần mềm hiện các mục
 mới hơn bản đang dùng khi có bản cập nhật.
 
+## 1.3.0
+
+- **Báo cáo phân cấp 06 tháng** (khoản 2 Điều 4 QĐ 27/2026/QĐ-UBND, trước 15/6 và 15/12): Báo cáo tổng hợp → Báo cáo phân cấp;
+  số văn bản theo từng nhiệm vụ lấy từ Sổ văn bản đi; chuông nhắc trước 15 ngày.
+- Mẫu mới: T29 Quyết định thành lập Hội đồng bồi thường, hỗ trợ, tái định cư; T30 Quyết định thành lập Ban cưỡng chế kiểm đếm bắt
+  buộc; T31 Quyết định giá bán nhà ở tái định cư (cảnh báo khi nhà ở khác xã — thẩm quyền Chủ tịch UBND tỉnh).
+- Cài đặt → **Thẩm quyền phân cấp**: khi có văn bản thay QĐ 27/2026, đơn vị tự nhập số, hiệu lực, vị trí từng nhiệm vụ.
+- Ngày mốc tự lấy từ văn bản đã ghi số: QĐ cưỡng chế (Mẫu 07, 22), QĐ thành lập Ban (T16) vào hồ sơ cưỡng chế; Kế hoạch (T1) cho
+  hạn họp phổ biến.
+- **Phiếu kiểm tra trước khi ký** (Word): các điểm cần xem, căn cứ, thẩm quyền — in kèm phiếu trình.
+- Máy tỉnh: kết quả phân cấp theo xã trong kỳ, lịch cưỡng chế toàn tỉnh; xuất Excel.
+- Sổ văn bản đi: ghi tay chọn được nhiệm vụ phân cấp; sổ nhiều nghìn dòng chỉ vẽ 500 dòng đầu (Excel có đủ).
+
 ## 1.2.0
 
 - Quyết định 27/2026/QĐ-UBND (phân cấp, ủy quyền lĩnh vực đất đai) vào Hỏi đáp và căn cứ mặc định; các mẫu thông báo, kế hoạch,

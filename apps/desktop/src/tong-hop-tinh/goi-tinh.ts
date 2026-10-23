@@ -13,6 +13,8 @@
  * gói trước đó của cùng đơn vị — phát hiện gói giả danh (khóa ký khác lần trước). Đây là chữ ký kỹ thuật của bản cài phần
  * mềm, không thay chữ ký số của cơ quan theo pháp luật về giao dịch điện tử.
  */
+import { nhiemVuCuaVanBan } from "../bao-cao-phan-cap";
+import type { VanBanDi } from "../so-van-ban";
 import { donTheoThang, hanDon, thongKeDon } from "../khieu-nai";
 const congNgay = (iso: string, n: number) => new Date(Date.parse(iso) + n * 86400000).toISOString().slice(0, 10);
 import { dsDoan, matBangTheoLyTrinh } from "../ly-trinh";
@@ -156,6 +158,8 @@ export interface TomTatDuAn {
     /** 1.2.0 (D2): lịch cưỡng chế — hồ sơ chưa kết thúc có ngày dự kiến (chỉ ngày, loại; không gửi tên hộ) */
     lich?: { ngay: string; loai: "KIEM_DEM" | "THU_HOI" }[];
   };
+  /** 1.3.0 (D1): văn bản thuộc nhiệm vụ phân cấp đã ban hành (theo Sổ văn bản đi) — chỉ mã nhiệm vụ, ngày ký, số hiệu (gói cũ không có) */
+  phanCap?: { nv: string; ngay: string; so: string }[];
   /** 1.1.0 (D3): bàn giao đất trên thực địa cho chủ đầu tư (Mẫu 06 NĐ 102/2024) — số lần, ngày gần nhất (gói cũ không có) */
   banGiaoThucDia?: { lan: number; ngayCuoi: string };
   /** 1.0.4: mặt bằng theo lý trình (chỉ khi xã có ghi lý trình thửa) — mét */
@@ -163,7 +167,7 @@ export interface TomTatDuAn {
 }
 
 /** Tóm tắt từng dự án (chạy trên máy tỉnh sau khi giải mã, hoặc trên máy xã để xem trước). */
-export function tomTatDuAn(duAn: DuAn[], ho: Ho[], soTep: (duAnId: string) => number, homNay: string, lich: LichLamViec = LICH_TRONG): TomTatDuAn[] {
+export function tomTatDuAn(duAn: DuAn[], ho: Ho[], soTep: (duAnId: string) => number, homNay: string, lich: LichLamViec = LICH_TRONG, soDi: VanBanDi[] = []): TomTatDuAn[] {
   return duAn.map((d) => {
     const cs = BO_CHINH_SACH[d.boChinhSach] ?? BO_CHINH_SACH[GOI_GOC]!;
     const hs = ho.filter((h) => h.duAnId === d.id && !h.daXoa);
@@ -248,6 +252,12 @@ export function tomTatDuAn(duAn: DuAn[], ho: Ho[], soTep: (duAnId: string) => nu
           ...(kn.tong ? { khieuNai: { ...kn, theoThang: donTheoThang(hs, homNay, lich) } } : {}),
           ...(cc.length ? { cuongChe: { kiemDem: cc.filter((c) => c.loai === "KIEM_DEM").length, thuHoi: cc.filter((c) => c.loai === "THU_HOI").length, dangThucHien: cc.filter((c) => !c.ketQua).length, duKien30Ngay: cc.filter((c) => !c.ketQua && c.ngayDuKien && c.ngayDuKien >= homNay && c.ngayDuKien <= congNgay(homNay, 30)).length, lich: cc.filter((c) => !c.ketQua && c.ngayDuKien).map((c) => ({ ngay: c.ngayDuKien!, loai: c.loai })).sort((a, b) => a.ngay.localeCompare(b.ngay)) } } : {}),
         };
+      })(),
+      ...(() => {
+        const pc = soDi.filter((x) => x.duAnId === d.id).flatMap((x) => { const nv = nhiemVuCuaVanBan(x); return nv ? [{ nv, ngay: x.ngay, so: x.soDayDu }] : []; });
+        const k = new Set<string>();
+        const ds = pc.filter((x) => { const kk = `${x.so}|${x.ngay}`; if (k.has(kk)) return false; k.add(kk); return true; });
+        return ds.length ? { phanCap: ds } : {};
       })(),
       ...((d.banGiaoThucDia ?? []).length ? { banGiaoThucDia: { lan: d.banGiaoThucDia!.length, ngayCuoi: d.banGiaoThucDia!.reduce((a, b) => (b.ngay > a ? b.ngay : a), "") } } : {}),
       ...(d.lienXa?.ma?.trim() ? { lienXa: d.lienXa } : {}),

@@ -6,6 +6,8 @@ import { ONgay } from "./ONgay";
 import { xuatExcelSoVanBan } from "../xuat-excel";
 
 const vn = (iso: string) => iso.split("-").reverse().join("/");
+/** 1.3.0 (E2): sổ nhiều nghìn dòng — chỉ vẽ phần đầu, Excel có đủ */
+const TOI_DA_HIEN = 500;
 
 /** 1.2.0 (C1) — sổ văn bản đi: các văn bản có số tạo từ phần mềm (dự án này hoặc cả đơn vị), lọc theo năm, ký hiệu; xuất Excel. */
 export function TheSoVanBanDi({ duAn }: { duAn: DuAn }) {
@@ -83,7 +85,7 @@ export function TheSoVanBanDi({ duAn }: { duAn: DuAn }) {
             <table className="bang chu-nho" aria-label="Sổ văn bản đi">
               <thead><tr><th>Số, ký hiệu</th><th>Ngày ký</th><th>Văn bản</th>{caDonVi && <th>Dự án</th>}<th>Hộ</th><th>Người cấp số</th></tr></thead>
               <tbody>
-                {hien.map((x, i) => (
+                {hien.slice(0, TOI_DA_HIEN).map((x, i) => (
                   <tr key={`${x.soDayDu}-${x.luc ?? i}-${i}`} style={trung.has(`${x.kyHieu}|${x.so}`) ? { color: "var(--do-to)" } : undefined} title={trung.has(`${x.kyHieu}|${x.so}`) ? "Số trùng trong năm — kiểm tra lại" : undefined}>
                     <td>{x.soDayDu}</td><td>{vn(x.ngay)}</td><td>{x.ma === MA_NGOAI ? <><span className="nhan nhan-xam">Ghi tay</span> {x.tenMau}</> : `${x.ma} – ${x.tenMau}`}</td>{caDonVi && <td>{x.duAnTen}</td>}<td>{x.hoMa ?? ""}</td><td>{x.nguoi ?? ""}</td>
                   </tr>
@@ -92,6 +94,7 @@ export function TheSoVanBanDi({ duAn }: { duAn: DuAn }) {
             </table>
           </div>
         )}
+        {hien.length > TOI_DA_HIEN && <div className="mo chu-nho" style={{ marginTop: 4 }}>Hiện {TOI_DA_HIEN}/{hien.length} dòng — lọc theo ký hiệu hoặc Xuất Excel để xem đủ.</div>}
         {trung.size > 0 && <div className="thong-bao thong-bao-vang chu-nho" style={{ marginTop: 6 }}>Có {trung.size} số bị cấp trùng (tô đỏ) — văn thư kiểm tra, đánh lại số nếu cần.</div>}
       </div>
     </div>

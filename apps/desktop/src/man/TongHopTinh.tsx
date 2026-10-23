@@ -5,6 +5,8 @@
  * - Cấp tỉnh ("Tổng hợp tỉnh"): tạo khóa cấp tỉnh, nhận gói (tệp hoặc tải từ cổng), bảng tổng hợp theo xã, phường,
  *   xem chi tiết từng dự án như cấp xã (chỉ xem), xuất Excel; quản lý mã truy cập cổng của các xã.
  */
+import { ThePhanCapTinh } from "../thanh-phan/PhanCapTinh";
+import { KHOA_SO_VB, type SoVanBanDi, type VanBanDi } from "../so-van-ban";
 import { TheLienXaTinh } from "../thanh-phan/LienXaTinh";
 import { moTaDemBanPA } from "../phuong-an";
 import { HopThoai } from "../thanh-phan/chung";
@@ -85,6 +87,7 @@ function PhanGui() {
   const [gui, setGui] = useState<CaiDatGui | null>(null);
   const [dang, setDang] = useState("");
   const [soTep, setSoTep] = useState<Map<string, number>>(new Map());
+  const [soDi, setSoDi] = useState<VanBanDi[]>([]);
   const [cong, setCong] = useState<CauHinhCong | null>(() => docCauHinhCong("XA"));
   useEffect(() => {
     void (async () => {
@@ -94,12 +97,13 @@ function PhanGui() {
       const m = new Map<string, number>();
       for (const d of dsDuAn) m.set(d.id, (await kho.dsDinhKem(d.id)).filter((x) => !x.daXoa && !x.thayBoi).length);
       setSoTep(m);
+      setSoDi((await kho.docCaiDat<SoVanBanDi>(KHOA_SO_VB).catch(() => null))?.ds ?? []);
     })();
   }, [kho, dsDuAn, dsDonVi]);
   const kemTep = gui?.kemTep ?? true;
   const kemBanDo = gui?.kemBanDo ?? true;
   const dsChon = useMemo(() => dsDuAn.filter((d) => !d.tapHuan && !gui?.boQua?.includes(d.id)), [dsDuAn, gui?.boQua]);
-  const tomTat = useMemo(() => tomTatDuAn(dsChon, dsChon.flatMap((d) => hoCua(d.id)), (id) => soTep.get(id) ?? 0, homNay(), lich), [dsChon, hoCua, soTep, lich]);
+  const tomTat = useMemo(() => tomTatDuAn(dsChon, dsChon.flatMap((d) => hoCua(d.id)), (id) => soTep.get(id) ?? 0, homNay(), lich, soDi), [dsChon, hoCua, soTep, lich, soDi]);
   const coQuyenGui = quyen("SAO_LUU");
 
   const nhapKhoa = async (f: File | undefined) => {
@@ -632,6 +636,9 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
         </div>
       </div>
 
+      <RaoLoi ten="khung Kết quả phân cấp">
+        <ThePhanCapTinh dong={hien} />
+      </RaoLoi>
       <RaoLoi ten="khung Diễn biến theo tháng">
         <TheDienBienTinh ds={ds} banCu={banCu} />
       </RaoLoi>
