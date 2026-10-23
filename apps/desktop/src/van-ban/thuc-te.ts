@@ -3,6 +3,7 @@
  * hồi đất kèm danh sách, Tờ trình/QĐ phê duyệt phương án 01 hộ (11 mục), Tờ trình/QĐ thu hồi đất nhiều hộ; và bước kiểm tra
  * thống nhất trước khi tạo văn bản (docs/19 mục 5 điểm 4). Chỉ tổng hợp số liệu đã có trong hồ sơ — không tự đặt mức, căn cứ.
  */
+import { canhBaoThamQuyen } from "./tham-quyen";
 import { D, dinhDang } from "@gpmb/core";
 import type Decimal from "decimal.js";
 import { CAC_BUOC, TEN_HINH_THUC_TDC, type DuAn, type Ho } from "../mo-hinh";
@@ -232,6 +233,11 @@ export function kiemTraThongNhat(ma: string, duAn: DuAn, du: Record<string, unkn
     const nam = String(du.nam ?? ""), thang = String(du.thang ?? ""), ngay = String(du.ngay ?? "");
     const iso = /^\d{4}$/.test(nam) && thang && ngay ? `${nam}-${thang.padStart(2, "0")}-${ngay.padStart(2, "0")}` : undefined;
     out.push(...canhBaoCanCu(du.can_cu as string[], iso));
+  }
+  {
+    // 1.2.0 (E1): thẩm quyền theo QĐ 27/2026 — ngày ký ngoài thời gian hiệu lực
+    const nam = String(du.nam ?? ""), thang = String(du.thang ?? ""), ngay = String(du.ngay ?? "");
+    if (/^\d{4}$/.test(nam) && /^\d{1,2}$/.test(thang) && /^\d{1,2}$/.test(ngay)) out.push(...canhBaoThamQuyen(ma, `${nam}-${thang.padStart(2, "0")}-${ngay.padStart(2, "0")}`));
   }
   if (MAU_CO_BIEU.has(ma) && !String(du.so ?? "").trim()) out.push("Chưa nhập số văn bản: dòng \"(Kèm theo … số …)\" của biểu kèm theo sẽ để trống cùng chỗ số văn bản — văn thư ghi tay cả hai chỗ khi ký.");
   for (const [k, v] of Object.entries(du)) {

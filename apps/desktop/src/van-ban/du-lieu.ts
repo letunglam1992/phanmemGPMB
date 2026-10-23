@@ -17,7 +17,7 @@ import { duLieuBocTham, duLieuBoTriTdc, duLieuChamTra, duLieuDoiThoai, duLieuThu
 
 export const CHAM = "…………";
 
-/** Căn cứ mặc định: trích nguyên văn phần căn cứ của QĐ 14/2026/QĐ-UBND và các văn bản đã có trong bộ tài liệu. */
+/** Căn cứ mặc định: trích nguyên văn phần căn cứ của QĐ 14/2026/QĐ-UBND và các văn bản đã có trong bộ tài liệu (1.2.0: thêm QĐ 27/2026/QĐ-UBND — trích yếu theo nguyên văn; hết hiệu lực 01/3/2027 thì phần mềm cảnh báo). */
 export const CAN_CU_MAC_DINH = [
   "Căn cứ Luật Tổ chức chính quyền địa phương số 72/2025/QH15;",
   "Căn cứ Luật Đất đai số 31/2024/QH15 được sửa đổi, bổ sung một số điều bởi các Luật số 43/2024/QH15, số 47/2024/QH15, số 58/2024/QH15, số 71/2025/QH15, số 84/2025/QH15, số 93/2025/QH15, số 95/2025/QH15, số 130/2025/QH15, số 146/2025/QH15, số 147/2025/QH15 và số 116/2025/QH15;",
@@ -27,6 +27,7 @@ export const CAN_CU_MAC_DINH = [
   "Căn cứ Nghị định số 49/2026/NĐ-CP của Chính phủ Quy định chi tiết và hướng dẫn một số điều của Nghị quyết số 254/2025/QH15 của Quốc hội quy định một số cơ chế, chính sách tháo gỡ khó khăn, vướng mắc trong tổ chức thi hành Luật Đất đai;",
   "Căn cứ Quyết định số 106/2025/QĐ-UBND ngày 06 tháng 10 năm 2025 của Ủy ban nhân dân tỉnh Sơn La;",
   "Căn cứ Quyết định số 14/2026/QĐ-UBND ngày 31 tháng 3 năm 2026 của Ủy ban nhân dân tỉnh Sơn La;",
+  "Căn cứ Quyết định số 27/2026/QĐ-UBND ngày 30 tháng 6 năm 2026 của Ủy ban nhân dân tỉnh Sơn La phân cấp, ủy quyền thực hiện một số nhiệm vụ thuộc thẩm quyền của Ủy ban nhân dân tỉnh trong lĩnh vực quản lý đất đai trên địa bàn tỉnh Sơn La;",
   "Căn cứ Quyết định số 64/2026/QĐ-UBND ngày 06 tháng 10 năm 2026 của Ủy ban nhân dân tỉnh Sơn La sửa đổi, bổ sung một số điều của Quyết định số 106/2025/QĐ-UBND ngày 06/10/2025 và Quyết định số 14/2026/QĐ-UBND ngày 31/03/2026 của Ủy ban nhân dân tỉnh Sơn La;",
 ];
 

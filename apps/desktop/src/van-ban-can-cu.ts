@@ -9,6 +9,8 @@ export interface VanBanCanCu {
   ten: string;
   ngay?: string;
   hieuLucTu?: string;
+  /** Ngày hết hiệu lực (ISO) — văn bản có thời hạn */
+  hetHieuLucTu?: string;
   /** Văn bản sửa đổi, bổ sung (số hiệu) và ngày có hiệu lực của văn bản sửa đổi */
   suaDoiBoi?: { so: string; hieuLucTu: string; noiDung: string }[];
   nguon: string;
@@ -25,6 +27,7 @@ export const VAN_BAN_CAN_CU: VanBanCanCu[] = [
   { so: "124/2020/NĐ-CP", ten: "Nghị định quy định chi tiết một số điều và biện pháp thi hành Luật Khiếu nại", ngay: "2020-10-19", suaDoiBoi: [{ so: "155/2026/NĐ-CP", hieuLucTu: "2026-07-01", noiDung: "Sửa đổi, bổ sung một số điều (thụ lý 07 ngày làm việc — Điều 10; thay Mẫu 01–04, 14; thêm Mẫu 14a, 14b)" }], nguon: "policy/nguon/nd124-2020-khieu-nai.md, nd155-2026-sua-nd124.md" },
   { so: "106/2025/QĐ-UBND", ten: "Quyết định của UBND tỉnh Sơn La (Phụ lục I, II, V, VIII)", ngay: "2025-10-06", suaDoiBoi: [{ so: "64/2026/QĐ-UBND", hieuLucTu: "2026-10-06", noiDung: "Sửa Điều 13 Phụ lục I, Điều 14 Phụ lục II" }], nguon: "policy/nguon/qd106-2025-phu-luc-1.md, qd106-2025-phu-luc-2.md" },
   { so: "14/2026/QĐ-UBND", ten: "Quyết định của UBND tỉnh Sơn La", ngay: "2026-03-31", suaDoiBoi: [{ so: "64/2026/QĐ-UBND", hieuLucTu: "2026-10-06", noiDung: "Sửa khoản 11 Điều 6" }], nguon: "policy/nguon/qd14-2026-dieu-3-7.md" },
+  { so: "27/2026/QĐ-UBND", ten: "Quyết định phân cấp, ủy quyền thực hiện một số nhiệm vụ thuộc thẩm quyền của UBND tỉnh trong lĩnh vực quản lý đất đai trên địa bàn tỉnh Sơn La", ngay: "2026-06-30", hieuLucTu: "2026-06-30", hetHieuLucTu: "2027-03-01", nguon: "policy/nguon/qd27-2026-phan-cap-uy-quyen-dat-dai.md" },
   { so: "64/2026/QĐ-UBND", ten: "Quyết định sửa đổi, bổ sung QĐ 106/2025/QĐ-UBND và QĐ 14/2026/QĐ-UBND", ngay: "2026-10-06", hieuLucTu: "2026-10-06", nguon: "policy/nguon/qd64-2026-sua-qd106-qd14.md" },
   { so: "152/2025/NQ-HĐND", ten: "Nghị quyết ban hành bảng giá đất", nguon: "policy/nguon/nq152-2025-bang-gia-dat.json" },
   { so: "32/2025/QĐ-UBND", ten: "Quyết định ban hành đơn giá bồi thường nhà, công trình", nguon: "policy/nguon/qd32-2025-don-gia-nha-cong-trinh.json" },
@@ -41,6 +44,7 @@ export function canhBaoCanCu(canCu: string[], ngay = new Date().toISOString().sl
   const out: string[] = [];
   for (const v of VAN_BAN_CAN_CU) {
     if (!coSo(chu, v.so)) continue;
+    if (v.hetHieuLucTu && ngay >= v.hetHieuLucTu) out.push(`Căn cứ dẫn ${v.so} — văn bản hết hiệu lực từ ${v.hetHieuLucTu.split("-").reverse().join("/")}: bỏ căn cứ này hoặc thay bằng văn bản thay thế.`);
     for (const s of v.suaDoiBoi ?? []) {
       if (s.hieuLucTu && s.hieuLucTu > ngay) continue;
       if (!coSo(chu, s.so)) out.push(`Căn cứ dẫn ${v.so} — văn bản này đã được sửa đổi, bổ sung bởi ${s.so}${s.hieuLucTu ? ` (hiệu lực ${s.hieuLucTu.split("-").reverse().join("/")})` : ""}: ${s.noiDung}. Bổ sung căn cứ nếu nội dung văn bản liên quan (Văn bản → Căn cứ → "Cập nhật căn cứ mặc định").`);

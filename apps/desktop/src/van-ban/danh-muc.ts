@@ -3,6 +3,7 @@
  * Thứ tự 14/15 theo NỘI DUNG mẫu (VM-23): 14 = QĐ phê duyệt phương án, 15 = QĐ thu hồi đất.
  * "goiY" lấy từ chú thích cuối trang của Sổ tay.
  */
+import { ghiChuThamQuyen } from "./tham-quyen";
 
 export interface TruongNhap {
   truong: string;
@@ -591,3 +592,9 @@ DANH_MUC_MAU.push(
     ],
   },
 );
+
+// 1.2.0 (E1): thẩm quyền theo Phụ lục II QĐ 27/2026/QĐ-UBND (phân cấp cho Chủ tịch UBND cấp xã)
+for (const m of DANH_MUC_MAU) {
+  const g = ghiChuThamQuyen(m.ma);
+  if (g) m.moTa = `${m.moTa ? m.moTa + " " : ""}${g}`;
+}

@@ -341,7 +341,7 @@ export function canhBaoChung(homNay: string, lich?: LichLamViec, thieuKhoaKhoiPh
     out.push({ noiDung: `Chưa xác nhận danh mục ngày nghỉ lễ, Tết năm ${nam} — hạn tính theo ngày làm việc hiện chỉ trừ thứ Bảy, Chủ nhật`, canCu: "VM-25 · bấm để mở Cài đặt → Lịch ngày nghỉ", muc: "TRUNG_BINH", caiDat: true });
   if (thieuKhoaKhoiPhuc)
     out.push({ noiDung: "Chưa đặt mật khẩu khôi phục cho sao lưu — quên mật khẩu sao lưu thì không mở được tệp; máy hỏng thì không mở được bản sao lưu tự động trên máy khác", canCu: "P0-5 · bấm để mở Cài đặt → Tự động sao lưu (tài khoản Quản trị)", muc: "TRUNG_BINH", caiDat: true });
-  if (con <= 60) return [...out, { noiDung: con > 0 ? `QĐ 27/2026/QĐ-UBND (phân cấp, ủy quyền) hết hiệu lực sau ${con} ngày` : "QĐ 27/2026/QĐ-UBND đã hết hiệu lực — kiểm tra thẩm quyền", canCu: "Điều 6 QĐ 27/2026/QĐ-UBND (VM-18)" }];
+  if (con <= 60) return [...out, { noiDung: con > 0 ? `QĐ 27/2026/QĐ-UBND (phân cấp, ủy quyền) hết hiệu lực sau ${con} ngày` : "QĐ 27/2026/QĐ-UBND đã hết hiệu lực — kiểm tra thẩm quyền", canCu: "khoản 1 Điều 6 QĐ 27/2026/QĐ-UBND (VM-18)" }];
   return out;
 }
 
