@@ -21,6 +21,8 @@ export interface VanBanDi {
   hoMa?: string;
   nguoi?: string;
   luc?: string;
+  /** 1.3.0 (A1): nhiệm vụ phân cấp (mã) của văn bản ghi tay — văn bản tạo từ mẫu thì suy từ mã mẫu */
+  nhiemVu?: string;
 }
 
 export interface SoVanBanDi {
@@ -86,7 +88,7 @@ export const soThuTu = (s: string): number | null => {
 export const MA_NGOAI = "NGOAI";
 
 /** Dựng dòng sổ cho văn bản ghi tay: số "15" hoặc "15/TB-UBND" (ký hiệu trong số được ưu tiên). */
-export function vanBanGhiTay(p: { so: string; kyHieu: string; ngay: string; trichYeu: string; duAn: { id: string; ten: string } }): VanBanDi | string {
+export function vanBanGhiTay(p: { so: string; kyHieu: string; ngay: string; trichYeu: string; duAn: { id: string; ten: string }; nhiemVu?: string }): VanBanDi | string {
   const so = p.so.trim();
   const tach = /^(\d{1,6})\s*\/\s*(.+)$/.exec(so);
   const kyHieu = (tach ? tach[2]! : p.kyHieu).trim();
@@ -94,6 +96,6 @@ export function vanBanGhiTay(p: { so: string; kyHieu: string; ngay: string; tric
   if (n === null) return "Số văn bản phải bắt đầu bằng số thứ tự (vd. 15 hoặc 15/TB-UBND)";
   if (!/^\d{4}-\d{2}-\d{2}$/.test(p.ngay)) return "Chưa nhập ngày ký";
   if (!p.trichYeu.trim()) return "Chưa nhập trích yếu";
-  return { so: n, kyHieu, soDayDu: kyHieu ? `${n}/${kyHieu}` : String(n), ngay: p.ngay, ma: MA_NGOAI, tenMau: p.trichYeu.trim(), duAnId: p.duAn.id, duAnTen: p.duAn.ten };
+  return { so: n, kyHieu, soDayDu: kyHieu ? `${n}/${kyHieu}` : String(n), ngay: p.ngay, ma: MA_NGOAI, tenMau: p.trichYeu.trim(), duAnId: p.duAn.id, duAnTen: p.duAn.ten, ...(p.nhiemVu ? { nhiemVu: p.nhiemVu } : {}) };
 }
 

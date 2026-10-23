@@ -10,6 +10,7 @@
  *   4. DA_KIEM_DEM – bước 4 (điều tra, kiểm đếm) đã hoàn thành;
  *   5. CHUA_KIEM_DEM.
  */
+import { QD27_MAC_DINH, cauHinhThamQuyen, hanBaoCaoPhanCap } from "./van-ban/tham-quyen";
 import { CAC_BUOC, daQuaBuoc, hoHieuLuc, tienDoHo, type DuAn, type Ho } from "./mo-hinh";
 import type { KetQuaHo } from "./tinh-ho";
 
@@ -339,17 +340,25 @@ export function canhBaoDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: st
   return out;
 }
 
-/** Cảnh báo chung: văn bản phân cấp, ủy quyền QĐ 27/2026 hết hiệu lực 01/3/2027 (VM-18) — báo trước 60 ngày. */
-export function canhBaoChung(homNay: string, lich?: LichLamViec, thieuKhoaKhoiPhuc = false): { noiDung: string; canCu: string; muc?: "TRUNG_BINH"; caiDat?: boolean }[] {
-  const het = "2027-03-01";
-  const con = soNgay(homNay, het);
+/**
+ * Cảnh báo chung: văn bản phân cấp đang áp dụng (mặc định QĐ 27/2026 — hết hiệu lực 01/3/2027, VM-18) — báo trước 60 ngày;
+ * 1.3.0 (A1): hạn báo cáo định kỳ 06 tháng kết quả thực hiện nhiệm vụ được phân cấp (khoản 2 Điều 4 QĐ 27/2026) — báo trước 15 ngày.
+ */
+export function canhBaoChung(homNay: string, lich?: LichLamViec, thieuKhoaKhoiPhuc = false): { noiDung: string; canCu: string; muc?: "TRUNG_BINH"; caiDat?: boolean; baoCaoPhanCap?: boolean }[] {
+  const tq = cauHinhThamQuyen();
   const out: ReturnType<typeof canhBaoChung> = [];
   const nam = Number(homNay.slice(0, 4));
   if (lich && !lich.namDaDu.includes(nam))
     out.push({ noiDung: `Chưa xác nhận danh mục ngày nghỉ lễ, Tết năm ${nam} — hạn tính theo ngày làm việc hiện chỉ trừ thứ Bảy, Chủ nhật`, canCu: "VM-25 · bấm để mở Cài đặt → Lịch ngày nghỉ", muc: "TRUNG_BINH", caiDat: true });
   if (thieuKhoaKhoiPhuc)
     out.push({ noiDung: "Chưa đặt mật khẩu khôi phục cho sao lưu — quên mật khẩu sao lưu thì không mở được tệp; máy hỏng thì không mở được bản sao lưu tự động trên máy khác", canCu: "P0-5 · bấm để mở Cài đặt → Tự động sao lưu (tài khoản Quản trị)", muc: "TRUNG_BINH", caiDat: true });
-  if (con <= 60) return [...out, { noiDung: con > 0 ? `QĐ 27/2026/QĐ-UBND (phân cấp, ủy quyền) hết hiệu lực sau ${con} ngày` : "QĐ 27/2026/QĐ-UBND đã hết hiệu lực — kiểm tra thẩm quyền", canCu: "khoản 1 Điều 6 QĐ 27/2026/QĐ-UBND (VM-18)" }];
+  const bc = hanBaoCaoPhanCap(homNay);
+  if (bc && soNgay(homNay, bc.han) <= 15)
+    out.push({ noiDung: `Báo cáo kết quả thực hiện nhiệm vụ được phân cấp gửi UBND tỉnh (qua Sở Nông nghiệp và Môi trường) trước ngày ${bc.han.split("-").reverse().join("/")} — Báo cáo tổng hợp → Báo cáo phân cấp`, canCu: `khoản 2 Điều 4 QĐ ${tq.so}`, muc: "TRUNG_BINH", baoCaoPhanCap: true });
+  if (tq.hetHieuLucTu) {
+    const con = soNgay(homNay, tq.hetHieuLucTu);
+    if (con <= 60) out.push({ noiDung: con > 0 ? `QĐ ${tq.so} (phân cấp, ủy quyền) hết hiệu lực sau ${con} ngày` : `QĐ ${tq.so} đã hết hiệu lực — kiểm tra thẩm quyền, cập nhật ở Cài đặt → Thẩm quyền phân cấp`, canCu: tq.so === QD27_MAC_DINH.so ? `khoản 1 Điều 6 QĐ ${tq.so} (VM-18)` : `QĐ ${tq.so}`, caiDat: con <= 0 });
+  }
   return out;
 }
 

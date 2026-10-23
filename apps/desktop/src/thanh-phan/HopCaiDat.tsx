@@ -13,6 +13,7 @@ import { deXuatNgayNghi, type LichLamViec, type NgayDacBiet } from "../lich-lam-
 import { Chon } from "./Chon";
 import { KHOA_THE_CAI_DAT } from "./BatDau";
 import { datHoiNoiLuu, hoiNoiLuu } from "../tai-xuong";
+import { QD27_MAC_DINH, loiCauHinh, type CauHinhThamQuyen } from "../van-ban/tham-quyen";
 import { loiMatKhau, taoKhoaKhoiPhuc, thuMatKhauKhoiPhuc } from "../ma-hoa";
 
 const THU = ["Chủ nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
@@ -23,7 +24,7 @@ const vn = (iso: string) => iso.split("-").reverse().join("/");
 /** Cài đặt chung: lịch ngày nghỉ (VM-25); các thẻ khác truyền qua `them`. */
 export function HopCaiDat({ them }: { them?: { ma: string; ten: string; noiDung: ReactNode }[] }) {
   const { moCaiDat } = useUngDung();
-  const cacThe = [{ ma: "lich", ten: "Lịch ngày nghỉ", noiDung: <TheLich /> }, { ma: "tu-dong", ten: "Tự động sao lưu", noiDung: <TheTuDong /> }, { ma: "cham-tra", ten: "Tiền chậm trả", noiDung: <TheTyLeCham /> }, { ma: "mang", ten: "Mạng nội bộ", noiDung: <TheMangNoiBo /> }, { ma: "luu-tep", ten: "Lưu tệp xuất", noiDung: <TheLuuTep /> }, { ma: "lich-su", ten: "Lịch sử bản ghi", noiDung: <TheLichSu /> }, { ma: "nguong-dt", ten: "Ngưỡng lệch diện tích", noiDung: <TheNguongDt /> }, { ma: "goi-cs", ten: "Gói chính sách", noiDung: <TheGoiChinhSach /> }, { ma: "giao-dien", ten: "Giao diện", noiDung: <TheGiaoDien /> }, ...(them ?? [])];
+  const cacThe = [{ ma: "lich", ten: "Lịch ngày nghỉ", noiDung: <TheLich /> }, { ma: "tu-dong", ten: "Tự động sao lưu", noiDung: <TheTuDong /> }, { ma: "cham-tra", ten: "Tiền chậm trả", noiDung: <TheTyLeCham /> }, { ma: "mang", ten: "Mạng nội bộ", noiDung: <TheMangNoiBo /> }, { ma: "luu-tep", ten: "Lưu tệp xuất", noiDung: <TheLuuTep /> }, { ma: "lich-su", ten: "Lịch sử bản ghi", noiDung: <TheLichSu /> }, { ma: "nguong-dt", ten: "Ngưỡng lệch diện tích", noiDung: <TheNguongDt /> }, { ma: "tham-quyen", ten: "Thẩm quyền phân cấp", noiDung: <TheThamQuyen /> }, { ma: "goi-cs", ten: "Gói chính sách", noiDung: <TheGoiChinhSach /> }, { ma: "giao-dien", ten: "Giao diện", noiDung: <TheGiaoDien /> }, ...(them ?? [])];
   const [the, setThe] = useState(() => {
     let t: string | null = null;
     try { t = sessionStorage.getItem(KHOA_THE_CAI_DAT); sessionStorage.removeItem(KHOA_THE_CAI_DAT); } catch { /* bỏ qua */ }
@@ -59,6 +60,54 @@ function TheNguongDt() {
       {loi && <div className="thong-bao thong-bao-vang mt-8">{loi}</div>}
       {nguongLechDt?.luc && <p className="mo chu-nho">Đặt bởi {nguongLechDt.nguoi} lúc {new Date(nguongLechDt.luc).toLocaleString("vi-VN")}</p>}
       {choSua && <button className="nut nut-chinh mt-8" disabled={!!loi} onClick={() => void luuNguongLechDt(n)}>Lưu ngưỡng</button>}
+    </div>
+  );
+}
+
+/**
+ * 1.3.0 (A3) — văn bản phân cấp thẩm quyền đang áp dụng (mặc định QĐ 27/2026/QĐ-UBND, hết hiệu lực 01/3/2027). Khi tỉnh ban hành văn
+ * bản thay thế, đơn vị nhập số, hiệu lực, vị trí từng nhiệm vụ — mô tả mẫu, cảnh báo ngày ký, nhắc báo cáo dùng ngay, không chờ bản mới.
+ */
+function TheThamQuyen() {
+  const { thamQuyen, luuThamQuyen, quyen } = useUngDung();
+  const [c, setC] = useState<CauHinhThamQuyen>(thamQuyen);
+  useEffect(() => setC(thamQuyen), [thamQuyen]);
+  const sua = quyen("CAI_DAT");
+  const loi = loiCauHinh(c);
+  const macDinh = thamQuyen.so === QD27_MAC_DINH.so && !thamQuyen.luc;
+  return (
+    <div data-the-tham-quyen>
+      <p className="mo mt-0">
+        Văn bản phân cấp cho Chủ tịch UBND cấp xã đang áp dụng: dùng để ghi thẩm quyền vào mô tả mẫu văn bản, cảnh báo khi ngày ký ngoài thời gian hiệu lực, nhắc báo cáo định kỳ và thống kê kết quả phân cấp.
+        Mặc định là <b>QĐ 27/2026/QĐ-UBND</b> (Phụ lục II; hết hiệu lực từ 01/3/2027 — khoản 1 Điều 6). Có văn bản thay thế thì nhập đúng số, ngày, vị trí từng nhiệm vụ; nhiệm vụ không còn được phân cấp thì xóa mẫu ở dòng đó.
+      </p>
+      <div className="luoi luoi-3">
+        <O nhan="Số văn bản"><input aria-label="Số văn bản phân cấp" value={c.so} disabled={!sua} onChange={(e) => setC({ ...c, so: e.target.value })} /></O>
+        <O nhan="Có hiệu lực từ"><ONgay aria-label="Văn bản phân cấp có hiệu lực từ" value={c.hieuLucTu} disabled={!sua} onChange={(e) => setC({ ...c, hieuLucTu: e.target.value })} /></O>
+        <O nhan="Hết hiệu lực từ (để trống nếu không thời hạn)"><ONgay aria-label="Văn bản phân cấp hết hiệu lực từ" value={c.hetHieuLucTu} disabled={!sua} onChange={(e) => setC({ ...c, hetHieuLucTu: e.target.value })} /></O>
+        <O nhan="Trích yếu" style={{ gridColumn: "1 / -1" }}><input value={c.ten} disabled={!sua} onChange={(e) => setC({ ...c, ten: e.target.value })} /></O>
+      </div>
+      <label className="chu-nho mt-6" style={{ display: "block" }}><input type="checkbox" checked={c.baoCao06Thang} disabled={!sua} onChange={(e) => setC({ ...c, baoCao06Thang: e.target.checked })} /> Có nghĩa vụ báo cáo định kỳ 06 tháng (trước ngày 15/6 và 15/12 — khoản 2 Điều 4 QĐ 27/2026)</label>
+      <table className="bang mt-8 chu-nho">
+        <thead><tr><th>Nhiệm vụ</th><th style={{ width: 230 }}>Vị trí trong văn bản</th><th style={{ width: 170 }}>Mẫu của phần mềm</th></tr></thead>
+        <tbody>
+          {c.nhiemVu.map((n, i) => (
+            <tr key={n.ma}>
+              <td>{n.noiDung}</td>
+              <td><input aria-label={`Vị trí: ${n.noiDung}`} value={n.viTri} disabled={!sua} onChange={(e) => setC({ ...c, nhiemVu: c.nhiemVu.map((x, j) => (j === i ? { ...x, viTri: e.target.value } : x)) })} /></td>
+              <td><input aria-label={`Mẫu: ${n.noiDung}`} value={n.mau.join(", ")} disabled={!sua} onChange={(e) => setC({ ...c, nhiemVu: c.nhiemVu.map((x, j) => (j === i ? { ...x, mau: e.target.value.split(/[,;\s]+/).map((m) => m.trim()).filter(Boolean) } : x)) })} /></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {loi && <div className="thong-bao thong-bao-vang mt-8">{loi}</div>}
+      {thamQuyen.luc && <p className="mo chu-nho">Cập nhật bởi {thamQuyen.nguoi} lúc {new Date(thamQuyen.luc).toLocaleString("vi-VN")}</p>}
+      {sua && (
+        <div className="nhom-nut mt-8">
+          <button className="nut nut-chinh" disabled={!!loi} onClick={() => void luuThamQuyen(c)}>Lưu văn bản phân cấp</button>
+          {!macDinh && <button className="nut" onClick={() => { if (confirm("Dùng lại mặc định QĐ 27/2026/QĐ-UBND?")) void luuThamQuyen(null); }}>Dùng lại QĐ 27/2026 (mặc định)</button>}
+        </div>
+      )}
     </div>
   );
 }

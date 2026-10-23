@@ -3,7 +3,7 @@
  * Thứ tự 14/15 theo NỘI DUNG mẫu (VM-23): 14 = QĐ phê duyệt phương án, 15 = QĐ thu hồi đất.
  * "goiY" lấy từ chú thích cuối trang của Sổ tay.
  */
-import { ghiChuThamQuyen } from "./tham-quyen";
+import { DAU_GHI_CHU_TQ, ghiChuThamQuyen } from "./tham-quyen";
 
 export interface TruongNhap {
   truong: string;
@@ -594,11 +594,62 @@ DANH_MUC_MAU.push(
   },
 );
 
-// 1.2.0 (E1): thẩm quyền theo Phụ lục II QĐ 27/2026/QĐ-UBND (phân cấp cho Chủ tịch UBND cấp xã)
-for (const m of DANH_MUC_MAU) {
-  const g = ghiChuThamQuyen(m.ma);
-  if (g) m.moTa = `${m.moTa ? m.moTa + " " : ""}${g}`;
+/** 1.3.0 (A2) — nhiệm vụ phân cấp tại mục II Phụ lục II QĐ 27/2026/QĐ-UBND chưa có mẫu: T29, T30, T31. */
+DANH_MUC_MAU.push(
+  {
+    ma: "T29", ten: "Quyết định thành lập Hội đồng bồi thường, hỗ trợ, tái định cư", buoc: "1", phamVi: "DU_AN", coQuan: "UBND", nguon: "THUC_TE", tep: "tt-qd-hoi-dong-bt.docx",
+    moTa: "Điểm c khoản 2 Điều 86 Luật Đất đai 2024: Hội đồng thành lập đối với từng dự án. Không có mẫu luật định; thành viên, nhiệm vụ do cán bộ nhập.",
+    ghiLai: { khoa: "qd_hoi_dong", capDo: "DU_AN", kyHieu: "QĐ-UBND" },
+    nhapThem: [
+      { truong: "chuc_danh_de_nghi", nhan: "Chức danh người đề nghị", goiY: "Để trống = Trưởng + tên phòng" },
+      { truong: "thanh_vien_hd", nhan: "Thành viên Hội đồng (mỗi dòng một người: họ tên, chức vụ, chức danh trong Hội đồng)", nhieuDong: true, goiY: "Điểm c k2 Đ86 LĐĐ: Chủ tịch hoặc Phó Chủ tịch UBND làm Chủ tịch Hội đồng; đại diện cơ quan tài chính, cơ quan có chức năng quản lý đất đai, UBND cấp xã nơi có đất thu hồi; đại diện của người sử dụng đất có đất thu hồi; một số thành viên khác do người ký quyết định" },
+      { truong: "nhiem_vu_hd", nhan: "Nhiệm vụ của Hội đồng (Điều 2)", nhieuDong: true },
+      { truong: "giai_the_khac", nhan: "Ghi chú thêm về hoạt động, giải thể (nếu có)" },
+      HIEU_LUC,
+      { truong: "co_quan_thi_hanh", nhan: "Cơ quan thi hành (Điều 3)", macDinh: "Chánh Văn phòng Hội đồng nhân dân và Ủy ban nhân dân, Thủ trưởng các cơ quan, đơn vị có liên quan" },
+      NOI_NHAN("Như Điều 3\nThường trực HĐND (để giám sát)\nỦy ban Mặt trận Tổ quốc Việt Nam (để giám sát)\nLưu: VT"),
+    ],
+  },
+  {
+    ma: "T30", ten: "Quyết định thành lập Ban cưỡng chế kiểm đếm bắt buộc", buoc: "4", phamVi: "HO", coQuan: "UBND", nguon: "THUC_TE", tep: "tt-qd-ban-cc-kiem-dem.docx",
+    moTa: "Khoản 1 Điều 36 NĐ 102/2024/NĐ-CP (khoản 4 Điều 88 Luật Đất đai). QĐ kiểm đếm bắt buộc, QĐ cưỡng chế lấy từ hồ sơ cưỡng chế kiểm đếm của hộ; nhiệm vụ của Ban trích khoản 2–4 Điều 36.",
+    ghiLai: { khoa: "qd_ban_cc_kd", capDo: "HO", kyHieu: "QĐ-UBND" },
+    nhapThem: [
+      { truong: "chuc_danh_de_nghi", nhan: "Chức danh người đề nghị", goiY: "Để trống = Trưởng + tên phòng" },
+      { truong: "thanh_vien_ban", nhan: "Thành viên Ban (mỗi dòng một người: họ tên, chức vụ, nhiệm vụ trong Ban)", nhieuDong: true, goiY: "Khoản 1 Điều 36 NĐ 102: Chủ tịch hoặc Phó Chủ tịch UBND là Trưởng ban; đại diện các cơ quan có chức năng thanh tra, tư pháp, quản lý đất đai, xây dựng; đơn vị, tổ chức thực hiện nhiệm vụ bồi thường; đại diện lãnh đạo UBND cấp xã nơi có đất thu hồi; thành viên khác do người ký quyết định" },
+      { truong: "nhiem_vu_khac", nhan: "Nhiệm vụ khác (nếu có)", nhieuDong: true },
+      HIEU_LUC,
+      { truong: "co_quan_thi_hanh", nhan: "Cơ quan thi hành (Điều 3)", macDinh: "Chánh Văn phòng Hội đồng nhân dân và Ủy ban nhân dân, Thủ trưởng các cơ quan, đơn vị có liên quan" },
+      NOI_NHAN("Như Điều 3\nỦy ban Mặt trận Tổ quốc Việt Nam (để giám sát)\nLưu: VT"),
+    ],
+  },
+  {
+    ma: "T31", ten: "Quyết định giá bán nhà ở tái định cư (trong địa bàn xã)", buoc: "9", phamVi: "DU_AN", coQuan: "UBND", nguon: "THUC_TE", tep: "tt-qd-gia-ban-nha-tdc.docx",
+    moTa: "Khoản 3 Điều 111 Luật Đất đai 2024. Chỉ dùng khi nhà ở tái định cư trong địa bàn xã có đất thu hồi; bố trí ở xã khác thì Chủ tịch UBND tỉnh quyết định (mục II Phụ lục I QĐ 27/2026). Giá do cán bộ nhập kèm căn cứ — phần mềm không tính giá.",
+    ghiLai: { khoa: "qd_gia_ban_tdc", capDo: "DU_AN", kyHieu: "QĐ-UBND" },
+    nhapThem: [
+      { truong: "chuc_danh_de_nghi", nhan: "Chức danh người đề nghị", goiY: "Để trống = Trưởng + tên phòng" },
+      { truong: "dia_diem_nha_tdc", nhan: "Địa điểm nhà ở tái định cư", goiY: "vd. Khu tái định cư bản … (ghi rõ xã, phường)" },
+      { truong: "xa_nha_tdc", nhan: "Xã, phường nơi có nhà ở tái định cư", goiY: "Để trống = cùng xã có đất thu hồi; khác xã thì phần mềm cảnh báo thẩm quyền" },
+      { truong: "can_cu_gia", nhan: "Căn cứ xác định giá (dòng căn cứ in trong quyết định)", nhieuDong: true, goiY: "vd. Căn cứ Chứng thư/kết quả thẩm định giá số … — bắt buộc" },
+      { truong: "gia_ban_chi_tiet", nhan: "Bảng giá bán (mỗi dòng: nhà, căn hộ | diện tích m² | giá bán đồng)", nhieuDong: true },
+      HIEU_LUC,
+      { truong: "co_quan_thi_hanh", nhan: "Cơ quan thi hành (Điều 3)", macDinh: "Chánh Văn phòng Hội đồng nhân dân và Ủy ban nhân dân, Thủ trưởng đơn vị thực hiện nhiệm vụ bồi thường, hỗ trợ, tái định cư, các cơ quan, đơn vị có liên quan" },
+      NOI_NHAN("Như Điều 3\nSở Nông nghiệp và Môi trường (để b/c)\nLưu: VT"),
+    ],
+  },
+);
+
+// 1.2.0 (E1), 1.3.0 (A3): thẩm quyền theo văn bản phân cấp đang áp dụng (mặc định Phụ lục II QĐ 27/2026/QĐ-UBND)
+/** Ghi lại thẩm quyền vào mô tả mẫu — gọi lại sau khi đơn vị đổi cấu hình (Cài đặt → Thẩm quyền phân cấp). */
+export function apDungThamQuyenMau() {
+  for (const m of DANH_MUC_MAU) {
+    const goc = m.moTa ? m.moTa.split(` ${DAU_GHI_CHU_TQ}`)[0]!.replace(new RegExp(`^${DAU_GHI_CHU_TQ}.*$`), "") : "";
+    const g = ghiChuThamQuyen(m.ma);
+    m.moTa = g ? `${goc ? goc + " " : ""}${g}` : goc || m.moTa;
+  }
 }
+apDungThamQuyenMau();
 
 // 1.2.0 (C2): mẫu 14 — Điều 1 theo Mẫu số 44 Phụ lục II NĐ 151/2025/NĐ-CP
 mauTheoMa("14").moTa = `Điều 1 theo Mẫu số 44 Phụ lục II NĐ 151/2025/NĐ-CP: (1) phương án đối với dự án (khoản 1 Điều 3 NĐ 88/2024 — các mục 1.1–1.11 theo Mẫu 14 Sổ tay), (2) phương án chi tiết từng người (khoản 2 Điều 3 — Phụ lục kèm theo), (3) nội dung khác; Điều 2 có trách nhiệm của người có đất thu hồi. ${mauTheoMa("14").moTa ?? ""}`.trim();

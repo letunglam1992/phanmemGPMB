@@ -9,9 +9,9 @@ const vn = (iso: string) => iso.split("-").reverse().join("/");
 
 /** 1.2.0 (C1) — sổ văn bản đi: các văn bản có số tạo từ phần mềm (dự án này hoặc cả đơn vị), lọc theo năm, ký hiệu; xuất Excel. */
 export function TheSoVanBanDi({ duAn }: { duAn: DuAn }) {
-  const { kho, quyen, bao } = useUngDung();
+  const { kho, quyen, bao, thamQuyen } = useUngDung();
   const [so, setSo] = useState<SoVanBanDi | null>(null);
-  const [ghi, setGhi] = useState<null | { so: string; kyHieu: string; ngay: string; trichYeu: string }>(null);
+  const [ghi, setGhi] = useState<null | { so: string; kyHieu: string; ngay: string; trichYeu: string; nhiemVu?: string }>(null);
   const [dangGhi, setDangGhi] = useState(false);
   const [caDonVi, setCaDonVi] = useState(false);
   const [nam, setNam] = useState(new Date().toISOString().slice(0, 4));
@@ -63,6 +63,12 @@ export function TheSoVanBanDi({ duAn }: { duAn: DuAn }) {
             <label className="chu-nho">Ký hiệu<input aria-label="Ký hiệu ghi tay" list="ds-ky-hieu-so" value={ghi.kyHieu} onChange={(e) => setGhi({ ...ghi, kyHieu: e.target.value })} /></label>
             <label className="chu-nho">Ngày ký<ONgay aria-label="Ngày ký ghi tay" value={ghi.ngay} onChange={(e) => setGhi({ ...ghi, ngay: e.target.value })} /></label>
             <label className="chu-nho" style={{ gridColumn: "1 / -1" }}>Trích yếu (văn bản soạn ngoài phần mềm)<input aria-label="Trích yếu ghi tay" value={ghi.trichYeu} onChange={(e) => setGhi({ ...ghi, trichYeu: e.target.value })} /></label>
+            <label className="chu-nho" style={{ gridColumn: "1 / -1" }}>Nhiệm vụ được phân cấp (để báo cáo 06 tháng — QĐ {thamQuyen.so})
+              <select aria-label="Nhiệm vụ phân cấp ghi tay" value={ghi.nhiemVu ?? ""} onChange={(e) => setGhi({ ...ghi, nhiemVu: e.target.value || undefined })}>
+                <option value="">Không thuộc nhiệm vụ phân cấp</option>
+                {thamQuyen.nhiemVu.map((n) => <option key={n.ma} value={n.ma}>{n.noiDung} ({n.viTri})</option>)}
+              </select>
+            </label>
             <datalist id="ds-ky-hieu-so">{[...new Set(["QĐ-UBND", "TB-UBND", "KH-UBND", ...dsKyHieu])].map((k) => <option key={k} value={k} />)}</datalist>
             <div style={{ display: "flex", gap: 6 }}>
               <button className="nut nut-nho nut-chinh" disabled={dangGhi} onClick={() => void luuGhiTay()}>Ghi vào sổ</button>

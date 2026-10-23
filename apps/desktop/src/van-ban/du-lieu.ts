@@ -13,7 +13,7 @@ import { docSoTien } from "./doc-so";
 import type { MauVanBan } from "./danh-muc";
 import { tenDayDu, tenLoaiDat } from "./loai-dat";
 import { soD } from "../so";
-import { duLieuBocTham, duLieuBoTriTdc, duLieuChamTra, duLieuDoiThoai, duLieuThuong, duLieuKeHoach, duLieuNhieuHo, duLieuPhuongAnHo, docDuToan, duLieuKhieuNaiCuongChe, duLieuCuongCheMau } from "./thuc-te";
+import { docGiaBan, duLieuBocTham, duLieuBoTriTdc, duLieuChamTra, duLieuDoiThoai, duLieuThuong, duLieuKeHoach, duLieuNhieuHo, duLieuPhuongAnHo, docDuToan, duLieuKhieuNaiCuongChe, duLieuCuongCheMau } from "./thuc-te";
 
 export const CHAM = "…………";
 
@@ -422,7 +422,15 @@ export function ghepDuLieu(p: {
     kq.ds_tai_san_bq = String(p.rieng.ds_tai_san_bq ?? "").split("\n").map((x) => x.trim()).filter(Boolean);
     if (!(kq.ds_tai_san_bq as string[]).length) kq.ds_tai_san_bq = ["…………"];
   }
-  if (p.mau.ma === "T16") kq.thanh_vien_ban = String(p.rieng.thanh_vien_ban ?? "").split("\n").map((s) => s.trim()).filter(Boolean);
+  if (p.mau.ma === "T29") kq.thanh_vien_hd = String(p.rieng.thanh_vien_hd ?? "").split("\n").map((s) => s.trim()).filter(Boolean);
+  if (p.mau.ma === "T29" || p.mau.ma === "T30") for (const t of ["nhiem_vu_hd", "nhiem_vu_khac", "giai_the_khac"]) if (kq[t] === undefined) kq[t] = "";
+  if (p.mau.ma === "T29" && !String(kq.nhiem_vu_hd ?? "").trim()) kq.nhiem_vu_hd = "…………";
+  if (p.mau.ma === "T31") {
+    Object.assign(kq, docGiaBan(String(p.rieng.gia_ban_chi_tiet ?? "")));
+    if (!String(p.rieng.can_cu_gia ?? "").trim()) kq.can_cu_gia = "…………";
+    if (!String(p.rieng.dia_diem_nha_tdc ?? "").trim()) kq.dia_diem_nha_tdc = "…………";
+  }
+  if (p.mau.ma === "T16" || p.mau.ma === "T30") kq.thanh_vien_ban = String(p.rieng.thanh_vien_ban ?? "").split("\n").map((s) => s.trim()).filter(Boolean);
   if (p.mau.ma === "T17") Object.assign(kq, docDuToan(String(p.rieng.du_toan_kinh_phi ?? "")));
   const tenTo = (p.rieng.ten_to_ban_do || "tờ bản đồ số").trim();
   kq.ds_thua_pa = p.ds.flatMap(({ h }) =>
@@ -458,7 +466,7 @@ function duLieuThucTe(p: { mau: MauVanBan; duAn: DuAn; ds: { h: Ho; k: KetQuaHo 
     ...(p.mau.ma === "T8" || p.mau.ma === "T9" ? duLieuBoTriTdc(p.duAn, p.ds) : {}),
     ...(p.mau.ma === "T12" && p.ho ? duLieuDoiThoai(p.ho.h) : {}),
     ...(p.mau.ma === "T13" ? duLieuBocTham(p.duAn, p.ds) : {}),
-    ...(p.ho && /^T(1[4-9]|2[0-2]|2[4578])$/.test(p.mau.ma) ? duLieuKhieuNaiCuongChe(p.ho.h, p.ngayKy, p.duAn.xa, p.mau.ma) : {}),
+    ...(p.ho && /^T(1[4-9]|2[0-2]|2[4578]|30)$/.test(p.mau.ma) ? duLieuKhieuNaiCuongChe(p.ho.h, p.ngayKy, p.duAn.xa, p.mau.ma) : {}),
     ...(p.mau.ma === "T10" ? { kinh_gui: `Chủ tịch Ủy ban nhân dân ${lower1(p.duAn.xa)}` } : {}),
     ...(p.mau.ma === "T10" || p.mau.ma === "T11" ? duLieuChamTra(p.duAn, p.ds, p.tyLeCham ?? [], p.ngayKy || new Date().toISOString().slice(0, 10)) : {}),
   };

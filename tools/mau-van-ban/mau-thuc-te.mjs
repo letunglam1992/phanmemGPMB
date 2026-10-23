@@ -958,7 +958,110 @@ MAU.T28 = () => [
   ],
 ];
 
-const DANH_SACH = { T1: "tt-ke-hoach", T8: "tt-tb-du-kien-tdc", T9: "tt-tb-cong-bo-tdc", T10: "tt-to-trinh-cham-tra", T11: "tt-qd-cham-tra", T12: "tt-bb-doi-thoai", T13: "tt-bb-boc-tham-tdc", T14: "tt-qd-giai-quyet-kn", T15: "tt-bb-van-dong-ban-giao", T16: "tt-qd-ban-cuong-che", T17: "tt-pa-cuong-che", T18: "tt-tb-thu-ly-kn", T19: "tt-tb-khong-thu-ly-kn", T20: "tt-bb-doi-thoai-kn", T21: "tt-qd-tam-dinh-chi-kn", T22: "tt-qd-tiep-tuc-kn", T23: "tt-bb-ban-giao-dat-thuc-dia", T24: "tt-tb-doi-thoai-kn", T25: "tt-qd-giai-quyet-kn-lan-hai", T26: "tt-qd-pa-mau-44", T27: "tt-bb-cuong-che-thu-hoi", T28: "tt-bb-bao-quan-tai-san", T2: "tt-to-trinh-tb", T3: "tt-thong-bao", T4: "tt-to-trinh-pa-ho", T5: "tt-qd-pa-ho", T6: "tt-to-trinh-thu-hoi", T7: "tt-qd-thu-hoi" };
+/**
+ * 1.3.0 (A2) — Quyết định thuộc nhiệm vụ phân cấp cho Chủ tịch UBND cấp xã tại mục II Phụ lục II QĐ 27/2026/QĐ-UBND:
+ * T29 thành lập Hội đồng bồi thường, hỗ trợ, tái định cư (khoản 1; điểm c khoản 2 Điều 86 Luật Đất đai), T30 thành lập Ban cưỡng
+ * chế kiểm đếm bắt buộc (khoản 2; khoản 1 Điều 36 NĐ 102/2024), T31 giá bán nhà ở tái định cư trong địa bàn xã (khoản 4; khoản 3
+ * Điều 111 Luật Đất đai). Không có mẫu luật định — bố cục theo thể thức NĐ 30/2020; thành viên, giá do cán bộ nhập kèm căn cứ.
+ */
+MAU.T29 = () => [
+  [
+    dauVanBan({ coQuan: UBND_XA, so: "Số: {so}/QĐ-UBND" }),
+    ...tenVanBan("QUYẾT ĐỊNH", "Về việc thành lập Hội đồng bồi thường, hỗ trợ, tái định cư\ndự án {ten_du_an}"),
+    giua("CHỦ TỊCH ỦY BAN NHÂN DÂN {TEN_XA}", { dam: true, truoc: 120 }),
+    ...CAN_CU(),
+    P("Căn cứ điểm c khoản 2 Điều 86 Luật Đất đai năm 2024;", { nghieng: true }),
+    P("Xét đề nghị của {chuc_danh_de_nghi}.", { nghieng: true }),
+    giua("QUYẾT ĐỊNH:", { dam: true, truoc: 120 }),
+    P("**Điều 1.** Thành lập Hội đồng bồi thường, hỗ trợ, tái định cư dự án {ten_du_an} tại {dia_diem_du_an}, gồm các ông (bà) có tên sau:"),
+    ...lap("thanh_vien_hd", "- {.}", { thut: 0, trai: 567, sau: 40 }),
+    P("Đại diện Hội đồng nhân dân, Ủy ban Mặt trận Tổ quốc Việt Nam và đại diện các tổ chức chính trị - xã hội khác được mời tham dự họp Hội đồng bồi thường, hỗ trợ, tái định cư để giám sát (điểm c khoản 2 Điều 86 Luật Đất đai năm 2024).", { truoc: 80 }),
+    P("**Điều 2.** Hội đồng bồi thường, hỗ trợ, tái định cư có nhiệm vụ:", { truoc: 120 }),
+    P("{nhiem_vu_hd}"),
+    P("Hội đồng tự giải thể sau khi hoàn thành nhiệm vụ. {giai_the_khac}"),
+    P("**Điều 3.** Quyết định có hiệu lực kể từ ngày {ngay_hieu_luc}. {co_quan_thi_hanh} và các ông (bà) có tên tại Điều 1 chịu trách nhiệm thi hành Quyết định này./."),
+    kyVanBan(),
+  ],
+];
+
+MAU.T30 = () => [
+  [
+    dauVanBan({ coQuan: UBND_XA, so: "Số: {so}/QĐ-UBND" }),
+    ...tenVanBan("QUYẾT ĐỊNH", "Về việc thành lập Ban cưỡng chế kiểm đếm bắt buộc đối với {doi_tuong_goi} {ho_ten}\nđể thực hiện dự án {ten_du_an}"),
+    giua("CHỦ TỊCH ỦY BAN NHÂN DÂN {TEN_XA}", { dam: true, truoc: 120 }),
+    ...CAN_CU(),
+    P("Căn cứ Điều 88 Luật Đất đai năm 2024; Điều 36 Nghị định số 102/2024/NĐ-CP ngày 30 tháng 7 năm 2024 của Chính phủ;", { nghieng: true }),
+    P("Căn cứ Quyết định số {kd_qd_so} ngày {kd_qd_ngay} về việc kiểm đếm bắt buộc đối với {doi_tuong_goi} {ho_ten};", { nghieng: true }),
+    P("Căn cứ Quyết định số {kd_cc_so} ngày {kd_cc_ngay} về việc cưỡng chế thực hiện quyết định kiểm đếm bắt buộc đối với {doi_tuong_goi} {ho_ten};", { nghieng: true }),
+    P("Xét đề nghị của {chuc_danh_de_nghi}.", { nghieng: true }),
+    giua("QUYẾT ĐỊNH:", { dam: true, truoc: 120 }),
+    P("**Điều 1.** Thành lập Ban cưỡng chế kiểm đếm bắt buộc để tổ chức thực hiện Quyết định số {kd_cc_so} ngày {kd_cc_ngay} về việc cưỡng chế thực hiện quyết định kiểm đếm bắt buộc đối với {doi_tuong_goi} {ho_ten}, địa chỉ: {dia_chi}, gồm các ông (bà) có tên sau:"),
+    ...lap("thanh_vien_ban", "- {.}", { thut: 0, trai: 567, sau: 40 }),
+    P("**Điều 2.** Ban cưỡng chế kiểm đếm bắt buộc có nhiệm vụ:", { truoc: 120 }),
+    P("1. Vận động, thuyết phục, đối thoại với người bị cưỡng chế trong thời hạn 05 ngày làm việc và phải được thể hiện bằng văn bản. Nếu người bị cưỡng chế chấp hành thì lập biên bản ghi nhận sự chấp hành và tiến hành kiểm đếm theo quy định (khoản 2 Điều 36 Nghị định số 102/2024/NĐ-CP)."),
+    P("2. Trường hợp người bị cưỡng chế không chấp hành quyết định cưỡng chế thì tổ chức lực lượng, phương tiện cần thiết để mở cửa, cổng vào khu đất, thửa đất cần kiểm đếm mà không cần sự cho phép của người sử dụng đất, chủ sở hữu tài sản; việc kiểm đếm phải được lập thành văn bản (khoản 2 Điều 36); thực hiện quyền quy định tại khoản 3 Điều 36 Nghị định số 102/2024/NĐ-CP."),
+    P("3. Mời đại diện Ủy ban Mặt trận Tổ quốc Việt Nam tham gia giám sát việc cưỡng chế (khoản 4 Điều 36 Nghị định số 102/2024/NĐ-CP)."),
+    P("{nhiem_vu_khac}"),
+    P("**Điều 3.** Quyết định có hiệu lực kể từ ngày {ngay_hieu_luc}. {co_quan_thi_hanh}, các ông (bà) có tên tại Điều 1 và {doi_tuong_goi} {ho_ten} chịu trách nhiệm thi hành Quyết định này./."),
+    kyVanBan(),
+  ],
+];
+
+MAU.T31 = () => [
+  [
+    dauVanBan({ coQuan: UBND_XA, so: "Số: {so}/QĐ-UBND" }),
+    ...tenVanBan("QUYẾT ĐỊNH", "Về việc quyết định giá bán nhà ở tái định cư\nđể bố trí tái định cư dự án {ten_du_an}"),
+    giua("CHỦ TỊCH ỦY BAN NHÂN DÂN {TEN_XA}", { dam: true, truoc: 120 }),
+    ...CAN_CU(),
+    P("Căn cứ khoản 3 Điều 111 Luật Đất đai năm 2024;", { nghieng: true }),
+    P("{can_cu_gia}", { nghieng: true }),
+    P("Xét đề nghị của {chuc_danh_de_nghi}.", { nghieng: true }),
+    giua("QUYẾT ĐỊNH:", { dam: true, truoc: 120 }),
+    P("**Điều 1.** Quyết định giá bán nhà ở tái định cư tại {dia_diem_nha_tdc} để bố trí tái định cư cho người có đất thu hồi thực hiện dự án {ten_du_an}, như sau:"),
+    bangLap("ds_gia_ban", [
+      { tieuDe: "STT", truong: "stt", rong: 7 },
+      { tieuDe: "Nhà ở, căn hộ", truong: "ten", rong: 43, canh: AlignmentType.LEFT },
+      { tieuDe: "Diện tích (m²)", truong: "dien_tich", rong: 20, canh: AlignmentType.RIGHT },
+      { tieuDe: "Giá bán (đồng)", truong: "gia", rong: 30, canh: AlignmentType.RIGHT },
+    ]),
+    P("**Điều 2.** {ten_don_vi_bt} có trách nhiệm thông báo giá bán nhà ở tái định cư đến người được bố trí tái định cư; tổ chức thực hiện theo phương án bố trí tái định cư đã được phê duyệt.", { truoc: 120 }),
+    P("**Điều 3.** Quyết định có hiệu lực kể từ ngày {ngay_hieu_luc}. {co_quan_thi_hanh} chịu trách nhiệm thi hành Quyết định này./."),
+    kyVanBan(),
+  ],
+];
+
+/**
+ * 1.3.0 (A1) — Báo cáo kết quả thực hiện nhiệm vụ, quyền hạn được phân cấp (khoản 2 Điều 4 QĐ 27/2026/QĐ-UBND: định kỳ 06 tháng,
+ * trước 15/6 và 15/12, gửi UBND tỉnh qua Sở NN&MT). Số liệu từ Sổ văn bản đi của đơn vị (màn Báo cáo tổng hợp điền, không qua màn Văn bản).
+ */
+MAU.BCPC = () => [
+  [
+    dauVanBan({ coQuan: UBND_XA, so: "Số: {so}/BC-UBND" }),
+    ...tenVanBan("BÁO CÁO", "Kết quả thực hiện nhiệm vụ, quyền hạn được phân cấp\ntrong lĩnh vực đất đai (thu hồi đất, bồi thường, hỗ trợ, tái định cư)"),
+    giua("(Từ ngày {tu_ngay} đến ngày {den_ngay})", { nghieng: true, sau: 120 }),
+    giua("Kính gửi: {kinh_gui}.", { truoc: 120 }),
+    P("Thực hiện khoản 2 Điều 4 Quyết định số {qd_so} ({qd_ten}), Ủy ban nhân dân {ten_xa} báo cáo kết quả thực hiện nhiệm vụ, quyền hạn được phân cấp như sau:"),
+    P("**I. KẾT QUẢ THỰC HIỆN**"),
+    P("{tong_quat}"),
+    bangLap("ds_nv", [
+      { tieuDe: "STT", truong: "stt", rong: 6 },
+      { tieuDe: "Nhiệm vụ được phân cấp", truong: "noi_dung", rong: 34, canh: AlignmentType.LEFT },
+      { tieuDe: "Căn cứ phân cấp", truong: "vi_tri", rong: 18, canh: AlignmentType.LEFT },
+      { tieuDe: "Số văn bản", truong: "so_vb", rong: 9 },
+      { tieuDe: "Văn bản đã ban hành (số, ngày; dự án)", truong: "van_ban", rong: 33, canh: AlignmentType.LEFT },
+    ]),
+    P("(Số liệu theo Sổ văn bản đi của đơn vị: văn bản tạo từ phần mềm và văn bản ghi tay vào sổ. Phạm vi: các nhiệm vụ về thu hồi đất, bồi thường, hỗ trợ, tái định cư; nhiệm vụ khác tại Phụ lục II do đơn vị bổ sung dưới đây.)", { nghieng: true }),
+    P("{noi_dung_khac}"),
+    P("**II. KHÓ KHĂN, VƯỚNG MẮC**"),
+    P("{kho_khan}"),
+    P("**III. ĐỀ XUẤT, KIẾN NGHỊ**"),
+    P("{kien_nghi}"),
+    P("Ủy ban nhân dân {ten_xa} báo cáo Ủy ban nhân dân tỉnh (qua Sở Nông nghiệp và Môi trường)./."),
+    kyVanBan(),
+  ],
+];
+
+const DANH_SACH = { T1: "tt-ke-hoach", T8: "tt-tb-du-kien-tdc", T9: "tt-tb-cong-bo-tdc", T10: "tt-to-trinh-cham-tra", T11: "tt-qd-cham-tra", T12: "tt-bb-doi-thoai", T13: "tt-bb-boc-tham-tdc", T14: "tt-qd-giai-quyet-kn", T15: "tt-bb-van-dong-ban-giao", T16: "tt-qd-ban-cuong-che", T17: "tt-pa-cuong-che", T18: "tt-tb-thu-ly-kn", T19: "tt-tb-khong-thu-ly-kn", T20: "tt-bb-doi-thoai-kn", T21: "tt-qd-tam-dinh-chi-kn", T22: "tt-qd-tiep-tuc-kn", T23: "tt-bb-ban-giao-dat-thuc-dia", T24: "tt-tb-doi-thoai-kn", T25: "tt-qd-giai-quyet-kn-lan-hai", T26: "tt-qd-pa-mau-44", T27: "tt-bb-cuong-che-thu-hoi", T28: "tt-bb-bao-quan-tai-san", T29: "tt-qd-hoi-dong-bt", T30: "tt-qd-ban-cc-kiem-dem", T31: "tt-qd-gia-ban-nha-tdc", BCPC: "bao-cao-phan-cap", T2: "tt-to-trinh-tb", T3: "tt-thong-bao", T4: "tt-to-trinh-pa-ho", T5: "tt-qd-pa-ho", T6: "tt-to-trinh-thu-hoi", T7: "tt-qd-thu-hoi" };
 for (const [ma, tep] of Object.entries(DANH_SACH)) {
   const [chinh, phu] = MAU[ma]();
   const buf = await Packer.toBuffer(taoDoc(chinh, phu));

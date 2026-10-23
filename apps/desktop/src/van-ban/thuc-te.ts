@@ -289,6 +289,19 @@ export function kiemTraThongNhat(ma: string, duAn: DuAn, du: Record<string, unkn
   if ((ma === "T16" || ma === "T17") && !du.cc_khong_co && !String(du.cc_so_qd ?? "").trim()) out.push("Chưa ghi số quyết định cưỡng chế thực hiện quyết định thu hồi đất ở hồ sơ cưỡng chế của hộ.");
   if (ma === "T16" && !(Array.isArray(du.thanh_vien_ban) && du.thanh_vien_ban.length)) out.push("Chưa nhập thành viên Ban cưỡng chế (điểm a khoản 4 Điều 89 Luật Đất đai 2024).");
   if (ma === "T17" && !(Array.isArray(du.ds_du_toan) && du.ds_du_toan.length)) out.push("Chưa nhập dự toán kinh phí cưỡng chế — bảng dự toán trống.");
+  // 1.3.0 (A2): T29–T31
+  if ((ma === "T29" && !(Array.isArray(du.thanh_vien_hd) && du.thanh_vien_hd.length)) || (ma === "T30" && !(Array.isArray(du.thanh_vien_ban) && du.thanh_vien_ban.length)))
+    out.push(ma === "T29" ? "Chưa nhập thành viên Hội đồng (điểm c khoản 2 Điều 86 Luật Đất đai: Chủ tịch hoặc Phó Chủ tịch UBND làm Chủ tịch Hội đồng; đại diện cơ quan tài chính, cơ quan quản lý đất đai, UBND cấp xã nơi có đất thu hồi, người sử dụng đất có đất thu hồi…)." : "Chưa nhập thành viên Ban cưỡng chế kiểm đếm bắt buộc (khoản 1 Điều 36 NĐ 102/2024/NĐ-CP).");
+  if (ma === "T30" && /^…|^$/.test(String(du.kd_cc_so ?? ""))) out.push("Hộ chưa có số quyết định cưỡng chế thực hiện quyết định kiểm đếm bắt buộc (Mẫu 07 / hồ sơ cưỡng chế kiểm đếm).");
+  if (ma === "T31") {
+    if (!String(du.can_cu_gia ?? "").trim() || /^…/.test(String(du.can_cu_gia))) out.push("Chưa ghi căn cứ xác định giá bán nhà ở tái định cư — phần mềm không tự đặt giá.");
+    if (!(Array.isArray(du.ds_gia_ban) && du.ds_gia_ban.length)) out.push("Chưa nhập bảng giá bán (mỗi dòng: nhà, căn hộ | diện tích | giá bán).");
+    else if (Number(du.gia_ban_loi)) out.push(`${String(du.gia_ban_loi)} dòng giá bán sai dạng (cần: nhà, căn hộ | diện tích m² | giá bán đồng).`);
+    const xaNha = String(du.xa_nha_tdc ?? "").trim();
+    const chuan = (x: string) => x.toLowerCase().replace(/^(xã|phường|đặc khu)\s+/, "").trim();
+    if (xaNha && chuan(xaNha) !== chuan(duAn.xa))
+      out.push(`Nhà ở tái định cư ở ${xaNha}, khác ${duAn.xa} nơi có đất thu hồi: giá bán do Chủ tịch UBND tỉnh quyết định (mục II Phụ lục I QĐ 27/2026/QĐ-UBND; khoản 3 Điều 111 Luật Đất đai) — không dùng mẫu này.`);
+  }
   if (ma === "T17" && Number(du.du_toan_loi) > 0) out.push(`${String(du.du_toan_loi)} dòng dự toán không đọc được số tiền (dạng: nội dung | số tiền) — không cộng vào tổng.`);
   if (ma === "T1" && !Number(du.so_moc)) out.push("Dự án chưa lập kế hoạch từng bước (Dự án → Lập kế hoạch): các mốc thời gian trong Kế hoạch để trống.");
   return out;
@@ -503,7 +516,16 @@ export function duLieuKhieuNaiCuongChe(h: Ho, ngayKy: string, xa: string, ma = "
     kn_thi_hanh_dinh_chi: `Chánh Văn phòng Hội đồng nhân dân và Ủy ban nhân dân, ${h.ten} và các cơ quan, tổ chức, cá nhân có liên quan`,
   };
   const cc = (h.cuongChe ?? []).filter((c) => c.loai === "THU_HOI").sort((a, b) => (a.ngayQd ?? a.vanDongTu ?? "").localeCompare(b.ngayQd ?? b.vanDongTu ?? "")).pop();
+  // 1.3.0 (A2): T30 — hồ sơ cưỡng chế kiểm đếm bắt buộc mới nhất; QĐ kiểm đếm theo hồ sơ hoặc Mẫu 06 đã ghi số
+  const kd = (h.cuongChe ?? []).filter((c) => c.loai === "KIEM_DEM").sort((a, b) => (a.ngayQd ?? a.vdKdTu ?? "").localeCompare(b.ngayQd ?? b.vdKdTu ?? "")).pop();
+  const kdThem = {
+    kd_qd_so: h.vanBan?.qd_kiem_dem_so || "…………",
+    kd_qd_ngay: kd?.ngayQdKd ? ngayVn(kd.ngayQdKd) : h.vanBan?.qd_kiem_dem_ngay || "…………",
+    kd_cc_so: kd?.soQd || "…………",
+    kd_cc_ngay: kd?.ngayQd ? ngayVn(kd.ngayQd) : "…………",
+  };
   return {
+    ...kdThem,
     kn_nguoi_khieu_nai: h.ten,
     ...knThem,
     CHUC_DANH_GQKN: `CHỦ TỊCH ỦY BAN NHÂN DÂN ${xa.toUpperCase()}`,
@@ -596,4 +618,23 @@ function duLieuLanHai(h: Ho, chu: (iso?: string) => string): Record<string, unkn
     // (điểm a khoản 3 Điều 116 Luật Tố tụng hành chính — VBHN 109/VBHN-VPQH ngày 27/8/2025); cán bộ sửa được
     kn2_thoi_han_khoi_kien: "01 năm",
   };
+}
+
+/**
+ * 1.3.0 (A2) — Bảng giá bán nhà ở tái định cư (T31): mỗi dòng "nhà, căn hộ | diện tích m² | giá bán đồng" do cán bộ nhập theo
+ * căn cứ đã ghi; phần mềm không tính giá. Dòng thiếu số hoặc sai dạng → đếm lỗi để nhắc.
+ */
+export function docGiaBan(chu: string): { ds_gia_ban: { stt: number; ten: string; dien_tich: string; gia: string }[]; gia_ban_loi: number } {
+  const ds: { stt: number; ten: string; dien_tich: string; gia: string }[] = [];
+  let loi = 0;
+  const so = (x: string | undefined) => (x ?? "").replace(/\s/g, "");
+  for (const dong of chu.split("\n").map((x) => x.trim()).filter(Boolean)) {
+    const [ten, dt, gia] = dong.split(/[|\t]/).map((x) => x.trim());
+    const dtSo = so(dt).replace(/\./g, "").replace(",", ".");
+    const giaSo = so(gia).replace(/[.,]/g, "");
+    const ok = /^\d+(\.\d+)?$/.test(dtSo) && /^\d+$/.test(giaSo);
+    if (!ok) loi++;
+    ds.push({ stt: ds.length + 1, ten: ten ?? "", dien_tich: ok ? dinhDang(D(dtSo), 2) : dt ?? "", gia: ok ? tien(D(giaSo)) : gia ?? "" });
+  }
+  return { ds_gia_ban: ds, gia_ban_loi: loi };
 }

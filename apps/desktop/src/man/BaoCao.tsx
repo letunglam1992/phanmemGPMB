@@ -10,6 +10,7 @@ import { duLieuBaoCaoWord, type ThongTinBaoCao } from "../bao-cao-van-ban";
 import { duLieuBoSungBaoCaoXa } from "../bao-cao-bo-sung";
 import { veBieuDoDienBien } from "../tong-hop-tinh/ve-bieu-do";
 import { chenAnhDocx } from "../van-ban/chen-anh";
+import { HopBaoCaoPhanCap } from "../thanh-phan/HopBaoCaoPhanCap";
 import { donViSuDung, type DonVi } from "../don-vi";
 import { taoWorkbookBaoCao } from "../xuat-excel";
 import { dienMau } from "../van-ban/dien-mau";
@@ -59,6 +60,7 @@ export function BaoCao() {
   const [tinhTrang, setTinhTrang] = useState<TinhTrangDuAn | "">("");
   const [denNgay, setDenNgay] = useState(homNayIso());
   const [hop, setHop] = useState(false);
+  const [hopPc, setHopPc] = useState(false);
   const dsXa = useMemo(() => [...new Set(dsDuAn.map((d) => d.xa))].sort((a, b) => a.localeCompare(b, "vi")), [dsDuAn]);
   const bc = useMemo(
     () => lapBaoCao(dsDuAn, (d) => hoCua(d.id).map((h) => ({ h, k: tinhHo(chinhSach(d), d, h) })), { xa: xa || undefined, tinhTrang: tinhTrang || undefined, denNgay }, lich, tyLeCham),
@@ -129,6 +131,7 @@ export function BaoCao() {
         <div className="phai" style={{ display: "flex", gap: 8 }}>
           <button className="nut" disabled={!bc.dong.length} onClick={() => void xuatExcel()}>Xuất Excel</button>
           <button className="nut" disabled={!bc.dong.length} title="Tạo ngay báo cáo Word theo mẫu đang chọn và thông tin cơ quan, người ký đã nhập lần trước (số liệu đến ngày đang chọn)" onClick={() => void motNut()}>Báo cáo định kỳ (một nút)</button>
+          <button className="nut" data-mo-bao-cao-phan-cap title="Khoản 2 Điều 4 QĐ 27/2026/QĐ-UBND — định kỳ 06 tháng" onClick={() => setHopPc(true)}>Báo cáo phân cấp (06 tháng)…</button>
           <button className="nut nut-chinh" disabled={!bc.dong.length} onClick={() => setHop(true)}>Soạn báo cáo Word…</button>
         </div>
       </div>
@@ -262,6 +265,7 @@ export function BaoCao() {
           }}
         />
       )}
+      {hopPc && <HopBaoCaoPhanCap dong={() => setHopPc(false)} />}
       {hop && <HopWord dong={() => setHop(false)} duLieuThu={(tt) => duLieuBaoCaoWord(bc, tt, ss, hoVm)} ghiNhatKy={ghiNhatKy} xuat={async (tt, maMau) => {
         try {
           localStorage.setItem(KHOA_TT, JSON.stringify({ ...tt, so: "", ngayKy: "" }));

@@ -12,7 +12,7 @@ const tep = readdirSync(THU_MUC).filter((f) => f.endsWith(".docx")).sort();
 const mm = (twip: number) => twip / 56.7;
 
 describe("Thể thức mẫu văn bản (NĐ 30/2020/NĐ-CP)", () => {
-  it("đủ 57 mẫu", () => expect(tep.length).toBe(57));
+  it("đủ 61 mẫu", () => expect(tep.length).toBe(61));
   for (const f of tep)
     it(f, () => {
       const z = new PizZip(readFileSync(new URL(f, THU_MUC)));

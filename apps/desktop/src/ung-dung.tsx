@@ -1,3 +1,5 @@
+import { KHOA_THAM_QUYEN, cauHinhThamQuyen, datCauHinhThamQuyen, loiCauHinh as loiCauHinhThamQuyen, type CauHinhThamQuyen } from "./van-ban/tham-quyen";
+import { apDungThamQuyenMau } from "./van-ban/danh-muc";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { KHOA_KHOI_PHUC, KHOA_TU_DONG, MAC_DINH_TU_DONG, cachTuDong, coVoWindows, denHan, saoLuuTuDong, thuMucSaoLuu, type CaiDatTuDong } from "./tu-dong-sao-luu";
 import { docCatNgoai, ghiCatNgoai, laNoiNgoai, type LanCatNgoai } from "./cat-ngoai";
@@ -156,6 +158,9 @@ interface NguCanh {
   /** §11.3: ngưỡng lệch diện tích do đơn vị đặt (null = chưa đặt). */
   nguongLechDt: NguongLechDt | null;
   luuNguongLechDt: (n: NguongLechDt | null) => Promise<void>;
+  /** 1.3.0 (A3): văn bản phân cấp thẩm quyền đang áp dụng (null = mặc định QĐ 27/2026) */
+  thamQuyen: CauHinhThamQuyen;
+  luuThamQuyen: (c: CauHinhThamQuyen | null) => Promise<void>;
   /** P3-2: chỉ mục số định danh → hồ sơ ở mọi dự án (người có đất dùng chung). */
   nguoiCoDat: Map<string, HoSoNguoi[]>;
   /** 1.0.7: chỉ mục số định danh của nhân khẩu. */
@@ -236,6 +241,7 @@ export function NhaCungCap({ children, kho: khoVao, chiXem, phienDau }: { childr
   const [kyBaoCao, setKyBaoCao] = useState<KyBaoCao[]>([]);
   const [giuLichSu, setGiuLichSu] = useState(0);
   const [nguongLechDt, setNguongLechDt] = useState<NguongLechDt | null>(null);
+  const [thamQuyen, setThamQuyen] = useState<CauHinhThamQuyen>(() => cauHinhThamQuyen());
   const [goiDaNap, setGoiDaNap] = useState<GoiDaNap[]>([]);
   const [giayPhep, setGiayPhep] = useState<TrangThaiGiayPhep>({ loai: "DUNG_THU", gioiHan: SO_DU_AN_DUNG_THU });
   const [maCaiDat, setMaCaiDat] = useState<string | null>(null);
@@ -291,6 +297,9 @@ export function NhaCungCap({ children, kho: khoVao, chiXem, phienDau }: { childr
     setKhoaKhoiPhuc((await kho.docCaiDat<KhoaKhoiPhuc>(KHOA_KHOI_PHUC)) ?? null);
     setGiuLichSu((await kho.docCaiDat<{ soNam: number }>("giuLichSu"))?.soNam ?? 0);
     setNguongLechDt((await kho.docCaiDat<NguongLechDt>(KHOA_NGUONG_LECH)) ?? null);
+    datCauHinhThamQuyen(await kho.docCaiDat<CauHinhThamQuyen>(KHOA_THAM_QUYEN));
+    apDungThamQuyenMau();
+    setThamQuyen(cauHinhThamQuyen());
     // 1.0.10: mã cài đặt (tạo lần đầu nếu có quyền ghi cài đặt) và mã kích hoạt
     let mc = (await kho.docCaiDat<string>(KHOA_MA_CAI_DAT)) ?? null;
     if (!mc) {
@@ -850,6 +859,18 @@ export function NhaCungCap({ children, kho: khoVao, chiXem, phienDau }: { childr
       }
       await ghiNhatKy("Chuyển bộ chính sách của dự án", `${d.ten}: ${d.boChinhSach} → ${khoa}. ${tomTat}`);
       return true;
+    },
+    thamQuyen,
+    luuThamQuyen: async (c) => {
+      if (chan("CAI_DAT")) return;
+      const loi = c && loiCauHinhThamQuyen(c);
+      if (loi) return bao(loi, "loi");
+      const v = c ? { ...c, nguoi: nguoiDung, luc: new Date().toISOString() } : null;
+      await ghi(() => kho.luuCaiDat(KHOA_THAM_QUYEN, v));
+      datCauHinhThamQuyen(v);
+      apDungThamQuyenMau();
+      setThamQuyen(cauHinhThamQuyen());
+      await ghiNhatKy("Cập nhật văn bản phân cấp thẩm quyền", v ? `QĐ ${v.so}, hiệu lực ${v.hieuLucTu}${v.hetHieuLucTu ? ` – trước ${v.hetHieuLucTu}` : ""}` : "dùng lại mặc định QĐ 27/2026/QĐ-UBND");
     },
     nguongLechDt,
     luuNguongLechDt: async (n) => {

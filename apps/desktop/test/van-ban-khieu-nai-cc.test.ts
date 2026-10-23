@@ -235,3 +235,35 @@ describe("1.0.21 (B2) — mẫu văn bản khiếu nại, cưỡng chế tự đ
     expect(t28.chu).not.toContain("{");
   });
 });
+
+describe("1.3.0 (A2) — T29 Hội đồng BT, T30 Ban cưỡng chế kiểm đếm, T31 giá bán nhà TĐC", () => {
+  const { duAn, ho } = taoDuAnMau();
+  const h: Ho = { ...ho[0]!, vanBan: { qd_kiem_dem_so: "40/QĐ-UBND", qd_kiem_dem_ngay: "01/10/2026" }, cuongChe: [{ id: "k", loai: "KIEM_DEM", soQd: "45/QĐ-UBND", ngayQd: "2026-10-12" }] };
+  it("T29: thành viên, căn cứ điểm c k2 Đ86; cảnh báo khi trống; mô tả ghi thẩm quyền QĐ 27", () => {
+    const r = tao("T29", h, duAn, { thanh_vien_hd: "Ông A – Phó Chủ tịch UBND xã, Chủ tịch Hội đồng\nBà B – Trưởng phòng Kinh tế, Phó Chủ tịch Hội đồng", nhiem_vu_hd: "Lập phương án bồi thường." });
+    expect(r.chu).toContain("Căn cứ điểm c khoản 2 Điều 86 Luật Đất đai năm 2024;");
+    expect(r.chu).toContain("- Bà B – Trưởng phòng Kinh tế, Phó Chủ tịch Hội đồng");
+    expect(r.chu).not.toContain("{");
+    expect(tao("T29", h, duAn, {}).canhBao.some((c) => c.includes("Chưa nhập thành viên Hội đồng"))).toBe(true);
+    expect(DANH_MUC_MAU.find((m) => m.ma === "T29")!.moTa).toContain("khoản 1 mục II Phụ lục II QĐ 27/2026/QĐ-UBND");
+  });
+  it("T30: số QĐ kiểm đếm (Mẫu 06), QĐ cưỡng chế kiểm đếm từ hồ sơ; nhiệm vụ Điều 36 NĐ 102", () => {
+    const r = tao("T30", h, duAn, { thanh_vien_ban: "Ông C – Chủ tịch UBND xã, Trưởng ban" });
+    expect(r.chu).toContain("Căn cứ Quyết định số 40/QĐ-UBND ngày 01/10/2026 về việc kiểm đếm bắt buộc");
+    expect(r.chu).toContain("Quyết định số 45/QĐ-UBND ngày 12/10/2026 về việc cưỡng chế thực hiện quyết định kiểm đếm bắt buộc");
+    expect(r.chu).toContain("trong thời hạn 05 ngày làm việc");
+    expect(r.chu).not.toContain("{");
+    expect(tao("T30", { ...h, cuongChe: [] }, duAn, { thanh_vien_ban: "x" }).canhBao.some((c) => c.includes("chưa có số quyết định cưỡng chế"))).toBe(true);
+  });
+  it("T31: bảng giá do cán bộ nhập; thiếu căn cứ, sai dòng, khác xã → cảnh báo", () => {
+    const r = tao("T31", h, duAn, { dia_diem_nha_tdc: "Khu TĐC bản Mẫu", can_cu_gia: "Căn cứ Chứng thư thẩm định giá số 12/CT;", gia_ban_chi_tiet: "Căn A1 | 60,5 | 850.000.000\nCăn A2 | 72 | 1.020.000.000" });
+    expect(r.chu).toContain("Căn A1");
+    expect(r.chu).toContain("850.000.000");
+    expect(r.chu).toContain("60,50");
+    expect(r.canhBao.some((c) => c.includes("Chủ tịch UBND tỉnh"))).toBe(false);
+    const sai = tao("T31", h, duAn, { xa_nha_tdc: "Xã Khác", gia_ban_chi_tiet: "Căn B | x | y" });
+    expect(sai.canhBao.some((c) => c.includes("căn cứ xác định giá"))).toBe(true);
+    expect(sai.canhBao.some((c) => c.includes("1 dòng giá bán sai dạng"))).toBe(true);
+    expect(sai.canhBao.some((c) => c.includes("mục II Phụ lục I QĐ 27/2026"))).toBe(true);
+  });
+});
