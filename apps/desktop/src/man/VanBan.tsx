@@ -1,3 +1,6 @@
+import { taiLieuPhieuKiemTra } from "../van-ban/phieu-kiem-tra";
+import { taoDocx } from "../van-ban/tai-lieu-don-gian";
+import { ghiChuThamQuyen } from "../van-ban/tham-quyen";
 import { ghiBanGiaoThucDia } from "../ban-giao-thuc-dia";
 import { KHOA_SO_VB, kyHieuMau, soThuTu, soTiepTheo, timTrung, type SoVanBanDi, type VanBanDi } from "../so-van-ban";
 import { ONgay } from "../thanh-phan/ONgay";
@@ -188,6 +191,13 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
     .filter((t): t is VanBanDi => !!t)
     .map((t) => `Số ${t.soDayDu} đã cấp cho ${t.tenMau} (${t.duAnTen}${t.hoMa ? `, hộ ${t.hoMa}` : ""}) ngày ${t.ngay.split("-").reverse().join("/")}${t.nguoi ? ` — ${t.nguoi}` : ""} — sổ văn bản đi của đơn vị.`);
   canhBaoTN.push(...canhBaoSo);
+  /** 1.3.0 (C2): phiếu kiểm tra trước khi ký */
+  const taiPhieuKiemTra = async () => {
+    const cc = Array.isArray(duLieuXem.can_cu) ? (duLieuXem.can_cu as string[]) : [];
+    const pv = mau.phamVi === "DU_AN" ? "Cả dự án" : hoXemTruoc ? `${dsHoChon.length > 1 ? `${dsHoChon.length} hộ, đầu tiên: ` : ""}${hoXemTruoc.h.ma} ${hoXemTruoc.h.ten}` : `${dsHoChon.length} hộ`;
+    const docx = taoDocx(taiLieuPhieuKiemTra({ ma, tenMau: mau.ten, duAn: duAn.ten, phamVi: pv, so: soSeCap()[0] ? soDayDu(soSeCap()[0]!) : so, ngayKy, canCu: cc, thamQuyen: ghiChuThamQuyen(ma), canhBao: canhBaoTN, nguoiLap: nguoiDung ?? "", luc: new Date().toISOString() }));
+    await taiXuong(docx, `Phieu-kiem-tra_${ma}_${(duAn.ten || "du-an").slice(0, 40).replace(/[^\p{L}\p{N}]+/gu, "-")}.docx`, "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+  };
   const ghiSo = async (ds: { so: string; hoMa?: string }[]) => {
     if (!coGhi || !kyHieuVb) return "";
     const vb: VanBanDi[] = ds.filter((x) => x.so.trim()).map((x) => ({ so: soThuTu(x.so), kyHieu: kyHieuVb, soDayDu: soDayDu(x.so), ngay: ngaySo, ma, tenMau: mau.ten, duAnId: duAn.id, duAnTen: duAn.ten, ...(x.hoMa ? { hoMa: x.hoMa } : {}) }));
@@ -445,6 +455,7 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
                 </div>
               )}
               <div className="nhom-nut">
+                <button className="nut" data-phieu-kiem-tra title="Phiếu liệt kê điểm cần xem, căn cứ, thẩm quyền — in kèm phiếu trình" onClick={() => void taiPhieuKiemTra()}>Phiếu kiểm tra (Word)</button>
                 <button className="nut" data-xem-truoc disabled={mau.phamVi !== "DU_AN" && chonHo.size === 0} title={mau.phamVi === "HO" && chonHo.size > 1 ? "Xem văn bản của hộ đầu tiên đã chọn" : undefined} onClick={() => void moXemTruoc()}>Xem trước</button>
                 <button className="nut nut-chinh" disabled={dangTao || chanSua || (mau.phamVi !== "DU_AN" && chonHo.size === 0)} title={chanSua ? "Lưu hồ sơ trước khi tạo văn bản" : undefined} onClick={tao}>
                   {dangTao ? "Đang tạo…" : mau.phamVi === "HO" ? `Tạo văn bản cho ${chonHo.size} hộ` : mau.phamVi === "DOT" ? `Tạo văn bản cho đợt (${chonHo.size} hộ)` : "Tạo văn bản cấp dự án (.docx)"}

@@ -129,7 +129,7 @@ export interface DongLichCuongChe {
 /** 1.2.0 (B2): lịch cưỡng chế — hồ sơ chưa kết thúc có ngày dự kiến, theo thứ tự ngày, kèm hạn gửi Công an và cảnh báo thời điểm. */
 export function lichCuongChe(hos: Ho[], homNay: string, lich: LichLamViec): DongLichCuongChe[] {
   return hos
-    .flatMap((h) => (h.cuongChe ?? []).filter((c) => c.ngayDuKien && !c.ketQua).map((c) => ({ h, c })))
+    .flatMap((h) => (h.cuongChe ?? []).map((c) => cuongCheTuVanBan(c, h)).filter((c) => c.ngayDuKien && !c.ketQua).map((c) => ({ h, c })))
     .map(({ h, c }) => ({
       ngayDuKien: c.ngayDuKien!,
       thang: c.ngayDuKien!.slice(0, 7),
@@ -141,8 +141,26 @@ export function lichCuongChe(hos: Ho[], homNay: string, lich: LichLamViec): Dong
     .sort((a, b) => a.ngayDuKien.localeCompare(b.ngayDuKien));
 }
 
+/**
+ * 1.3.0 (C1) — Số, ngày văn bản đã tạo có số ở hồ sơ hộ (Mẫu 07, 22 — QĐ cưỡng chế; T16 — QĐ thành lập Ban) điền vào hồ sơ cưỡng
+ * chế mới nhất cùng loại khi cán bộ chưa ghi tay — để hạn, lịch tính được mà không nhập lại. Ô đã ghi tay được giữ nguyên.
+ */
+export function cuongCheTuVanBan(c: CuongChe, h: Pick<Ho, "cuongChe" | "vanBan">): CuongChe {
+  const vb = h.vanBan;
+  if (!vb) return c;
+  const cung = (h.cuongChe ?? []).filter((x) => x.loai === c.loai);
+  if (cung[cung.length - 1]?.id !== c.id) return c;
+  const k = c.loai === "KIEM_DEM" ? "qd_cc_kiem_dem" : "qd_cc_thu_hoi";
+  const out = { ...c };
+  if (!out.soQd && vb[`${k}_so`]) out.soQd = vb[`${k}_so`];
+  if (!out.ngayQd && vb[`${k}_ngay`]) out.ngayQd = ngayIsoTuChu(vb[`${k}_ngay`]) ?? undefined;
+  if (c.loai === "THU_HOI" && !out.qdBan?.trim() && vb.qd_ban_cc_so) out.qdBan = `${vb.qd_ban_cc_so}${vb.qd_ban_cc_ngay ? ` ngày ${vb.qd_ban_cc_ngay}` : ""}`;
+  return out;
+}
+
 /** Đối chiếu điều kiện, thời hạn của một hồ sơ cưỡng chế. */
-export function kiemCuongChe(c: CuongChe, h: Ho, homNay: string, lich: LichLamViec): MucKiemCc[] {
+export function kiemCuongChe(c0: CuongChe, h: Ho, homNay: string, lich: LichLamViec): MucKiemCc[] {
+  const c = cuongCheTuVanBan(c0, h);
   const out: MucKiemCc[] = [];
   const d = DIEU_CC[c.loai];
   const cc = (k: string) => `${k} ${d} Luật Đất đai 2024`;

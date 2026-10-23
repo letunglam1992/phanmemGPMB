@@ -21,7 +21,7 @@ describe("1.3.0 (A3) — văn bản phân cấp cấu hình được", () => {
     apDungThamQuyenMau();
     expect(mauTheoMa("15").moTa).toContain("khoản 1 Điều 2 QĐ 05/2027/QĐ-UBND");
     expect(mauTheoMa("15").moTa).not.toContain("27/2026");
-    expect(mauTheoMa("15").moTa.match(/Thẩm quyền:/g)).toHaveLength(1);
+    expect(mauTheoMa("15").moTa!.match(/Thẩm quyền:/g)).toHaveLength(1);
     expect(canhBaoThamQuyen("15", "2027-05-01")).toEqual([]);
     expect(canhBaoThamQuyen("15", "2027-02-01")[0]).toContain("trước ngày QĐ 05/2027/QĐ-UBND có hiệu lực");
     expect(ghiChuThamQuyen("15")).not.toContain("đến trước");

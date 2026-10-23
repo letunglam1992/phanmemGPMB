@@ -3,6 +3,7 @@
  * hồi đất kèm danh sách, Tờ trình/QĐ phê duyệt phương án 01 hộ (11 mục), Tờ trình/QĐ thu hồi đất nhiều hộ; và bước kiểm tra
  * thống nhất trước khi tạo văn bản (docs/19 mục 5 điểm 4). Chỉ tổng hợp số liệu đã có trong hồ sơ — không tự đặt mức, căn cứ.
  */
+import { cuongCheTuVanBan } from "../cuong-che";
 import { canhBaoThamQuyen } from "./tham-quyen";
 import { D, dinhDang } from "@gpmb/core";
 import type Decimal from "decimal.js";
@@ -515,9 +516,9 @@ export function duLieuKhieuNaiCuongChe(h: Ho, ngayKy: string, xa: string, ma = "
     kn_dieu_1_tiep_tuc: `Tiếp tục giải quyết vụ việc khiếu nại của ${h.ten} theo ${tb}. Thời hạn giải quyết khiếu nại tiếp tục được tính từ ngày ban hành Quyết định này (khoản 2 Điều 28b Nghị định số 124/2020/NĐ-CP được bổ sung bởi Nghị định số 155/2026/NĐ-CP).`,
     kn_thi_hanh_dinh_chi: `Chánh Văn phòng Hội đồng nhân dân và Ủy ban nhân dân, ${h.ten} và các cơ quan, tổ chức, cá nhân có liên quan`,
   };
-  const cc = (h.cuongChe ?? []).filter((c) => c.loai === "THU_HOI").sort((a, b) => (a.ngayQd ?? a.vanDongTu ?? "").localeCompare(b.ngayQd ?? b.vanDongTu ?? "")).pop();
+  const cc = (h.cuongChe ?? []).filter((c) => c.loai === "THU_HOI").map((c) => cuongCheTuVanBan(c, h)).sort((a, b) => (a.ngayQd ?? a.vanDongTu ?? "").localeCompare(b.ngayQd ?? b.vanDongTu ?? "")).pop();
   // 1.3.0 (A2): T30 — hồ sơ cưỡng chế kiểm đếm bắt buộc mới nhất; QĐ kiểm đếm theo hồ sơ hoặc Mẫu 06 đã ghi số
-  const kd = (h.cuongChe ?? []).filter((c) => c.loai === "KIEM_DEM").sort((a, b) => (a.ngayQd ?? a.vdKdTu ?? "").localeCompare(b.ngayQd ?? b.vdKdTu ?? "")).pop();
+  const kd = (h.cuongChe ?? []).filter((c) => c.loai === "KIEM_DEM").map((c) => cuongCheTuVanBan(c, h)).sort((a, b) => (a.ngayQd ?? a.vdKdTu ?? "").localeCompare(b.ngayQd ?? b.vdKdTu ?? "")).pop();
   const kdThem = {
     kd_qd_so: h.vanBan?.qd_kiem_dem_so || "…………",
     kd_qd_ngay: kd?.ngayQdKd ? ngayVn(kd.ngayQdKd) : h.vanBan?.qd_kiem_dem_ngay || "…………",

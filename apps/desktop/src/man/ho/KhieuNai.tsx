@@ -5,7 +5,7 @@ import { Chon } from "../../thanh-phan/Chon";
 import { taoId, type DuAn, type Ho } from "../../mo-hinh";
 import { homNayIso } from "../../trang-thai";
 import { TEN_DINH_CHI, TEN_KET_QUA_DON, TEN_LOAI_DON, TEN_TDC, TEN_TT_DON, canhBaoThuTucDon, hanDon, hanGuiQd, type DonKhieuNai, type KetQuaDon, type LoaiDon, type TamDinhChi } from "../../khieu-nai";
-import { DIEU_CC, TEN_LOAI_CC, hanBanGiaoSauChapHanh, hanThiHanh, kiemCuongChe, ngaySomNhatQdThuHoi, ngaySomNhatQdKiemDem, ngayQdKiemDem, type CuongChe, type LoaiCuongChe } from "../../cuong-che";
+import { cuongCheTuVanBan, DIEU_CC, TEN_LOAI_CC, hanBanGiaoSauChapHanh, hanThiHanh, kiemCuongChe, ngaySomNhatQdThuHoi, ngaySomNhatQdKiemDem, ngayQdKiemDem, type CuongChe, type LoaiCuongChe } from "../../cuong-che";
 
 const LOP_TT: Record<string, string> = { QUA_HAN: "nhan-do", QUA_HAN_THU_LY: "nhan-do", SAP_HET: "nhan-vang", CHO_THU_LY: "nhan-vang", DANG_GIAI_QUYET: "nhan-xanh", DA_GIAI_QUYET: "nhan-xam", KHONG_TINH_HAN: "nhan-xam", TAM_DINH_CHI: "nhan-vang" };
 const LOP_MUC = { CAO: "thong-bao-do", TRUNG_BINH: "thong-bao-vang", THONG_TIN: "thong-bao-xanh" } as const;
@@ -111,6 +111,7 @@ export function TabKhieuNai({ h, duAn, doi, soanMau }: { h: Ho; duAn: DuAn; doi:
         {dsCc.length === 0 && <div className="the-than trong">Hộ không có hồ sơ cưỡng chế.</div>}
         {dsCc.map((c) => {
           const kiem = kiemCuongChe(c, h, homNay, lich);
+          const cv = cuongCheTuVanBan(c, h);
           const han = hanThiHanh(c, lich);
           const hbg = hanBanGiaoSauChapHanh(c, lich);
           return (
@@ -153,10 +154,10 @@ export function TabKhieuNai({ h, duAn, doi, soanMau }: { h: Ho; duAn: DuAn; doi:
                 <O nhan={c.loai === "KIEM_DEM" ? "Vận động chấp hành QĐ kiểm đếm từ" : "Vận động từ ngày"}><ONgay aria-label="Vận động từ ngày" value={c.vanDongTu ?? ""} onChange={(e) => datCc(c.id, { vanDongTu: e.target.value || undefined })} /></O>
                 <O nhan="đến ngày" goiY={c.loai === "THU_HOI" && c.vanDongDen ? `QĐ cưỡng chế sớm nhất ${ngayVN(ngaySomNhatQdThuHoi(c.vanDongDen, lich))}` : undefined}><ONgay aria-label="Vận động đến ngày" value={c.vanDongDen ?? ""} onChange={(e) => datCc(c.id, { vanDongDen: e.target.value || undefined })} /></O>
                 <O nhan="Văn bản vận động, thuyết phục"><input aria-label="Văn bản vận động" value={c.vbVanDong ?? ""} placeholder="Biên bản số…, ngày…" onChange={(e) => datCc(c.id, { vbVanDong: e.target.value })} /></O>
-                {c.loai === "THU_HOI" && <O nhan="QĐ thành lập Ban cưỡng chế"><input aria-label="QĐ thành lập Ban cưỡng chế" value={c.qdBan ?? ""} onChange={(e) => datCc(c.id, { qdBan: e.target.value })} /></O>}
+                {c.loai === "THU_HOI" && <O nhan="QĐ thành lập Ban cưỡng chế" goiY={!c.qdBan?.trim() && cv.qdBan ? `Theo T16 đã ghi số: ${cv.qdBan}` : undefined}><input aria-label="QĐ thành lập Ban cưỡng chế" value={c.qdBan ?? ""} onChange={(e) => datCc(c.id, { qdBan: e.target.value })} /></O>}
               </div>
               <div className="luoi luoi-4">
-                <O nhan="Số QĐ cưỡng chế"><input aria-label="Số QĐ cưỡng chế" value={c.soQd ?? ""} onChange={(e) => datCc(c.id, { soQd: e.target.value })} /></O>
+                <O nhan="Số QĐ cưỡng chế" goiY={!c.soQd && cv.soQd ? `Theo văn bản đã ghi số: ${cv.soQd}${cv.ngayQd ? ` ngày ${ngayVN(cv.ngayQd)}` : ""}` : undefined}><input aria-label="Số QĐ cưỡng chế" value={c.soQd ?? ""} onChange={(e) => datCc(c.id, { soQd: e.target.value })} /></O>
                 <O nhan="Ngày QĐ"><ONgay aria-label="Ngày QĐ cưỡng chế" value={c.ngayQd ?? ""} onChange={(e) => datCc(c.id, { ngayQd: e.target.value || undefined })} /></O>
                 <O nhan="Ngày có hiệu lực"><ONgay aria-label="Ngày QĐ có hiệu lực" value={c.ngayHieuLuc ?? ""} onChange={(e) => datCc(c.id, { ngayHieuLuc: e.target.value || undefined })} /></O>
                 <O nhan="Ngày niêm yết công khai"><ONgay aria-label="Ngày niêm yết QĐ cưỡng chế" value={c.ngayNiemYet ?? ""} onChange={(e) => datCc(c.id, { ngayNiemYet: e.target.value || undefined })} /></O>

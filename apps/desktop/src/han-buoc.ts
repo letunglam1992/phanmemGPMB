@@ -17,7 +17,7 @@ export interface HanBuoc {
 
 export const HAN_BUOC: HanBuoc[] = [
   // 1.2.0 (B1): bước chung — tính một lần cho dự án / đợt (hanBuocChung), không tính theo từng hộ
-  { buoc: "2", soNgay: 3, loai: "N", moc: { loai: "BUOC", buoc: "1", nhan: "ngày phê duyệt Kế hoạch thu hồi đất, điều tra, khảo sát, đo đạc, kiểm đếm (bước 1)" }, canCu: "khoản 4 Mục V Phần II Sổ tay QĐ 1966/QĐ-UBND — tổ chức họp \"không quá 03 ngày\" kể từ khi Kế hoạch được phê duyệt (mục 2 mục IV Phần II Phụ lục I NĐ 151/2025/NĐ-CP không quy định số ngày)" },
+  { buoc: "2", soNgay: 3, loai: "N", moc: { loai: "BUOC", buoc: "1", nhan: "ngày phê duyệt Kế hoạch thu hồi đất, điều tra, khảo sát, đo đạc, kiểm đếm (bước 1; chưa xác nhận thì ngày Kế hoạch T1 đã ghi số)" }, canCu: "khoản 4 Mục V Phần II Sổ tay QĐ 1966/QĐ-UBND — tổ chức họp \"không quá 03 ngày\" kể từ khi Kế hoạch được phê duyệt (mục 2 mục IV Phần II Phụ lục I NĐ 151/2025/NĐ-CP không quy định số ngày)" },
   { buoc: "3", soNgay: 2, loai: "N", moc: { loai: "NHAP", nhan: "Ngày Chủ tịch UBND cấp xã nhận tờ trình ban hành thông báo thu hồi đất (trống = ngày Tờ trình T2 đã ghi số)" }, canCu: "điểm a khoản 2 Mục V Phần II Sổ tay QĐ 1966/QĐ-UBND — ban hành thông báo \"không quá 02 ngày\" kể từ ngày nhận được tờ trình (mục 3 mục IV Phần II Phụ lục I NĐ 151/2025/NĐ-CP không quy định số ngày)" },
   { buoc: "8", soNgay: 30, loai: "N", moc: { loai: "NHAP", nhan: "Ngày nhận đủ hồ sơ thẩm định (thời gian bổ sung hồ sơ không tính — khai báo ở \"Thời gian không tính\")" }, canCu: "khoản 3 Điều 3 NĐ 88/2024/NĐ-CP; mục 8 Phần II Phụ lục I NĐ 151/2025/NĐ-CP — \"không quá 30 ngày\" (Sổ tay QĐ 1966 điểm a khoản 2 Mục XII ghi 30 ngày làm việc; phần mềm theo nghị định)" },
   { buoc: "9", soNgay: 5, loai: "NLV", moc: { loai: "NHAP", nhan: "Ngày nhận tờ trình phê duyệt phương án" }, canCu: "điểm d khoản 2 Mục XII Phần II Sổ tay QĐ 1966/QĐ-UBND (Điều 87 Luật Đất đai 2024 không quy định số ngày)" },
@@ -216,7 +216,7 @@ type NguonHanChung = { tienDoChung?: Record<string, BuocHo>; vanBan?: Record<str
 export function hanBuocChung(duAn: NguonHanChung, homNay: string, lich: LichLamViec): HanChung[] {
   const nhom: { dotId: string; ten: string; td: Record<string, BuocHo>; vanBan?: Record<string, string> }[] = [{ dotId: "", ten: "Cả dự án", td: duAn.tienDoChung ?? {}, vanBan: duAn.vanBan }];
   for (const d of duAn.dotThuHoi ?? []) {
-    if (!d.tienDoChung && !d.vanBan?.tt_tb_thu_hoi_ngay) continue;
+    if (!d.tienDoChung && !d.vanBan?.tt_tb_thu_hoi_ngay && !d.vanBan?.ke_hoach_ngay) continue;
     nhom.push({ dotId: d.id, ten: d.ten.trim() || `Đợt ${d.so}`, td: { ...(duAn.tienDoChung ?? {}), ...(d.tienDoChung ?? {}) }, vanBan: { ...(duAn.vanBan ?? {}), ...(d.vanBan ?? {}) } });
   }
   const out: HanChung[] = [];
@@ -224,6 +224,11 @@ export function hanBuocChung(duAn: NguonHanChung, homNay: string, lich: LichLamV
     for (const ma of BUOC_CHUNG_CO_HAN) {
       const han = hanCuaBuoc(ma)!;
       const td = { ...n.td };
+      // 1.3.0 (C1): bước 1 chưa xác nhận có ngày → mốc bước 2 lấy ngày Kế hoạch (T1) đã ghi số
+      if (ma === "2" && !(td["1"]?.trangThai === "XONG" && td["1"]?.ngay)) {
+        const kh = ngayIsoTuChu(n.vanBan?.ke_hoach_ngay);
+        if (kh) td["1"] = { ...(td["1"] ?? {}), trangThai: "XONG" as const, ngay: kh };
+      }
       if (ma === "3" && !td["3"]?.mocHan) {
         const tt = ngayIsoTuChu(n.vanBan?.tt_tb_thu_hoi_ngay);
         if (tt) td["3"] = { ...(td["3"] ?? { trangThai: "CHUA" as const }), mocHan: tt };
