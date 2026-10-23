@@ -4,6 +4,28 @@ Mỗi phiên bản một mục `## X.Y.Z`. Khi phát hành, quy trình đóng g�
 (`tools/ghi-chu-phat-hanh.mjs`) — thiếu mục của phiên bản đang phát hành thì dừng, không phát hành. Phần mềm hiện các mục
 mới hơn bản đang dùng khi có bản cập nhật.
 
+## 1.2.0
+
+- Quyết định 27/2026/QĐ-UBND (phân cấp, ủy quyền lĩnh vực đất đai) vào Hỏi đáp và căn cứ mặc định; các mẫu thông báo, kế hoạch,
+  quyết định thu hồi, phê duyệt phương án, phương án cưỡng chế ghi thẩm quyền theo Phụ lục II; cảnh báo khi ngày ký ngoài thời
+  gian hiệu lực (từ 30/6/2026 đến trước 01/3/2027).
+- Luật Tố tụng hành chính vào Hỏi đáp; quyết định giải quyết khiếu nại lần hai ghi thời hiệu khởi kiện 01 năm (điểm a khoản 3
+  Điều 116).
+- Mẫu T26 Quyết định phê duyệt phương án theo Mẫu số 44 Nghị định 151/2025/NĐ-CP; mẫu 14 tách Điều 1 thành phương án đối với dự
+  án và phương án chi tiết từng người (khoản 1, 2 Điều 3 Nghị định 88/2024); mẫu 14, R5 thêm trách nhiệm người có đất thu hồi.
+- Mẫu T27 biên bản cưỡng chế thu hồi đất, T28 biên bản bàn giao bảo quản tài sản.
+- Nút **Căn cứ thời hạn**: đối chiếu 16 bước với Nghị định 151/2025 và Sổ tay nghiệp vụ.
+- Nhắc hạn theo Sổ tay: họp phổ biến kế hoạch 03 ngày, ban hành thông báo thu hồi 02 ngày; vận động trước kiểm đếm bắt buộc 15
+  ngày, quá 10 ngày mới ban hành quyết định (điểm đ khoản 2 Điều 87 Luật Đất đai); trình 03, ban hành 02 ngày làm việc; giao
+  quyết định cưỡng chế; vận động 05 ngày làm việc sau khi giao.
+- **Sổ văn bản đi** của đơn vị: tạo văn bản có số thì tự ghi sổ, gợi ý số tiếp theo, báo số đã cấp; ghi tay văn bản soạn ngoài
+  phần mềm; mạng nội bộ cấp số tập trung.
+- **Xem trước** văn bản Word và biểu Excel phương án ngay trong phần mềm.
+- Lịch cưỡng chế (hạn gửi Công an 05 ngày làm việc), thẻ Tiến độ theo tháng; bản đồ và PDF bản đồ viền thửa đã giao đất thực địa
+  cho chủ đầu tư.
+- Báo cáo Word cấp xã có tiến độ theo tháng (biểu đồ), đơn quá hạn, lịch cưỡng chế; máy tỉnh có biểu đồ đơn khiếu nại theo
+  tháng, danh sách đơn quá hạn (không có tên hộ), lịch cưỡng chế trong báo cáo tỉnh.
+
 ## 1.1.0
 
 - Khiếu nại: ghi ngày tổ chức đối thoại, ngày gửi thông báo — phần mềm nhắc gửi thông báo trước ngày đối thoại ít nhất 05 ngày

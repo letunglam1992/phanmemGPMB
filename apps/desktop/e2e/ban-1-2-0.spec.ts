@@ -129,3 +129,42 @@ test("A2, B2: T26 Mẫu 44 cho đợt; lịch cưỡng chế ở thẻ Khiếu n
   expect(t26).toContain("theo quy định tại khoản 1 Điều 3 của Nghị định số 88/2024/NĐ-CP");
   expect(t26).toContain("TỔNG CỘNG");
 });
+
+test("B1, B3, C1, C3: hạn bước chung (Sổ tay Mục V); hạn kiểm đếm bắt buộc; ghi tay sổ văn bản đi; xem trước biểu Excel", async ({ page: p }) => {
+  await vao(p);
+  await p.keyboard.press("Alt+3");
+  // B1: bước 2 dữ liệu mẫu — kế hoạch 20/3, họp 02/4 → hạn 23/3, xong sau hạn
+  await p.getByRole("button", { name: "Cập nhật tiến độ" }).first().click();
+  await expect(p.locator("[data-han-chung='2']")).toContainText("23/03/2026");
+  await expect(p.locator("[data-han-chung='2']")).toContainText("xong sau hạn");
+  await p.locator("[role=dialog]", { hasText: "Cập nhật tiến độ dự án" }).getByRole("button", { name: "Đóng" }).last().click();
+  // C3: xem trước biểu Excel phương án
+  await p.getByRole("button", { name: "Thêm", exact: true }).click();
+  await p.getByRole("menuitem", { name: "Biểu mẫu Excel…" }).click();
+  await p.locator("[data-xem-truoc-excel]").click();
+  await expect(p.locator("[data-noi-dung-xem-truoc-excel] table")).toBeVisible();
+  await expect(p.locator("[data-noi-dung-xem-truoc-excel]")).toContainText(/\d{1,3}(\.\d{3})+/);
+  await p.locator("[role=dialog]", { hasText: "Xem trước biểu Excel" }).getByRole("button", { name: "Đóng" }).last().click();
+  await p.locator("[role=dialog]", { hasText: "Biểu mẫu Excel phương án" }).getByRole("button", { name: "Đóng" }).last().click();
+  // C1: ghi tay văn bản soạn ngoài phần mềm
+  await p.locator("[role=tablist] button", { hasText: "Tài liệu, văn bản" }).click();
+  const so = p.locator("[data-so-van-ban-di]");
+  await so.locator("[data-ghi-tay-so]").click();
+  await so.getByLabel("Số văn bản ghi tay").fill("7/QĐ-UBND");
+  await so.getByLabel("Trích yếu ghi tay").fill("Quyết định thành lập tổ công tác");
+  await so.getByRole("button", { name: "Ghi vào sổ" }).click();
+  await expect(p.getByText("Đã ghi 7/QĐ-UBND vào sổ")).toBeVisible();
+  await expect(so.getByLabel("Sổ văn bản đi")).toContainText("Ghi tay");
+  await expect(so.getByLabel("Sổ văn bản đi")).toContainText("Quyết định thành lập tổ công tác");
+  // B2, B3: hồ sơ cưỡng chế kiểm đếm bắt buộc
+  await moHo(p, 0);
+  await p.locator("[role=tablist] button", { hasText: "Khiếu nại" }).click();
+  await p.getByRole("button", { name: "+ Cưỡng chế kiểm đếm bắt buộc" }).click();
+  const cc = p.locator("[data-cc=KIEM_DEM]");
+  await ngay(p, "Vận động trước kiểm đếm từ ngày", "01/10/2026", cc);
+  await ngay(p, "Vận động trước kiểm đếm đến ngày", "05/10/2026", cc);
+  await expect(cc).toContainText("QĐ kiểm đếm bắt buộc sớm nhất 16/10/2026");
+  await ngay(p, "Ngày nhận đề nghị kiểm đếm bắt buộc", "12/10/2026", cc);
+  await expect(cc.locator("[data-kiem-cc]")).toContainText("Quá hạn trình Chủ tịch UBND cấp xã ban hành QĐ kiểm đếm bắt buộc: 15/10/2026");
+  await expect(cc.locator("[data-kiem-cc]")).toContainText("ghi 5 ngày");
+});

@@ -235,6 +235,13 @@ Gặp lỗi: bấm **"Chép chi tiết lỗi"** (nếu có), hoặc chụp màn 
 - [ ] Bản đồ dự án đã ghi mốc bàn giao đất thực địa: thửa có viền xanh đậm, chú giải ghi số thửa.
 - [ ] Dự án có ngày ở bước 9, 12, 13 qua nhiều tháng: thẻ **Tiến độ theo tháng** vẽ đúng.
 - [ ] T25: Điều 3 ghi "Trong thời hạn 01 năm"; Hỏi đáp: hỏi "thời hiệu khởi kiện" → trích Điều 116 Luật Tố tụng hành chính.
+- [ ] Văn bản 15 (QĐ thu hồi), 14, T26: căn cứ có dòng QĐ 27/2026/QĐ-UBND; đổi Ngày ký sang 02/3/2027 → khung kiểm tra báo hết hiệu lực.
+- [ ] Cập nhật tiến độ → bước 2, 3 hiện hạn (Sổ tay Mục V); ghi Ngày nhận tờ trình ở bước 3 → hạn 02 ngày.
+- [ ] Hồ sơ cưỡng chế kiểm đếm bắt buộc: ghi vận động trước kiểm đếm, ngày nhận đề nghị → hiện "QĐ kiểm đếm bắt buộc sớm nhất", hạn trình; quá hạn lên chuông.
+- [ ] Sổ văn bản đi → **Ghi tay** một văn bản soạn ngoài; Biểu mẫu Excel → **Xem trước** khớp tệp Excel tải về.
+- [ ] Mẫu 14 và R5: Điều 1 (14) có phần 1, 2, 3 theo Mẫu 44; Điều 2 khoản 4 trách nhiệm người có đất; mở bằng Word đúng thể thức.
+- [ ] Báo cáo Word cấp xã: mục Tiến độ theo tháng có biểu đồ; đơn quá hạn, lịch cưỡng chế. Máy tỉnh: biểu đồ đơn theo tháng; báo cáo tỉnh có lịch cưỡng chế.
+- [ ] PDF bản đồ tiến độ: thửa đã giao chủ đầu tư có viền xanh đậm, chú giải.
 ## 3. Quy trình mỗi lần sửa (để phiên mới làm đúng ngay)
 
 1. Sửa mã. Cập nhật `docs/09`, ghi chú này, `docs/13`/`docs/21` nếu đổi cách dùng.

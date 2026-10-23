@@ -309,4 +309,51 @@ if (!chiQuay || chiQuay === "4") {
   await h.bia("PHẦN MỀM GPMB SƠN LA", "Phần mềm ghi nhận, nhắc hạn — không kết luận đúng sai", "Người có thẩm quyền xem xét, quyết định", 3000);
   await ket(h, "4-Khieu-nai-cuong-che");
 }
+// ---------------- Video 5 (1.2.0): căn cứ thời hạn, sổ văn bản đi, xem trước, nhắc hạn ----------------
+if (!chiQuay || chiQuay === "5") {
+  const h = await moi(trinh, "5");
+  const { p } = h;
+  await batDau(h);
+  await h.bia("HƯỚNG DẪN THAO TÁC · 5", "Căn cứ thời hạn, sổ văn bản đi, xem trước, nhắc hạn", "NĐ 151/2025 · Sổ tay QĐ 1966/QĐ-UBND · QĐ 27/2026/QĐ-UBND");
+  await h.bam(nutBen(p, "Hồ sơ"));
+  await h.bam(the(p, "Tổng quan dự án"), 800);
+  await h.phuDe("<b>Căn cứ thời hạn</b>: 16 bước đối chiếu với Nghị định 151/2025 và Sổ tay — nguyên văn từng dòng", 300);
+  await h.bam(p.getByRole("button", { name: "Căn cứ thời hạn" }), 1500);
+  await h.den(p.locator("[data-doi-chieu-quy-trinh] tr[data-buoc='8']"));
+  await h.cho(2800);
+  await h.bam(p.locator("[role=dialog]", { has: p.locator("[data-doi-chieu-quy-trinh]") }).getByRole("button", { name: "Đóng" }).last(), 600);
+  await h.phuDe("<b>Cập nhật tiến độ</b>: bước 2, 3 có hạn theo Sổ tay (họp 03 ngày, thông báo 02 ngày)", 300);
+  await h.bam(p.getByRole("button", { name: "Cập nhật tiến độ" }).first(), 1200);
+  await h.den(p.locator("[data-han-chung='2']"));
+  await h.cho(2600);
+  await h.bam(p.locator("[role=dialog]", { hasText: "Cập nhật tiến độ dự án" }).getByRole("button", { name: "Đóng" }).last(), 600);
+  await h.phuDe("Soạn văn bản: <b>Số tiếp theo theo sổ</b>, <b>Xem trước</b> trước khi tải; tạo xong tự ghi sổ", 300);
+  await h.bam(the(p, "Hộ, cá nhân"));
+  await h.bam(p.locator("tr[data-ho-id]").first(), 1000);
+  await h.bam(p.locator(".tab-gon button", { hasText: "Văn bản" }), 900);
+  await h.bam(p.locator(".muc-mau", { hasText: "Thông báo thụ lý giải quyết khiếu nại" }), 1200);
+  await h.den(p.locator("[data-so-tiep-theo]"));
+  await h.cho(1800);
+  await h.bam(p.locator("[data-xem-truoc]"), 2600);
+  await h.bam(p.getByRole("button", { name: "Đóng" }).last(), 600);
+  await h.phuDe("Hồ sơ cưỡng chế: vận động trước kiểm đếm 15 ngày, quá 10 ngày mới ban hành QĐ — phần mềm nhắc hạn", 300);
+  await h.bam(the(p, "Khiếu nại"), 800);
+  await h.bam(p.getByRole("button", { name: "+ Cưỡng chế kiểm đếm bắt buộc" }), 900);
+  const cc = p.locator("[data-cc=KIEM_DEM]");
+  const ngay = async (nhan, gt) => { const o = cc.getByLabel(nhan, { exact: true }).first(); await h.bam(o, 200); await o.fill(gt); await o.press("Tab"); await h.cho(700); };
+  await ngay("Vận động trước kiểm đếm từ ngày", "01/10/2026");
+  await ngay("Vận động trước kiểm đếm đến ngày", "15/10/2026");
+  await ngay("Ngày nhận đề nghị kiểm đếm bắt buộc", "16/10/2026");
+  await h.den(cc.locator("[data-kiem-cc]"));
+  await h.cho(3000);
+  await h.bam(p.getByRole("button", { name: "Lưu hồ sơ" }), 900);
+  await h.phuDe("Dự án → <b>Tài liệu, văn bản</b>: Sổ văn bản đi — <b>Ghi tay</b> văn bản soạn ngoài, xuất Excel", 300);
+  await h.bam(nutBen(p, "Hồ sơ"));
+  await h.bam(the(p, "Tài liệu, văn bản"), 1000);
+  await h.den(p.locator("[data-so-van-ban-di]"));
+  await h.cho(2600);
+  await h.phuDe("", 0);
+  await h.bia("PHẦN MỀM GPMB SƠN LA", "Nhắc hạn có căn cứ — không tự đặt thời hạn", "Thẩm quyền theo NĐ 151/2025, QĐ 27/2026/QĐ-UBND", 3000);
+  await ket(h, "5-Can-cu-thoi-han-so-van-ban");
+}
 await trinh.close();
