@@ -62,3 +62,21 @@ export function dienBienTinh(ban: BanGui[], p: PhamViDienBien, denNgay = new Dat
     return { ky: k, soDonVi, soHo, banGiao, duyetPA, tamTinh: tamTinh.toNumber(), dtThuHoi: dt.toNumber() };
   });
 }
+
+/**
+ * 1.2.0 (D3) — Đơn khiếu nại, kiến nghị theo tháng ở cấp tỉnh: cộng `khieuNai.theoThang` (12 tháng, đơn vị tính khi gửi) của các
+ * dự án trong bản gửi hiện tại của từng đơn vị. Gói gửi trước 1.2.0 không có — không tính.
+ */
+export function donTinhTheoThang(tomTat: Pick<TomTatDuAn, "khieuNai">[]): import("../khieu-nai").DonThang[] {
+  const m = new Map<string, import("../khieu-nai").DonThang>();
+  for (const d of tomTat)
+    for (const k of d.khieuNai?.theoThang ?? []) {
+      const g = m.get(k.ky) ?? { ky: k.ky, moi: 0, daGiaiQuyet: 0, quaHan: 0 };
+      g.moi += k.moi;
+      g.daGiaiQuyet += k.daGiaiQuyet;
+      g.quaHan += k.quaHan;
+      m.set(k.ky, g);
+    }
+  return [...m.values()].sort((a, b) => a.ky.localeCompare(b.ky));
+}
+

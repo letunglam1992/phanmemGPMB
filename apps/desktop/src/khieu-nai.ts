@@ -259,3 +259,51 @@ export function canhBaoThuTucDon(d: DonKhieuNai, homNay: string, lich: LichLamVi
   }
   return out;
 }
+
+export interface DonThang {
+  /** YYYY-MM */
+  ky: string;
+  /** Đơn nhận trong tháng */
+  moi: number;
+  /** Đơn có quyết định / văn bản giải quyết trong tháng */
+  daGiaiQuyet: number;
+  /** Đơn quá hạn thụ lý, giải quyết tại cuối tháng (tháng hiện tại: tại hôm nay) */
+  quaHan: number;
+}
+
+/**
+ * 1.2.0 (D3) — Diễn biến đơn khiếu nại, kiến nghị theo tháng (tối đa `soThang` tháng gần nhất đến tháng hiện tại): đơn mới, đã
+ * giải quyết (theo ngày văn bản giải quyết đã ghi), quá hạn tại cuối tháng (đơn chưa giải quyết đến cuối tháng đó).
+ */
+export function donTheoThang(hos: Ho[], homNay: string, lich: LichLamViec, soThang = 12): DonThang[] {
+  const ds = hos.flatMap((h) => h.khieuNai ?? []);
+  if (!ds.length) return [];
+  const ky: string[] = [];
+  let [y, m] = homNay.slice(0, 7).split("-").map(Number) as [number, number];
+  for (let i = 0; i < soThang; i++) {
+    ky.unshift(`${y}-${String(m).padStart(2, "0")}`);
+    if (--m === 0) { m = 12; y--; }
+  }
+  const dau = ds.reduce((a, d) => (d.ngayNhan < a ? d.ngayNhan : a), homNay).slice(0, 7);
+  return ky
+    .filter((k) => k >= dau)
+    .map((k) => {
+      const [yy, mm] = k.split("-").map(Number) as [number, number];
+      const cuoi = k === homNay.slice(0, 7) ? homNay : new Date(Date.UTC(yy, mm, 0)).toISOString().slice(0, 10);
+      let quaHan = 0;
+      for (const d of ds) {
+        if (d.ngayNhan > cuoi) continue;
+        const xong = d.ketQua && (!d.ngayVb || d.ngayVb <= cuoi);
+        if (xong) continue;
+        const tt = hanDon({ ...d, ketQua: undefined }, cuoi, lich).tt;
+        if (tt === "QUA_HAN" || tt === "QUA_HAN_THU_LY") quaHan++;
+      }
+      return {
+        ky: k,
+        moi: ds.filter((d) => d.ngayNhan.startsWith(k)).length,
+        daGiaiQuyet: ds.filter((d) => d.ketQua && d.ngayVb?.startsWith(k)).length,
+        quaHan,
+      };
+    });
+}
+

@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { dinhDang } from "@gpmb/core";
 import { BieuDoKy } from "./BieuDoKy";
 import { Chon } from "./Chon";
-import { dienBienTinh, type BanGui, type PhamViDienBien } from "../tong-hop-tinh/dien-bien";
+import { dienBienTinh, donTinhTheoThang, type BanGui, type PhamViDienBien } from "../tong-hop-tinh/dien-bien";
 import type { BanCu, BanGhiGoi } from "../tong-hop-tinh/kho-tinh";
 import { chuanMa } from "../tong-hop-tinh/lien-xa";
 
@@ -24,6 +24,11 @@ export function TheDienBienTinh({ ds, banCu }: { ds: BanGhiGoi[]; banCu: BanCu[]
   }, [ban]);
   const pv: PhamViDienBien = chon.startsWith("XA:") ? { loai: "XA", xa: chon.slice(3) } : chon.startsWith("LX:") ? { loai: "LIEN_XA", ma: chon.slice(3) } : { loai: "TINH" };
   const ky = useMemo(() => dienBienTinh(ban, pv), [ban, chon]); // eslint-disable-line react-hooks/exhaustive-deps
+  // 1.2.0 (D3): đơn khiếu nại, kiến nghị theo tháng — bản gửi hiện tại của từng đơn vị (đã có lịch sử 12 tháng)
+  const don = useMemo(
+    () => donTinhTheoThang(ds.flatMap((b) => b.tomTat).filter((d) => (pv.loai === "XA" ? d.xa === pv.xa : pv.loai === "LIEN_XA" ? chuanMa(d.lienXa?.ma ?? "") === pv.ma : true))),
+    [ds, chon], // eslint-disable-line react-hooks/exhaustive-deps
+  );
   if (!ban.length) return null;
   const nhan = ky.map((k) => `${k.ky.slice(5)}/${k.ky.slice(2, 4)}`);
   const tl = (a: number, b: number) => (b ? (a / b) * 100 : null);
@@ -53,6 +58,13 @@ export function TheDienBienTinh({ ds, banCu }: { ds: BanGhiGoi[]; banCu: BanCu[]
               <BieuDoKy kieu="cot" nhanKy={nhan} hienTai={ky.length - 1} dinhDang={(v) => dinhDang(v, v < 10 ? 2 : 1)} moTa="Tổng giá trị tạm tính theo tháng, tỷ đồng"
                 chuoi={[{ ten: "Tạm tính", giaTri: ky.map((k) => k.tamTinh / 1e9) }]} />
             </div>
+          </div>
+        )}
+        {don.length > 0 && (
+          <div className="mb-14" data-don-theo-thang>
+            <div className="nhan-muc">Đơn khiếu nại, kiến nghị theo tháng</div>
+            <BieuDoKy kieu="cot" nhanKy={don.map((k) => `${k.ky.slice(5)}/${k.ky.slice(2, 4)}`)} hienTai={don.length - 1} dinhDang={(v) => `${Math.round(v)}`} moTa="Số đơn nhận mới, đơn đã giải quyết trong tháng và đơn quá hạn tại cuối tháng (gói gửi từ bản 1.2.0)"
+              chuoi={[{ ten: "Đơn mới", giaTri: don.map((k) => k.moi) }, { ten: "Đã giải quyết", giaTri: don.map((k) => k.daGiaiQuyet) }, { ten: "Quá hạn cuối tháng", giaTri: don.map((k) => k.quaHan) }]} />
           </div>
         )}
         {cuoi && (

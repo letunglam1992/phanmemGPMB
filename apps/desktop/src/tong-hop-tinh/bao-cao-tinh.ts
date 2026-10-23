@@ -9,7 +9,7 @@ import { D, dinhDang } from "@gpmb/core";
 import type { ThongTinBaoCao } from "../bao-cao-van-ban";
 import type { TomTatDuAn } from "./goi-tinh";
 import { moTaCham, type ChamGui } from "./canh-bao";
-import type { KyDienBien } from "./dien-bien";
+import { donTinhTheoThang, type KyDienBien } from "./dien-bien";
 
 export type ThongTinBaoCaoTinh = ThongTinBaoCao;
 export interface DongBaoCao extends TomTatDuAn {
@@ -108,6 +108,21 @@ export function duLieuBaoCaoTinh(dong: DongBaoCao[], t: ThongTinBaoCaoTinh, o: {
         co_qua_han: ds.length > 0,
         tong_qua_han: ds.length,
         qua_han: ds.map(({ d, q }, i) => ({ tt: i + 1, du_an: `${d.ten} (${tenXa(d)})`, doi_tuong: q.doiTuong, khau: q.khau, han: ngayVN(q.han), can_cu: q.canCu })),
+      };
+    })(),
+    // 1.2.0 (D2, D3): đơn khiếu nại theo tháng (tháng gần nhất so với tháng trước), lịch cưỡng chế (ngày, dự án, loại)
+    ...(() => {
+      const don = donTinhTheoThang(dong);
+      const a = don[don.length - 2], b = don[don.length - 1];
+      const lich = dong.flatMap((d) => (d.cuongChe?.lich ?? []).map((c) => ({ d, c }))).sort((x, y) => x.c.ngay.localeCompare(y.c.ngay));
+      return {
+        co_don_thang: !!b,
+        cau_don_thang: b
+          ? `Đơn khiếu nại, kiến nghị tháng ${thang(b.ky)} (đơn vị gửi từ bản 1.2.0): nhận mới ${b.moi} đơn, giải quyết ${b.daGiaiQuyet} đơn, quá hạn ${b.quaHan} đơn${a ? `; tháng ${thang(a.ky)}: nhận mới ${a.moi}, giải quyết ${a.daGiaiQuyet}, quá hạn ${a.quaHan}` : ""}.`
+          : "",
+        co_lich_cc: lich.length > 0,
+        so_lich_cc: lich.length,
+        lich_cc: lich.map(({ d, c }, i) => ({ tt: i + 1, ngay: ngayVN(c.ngay), du_an: `${d.ten} (${tenXa(d)})`, loai: c.loai === "KIEM_DEM" ? "cưỡng chế kiểm đếm bắt buộc" : "cưỡng chế thu hồi đất" })),
       };
     })(),
     co_kho_khan_khac: !!t.khoKhanKhac.trim(),

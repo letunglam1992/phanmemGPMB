@@ -34,7 +34,7 @@
   --do: #a02b20;     --do-nen: #fae6e2;     --do-to: #cc3b2e;
   --xanh-duong: #1f52a8; --xanh-duong-nen: #e6eefb; --xanh-duong-to: #2f6bd0;
   /* Chuỗi dữ liệu biểu đồ (đã kiểm tra: độ sáng, độ bão hòa, phân biệt khi mù màu, tương phản) */
-  --bd-1: #138a6b; --bd-2: #2f6bd0;
+  --bd-1: #138a6b; --bd-2: #2f6bd0; --bd-3: #c0392b;
   --tim: #5a47a3;    --tim-nen: #eee9f8;
   --xam: #4f5652;    --xam-nen: #eceeeb;    --xam-to: #8b918c;
   --lam: #085f6e;    --lam-nen: #e1f2f5;    --lam-to: #0a9bb0;
@@ -68,7 +68,7 @@
   --vang: #efc882;   --vang-nen: #3a2c12;   --vang-to: #c28a2a;
   --do: #f5a79c;     --do-nen: #40201b;     --do-to: #dd5646;
   --xanh-duong: #a9c6f4; --xanh-duong-nen: #1a2c48; --xanh-duong-to: #4c84d6;
-  --bd-1: #28a383; --bd-2: #4c84d6;
+  --bd-1: #28a383; --bd-2: #4c84d6; --bd-3: #e0645a;
   --tim: #bba8ef;    --tim-nen: #2a2342;
   --xam: #c3c9c5;    --xam-nen: #28302c;    --xam-to: #6f7773;
   --lam: #8fd9e4;    --lam-nen: #0f3239;    --lam-to: #179aad;

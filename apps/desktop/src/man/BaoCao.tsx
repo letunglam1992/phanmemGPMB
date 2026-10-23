@@ -7,6 +7,9 @@ import { tinhHo } from "../tinh-ho";
 import { homNayIso } from "../trang-thai";
 import { lapBaoCao, TEN_TINH_TRANG, type SoLieu, type TinhTrangDuAn } from "../bao-cao";
 import { duLieuBaoCaoWord, type ThongTinBaoCao } from "../bao-cao-van-ban";
+import { duLieuBoSungBaoCaoXa } from "../bao-cao-bo-sung";
+import { veBieuDoDienBien } from "../tong-hop-tinh/ve-bieu-do";
+import { chenAnhDocx } from "../van-ban/chen-anh";
 import { donViSuDung, type DonVi } from "../don-vi";
 import { taoWorkbookBaoCao } from "../xuat-excel";
 import { dienMau } from "../van-ban/dien-mau";
@@ -77,7 +80,10 @@ export function BaoCao() {
     const mau = (await kho.docMau(maMau))?.bytes ?? (maMau === MA_MAU_GOC ? await (await fetch("/mau-van-ban/bao-cao-tong-hop.docx")).arrayBuffer() : null);
     if (!mau) return bao("Không còn mẫu đã chọn — chọn mẫu khác", "loi");
     try {
-      if (!(await taiXuong(dienMau(mau, duLieuBaoCaoWord(bc, tt, ss, hoVm)), `${tenTep}.docx`, "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))) return false;
+      // 1.2.0 (D2): tiến độ theo tháng (biểu đồ), đơn quá hạn, lịch cưỡng chế — mẫu của đơn vị không có trường thì bỏ qua
+      const bs = duLieuBoSungBaoCaoXa(bc.dong.map((x) => ({ duAn: x.duAn, hos: hoCua(x.duAn.id) })), denNgay, lich);
+      const anh = bs.co_tien_do_thang ? await veBieuDoDienBien(bs.bieu_do_thang).catch(() => null) : null;
+      if (!(await taiXuong(chenAnhDocx(dienMau(mau, { ...duLieuBaoCaoWord(bc, tt, ss, hoVm), ...bs }), "[[BIEU_DO_TIEN_DO]]", anh, 15, 6.5, "Biểu đồ tiến độ theo tháng"), `${tenTep}.docx`, "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))) return false;
     } catch (e) {
       bao(`Mẫu báo cáo lỗi: ${(e as Error).message}${(e as { chiTiet?: string[] }).chiTiet?.length ? ` — ${(e as { chiTiet: string[] }).chiTiet.join("; ")}` : ""}`, "loi");
       return false;

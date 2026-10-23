@@ -10,7 +10,7 @@ export interface ChuoiBd {
   giaTri: (number | null)[];
 }
 
-const MAU = ["var(--bd-1)", "var(--bd-2)"];
+const MAU = ["var(--bd-1)", "var(--bd-2)", "var(--bd-3)"];
 const CAO = 220;
 const LE = { tren: 14, duoi: 30, trai: 44, phai: 58 };
 

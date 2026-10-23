@@ -87,5 +87,12 @@ describe("PDF vector từ lệnh vẽ canvas (1.0.6)", () => {
     expect(chu.some((t) => /\(1 thửa\)/.test(t))).toBe(true);
     expect(chu).toContain("(số thửa trong phạm vi in)");
     expect(chu.join(" ")).toContain("In theo vùng chọn.");
+    // 1.2.0 (D1): thửa đã bàn giao cho chủ đầu tư — chú giải đếm thửa trong phạm vi in
+    chu.length = 0;
+    veTrangBanDo(ctx, 1, KHO_GIAY.A4, { ...n, thuaDaGiaoCdt: new Set(["1", "9"]) });
+    expect(chu).toContain("Đã bàn giao cho chủ đầu tư (1 thửa)");
+    chu.length = 0;
+    veTrangBanDo(ctx, 1, KHO_GIAY.A4, n);
+    expect(chu.join(" ")).not.toContain("Đã bàn giao cho chủ đầu tư");
   });
 });

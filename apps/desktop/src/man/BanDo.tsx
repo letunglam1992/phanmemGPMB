@@ -339,7 +339,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
               <button className="nut" disabled={dangPdf} title="Bản đồ tiến độ GPMB tô màu theo hiện trạng hồ sơ, có khung, chú giải, tỷ lệ — dùng báo cáo, họp (không phải trích lục thửa)" onClick={async () => {
                 setDangPdf(true);
                 try {
-                  const nd: NoiDungIn = { dl, tieuDe: "BẢN ĐỒ TIẾN ĐỘ BỒI THƯỜNG, GIẢI PHÓNG MẶT BẰNG", phuDe: `Dự án: ${duAn.ten} — ${duAn.xa}`, ttThua, thuHoi, khoaThua, ranh: [...vungDs.map((v) => v.vong), ...ranhVe], ngay: new Date().toLocaleDateString("vi-VN"), phamVi: phamViIn === "KHUNG" ? (khungNhin.current ?? undefined) : phamViIn === "VE" ? (khungIn ?? undefined) : undefined };
+                  const nd: NoiDungIn = { dl, tieuDe: "BẢN ĐỒ TIẾN ĐỘ BỒI THƯỜNG, GIẢI PHÓNG MẶT BẰNG", phuDe: `Dự án: ${duAn.ten} — ${duAn.xa}`, ttThua, thuHoi, khoaThua, ranh: [...vungDs.map((v) => v.vong), ...ranhVe], ngay: new Date().toLocaleDateString("vi-VN"), thuaDaGiaoCdt, phamVi: phamViIn === "KHUNG" ? (khungNhin.current ?? undefined) : phamViIn === "VE" ? (khungIn ?? undefined) : undefined };
                   if (nenVeTinh) {
                     const c = docCaiDatAnhNen(duAnId);
                     // Chỉ dùng khi đã bật ảnh vệ tinh trên bản đồ (đã đồng ý dùng ảnh trực tuyến, đã chỉnh khớp)

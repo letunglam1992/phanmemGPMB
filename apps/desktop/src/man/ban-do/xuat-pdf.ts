@@ -71,6 +71,8 @@ export interface NoiDungIn {
   phamVi?: { minX: number; minY: number; maxX: number; maxY: number };
   /** 1.0.9: ảnh vệ tinh làm nền (dựng bằng dungAnhNenIn cho đúng phamViTrang(n)) */
   anhNen?: AnhNenIn;
+  /** 1.2.0 (D1): mã thửa bản đồ đã bàn giao đất trên thực địa cho chủ đầu tư — viền xanh đậm, có chú giải */
+  thuaDaGiaoCdt?: Set<string>;
 }
 
 /** Phạm vi bản đồ (VN-2000) của trang in: vùng chọn, không thì thửa trong ranh + ranh (nới 6%), không thì cả bản đồ. */
@@ -175,6 +177,19 @@ export function veTrangBanDo(ctx: CanvasRenderingContext2D, pxMm: number, kho: {
     ctx.lineWidth = Math.max(1, mm(a ? 0.25 : 0.15));
     ctx.stroke();
   }
+  // 1.2.0 (D1): viền thửa đã bàn giao đất trên thực địa cho chủ đầu tư (vẽ sau màu hiện trạng, dưới ranh GPMB)
+  let daGiao = 0;
+  if (n.thuaDaGiaoCdt?.size) {
+    ctx.strokeStyle = a ? "#7dffb0" : "#0b6b3a";
+    ctx.lineWidth = Math.max(1.5, mm(0.55));
+    for (const t of thuaIn) {
+      if (!n.thuaDaGiaoCdt.has(t.ma)) continue;
+      daGiao++;
+      ctx.beginPath();
+      for (const v of t.vong) { duong(v); ctx.closePath(); }
+      ctx.stroke();
+    }
+  }
   ctx.strokeStyle = "#d0021b";
   ctx.lineWidth = mm(0.6);
   for (const r of n.ranh) { ctx.beginPath(); for (const v of r) { duong(v); ctx.closePath(); } ctx.stroke(); }
@@ -237,7 +252,18 @@ export function veTrangBanDo(ctx: CanvasRenderingContext2D, pxMm: number, kho: {
   ctx.lineTo(cx + mm(8), y - mm(1.2));
   ctx.stroke();
   ctx.fillText("Ranh GPMB", cx + mm(11), y);
-  y += mm(10);
+  y += mm(6.5);
+  if (daGiao) {
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(cx, y - mm(3.2), mm(8), mm(4.2));
+    ctx.strokeStyle = "#0b6b3a";
+    ctx.lineWidth = mm(0.55);
+    ctx.strokeRect(cx, y - mm(3.2), mm(8), mm(4.2));
+    ctx.fillStyle = "#000";
+    ctx.fillText(`Đã bàn giao cho chủ đầu tư (${daGiao} thửa)`, cx + mm(11), y);
+    y += mm(6.5);
+  }
+  y += mm(3.5);
   // Thước tỷ lệ, tỷ lệ số (1 mm giấy = 1/tyLe*pxMm m)
   const mMoiMm = pxMm / tyLe;
   const tl = Math.round((mMoiMm * 1000) / 10) * 10;

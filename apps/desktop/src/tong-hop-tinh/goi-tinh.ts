@@ -13,7 +13,7 @@
  * gói trước đó của cùng đơn vị — phát hiện gói giả danh (khóa ký khác lần trước). Đây là chữ ký kỹ thuật của bản cài phần
  * mềm, không thay chữ ký số của cơ quan theo pháp luật về giao dịch điện tử.
  */
-import { hanDon, thongKeDon } from "../khieu-nai";
+import { donTheoThang, hanDon, thongKeDon } from "../khieu-nai";
 const congNgay = (iso: string, n: number) => new Date(Date.parse(iso) + n * 86400000).toISOString().slice(0, 10);
 import { dsDoan, matBangTheoLyTrinh } from "../ly-trinh";
 import { CAN_CU_CHI_TRA, hanChinhLyBan, khauChiTra } from "../thu-tuc-ban";
@@ -146,8 +146,16 @@ export interface TomTatDuAn {
   /** 1.0.15: chi tiết các khâu thủ tục đang quá hạn (bản phương án / đợt) — để tỉnh xem dự án nào, bản nào, khâu nào */
   quaHan?: { doiTuong: string; khau: string; han: string; canCu: string }[];
   /** 1.0.20: đơn khiếu nại, kiến nghị (B1) và hồ sơ cưỡng chế (B2) — chỉ số lượng (gói cũ không có) */
-  khieuNai?: import("../khieu-nai").ThongKeDon;
-  cuongChe?: { kiemDem: number; thuHoi: number; dangThucHien: number; /** 1.2.0 (B2): số hồ sơ có ngày dự kiến cưỡng chế trong 30 ngày tới */ duKien30Ngay?: number };
+  khieuNai?: import("../khieu-nai").ThongKeDon & { /** 1.2.0 (D3): đơn mới, đã giải quyết, quá hạn theo tháng (12 tháng) */ theoThang?: import("../khieu-nai").DonThang[] };
+  cuongChe?: {
+    kiemDem: number;
+    thuHoi: number;
+    dangThucHien: number;
+    /** 1.2.0 (B2): số hồ sơ có ngày dự kiến cưỡng chế trong 30 ngày tới */
+    duKien30Ngay?: number;
+    /** 1.2.0 (D2): lịch cưỡng chế — hồ sơ chưa kết thúc có ngày dự kiến (chỉ ngày, loại; không gửi tên hộ) */
+    lich?: { ngay: string; loai: "KIEM_DEM" | "THU_HOI" }[];
+  };
   /** 1.1.0 (D3): bàn giao đất trên thực địa cho chủ đầu tư (Mẫu 06 NĐ 102/2024) — số lần, ngày gần nhất (gói cũ không có) */
   banGiaoThucDia?: { lan: number; ngayCuoi: string };
   /** 1.0.4: mặt bằng theo lý trình (chỉ khi xã có ghi lý trình thửa) — mét */
@@ -237,8 +245,8 @@ export function tomTatDuAn(duAn: DuAn[], ho: Ho[], soTep: (duAnId: string) => nu
         const kn = thongKeDon(hs, homNay, lich);
         const cc = hs.flatMap((h) => h.cuongChe ?? []);
         return {
-          ...(kn.tong ? { khieuNai: kn } : {}),
-          ...(cc.length ? { cuongChe: { kiemDem: cc.filter((c) => c.loai === "KIEM_DEM").length, thuHoi: cc.filter((c) => c.loai === "THU_HOI").length, dangThucHien: cc.filter((c) => !c.ketQua).length, duKien30Ngay: cc.filter((c) => !c.ketQua && c.ngayDuKien && c.ngayDuKien >= homNay && c.ngayDuKien <= congNgay(homNay, 30)).length } } : {}),
+          ...(kn.tong ? { khieuNai: { ...kn, theoThang: donTheoThang(hs, homNay, lich) } } : {}),
+          ...(cc.length ? { cuongChe: { kiemDem: cc.filter((c) => c.loai === "KIEM_DEM").length, thuHoi: cc.filter((c) => c.loai === "THU_HOI").length, dangThucHien: cc.filter((c) => !c.ketQua).length, duKien30Ngay: cc.filter((c) => !c.ketQua && c.ngayDuKien && c.ngayDuKien >= homNay && c.ngayDuKien <= congNgay(homNay, 30)).length, lich: cc.filter((c) => !c.ketQua && c.ngayDuKien).map((c) => ({ ngay: c.ngayDuKien!, loai: c.loai })).sort((a, b) => a.ngay.localeCompare(b.ngay)) } } : {}),
         };
       })(),
       ...((d.banGiaoThucDia ?? []).length ? { banGiaoThucDia: { lan: d.banGiaoThucDia!.length, ngayCuoi: d.banGiaoThucDia!.reduce((a, b) => (b.ngay > a ? b.ngay : a), "") } } : {}),
