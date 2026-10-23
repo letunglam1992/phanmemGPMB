@@ -7,6 +7,7 @@
  */
 import { amSangDuong } from "./am-lich";
 import { hanChot, hanChotNgay, laNgayLamViec, type LichLamViec } from "./lich-lam-viec";
+import { ngayIsoTuChu } from "./han-buoc";
 import type { Ho } from "./mo-hinh";
 
 export type LoaiCuongChe = "KIEM_DEM" | "THU_HOI";
@@ -42,12 +43,26 @@ export interface CuongChe {
   /** Ngày biên bản ghi nhận chấp hành / ngày thực hiện cưỡng chế */
   ngayKetQua?: string;
   ghiChu?: string;
+  /** 1.2.0 (B2) — kiểm đếm bắt buộc: vận động, thuyết phục phối hợp điều tra, kiểm đếm TRƯỚC khi ban hành QĐ kiểm đếm bắt buộc */
+  vdKdTu?: string;
+  vdKdDen?: string;
+  vbVdKd?: string;
+  /** Ngày QĐ kiểm đếm bắt buộc (trống = lấy theo văn bản Mẫu 06 đã ghi số ở hồ sơ hộ) */
+  ngayQdKd?: string;
+  /** 1.2.0 (B3) — ngày phòng chuyên môn nhận văn bản đề nghị kiểm đếm bắt buộc / ngày trình Chủ tịch UBND cấp xã */
+  deNghiKd?: string;
+  trinhKd?: string;
+  /** Ngày phòng chuyên môn nhận văn bản đề nghị cưỡng chế / ngày trình Chủ tịch UBND cấp xã */
+  deNghiCc?: string;
+  trinhCc?: string;
 }
 
 export interface MucKiemCc {
   muc: "CAO" | "TRUNG_BINH" | "THONG_TIN";
   noiDung: string;
   canCu: string;
+  /** Thời hạn theo Sổ tay đã đến/quá — đưa lên chuông nhắc việc (mức trung bình) */
+  nhac?: boolean;
 }
 
 const vn = (iso: string) => iso.split("-").reverse().join("/");
@@ -163,6 +178,7 @@ export function kiemCuongChe(c: CuongChe, h: Ho, homNay: string, lich: LichLamVi
       out.push({ muc: "THONG_TIN", noiDung: "Kiểm tra ngày lễ truyền thống của đồng bào dân tộc và trường hợp đặc biệt tại địa phương (phần mềm không có danh mục)", canCu: cc("điểm b khoản 1") });
     }
   }
+  out.push(...hanSoTayCuongChe(c, h, homNay, lich));
   const hbg = hanBanGiaoSauChapHanh(c, lich);
   if (hbg && !h.banGiao?.ngay && homNay > hbg)
     out.push({ muc: "CAO", noiDung: `Người bị cưỡng chế đã chấp hành (biên bản ${vn(c.ngayKetQua!)}) nhưng quá 30 ngày chưa bàn giao đất (hạn ${vn(hbg)})`, canCu: cc("điểm b khoản 4") });
@@ -171,3 +187,63 @@ export function kiemCuongChe(c: CuongChe, h: Ho, homNay: string, lich: LichLamVi
 
 /** Hồ sơ cưỡng chế chưa kết thúc của hộ */
 export const cuongCheDangMo = (h: Ho) => (h.cuongChe ?? []).filter((c) => !c.ketQua);
+
+export const CAN_CU_VAN_DONG_KIEM_DEM = "điểm đ khoản 2 Điều 87 Luật Đất đai 2024; điểm c mục 4 mục IV Phần II Phụ lục I NĐ 151/2025/NĐ-CP";
+const ST = "Phần II Sổ tay QĐ 1966/QĐ-UBND";
+
+/** Ngày sớm nhất được ban hành QĐ kiểm đếm bắt buộc: quá 10 ngày kể từ ngày kết thúc vận động (điểm đ k2 Đ87 LĐĐ). */
+export const ngaySomNhatQdKiemDem = (vdKdDen: string, lich: LichLamViec) => cong(hanChotNgay(vdKdDen, 10, lich), 1);
+
+/** Ngày QĐ kiểm đếm bắt buộc của hồ sơ: ghi ở hồ sơ cưỡng chế, trống thì theo văn bản Mẫu 06 đã ghi số ở hộ. */
+export const ngayQdKiemDem = (c: CuongChe, h: Pick<Ho, "vanBan">) => c.ngayQdKd || ngayIsoTuChu(h.vanBan?.qd_kiem_dem_ngay) || undefined;
+
+/**
+ * 1.2.0 (B2, B3) — Thời hạn theo Luật và Sổ tay QĐ 1966 cho từng khâu: vận động trước QĐ kiểm đếm bắt buộc (15 ngày, quá 10 ngày
+ * mới ban hành — điểm đ k2 Đ87; Sổ tay Mục VII k1 ghi 10 ngày làm việc, phần mềm theo Luật), trình QĐ trong 03 ngày làm việc kể từ
+ * nhận văn bản đề nghị và ban hành trong 02 ngày làm việc kể từ nhận hồ sơ trình (Mục VII k2, VIII k1, XVII k3), giao QĐ cưỡng chế
+ * (02 NLV — VIII k3; 03 NLV — XVII k5), vận động, đối thoại 05 NLV sau giao QĐ cưỡng chế (k2 Đ36 NĐ 102/2024; XVII k6).
+ * Chỉ tính khi cán bộ đã ghi ngày mốc.
+ */
+export function hanSoTayCuongChe(c: CuongChe, h: Ho, homNay: string, lich: LichLamViec): MucKiemCc[] {
+  const out: MucKiemCc[] = [];
+  const nlv = (moc: string, n: number) => hanChot(moc, n, "NLV", lich);
+  const kd = c.loai === "KIEM_DEM";
+  /** Khâu có mốc bắt đầu, việc phải xong trước hạn; `xong` = ngày đã làm (nếu có) */
+  const khau = (moc: string | undefined, n: number, xong: string | undefined, viec: string, tuMoc: string, canCu: string) => {
+    if (!moc) return;
+    const han = nlv(moc, n);
+    if (xong) {
+      if (xong > han) out.push({ muc: "THONG_TIN", noiDung: `${viec} ngày ${vn(xong)} — sau hạn ${vn(han)} (${String(n).padStart(2, "0")} ngày làm việc kể từ ${tuMoc} ${vn(moc)})`, canCu });
+    } else if (!c.ketQua) {
+      const qua = homNay > han;
+      out.push({ muc: qua ? "TRUNG_BINH" : "THONG_TIN", noiDung: `${qua ? "Quá hạn" : "Hạn"} ${viec.charAt(0).toLowerCase() + viec.slice(1)}: ${vn(han)} (${String(n).padStart(2, "0")} ngày làm việc kể từ ${tuMoc} ${vn(moc)})`, canCu, ...(qua || homNay === han ? { nhac: true } : {}) });
+    }
+  };
+  if (kd) {
+    const qdKd = ngayQdKiemDem(c, h);
+    if (c.vdKdTu && c.vdKdDen) {
+      const so = Math.round((Date.parse(c.vdKdDen) - Date.parse(c.vdKdTu)) / 86400000) + 1;
+      if (so !== 15) out.push({ muc: "THONG_TIN", noiDung: `Vận động trước kiểm đếm bắt buộc ghi ${so} ngày (${vn(c.vdKdTu)}–${vn(c.vdKdDen)}); quy định: tiến hành trong thời gian 15 ngày, thể hiện bằng văn bản`, canCu: CAN_CU_VAN_DONG_KIEM_DEM });
+    }
+    if (c.vdKdDen) {
+      const som = ngaySomNhatQdKiemDem(c.vdKdDen, lich);
+      if (qdKd && qdKd < som) out.push({ muc: "CAO", noiDung: `QĐ kiểm đếm bắt buộc ngày ${vn(qdKd)} chưa quá 10 ngày kể từ ngày kết thúc vận động ${vn(c.vdKdDen)} (sớm nhất ${vn(som)})`, canCu: CAN_CU_VAN_DONG_KIEM_DEM });
+      else if (!qdKd) out.push({ muc: "THONG_TIN", noiDung: `QĐ kiểm đếm bắt buộc ban hành sớm nhất ${vn(som)} (quá 10 ngày kể từ ngày kết thúc vận động; Sổ tay Mục VII k1 ghi 10 ngày làm việc — phần mềm theo Luật)`, canCu: CAN_CU_VAN_DONG_KIEM_DEM });
+    } else if (qdKd) out.push({ muc: "TRUNG_BINH", noiDung: "Đã có QĐ kiểm đếm bắt buộc nhưng chưa ghi thời gian vận động, thuyết phục trước khi ban hành (15 ngày)", canCu: CAN_CU_VAN_DONG_KIEM_DEM });
+    khau(c.deNghiKd, 3, c.trinhKd ?? qdKd, "Trình Chủ tịch UBND cấp xã ban hành QĐ kiểm đếm bắt buộc", "ngày nhận văn bản đề nghị", `khoản 2 Mục VII ${ST}`);
+    khau(c.trinhKd, 2, qdKd, "Ban hành QĐ kiểm đếm bắt buộc", "ngày nhận hồ sơ trình", `khoản 2 Mục VII ${ST}`);
+  }
+  const mucCc = kd ? "khoản 1 Mục VIII" : "khoản 3 Mục XVII";
+  khau(c.deNghiCc, 3, c.trinhCc ?? c.ngayQd, `Trình Chủ tịch UBND cấp xã ban hành QĐ cưỡng chế`, "ngày nhận văn bản đề nghị", `${mucCc} ${ST}`);
+  khau(c.trinhCc, 2, c.ngayQd, "Ban hành QĐ cưỡng chế", "ngày nhận hồ sơ trình", `${mucCc} ${ST}`);
+  khau(c.ngayQd, kd ? 2 : 3, c.ngayNhanQd, "Giao QĐ cưỡng chế cho người bị cưỡng chế (lập biên bản)", "ngày ban hành QĐ", kd ? `khoản 3 Mục VIII ${ST}` : `khoản 5 Mục XVII ${ST}`);
+  if (c.ngayNhanQd && !c.ketQua) {
+    const het = nlv(c.ngayNhanQd, 5);
+    const cc = kd ? `khoản 2 Điều 36 NĐ 102/2024/NĐ-CP; khoản 3 Mục VIII ${ST}` : `khoản 6 Mục XVII ${ST}`;
+    if (c.ngayDuKien && c.ngayDuKien <= het)
+      out.push({ muc: "TRUNG_BINH", noiDung: `Ngày dự kiến cưỡng chế ${vn(c.ngayDuKien)} còn trong thời gian Ban cưỡng chế vận động, thuyết phục, đối thoại 05 ngày làm việc kể từ ngày giao QĐ (đến ${vn(het)})`, canCu: cc });
+    else if (!c.ngayDuKien && homNay <= het) out.push({ muc: "THONG_TIN", noiDung: `Ban cưỡng chế vận động, thuyết phục, đối thoại đến ${vn(het)} (05 ngày làm việc kể từ ngày giao QĐ), lập thành biên bản`, canCu: cc });
+  }
+  return out;
+}
+

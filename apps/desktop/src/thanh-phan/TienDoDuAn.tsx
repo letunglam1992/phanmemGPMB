@@ -4,6 +4,7 @@ import { useUngDung } from "../ung-dung";
 import { boLanDoi, buocDoi, canQuyenDuyet, docLanDoi, ghiLanDoi, hoanTacLan } from "../hoan-tac";
 import { daQuaBuoc, BUOC_CHUNG, CAC_BUOC, TEN_TRANG_THAI_BUOC, laBuocChung, tienDoHieuLuc, type BuocHo, type DuAn, type Ho, type TrangThaiBuoc, type DotThuHoi } from "../mo-hinh";
 import { kiemTraDuyetBuoc } from "../tai-khoan";
+import { hanBuocChung, type TinhHan } from "../han-buoc";
 import { homNayIso } from "../trang-thai";
 import { HopThoai, O, ngayVN } from "./chung";
 import { Chon } from "./Chon";
@@ -54,7 +55,7 @@ export function BuocChung({ duAn, hos, tiep }: { duAn: DuAn; hos: Ho[]; tiep?: {
 }
 
 function BuocChungCua({ duAn, dot, hos, tiep }: { duAn: DuAn; dot?: DotThuHoi; hos: Ho[]; tiep?: { nhan: string; di: () => void } }) {
-  const { luuDuAn, ghiNhatKy, taiKhoan, quyen, bao } = useUngDung();
+  const { luuDuAn, ghiNhatKy, taiKhoan, quyen, bao, lich } = useUngDung();
   const goc = (dot ? dot.tienDoChung : duAn.tienDoChung) ?? {};
   const [nhap, setNhap] = useState<Record<string, BuocHo>>(() => Object.fromEntries(BUOC_CHUNG.map((ma) => [ma, goc[ma] ?? { trangThai: "CHUA" }])));
   const [dang, setDang] = useState(false);
@@ -65,7 +66,7 @@ function BuocChungCua({ duAn, dot, hos, tiep }: { duAn: DuAn; dot?: DotThuHoi; h
   const luu = async (moi: Record<string, BuocHo>, nk: string, hoanTac = false) => {
     setDang(true);
     try {
-      const giu = Object.fromEntries(Object.entries(moi).filter(([ma, b]) => goc[ma] || b.trangThai !== "CHUA" || b.ngay || b.ghiChu));
+      const giu = Object.fromEntries(Object.entries(moi).filter(([ma, b]) => goc[ma] || b.trangThai !== "CHUA" || b.ngay || b.ghiChu || b.mocHan));
       if (dot) await luuDuAn({ ...duAn, dotThuHoi: duAn.dotThuHoi!.map((x) => (x.id === dot.id ? { ...x, tienDoChung: Object.keys(giu).length ? giu : undefined } : x)) });
       else await luuDuAn({ ...duAn, tienDoChung: giu });
       await ghiNhatKy(nk, `${duAn.ten}${dot ? ` – ${tenDot(dot)}` : ""} — áp dụng cho ${hos.length} hộ`);
@@ -105,6 +106,13 @@ function BuocChungCua({ duAn, dot, hos, tiep }: { duAn: DuAn; dot?: DotThuHoi; h
     setNhap({ ...nhap, [ma]: { ...b, ...p } });
   };
 
+  const coNhap = Object.fromEntries(Object.entries(nhap).filter(([, b]) => b.trangThai !== "CHUA" || b.ngay || b.mocHan));
+  const dsHan = hanBuocChung(
+    { tienDoChung: dot ? { ...(duAn.tienDoChung ?? {}), ...coNhap } : coNhap, vanBan: { ...(duAn.vanBan ?? {}), ...(dot?.vanBan ?? {}) } },
+    homNayIso(),
+    lich,
+  );
+  const hanCua = (ma: string) => dsHan.find((x) => x.t.han.buoc === ma)?.t;
   return (
     <div className="luoi" style={{ gap: 12 }}>
       <div className="thong-bao thong-bao-xanh mb-0">
@@ -129,6 +137,13 @@ function BuocChungCua({ duAn, dot, hos, tiep }: { duAn: DuAn; dot?: DotThuHoi; h
                   {rieng.length > 0 && <div className="chu-nho" style={{ color: "var(--vang)" }}>{rieng.length} hộ theo dõi riêng: {rieng.slice(0, 4).map((h) => h.ma).join(", ")}{rieng.length > 4 ? "…" : ""}</div>}
                   {dot && !goc[ma] && <div className="chu-nho mo">Đợt chưa cập nhật — đang theo dự án: {TEN_TRANG_THAI_BUOC[duAn.tienDoChung?.[ma]?.trangThai ?? "CHUA"]}</div>}
                   {!dot && cu !== null && hos.length > 0 && <div className="chu-nho mo">Chưa cập nhật chung — đang lấy theo từng hộ ({cu}/{hos.length} hộ đã xong)</div>}
+                  {hanCua(ma) && <HanChungO t={hanCua(ma)!} />}
+                  {ma === "3" && b.trangThai !== "XONG" && (
+                    <label className="chu-nho" style={{ display: "flex", gap: 6, alignItems: "center", marginTop: 4 }}>
+                      Ngày nhận tờ trình
+                      <ONgay aria-label="Ngày nhận tờ trình thông báo thu hồi" value={b.mocHan ?? ""} onChange={(e) => dat(ma, { mocHan: e.target.value || undefined })} />
+                    </label>
+                  )}
                   {(b.guiBoi || b.duyetBoi) && <div className="chu-nho mo">{b.guiBoi && <>Gửi: {b.guiBoi}. </>}{b.duyetBoi && <>Xác nhận: {b.duyetBoi}.</>}</div>}
                 </td>
                 <td>
@@ -361,3 +376,16 @@ function HangLoat({ duAn, hos }: { duAn: DuAn; hos: Ho[] }) {
     </div>
   );
 }
+
+/** 1.2.0 (B1): hạn của bước chung 2, 3 (Mục V Phần II Sổ tay QĐ 1966). */
+function HanChungO({ t }: { t: TinhHan }) {
+  const vn = (iso: string) => iso.split("-").reverse().join("/");
+  const mau = t.trangThai === "QUA_HAN" || t.trangThai === "XONG_QUA_HAN" ? "var(--do-to)" : t.trangThai === "SAP_HET" ? "var(--vang)" : undefined;
+  const tt = t.trangThai === "QUA_HAN" ? "quá hạn" : t.trangThai === "SAP_HET" ? `còn ${t.conLai} ngày` : t.trangThai === "XONG_QUA_HAN" ? "xong sau hạn" : t.trangThai === "XONG_DUNG_HAN" ? "xong đúng hạn" : `còn ${t.conLai ?? ""} ngày`;
+  return (
+    <div className="chu-nho" data-han-chung={t.han.buoc} style={mau ? { color: mau } : undefined} title={t.han.canCu}>
+      Hạn {vn(t.hanChot!)} ({t.han.soNgay} ngày kể từ {vn(t.moc!)} — Sổ tay QĐ 1966 Mục V): {tt}
+    </div>
+  );
+}
+

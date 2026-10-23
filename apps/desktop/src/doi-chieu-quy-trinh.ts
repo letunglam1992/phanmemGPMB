@@ -38,21 +38,21 @@ export const DOI_CHIEU_QUY_TRINH: DongDoiChieu[] = [
     buoc: "2", mucNd151: `mục 2 ${ND}`,
     trichNd151: "Ủy ban nhân dân cấp xã nơi có đất thu hồi chủ trì phối hợp với Ủy ban Mặt trận Tổ quốc Việt Nam cùng cấp",
     soTay: { muc: "khoản 4 Mục V Phần II Sổ tay", trich: "Trong thời hạn không quá 03 ngày, kể từ khi Kế hoạch thu hồi đất, điều tra, khảo sát, đo đạc kiểm đếm được phê duyệt" },
-    phanMem: "Không tính hạn", danhGia: "KHONG_TINH", ghiChu: "Sổ tay có hạn 03 ngày tổ chức họp sau khi phê duyệt kế hoạch — phần mềm chưa nhắc.",
+    phanMem: "≤ 03 ngày kể từ ngày phê duyệt kế hoạch (bước 1)", danhGia: "THEO_SO_TAY", ghiChu: "Từ 1.2.0 nhắc ở Bước chung của dự án / đợt và trên chuông (mức trung bình — văn bản hướng dẫn của tỉnh).",
   },
   {
     buoc: "3", mucNd151: `mục 3 ${ND}`,
     trichNd151: "Chủ tịch Ủy ban nhân dân cấp xã ban hành thông báo thu hồi đất",
     soTay: { muc: "khoản 2 Mục V Phần II Sổ tay", trich: "Trong thời hạn không quá 02 ngày kể từ ngày nhận được tờ trình của phòng chuyên môn, Chủ tịch UBND cấp xã ban hành thông báo thu hồi đất." },
-    phanMem: "Thông báo trước ít nhất 90 ngày (đất nông nghiệp) / 180 ngày (đất phi nông nghiệp) trước khi có quyết định thu hồi (Điều 85 Luật Đất đai)", danhGia: "KHOP",
-    ghiChu: "Hạn 02 ngày ban hành thông báo của Sổ tay — phần mềm chưa nhắc.",
+    phanMem: "Ban hành ≤ 02 ngày kể từ ngày nhận tờ trình (Sổ tay); thông báo trước ít nhất 90 ngày (đất nông nghiệp) / 180 ngày (đất phi nông nghiệp) trước khi có quyết định thu hồi (Điều 85 Luật Đất đai)", danhGia: "THEO_SO_TAY",
+    ghiChu: "Từ 1.2.0 nhắc hạn 02 ngày: mốc là ngày nhận tờ trình ghi ở bước chung 3, trống thì ngày Tờ trình T2 đã ghi số. Nghị định không quy định số ngày ban hành; 90/180 ngày theo khoản 2 Điều 85 Luật Đất đai.",
   },
   {
     buoc: "4", mucNd151: `điểm c mục 4 ${ND}`,
-    trichNd151: "Việc tổ chức vận động, thuyết phục được tiến hành trong thời gian 15 ngày và phải được thể hiện bằng văn bản.",
-    soTay: { muc: "Mục VII Phần II Sổ tay", trich: "Trong thời gian 03 (ba) ngày làm việc kể từ ngày nhận được văn bản đề nghị kiểm đếm bắt buộc" },
-    phanMem: "Đối chiếu điều kiện cưỡng chế kiểm đếm (Điều 88 Luật Đất đai); vận động trước QĐ kiểm đếm bắt buộc (15 ngày, quá 10 ngày mới ban hành) chưa tính hạn", danhGia: "KHONG_TINH",
-    ghiChu: "Khớp với điểm d khoản 2 Điều 87 Luật Đất đai; Ban cưỡng chế kiểm đếm vận động 05 ngày làm việc (khoản 2 Điều 36 NĐ 102/2024) đã nhắc ở hồ sơ cưỡng chế.",
+    trichNd151: "Quá thời hạn 10 ngày kể từ ngày kết thúc vận động, thuyết phục mà người có đất thu hồi vẫn không phối hợp điều tra, khảo sát, đo đạc, kiểm đếm thì Chủ tịch Ủy ban nhân dân cấp xã ban hành quyết định kiểm đếm bắt buộc.",
+    soTay: { muc: "khoản 1 Mục VII Phần II Sổ tay", trich: "Sau thời gian 10 (mười) ngày làm việc kể từ ngày kết thúc vận động, thuyết phục mà người có đất Nhà nước thu hồi vẫn không phối hợp thực hiện" },
+    phanMem: "Vận động 15 ngày; QĐ kiểm đếm bắt buộc sớm nhất sau 10 ngày kể từ ngày kết thúc vận động (điểm đ khoản 2 Điều 87 Luật Đất đai); trình ≤ 03, ban hành ≤ 02 ngày làm việc (khoản 2 Mục VII Sổ tay)", danhGia: "THEO_NGHI_DINH",
+    ghiChu: "Sổ tay ghi 10 ngày làm việc; Luật, nghị định ghi 10 ngày — phần mềm theo Luật. Ghi ở hồ sơ cưỡng chế kiểm đếm bắt buộc của hộ (thẻ Khiếu nại, cưỡng chế). Ban cưỡng chế kiểm đếm vận động 05 ngày làm việc sau giao quyết định (khoản 2 Điều 36 NĐ 102/2024; khoản 3 Mục VIII Sổ tay).",
   },
   { buoc: "5", mucNd151: `mục 5 ${ND}`, trichNd151: "Đơn vị, tổ chức thực hiện nhiệm vụ bồi thường, hỗ trợ, tái định cư có trách nhiệm lập phương án bồi thường, hỗ trợ, tái định cư.", phanMem: "Không tính hạn", danhGia: "KHONG_TINH" },
   {
@@ -98,7 +98,8 @@ export const DOI_CHIEU_QUY_TRINH: DongDoiChieu[] = [
   {
     buoc: "14", mucNd151: `mục 15 ${ND}`,
     trichNd151: "Quá thời hạn 10 ngày kể từ ngày kết thúc vận động, thuyết phục mà người có đất thu hồi vẫn không chấp hành việc bàn giao đất",
-    phanMem: "QĐ cưỡng chế sau 10 ngày kể từ ngày kết thúc vận động (điểm b khoản 7 Điều 87 Luật Đất đai); điều kiện, thời hạn Điều 89", danhGia: "KHOP",
+    soTay: { muc: "khoản 3, 5, 6 Mục XVII Phần II Sổ tay", trich: "Trong thời gian 05 (năm) ngày làm việc kể từ ngày giao quyết định cưỡng chế thực hiện quyết định thu hồi đất cho người bị cưỡng chế" },
+    phanMem: "QĐ cưỡng chế sau 10 ngày kể từ ngày kết thúc vận động (điểm b khoản 7 Điều 87 Luật Đất đai); điều kiện, thời hạn Điều 89; trình ≤ 03, ban hành ≤ 02, giao QĐ ≤ 03, vận động sau giao ≤ 05 ngày làm việc (Sổ tay)", danhGia: "KHOP",
   },
   {
     buoc: "15", mucNd151: `Không có trong ${ND}`,

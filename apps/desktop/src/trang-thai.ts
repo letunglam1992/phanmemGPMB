@@ -15,7 +15,7 @@ import type { KetQuaHo } from "./tinh-ho";
 
 import { hoDaPheDuyet, hoLechSauPheDuyet } from "./phuong-an";
 import { CAN_CU_THONG_BAO, hanChinhLyBan, laDatNongNghiep, thongBaoNhom } from "./thu-tuc-ban";
-import { HAN_BUOC, hanThuHoiNhom, nhomThuHoi, hanGuiQdBan, hanPheDuyetBan, hanThamDinhBan, ngayToTrinhPA, tinhHanBuoc, ghiChuDoiHanThamDinh } from "./han-buoc";
+import { HAN_BUOC, hanBuocChung, hanThuHoiNhom, nhomThuHoi, hanGuiQdBan, hanPheDuyetBan, hanThamDinhBan, ngayToTrinhPA, tinhHanBuoc, ghiChuDoiHanThamDinh } from "./han-buoc";
 import { LICH_TRONG, type LichLamViec } from "./lich-lam-viec";
 import { tinhChiTra, type GiaiDoanTyLe } from "./chi-tra";
 import { dinhDang } from "@gpmb/core";
@@ -227,6 +227,13 @@ export function canhBaoDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: st
     if (t.trangThai === "QUA_HAN") out.push({ muc: "CAO", duAnId: duAn.id, noiDung: `Phương án bản ${p.so}: quá hạn thẩm định (hạn ${hc}, 30 ngày từ ngày nhận đủ hồ sơ) — chưa ghi nhận kết quả thẩm định${gc ? `. ${gc}` : ""}`, canCu: t.han.canCu });
     else if (t.trangThai === "SAP_HET") out.push({ muc: "TRUNG_BINH", duAnId: duAn.id, noiDung: `Phương án bản ${p.so}: sắp hết hạn thẩm định (${hc}, còn ${t.conLai} ngày)${gc ? `. ${gc}` : ""}`, canCu: t.han.canCu });
   }
+  // 1.2.0 (B1): bước chung 2, 3 — hạn theo Mục V Phần II Sổ tay QĐ 1966 (văn bản hướng dẫn của tỉnh → mức trung bình)
+  for (const { ten, t } of hanBuocChung(duAn, homNay, lich)) {
+    if (t.trangThai !== "QUA_HAN" && t.trangThai !== "SAP_HET") continue;
+    const tenB = CAC_BUOC.find((b) => b.ma === t.han.buoc)?.ten ?? "";
+    const hc = t.hanChot!.split("-").reverse().join("/");
+    out.push({ muc: "TRUNG_BINH", duAnId: duAn.id, noiDung: `${ten}: bước ${t.han.buoc}. ${tenB} ${t.trangThai === "QUA_HAN" ? "quá hạn" : "sắp hết hạn"} (hạn ${hc}, ${t.han.soNgay} ngày kể từ ${t.han.buoc === "2" ? "ngày phê duyệt kế hoạch" : "ngày nhận tờ trình"})`, canCu: t.han.canCu });
+  }
   // 1.0.13: hạn phê duyệt theo bản (5 ngày làm việc từ ngày nhận tờ trình — mặc định ngày tờ trình mẫu 13 / R4)
   for (const p of duAn.phuongAn ?? []) {
     const t = hanPheDuyetBan(p, ds.map((x) => hoHieuLuc(duAn, x.h)), homNay, lich, ngayToTrinhPA(duAn, p));
@@ -294,6 +301,7 @@ export function canhBaoDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: st
     for (const han of HAN_BUOC) {
       if ((han.buoc === "8" || han.buoc === "9" || han.buoc === "11") && trongBan.has(h.id)) continue; // đã báo theo bản phương án
       if (han.buoc === "13") continue; // đã báo theo nhóm (đợt / chưa xếp đợt / cả dự án)
+      if (han.buoc === "2" || han.buoc === "3") continue; // bước chung — báo theo dự án / đợt (hanBuocChung)
       if (han.buoc === "15" && duyetHienHanh.has(h.id)) continue; // đã báo theo bản phương án
       const t = tinhHanBuoc(h, han, homNay, lich);
       const ten = CAC_BUOC.find((b) => b.ma === han.buoc)?.ten ?? "";
@@ -317,8 +325,8 @@ export function canhBaoDuAn(duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[], homNay: st
     }
     // 1.0.20 (B2): cưỡng chế — điều kiện, thời hạn mức cao
     for (const c of h.cuongChe ?? [])
-      for (const k of kiemCuongChe(c, h, homNay, lich).filter((x) => x.muc === "CAO"))
-        out.push({ muc: "CAO", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: ${TEN_LOAI_CC[c.loai].toLowerCase()} — ${k.noiDung}`, canCu: k.canCu });
+      for (const k of kiemCuongChe(c, h, homNay, lich).filter((x) => x.muc === "CAO" || x.nhac))
+        out.push({ muc: k.muc === "CAO" ? "CAO" : "TRUNG_BINH", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: ${TEN_LOAI_CC[c.loai].toLowerCase()} — ${k.noiDung}`, canCu: k.canCu });
     for (const v of vuongMacBuoc(h)) out.push({ muc: "TRUNG_BINH", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: vướng mắc ở bước ${v.ma}. ${v.ten} — ${v.noiDung}` });
     if (k.tong.soDongThieuCanCu && dangLapPhuongAn(h))
       out.push({ muc: daNiemYet(h) ? "CAO" : "TRUNG_BINH", duAnId: duAn.id, hoId: h.id, noiDung: `${h.ma} · ${h.ten}: ${k.tong.soDongThieuCanCu} khoản thiếu căn cứ${daNiemYet(h) ? " (phương án đã niêm yết)" : ""}` });

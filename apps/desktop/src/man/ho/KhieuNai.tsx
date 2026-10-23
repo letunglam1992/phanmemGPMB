@@ -5,7 +5,7 @@ import { Chon } from "../../thanh-phan/Chon";
 import { taoId, type DuAn, type Ho } from "../../mo-hinh";
 import { homNayIso } from "../../trang-thai";
 import { TEN_DINH_CHI, TEN_KET_QUA_DON, TEN_LOAI_DON, TEN_TDC, TEN_TT_DON, canhBaoThuTucDon, hanDon, hanGuiQd, type DonKhieuNai, type KetQuaDon, type LoaiDon, type TamDinhChi } from "../../khieu-nai";
-import { DIEU_CC, TEN_LOAI_CC, hanBanGiaoSauChapHanh, hanThiHanh, kiemCuongChe, ngaySomNhatQdThuHoi, type CuongChe, type LoaiCuongChe } from "../../cuong-che";
+import { DIEU_CC, TEN_LOAI_CC, hanBanGiaoSauChapHanh, hanThiHanh, kiemCuongChe, ngaySomNhatQdThuHoi, ngaySomNhatQdKiemDem, ngayQdKiemDem, type CuongChe, type LoaiCuongChe } from "../../cuong-che";
 
 const LOP_TT: Record<string, string> = { QUA_HAN: "nhan-do", QUA_HAN_THU_LY: "nhan-do", SAP_HET: "nhan-vang", CHO_THU_LY: "nhan-vang", DANG_GIAI_QUYET: "nhan-xanh", DA_GIAI_QUYET: "nhan-xam", KHONG_TINH_HAN: "nhan-xam", TAM_DINH_CHI: "nhan-vang" };
 const LOP_MUC = { CAO: "thong-bao-do", TRUNG_BINH: "thong-bao-vang", THONG_TIN: "thong-bao-xanh" } as const;
@@ -130,8 +130,27 @@ export function TabKhieuNai({ h, duAn, doi, soanMau }: { h: Ho; duAn: DuAn; doi:
                 )}
                 <button className="nut nut-nho nut-nguy" onClick={() => xoa("hồ sơ cưỡng chế", dsCc, c.id, (m) => ({ ...h, cuongChe: m }))}>Xóa</button>
               </div>
+              {c.loai === "KIEM_DEM" && (
+                <>
+                  <div className="chu-nho mo" style={{ marginBottom: 4 }}>Trước QĐ kiểm đếm bắt buộc — vận động 15 ngày, quá 10 ngày kể từ ngày kết thúc mới ban hành (điểm đ k2 Đ87 LĐĐ); trình 03, ban hành 02 ngày làm việc (k2 Mục VII Sổ tay)</div>
+                  <div className="luoi luoi-4" data-truoc-kiem-dem>
+                    <O nhan="Vận động phối hợp kiểm đếm từ"><ONgay aria-label="Vận động trước kiểm đếm từ ngày" value={c.vdKdTu ?? ""} onChange={(e) => datCc(c.id, { vdKdTu: e.target.value || undefined })} /></O>
+                    <O nhan="đến ngày" goiY={c.vdKdDen ? `QĐ kiểm đếm bắt buộc sớm nhất ${ngayVN(ngaySomNhatQdKiemDem(c.vdKdDen, lich))}` : undefined}><ONgay aria-label="Vận động trước kiểm đếm đến ngày" value={c.vdKdDen ?? ""} onChange={(e) => datCc(c.id, { vdKdDen: e.target.value || undefined })} /></O>
+                    <O nhan="Văn bản vận động (Mẫu 05)"><input aria-label="Văn bản vận động trước kiểm đếm" value={c.vbVdKd ?? ""} placeholder="Biên bản số…, ngày…" onChange={(e) => datCc(c.id, { vbVdKd: e.target.value })} /></O>
+                    <O nhan="Ngày QĐ kiểm đếm bắt buộc" goiY={!c.ngayQdKd && ngayQdKiemDem(c, h) ? `Theo Mẫu 06 đã ghi: ${ngayVN(ngayQdKiemDem(c, h)!)}` : "Trống = theo Mẫu 06 đã ghi số"}><ONgay aria-label="Ngày QĐ kiểm đếm bắt buộc" value={c.ngayQdKd ?? ""} onChange={(e) => datCc(c.id, { ngayQdKd: e.target.value || undefined })} /></O>
+                  </div>
+                  <div className="luoi luoi-4">
+                    <O nhan="Phòng nhận đề nghị kiểm đếm bắt buộc"><ONgay aria-label="Ngày nhận đề nghị kiểm đếm bắt buộc" value={c.deNghiKd ?? ""} onChange={(e) => datCc(c.id, { deNghiKd: e.target.value || undefined })} /></O>
+                    <O nhan="Ngày trình QĐ kiểm đếm bắt buộc"><ONgay aria-label="Ngày trình QĐ kiểm đếm bắt buộc" value={c.trinhKd ?? ""} onChange={(e) => datCc(c.id, { trinhKd: e.target.value || undefined })} /></O>
+                  </div>
+                </>
+              )}
               <div className="luoi luoi-4">
-                <O nhan="Vận động từ ngày"><ONgay aria-label="Vận động từ ngày" value={c.vanDongTu ?? ""} onChange={(e) => datCc(c.id, { vanDongTu: e.target.value || undefined })} /></O>
+                <O nhan="Phòng nhận đề nghị cưỡng chế" goiY={c.loai === "KIEM_DEM" ? "k1 Mục VIII Sổ tay: trình 03, ban hành 02 ngày làm việc" : "k3 Mục XVII Sổ tay: trình 03, ban hành 02 ngày làm việc"}><ONgay aria-label="Ngày nhận đề nghị cưỡng chế" value={c.deNghiCc ?? ""} onChange={(e) => datCc(c.id, { deNghiCc: e.target.value || undefined })} /></O>
+                <O nhan="Ngày trình QĐ cưỡng chế"><ONgay aria-label="Ngày trình QĐ cưỡng chế" value={c.trinhCc ?? ""} onChange={(e) => datCc(c.id, { trinhCc: e.target.value || undefined })} /></O>
+              </div>
+              <div className="luoi luoi-4">
+                <O nhan={c.loai === "KIEM_DEM" ? "Vận động chấp hành QĐ kiểm đếm từ" : "Vận động từ ngày"}><ONgay aria-label="Vận động từ ngày" value={c.vanDongTu ?? ""} onChange={(e) => datCc(c.id, { vanDongTu: e.target.value || undefined })} /></O>
                 <O nhan="đến ngày" goiY={c.loai === "THU_HOI" && c.vanDongDen ? `QĐ cưỡng chế sớm nhất ${ngayVN(ngaySomNhatQdThuHoi(c.vanDongDen, lich))}` : undefined}><ONgay aria-label="Vận động đến ngày" value={c.vanDongDen ?? ""} onChange={(e) => datCc(c.id, { vanDongDen: e.target.value || undefined })} /></O>
                 <O nhan="Văn bản vận động, thuyết phục"><input aria-label="Văn bản vận động" value={c.vbVanDong ?? ""} placeholder="Biên bản số…, ngày…" onChange={(e) => datCc(c.id, { vbVanDong: e.target.value })} /></O>
                 {c.loai === "THU_HOI" && <O nhan="QĐ thành lập Ban cưỡng chế"><input aria-label="QĐ thành lập Ban cưỡng chế" value={c.qdBan ?? ""} onChange={(e) => datCc(c.id, { qdBan: e.target.value })} /></O>}
