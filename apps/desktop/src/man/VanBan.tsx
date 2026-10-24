@@ -246,7 +246,8 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
       } else if (mau.phamVi === "DU_AN") {
         const out = dienMau(mauBytes, ghepDuLieu({ mau, duAn: duAnVb, ds: dsDot_, chung: chungVb, rieng, so, ngayKy, tyLeCham }));
         if (!(await taiXuong(out, `Mau-${ma}_${tenAnToan(mau.ten)}_${tenAnToan(duAn.ten)}${dotChon ? `_${tenAnToan(tenDot(dotChon))}` : ""}.docx`, DOCX))) return setThongBao({ loai: "vang", noiDung: "Đã hủy lưu tệp — chưa ghi số, ngày văn bản." });
-        if (mau.ghiLai && so.trim()) await luuDuAn(vanBanGhi({ [`${mau.ghiLai.khoa}_so`]: `${so.trim()}/${kyHieu}`, [`${mau.ghiLai.khoa}_ngay`]: ngayChu(ngayKy) }));
+        // 1.3.0 (B1): giữ giá trị đã nhập (thành viên Hội đồng T29, bảng giá T31…) để lần sau tự điền
+        await luuDuAn(vanBanGhi({ ...luuRieng, ...(mau.ghiLai && so.trim() ? { [`${mau.ghiLai.khoa}_so`]: `${so.trim()}/${kyHieu}`, [`${mau.ghiLai.khoa}_ngay`]: ngayChu(ngayKy) } : {}) }));
         // 1.1.0 (D3): biên bản bàn giao đất trên thực địa → ghi mốc của dự án (đợt) cho Tổng quan, báo cáo, gói tỉnh
         if (ma === "T23" && ngayKy) {
           const du = ghepDuLieu({ mau, duAn: duAnVb, ds: dsDot_, chung: chungVb, rieng, so, ngayKy, tyLeCham });
@@ -273,6 +274,9 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
         if (!daLuu) return setThongBao({ loai: "vang", noiDung: "Đã hủy lưu tệp — chưa ghi số, ngày văn bản và nhật ký hồ sơ." });
         // Ghi số, ngày, nhật ký hồ sơ sau khi đã lưu được tệp
         for (const x of ghiHo) await luuHo(x);
+        // 1.3.0 (B1): thành viên Ban cưỡng chế (T16, T30) lưu theo dự án — dùng lại cho hộ khác, biên bản T27, T28
+        const banLuu = Object.fromEntries(["thanh_vien_ban", "thanh_vien_ban_kd"].filter((k) => luuRieng[k]).map((k) => [k, luuRieng[k]!]));
+        if (Object.keys(banLuu).length) await luuDuAn({ ...duAn, vanBan: { ...(duAn.vanBan ?? {}), ...chung, ...banLuu } });
         const ghiChuSo = await ghiSo(dsHoChon.map((x, i) => ({ so: soSo !== null ? String(soSo + i) : so, hoMa: x.h.ma })));
         setThongBao({ loai: "xanh", noiDung: `Đã tạo ${tep.length} văn bản Mẫu ${ma}${tep.length > 1 ? " (tệp .zip)" : ""}${coGhi ? "; đã ghi nhật ký hồ sơ." : "."}${ghiChuSo}` });
       }

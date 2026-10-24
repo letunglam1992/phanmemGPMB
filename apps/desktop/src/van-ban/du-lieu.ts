@@ -430,7 +430,8 @@ export function ghepDuLieu(p: {
     if (!String(p.rieng.can_cu_gia ?? "").trim()) kq.can_cu_gia = "…………";
     if (!String(p.rieng.dia_diem_nha_tdc ?? "").trim()) kq.dia_diem_nha_tdc = "…………";
   }
-  if (p.mau.ma === "T16" || p.mau.ma === "T30") kq.thanh_vien_ban = String(p.rieng.thanh_vien_ban ?? "").split("\n").map((s) => s.trim()).filter(Boolean);
+  if (p.mau.ma === "T30") kq.thanh_vien_ban_kd = String(p.rieng.thanh_vien_ban_kd ?? "").split("\n").map((s) => s.trim()).filter(Boolean);
+  if (p.mau.ma === "T16") kq.thanh_vien_ban = String(p.rieng.thanh_vien_ban ?? "").split("\n").map((s) => s.trim()).filter(Boolean);
   if (p.mau.ma === "T17") Object.assign(kq, docDuToan(String(p.rieng.du_toan_kinh_phi ?? "")));
   const tenTo = (p.rieng.ten_to_ban_do || "tờ bản đồ số").trim();
   kq.ds_thua_pa = p.ds.flatMap(({ h }) =>

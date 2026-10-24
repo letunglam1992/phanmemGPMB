@@ -3,6 +3,8 @@
  * đơn vị, giá trị mặc định tự tính từ hồ sơ. Không ghi số, ngày văn bản — bản dự thảo để in/chỉnh trong Word.
  */
 import { duAnCuaHo } from "../dot-thu-hoi";
+import { quyCua, tenLo } from "../quy-tdc";
+import { D } from "@gpmb/core";
 import type { Kho } from "../kho";
 import type { DuAn, Ho } from "../mo-hinh";
 import type { KetQuaHo } from "../tinh-ho";
@@ -44,8 +46,37 @@ export function ketQuaThamDinh(duAn: Pick<DuAn, "phuongAn">, hoIds: string[]): s
 }
 
 /** Giá trị ban đầu các trường nhập thêm: đã lưu cho dự án > tự tính từ hồ sơ > mặc định của mẫu. */
+/**
+ * 1.3.0 (B1, B2) — giá trị mặc định dùng lại từ dữ liệu đã có của dự án: thành viên Ban cưỡng chế (T16 đã soạn) cho biên bản
+ * T27 (Ban cưỡng chế), T28 (người chủ trì — dòng đầu, Trưởng ban); bảng giá bán nhà ở T31 từ quỹ tái định cư (căn nhà ở chưa tạm giữ;
+ * giá bán = giá đ/m² × diện tích đơn vị đã nhập kèm căn cứ — không có giá thì để trống).
+ */
+export function macDinhDungLai(ma: string, duAn: DuAn): Record<string, string> {
+  const vb = duAn.vanBan ?? {};
+  const ban = (vb.thanh_vien_ban ?? "").split("\n").map((x) => x.trim()).filter(Boolean);
+  if (ma === "T27" && ban.length) return { tp_ban: ban.join("\n") };
+  if (ma === "T28" && ban.length) return { tp_chu_tri: ban[0]! };
+  if (ma === "T31") {
+    const nha = quyCua(duAn).lo.filter((l) => l.loai === "NHA_O" && !l.giuLai?.trim());
+    if (!nha.length) return {};
+    const dong = nha.map((l) => {
+      const dt = l.dienTich?.trim() ? D(l.dienTich) : null;
+      const gia = l.gia?.trim() && dt ? D(l.gia).times(dt).toFixed(0) : "";
+      return `${tenLo(l).replace(" – lô ", " – căn ")} | ${dt ? dt.toString().replace(".", ",") : ""} | ${gia}`;
+    });
+    const canCu = [...new Set(nha.map((l) => l.canCuGia?.trim()).filter((x): x is string => !!x))];
+    const khu = [...new Set(nha.map((l) => l.khu.trim()).filter(Boolean))];
+    return {
+      gia_ban_chi_tiet: dong.join("\n"),
+      ...(canCu.length ? { can_cu_gia: canCu.map((c) => (/^căn cứ/i.test(c) ? c : `Căn cứ ${c}`).replace(/[;.]?$/, ";")).join("\n") } : {}),
+      ...(khu.length ? { dia_diem_nha_tdc: khu.join(", ") } : {}),
+    };
+  }
+  return {};
+}
+
 export function giaTriNhapThem(mau: MauVanBan, duAn: DuAn, ds: { h: Ho; k: KetQuaHo }[]): Record<string, string> {
-  const tu = macDinhTuHoSo(ds);
+  const tu = { ...macDinhDungLai(mau.ma, duAn), ...macDinhTuHoSo(ds) };
   // 1.0.12: kết quả thẩm định đã ghi nhận ở bản phương án là nguồn chính (ưu tiên hơn giá trị lưu tay)
   const td = ketQuaThamDinh(duAn, ds.map((x) => x.h.id));
   return Object.fromEntries(

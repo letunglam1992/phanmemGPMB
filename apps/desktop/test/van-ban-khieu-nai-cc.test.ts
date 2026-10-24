@@ -248,12 +248,12 @@ describe("1.3.0 (A2) — T29 Hội đồng BT, T30 Ban cưỡng chế kiểm đ�
     expect(DANH_MUC_MAU.find((m) => m.ma === "T29")!.moTa).toContain("khoản 1 mục II Phụ lục II QĐ 27/2026/QĐ-UBND");
   });
   it("T30: số QĐ kiểm đếm (Mẫu 06), QĐ cưỡng chế kiểm đếm từ hồ sơ; nhiệm vụ Điều 36 NĐ 102", () => {
-    const r = tao("T30", h, duAn, { thanh_vien_ban: "Ông C – Chủ tịch UBND xã, Trưởng ban" });
+    const r = tao("T30", h, duAn, { thanh_vien_ban_kd: "Ông C – Chủ tịch UBND xã, Trưởng ban" });
     expect(r.chu).toContain("Căn cứ Quyết định số 40/QĐ-UBND ngày 01/10/2026 về việc kiểm đếm bắt buộc");
     expect(r.chu).toContain("Quyết định số 45/QĐ-UBND ngày 12/10/2026 về việc cưỡng chế thực hiện quyết định kiểm đếm bắt buộc");
     expect(r.chu).toContain("trong thời hạn 05 ngày làm việc");
     expect(r.chu).not.toContain("{");
-    expect(tao("T30", { ...h, cuongChe: [] }, duAn, { thanh_vien_ban: "x" }).canhBao.some((c) => c.includes("chưa có số quyết định cưỡng chế"))).toBe(true);
+    expect(tao("T30", { ...h, cuongChe: [] }, duAn, { thanh_vien_ban_kd: "x" }).canhBao.some((c) => c.includes("chưa có số quyết định cưỡng chế"))).toBe(true);
   });
   it("T31: bảng giá do cán bộ nhập; thiếu căn cứ, sai dòng, khác xã → cảnh báo", () => {
     const r = tao("T31", h, duAn, { dia_diem_nha_tdc: "Khu TĐC bản Mẫu", can_cu_gia: "Căn cứ Chứng thư thẩm định giá số 12/CT;", gia_ban_chi_tiet: "Căn A1 | 60,5 | 850.000.000\nCăn A2 | 72 | 1.020.000.000" });

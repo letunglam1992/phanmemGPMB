@@ -616,7 +616,7 @@ DANH_MUC_MAU.push(
     ghiLai: { khoa: "qd_ban_cc_kd", capDo: "HO", kyHieu: "QĐ-UBND" },
     nhapThem: [
       { truong: "chuc_danh_de_nghi", nhan: "Chức danh người đề nghị", goiY: "Để trống = Trưởng + tên phòng" },
-      { truong: "thanh_vien_ban", nhan: "Thành viên Ban (mỗi dòng một người: họ tên, chức vụ, nhiệm vụ trong Ban)", nhieuDong: true, goiY: "Khoản 1 Điều 36 NĐ 102: Chủ tịch hoặc Phó Chủ tịch UBND là Trưởng ban; đại diện các cơ quan có chức năng thanh tra, tư pháp, quản lý đất đai, xây dựng; đơn vị, tổ chức thực hiện nhiệm vụ bồi thường; đại diện lãnh đạo UBND cấp xã nơi có đất thu hồi; thành viên khác do người ký quyết định" },
+      { truong: "thanh_vien_ban_kd", nhan: "Thành viên Ban (mỗi dòng một người: họ tên, chức vụ, nhiệm vụ trong Ban)", nhieuDong: true, goiY: "Khoản 1 Điều 36 NĐ 102: Chủ tịch hoặc Phó Chủ tịch UBND là Trưởng ban; đại diện các cơ quan có chức năng thanh tra, tư pháp, quản lý đất đai, xây dựng; đơn vị, tổ chức thực hiện nhiệm vụ bồi thường; đại diện lãnh đạo UBND cấp xã nơi có đất thu hồi; thành viên khác do người ký quyết định" },
       { truong: "nhiem_vu_khac", nhan: "Nhiệm vụ khác (nếu có)", nhieuDong: true },
       HIEU_LUC,
       { truong: "co_quan_thi_hanh", nhan: "Cơ quan thi hành (Điều 3)", macDinh: "Chánh Văn phòng Hội đồng nhân dân và Ủy ban nhân dân, Thủ trưởng các cơ quan, đơn vị có liên quan" },

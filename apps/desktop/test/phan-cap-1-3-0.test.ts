@@ -64,3 +64,28 @@ describe("1.3.0 (A1) — báo cáo 06 tháng kết quả phân cấp", () => {
     expect(t).not.toMatch(/\{[#/^]?[\w.]+\}/);
   });
 });
+
+describe("1.3.0 (B) — dùng lại dữ liệu; so sánh kỳ trước", () => {
+  it("kỳ trước liền kề cùng độ dài; báo cáo có cột Kỳ trước, câu so sánh", async () => {
+    const { kyTruoc } = await import("../src/bao-cao-phan-cap");
+    expect(kyTruoc("2026-06-30", "2026-12-14")).toEqual({ tu: "2026-01-13", den: "2026-06-29" });
+    const ds = [vb({}), vb({ so: 9, soDayDu: "9/QĐ-UBND", ngay: "2026-03-01" }), vb({ so: 8, soDayDu: "8/QĐ-UBND", ngay: "2026-04-01" })];
+    const k = kyTruoc("2026-06-30", "2026-12-14");
+    const du = duLieuBaoCaoPhanCap(thongKePhanCap(ds, "2026-06-30", "2026-12-14"), "2026-06-30", "2026-12-14", { so: "", ngayKy: "", tenXa: "Xã A", diaDanh: "", kinhGui: "x", khoKhan: "", kienNghi: "", noiDungKhac: "", noiNhan: "", quyenHan: "", nguoiKy: "" }, undefined, { ...k, dong: thongKePhanCap(ds, k.tu, k.den) });
+    expect(du.cau_ky_truoc).toBe("So với kỳ trước (13/01/2026–29/06/2026: 2 văn bản): giảm 1 văn bản.");
+    expect((du.ds_nv as { so_truoc: string }[])[0]!.so_truoc).toBe("2");
+  });
+  it("T27, T28 lấy thành viên Ban (T16 đã soạn); T31 lấy căn nhà ở từ quỹ TĐC, giá = đ/m² × diện tích", async () => {
+    const { macDinhDungLai } = await import("../src/van-ban/tao-nhanh");
+    const da = { id: "d", ten: "A", xa: "Xã A", vanBan: { thanh_vien_ban: "Ông A – Phó Chủ tịch UBND xã, Trưởng ban\nBà B – thành viên" },
+      quyTdc: { lo: [
+        { id: "1", khu: "Khu TĐC bản Mẫu", soLo: "A1", loai: "NHA_O", dienTich: "60.5", gia: "14000000", canCuGia: "Chứng thư thẩm định giá số 12/CT" },
+        { id: "2", khu: "Khu TĐC bản Mẫu", soLo: "A2", loai: "NHA_O", dienTich: "72", giuLai: "tranh chấp" },
+        { id: "3", khu: "Khu TĐC bản Mẫu", soLo: "L1", loai: "DAT_O", dienTich: "100" },
+      ] } } as unknown as import("../src/mo-hinh").DuAn;
+    expect(macDinhDungLai("T27", da)).toEqual({ tp_ban: "Ông A – Phó Chủ tịch UBND xã, Trưởng ban\nBà B – thành viên" });
+    expect(macDinhDungLai("T28", da)).toEqual({ tp_chu_tri: "Ông A – Phó Chủ tịch UBND xã, Trưởng ban" });
+    expect(macDinhDungLai("T31", da)).toEqual({ gia_ban_chi_tiet: "Khu TĐC bản Mẫu – căn A1 | 60,5 | 847000000", can_cu_gia: "Căn cứ Chứng thư thẩm định giá số 12/CT;", dia_diem_nha_tdc: "Khu TĐC bản Mẫu" });
+    expect(macDinhDungLai("T31", { ...da, quyTdc: { lo: [] } } as typeof da)).toEqual({});
+  });
+});

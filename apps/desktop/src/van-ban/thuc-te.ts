@@ -291,7 +291,7 @@ export function kiemTraThongNhat(ma: string, duAn: DuAn, du: Record<string, unkn
   if (ma === "T16" && !(Array.isArray(du.thanh_vien_ban) && du.thanh_vien_ban.length)) out.push("Chưa nhập thành viên Ban cưỡng chế (điểm a khoản 4 Điều 89 Luật Đất đai 2024).");
   if (ma === "T17" && !(Array.isArray(du.ds_du_toan) && du.ds_du_toan.length)) out.push("Chưa nhập dự toán kinh phí cưỡng chế — bảng dự toán trống.");
   // 1.3.0 (A2): T29–T31
-  if ((ma === "T29" && !(Array.isArray(du.thanh_vien_hd) && du.thanh_vien_hd.length)) || (ma === "T30" && !(Array.isArray(du.thanh_vien_ban) && du.thanh_vien_ban.length)))
+  if ((ma === "T29" && !(Array.isArray(du.thanh_vien_hd) && du.thanh_vien_hd.length)) || (ma === "T30" && !(Array.isArray(du.thanh_vien_ban_kd) && du.thanh_vien_ban_kd.length)))
     out.push(ma === "T29" ? "Chưa nhập thành viên Hội đồng (điểm c khoản 2 Điều 86 Luật Đất đai: Chủ tịch hoặc Phó Chủ tịch UBND làm Chủ tịch Hội đồng; đại diện cơ quan tài chính, cơ quan quản lý đất đai, UBND cấp xã nơi có đất thu hồi, người sử dụng đất có đất thu hồi…)." : "Chưa nhập thành viên Ban cưỡng chế kiểm đếm bắt buộc (khoản 1 Điều 36 NĐ 102/2024/NĐ-CP).");
   if (ma === "T30" && /^…|^$/.test(String(du.kd_cc_so ?? ""))) out.push("Hộ chưa có số quyết định cưỡng chế thực hiện quyết định kiểm đếm bắt buộc (Mẫu 07 / hồ sơ cưỡng chế kiểm đếm).");
   if (ma === "T31") {

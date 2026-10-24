@@ -3,7 +3,7 @@ import { useUngDung } from "../ung-dung";
 import { HopThoai, O } from "./chung";
 import { ONgay } from "./ONgay";
 import { KHOA_SO_VB, type SoVanBanDi } from "../so-van-ban";
-import { duLieuBaoCaoPhanCap, thongKePhanCap, type ThongTinBcpc } from "../bao-cao-phan-cap";
+import { duLieuBaoCaoPhanCap, kyTruoc, thongKePhanCap, type ThongTinBcpc } from "../bao-cao-phan-cap";
 import { hanBaoCaoPhanCap } from "../van-ban/tham-quyen";
 import { dienMau } from "../van-ban/dien-mau";
 import { taiXuong } from "../tai-xuong";
@@ -36,6 +36,7 @@ export function HopBaoCaoPhanCap({ dong }: { dong: () => void }) {
   useEffect(() => void kho.docCaiDat<SoVanBanDi>(KHOA_SO_VB).then(setSo).catch(() => setSo(null)), [kho]);
   const dongTk = useMemo(() => thongKePhanCap(so?.ds ?? [], tu, den, thamQuyen), [so, tu, den, thamQuyen]);
   const tong = dongTk.reduce((s, x) => s + x.ds.length, 0);
+  const truoc = useMemo(() => { const k = kyTruoc(tu, den); return { ...k, dong: thongKePhanCap(so?.ds ?? [], k.tu, k.den, thamQuyen) }; }, [so, tu, den, thamQuyen]);
   const o = (k: keyof ThongTinBcpc, nhan: string, n = 1) => (
     <O nhan={nhan} style={n > 1 ? { gridColumn: "1 / -1" } : undefined}>
       {n > 1 ? <textarea aria-label={nhan} rows={n} value={t[k]} onChange={(e) => setT({ ...t, [k]: e.target.value })} /> : <input aria-label={nhan} value={t[k]} onChange={(e) => setT({ ...t, [k]: e.target.value })} />}
@@ -45,7 +46,7 @@ export function HopBaoCaoPhanCap({ dong }: { dong: () => void }) {
     try {
       try { localStorage.setItem(KHOA, JSON.stringify({ tenXa: t.tenXa, diaDanh: t.diaDanh, kinhGui: t.kinhGui, noiNhan: t.noiNhan, quyenHan: t.quyenHan, nguoiKy: t.nguoiKy })); } catch { /* bỏ qua */ }
       const mau = await (await fetch("/mau-van-ban/bao-cao-phan-cap.docx")).arrayBuffer();
-      if (!(await taiXuong(dienMau(mau, duLieuBaoCaoPhanCap(dongTk, tu, den, t, thamQuyen)), `Bao-cao-phan-cap_${tu}_${den}.docx`, DOCX))) return;
+      if (!(await taiXuong(dienMau(mau, duLieuBaoCaoPhanCap(dongTk, tu, den, t, thamQuyen, truoc)), `Bao-cao-phan-cap_${tu}_${den}.docx`, DOCX))) return;
       await ghiNhatKy("Tạo báo cáo kết quả thực hiện nhiệm vụ được phân cấp", `${vn(tu)}–${vn(den)}: ${tong} văn bản`);
       bao("Đã tạo báo cáo (dự thảo) — kiểm tra, bổ sung trước khi trình ký");
     } catch (e) {
@@ -66,12 +67,13 @@ export function HopBaoCaoPhanCap({ dong }: { dong: () => void }) {
         <O nhan="Ngày ký"><ONgay value={t.ngayKy} onChange={(e) => setT({ ...t, ngayKy: e.target.value })} /></O>
       </div>
       <table className="bang chu-nho mt-8" aria-label="Kết quả phân cấp theo nhiệm vụ">
-        <thead><tr><th>Nhiệm vụ được phân cấp</th><th>Căn cứ</th><th className="so">Số văn bản</th></tr></thead>
+        <thead><tr><th>Nhiệm vụ được phân cấp</th><th>Căn cứ</th><th className="so">Số văn bản</th><th className="so" title={`Kỳ trước ${vn(truoc.tu)}–${vn(truoc.den)}`}>Kỳ trước</th></tr></thead>
         <tbody>
           {dongTk.map((x) => (
             <tr key={x.nv.ma} data-nv={x.nv.ma}>
               <td>{x.nv.noiDung}</td><td>{x.nv.viTri}</td>
               <td className="so" title={x.ds.map((v) => `${v.soDayDu} ngày ${vn(v.ngay)}`).join("\n")}>{x.ds.length}</td>
+              <td className="so">{truoc.dong.find((y) => y.nv.ma === x.nv.ma)?.ds.length ?? 0}</td>
             </tr>
           ))}
         </tbody>
