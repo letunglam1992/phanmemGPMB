@@ -49,7 +49,7 @@ export interface BanSaoLuu {
   /** Lịch sử thay đổi (0.9.27; tệp cũ không có) */
   lichSu?: BanLichSu[];
   /** Cài đặt dùng chung (có từ bản ghi lịch làm việc; tệp cũ không có). */
-  caiDat?: { lichLamViec?: unknown; tyLeChamTra?: unknown; kyBaoCao?: unknown; donVi?: unknown; anhNen?: unknown; goiChinhSach?: unknown };
+  caiDat?: { lichLamViec?: unknown; tyLeChamTra?: unknown; kyBaoCao?: unknown; donVi?: unknown; anhNen?: unknown; goiChinhSach?: unknown; soVanBanDi?: unknown };
 }
 
 export class LoiSaoLuu extends Error {}
@@ -76,7 +76,7 @@ export async function taoBanSaoLuu(kho: Kho, ungDung = "0.1", loc: LocSaoLuu = {
   const duAn = (await kho.dsDuAn()).filter((d) => !chon || chon.has(d.id));
   const ho = (await Promise.all(duAn.map((d) => kho.dsHo(d.id)))).flat();
   const zip = new PizZip();
-  const caiDat = { lichLamViec: await kho.docCaiDat(KHOA_LICH), tyLeChamTra: await kho.docCaiDat("tyLeChamTra"), kyBaoCao: await kho.docCaiDat("kyBaoCao"), donVi: await kho.docCaiDat("donVi"), anhNen: await kho.docCaiDat("anhNen"), goiChinhSach: await kho.docCaiDat("goiChinhSach") };
+  const caiDat = { lichLamViec: await kho.docCaiDat(KHOA_LICH), tyLeChamTra: await kho.docCaiDat("tyLeChamTra"), kyBaoCao: await kho.docCaiDat("kyBaoCao"), donVi: await kho.docCaiDat("donVi"), anhNen: await kho.docCaiDat("anhNen"), goiChinhSach: await kho.docCaiDat("goiChinhSach"), soVanBanDi: soVanBanDiLoc(await kho.docCaiDat("soVanBanDi").catch(() => null), chon) };
   const duLieu = JSON.stringify({ duAn, ho, caiDat });
   zip.file("du-lieu.json", duLieu);
   let soBanDo = 0;
@@ -238,12 +238,33 @@ export async function khoiPhuc(kho: Kho, ban: BanSaoLuu, cheDo: "THAY_THE" | "GO
   if (ban.caiDat?.kyBaoCao) await kho.luuCaiDat("kyBaoCao", ban.caiDat.kyBaoCao);
   if (ban.caiDat?.donVi) await kho.luuCaiDat("donVi", ban.caiDat.donVi);
   if (ban.caiDat?.anhNen) await kho.luuCaiDat("anhNen", ban.caiDat.anhNen);
+  // 1.3.0: Sổ văn bản đi — thêm các dòng chưa có (không xóa, không sửa dòng đang có trên máy)
+  const soBan = soVanBanDiLoc(ban.caiDat?.soVanBanDi, null);
+  if (soBan?.ds.length) {
+    const cu = ((await kho.docCaiDat<{ ds: VanBanDiBan[] }>("soVanBanDi").catch(() => null)) ?? { ds: [] });
+    const co = new Set(cu.ds.map(khoaDongSo));
+    const them = soBan.ds.filter((x) => !co.has(khoaDongSo(x)));
+    if (them.length) await kho.luuCaiDat("soVanBanDi", { ...cu, ds: [...cu.ds, ...them] });
+  }
   // gói chính sách (P2-1): gộp theo khóa — dự án trong bản sao lưu cần bộ chính sách của nó
   if (Array.isArray(ban.caiDat?.goiChinhSach) && ban.caiDat.goiChinhSach.length) {
     const cu = ((await kho.docCaiDat<{ khoa: string }[]>("goiChinhSach")) ?? []);
     const them = (ban.caiDat.goiChinhSach as { khoa: string }[]).filter((g) => !cu.some((x) => x.khoa === g.khoa));
     if (them.length) await kho.luuCaiDat("goiChinhSach", [...cu, ...them]);
   }
+}
+
+type VanBanDiBan = { soDayDu: string; ngay: string; duAnId: string; ma: string };
+const khoaDongSo = (x: VanBanDiBan) => `${x.soDayDu}|${x.ngay}|${x.duAnId}|${x.ma}`;
+/**
+ * 1.3.0 — Sổ văn bản đi đi kèm bản sao lưu / gói tỉnh (tỉnh đếm văn bản phân cấp — Điều 4 QĐ 27/2026). Gói chọn dự án: chỉ các
+ * dòng của dự án đó. Dữ liệu sai dạng → bỏ (không làm hỏng bản sao lưu).
+ */
+export function soVanBanDiLoc(so: unknown, chon: Set<string> | null): { ds: VanBanDiBan[] } | undefined {
+  const ds = (so as { ds?: unknown } | null)?.ds;
+  if (!Array.isArray(ds)) return undefined;
+  const hop = ds.filter((x): x is VanBanDiBan => !!x && typeof x === "object" && typeof x.soDayDu === "string" && typeof x.ngay === "string" && typeof x.duAnId === "string" && typeof x.ma === "string");
+  return { ...(so as object), ds: chon ? hop.filter((x) => chon.has(x.duAnId)) : hop };
 }
 
 const KHOA_LAN_CUOI = "gpmb-sao-luu-lan-cuoi";

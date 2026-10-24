@@ -8,7 +8,7 @@
  *                     GIU_BAN_CU bản mỗi đơn vị (giới hạn dung lượng máy, bản cũ nhất bị bỏ)
  * Chi tiết hồ sơ chỉ giải mã khi xem (cần mật khẩu khóa) và chỉ giữ trong bộ nhớ.
  */
-import { docThongTinGoi, giaiMaGoi, LoiGoiTinh, tomTatBan, type KhoaTinh, type ThongTinGoi, type TomTatDuAn } from "./goi-tinh";
+import { docThongTinGoi, giaiMaGoi, LoiGoiTinh, tomTatBanTheoLat, type KhoaTinh, type ThongTinGoi, type TomTatDuAn } from "./goi-tinh";
 import type { BanSaoLuu } from "../sao-luu";
 import type { TuyenLienXa } from "./lien-xa";
 
@@ -119,7 +119,7 @@ export type KetQuaNhap = { loai: "MOI" | "CAP_NHAT"; banGhi: BanGhiGoi; ban: Ban
  * Nhập gói: kiểm chữ ký, mã băm → giải mã bằng khóa tỉnh → kiểm bản sao lưu → tóm tắt → lưu (thay gói cũ hơn của cùng đơn vị).
  * Gói cũ hơn / trùng gói đã có: không ghi. Khóa ký đổi: ném LoiDoiKhoaKy trừ khi `chapNhanDoiKhoa`.
  */
-export async function nhapGoi(bytes: Uint8Array, khoa: { tinh: KhoaTinh; biMat: CryptoKey }, nguon: "TEP" | "CONG", o: { homNay: string; chapNhanDoiKhoa?: boolean }): Promise<KetQuaNhap> {
+export async function nhapGoi(bytes: Uint8Array, khoa: { tinh: KhoaTinh; biMat: CryptoKey }, nguon: "TEP" | "CONG", o: { homNay: string; chapNhanDoiKhoa?: boolean; tienDo?: (xong: number, tong: number) => void }): Promise<KetQuaNhap> {
   const { thongTin, du } = await docThongTinGoi(bytes);
   const ban = await giaiMaGoi(thongTin, du, khoa.biMat, khoa.tinh.vanTay);
   const cu = await docGoi(thongTin.maGui);
@@ -130,7 +130,7 @@ export async function nhapGoi(bytes: Uint8Array, khoa: { tinh: KhoaTinh; biMat: 
       await nk("Đã có gói này — không nhập lại");
       return { loai: "TRUNG", thongTin, cu };
     }
-    const moi = await luuBanCu({ maGui: thongTin.maGui, donViGui: thongTin.donViGui, thongTin, tomTat: tomTatBan(ban, o.homNay), nhanLuc: luc, nguon, bytes });
+    const moi = await luuBanCu({ maGui: thongTin.maGui, donViGui: thongTin.donViGui, thongTin, tomTat: await tomTatBanTheoLat(ban, o.homNay, o.tienDo), nhanLuc: luc, nguon, bytes });
     await nk(moi ? "Cũ hơn gói đang có — lưu vào các bản trước" : "Đã có bản này trong các bản trước");
     return { loai: moi ? "CU_HON" : "TRUNG", thongTin, cu };
   }
@@ -138,7 +138,7 @@ export async function nhapGoi(bytes: Uint8Array, khoa: { tinh: KhoaTinh; biMat: 
     await nk("Từ chối: khóa ký khác lần trước (chờ xác minh)");
     throw new LoiDoiKhoaKy(thongTin, cu.thongTin.khoaKy.vanTay);
   }
-  const banGhi: BanGhiGoi = { maGui: thongTin.maGui, donViGui: thongTin.donViGui, thongTin, tomTat: tomTatBan(ban, o.homNay), nhanLuc: luc, nguon, bytes };
+  const banGhi: BanGhiGoi = { maGui: thongTin.maGui, donViGui: thongTin.donViGui, thongTin, tomTat: await tomTatBanTheoLat(ban, o.homNay, o.tienDo), nhanLuc: luc, nguon, bytes };
   if (cu) await luuBanCu(cu); // bản đang có chuyển sang danh sách bản trước
   await giaoDich("goi", "readwrite", (s) => void s.put(banGhi));
   await nk(cu ? `Cập nhật (thay gói xuất ${cu.thongTin.luc.slice(0, 16).replace("T", " ")})${cu.thongTin.khoaKy.vanTay !== thongTin.khoaKy.vanTay ? " — đã chấp nhận khóa ký mới" : ""}` : "Nhận mới");

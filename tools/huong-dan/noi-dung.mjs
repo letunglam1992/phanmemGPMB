@@ -145,7 +145,7 @@ export const CHUONG = [
       "Báo cáo phân cấp 06 tháng (1.3.0): Báo cáo tổng hợp → **Báo cáo phân cấp (06 tháng)…** — trước 15/6 và 15/12 (khoản 2 Điều 4 QĐ 27/2026/QĐ-UBND); số văn bản theo nhiệm vụ lấy từ Sổ văn bản đi. Máy tỉnh có thẻ Kết quả phân cấp theo xã, lịch cưỡng chế toàn tỉnh.",
       "Từ bản 1.2.0: báo cáo Word cấp xã có mục Tiến độ theo tháng (biểu đồ tỷ lệ hộ đã duyệt phương án, đã bàn giao), đơn quá hạn, lịch cưỡng chế; máy tỉnh có biểu đồ đơn khiếu nại theo tháng (đơn mới, đã giải quyết, quá hạn), báo cáo tỉnh có lịch cưỡng chế (gói xã chỉ gửi ngày, loại — không tên hộ).",
     ],
-    anh: [["bao-cao", "Báo cáo tổng hợp"], ["gui-tinh", "Gửi tỉnh, tổng hợp tỉnh"]],
+    anh: [["bao-cao", "Báo cáo tổng hợp"], ["bao-cao-phan-cap", "Báo cáo kết quả thực hiện nhiệm vụ được phân cấp (06 tháng)"], ["gui-tinh", "Gửi tỉnh, tổng hợp tỉnh"]],
     luuY: ["Dự án tập huấn không bao giờ được đưa vào gói gửi tỉnh."],
   },
   {
@@ -157,7 +157,7 @@ export const CHUONG = [
       "Cập nhật: Giới thiệu, bản quyền → kiểm tra bản mới, cài trong phần mềm.",
       "**Nhật ký sự cố** (Giới thiệu, bản quyền): khi cần hỗ trợ, bấm **Xuất nhật ký lỗi** và gửi tệp .txt cho tác giả — tệp chỉ có thông điệp kỹ thuật, đã che số định danh, điện thoại; phần mềm không tự gửi.",
     ],
-    anh: [["sao-luu", "Sao lưu, khôi phục dữ liệu"], ["cai-dat", "Cài đặt chung — lịch ngày nghỉ"], ["gioi-thieu", "Giới thiệu, bản quyền — cập nhật, nhật ký sự cố"]],
+    anh: [["sao-luu", "Sao lưu, khôi phục dữ liệu"], ["cai-dat", "Cài đặt chung — lịch ngày nghỉ"], ["tham-quyen-phan-cap", "Cài đặt chung — Thẩm quyền phân cấp (QĐ 27/2026)"], ["gioi-thieu", "Giới thiệu, bản quyền — cập nhật, nhật ký sự cố"]],
   },
   {
     ten: "Dự án tập huấn",

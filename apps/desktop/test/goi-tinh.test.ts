@@ -113,3 +113,25 @@ describe("Gói gửi tỉnh", () => {
     await xem.ghiNhatKy({ nguoi: "x", hoTen: "x", hanhDong: "Xuất Excel" }); // nhật ký trong bộ nhớ: không chặn
   }, 30_000);
 });
+
+describe("1.3.0 — Sổ văn bản đi đi kèm gói tỉnh, sao lưu", () => {
+  it("gói chỉ mang dòng sổ của dự án chọn; tỉnh tóm tắt có văn bản phân cấp; khôi phục gộp, không ghi đè", async () => {
+    const { kho, a, b } = await khoXa();
+    const { tomTatBanTheoLat } = await import("../src/tong-hop-tinh/goi-tinh");
+    const { khoiPhuc, taoBanSaoLuu, docBanSaoLuu } = await import("../src/sao-luu");
+    const dong = (duAnId: string, so: number, ma: string) => ({ so, kyHieu: "QĐ-UBND", soDayDu: `${so}/QĐ-UBND`, ngay: "2026-10-19", ma, tenMau: "x", duAnId, duAnTen: "x" });
+    await kho.luuCaiDat("soVanBanDi", { ds: [dong(a.duAn.id, 5, "T29"), dong(b.duAn.id, 6, "T29")] });
+    const g = await taoGoiTinh(kho, await tuyChon([a.duAn.id]));
+    const { thongTin, du } = await docThongTinGoi(g.bytes);
+    const ban = await giaiMaGoi(thongTin, du, biMat, tinh.vanTay);
+    expect((ban.caiDat?.soVanBanDi as { ds: unknown[] }).ds).toHaveLength(1);
+    const tt = await tomTatBanTheoLat(ban, "2026-10-24");
+    expect(tt[0]!.phanCap).toEqual([{ nv: "HOI_DONG", ngay: "2026-10-19", so: "5/QĐ-UBND" }]);
+    // sao lưu đầy đủ → khôi phục vào máy đã có một dòng: gộp, giữ dòng đang có
+    const sl = await docBanSaoLuu((await taoBanSaoLuu(kho)).bytes);
+    const kho2 = taoKhoBoNho();
+    await kho2.luuCaiDat("soVanBanDi", { ds: [dong(a.duAn.id, 5, "T29"), dong("khac", 1, "15")] });
+    await khoiPhuc(kho2, sl, "THAY_THE");
+    expect(((await kho2.docCaiDat<{ ds: { soDayDu: string }[] }>("soVanBanDi"))!.ds).map((x) => x.soDayDu)).toEqual(["5/QĐ-UBND", "1/QĐ-UBND", "6/QĐ-UBND"]);
+  }, 60_000);
+});

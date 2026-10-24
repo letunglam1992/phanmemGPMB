@@ -27,7 +27,7 @@ describe("1.3.0 (C2) — đơn vị chưa gửi số liệu phân cấp", () => 
 
 describe("1.3.0 (C1) — báo cáo Word phân cấp toàn tỉnh", () => {
   it("điền đủ, không còn thẻ trống", () => {
-    const pc = [{ xa: "Xã A", theoNv: { THU_HOI: 2, HOI_DONG: 1 }, tong: 3 }, { xa: "Xã B", theoNv: {}, tong: 0 }];
+    const pc: { xa: string; theoNv: Record<string, number>; tong: number }[] = [{ xa: "Xã A", theoNv: { THU_HOI: 2, HOI_DONG: 1 }, tong: 3 }, { xa: "Xã B", theoNv: {}, tong: 0 }];
     const nv = [{ ma: "THU_HOI", noiDung: "Quyết định thu hồi đất", viTri: "Điều 1" }, { ma: "HOI_DONG", noiDung: "Thành lập Hội đồng", viTri: "Điều 1" }];
     const d = duLieuBaoCaoPhanCapTinh(pc, nv, [{ donVi: "Xã B", lyDo: "gói gửi từ bản cũ (1.2.0)" }], { tu: "2026-06-15", den: "2026-12-14" }, { so: "27/2026/QĐ-UBND", ten: "Quyết định phân cấp" }, {
       coQuanCapTren: "UBND tỉnh Sơn La", coQuan: "Sở Nông nghiệp và Môi trường", kyHieu: "SNNMT", so: "", diaDanh: "Sơn La", ngayKy: "2026-12-15", kinhGui: "Ủy ban nhân dân tỉnh Sơn La", khoKhan: "", kienNghi: "", noiNhan: "Như trên;\nLưu: VT.", quyenHan: "Giám đốc", nguoiKy: "",

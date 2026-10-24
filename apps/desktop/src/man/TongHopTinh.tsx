@@ -13,7 +13,9 @@ import { HopThoai } from "../thanh-phan/chung";
 import { TheDienBienTinh } from "../thanh-phan/DienBienTinh";
 import { dienBienTinh } from "../tong-hop-tinh/dien-bien";
 import { gomLienXa, type DoanTinh, type TuyenLienXa } from "../tong-hop-tinh/lien-xa";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { layTienDoNen, ngheTinhNen, tinhNen, type ViecTinh } from "../tinh-nen";
+import { TienDoTinhNen } from "../thanh-phan/CongTinhNen";
 import { ChonTep } from "../thanh-phan/ChonTep";
 import { D, dinhDang } from "@gpmb/core";
 import { useUngDung } from "../ung-dung";
@@ -82,7 +84,7 @@ export function TongHopTinh() {
 /* ================================ CẤP XÃ ================================ */
 
 function PhanGui() {
-  const { kho, dsDuAn, hoCua, quyen, taiKhoan, dsDonVi, bao, ghiNhatKy, lich } = useUngDung();
+  const { kho, dsDuAn, hoCua, quyen, taiKhoan, dsDonVi, bao, ghiNhatKy, lich, chinhSach } = useUngDung();
   const [khoa, setKhoa] = useState<KhoaCongKhaiTinh | null>(null);
   const [gui, setGui] = useState<CaiDatGui | null>(null);
   const [dang, setDang] = useState("");
@@ -103,7 +105,14 @@ function PhanGui() {
   const kemTep = gui?.kemTep ?? true;
   const kemBanDo = gui?.kemBanDo ?? true;
   const dsChon = useMemo(() => dsDuAn.filter((d) => !d.tapHuan && !gui?.boQua?.includes(d.id)), [dsDuAn, gui?.boQua]);
-  const tomTat = useMemo(() => tomTatDuAn(dsChon, dsChon.flatMap((d) => hoCua(d.id)), (id) => soTep.get(id) ?? 0, homNay(), lich, soDi), [dsChon, hoCua, soTep, lich, soDi]);
+  // 1.3.0 (D): dữ liệu lớn chưa tính → tính nền theo lát (tinh-nen.ts), xem trước tóm tắt hiện khi xong — không đứng giao diện
+  const lanNen = useSyncExternalStore(ngheTinhNen, () => layTienDoNen().lan);
+  const dangTinhNen = useMemo(
+    () => tinhNen(dsChon.flatMap((d) => { const cs = chinhSach(d); return hoCua(d.id).map((h): ViecTinh => [cs, d, h]); })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- lanNen: kiểm lại khi một lần tính nền xong
+    [dsChon, hoCua, chinhSach, lanNen],
+  );
+  const tomTat = useMemo(() => (dangTinhNen ? null : tomTatDuAn(dsChon, dsChon.flatMap((d) => hoCua(d.id)), (id) => soTep.get(id) ?? 0, homNay(), lich, soDi)), [dangTinhNen, dsChon, hoCua, soTep, lich, soDi]);
   const coQuyenGui = quyen("SAO_LUU");
 
   const nhapKhoa = async (f: File | undefined) => {
@@ -213,11 +222,13 @@ function PhanGui() {
       <div className="the">
         <div className="the-dau"><h3>3. Gửi</h3></div>
         <div className="the-than luoi" style={{ gap: 10 }}>
-          <div className="tht-chi-so">
-            <div><b>{tomTat.length}</b><span>dự án</span></div>
-            <div><b>{tomTat.reduce((s, x) => s + x.soHo, 0)}</b><span>hồ sơ</span></div>
-            <div><b>{tomTat.reduce((s, x) => s + (x.theoTrangThai.HOAN_THANH ?? 0), 0)}</b><span>đã bàn giao</span></div>
-          </div>
+          {tomTat ? (
+            <div className="tht-chi-so">
+              <div><b>{tomTat.length}</b><span>dự án</span></div>
+              <div><b>{tomTat.reduce((s, x) => s + x.soHo, 0)}</b><span>hồ sơ</span></div>
+              <div><b>{tomTat.reduce((s, x) => s + (x.theoTrangThai.HOAN_THANH ?? 0), 0)}</b><span>đã bàn giao</span></div>
+            </div>
+          ) : <TienDoTinhNen ghiChu="Số liệu xem trước của gói hiện khi tính xong; vẫn xuất gói được trong lúc chờ (gói chứa dữ liệu gốc, tỉnh tự tính)." />}
           {gui.lanGui && <div className="chu-nho">Lần gửi gần nhất: <b>{ngayGio(gui.lanGui.luc)}</b> ({gui.lanGui.cach})</div>}
           {!coQuyenGui && <div className="thong-bao thong-bao-vang chu-nho" style={{ margin: 0 }}>Tài khoản không có quyền sao lưu, xuất dữ liệu — không gửi được.</div>}
           <div className="nhom-nut">
@@ -318,6 +329,7 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
   const [nhan, setNhan] = useState<DongNhanGoi[]>([]);
   const [cong, setCong] = useState<CauHinhCong | null>(() => docCauHinhCong("TINH"));
   const [dang, setDang] = useState("");
+  const [tienDo, setTienDo] = useState<{ xong: number; tong: number } | null>(null);
   const [loc, setLoc] = useState({ xa: "", tim: "" });
   const [ketQua, setKetQua] = useState<string[]>([]);
   const [taoMoi, setTaoMoi] = useState(false);
@@ -412,17 +424,22 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
     }
     return { tinh: khoa, biMat: km.biMat };
   };
+  /** 1.3.0 (D): tóm tắt gói lớn tính theo lát — hiện số hộ đã tính, thanh tiến độ. */
+  const tienDoTinh = (ten: string) => (xong: number, tong: number) => {
+    setDang(`Đang tính tóm tắt gói ${ten}: ${xong.toLocaleString("vi-VN")}/${tong.toLocaleString("vi-VN")} hộ`);
+    setTienDo(xong >= tong ? null : { xong, tong });
+  };
   const nhapBytes = async (bytes: Uint8Array, nguon: "TEP" | "CONG", ten: string): Promise<string> => {
     const k = canMo();
     if (!k) return `${ten}: chưa mở khóa`;
     try {
       let r: KetQuaNhap;
       try {
-        r = await nhapGoi(bytes, k, nguon, { homNay: homNay() });
+        r = await nhapGoi(bytes, k, nguon, { homNay: homNay(), tienDo: tienDoTinh(ten) });
       } catch (e) {
         if (!(e instanceof LoiDoiKhoaKy)) throw e;
         if (!confirm(`${e.message}\n\nKhóa ký cũ: ${nhomVanTay(e.vanTayCu)}\nKhóa ký mới: ${nhomVanTay(e.thongTin.khoaKy.vanTay)}\n\nĐã xác minh với đơn vị gửi và chấp nhận gói này?`)) return `${ten}: từ chối (khóa ký đổi, chưa xác minh)`;
-        r = await nhapGoi(bytes, k, nguon, { homNay: homNay(), chapNhanDoiKhoa: true });
+        r = await nhapGoi(bytes, k, nguon, { homNay: homNay(), chapNhanDoiKhoa: true, tienDo: tienDoTinh(ten) });
       }
       if ("banGhi" in r) {
         await ghiNhatKy("Nhận gói dữ liệu gửi tỉnh", `${r.banGhi.donViGui} · xuất ${ngayGio(r.banGhi.thongTin.luc)} · ${r.banGhi.thongTin.soDuAn} dự án, ${r.banGhi.thongTin.soHo} hồ sơ · ${nguon === "CONG" ? "cổng" : "tệp"}`);
@@ -440,6 +457,7 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
     for (const f of [...fs]) kq.push(await nhapBytes(await docTep(f), "TEP", f.name));
     setKetQua(kq);
     setDang("");
+    setTienDo(null);
     await napLai();
   };
   const taiTuCong = async () => {
@@ -541,6 +559,7 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
             {cong && <button className="nut" disabled={!moKhoa || !!dang} title="Cổng giữ 5 bản gần nhất của mỗi xã — tải các bản máy này chưa có vào “các bản trước” để xem diễn biến" onClick={() => void taiBanCuTuCong()}>Tải các bản cũ trên cổng</button>}
             {!moKhoa && !choNhan.length && <div className="mo chu-nho">Mở khóa cấp tỉnh trước khi nhận gói.</div>}
             {dang && <div className="mo" role="status">{dang}</div>}
+            {dang && tienDo && <progress aria-label="Tiến độ tính tóm tắt gói" max={tienDo.tong} value={tienDo.xong} style={{ width: "100%" }} />}
             {ketQua.length > 0 && <ul className="chu-nho" aria-label="Kết quả nhận gói" style={{ margin: 0, paddingLeft: 18 }}>{ketQua.map((k, i) => <li key={i}>{k}</li>)}</ul>}
             <div className="mo chu-nho">Mỗi đơn vị gửi giữ gói mới nhất; gói cũ hơn hoặc trùng bị bỏ qua. Gói bị sửa, sai chữ ký, mã hóa cho khóa khác đều bị từ chối.</div>
           </div>

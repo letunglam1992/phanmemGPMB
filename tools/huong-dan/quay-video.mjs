@@ -1,8 +1,9 @@
 /**
  * Quay video hướng dẫn thao tác (D3, 1.0.20) bằng Playwright trên bản build (vite preview) — dữ liệu mẫu ẩn danh, bản đồ
  * DXF giả lập; con trỏ chuột, vòng bấm và phụ đề từng bước được vẽ chồng trong trang. Ra tệp .webm → đổi .mp4 bằng ffmpeg:
- *   PW_CHROMIUM=... node tools/huong-dan/quay-video.mjs <thư mục ra> [1|2|3|4]
+ *   PW_CHROMIUM=... node tools/huong-dan/quay-video.mjs <thư mục ra> [1|2|3|4|5|6]
  * 1.1.0 (E1): video 4 — khiếu nại (thụ lý, tạm đình chỉ, đối thoại), mẫu T18–T25, cưỡng chế, báo cáo khiếu nại của dự án.
+ * 1.2.0: video 5 — căn cứ thời hạn, sổ văn bản đi, xem trước. 1.3.0: video 6 — T29, T31, phiếu kiểm tra, báo cáo phân cấp, Thẩm quyền.
  */
 import { chromium } from "@playwright/test";
 import { mkdirSync, renameSync, writeFileSync } from "node:fs";
@@ -355,5 +356,47 @@ if (!chiQuay || chiQuay === "5") {
   await h.phuDe("", 0);
   await h.bia("PHẦN MỀM GPMB SƠN LA", "Nhắc hạn có căn cứ — không tự đặt thời hạn", "Thẩm quyền theo NĐ 151/2025, QĐ 27/2026/QĐ-UBND", 3000);
   await ket(h, "5-Can-cu-thoi-han-so-van-ban");
+}
+// ---------------- Video 6 (1.3.0): phân cấp QĐ 27/2026 — T29–T31, phiếu kiểm tra, báo cáo 06 tháng ----------------
+if (!chiQuay || chiQuay === "6") {
+  const h = await moi(trinh, "6");
+  const { p } = h;
+  await batDau(h);
+  await h.bia("HƯỚNG DẪN THAO TÁC · 6", "Nhiệm vụ được phân cấp, báo cáo 06 tháng", "QĐ 27/2026/QĐ-UBND · Điều 86, 88, 111 Luật Đất đai 2024 · Điều 36 NĐ 102/2024");
+  await h.bam(nutBen(p, "Hồ sơ"));
+  await h.bam(the(p, "Tổng quan dự án"), 800);
+  await h.phuDe("Văn bản dự án → <b>T29</b> Quyết định thành lập Hội đồng (điểm c k2 Đ86) — thành viên do cán bộ nhập", 300);
+  await h.bam(p.getByRole("button", { name: "Văn bản dự án, đợt" }), 1000);
+  await h.bam(p.locator(".muc-mau", { hasText: /^T29/ }), 1200);
+  const tv = p.locator(".o-nhap", { has: p.locator("label", { hasText: "Thành viên Hội đồng" }) }).locator("textarea");
+  await h.go(tv, "Ông A – Phó Chủ tịch UBND xã, Chủ tịch Hội đồng (minh họa)");
+  await h.go(p.locator(".o-nhap", { has: p.locator("label:text-is('Số văn bản')") }).locator("input"), "5");
+  const ngayKy = p.getByLabel("Ngày ký", { exact: true }).first();
+  await h.bam(ngayKy, 200); await ngayKy.fill("19/10/2026"); await ngayKy.press("Tab"); await h.cho(600);
+  await h.phuDe("<b>Phiếu kiểm tra (Word)</b>: căn cứ, thẩm quyền theo QĐ 27/2026, cảnh báo — in kèm phiếu trình trước khi ký", 300);
+  await h.den(p.locator("[data-phieu-kiem-tra]"));
+  await h.cho(2600);
+  await h.bam(p.getByRole("button", { name: /Tạo văn bản cấp dự án/ }), 1500);
+  await h.phuDe("Tạo xong: ghi <b>Sổ văn bản đi</b>; thành viên Hội đồng, Ban lưu theo dự án để lần sau tự điền", 2600);
+  await h.phuDe("<b>T31</b> giá bán nhà ở TĐC (k3 Đ111): bảng giá lấy từ thẻ Tái định cư — giá, căn cứ do đơn vị nhập", 300);
+  await h.bam(p.locator(".muc-mau", { hasText: /^T31/ }), 1200);
+  await h.den(p.locator(".o-nhap", { has: p.locator("label", { hasText: "Bảng giá bán" }) }));
+  await h.cho(2600);
+  await h.phuDe("<b>Báo cáo tổng hợp → Báo cáo phân cấp</b>: trước 15/6, 15/12 (k2 Điều 4) — đếm theo Sổ văn bản đi, so kỳ trước", 300);
+  await h.bam(nutBen(p, "Báo cáo tổng hợp"), 1000);
+  await h.bam(p.locator("[data-mo-bao-cao-phan-cap]"), 1500);
+  await h.den(p.locator("[data-bao-cao-phan-cap]"));
+  await h.cho(3000);
+  await h.bam(p.locator("[role=dialog]", { has: p.locator("[data-bao-cao-phan-cap]") }).getByRole("button", { name: "Đóng" }).last(), 600);
+  await h.phuDe("Có văn bản thay QĐ 27/2026: <b>Cài đặt chung → Thẩm quyền phân cấp</b> — đơn vị tự nhập số, hiệu lực, nhiệm vụ", 300);
+  await h.bam(nutBen(p, "Cài đặt chung"), 900);
+  await h.bam(p.locator(".tab button", { hasText: "Thẩm quyền phân cấp" }), 1200);
+  await h.den(p.locator("[data-the-tham-quyen]"));
+  await h.cho(2800);
+  await p.keyboard.press("Escape");
+  await h.phuDe("Máy tỉnh: gói 1.3.0 mang Sổ văn bản đi → bảng phân cấp theo xã, <b>Word phân cấp toàn tỉnh</b>", 3000);
+  await h.phuDe("", 0);
+  await h.bia("PHẦN MỀM GPMB SƠN LA", "Đếm văn bản đã ban hành — không tự đặt thẩm quyền", "Phân cấp theo QĐ 27/2026/QĐ-UBND hoặc văn bản thay thế đơn vị nhập", 3000);
+  await ket(h, "6-Phan-cap-bao-cao-06-thang");
 }
 await trinh.close();

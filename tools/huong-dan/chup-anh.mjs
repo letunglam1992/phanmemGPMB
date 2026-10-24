@@ -120,6 +120,11 @@ await chup("chi-tra-kinh-phi", { cho: 900 });
 // 8. Báo cáo, gửi tỉnh
 await thanhBen("Báo cáo tổng hợp").click();
 await chup("bao-cao", { cho: 1000 });
+// 1.3.0: báo cáo kết quả thực hiện nhiệm vụ được phân cấp (k2 Điều 4 QĐ 27/2026)
+await p.locator("[data-mo-bao-cao-phan-cap]").click();
+await p.locator("[data-bao-cao-phan-cap]").waitFor();
+await chup("bao-cao-phan-cap", { cho: 800 });
+await p.locator("[role=dialog]", { has: p.locator("[data-bao-cao-phan-cap]") }).getByRole("button", { name: "Đóng" }).last().click();
 await thanhBen("Gửi tỉnh, tổng hợp tỉnh").click();
 await chup("gui-tinh");
 
@@ -141,6 +146,8 @@ await p.keyboard.press("Escape");
 await cho(300);
 await thanhBen("Cài đặt chung").click();
 await chup("cai-dat");
+await p.locator(".tab button", { hasText: "Thẩm quyền phân cấp" }).click();
+await chup("tham-quyen-phan-cap", { cho: 800 });
 await p.keyboard.press("Escape");
 await cho(300);
 await thanhBen("Hướng dẫn sử dụng").click();

@@ -79,7 +79,7 @@ export async function taiGoiMoi(
       const bytes = await taiGoiTuCong(cong, g.ma);
       let r: KetQuaNhap;
       try {
-        r = await nhapGoi(bytes, khoa, "CONG", { homNay: o.homNay });
+        r = await nhapGoi(bytes, khoa, "CONG", { homNay: o.homNay, tienDo: (x, t) => o.tienDo?.(`${g.ten} — tính ${x.toLocaleString("vi-VN")}/${t.toLocaleString("vi-VN")} hộ`) });
       } catch (e) {
         if (!(e instanceof LoiDoiKhoaKy)) throw e;
         if (!o.xacNhanDoiKhoa) {
@@ -93,7 +93,7 @@ export async function taiGoiMoi(
           ghiDaTai(daTai);
           continue;
         }
-        r = await nhapGoi(bytes, khoa, "CONG", { homNay: o.homNay, chapNhanDoiKhoa: true });
+        r = await nhapGoi(bytes, khoa, "CONG", { homNay: o.homNay, chapNhanDoiKhoa: true, tienDo: (x, t) => o.tienDo?.(`${g.ten} — tính ${x.toLocaleString("vi-VN")}/${t.toLocaleString("vi-VN")} hộ`) });
       }
       if ("banGhi" in r) {
         soNhan++;

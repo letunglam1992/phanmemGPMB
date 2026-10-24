@@ -16,6 +16,14 @@ mới hơn bản đang dùng khi có bản cập nhật.
 - **Phiếu kiểm tra trước khi ký** (Word): các điểm cần xem, căn cứ, thẩm quyền — in kèm phiếu trình.
 - Máy tỉnh: kết quả phân cấp theo xã trong kỳ, lịch cưỡng chế toàn tỉnh; xuất Excel.
 - Sổ văn bản đi: ghi tay chọn được nhiệm vụ phân cấp; sổ nhiều nghìn dòng chỉ vẽ 500 dòng đầu (Excel có đủ).
+- Thành viên Hội đồng (T29), Ban cưỡng chế (T16, T30) lưu theo dự án: hộ khác, biên bản T27, T28 tự điền thành phần.
+- T31 lấy căn nhà ở, diện tích, giá, căn cứ giá từ quỹ tái định cư (giá do đơn vị nhập kèm căn cứ — phần mềm không tính giá).
+- Báo cáo phân cấp có cột **kỳ trước** và câu so sánh tăng/giảm.
+- Máy tỉnh: **Báo cáo Word tổng hợp phân cấp toàn tỉnh** (Sở Nông nghiệp và Môi trường báo cáo UBND tỉnh); nhắc đơn vị chưa có
+  số liệu phân cấp của kỳ (gói gửi trước kỳ hoặc từ bản cũ), nổi vàng khi còn 15 ngày đến hạn 15/6, 15/12.
+- Gói gửi tỉnh, bản sao lưu mang **Sổ văn bản đi** (gói chỉ các dòng của dự án gửi); khôi phục gộp dòng chưa có, không xóa số đã cấp.
+- Gói lớn không còn đứng giao diện: máy xã tính nền số liệu xem trước (thanh tiến độ, vẫn xuất gói được); máy tỉnh nhận gói tính theo
+  từng lát, báo số hộ đã tính.
 
 ## 1.2.0
 

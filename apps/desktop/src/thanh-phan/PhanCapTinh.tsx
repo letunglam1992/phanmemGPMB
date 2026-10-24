@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useUngDung } from "../ung-dung";
 import { O } from "./chung";
 import { ONgay } from "./ONgay";
-import { donViChuaGuiPhanCap, duLieuBaoCaoPhanCapTinh, lichCuongCheTinh, phanCapTheoXa } from "../tong-hop-tinh/dien-bien";
+import { donViChuaGuiPhanCap, duLieuBaoCaoPhanCapTinh, lichCuongCheTinh, phanCapTheoXa, phienBanTu } from "../tong-hop-tinh/dien-bien";
 import { HopThoai } from "./chung";
 import { dienMau } from "../van-ban/dien-mau";
 import { taiXuong } from "../tai-xuong";
@@ -35,7 +35,8 @@ export function ThePhanCapTinh({ dong, goi = [] }: { dong: TomTatDuAn[]; goi?: {
   const [dangXuat, setDangXuat] = useState(false);
   const pc = useMemo(() => phanCapTheoXa(dong, tu, den), [dong, tu, den]);
   const lichCc = useMemo(() => lichCuongCheTinh(dong, homNay).map((x) => ({ ...x, hanCongAn: hanGuiCongAn(x.ngay, lich) })), [dong, homNay, lich]);
-  const coGoiMoi = dong.some((d) => d.phanCap);
+  // gói từ 1.3.0 mang Sổ văn bản đi (kể cả khi chưa có văn bản phân cấp nào — bảng hiện số 0)
+  const coGoiMoi = dong.some((d) => d.phanCap) || goi.some((g) => phienBanTu(g.thongTin.ungDung, "1.3.0"));
   const chuaGui = useMemo(() => donViChuaGuiPhanCap(goi, tu), [goi, tu]);
   const ganHan = !!han && Math.round((Date.parse(han.han) - Date.parse(homNay)) / 86400000) <= 15;
   const taoWord = async () => {
@@ -62,8 +63,8 @@ export function ThePhanCapTinh({ dong, goi = [] }: { dong: TomTatDuAn[]; goi?: {
       <div className="the-dau" style={{ flexWrap: "wrap", gap: 8 }}>
         <h3>Kết quả phân cấp theo xã, lịch cưỡng chế</h3>
         <div className="phai">
-          {coGoiMoi && <button className="nut nut-nho" data-bao-cao-phan-cap-tinh onClick={() => setHopWord(true)}>Báo cáo Word…</button>}
-          <button className="nut nut-nho" disabled={dangXuat} onClick={async () => { setDangXuat(true); try { await xuatExcelPhanCapTinh(pc, thamQuyen.nhiemVu, lichCc, { ky: `${vn(tu)}–${vn(den)}`, qd: thamQuyen.so }); } finally { setDangXuat(false); } }}>Xuất Excel</button>
+          {coGoiMoi && <button className="nut nut-nho" data-bao-cao-phan-cap-tinh onClick={() => setHopWord(true)}>Word phân cấp toàn tỉnh…</button>}
+          <button className="nut nut-nho" disabled={dangXuat} onClick={async () => { setDangXuat(true); try { await xuatExcelPhanCapTinh(pc, thamQuyen.nhiemVu, lichCc, { ky: `${vn(tu)}–${vn(den)}`, qd: thamQuyen.so }); } finally { setDangXuat(false); } }}>Excel phân cấp, lịch cưỡng chế</button>
         </div>
       </div>
       <div className="the-than">

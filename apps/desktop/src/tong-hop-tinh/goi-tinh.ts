@@ -26,11 +26,12 @@ import { D } from "@gpmb/core";
 import type { Kho } from "../kho";
 import type { DuAn, Ho } from "../mo-hinh";
 import { hoHieuLuc, tienDoHo } from "../mo-hinh";
-import { taoBanSaoLuu, type BanSaoLuu, docBanSaoLuu } from "../sao-luu";
+import { taoBanSaoLuu, type BanSaoLuu, docBanSaoLuu, soVanBanDiLoc } from "../sao-luu";
 import { taoKhoaKhoiPhuc, thuMatKhauKhoiPhuc, type KhoaKhoiPhuc } from "../ma-hoa";
 import { BO_CHINH_SACH } from "../du-lieu";
 import { GOI_GOC, dangKyGoi, type GoiDaNap } from "../goi-chinh-sach";
-import { tinhHo } from "../tinh-ho";
+import { daTinh, tinhHo } from "../tinh-ho";
+import type { BoChinhSach } from "@gpmb/core";
 import { THU_TU_TRANG_THAI, trangThaiHo, type TrangThaiGpmb } from "../trang-thai";
 import { demBanPA, hoDaPheDuyet } from "../phuong-an";
 
@@ -413,12 +414,51 @@ export async function giaiMaGoi(t: ThongTinGoi, du: Uint8Array, khoaBiMat: Crypt
   return ban;
 }
 
+/**
+ * 1.3.0 (D) — tính trước kết quả các hộ theo từng lát ngắn (mặc định 12 ms), nhường luồng giao diện giữa các lát để màn
+ * hình không đứng với gói lớn (20.000 hộ ≈ 11–14 s tính lần đầu). Kết quả vào bộ nhớ đệm của `tinhHo` — `tomTatDuAn`
+ * gọi sau đó dùng lại, số liệu không đổi. `tienDo(xong, tong)` báo thưa (≥ 200 ms).
+ */
+export async function tinhTruocTheoLat(duAn: DuAn[], ho: Ho[], o: { tienDo?: (xong: number, tong: number) => void; lat?: number; nhuong?: () => Promise<void> } = {}): Promise<void> {
+  const { lat = 12, nhuong = () => new Promise<void>((r) => setTimeout(r, 0)) } = o;
+  const theoId = new Map(duAn.map((d) => [d.id, d] as const));
+  const viec: [BoChinhSach, DuAn, Ho][] = [];
+  for (const h of ho) {
+    const d = theoId.get(h.duAnId);
+    if (!d || h.daXoa) continue;
+    const cs = BO_CHINH_SACH[d.boChinhSach] ?? BO_CHINH_SACH[GOI_GOC]!;
+    if (!daTinh(cs, d, h)) viec.push([cs, d, h]);
+  }
+  let i = 0, bao = 0;
+  while (i < viec.length) {
+    const het = performance.now() + lat;
+    do {
+      const [cs, d, h] = viec[i++]!;
+      try { tinhHo(cs, d, h); } catch { /* hộ lỗi: tomTatDuAn bỏ qua như trước */ }
+    } while (i < viec.length && performance.now() < het);
+    if (o.tienDo && (performance.now() - bao >= 200 || i >= viec.length)) {
+      bao = performance.now();
+      o.tienDo(i, viec.length);
+    }
+    if (i < viec.length) await nhuong();
+  }
+}
+
+/** 1.3.0 (D) — như `tomTatBan` nhưng tính các hộ theo lát (không đứng giao diện khi nhận gói lớn). */
+export async function tomTatBanTheoLat(ban: BanSaoLuu, homNay: string, tienDo?: (xong: number, tong: number) => void): Promise<TomTatDuAn[]> {
+  if (Array.isArray(ban.caiDat?.goiChinhSach)) dangKyGoi(ban.caiDat.goiChinhSach as GoiDaNap[]);
+  await tinhTruocTheoLat(ban.duAn.filter((d) => !d.daXoa), ban.ho, { tienDo });
+  return tomTatBan(ban, homNay);
+}
+
 /** Tóm tắt một bản đã giải mã (đăng ký bộ chính sách đi kèm gói để tính đúng). */
 export function tomTatBan(ban: BanSaoLuu, homNay: string): TomTatDuAn[] {
   if (Array.isArray(ban.caiDat?.goiChinhSach)) dangKyGoi(ban.caiDat.goiChinhSach as GoiDaNap[]);
   const dem = new Map<string, number>();
   for (const f of ban.dinhKem.filter((x) => !x.meta.daXoa && !x.meta.thayBoi)) dem.set(f.meta.duAnId, (dem.get(f.meta.duAnId) ?? 0) + 1);
-  return tomTatDuAn(ban.duAn.filter((d) => !d.daXoa), ban.ho, (id) => dem.get(id) ?? 0, homNay, lichTuBan(ban));
+  // 1.3.0: Sổ văn bản đi trong gói → danh sách văn bản phân cấp (mã nhiệm vụ, ngày, số hiệu) của từng dự án
+  const soDi = (soVanBanDiLoc(ban.caiDat?.soVanBanDi, null)?.ds ?? []) as VanBanDi[];
+  return tomTatDuAn(ban.duAn.filter((d) => !d.daXoa), ban.ho, (id) => dem.get(id) ?? 0, homNay, lichTuBan(ban), soDi);
 }
 
 /** 1.0.14: lịch ngày nghỉ của đơn vị gửi (đi kèm gói trong phần cài đặt) — để hạn tính ở tỉnh khớp máy xã; sai dạng → chỉ trừ T7, CN. */

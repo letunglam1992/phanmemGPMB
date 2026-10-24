@@ -11,7 +11,7 @@ import { thongKePhanCap } from "../src/bao-cao-phan-cap";
 import { dienBienDuAn } from "../src/dien-bien-du-an";
 import { duLieuBoSungBaoCaoXa } from "../src/bao-cao-bo-sung";
 import { LICH_TRONG } from "../src/lich-lam-viec";
-import { tomTatDuAn } from "../src/tong-hop-tinh/goi-tinh";
+import { tinhTruocTheoLat, tomTatDuAn } from "../src/tong-hop-tinh/goi-tinh";
 import { lichCuongCheTinh, phanCapTheoXa } from "../src/tong-hop-tinh/dien-bien";
 
 const HOM_NAY = "2026-10-30";
@@ -93,5 +93,29 @@ describe("1.3.0 (D1, D2) — gói tỉnh có phân cấp (không tên, nội dun
       { xa: "Xã B", theoNv: {}, tong: 0 },
     ]);
     expect(lichCuongCheTinh([t!], HOM_NAY)[0]).toEqual({ ngay: "2026-11-20", xa: "Xã A", duAn: d.ten, loai: "THU_HOI" });
+  });
+});
+
+describe("1.3.0 (D) — tóm tắt gói tỉnh tính theo lát", () => {
+  it("nhường luồng giữa các lát, báo tiến độ; kết quả trùng tính một lần", async () => {
+    const das = Array.from({ length: 3 }, (_, i) => ({ ...duAn, id: `L${i}`, ten: `Dự án L${i}`, xa: "Xã L" }) as DuAn);
+    const hos = das.flatMap((d) => nhieuHo(400, d.id));
+    const motLan = tomTatDuAn(das.map((d) => ({ ...d })), hos.map((h) => ({ ...h })), () => 0, HOM_NAY, LICH_TRONG);
+    let nhuong = 0, lanLatDaiNhat = 0, t0 = performance.now();
+    const td: [number, number][] = [];
+    await tinhTruocTheoLat(das, hos, {
+      lat: 5,
+      tienDo: (x, t) => td.push([x, t]),
+      nhuong: async () => { nhuong++; lanLatDaiNhat = Math.max(lanLatDaiNhat, performance.now() - t0); await Promise.resolve(); t0 = performance.now(); },
+    });
+    expect(nhuong).toBeGreaterThan(0);
+    expect(td.at(-1)).toEqual([1200, 1200]);
+    // mỗi lát ≤ lat + một hộ (máy CI chậm: nới rộng)
+    expect(lanLatDaiNhat).toBeLessThan(500);
+    // lần gọi sau dùng bộ nhớ đệm — không còn việc
+    let lan2 = 0;
+    await tinhTruocTheoLat(das, hos, { nhuong: async () => void lan2++ });
+    expect(lan2).toBe(0);
+    expect(JSON.stringify(tomTatDuAn(das, hos, () => 0, HOM_NAY, LICH_TRONG))).toBe(JSON.stringify(motLan));
   });
 });
