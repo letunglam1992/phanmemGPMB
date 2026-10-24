@@ -43,7 +43,7 @@ jobs:
       - run: npm -w @gpmb/desktop run e2e
         env:
           CI: "1"
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         if: failure()
         with:
           name: playwright-ket-qua
@@ -72,7 +72,7 @@ jobs:
       - name: Kiểm thử nối thật máy trạm ↔ máy chủ mạng nội bộ (HTTPS, vân tay chứng chỉ)
         working-directory: apps/desktop
         run: npm run test:mang-that
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: gpmb-sonla-windows-setup
           path: apps/desktop/src-tauri/target/release/bundle/nsis/*.exe
