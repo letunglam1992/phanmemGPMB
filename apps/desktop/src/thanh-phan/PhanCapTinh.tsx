@@ -2,7 +2,10 @@ import { useMemo, useState } from "react";
 import { useUngDung } from "../ung-dung";
 import { O } from "./chung";
 import { ONgay } from "./ONgay";
-import { lichCuongCheTinh, phanCapTheoXa } from "../tong-hop-tinh/dien-bien";
+import { donViChuaGuiPhanCap, duLieuBaoCaoPhanCapTinh, lichCuongCheTinh, phanCapTheoXa } from "../tong-hop-tinh/dien-bien";
+import { HopThoai } from "./chung";
+import { dienMau } from "../van-ban/dien-mau";
+import { taiXuong } from "../tai-xuong";
 import type { TomTatDuAn } from "../tong-hop-tinh/goi-tinh";
 import { hanBaoCaoPhanCap } from "../van-ban/tham-quyen";
 import { hanGuiCongAn } from "../cuong-che";
@@ -15,8 +18,16 @@ const vn = (iso: string) => iso.split("-").reverse().join("/");
  * 1.3.0 (D1, D2) — máy tỉnh: kết quả thực hiện nhiệm vụ được phân cấp theo xã trong kỳ (số liệu cho báo cáo 06 tháng — khoản 2
  * Điều 4 QĐ 27/2026), lịch cưỡng chế toàn tỉnh; xuất Excel. Gói gửi trước 1.3.0 không có số liệu phân cấp.
  */
-export function ThePhanCapTinh({ dong }: { dong: TomTatDuAn[] }) {
-  const { thamQuyen, lich } = useUngDung();
+const KHOA_TT = "gpmb-bao-cao-phan-cap-tinh";
+type TtBc = { coQuanCapTren: string; coQuan: string; kyHieu: string; so: string; diaDanh: string; ngayKy: string; kinhGui: string; khoKhan: string; kienNghi: string; noiNhan: string; quyenHan: string; nguoiKy: string };
+
+export function ThePhanCapTinh({ dong, goi = [] }: { dong: TomTatDuAn[]; goi?: { donViGui: string; thongTin: { luc: string; ungDung: string } }[] }) {
+  const { thamQuyen, lich, bao, ghiNhatKy } = useUngDung();
+  const [hopWord, setHopWord] = useState(false);
+  const [tt, setTt] = useState<TtBc>(() => {
+    const mac: TtBc = { coQuanCapTren: "UBND TỈNH SƠN LA", coQuan: "Sở Nông nghiệp và Môi trường", kyHieu: "SNNMT", so: "", diaDanh: "Sơn La", ngayKy: homNayIso(), kinhGui: "Ủy ban nhân dân tỉnh Sơn La", khoKhan: "", kienNghi: "", noiNhan: "Như trên\nLưu: VT", quyenHan: "GIÁM ĐỐC", nguoiKy: "" };
+    try { return { ...mac, ...JSON.parse(localStorage.getItem(KHOA_TT) ?? "{}"), so: "", ngayKy: homNayIso(), khoKhan: "", kienNghi: "" }; } catch { return mac; }
+  });
   const homNay = homNayIso();
   const han = hanBaoCaoPhanCap(homNay);
   const [tu, setTu] = useState(han?.tu ?? `${homNay.slice(0, 4)}-01-01`);
@@ -25,16 +36,43 @@ export function ThePhanCapTinh({ dong }: { dong: TomTatDuAn[] }) {
   const pc = useMemo(() => phanCapTheoXa(dong, tu, den), [dong, tu, den]);
   const lichCc = useMemo(() => lichCuongCheTinh(dong, homNay).map((x) => ({ ...x, hanCongAn: hanGuiCongAn(x.ngay, lich) })), [dong, homNay, lich]);
   const coGoiMoi = dong.some((d) => d.phanCap);
+  const chuaGui = useMemo(() => donViChuaGuiPhanCap(goi, tu), [goi, tu]);
+  const ganHan = !!han && Math.round((Date.parse(han.han) - Date.parse(homNay)) / 86400000) <= 15;
+  const taoWord = async () => {
+    try {
+      try { localStorage.setItem(KHOA_TT, JSON.stringify({ ...tt, so: "", khoKhan: "", kienNghi: "" })); } catch { /* bỏ qua */ }
+      const mau = await (await fetch("/mau-van-ban/bao-cao-phan-cap-tinh.docx")).arrayBuffer();
+      const du = duLieuBaoCaoPhanCapTinh(pc, thamQuyen.nhiemVu, chuaGui, { tu, den }, { so: thamQuyen.so, ten: thamQuyen.ten }, tt);
+      if (!(await taiXuong(dienMau(mau, du), `Bao-cao-phan-cap-toan-tinh_${tu}_${den}.docx`, "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))) return;
+      await ghiNhatKy("Tạo báo cáo tổng hợp phân cấp toàn tỉnh", `${vn(tu)}–${vn(den)}`);
+      bao("Đã tạo báo cáo (dự thảo) — kiểm tra trước khi trình ký");
+      setHopWord(false);
+    } catch (e) {
+      bao(`Không tạo được báo cáo: ${(e as Error).message}`, "loi");
+    }
+  };
+  const o = (k: keyof TtBc, nhan: string, n = 1) => (
+    <O nhan={nhan} style={n > 1 ? { gridColumn: "1 / -1" } : undefined}>
+      {n > 1 ? <textarea aria-label={nhan} rows={n} value={tt[k]} onChange={(e) => setTt({ ...tt, [k]: e.target.value })} /> : <input aria-label={nhan} value={tt[k]} onChange={(e) => setTt({ ...tt, [k]: e.target.value })} />}
+    </O>
+  );
   if (!coGoiMoi && !lichCc.length) return null;
   return (
     <div className="the" data-phan-cap-tinh>
       <div className="the-dau" style={{ flexWrap: "wrap", gap: 8 }}>
         <h3>Kết quả phân cấp theo xã, lịch cưỡng chế</h3>
         <div className="phai">
+          {coGoiMoi && <button className="nut nut-nho" data-bao-cao-phan-cap-tinh onClick={() => setHopWord(true)}>Báo cáo Word…</button>}
           <button className="nut nut-nho" disabled={dangXuat} onClick={async () => { setDangXuat(true); try { await xuatExcelPhanCapTinh(pc, thamQuyen.nhiemVu, lichCc, { ky: `${vn(tu)}–${vn(den)}`, qd: thamQuyen.so }); } finally { setDangXuat(false); } }}>Xuất Excel</button>
         </div>
       </div>
       <div className="the-than">
+        {coGoiMoi && chuaGui.length > 0 && (
+          <div className={`thong-bao ${ganHan ? "thong-bao-vang" : "thong-bao-xanh"} chu-nho mb-10`} data-chua-gui-phan-cap>
+            {ganHan && han ? <b>Sắp đến hạn báo cáo (trước {vn(han.han)}). </b> : null}
+            Đơn vị chưa có số liệu phân cấp kỳ này ({chuaGui.length}): {chuaGui.map((c) => `${c.donVi} — ${c.lyDo}`).join("; ")}. Đề nghị các đơn vị cập nhật phần mềm 1.3.0 và gửi gói mới.
+          </div>
+        )}
         {coGoiMoi ? (
           <>
             <div className="luoi luoi-4">
@@ -63,6 +101,17 @@ export function ThePhanCapTinh({ dong }: { dong: TomTatDuAn[] }) {
           </div>
         )}
       </div>
+      {hopWord && (
+        <HopThoai tieuDe="Báo cáo tổng hợp phân cấp toàn tỉnh (Word)" dong={() => setHopWord(false)} rong={820} chan={<><button className="nut" onClick={() => setHopWord(false)}>Hủy</button><button className="nut nut-chinh" onClick={() => void taoWord()}>Tạo tệp Word</button></>}>
+          <div className="mo chu-nho mb-10">Kỳ {vn(tu)}–{vn(den)}; số liệu theo bảng ở thẻ (đơn vị đã gửi gói từ 1.3.0), kèm danh sách đơn vị chưa có số liệu. Thông tin cơ quan, người ký được nhớ trên máy này.</div>
+          <div className="luoi luoi-2">
+            {o("coQuanCapTren", "Cơ quan chủ quản")}{o("coQuan", "Cơ quan báo cáo")}{o("kyHieu", "Ký hiệu (…/BC-?)")}{o("so", "Số báo cáo")}
+            {o("diaDanh", "Địa danh")}<O nhan="Ngày ký"><ONgay value={tt.ngayKy} onChange={(e) => setTt({ ...tt, ngayKy: e.target.value })} /></O>
+            {o("kinhGui", "Kính gửi")}{o("quyenHan", "Quyền hạn người ký")}{o("nguoiKy", "Họ tên người ký")}
+            {o("khoKhan", "Khó khăn, vướng mắc", 3)}{o("kienNghi", "Đề xuất, kiến nghị", 3)}{o("noiNhan", "Nơi nhận (mỗi dòng một nơi)", 3)}
+          </div>
+        </HopThoai>
+      )}
     </div>
   );
 }

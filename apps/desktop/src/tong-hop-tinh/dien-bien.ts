@@ -100,3 +100,59 @@ export function lichCuongCheTinh(dong: Pick<TomTatDuAn, "xa" | "ten" | "cuongChe
     .sort((a, b) => a.ngay.localeCompare(b.ngay) || a.xa.localeCompare(b.xa, "vi"));
 }
 
+/** So sánh phiên bản "x.y.z" có trong chuỗi (vd. "GPMB Sơn La 1.3.0") với `toiThieu`; không đọc được → coi như cũ. */
+export function phienBanTu(ungDung: string, toiThieu: string): boolean {
+  const a = /(\d+)\.(\d+)\.(\d+)/.exec(ungDung ?? "");
+  if (!a) return false;
+  const b = toiThieu.split(".").map(Number);
+  for (let i = 0; i < 3; i++) if (Number(a[i + 1]) !== b[i]) return Number(a[i + 1]) > b[i]!;
+  return true;
+}
+
+/**
+ * 1.3.0 (C2) — đơn vị chưa có số liệu phân cấp của kỳ: gói mới nhất gửi trước ngày bắt đầu kỳ hoặc từ bản phần mềm trước 1.3.0
+ * (chưa gửi kèm Sổ văn bản đi). Trả tên đơn vị gửi kèm lý do.
+ */
+export function donViChuaGuiPhanCap(goi: { donViGui: string; thongTin: { luc: string; ungDung: string } }[], tu: string): { donVi: string; lyDo: string }[] {
+  return goi
+    .map((g) => ({ donVi: g.donViGui, lyDo: !phienBanTu(g.thongTin.ungDung, "1.3.0") ? `gói gửi từ bản cũ (${g.thongTin.ungDung || "không rõ"})` : g.thongTin.luc.slice(0, 10) < tu ? `gói mới nhất ngày ${g.thongTin.luc.slice(0, 10).split("-").reverse().join("/")} — trước kỳ` : "" }))
+    .filter((x) => x.lyDo)
+    .sort((a, b) => a.donVi.localeCompare(b.donVi, "vi"));
+}
+
+/** 1.3.0 (C1) — dữ liệu mẫu Word tổng hợp phân cấp toàn tỉnh. */
+export function duLieuBaoCaoPhanCapTinh(
+  pc: { xa: string; theoNv: Record<string, number>; tong: number }[],
+  nhiemVu: { ma: string; noiDung: string; viTri: string }[],
+  chuaGui: { donVi: string; lyDo: string }[],
+  ky: { tu: string; den: string },
+  qd: { so: string; ten: string },
+  t: { coQuanCapTren: string; coQuan: string; kyHieu: string; so: string; diaDanh: string; ngayKy: string; kinhGui: string; khoKhan: string; kienNghi: string; noiNhan: string; quyenHan: string; nguoiKy: string },
+): Record<string, unknown> {
+  const vn = (iso: string) => iso.split("-").reverse().join("/");
+  const [y, m, d] = t.ngayKy ? t.ngayKy.split("-") : ["", "", ""];
+  const tong = pc.reduce((s, x) => s + x.tong, 0);
+  const coSo = pc.filter((x) => x.tong).length;
+  return {
+    co_quan_cap_tren: t.coQuanCapTren.toUpperCase(),
+    CO_QUAN: t.coQuan.toUpperCase(),
+    co_quan_bc: t.coQuan || "…………",
+    ky_hieu: t.kyHieu,
+    so: t.so,
+    dia_danh: t.diaDanh || "…………",
+    ngay: d ?? "", thang: m ?? "", nam: y ?? "",
+    tu_ngay: vn(ky.tu), den_ngay: vn(ky.den),
+    kinh_gui: t.kinhGui,
+    qd_so: qd.so, qd_ten: qd.ten,
+    tong_quat: `Trong kỳ, ${coSo}/${pc.length} xã, phường có văn bản thuộc nhiệm vụ được phân cấp, tổng cộng ${tong} văn bản.`,
+    ds_nv: nhiemVu.map((n, i) => ({ stt: i + 1, noi_dung: n.noiDung, vi_tri: n.viTri, so_vb: String(pc.reduce((s, x) => s + (x.theoNv[n.ma] ?? 0), 0)), so_xa: String(pc.filter((x) => x.theoNv[n.ma]).length) })),
+    ds_xa: pc.map((x, i) => ({ stt: i + 1, xa: x.xa, tong: String(x.tong), chi_tiet: nhiemVu.filter((n) => x.theoNv[n.ma]).map((n) => `${n.noiDung}: ${x.theoNv[n.ma]}`).join("; ") || "—" })),
+    xa_chua_gui: chuaGui.length ? `Đơn vị chưa có số liệu kỳ này (${chuaGui.length}): ${chuaGui.map((c) => `${c.donVi} (${c.lyDo})`).join("; ")}.` : "Các đơn vị đã gửi số liệu trong kỳ.",
+    kho_khan: t.khoKhan.trim() || "…………",
+    kien_nghi: t.kienNghi.trim() || "…………",
+    noi_nhan: t.noiNhan.split("\n").map((x) => x.trim().replace(/[;.]$/, "")).filter(Boolean),
+    quyen_han: t.quyenHan.toUpperCase(),
+    nguoi_ky: t.nguoiKy,
+  };
+}
+

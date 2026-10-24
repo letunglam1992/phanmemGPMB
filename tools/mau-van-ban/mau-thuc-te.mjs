@@ -1063,7 +1063,41 @@ MAU.BCPC = () => [
   ],
 ];
 
-const DANH_SACH = { T1: "tt-ke-hoach", T8: "tt-tb-du-kien-tdc", T9: "tt-tb-cong-bo-tdc", T10: "tt-to-trinh-cham-tra", T11: "tt-qd-cham-tra", T12: "tt-bb-doi-thoai", T13: "tt-bb-boc-tham-tdc", T14: "tt-qd-giai-quyet-kn", T15: "tt-bb-van-dong-ban-giao", T16: "tt-qd-ban-cuong-che", T17: "tt-pa-cuong-che", T18: "tt-tb-thu-ly-kn", T19: "tt-tb-khong-thu-ly-kn", T20: "tt-bb-doi-thoai-kn", T21: "tt-qd-tam-dinh-chi-kn", T22: "tt-qd-tiep-tuc-kn", T23: "tt-bb-ban-giao-dat-thuc-dia", T24: "tt-tb-doi-thoai-kn", T25: "tt-qd-giai-quyet-kn-lan-hai", T26: "tt-qd-pa-mau-44", T27: "tt-bb-cuong-che-thu-hoi", T28: "tt-bb-bao-quan-tai-san", T29: "tt-qd-hoi-dong-bt", T30: "tt-qd-ban-cc-kiem-dem", T31: "tt-qd-gia-ban-nha-tdc", BCPC: "bao-cao-phan-cap", T2: "tt-to-trinh-tb", T3: "tt-thong-bao", T4: "tt-to-trinh-pa-ho", T5: "tt-qd-pa-ho", T6: "tt-to-trinh-thu-hoi", T7: "tt-qd-thu-hoi" };
+/** 1.3.0 (C1) — Báo cáo tổng hợp toàn tỉnh kết quả thực hiện nhiệm vụ được phân cấp cho Chủ tịch UBND cấp xã (máy tỉnh điền). */
+MAU.BCPCT = () => [
+  [
+    dauVanBan({ coQuan: ["{co_quan_cap_tren}", "{CO_QUAN}"], so: "Số: {so}/BC-{ky_hieu}" }),
+    ...tenVanBan("BÁO CÁO", "Tổng hợp kết quả thực hiện nhiệm vụ, quyền hạn được phân cấp\ncho Chủ tịch Ủy ban nhân dân cấp xã trong lĩnh vực đất đai"),
+    giua("(Từ ngày {tu_ngay} đến ngày {den_ngay})", { nghieng: true, sau: 120 }),
+    giua("Kính gửi: {kinh_gui}.", { truoc: 120 }),
+    P("Thực hiện khoản 2 Điều 4 Quyết định số {qd_so} ({qd_ten}), trên cơ sở số liệu các xã, phường gửi qua Phần mềm GPMB Sơn La, {co_quan_bc} tổng hợp kết quả thực hiện nhiệm vụ, quyền hạn được phân cấp như sau:"),
+    P("**I. KẾT QUẢ THEO NHIỆM VỤ**"),
+    P("{tong_quat}"),
+    bangLap("ds_nv", [
+      { tieuDe: "STT", truong: "stt", rong: 7 },
+      { tieuDe: "Nhiệm vụ được phân cấp", truong: "noi_dung", rong: 45, canh: AlignmentType.LEFT },
+      { tieuDe: "Căn cứ phân cấp", truong: "vi_tri", rong: 22, canh: AlignmentType.LEFT },
+      { tieuDe: "Số văn bản", truong: "so_vb", rong: 13 },
+      { tieuDe: "Số xã, phường", truong: "so_xa", rong: 13 },
+    ]),
+    P("**II. KẾT QUẢ THEO XÃ, PHƯỜNG**", { truoc: 120 }),
+    bangLap("ds_xa", [
+      { tieuDe: "STT", truong: "stt", rong: 7 },
+      { tieuDe: "Xã, phường", truong: "xa", rong: 25, canh: AlignmentType.LEFT },
+      { tieuDe: "Tổng số văn bản", truong: "tong", rong: 13 },
+      { tieuDe: "Chi tiết theo nhiệm vụ", truong: "chi_tiet", rong: 55, canh: AlignmentType.LEFT },
+    ]),
+    P("{xa_chua_gui}", { truoc: 120 }),
+    P("(Số liệu theo Sổ văn bản đi các xã, phường gửi kèm gói dữ liệu từ bản 1.3.0; phạm vi các nhiệm vụ về thu hồi đất, bồi thường, hỗ trợ, tái định cư.)", { nghieng: true }),
+    P("**III. KHÓ KHĂN, VƯỚNG MẮC**"),
+    P("{kho_khan}"),
+    P("**IV. ĐỀ XUẤT, KIẾN NGHỊ**"),
+    P("{kien_nghi}"),
+    kyVanBan(),
+  ],
+];
+
+const DANH_SACH = { T1: "tt-ke-hoach", T8: "tt-tb-du-kien-tdc", T9: "tt-tb-cong-bo-tdc", T10: "tt-to-trinh-cham-tra", T11: "tt-qd-cham-tra", T12: "tt-bb-doi-thoai", T13: "tt-bb-boc-tham-tdc", T14: "tt-qd-giai-quyet-kn", T15: "tt-bb-van-dong-ban-giao", T16: "tt-qd-ban-cuong-che", T17: "tt-pa-cuong-che", T18: "tt-tb-thu-ly-kn", T19: "tt-tb-khong-thu-ly-kn", T20: "tt-bb-doi-thoai-kn", T21: "tt-qd-tam-dinh-chi-kn", T22: "tt-qd-tiep-tuc-kn", T23: "tt-bb-ban-giao-dat-thuc-dia", T24: "tt-tb-doi-thoai-kn", T25: "tt-qd-giai-quyet-kn-lan-hai", T26: "tt-qd-pa-mau-44", T27: "tt-bb-cuong-che-thu-hoi", T28: "tt-bb-bao-quan-tai-san", T29: "tt-qd-hoi-dong-bt", T30: "tt-qd-ban-cc-kiem-dem", T31: "tt-qd-gia-ban-nha-tdc", BCPC: "bao-cao-phan-cap", BCPCT: "bao-cao-phan-cap-tinh", T2: "tt-to-trinh-tb", T3: "tt-thong-bao", T4: "tt-to-trinh-pa-ho", T5: "tt-qd-pa-ho", T6: "tt-to-trinh-thu-hoi", T7: "tt-qd-thu-hoi" };
 for (const [ma, tep] of Object.entries(DANH_SACH)) {
   const [chinh, phu] = MAU[ma]();
   const buf = await Packer.toBuffer(taoDoc(chinh, phu));

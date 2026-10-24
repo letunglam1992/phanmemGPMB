@@ -637,7 +637,7 @@ function PhanTinh({ daCoKhoa }: { daCoKhoa: () => void }) {
       </div>
 
       <RaoLoi ten="khung Kết quả phân cấp">
-        <ThePhanCapTinh dong={hien} />
+        <ThePhanCapTinh dong={hien} goi={ds} />
       </RaoLoi>
       <RaoLoi ten="khung Diễn biến theo tháng">
         <TheDienBienTinh ds={ds} banCu={banCu} />
