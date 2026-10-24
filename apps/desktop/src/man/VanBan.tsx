@@ -1,6 +1,6 @@
 import { taiLieuPhieuKiemTra } from "../van-ban/phieu-kiem-tra";
 import { taoDocx } from "../van-ban/tai-lieu-don-gian";
-import { ghiChuThamQuyen } from "../van-ban/tham-quyen";
+import { ghiChuThamQuyen, xacNhanThamQuyen } from "../van-ban/tham-quyen";
 import { ghiBanGiaoThucDia } from "../ban-giao-thuc-dia";
 import { KHOA_SO_VB, kyHieuMau, soThuTu, soTiepTheo, timTrung, type SoVanBanDi, type VanBanDi } from "../so-van-ban";
 import { ONgay } from "../thanh-phan/ONgay";
@@ -221,6 +221,9 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
   const napMau = async () => (await kho.docMau(ma))?.bytes ?? (await napMauGoc(ma));
 
   const tao = async () => {
+    // 1.3.1 (B3): ngày ký ngoài hiệu lực văn bản phân cấp → hỏi xác nhận trước khi tạo
+    const hoi = xacNhanThamQuyen(ma, ngayKy || undefined);
+    if (hoi && !confirm(hoi)) return setThongBao({ loai: "vang", noiDung: "Chưa tạo văn bản — kiểm tra thẩm quyền theo văn bản phân cấp đang áp dụng." });
     setDangTao(true);
     setThongBao(null);
     try {

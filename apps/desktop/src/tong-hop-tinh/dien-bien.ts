@@ -122,7 +122,7 @@ export function donViChuaGuiPhanCap(goi: { donViGui: string; thongTin: { luc: st
 
 /** 1.3.0 (C1) — dữ liệu mẫu Word tổng hợp phân cấp toàn tỉnh. */
 export function duLieuBaoCaoPhanCapTinh(
-  pc: { xa: string; theoNv: Record<string, number>; tong: number }[],
+  pc: { xa: string; theoNv: Record<string, number>; tong: number; ghiChu?: string }[],
   nhiemVu: { ma: string; noiDung: string; viTri: string }[],
   chuaGui: { donVi: string; lyDo: string }[],
   ky: { tu: string; den: string },
@@ -146,7 +146,7 @@ export function duLieuBaoCaoPhanCapTinh(
     qd_so: qd.so, qd_ten: qd.ten,
     tong_quat: `Trong kỳ, ${coSo}/${pc.length} xã, phường có văn bản thuộc nhiệm vụ được phân cấp, tổng cộng ${tong} văn bản.`,
     ds_nv: nhiemVu.map((n, i) => ({ stt: i + 1, noi_dung: n.noiDung, vi_tri: n.viTri, so_vb: String(pc.reduce((s, x) => s + (x.theoNv[n.ma] ?? 0), 0)), so_xa: String(pc.filter((x) => x.theoNv[n.ma]).length) })),
-    ds_xa: pc.map((x, i) => ({ stt: i + 1, xa: x.xa, tong: String(x.tong), chi_tiet: nhiemVu.filter((n) => x.theoNv[n.ma]).map((n) => `${n.noiDung}: ${x.theoNv[n.ma]}`).join("; ") || "—" })),
+    ds_xa: pc.map((x, i) => ({ stt: i + 1, xa: x.xa, tong: String(x.tong), chi_tiet: `${nhiemVu.filter((n) => x.theoNv[n.ma]).map((n) => `${n.noiDung}: ${x.theoNv[n.ma]}`).join("; ") || "—"}${x.ghiChu ? ` (${x.ghiChu})` : ""}` })),
     xa_chua_gui: chuaGui.length ? `Đơn vị chưa có số liệu kỳ này (${chuaGui.length}): ${chuaGui.map((c) => `${c.donVi} (${c.lyDo})`).join("; ")}.` : "Các đơn vị đã gửi số liệu trong kỳ.",
     kho_khan: t.khoKhan.trim() || "…………",
     kien_nghi: t.kienNghi.trim() || "…………",
@@ -156,3 +156,40 @@ export function duLieuBaoCaoPhanCapTinh(
   };
 }
 
+
+/**
+ * 1.3.1 (A2) — Số liệu phân cấp máy tỉnh ghi tay cho đơn vị chưa gửi gói có Sổ văn bản đi (bản trước 1.3.0, hoặc gói cũ), theo
+ * báo cáo bằng văn bản của đơn vị — bắt buộc ghi căn cứ (số, ngày báo cáo). Chỉ áp dụng đúng kỳ đã ghi; lưu ở cài đặt máy tỉnh.
+ */
+export interface PhanCapGhiTay {
+  maGui: string;
+  donVi: string;
+  xa: string;
+  tu: string;
+  den: string;
+  theoNv: Record<string, number>;
+  canCu: string;
+  nguoi?: string;
+  luc?: string;
+}
+export const KHOA_PC_GHI_TAY = "phanCapGhiTay";
+export type DongPhanCap = { xa: string; theoNv: Record<string, number>; tong: number; ghiChu?: string };
+
+export function loiPhanCapGhiTay(g: Pick<PhanCapGhiTay, "xa" | "canCu" | "theoNv">): string | null {
+  if (!g.xa.trim()) return "Chưa ghi xã, phường";
+  if (!g.canCu.trim()) return "Chưa ghi căn cứ (số, ngày văn bản báo cáo của đơn vị)";
+  if (Object.values(g.theoNv).some((n) => !Number.isInteger(n) || n < 0)) return "Số văn bản phải là số nguyên không âm";
+  return null;
+}
+
+/** Ghép số liệu từ gói với số liệu ghi tay của kỳ: đơn vị có ghi tay thì bỏ dòng tính từ gói của đơn vị đó (tránh đếm hai lần). */
+export function gopPhanCapGhiTay<T extends Pick<TomTatDuAn, "xa" | "phanCap"> & { goi?: { maGui: string } }>(dong: T[], ghiTay: PhanCapGhiTay[], tu: string, den: string): { pc: DongPhanCap[]; maGuiGhiTay: Set<string> } {
+  const cuaKy = ghiTay.filter((g) => g.tu === tu && g.den === den);
+  const maGuiGhiTay = new Set(cuaKy.map((g) => g.maGui));
+  const tuGoi: DongPhanCap[] = phanCapTheoXa(dong.filter((d) => !d.goi || !maGuiGhiTay.has(d.goi.maGui)), tu, den);
+  const tay: DongPhanCap[] = cuaKy.map((g) => {
+    const theoNv = Object.fromEntries(Object.entries(g.theoNv).filter(([, n]) => n > 0));
+    return { xa: g.xa, theoNv, tong: Object.values(theoNv).reduce((s, n) => s + n, 0), ghiChu: `ghi tay theo ${g.canCu}` };
+  });
+  return { pc: [...tuGoi, ...tay].sort((a, b) => a.xa.localeCompare(b.xa, "vi")), maGuiGhiTay };
+}

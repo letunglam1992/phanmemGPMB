@@ -9,7 +9,8 @@
     "test": "npm test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "dev": "npm -w @gpmb/desktop run dev",
-    "build": "npm -w @gpmb/desktop run build"
+    "build": "npm -w @gpmb/desktop run build",
+    "don:rust": "node tools/don-build-rust.mjs"
   },
   "devDependencies": {
     "docx": "^9.7.2"

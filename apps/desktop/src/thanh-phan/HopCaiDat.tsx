@@ -13,7 +13,9 @@ import { deXuatNgayNghi, type LichLamViec, type NgayDacBiet } from "../lich-lam-
 import { Chon } from "./Chon";
 import { KHOA_THE_CAI_DAT } from "./BatDau";
 import { datHoiNoiLuu, hoiNoiLuu } from "../tai-xuong";
-import { QD27_MAC_DINH, loiCauHinh, type CauHinhThamQuyen } from "../van-ban/tham-quyen";
+import { DUOI_TEP_TQ, QD27_MAC_DINH, docTepCauHinhThamQuyen, loiCauHinh, tepCauHinhThamQuyen, type CauHinhThamQuyen } from "../van-ban/tham-quyen";
+import { taiXuong } from "../tai-xuong";
+import { ChonTep } from "./ChonTep";
 import { loiMatKhau, taoKhoaKhoiPhuc, thuMatKhauKhoiPhuc } from "../ma-hoa";
 
 const THU = ["Chủ nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
@@ -69,8 +71,23 @@ function TheNguongDt() {
  * bản thay thế, đơn vị nhập số, hiệu lực, vị trí từng nhiệm vụ — mô tả mẫu, cảnh báo ngày ký, nhắc báo cáo dùng ngay, không chờ bản mới.
  */
 function TheThamQuyen() {
-  const { thamQuyen, luuThamQuyen, quyen } = useUngDung();
+  const { thamQuyen, luuThamQuyen, quyen, nguoiDung, bao, ghiNhatKy } = useUngDung();
   const [c, setC] = useState<CauHinhThamQuyen>(thamQuyen);
+  /** 1.3.1 (B2): Sở lập cấu hình một lần, xuất tệp gửi các xã; xã nạp tệp (kiểm tra đủ trường) rồi xem lại, bấm Lưu. */
+  const xuatTep = async () => {
+    const ten = `Tham-quyen-phan-cap_${c.so.replace(/[^\p{L}\p{N}]+/gu, "-")}${DUOI_TEP_TQ}`;
+    if (await taiXuong(new TextEncoder().encode(tepCauHinhThamQuyen(c, nguoiDung ?? "")), ten, "application/json")) await ghiNhatKy("Xuất tệp cấu hình thẩm quyền phân cấp", `QĐ ${c.so}`);
+  };
+  const napTep = async (f: File | undefined) => {
+    if (!f) return;
+    try {
+      const t = docTepCauHinhThamQuyen(await f.text());
+      setC(t.cauHinh);
+      bao(`Đã đọc tệp: QĐ ${t.cauHinh.so}${t.nguoiLap ? ` (lập bởi ${t.nguoiLap}${t.luc ? `, ${new Date(t.luc).toLocaleString("vi-VN")}` : ""})` : ""} — đối chiếu với văn bản gốc rồi bấm "Lưu văn bản phân cấp"`);
+    } catch (e) {
+      bao((e as Error).message, "loi");
+    }
+  };
   useEffect(() => setC(thamQuyen), [thamQuyen]);
   const sua = quyen("CAI_DAT");
   const loi = loiCauHinh(c);
@@ -105,6 +122,8 @@ function TheThamQuyen() {
       {sua && (
         <div className="nhom-nut mt-8">
           <button className="nut nut-chinh" disabled={!!loi} onClick={() => void luuThamQuyen(c)}>Lưu văn bản phân cấp</button>
+          <ChonTep nhan="Nạp tệp cấu hình…" accept={`${DUOI_TEP_TQ},.json`} aria-label="Nạp tệp cấu hình thẩm quyền" onChange={(e) => { void napTep(e.target.files?.[0]); e.target.value = ""; }} />
+          <button className="nut" data-xuat-tep-tham-quyen disabled={!!loi} onClick={() => void xuatTep()}>Xuất tệp cấu hình (gửi các xã)</button>
           {!macDinh && <button className="nut" onClick={() => { if (confirm("Dùng lại mặc định QĐ 27/2026/QĐ-UBND?")) void luuThamQuyen(null); }}>Dùng lại QĐ 27/2026 (mặc định)</button>}
         </div>
       )}

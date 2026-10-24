@@ -17,8 +17,8 @@ jobs:
   kiem-thu:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -32,8 +32,8 @@ jobs:
     # Kiểm thử giao diện Playwright (P1-9): kịch bản Giai đoạn 1 trên bản build, Chromium
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -43,7 +43,7 @@ jobs:
       - run: npm -w @gpmb/desktop run e2e
         env:
           CI: "1"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: failure()
         with:
           name: playwright-ket-qua
@@ -53,8 +53,8 @@ jobs:
     needs: [kiem-thu, giao-dien]
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -72,7 +72,7 @@ jobs:
       - name: Kiểm thử nối thật máy trạm ↔ máy chủ mạng nội bộ (HTTPS, vân tay chứng chỉ)
         working-directory: apps/desktop
         run: npm run test:mang-that
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: gpmb-sonla-windows-setup
           path: apps/desktop/src-tauri/target/release/bundle/nsis/*.exe
@@ -87,7 +87,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Kiểm tra nhãn khớp phiên bản, đã có khóa ký
         shell: bash
         env:
@@ -102,7 +102,7 @@ jobs:
           [ -s apps/desktop/src-tauri/khoa-cap-nhat.pub ] || { echo "::error::Chưa có khóa công khai apps/desktop/src-tauri/khoa-cap-nhat.pub"; exit 1; }
           node tools/ghi-chu-phat-hanh.mjs "$pb" > ghi-chu.md || exit 1
           { echo 'NOI_DUNG<<HET_NOI_DUNG'; cat ghi-chu.md; echo 'HET_NOI_DUNG'; } >> "$GITHUB_ENV"
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm

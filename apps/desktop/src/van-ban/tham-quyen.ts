@@ -115,3 +115,50 @@ export function hanBaoCaoPhanCap(homNay: string): { han: string; tu: string; den
   d.setUTCDate(d.getUTCDate() - 1);
   return { han, tu, den: d.toISOString().slice(0, 10) };
 }
+
+/**
+ * 1.3.1 (B3) — Chặn mềm khi tạo văn bản thuộc nhiệm vụ phân cấp mà ngày ký ngoài thời gian hiệu lực của văn bản phân cấp đang
+ * áp dụng: trả nội dung hỏi xác nhận (null = không cần hỏi). Phần mềm không tự đổi thẩm quyền, người ký.
+ */
+export function xacNhanThamQuyen(ma: string, ngay?: string): string | null {
+  const cb = canhBaoThamQuyen(ma, ngay);
+  if (!cb.length) return null;
+  return `${cb.join("\n")}\n\nVẫn tạo văn bản? (Người ký chịu trách nhiệm về thẩm quyền; nếu đã có văn bản phân cấp thay thế, cập nhật ở Cài đặt chung → Thẩm quyền phân cấp hoặc nạp tệp cấu hình do Sở gửi.)`;
+}
+
+/** 1.3.1 (B2) — Tệp cấu hình văn bản phân cấp (Sở lập một lần, các xã nạp — không phải gõ lại từng máy). */
+export const DINH_DANG_TQ = "gpmb-tham-quyen-phan-cap";
+export const DUOI_TEP_TQ = ".gpmbtq";
+
+export function tepCauHinhThamQuyen(c: CauHinhThamQuyen, nguoiLap: string, luc = new Date().toISOString()): string {
+  const { nguoi: _n, luc: _l, ...cauHinh } = c;
+  return JSON.stringify({ dinhDang: DINH_DANG_TQ, phienBan: 1, nguoiLap, luc, cauHinh }, null, 2);
+}
+
+const laNgay = (x: unknown) => typeof x === "string" && /^\d{4}-\d{2}-\d{2}$/.test(x);
+
+/** Đọc, kiểm tra tệp cấu hình; sai dạng → ném lỗi có nội dung rõ (không nạp một phần). */
+export function docTepCauHinhThamQuyen(chu: string): { cauHinh: CauHinhThamQuyen; nguoiLap: string; luc: string } {
+  let o: Record<string, unknown>;
+  try {
+    o = JSON.parse(chu) as Record<string, unknown>;
+  } catch {
+    throw new Error("Tệp không đọc được (không phải tệp cấu hình thẩm quyền).");
+  }
+  if (o?.dinhDang !== DINH_DANG_TQ) throw new Error("Không phải tệp cấu hình thẩm quyền phân cấp của phần mềm.");
+  if (o.phienBan !== 1) throw new Error("Tệp cấu hình được tạo bởi phiên bản phần mềm mới hơn — cập nhật phần mềm rồi nạp lại.");
+  const c = o.cauHinh as Partial<CauHinhThamQuyen> | undefined;
+  if (!c || typeof c.so !== "string" || typeof c.ten !== "string" || !laNgay(c.hieuLucTu) || (c.hetHieuLucTu !== "" && !laNgay(c.hetHieuLucTu)) || typeof c.baoCao06Thang !== "boolean" || !Array.isArray(c.nhiemVu) || !c.nhiemVu.length)
+    throw new Error("Tệp cấu hình thiếu hoặc sai trường (số, trích yếu, ngày hiệu lực, danh sách nhiệm vụ).");
+  const ma = new Set<string>();
+  for (const n of c.nhiemVu) {
+    if (!n || typeof n.ma !== "string" || !n.ma || typeof n.noiDung !== "string" || typeof n.viTri !== "string" || !Array.isArray(n.mau) || n.mau.some((m) => typeof m !== "string"))
+      throw new Error("Danh sách nhiệm vụ trong tệp sai dạng.");
+    if (ma.has(n.ma)) throw new Error(`Mã nhiệm vụ ${n.ma} bị lặp trong tệp.`);
+    ma.add(n.ma);
+  }
+  const cauHinh: CauHinhThamQuyen = { so: c.so, ten: c.ten, hieuLucTu: c.hieuLucTu!, hetHieuLucTu: c.hetHieuLucTu ?? "", baoCao06Thang: c.baoCao06Thang, nhiemVu: c.nhiemVu.map((n) => ({ ma: n.ma, noiDung: n.noiDung, viTri: n.viTri, mau: [...n.mau] })) };
+  const loi = loiCauHinh(cauHinh);
+  if (loi) throw new Error(`Tệp cấu hình chưa hợp lệ: ${loi}.`);
+  return { cauHinh, nguoiLap: typeof o.nguoiLap === "string" ? o.nguoiLap : "", luc: typeof o.luc === "string" ? o.luc : "" };
+}

@@ -54,3 +54,10 @@ opt-level = 3
 opt-level = 3
 [profile.dev.package.hmac]
 opt-level = 3
+
+# 1.3.1 (D1): thư mục target/debug từng lên ~28 GB (đầy đĩa máy dựng). Thư viện phụ thuộc không cần thông tin gỡ lỗi; mã của
+# phần mềm chỉ giữ số dòng (đủ đọc vết lỗi). Dọn thêm: `npm run don:rust` (xóa bản dựng tăng dần, ví dụ cũ).
+[profile.dev]
+debug = "line-tables-only"
+[profile.dev.package."*"]
+debug = false

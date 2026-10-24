@@ -253,6 +253,11 @@ Gặp lỗi: bấm **"Chép chi tiết lỗi"** (nếu có), hoặc chụp màn 
 - [ ] Máy tỉnh: **Word phân cấp toàn tỉnh…** tổng hợp phân cấp toàn tỉnh mở được bằng Word; đơn vị còn gửi bản 1.2.0 hiện trong danh sách chưa có số liệu.
 - [ ] Nhận gói 20.000 hộ trên máy tỉnh: dòng trạng thái đếm số hộ đã tính, thanh tiến độ chạy, cửa sổ không "Not responding".
 - [ ] Đo thời gian trên máy cấu hình thấp: mở Sổ văn bản đi nhiều nghìn dòng; Xuất gói gửi tỉnh dự án lớn (so với số đo CI trong `tai-lon-1-3-0.test.ts`: sổ 5.000 dòng < 0,3 giây; diễn biến 20.000 hộ ~0,3 giây; tóm tắt gói 20.000 hộ ~11 giây lần đầu).
+### A11. Thử bản 1.3.1 trên máy Windows thật (khi phát hành)
+
+- [ ] Máy Sở: Cài đặt → Thẩm quyền phân cấp → **Xuất tệp cấu hình**; máy xã **Nạp tệp cấu hình** → các ô đổi theo tệp → Lưu; mô tả mẫu 15 đổi theo.
+- [ ] Soạn Mẫu 15 với ngày ký từ 01/3/2027 (vẫn QĐ 27/2026) → hộp hỏi xác nhận của Windows; bấm Cancel thì không tạo tệp.
+- [ ] Máy tỉnh: đơn vị gửi bằng bản 1.2.0 → **Ghi số liệu…** theo báo cáo giấy; Excel, Word toàn tỉnh có dòng "ghi tay theo …".
 
 ## 3. Quy trình mỗi lần sửa (để phiên mới làm đúng ngay)
 

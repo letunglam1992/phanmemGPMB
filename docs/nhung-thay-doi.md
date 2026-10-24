@@ -4,6 +4,15 @@ Mỗi phiên bản một mục `## X.Y.Z`. Khi phát hành, quy trình đóng g�
 (`tools/ghi-chu-phat-hanh.mjs`) — thiếu mục của phiên bản đang phát hành thì dừng, không phát hành. Phần mềm hiện các mục
 mới hơn bản đang dùng khi có bản cập nhật.
 
+## 1.3.1
+
+- Cài đặt → Thẩm quyền phân cấp: **Xuất tệp cấu hình** (`.gpmbtq`) để Sở gửi các xã khi có văn bản thay QĐ 27/2026; xã **Nạp tệp
+  cấu hình**, đối chiếu với văn bản gốc rồi bấm Lưu (tệp sai dạng, thiếu vị trí nhiệm vụ bị từ chối).
+- Tạo văn bản thuộc nhiệm vụ phân cấp có ngày ký ngoài hiệu lực văn bản phân cấp (vd. từ 01/3/2027 khi vẫn dùng QĐ 27/2026)
+  phải **xác nhận** trước khi tạo.
+- Máy tỉnh: đơn vị chưa có số liệu phân cấp của kỳ (gói từ bản cũ) — **ghi số liệu theo báo cáo bằng văn bản** của đơn vị (bắt
+  buộc căn cứ số, ngày báo cáo); bảng, Excel, Word toàn tỉnh dùng số ghi tay, ghi rõ nguồn.
+
 ## 1.3.0
 
 - **Báo cáo phân cấp 06 tháng** (khoản 2 Điều 4 QĐ 27/2026/QĐ-UBND, trước 15/6 và 15/12): Báo cáo tổng hợp → Báo cáo phân cấp;
