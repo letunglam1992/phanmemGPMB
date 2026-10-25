@@ -1,3 +1,4 @@
+import { homNayIso } from "../trang-thai";
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { VAN_BAN_CAN_CU } from "../van-ban-can-cu";
 import { GOI_MOI_NHAT, tenBoChinhSach } from "../goi-chinh-sach";
@@ -69,7 +70,7 @@ function tuGiaDat(bg: BangGiaDat): Muc[] {
   const tuyen = (ds: BangGiaDat["dat_o"], ten: string, khoa: string) => ds.forEach((r, i) => out.push({
     id: `${khoa}#${i}`, tab: "GIA_DAT", ma: `NQ152/B${r.bang}/${r.xa}/${r.stt}`, duong: [r.xa, `Bảng ${r.bang} – ${ten}`, ...(r.nhom ? [r.nhom] : [])], ten: r.tuyen, dvt: "nghìn đ/m²", gia: r.vt[0] ?? null, trang: null,
     them: [["Xã, phường", r.xa], ...r.vt.map((g, v) => [`Vị trí ${v + 1}`, g === null ? "—" : `${g.toLocaleString("vi-VN")} nghìn đ/m²`] as [string, string])],
-    canhBao: r.canh_bao, trich: `Bảng ${r.bang}, ${r.xa}, STT ${r.stt} (${r.tuyen}): ${r.vt.map((g, v) => `VT${v + 1} ${g ?? "—"}`).join("; ")} nghìn đồng/m²`,
+    canhBao: r.canh_bao, trich: `Bảng ${r.bang}, ${r.xa}, STT ${r.stt} (${r.tuyen}): ${r.vt.map((g, v) => `VT${v + 1} ${g ?? "—"}`).join("; ")} nghìn đồng/m²${r.van_ban ? ` — ${r.van_ban}` : ""}`,
   }));
   tuyen(bg.dat_o, "Đất ở", "O");
   tuyen(bg.dat_tmdv, "Đất thương mại, dịch vụ", "TM");
@@ -154,7 +155,7 @@ export function TraCuu({ timDau }: { timDau?: string } = {}) {
   const [bg, setBg] = useState<BangGiaDat | null>(null);
   const canCuRef = useRef<HTMLDivElement>(null);
   useEffect(() => { setBg(null); }, [bo]);
-  useEffect(() => { if (tab === "GIA_DAT" && !bg) void napBangGiaDatTheoBo(bo || undefined).then(setBg); }, [tab, bg, bo]);
+  useEffect(() => { if (tab === "GIA_DAT" && !bg) void napBangGiaDatTheoBo(bo || undefined, homNayIso()).then(setBg); }, [tab, bg, bo]);
 
   const tatCa = useMemo<Muc[]>(() => {
     if (tab === "CS") return [];

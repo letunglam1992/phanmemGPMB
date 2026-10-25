@@ -29,7 +29,8 @@ export const VAN_BAN_CAN_CU: VanBanCanCu[] = [
   { so: "14/2026/QĐ-UBND", ten: "Quyết định của UBND tỉnh Sơn La", ngay: "2026-03-31", suaDoiBoi: [{ so: "64/2026/QĐ-UBND", hieuLucTu: "2026-10-06", noiDung: "Sửa khoản 11 Điều 6" }], nguon: "policy/nguon/qd14-2026-dieu-3-7.md" },
   { so: "27/2026/QĐ-UBND", ten: "Quyết định phân cấp, ủy quyền thực hiện một số nhiệm vụ thuộc thẩm quyền của UBND tỉnh trong lĩnh vực quản lý đất đai trên địa bàn tỉnh Sơn La", ngay: "2026-06-30", hieuLucTu: "2026-06-30", hetHieuLucTu: "2027-03-01", nguon: "policy/nguon/qd27-2026-phan-cap-uy-quyen-dat-dai.md" },
   { so: "64/2026/QĐ-UBND", ten: "Quyết định sửa đổi, bổ sung QĐ 106/2025/QĐ-UBND và QĐ 14/2026/QĐ-UBND", ngay: "2026-10-06", hieuLucTu: "2026-10-06", nguon: "policy/nguon/qd64-2026-sua-qd106-qd14.md" },
-  { so: "152/2025/NQ-HĐND", ten: "Nghị quyết ban hành bảng giá đất", nguon: "policy/nguon/nq152-2025-bang-gia-dat.json" },
+  { so: "152/2025/NQ-HĐND", ten: "Nghị quyết ban hành bảng giá đất", suaDoiBoi: [{ so: "28/2026/NQ-HĐND", hieuLucTu: "2026-11-01", noiDung: "Sửa đổi, bổ sung Quy định bảng giá đất: bổ sung, sửa tên, bãi bỏ tuyến Bảng 05, 06, 07; khoản 8 Điều 7 (TMDV có nguồn gốc đất ở = 90% đất ở); bãi bỏ khoản 3 Điều 4" }], nguon: "policy/nguon/nq152-2025-bang-gia-dat.json, nq28-2026-sua-bang-gia-dat.json" },
+  { so: "28/2026/NQ-HĐND", ten: "Nghị quyết sửa đổi, bổ sung một số điều của Quy định bảng giá đất kèm NQ 152/2025/NQ-HĐND", ngay: "2026-10-19", hieuLucTu: "2026-11-01", nguon: "policy/nguon/nq28-2026-sua-bang-gia-dat.md" },
   { so: "32/2025/QĐ-UBND", ten: "Quyết định ban hành đơn giá bồi thường nhà, công trình", nguon: "policy/nguon/qd32-2025-don-gia-nha-cong-trinh.json" },
 ];
 

@@ -69,6 +69,9 @@ export interface BangGiaDat {
   dat_tmdv: DongGiaTuyen[];
   dat_skc: DongGiaTuyen[];
   dat_kcn_ccn: { bang: string; loai_dat: string; ten: string; xa: string; gia: number }[];
+  /** 1.3.1: bảng đã áp dụng NQ 28/2026 (lưu ý về nguồn dữ liệu, cờ) */
+  luu_y?: string;
+  nq28?: boolean;
 }
 export interface DongGiaTuyen {
   bang: string;
@@ -79,6 +82,8 @@ export interface DongGiaTuyen {
   tuyen: string;
   vt: (number | null)[];
   canh_bao: string[];
+  /** 1.3.1: dòng bổ sung / sửa tên theo văn bản sửa đổi (vd. "NQ 28/2026/NQ-HĐND, Phụ lục I") — trống = NQ 152 */
+  van_ban?: string;
 }
 
 let bangGia: Promise<BangGiaDat> | null = null;
@@ -86,6 +91,13 @@ let bangGia: Promise<BangGiaDat> | null = null;
 export function napBangGiaDat(): Promise<BangGiaDat> {
   bangGia ??= import("../../../policy/nguon/nq152-2025-bang-gia-dat.json").then((m) => (m.default ?? m) as unknown as BangGiaDat);
   return bangGia;
+}
+
+let suaNq28: Promise<import("./bang-gia-nq28").SuaBangGia> | null = null;
+/** 1.3.1: dữ liệu NQ 28/2026 sửa đổi, bổ sung bảng giá đất NQ 152. */
+export function napSuaNq28() {
+  suaNq28 ??= import("../../../policy/nguon/nq28-2026-sua-bang-gia-dat.json").then((m) => (m.default ?? m) as unknown as import("./bang-gia-nq28").SuaBangGia);
+  return suaNq28;
 }
 
 /** Bảng đơn giá, bảng giá đất nạp kèm gói chính sách (goi-chinh-sach.ts dangKyGoi), theo khóa bộ chính sách. */
@@ -104,9 +116,19 @@ export function donGiaTheoBo(khoa?: string): DongDonGia[] {
 }
 
 /** Bảng giá đất theo bộ chính sách: gói có bảng giá đất thì dùng bảng của gói, không thì bảng NQ 152 có sẵn. */
-export function napBangGiaDatTheoBo(khoa?: string): Promise<BangGiaDat> {
+export function napBangGiaDatTheoBo(khoa?: string, ngay?: string): Promise<BangGiaDat> {
   const g = khoa ? BANG_GIA_GOI[khoa] : undefined;
-  return g ? Promise.resolve(g) : napBangGiaDat();
+  if (g) return Promise.resolve(g);
+  // 1.3.1: bảng có sẵn — áp dụng NQ 28/2026 theo ngày (trống = không áp dụng, giữ NQ 152 nguyên bản)
+  if (!ngay) return napBangGiaDat();
+  return Promise.all([napBangGiaDat(), napSuaNq28(), import("./bang-gia-nq28")]).then(([b, s, m]) => m.bangGiaTheoNgay(b, s, ngay));
+}
+
+/** 1.3.1: kiểm tra phương án — chấp nhận giá của cả hai kỳ (trước / từ 01/11/2026). Gói có bảng riêng thì dùng bảng gói. */
+export function napBangGiaKiemTra(khoa?: string): Promise<BangGiaDat> {
+  const g = khoa ? BANG_GIA_GOI[khoa] : undefined;
+  if (g) return Promise.resolve(g);
+  return Promise.all([napBangGiaDat(), napSuaNq28(), import("./bang-gia-nq28")]).then(([b, s, m]) => m.bangGiaHaiKy(b, s));
 }
 
 /** Danh mục 75 xã, phường (NQ 152) — bản rút gọn nạp sẵn để chọn địa bàn. */

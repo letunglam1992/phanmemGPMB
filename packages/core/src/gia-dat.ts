@@ -3,6 +3,8 @@ import type { DieuChinhGia } from "./dat";
 import { D, dinhDang, lamTronDienTich, type SoVao } from "./so";
 
 const VB = "NQ 152/2025/NQ-HĐND";
+/** Điều 2, Điều 4 NQ 28/2026/NQ-HĐND: bãi bỏ khoản 3 Điều 4 (giảm do chênh cao), hiệu lực 01/11/2026. */
+export const NGAY_BAI_BO_CHENH_CAO = "2026-11-01";
 
 /**
  * Xác định giá đất một thửa phi nông nghiệp theo NQ 152/2025 (GD-09…GD-14, docs/07),
@@ -24,6 +26,8 @@ export function dieuChinhGiaDatPnn(
     matTiepGiap?: LoaiMatTiepGiap[];
     chenhCaoMet?: SoVao;
     matDuongLaDuongDat?: boolean;
+    /** Ngày áp dụng bảng giá (ISO). Từ 01/11/2026 khoản 3 Điều 4 (giảm do chênh cao) bị bãi bỏ — Điều 2 NQ 28/2026/NQ-HĐND. */
+    ngayApDung?: string;
   },
 ): { giaCoSoNghinDong: string; dieuChinh: DieuChinhGia[]; canhBao: string[] } {
   const g = cs.giaDat;
@@ -69,7 +73,10 @@ export function dieuChinhGiaDatPnn(
   }
 
   // 3. Giảm do chênh cao; đường đất (vị trí 2–5)
-  if (p.chenhCaoMet !== undefined && D(p.chenhCaoMet).abs().gte(g.giamChenhCao.nguongMet)) {
+  const boChenhCao = !!p.ngayApDung && p.ngayApDung >= NGAY_BAI_BO_CHENH_CAO;
+  if (boChenhCao && p.chenhCaoMet !== undefined && D(p.chenhCaoMet).abs().gte(g.giamChenhCao.nguongMet))
+    canhBao.push("Không giảm do chênh cao: khoản 3 Điều 4 Quy định kèm NQ 152/2025 đã bãi bỏ từ 01/11/2026 (Điều 2 NQ 28/2026/NQ-HĐND)");
+  if (!boChenhCao && p.chenhCaoMet !== undefined && D(p.chenhCaoMet).abs().gte(g.giamChenhCao.nguongMet)) {
     dieuChinh.push({ moTa: `Chênh cao ${dinhDang(p.chenhCaoMet, 2)} m ≥ ${g.giamChenhCao.nguongMet} m: giảm 30%`, heSo: g.giamChenhCao.heSo, canCu: { vanBan: VB, viTri: g.giamChenhCao.canCu } });
   }
   if (p.matDuongLaDuongDat && g.duongDat.apDungViTri.includes(p.viTri)) {

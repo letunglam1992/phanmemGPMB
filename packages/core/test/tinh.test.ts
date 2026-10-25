@@ -200,6 +200,12 @@ describe("Giá đất NQ 152 – thứ tự điều chỉnh đã xác nhận (VM
     const r = dieuChinhGiaDatPnn(cs, { loai: "PNN", viTri: 2, giaViTriNghinDong: 1000, dienTichTheoLop: [100, 100], matTiepGiap: ["NGO", "NGO"], chenhCaoMet: "-1.6", matDuongLaDuongDat: true });
     expect(r.dieuChinh.map((x) => x.heSo)).toEqual(["0.75", "1.08", "0.7", "0.7"]);
   });
+  it("từ 01/11/2026 không giảm do chênh cao (Điều 2 NQ 28/2026 bãi bỏ k3 Đ4), có cảnh báo", () => {
+    const r = dieuChinhGiaDatPnn(cs, { loai: "PNN", viTri: 2, giaViTriNghinDong: 1000, chenhCaoMet: "-1.6", ngayApDung: "2026-11-01" });
+    expect(r.dieuChinh).toHaveLength(0);
+    expect(r.canhBao.join()).toContain("Điều 2 NQ 28/2026/NQ-HĐND");
+    expect(dieuChinhGiaDatPnn(cs, { loai: "PNN", viTri: 2, giaViTriNghinDong: 1000, chenhCaoMet: "-1.6", ngayApDung: "2026-10-31" }).dieuChinh.map((x) => x.heSo)).toEqual(["0.7"]);
+  });
   it("đường đất không áp cho vị trí 1", () => {
     expect(dieuChinhGiaDatPnn(cs, { loai: "PNN", viTri: 1, giaViTriNghinDong: 1000, matDuongLaDuongDat: true }).dieuChinh).toHaveLength(0);
   });

@@ -155,3 +155,29 @@ test("A2 tỉnh: đơn vị chưa có số liệu kỳ → ghi tay theo báo cá
   expect(doc).toContain("Quyết định thu hồi đất (Điều 78, 79 Luật Đất đai): 4 (ghi tay theo Báo cáo số 12/BC-UBND ngày 10/12/2026 (thử))");
   expect(doc).toContain("Các đơn vị đã gửi số liệu trong kỳ.");
 });
+
+test("NQ 28/2026: chọn giá đất kỳ từ 01/11/2026 — tuyến bổ sung (Phụ lục I), TMDV gốc đất ở 90% (k8 Đ7); kỳ trước không có tuyến mới", async ({ page: p }) => {
+  await vao(p);
+  await p.keyboard.press("Alt+3");
+  await p.locator("[role=tablist] button", { hasText: "Hộ, cá nhân" }).click();
+  await p.locator("tr[data-ho-id]").first().click();
+  await p.locator("[role=tablist] button", { hasText: "Thửa đất" }).first().click();
+  await p.getByRole("button", { name: /^(Đổi|Chọn giá đất…)$/ }).first().click();
+  const hop = p.locator("[role=dialog]", { hasText: "Chọn giá đất" });
+  // đồng hồ thử 19/10/2026 → mặc định kỳ trước 01/11/2026
+  await expect(hop.getByLabel("Kỳ áp dụng bảng giá đất")).toHaveValue("CU");
+  await hop.locator(".o-nhap", { has: p.locator("label", { hasText: /^Bảng giá$/ }) }).locator("select").selectOption("DAT_O");
+  await hop.locator(".o-nhap", { has: p.locator("label", { hasText: "Xã, phường" }) }).locator("select").selectOption("Xã Chiềng Mung");
+  await hop.getByPlaceholder("Tên đường, đoạn…").fill("cai nghiện");
+  await expect(hop.getByText("Không có dòng phù hợp.")).toBeVisible();
+  await hop.getByLabel("Kỳ áp dụng bảng giá đất").selectOption("MOI");
+  await expect(hop.locator("[data-luu-y-nq28]")).toContainText("đối chiếu với bản Nghị quyết đã ký");
+  const dong = hop.locator("tbody tr", { hasText: "trung tâm cai nghiện" });
+  await expect(dong).toContainText("Bổ sung theo Phụ lục I NQ 28/2026/NQ-HĐND ngày 19/10/2026, áp dụng từ 01/11/2026");
+  // Bảng 06 + khoản 8 Điều 7: 90% giá đất ở VT1 1.500 → 1.350
+  await hop.locator(".o-nhap", { has: p.locator("label", { hasText: /^Bảng giá$/ }) }).locator("select").selectOption("TMDV");
+  await hop.getByLabel("Đất TMDV có nguồn gốc đất ở (khoản 8 Điều 7)").check();
+  await hop.locator("tbody tr", { hasText: "trung tâm cai nghiện" }).getByRole("button", { name: "1350", exact: true }).click();
+  await expect(hop).toHaveCount(0);
+  await expect(p.getByText(/Khoản 8 Điều 7 \(bổ sung bởi khoản 6 Điều 1 NQ 28\/2026\): 90% × Bảng 05, Xã Chiềng Mung/).first()).toBeVisible();
+});

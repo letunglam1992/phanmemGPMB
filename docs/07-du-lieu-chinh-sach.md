@@ -11,6 +11,8 @@ Toàn bộ dữ liệu nằm trong `policy/nguon/`, sinh lại được bằng c
 | `qd106-2025-pl8-cay-trong-thuy-san.json` | PL VIII – PDF gốc | find_tables, cây phân cấp | **311** (Biểu 01: 53; 02: 192; 03: 56; 04: 10) | Mọi ô giá đều được xuất; 7 ô "mật độ" ở dòng tiêu đề Biểu 03 được lưu làm mật độ nhóm; **đã khôi phục Biểu 02 mục 1–15** |
 | `nq152-2025-bang-gia-dat.json` | NQ 152/2025 – Bảng 01–08 (**bản Word**, đợt 4) | Đọc trực tiếp bảng Word, giữ đúng vị trí ô trống | Đất NN: **376**; đất ở: **1.795**; TMDV: **1.793**; SXKD: **1.797**; KCN/CCN: **3** | 75/75 xã, phường; 26 dòng **đúng văn bản** nhưng bất thường (giá vị trí sau cao hơn, bỏ trống vị trí) → `policy/nguon/nq152-can-doi-chieu.md` |
 
+| `nq28-2026-sua-bang-gia-dat.json` | NQ 28/2026/NQ-HĐND sửa NQ 152 — phụ biểu Excel ("kèm DTNQ update 2-10-2026") | `tools/gia-dat/doc-nq28.py`: đọc PL I–V, khớp từng dòng sửa tên/bãi bỏ với dòng NQ 152 theo bảng (cùng xã, STT, tên gần giống; không thì tên trùng ≥ 95%) | Bổ sung **132** tuyến mỗi Bảng 05, 06, 07; sửa tên **107**; bãi bỏ **26**; chưa khớp **0** | Hiệu lực 01/11/2026; nguyên văn Điều 1–5 ở `nq28-2026-sua-bang-gia-dat.md`; VM-41, QD-44 |
+
 ### Lưu ý chất lượng
 
 - **Bảng 05–07 NQ 152**: đã thay nguồn Markdown bằng bản Word (đầy đủ hơn 11–32 dòng mỗi bảng, đúng vị trí ô trống). Script: `tools/extract/nq152_docx.py`.

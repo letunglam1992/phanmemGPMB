@@ -429,10 +429,10 @@ function giaDatXa(bang: BangGiaDat, xa: string, ma: string | null): { gia: numbe
       kq.push({ gia: r.gia, nguon: `NQ 152/2025/NQ-HĐND, Bảng ${r.bang}, STT ${r.stt}, ${r.xa}, ${r.loai_dat}` });
   if (!ma || MA_DAT_O.includes(ma))
     for (const r of bang.dat_o)
-      if (cungXa(r.xa)) r.vt.forEach((g, i) => g != null && kq.push({ gia: g, nguon: `NQ 152/2025/NQ-HĐND, Bảng ${r.bang}, ${r.xa}, STT ${r.stt}, VT${i + 1}: ${r.tuyen}` }));
+      if (cungXa(r.xa)) r.vt.forEach((g, i) => g != null && kq.push({ gia: g, nguon: `${r.van_ban ?? "NQ 152/2025/NQ-HĐND"}, Bảng ${r.bang}, ${r.xa}, STT ${r.stt}, VT${i + 1}: ${r.tuyen}` }));
   if (ma && ["SKC", "TMD"].includes(ma)) {
     for (const r of [...bang.dat_tmdv, ...bang.dat_skc])
-      if (cungXa(r.xa) && (ma === "TMD" ? r.loai_dat.includes("TMD") : r.loai_dat.includes("SKC"))) r.vt.forEach((g, i) => g != null && kq.push({ gia: g, nguon: `NQ 152/2025/NQ-HĐND, Bảng ${r.bang}, ${r.xa}, STT ${r.stt}, VT${i + 1}` }));
+      if (cungXa(r.xa) && (ma === "TMD" ? r.loai_dat.includes("TMD") : r.loai_dat.includes("SKC"))) r.vt.forEach((g, i) => g != null && kq.push({ gia: g, nguon: `${r.van_ban ?? "NQ 152/2025/NQ-HĐND"}, Bảng ${r.bang}, ${r.xa}, STT ${r.stt}, VT${i + 1}` }));
   }
   if (ma && ["SKK", "SKN"].includes(ma)) for (const r of bang.dat_kcn_ccn) if (cungXa(r.xa)) kq.push({ gia: r.gia, nguon: `NQ 152/2025/NQ-HĐND, Bảng ${r.bang}, ${r.ten}` });
   return kq;

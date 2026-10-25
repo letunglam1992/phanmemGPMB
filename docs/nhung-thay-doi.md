@@ -13,6 +13,10 @@ mới hơn bản đang dùng khi có bản cập nhật.
 - Máy tỉnh: đơn vị chưa có số liệu phân cấp của kỳ (gói từ bản cũ) — **ghi số liệu theo báo cáo bằng văn bản** của đơn vị (bắt
   buộc căn cứ số, ngày báo cáo); bảng, Excel, Word toàn tỉnh dùng số ghi tay, ghi rõ nguồn.
 
+- **Bảng giá đất theo NQ 28/2026/NQ-HĐND** (sửa NQ 152/2025, hiệu lực 01/11/2026): khi chọn giá đất chọn kỳ áp dụng (trước / từ
+  01/11/2026); từ 01/11/2026 có thêm 132 tuyến mỗi bảng đất ở, TMDV, SXKD, tên tuyến sửa theo Phụ lục IV, bỏ các tuyến bãi bỏ;
+  đất TMDV có nguồn gốc đất ở = 90% giá đất ở cùng vị trí (khoản 8 Điều 7); giảm giá do chênh cao (khoản 3 Điều 4) đã bãi bỏ.
+
 ## 1.3.0
 
 - **Báo cáo phân cấp 06 tháng** (khoản 2 Điều 4 QĐ 27/2026/QĐ-UBND, trước 15/6 và 15/12): Báo cáo tổng hợp → Báo cáo phân cấp;
