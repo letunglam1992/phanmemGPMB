@@ -15,7 +15,12 @@ mới hơn bản đang dùng khi có bản cập nhật.
 
 - **Bảng giá đất theo NQ 28/2026/NQ-HĐND** (sửa NQ 152/2025, hiệu lực 01/11/2026): khi chọn giá đất chọn kỳ áp dụng (trước / từ
   01/11/2026); từ 01/11/2026 có thêm 132 tuyến mỗi bảng đất ở, TMDV, SXKD, tên tuyến sửa theo Phụ lục IV, bỏ các tuyến bãi bỏ;
-  đất TMDV có nguồn gốc đất ở = 90% giá đất ở cùng vị trí (khoản 8 Điều 7); giảm giá do chênh cao (khoản 3 Điều 4) đã bãi bỏ.
+  đất TMDV có nguồn gốc đất ở = 90% giá đất ở cùng vị trí (khoản 8 Điều 7); giảm giá do chênh cao (khoản 3 Điều 4) đã bãi bỏ;
+  bảng giá đất nghĩa trang, nhà tang lễ, cơ sở hỏa táng.
+- Tổng quan: thẻ **Rà soát NQ 28** — thửa đang dùng giá theo tuyến bị bãi bỏ, đổi tên, giá nhập tay có giảm chênh cao; gợi ý tuyến
+  bổ sung tách từ tuyến cũ; xuất Excel; mở hồ sơ để chọn lại giá.
+- Bản đồ: lớp điểm tọa độ tuyến giá đất ghi trong phụ biểu NQ 28; chọn thửa hiện tuyến gần (tham khảo).
+- Tra cứu giá đất: chọn kỳ bảng giá (trước / từ 01/11/2026).
 
 ## 1.3.0
 

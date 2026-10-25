@@ -1,5 +1,6 @@
 import { ONgay } from "../thanh-phan/ONgay";
 import { TheQd64 } from "../thanh-phan/Qd64";
+import { TheNq28 } from "../thanh-phan/Nq28";
 import { GOI_MOI_NHAT } from "../goi-chinh-sach";
 import { TheBatDau } from "../thanh-phan/BatDau";
 import { useRef, useState } from "react";
@@ -97,6 +98,7 @@ export function TongQuan() {
       {dangTinh && <TienDoTinhNen />}
       <TheBatDau taoDuAn={() => setTaoMoi(true)} />
       <TheQd64 />
+      <TheNq28 />
       <section className="the tq-tinh-trang" aria-label="Tình trạng chung">
         <div className="tq-tt-dau">
           <span className="bt"><BieuTuong ten="baoCao" co={30} /></span>

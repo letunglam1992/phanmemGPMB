@@ -5,7 +5,8 @@
     python3 -I tools/gia-dat/doc-nq28.py <phu-bieu.xlsx> <ten-tep-goc>
 
 Đơn vị: nghìn đồng/m². Phụ lục I (Bảng 05 đất ở), II (Bảng 06 TMDV), III (Bảng 07 SKC) — bổ sung; IV — điều chỉnh tên;
-V — bãi bỏ (Điều 1 NQ 28). Trang "Bổ sung NTD" (nghĩa trang) không có trong Điều 1 → ghi vào "chua_ap_dung".
+V — bãi bỏ (Điều 1 NQ 28); trang "Bổ sung NTD" — giá đất nghĩa trang, nhà tang lễ, cơ sở hỏa táng (phụ biểu kèm NQ, người dùng
+xác nhận NQ đã ký 25/10/2026 và dùng làm căn cứ). Tọa độ (WGS-84, độ phút giây hoặc độ phút) ghi trong phụ biểu → "toa_do".
 """
 import json, re, sys, os, difflib
 import openpyxl
@@ -31,6 +32,21 @@ def so(v):
         return None
     return int(v) if float(v).is_integer() else float(v)
 
+TOA_DO = re.compile(r"(\d{1,3})\s*°\s*(\d+(?:\.\d+)?)\s*['′](?:\s*(\d+(?:\.\d+)?)\s*[\"″])?\s*([NS])\s*[,;]?\s*(\d{1,3})\s*°\s*(\d+(?:\.\d+)?)\s*['′](?:\s*(\d+(?:\.\d+)?)\s*[\"″])?\s*([EW])")
+
+def toa_do(o):
+    """Các điểm [vĩ độ, kinh độ] (WGS-84, độ thập phân, 6 số lẻ) theo thứ tự ghi trong ô."""
+    out = []
+    for c in o:
+        if not isinstance(c, str):
+            continue
+        for m in TOA_DO.finditer(c):
+            g = m.groups()
+            lat = int(g[0]) + float(g[1]) / 60 + (float(g[2]) / 3600 if g[2] else 0)
+            lon = int(g[4]) + float(g[5]) / 60 + (float(g[6]) / 3600 if g[6] else 0)
+            out.append([round(lat if g[3] == "N" else -lat, 6), round(lon if g[7] == "E" else -lon, 6)])
+    return out
+
 def doc_bo_sung(ws, bang, loai):
     out, xa, nhom, n = [], None, "", 0
     for r in ws.iter_rows(min_row=6, values_only=True):
@@ -49,7 +65,8 @@ def doc_bo_sung(ws, bang, loai):
         if xa is None:
             raise SystemExit(f"{ws.title}: dòng có giá trước khi có xã: {ten}")
         n += 1
-        out.append({"bang": bang, "loai_dat": loai, "xa": xa, "stt": f"NQ28-{n}", "nhom": nhom or "Bổ sung theo NQ 28/2026/NQ-HĐND",
+        td = toa_do(r[8:])
+        out.append({**({"toa_do": td} if td else {}), "bang": bang, "loai_dat": loai, "xa": xa, "stt": f"NQ28-{n}", "nhom": nhom or "Bổ sung theo NQ 28/2026/NQ-HĐND",
                     "tuyen": ten, "vt": vt, "so_vi_tri": sum(1 for v in vt if v is not None), "canh_bao": [],
                     **({"vi_tri_bo_sung": ghi} if ghi else {}), **({"stt_phu_bieu": stt} if stt and stt != "-" else {})})
     return out
@@ -105,6 +122,16 @@ def gan_khop(ds, khoa_ten, ten_loai):
             chua.append({**d, "loai": ten_loai})
     return ok, chua
 
+def doc_ntd(ws):
+    out = []
+    for r in ws.iter_rows(min_row=5, values_only=True):
+        ten, xa, gia = sach(r[1]), ten_xa(r[2]), so(r[3])
+        if ten and gia is not None:
+            if not xa:
+                raise SystemExit(f"NTD: không nhận ra xã {r[2]}")
+            out.append({"bang": "NTD", "loai_dat": "NTD", "ten": ten, "xa": xa, "gia": gia})
+    return out
+
 ten_trang = {ws.title: ws for ws in wb.worksheets}
 def trang(dau):
     for k, v in ten_trang.items():
@@ -118,7 +145,7 @@ kq = {
     "hieu_luc_tu": "2026-11-01",
     "don_vi": "nghìn đồng/m²",
     "nguon": ten_goc,
-    "luu_y_nguon": "Theo tệp đơn vị cung cấp (tên tệp ghi \"dự thảo\"; phụ biểu \"kèm DTNQ update 2/10/2026\") — đối chiếu với bản Nghị quyết đã ký, công bố trước khi áp dụng.",
+    "luu_y_nguon": "Nghị quyết đã ký ban hành (người dùng xác nhận 25/10/2026); giá theo phụ biểu kèm Nghị quyết.",
     "bo_sung": {
         "dat_o": doc_bo_sung(trang("PL.1"), "05", "ODT/ONT"),
         "dat_tmdv": doc_bo_sung(trang("PL.2"), "06", "TMD"),
@@ -131,10 +158,8 @@ kq = {
         {"vi_tri": "khoản 3 Điều 4 (bãi bỏ bởi Điều 2 NQ 28/2026)", "noi_dung": "Bãi bỏ khoản 3 Điều 4 Quy định ban hành kèm theo Nghị quyết số 152/2025/NQ-HĐND (giảm giá do chênh lệch độ cao)."},
         {"vi_tri": "khoản 1 Điều 3 NQ 28/2026 (chuyển tiếp)", "noi_dung": "Đối với trường hợp đã có quyết định phê duyệt phương án bồi thường, hỗ trợ và tái định cư trước ngày Nghị quyết này có hiệu lực thi hành thì tiếp tục thực hiện theo phương án đã được phê duyệt, trừ trường hợp phương án bồi thường, hỗ trợ, tái định cư phải điều chỉnh, bổ sung hoặc hủy bỏ theo quy định của pháp luật."},
     ],
-    "chua_ap_dung": [
-        {"trang": t, "ly_do": "Phụ biểu có trang này nhưng Điều 1 NQ 28/2026 không có nội dung tương ứng (bổ sung giá đất nghĩa trang, nhà tang lễ, cơ sở hỏa táng) — chưa đưa vào bảng giá; chờ đối chiếu bản ký."}
-        for t in ten_trang if "NTD" in t
-    ],
+    "dat_ntd": doc_ntd(trang("PL.4_Bổ sung NTD")),
+    "chua_ap_dung": [],
 }
 kq["doi_ten"], c1 = gan_khop(doc_danh_sach(trang("PL.4_Điều chỉnh"), True), "ten_cu", "doi_ten")
 kq["bai_bo"], c2 = gan_khop(doc_danh_sach(trang("PL.5"), False), "ten", "bai_bo")
@@ -144,7 +169,7 @@ for d in kq["doi_ten"]:
 kq["chua_khop"] = c1 + c2
 ra = os.path.join(GOC, "nq28-2026-sua-bang-gia-dat.json")
 json.dump(kq, open(ra, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
-print(ra, {k: len(v) for k, v in kq["bo_sung"].items()}, "đổi tên", len(kq["doi_ten"]), "bãi bỏ", len(kq["bai_bo"]), "chưa khớp", [(x["loai"], x["xa"], x["stt"]) for x in kq["chua_khop"]])
+print(ra, {k: len(v) for k, v in kq["bo_sung"].items()}, "NTD", len(kq["dat_ntd"]), "có tọa độ", sum(1 for r in kq["bo_sung"]["dat_o"] if r.get("toa_do")), "đổi tên", len(kq["doi_ten"]), "bãi bỏ", len(kq["bai_bo"]), "chưa khớp", [(x["loai"], x["xa"], x["stt"]) for x in kq["chua_khop"]])
 for d in kq["doi_ten"] + kq["bai_bo"]:
     if len(d["khop"]) < 3:
         print("chỉ khớp một phần bảng:", d["xa"], d["stt"], list(d["khop"]))

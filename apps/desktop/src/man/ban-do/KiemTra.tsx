@@ -89,7 +89,7 @@ export function KiemTraBanDo({ dl, coPhamVi, soVung, moCauHinh, ttThua }: { dl: 
   );
 }
 
-export function ChiTietThua({ t, th, ho, tt, moHo, tomTat, xoa, quayLai }: { t: ThuaBanDo; th?: DienTichThuHoi; ho?: Ho; tt?: TrangThaiGpmb; moHo: (h: Ho) => void; tomTat?: React.ReactNode; xoa?: () => void; quayLai?: () => void }) {
+export function ChiTietThua({ t, th, ho, tt, moHo, tomTat, xoa, quayLai, goiYTuyen }: { t: ThuaBanDo; th?: DienTichThuHoi; ho?: Ho; tt?: TrangThaiGpmb; moHo: (h: Ho) => void; tomTat?: React.ReactNode; xoa?: () => void; quayLai?: () => void; goiYTuyen?: string }) {
   return (
     <div className="the">
       {quayLai && <div className="the-quay-lai" data-chi-tiet-thua><button className="nut nut-chu nut-nho" onClick={quayLai}>← Danh sách thửa</button></div>}
@@ -106,6 +106,7 @@ export function ChiTietThua({ t, th, ho, tt, moHo, tomTat, xoa, quayLai }: { t: 
         )}
         <div className="mo">Nhãn trong thửa: {t.nhan.map((n) => `[${n.lop}] ${n.chu}`).join(" · ")}</div>
         {ho && <div>Đã gắn hồ sơ: <button className="nut nut-chu nut-nho" onClick={() => moHo(ho)}>{ho.ma} · {ho.ten}</button></div>}
+        {goiYTuyen && <div className="thong-bao thong-bao-xanh chu-nho" style={{ margin: 0 }} data-goi-y-tuyen-gia>Tuyến giá đất gần (NQ 28/2026): {goiYTuyen}</div>}
         {tomTat}
       </div>
     </div>

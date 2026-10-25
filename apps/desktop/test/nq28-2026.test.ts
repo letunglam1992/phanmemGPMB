@@ -24,7 +24,9 @@ describe("Dữ liệu NQ 28/2026", () => {
       expect(bang.danh_muc_xa).toContain(r.xa);
       expect(r.vt.some((g) => typeof g === "number" && g > 0)).toBe(true);
     }
-    expect(sua.chua_ap_dung.map((x) => x.trang).join()).toContain("NTD");
+    expect(sua.chua_ap_dung).toEqual([]);
+    expect(sua.dat_ntd).toEqual([{ bang: "NTD", loai_dat: "NTD", ten: expect.stringContaining("Công viên nghĩa trang thành phố Sơn La"), xa: "Phường Chiềng Sinh", gia: 350 }]);
+    expect(sua.luu_y_nguon).toContain("đã ký ban hành");
   });
 });
 
@@ -63,5 +65,36 @@ describe("Áp dụng theo ngày", () => {
     expect(giaTmdTuDatO(640)).toBe("576");
     expect(giaTmdTuDatO(1050)).toBe("945");
     expect(giaTmdTuDatO(155)).toBe("139.5");
+  });
+});
+
+import { raSoatNq28, docNguonTuyen } from "../src/nq28";
+import { tuyenCoToaDo, tuyenGanNhat } from "../src/man/ban-do/tuyen-gia";
+import { HE_SON_LA, vn2000SangWgs84 } from "@gpmb/gis";
+import type { DuAn, Ho } from "../src/mo-hinh";
+
+describe("Rà soát NQ 28, tọa độ tuyến", () => {
+  const ho = (id: string, nguon: string): Ho => ({ id, duAnId: "d1", ma: id, loai: "HO_GIA_DINH", ten: id, diaChi: "", soDinhDanh: "", dienThoai: "", nhanKhau: [], thua: [{ id: `t-${id}`, soTo: "5", soThua: "12", loaiDat: "ODT", gia: { giaNghinDong: "100", nguon } } as unknown as Ho["thua"][number]], taiSan: [], hoTro: {} as Ho["hoTro"], khauTru: "0", tienDo: {}, nhatKy: [] });
+  it("thửa dùng tuyến bãi bỏ → gợi ý tuyến tách; đổi tên → thông tin; nhập tay giảm chênh cao → nhắc; PA đã duyệt → k1 Đ3", () => {
+    const bo = bang.dat_o.find((r) => r.xa === "Xã Đoàn Kết" && r.tuyen.startsWith("Từ Km 46+800 theo Quốc lộ 43 đến Nhà văn hóa"))!;
+    const doi = bang.dat_o.find((r) => r.xa === "Xã Tô Múa" && r.tuyen.includes("bản Liên Hưng"))!;
+    const ng = (r: typeof bo) => `Bảng 05, ${r.xa}, STT ${r.stt} (${r.tuyen}), VT1`;
+    expect(docNguonTuyen(ng(bo))).toMatchObject({ bang: "05", xa: "Xã Đoàn Kết", stt: bo.stt });
+    const d = { id: "d1", ten: "DA", xa: "Xã Đoàn Kết", phuongAn: [] } as unknown as DuAn;
+    const hos = [ho("A", ng(bo)), ho("B", `${ng(doi)} — NQ 152`), ho("C", "Nhập tay: VT2 × 0,7 giảm chênh cao 2 m (k3 Đ4)"), ho("D", "Bảng 05, STT 1.1, VT1 (chuỗi khác)")];
+    const ds = raSoatNq28([d], () => hos, sua);
+    expect(ds.map((x) => [x.ho.id, x.loai])).toEqual([["A", "BAI_BO"], ["B", "DOI_TEN"], ["C", "CHENH_CAO"]]);
+    expect(ds[0]!.goiY.join()).toContain("Từ km 46+800 theo Quốc lộ 43 đến Km 45+590");
+    expect(ds[0]!.daDuyet).toBe(false);
+  });
+  it("tọa độ WGS-84 phụ biểu → VN-2000 (múi 3°, KTT 104°) đổi ngược khớp; tuyến gần nhất trong 1,5 km", () => {
+    const ds = tuyenCoToaDo(sua, "Xã Chiềng Hặc", HE_SON_LA);
+    expect(ds.length).toBe(10);
+    const p0 = ds[0]!.diem[0]!;
+    const ll = vn2000SangWgs84(p0, HE_SON_LA);
+    expect(ll.lat).toBeCloseTo(20.959967, 5);
+    expect(ll.lon).toBeCloseTo(104.4299, 5);
+    expect(tuyenGanNhat(ds, { x: p0.x + 30, y: p0.y + 40 })!.m).toBeCloseTo(50, 3);
+    expect(tuyenGanNhat(ds, { x: p0.x + 50000, y: p0.y + 50000 }, 1500)).toBeNull();
   });
 });

@@ -259,6 +259,7 @@ Gặp lỗi: bấm **"Chép chi tiết lỗi"** (nếu có), hoặc chụp màn 
 - [ ] Soạn Mẫu 15 với ngày ký từ 01/3/2027 (vẫn QĐ 27/2026) → hộp hỏi xác nhận của Windows; bấm Cancel thì không tạo tệp.
 - [ ] Máy tỉnh: đơn vị gửi bằng bản 1.2.0 → **Ghi số liệu…** theo báo cáo giấy; Excel, Word toàn tỉnh có dòng "ghi tay theo …".
 - [ ] Chọn giá đất: ô **Bảng giá áp dụng** đổi giữa trước/từ 01/11/2026; tuyến bổ sung NQ 28 của xã mình có đủ giá như phụ biểu; Bảng 06 tích "nguồn gốc đất ở" ra 90% giá đất ở.
+- [ ] Tổng quan → thẻ **Rà soát NQ 28** liệt kê đúng thửa dùng tuyến bãi bỏ; Bản đồ (xã có tọa độ trong phụ biểu, vd. Chiềng Hặc): điểm cam đúng vị trí tuyến trên ảnh vệ tinh.
 
 ## 3. Quy trình mỗi lần sửa (để phiên mới làm đúng ngay)
 

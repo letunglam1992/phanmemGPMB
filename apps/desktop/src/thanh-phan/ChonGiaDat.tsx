@@ -7,13 +7,14 @@ import { HopThoai, O } from "./chung";
 import { Chon } from "./Chon";
 import { tenDayDu } from "../van-ban/loai-dat";
 
-type Bang = "NN" | "DAT_O" | "TMDV" | "SKC" | "KCN";
+type Bang = "NN" | "DAT_O" | "TMDV" | "SKC" | "KCN" | "NTD";
 const TEN_BANG: Record<Bang, string> = {
   NN: "Đất nông nghiệp (Bảng 01–04)",
   DAT_O: "Đất ở (Bảng 05)",
   TMDV: "Đất thương mại, dịch vụ (Bảng 06)",
   SKC: "Đất SXKD phi NN (Bảng 07)",
   KCN: "Đất KCN, CCN (Bảng 08)",
+  NTD: "Đất nghĩa trang, nhà tang lễ, hỏa táng (NQ 28/2026)",
 };
 function bangTheoLoai(loai: string): Bang {
   const l = loai.toUpperCase();
@@ -21,6 +22,7 @@ function bangTheoLoai(loai: string): Bang {
   if (l === "TMD") return "TMDV";
   if (l === "SKC") return "SKC";
   if (["SKK", "SKN"].includes(l)) return "KCN";
+  if (l === "NTD") return "NTD";
   return "NN";
 }
 
@@ -68,7 +70,7 @@ export function ChonGiaDat(p: { xa: string; loaiDat: string; dong: () => void; c
           <div className="luoi luoi-3" style={{ marginBottom: 12 }}>
             <O nhan="Bảng giá">
               <Chon value={bang} onChange={(e) => setBang(e.target.value as Bang)}>
-                {Object.entries(TEN_BANG).filter(([k]) => !p.chonTuyen || ["DAT_O", "TMDV", "SKC"].includes(k)).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                {Object.entries(TEN_BANG).filter(([k]) => (!p.chonTuyen || ["DAT_O", "TMDV", "SKC"].includes(k)) && (k !== "NTD" || !!bg.dat_ntd?.length)).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
               </Chon>
             </O>
             <O nhan="Xã, phường">
@@ -76,7 +78,7 @@ export function ChonGiaDat(p: { xa: string; loaiDat: string; dong: () => void; c
                 {bg.danh_muc_xa.map((x) => <option key={x}>{x}</option>)}
               </Chon>
             </O>
-            {bang !== "NN" && bang !== "KCN" && <O nhan="Tìm tuyến đường"><input value={loc} onChange={(e) => setLoc(e.target.value)} placeholder="Tên đường, đoạn…" /></O>}
+            {!["NN", "KCN", "NTD"].includes(bang) && <O nhan="Tìm tuyến đường"><input value={loc} onChange={(e) => setLoc(e.target.value)} placeholder="Tên đường, đoạn…" /></O>}
             {sua && !goiRieng && (
               <O nhan="Bảng giá áp dụng">
                 <Chon aria-label="Kỳ áp dụng bảng giá đất" value={ky ?? "MOI"} onChange={(e) => setKy(e.target.value as "CU" | "MOI")}>
@@ -87,7 +89,7 @@ export function ChonGiaDat(p: { xa: string; loaiDat: string; dong: () => void; c
             )}
           </div>
           {sua && !goiRieng && (
-            <div className={`thong-bao ${ky === "MOI" ? "thong-bao-vang" : "thong-bao-xanh"} chu-nho`} style={{ marginBottom: 10 }} data-luu-y-nq28>
+            <div className="thong-bao thong-bao-xanh chu-nho" style={{ marginBottom: 10 }} data-luu-y-nq28>
               {ky === "MOI"
                 ? <>Áp dụng {sua.van_ban} (bổ sung, sửa tên, bãi bỏ tuyến; khoản 3 Điều 4 về giảm giá do chênh cao đã bãi bỏ — Điều 2). {sua.luu_y_nguon}</>
                 : <>Bảng giá NQ 152/2025 trước khi sửa đổi — dùng cho phương án đã phê duyệt trước {sua.hieu_luc_tu.split("-").reverse().join("/")} hoặc phải điều chỉnh theo phương án đã duyệt (khoản 1 Điều 3 {sua.van_ban.split(" ngày")[0]}).</>}
@@ -123,7 +125,20 @@ export function ChonGiaDat(p: { xa: string; loaiDat: string; dong: () => void; c
                 </tbody>
               </table>
             )}
-            {bang !== "NN" && bang !== "KCN" && (
+            {bang === "NTD" && (
+              bg.dat_ntd?.length ? (
+                <table className="bang">
+                  <thead><tr><th>Nghĩa trang, nhà tang lễ, cơ sở hỏa táng</th><th>Xã, phường</th><th className="so">Giá</th><th /></tr></thead>
+                  <tbody>
+                    {bg.dat_ntd.map((r, i) => (
+                      <tr key={i}><td>{r.ten}</td><td>{r.xa}</td><td className="so">{r.gia}</td>
+                        <td><button className="nut nut-nho" onClick={() => p.chon({ giaNghinDong: String(r.gia), nguon: `${r.ten} (${r.xa}) — ${r.van_ban ?? "NQ 28/2026/NQ-HĐND"}` })}>Chọn</button></td></tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : <div className="trong">Bảng giá kỳ này không có giá đất nghĩa trang, nhà tang lễ — chọn kỳ từ 01/11/2026 hoặc nhập giá kèm căn cứ.</div>
+            )}
+            {!["NN", "KCN", "NTD"].includes(bang) && (
               <table className="bang">
                 <thead><tr><th>STT</th><th>Tuyến / đoạn</th>{[1, 2, 3, 4, 5].map((v) => <th key={v} className="so">VT{v}</th>)}{p.chonTuyen && <th />}</tr></thead>
                 <tbody>

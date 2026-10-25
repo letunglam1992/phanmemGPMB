@@ -75,6 +75,10 @@ function tuGiaDat(bg: BangGiaDat): Muc[] {
   tuyen(bg.dat_o, "Đất ở", "O");
   tuyen(bg.dat_tmdv, "Đất thương mại, dịch vụ", "TM");
   tuyen(bg.dat_skc, "Đất SXKD phi nông nghiệp", "SKC");
+  (bg.dat_ntd ?? []).forEach((r, i) => out.push({
+    id: `NTD#${i}`, tab: "GIA_DAT", ma: `NQ28/NTD/${i + 1}`, duong: [r.xa, "Đất nghĩa trang, nhà tang lễ, cơ sở hỏa táng"], ten: r.ten, dvt: "nghìn đ/m²", gia: r.gia, trang: null,
+    them: [["Xã, phường", r.xa]], canhBao: [], trich: `${r.ten} (${r.xa}): ${r.gia} nghìn đồng/m² — ${r.van_ban ?? "NQ 28/2026/NQ-HĐND"}`,
+  }));
   bg.dat_kcn_ccn.forEach((r, i) => out.push({
     id: `KCN#${i}`, tab: "GIA_DAT", ma: `NQ152/B${r.bang}/${i + 1}`, duong: [r.xa, `Bảng ${r.bang} – Đất KCN, CCN`], ten: r.ten, dvt: "nghìn đ/m²", gia: r.gia, trang: null,
     them: [["Xã, phường", r.xa], ["Loại đất", r.loai_dat]], canhBao: [], trich: `Bảng ${r.bang}, ${r.ten} (${r.xa}): ${r.gia} nghìn đồng/m²`,
@@ -154,8 +158,10 @@ export function TraCuu({ timDau }: { timDau?: string } = {}) {
   const [chiGhim, setChiGhim] = useState(false);
   const [bg, setBg] = useState<BangGiaDat | null>(null);
   const canCuRef = useRef<HTMLDivElement>(null);
-  useEffect(() => { setBg(null); }, [bo]);
-  useEffect(() => { if (tab === "GIA_DAT" && !bg) void napBangGiaDatTheoBo(bo || undefined, homNayIso()).then(setBg); }, [tab, bg, bo]);
+  // 1.3.1: kỳ bảng giá đất (NQ 28/2026 sửa NQ 152 từ 01/11/2026) — mặc định theo ngày hôm nay
+  const [kyGia, setKyGia] = useState<"" | "2026-10-31" | "2026-11-01">("");
+  useEffect(() => { setBg(null); }, [bo, kyGia]);
+  useEffect(() => { if (tab === "GIA_DAT" && !bg) void napBangGiaDatTheoBo(bo || undefined, kyGia || homNayIso()).then(setBg); }, [tab, bg, bo, kyGia]);
 
   const tatCa = useMemo<Muc[]>(() => {
     if (tab === "CS") return [];
@@ -222,6 +228,16 @@ export function TraCuu({ timDau }: { timDau?: string } = {}) {
           <h1>Tra cứu đơn giá, giá đất, chính sách</h1>
           <div className="mo-ta">Dữ liệu trích xuất từ văn bản gốc, mỗi dòng giữ mã nguồn và số trang để đối chiếu (docs/07).</div>
         </div>
+        {tab === "GIA_DAT" && !(bo && BANG_GIA_GOI[bo]) && (
+          <label className="chu-nho">
+            Bảng giá đất{" "}
+            <select aria-label="Kỳ bảng giá đất tra cứu" value={kyGia} onChange={(e) => { setKyGia(e.target.value as typeof kyGia); setChon(null); }}>
+              <option value="">Theo ngày hôm nay</option>
+              <option value="2026-10-31">Trước 01/11/2026 — NQ 152/2025</option>
+              <option value="2026-11-01">Từ 01/11/2026 — NQ 152 sửa đổi bởi NQ 28/2026</option>
+            </select>
+          </label>
+        )}
         {dsBoCoBang.length > 0 && (
           <label className="chu-nho" title="Gói chính sách nạp kèm bảng đơn giá, bảng giá đất — tra theo bảng của gói">
             Bảng theo{" "}

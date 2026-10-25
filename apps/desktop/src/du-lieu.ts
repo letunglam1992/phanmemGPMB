@@ -69,6 +69,8 @@ export interface BangGiaDat {
   dat_tmdv: DongGiaTuyen[];
   dat_skc: DongGiaTuyen[];
   dat_kcn_ccn: { bang: string; loai_dat: string; ten: string; xa: string; gia: number }[];
+  /** 1.3.1: giá đất nghĩa trang, nhà tang lễ, cơ sở hỏa táng (phụ biểu NQ 28/2026) */
+  dat_ntd?: { bang: string; loai_dat: string; ten: string; xa: string; gia: number; van_ban?: string }[];
   /** 1.3.1: bảng đã áp dụng NQ 28/2026 (lưu ý về nguồn dữ liệu, cờ) */
   luu_y?: string;
   nq28?: boolean;
@@ -84,6 +86,8 @@ export interface DongGiaTuyen {
   canh_bao: string[];
   /** 1.3.1: dòng bổ sung / sửa tên theo văn bản sửa đổi (vd. "NQ 28/2026/NQ-HĐND, Phụ lục I") — trống = NQ 152 */
   van_ban?: string;
+  /** 1.3.1: điểm tọa độ ghi trong phụ biểu NQ 28 ([vĩ độ, kinh độ] WGS-84) — đầu, cuối, giữa tuyến; tham khảo */
+  toa_do?: [number, number][];
 }
 
 let bangGia: Promise<BangGiaDat> | null = null;

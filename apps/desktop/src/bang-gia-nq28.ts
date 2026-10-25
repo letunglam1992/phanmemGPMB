@@ -4,7 +4,9 @@
  * bổ sung khoản 8 Điều 7 (đất TMDV có nguồn gốc đất ở = 90% giá đất ở cùng vị trí, tuyến); Điều 2 bãi bỏ khoản 3 Điều 4 (giảm do
  * chênh cao); Điều 3 chuyển tiếp (phương án đã phê duyệt trước 01/11/2026 tiếp tục theo phương án đã duyệt).
  * Dữ liệu: policy/nguon/nq28-2026-sua-bang-gia-dat.json (tools/gia-dat/doc-nq28.py) — mỗi dòng sửa tên, bãi bỏ đã khớp với dòng
- * NQ 152 theo từng bảng. Phần mềm không tự chọn kỳ áp dụng cho phương án: cán bộ chọn "trước/từ 01/11/2026" khi chọn giá.
+ * NQ 152 theo từng bảng; phụ biểu giá đất nghĩa trang, nhà tang lễ (NTD); tọa độ WGS-84 của một số tuyến bổ sung (toa_do).
+ * Người dùng xác nhận Nghị quyết đã ký ban hành (25/10/2026). Phần mềm không tự chọn kỳ áp dụng cho phương án: cán bộ chọn
+ * "trước/từ 01/11/2026" khi chọn giá.
  */
 import { D } from "@gpmb/core";
 import type { BangGiaDat, DongGiaTuyen } from "./du-lieu";
@@ -19,6 +21,8 @@ export interface SuaBangGia {
   doi_ten: { xa: string; stt: string; ten_cu: string; ten_moi: string; ghi_chu: string; khop: Khop; chi_doi_stt?: boolean }[];
   bai_bo: { xa: string; stt: string; ten: string; ghi_chu: string; khop: Khop }[];
   quy_dinh: { vi_tri: string; noi_dung: string }[];
+  /** Phụ biểu "Bổ sung NTD": giá đất nghĩa trang, nhà tang lễ, cơ sở hỏa táng (nghìn đ/m²) */
+  dat_ntd: { bang: string; loai_dat: string; ten: string; xa: string; gia: number }[];
   chua_ap_dung: { trang: string; ly_do: string }[];
 }
 
@@ -44,6 +48,7 @@ export function bangGiaTheoNgay(bang: BangGiaDat, sua: SuaBangGia, ngay: string)
     const them = sua.bo_sung[k].map((r) => ({ ...r, van_ban: `${sua.van_ban}, ${PHU_LUC[b]}`, canh_bao: [...r.canh_bao, `Bổ sung theo ${PHU_LUC[b]} ${sua.van_ban}, áp dụng từ ${vn(sua.hieu_luc_tu)}`] }));
     out[k] = [...giu, ...them];
   }
+  out.dat_ntd = sua.dat_ntd.map((r) => ({ ...r, van_ban: `${sua.van_ban}, phụ biểu đất nghĩa trang, nhà tang lễ, cơ sở hỏa táng` }));
   return out;
 }
 

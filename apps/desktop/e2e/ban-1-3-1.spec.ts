@@ -171,7 +171,7 @@ test("NQ 28/2026: chọn giá đất kỳ từ 01/11/2026 — tuyến bổ sung 
   await hop.getByPlaceholder("Tên đường, đoạn…").fill("cai nghiện");
   await expect(hop.getByText("Không có dòng phù hợp.")).toBeVisible();
   await hop.getByLabel("Kỳ áp dụng bảng giá đất").selectOption("MOI");
-  await expect(hop.locator("[data-luu-y-nq28]")).toContainText("đối chiếu với bản Nghị quyết đã ký");
+  await expect(hop.locator("[data-luu-y-nq28]")).toContainText("đã ký ban hành");
   const dong = hop.locator("tbody tr", { hasText: "trung tâm cai nghiện" });
   await expect(dong).toContainText("Bổ sung theo Phụ lục I NQ 28/2026/NQ-HĐND ngày 19/10/2026, áp dụng từ 01/11/2026");
   // Bảng 06 + khoản 8 Điều 7: 90% giá đất ở VT1 1.500 → 1.350
@@ -180,4 +180,16 @@ test("NQ 28/2026: chọn giá đất kỳ từ 01/11/2026 — tuyến bổ sung 
   await hop.locator("tbody tr", { hasText: "trung tâm cai nghiện" }).getByRole("button", { name: "1350", exact: true }).click();
   await expect(hop).toHaveCount(0);
   await expect(p.getByText(/Khoản 8 Điều 7 \(bổ sung bởi khoản 6 Điều 1 NQ 28\/2026\): 90% × Bảng 05, Xã Chiềng Mung/).first()).toBeVisible();
+});
+
+test("NQ 28/2026: Tra cứu chọn kỳ bảng giá — giá đất nghĩa trang, tuyến bổ sung chỉ có ở kỳ từ 01/11/2026", async ({ page: p }) => {
+  await vao(p);
+  await p.getByRole("button", { name: "Tra cứu đơn giá, giá đất" }).first().click();
+  await p.locator(".tc-tab button", { hasText: "Bảng giá đất" }).click();
+  const ky = p.getByLabel("Kỳ bảng giá đất tra cứu");
+  await ky.selectOption("2026-10-31");
+  await p.getByLabel("Từ khóa tra cứu").fill("cong vien nghia trang");
+  await expect(p.getByText("Không có dòng khớp điều kiện tra cứu.")).toBeVisible();
+  await ky.selectOption("2026-11-01");
+  await expect(p.getByText(/Công viên nghĩa trang thành phố Sơn La/).first()).toBeVisible();
 });

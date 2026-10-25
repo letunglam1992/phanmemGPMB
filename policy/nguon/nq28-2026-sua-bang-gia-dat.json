@@ -4,7 +4,7 @@
  "hieu_luc_tu": "2026-11-01",
  "don_vi": "nghìn đồng/m²",
  "nguon": "28.2026.nq_phu_bieu_sua_doi_bang_gia_dat_son_la_kem_dtnq_update_2-10-2026.xlsx",
- "luu_y_nguon": "Theo tệp đơn vị cung cấp (tên tệp ghi \"dự thảo\"; phụ biểu \"kèm DTNQ update 2/10/2026\") — đối chiếu với bản Nghị quyết đã ký, công bố trước khi áp dụng.",
+ "luu_y_nguon": "Nghị quyết đã ký ban hành (người dùng xác nhận 25/10/2026); giá theo phụ biểu kèm Nghị quyết.",
  "bo_sung": {
   "dat_o": [
    {
@@ -318,6 +318,16 @@
     "stt_phu_bieu": "5.5.2"
    },
    {
+    "toa_do": [
+     [
+      20.88575,
+      104.827361
+     ],
+     [
+      20.9265,
+      104.905333
+     ]
+    ],
     "bang": "05",
     "loai_dat": "ODT/ONT",
     "xa": "Xã Tô Múa",
@@ -336,6 +346,12 @@
     "vi_tri_bo_sung": "Bổ sung mới sau STT 1.4"
    },
    {
+    "toa_do": [
+     [
+      20.837722,
+      104.785917
+     ]
+    ],
     "bang": "05",
     "loai_dat": "ODT/ONT",
     "xa": "Xã Tô Múa",
@@ -1319,6 +1335,12 @@
     "canh_bao": []
    },
    {
+    "toa_do": [
+     [
+      21.030722,
+      104.320778
+     ]
+    ],
     "bang": "05",
     "loai_dat": "ODT/ONT",
     "xa": "Xã Yên Châu",
@@ -1337,6 +1359,12 @@
     "vi_tri_bo_sung": "Bổ sung mới sau STT cuối cùng 13.2"
    },
    {
+    "toa_do": [
+     [
+      21.048722,
+      104.319917
+     ]
+    ],
     "bang": "05",
     "loai_dat": "ODT/ONT",
     "xa": "Xã Yên Châu",
@@ -1355,6 +1383,12 @@
     "vi_tri_bo_sung": "Bổ sung mới sau STT cuối cùng 13.2"
    },
    {
+    "toa_do": [
+     [
+      21.107556,
+      104.233361
+     ]
+    ],
     "bang": "05",
     "loai_dat": "ODT/ONT",
     "xa": "Xã Yên Châu",
@@ -1373,6 +1407,16 @@
     "vi_tri_bo_sung": "Bổ sung mới sau STT cuối cùng 13.2"
    },
    {
+    "toa_do": [
+     [
+      20.959967,
+      104.4299
+     ],
+     [
+      20.948967,
+      104.417283
+     ]
+    ],
     "bang": "05",
     "loai_dat": "ODT/ONT",
     "xa": "Xã Chiềng Hặc",
@@ -1391,6 +1435,16 @@
     "vi_tri_bo_sung": "Bổ sung mới sau STT 5"
    },
    {
+    "toa_do": [
+     [
+      21.014967,
+      104.37875
+     ],
+     [
+      21.011817,
+      104.377283
+     ]
+    ],
     "bang": "05",
     "loai_dat": "ODT/ONT",
     "xa": "Xã Chiềng Hặc",
@@ -1409,6 +1463,16 @@
     "vi_tri_bo_sung": "Bổ sung mới sau STT 5"
    },
    {
+    "toa_do": [
+     [
+      21.004817,
+      104.3653
+     ],
+     [
+      20.997917,
+      104.340183
+     ]
+    ],
     "bang": "05",
     "loai_dat": "ODT/ONT",
     "xa": "Xã Chiềng Hặc",
@@ -1427,6 +1491,16 @@
     "vi_tri_bo_sung": "Bổ sung mới sau STT 5"
    },
    {
+    "toa_do": [
+     [
+      21.004733,
+      104.365967
+     ],
+     [
+      20.9854,
+      104.377067
+     ]
+    ],
     "bang": "05",
     "loai_dat": "ODT/ONT",
     "xa": "Xã Chiềng Hặc",
@@ -1446,6 +1520,32 @@
     "stt_phu_bieu": "5.39.3"
    },
    {
+    "toa_do": [
+     [
+      20.979467,
+      104.433717
+     ],
+     [
+      20.978167,
+      104.4282
+     ],
+     [
+      20.981367,
+      104.429833
+     ],
+     [
+      20.973233,
+      104.434183
+     ],
+     [
+      20.978517,
+      104.437633
+     ],
+     [
+      20.959917,
+      104.440517
+     ]
+    ],
     "bang": "05",
     "loai_dat": "ODT/ONT",
     "xa": "Xã Chiềng Hặc",
@@ -1463,6 +1563,40 @@
     "canh_bao": []
    },
    {
+    "toa_do": [
+     [
+      20.978233,
+      104.410783
+     ],
+     [
+      20.9799,
+      104.403617
+     ],
+     [
+      21.00205,
+      104.39325
+     ],
+     [
+      20.999483,
+      104.3939
+     ],
+     [
+      21.001783,
+      104.394217
+     ],
+     [
+      20.99765,
+      104.40335
+     ],
+     [
+      20.994417,
+      104.40205
+     ],
+     [
+      20.992433,
+      104.4036
+     ]
+    ],
     "bang": "05",
     "loai_dat": "ODT/ONT",
     "xa": "Xã Chiềng Hặc",
@@ -1480,6 +1614,16 @@
     "canh_bao": []
    },
    {
+    "toa_do": [
+     [
+      21.0552,
+      104.392617
+     ],
+     [
+      21.052833,
+      104.3936
+     ]
+    ],
     "bang": "05",
     "loai_dat": "ODT/ONT",
     "xa": "Xã Chiềng Hặc",
@@ -1497,6 +1641,28 @@
     "canh_bao": []
    },
    {
+    "toa_do": [
+     [
+      21.034767,
+      104.360133
+     ],
+     [
+      21.032517,
+      104.36455
+     ],
+     [
+      21.036867,
+      104.363617
+     ],
+     [
+      21.02085,
+      104.37445
+     ],
+     [
+      21.018367,
+      104.372583
+     ]
+    ],
     "bang": "05",
     "loai_dat": "ODT/ONT",
     "xa": "Xã Chiềng Hặc",
@@ -1531,6 +1697,16 @@
     "canh_bao": []
    },
    {
+    "toa_do": [
+     [
+      21.001167,
+      104.475817
+     ],
+     [
+      20.9874,
+      104.497467
+     ]
+    ],
     "bang": "05",
     "loai_dat": "ODT/ONT",
     "xa": "Xã Chiềng Hặc",
@@ -1548,6 +1724,16 @@
     "canh_bao": []
    },
    {
+    "toa_do": [
+     [
+      21.013983,
+      104.391667
+     ],
+     [
+      21.014083,
+      104.395433
+     ]
+    ],
     "bang": "05",
     "loai_dat": "ODT/ONT",
     "xa": "Xã Chiềng Hặc",
@@ -1565,6 +1751,12 @@
     "canh_bao": []
    },
    {
+    "toa_do": [
+     [
+      20.940194,
+      104.354889
+     ]
+    ],
     "bang": "05",
     "loai_dat": "ODT/ONT",
     "xa": "Xã Lóng Phiêng",
@@ -2015,6 +2207,12 @@
     "vi_tri_bo_sung": "Bổ sung mới sau STT 8.9"
    },
    {
+    "toa_do": [
+     [
+      21.325944,
+      103.910778
+     ]
+    ],
     "bang": "05",
     "loai_dat": "ODT/ONT",
     "xa": "Phường Tô Hiệu",
@@ -2033,6 +2231,12 @@
     "vi_tri_bo_sung": "Bổ sung sau tuyến: Đường quy hoạch rộng 38m"
    },
    {
+    "toa_do": [
+     [
+      21.355472,
+      103.910083
+     ]
+    ],
     "bang": "05",
     "loai_dat": "ODT/ONT",
     "xa": "Phường Chiềng An",
@@ -2051,6 +2255,12 @@
     "vi_tri_bo_sung": "Bổ sung mới sau STT 11.17"
    },
    {
+    "toa_do": [
+     [
+      21.381361,
+      103.893667
+     ]
+    ],
     "bang": "05",
     "loai_dat": "ODT/ONT",
     "xa": "Phường Chiềng An",
@@ -2069,6 +2279,16 @@
     "vi_tri_bo_sung": "Bổ sung mới sau STT 11"
    },
    {
+    "toa_do": [
+     [
+      21.289222,
+      103.950083
+     ],
+     [
+      21.275111,
+      103.968111
+     ]
+    ],
     "bang": "05",
     "loai_dat": "ODT/ONT",
     "xa": "Phường Chiềng Sinh",
@@ -2670,6 +2890,16 @@
     "stt_phu_bieu": "6.5.2"
    },
    {
+    "toa_do": [
+     [
+      20.88575,
+      104.827361
+     ],
+     [
+      20.9265,
+      104.905333
+     ]
+    ],
     "bang": "06",
     "loai_dat": "TMD",
     "xa": "Xã Tô Múa",
@@ -2688,6 +2918,12 @@
     "vi_tri_bo_sung": "Bổ sung mới sau STT 1.4"
    },
    {
+    "toa_do": [
+     [
+      20.837722,
+      104.785917
+     ]
+    ],
     "bang": "06",
     "loai_dat": "TMD",
     "xa": "Xã Tô Múa",
@@ -3671,6 +3907,12 @@
     "canh_bao": []
    },
    {
+    "toa_do": [
+     [
+      21.030722,
+      104.320778
+     ]
+    ],
     "bang": "06",
     "loai_dat": "TMD",
     "xa": "Xã Yên Châu",
@@ -3689,6 +3931,12 @@
     "vi_tri_bo_sung": "Bổ sung mới sau STT cuối cùng 13.2"
    },
    {
+    "toa_do": [
+     [
+      21.048722,
+      104.319917
+     ]
+    ],
     "bang": "06",
     "loai_dat": "TMD",
     "xa": "Xã Yên Châu",
@@ -3707,6 +3955,12 @@
     "vi_tri_bo_sung": "Bổ sung mới sau STT cuối cùng 13.2"
    },
    {
+    "toa_do": [
+     [
+      21.107556,
+      104.233361
+     ]
+    ],
     "bang": "06",
     "loai_dat": "TMD",
     "xa": "Xã Yên Châu",
@@ -3725,6 +3979,16 @@
     "vi_tri_bo_sung": "Bổ sung mới sau STT cuối cùng 13.2"
    },
    {
+    "toa_do": [
+     [
+      20.959967,
+      104.4299
+     ],
+     [
+      20.948967,
+      104.417283
+     ]
+    ],
     "bang": "06",
     "loai_dat": "TMD",
     "xa": "Xã Chiềng Hặc",
@@ -3743,6 +4007,16 @@
     "vi_tri_bo_sung": "Bổ sung mới sau STT 5"
    },
    {
+    "toa_do": [
+     [
+      21.014967,
+      104.37875
+     ],
+     [
+      21.011817,
+      104.377283
+     ]
+    ],
     "bang": "06",
     "loai_dat": "TMD",
     "xa": "Xã Chiềng Hặc",
@@ -3761,6 +4035,16 @@
     "vi_tri_bo_sung": "Bổ sung mới sau STT 5"
    },
    {
+    "toa_do": [
+     [
+      21.004817,
+      104.3653
+     ],
+     [
+      20.997917,
+      104.340183
+     ]
+    ],
     "bang": "06",
     "loai_dat": "TMD",
     "xa": "Xã Chiềng Hặc",
@@ -3779,6 +4063,16 @@
     "vi_tri_bo_sung": "Bổ sung mới sau STT 5"
    },
    {
+    "toa_do": [
+     [
+      21.004733,
+      104.365967
+     ],
+     [
+      20.9854,
+      104.377067
+     ]
+    ],
     "bang": "06",
     "loai_dat": "TMD",
     "xa": "Xã Chiềng Hặc",
@@ -3798,6 +4092,32 @@
     "stt_phu_bieu": "6.39.3"
    },
    {
+    "toa_do": [
+     [
+      20.979467,
+      104.433717
+     ],
+     [
+      20.978167,
+      104.4282
+     ],
+     [
+      20.981367,
+      104.429833
+     ],
+     [
+      20.973233,
+      104.434183
+     ],
+     [
+      20.978517,
+      104.437633
+     ],
+     [
+      20.959917,
+      104.440517
+     ]
+    ],
     "bang": "06",
     "loai_dat": "TMD",
     "xa": "Xã Chiềng Hặc",
@@ -3815,6 +4135,40 @@
     "canh_bao": []
    },
    {
+    "toa_do": [
+     [
+      20.978233,
+      104.410783
+     ],
+     [
+      20.9799,
+      104.403617
+     ],
+     [
+      21.00205,
+      104.39325
+     ],
+     [
+      20.999483,
+      104.3939
+     ],
+     [
+      21.001783,
+      104.394217
+     ],
+     [
+      20.99765,
+      104.40335
+     ],
+     [
+      20.994417,
+      104.40205
+     ],
+     [
+      20.992433,
+      104.4036
+     ]
+    ],
     "bang": "06",
     "loai_dat": "TMD",
     "xa": "Xã Chiềng Hặc",
@@ -3832,6 +4186,16 @@
     "canh_bao": []
    },
    {
+    "toa_do": [
+     [
+      21.0552,
+      104.392617
+     ],
+     [
+      21.052833,
+      104.3936
+     ]
+    ],
     "bang": "06",
     "loai_dat": "TMD",
     "xa": "Xã Chiềng Hặc",
@@ -3849,6 +4213,28 @@
     "canh_bao": []
    },
    {
+    "toa_do": [
+     [
+      21.034767,
+      104.360133
+     ],
+     [
+      21.032517,
+      104.36455
+     ],
+     [
+      21.036867,
+      104.363617
+     ],
+     [
+      21.02085,
+      104.37445
+     ],
+     [
+      21.018367,
+      104.372583
+     ]
+    ],
     "bang": "06",
     "loai_dat": "TMD",
     "xa": "Xã Chiềng Hặc",
@@ -3883,6 +4269,16 @@
     "canh_bao": []
    },
    {
+    "toa_do": [
+     [
+      21.001167,
+      104.475817
+     ],
+     [
+      20.9874,
+      104.497467
+     ]
+    ],
     "bang": "06",
     "loai_dat": "TMD",
     "xa": "Xã Chiềng Hặc",
@@ -3900,6 +4296,16 @@
     "canh_bao": []
    },
    {
+    "toa_do": [
+     [
+      21.013983,
+      104.391667
+     ],
+     [
+      21.014083,
+      104.395433
+     ]
+    ],
     "bang": "06",
     "loai_dat": "TMD",
     "xa": "Xã Chiềng Hặc",
@@ -3917,6 +4323,12 @@
     "canh_bao": []
    },
    {
+    "toa_do": [
+     [
+      20.940194,
+      104.354889
+     ]
+    ],
     "bang": "06",
     "loai_dat": "TMD",
     "xa": "Xã Lóng Phiêng",
@@ -4367,6 +4779,12 @@
     "vi_tri_bo_sung": "Bổ sung mới sau STT 8.9"
    },
    {
+    "toa_do": [
+     [
+      21.325944,
+      103.910778
+     ]
+    ],
     "bang": "06",
     "loai_dat": "TMD",
     "xa": "Phường Tô Hiệu",
@@ -4385,6 +4803,12 @@
     "vi_tri_bo_sung": "Bổ sung sau tuyến: Đường quy hoạch rộng 38m"
    },
    {
+    "toa_do": [
+     [
+      21.355472,
+      103.910083
+     ]
+    ],
     "bang": "06",
     "loai_dat": "TMD",
     "xa": "Phường Chiềng An",
@@ -4403,6 +4827,12 @@
     "vi_tri_bo_sung": "Bổ sung mới sau STT 11.17"
    },
    {
+    "toa_do": [
+     [
+      21.381361,
+      103.893667
+     ]
+    ],
     "bang": "06",
     "loai_dat": "TMD",
     "xa": "Phường Chiềng An",
@@ -4421,6 +4851,16 @@
     "vi_tri_bo_sung": "Bổ sung mới sau STT 11"
    },
    {
+    "toa_do": [
+     [
+      21.289222,
+      103.950083
+     ],
+     [
+      21.275111,
+      103.968111
+     ]
+    ],
     "bang": "06",
     "loai_dat": "TMD",
     "xa": "Phường Chiềng Sinh",
@@ -5022,6 +5462,16 @@
     "stt_phu_bieu": "7.7.2"
    },
    {
+    "toa_do": [
+     [
+      20.88575,
+      104.827361
+     ],
+     [
+      20.9265,
+      104.905333
+     ]
+    ],
     "bang": "07",
     "loai_dat": "SKC",
     "xa": "Xã Tô Múa",
@@ -5040,6 +5490,12 @@
     "vi_tri_bo_sung": "Bổ sung mới sau STT 1.4"
    },
    {
+    "toa_do": [
+     [
+      20.837722,
+      104.785917
+     ]
+    ],
     "bang": "07",
     "loai_dat": "SKC",
     "xa": "Xã Tô Múa",
@@ -6023,6 +6479,12 @@
     "canh_bao": []
    },
    {
+    "toa_do": [
+     [
+      21.030722,
+      104.320778
+     ]
+    ],
     "bang": "07",
     "loai_dat": "SKC",
     "xa": "Xã Yên Châu",
@@ -6041,6 +6503,12 @@
     "vi_tri_bo_sung": "Bổ sung mới sau STT cuối cùng 13.2"
    },
    {
+    "toa_do": [
+     [
+      21.048722,
+      104.319917
+     ]
+    ],
     "bang": "07",
     "loai_dat": "SKC",
     "xa": "Xã Yên Châu",
@@ -6059,6 +6527,12 @@
     "vi_tri_bo_sung": "Bổ sung mới sau STT cuối cùng 13.2"
    },
    {
+    "toa_do": [
+     [
+      21.107556,
+      104.233361
+     ]
+    ],
     "bang": "07",
     "loai_dat": "SKC",
     "xa": "Xã Yên Châu",
@@ -6077,6 +6551,16 @@
     "vi_tri_bo_sung": "Bổ sung mới sau STT cuối cùng 13.2"
    },
    {
+    "toa_do": [
+     [
+      20.959967,
+      104.4299
+     ],
+     [
+      20.948967,
+      104.417283
+     ]
+    ],
     "bang": "07",
     "loai_dat": "SKC",
     "xa": "Xã Chiềng Hặc",
@@ -6095,6 +6579,16 @@
     "vi_tri_bo_sung": "Bổ sung mới sau STT 5"
    },
    {
+    "toa_do": [
+     [
+      21.014967,
+      104.37875
+     ],
+     [
+      21.011817,
+      104.377283
+     ]
+    ],
     "bang": "07",
     "loai_dat": "SKC",
     "xa": "Xã Chiềng Hặc",
@@ -6113,6 +6607,16 @@
     "vi_tri_bo_sung": "Bổ sung mới sau STT 5"
    },
    {
+    "toa_do": [
+     [
+      21.004817,
+      104.3653
+     ],
+     [
+      20.997917,
+      104.340183
+     ]
+    ],
     "bang": "07",
     "loai_dat": "SKC",
     "xa": "Xã Chiềng Hặc",
@@ -6131,6 +6635,16 @@
     "vi_tri_bo_sung": "Bổ sung mới sau STT 5"
    },
    {
+    "toa_do": [
+     [
+      21.004733,
+      104.365967
+     ],
+     [
+      20.9854,
+      104.377067
+     ]
+    ],
     "bang": "07",
     "loai_dat": "SKC",
     "xa": "Xã Chiềng Hặc",
@@ -6150,6 +6664,32 @@
     "stt_phu_bieu": "7.39.3"
    },
    {
+    "toa_do": [
+     [
+      20.979467,
+      104.433717
+     ],
+     [
+      20.978167,
+      104.4282
+     ],
+     [
+      20.981367,
+      104.429833
+     ],
+     [
+      20.973233,
+      104.434183
+     ],
+     [
+      20.978517,
+      104.437633
+     ],
+     [
+      20.959917,
+      104.440517
+     ]
+    ],
     "bang": "07",
     "loai_dat": "SKC",
     "xa": "Xã Chiềng Hặc",
@@ -6167,6 +6707,40 @@
     "canh_bao": []
    },
    {
+    "toa_do": [
+     [
+      20.978233,
+      104.410783
+     ],
+     [
+      20.9799,
+      104.403617
+     ],
+     [
+      21.00205,
+      104.39325
+     ],
+     [
+      20.999483,
+      104.3939
+     ],
+     [
+      21.001783,
+      104.394217
+     ],
+     [
+      20.99765,
+      104.40335
+     ],
+     [
+      20.994417,
+      104.40205
+     ],
+     [
+      20.992433,
+      104.4036
+     ]
+    ],
     "bang": "07",
     "loai_dat": "SKC",
     "xa": "Xã Chiềng Hặc",
@@ -6184,6 +6758,16 @@
     "canh_bao": []
    },
    {
+    "toa_do": [
+     [
+      21.0552,
+      104.392617
+     ],
+     [
+      21.052833,
+      104.3936
+     ]
+    ],
     "bang": "07",
     "loai_dat": "SKC",
     "xa": "Xã Chiềng Hặc",
@@ -6201,6 +6785,28 @@
     "canh_bao": []
    },
    {
+    "toa_do": [
+     [
+      21.034767,
+      104.360133
+     ],
+     [
+      21.032517,
+      104.36455
+     ],
+     [
+      21.036867,
+      104.363617
+     ],
+     [
+      21.02085,
+      104.37445
+     ],
+     [
+      21.018367,
+      104.372583
+     ]
+    ],
     "bang": "07",
     "loai_dat": "SKC",
     "xa": "Xã Chiềng Hặc",
@@ -6235,6 +6841,16 @@
     "canh_bao": []
    },
    {
+    "toa_do": [
+     [
+      21.001167,
+      104.475817
+     ],
+     [
+      20.9874,
+      104.497467
+     ]
+    ],
     "bang": "07",
     "loai_dat": "SKC",
     "xa": "Xã Chiềng Hặc",
@@ -6252,6 +6868,16 @@
     "canh_bao": []
    },
    {
+    "toa_do": [
+     [
+      21.013983,
+      104.391667
+     ],
+     [
+      21.014083,
+      104.395433
+     ]
+    ],
     "bang": "07",
     "loai_dat": "SKC",
     "xa": "Xã Chiềng Hặc",
@@ -6269,6 +6895,12 @@
     "canh_bao": []
    },
    {
+    "toa_do": [
+     [
+      20.940194,
+      104.354889
+     ]
+    ],
     "bang": "07",
     "loai_dat": "SKC",
     "xa": "Xã Lóng Phiêng",
@@ -6719,6 +7351,12 @@
     "vi_tri_bo_sung": "Bổ sung mới sau STT 8.9"
    },
    {
+    "toa_do": [
+     [
+      21.325944,
+      103.910778
+     ]
+    ],
     "bang": "07",
     "loai_dat": "SKC",
     "xa": "Phường Tô Hiệu",
@@ -6737,6 +7375,12 @@
     "vi_tri_bo_sung": "Bổ sung sau tuyến: Đường quy hoạch rộng 38m"
    },
    {
+    "toa_do": [
+     [
+      21.355472,
+      103.910083
+     ]
+    ],
     "bang": "07",
     "loai_dat": "SKC",
     "xa": "Phường Chiềng An",
@@ -6755,6 +7399,12 @@
     "vi_tri_bo_sung": "Bổ sung mới sau STT 11.17"
    },
    {
+    "toa_do": [
+     [
+      21.381361,
+      103.893667
+     ]
+    ],
     "bang": "07",
     "loai_dat": "SKC",
     "xa": "Phường Chiềng An",
@@ -6773,6 +7423,16 @@
     "vi_tri_bo_sung": "Bổ sung mới sau STT 11"
    },
    {
+    "toa_do": [
+     [
+      21.289222,
+      103.950083
+     ],
+     [
+      21.275111,
+      103.968111
+     ]
+    ],
     "bang": "07",
     "loai_dat": "SKC",
     "xa": "Phường Chiềng Sinh",
@@ -9837,11 +10497,15 @@
    "noi_dung": "Đối với trường hợp đã có quyết định phê duyệt phương án bồi thường, hỗ trợ và tái định cư trước ngày Nghị quyết này có hiệu lực thi hành thì tiếp tục thực hiện theo phương án đã được phê duyệt, trừ trường hợp phương án bồi thường, hỗ trợ, tái định cư phải điều chỉnh, bổ sung hoặc hủy bỏ theo quy định của pháp luật."
   }
  ],
- "chua_ap_dung": [
+ "dat_ntd": [
   {
-   "trang": "PL.4_Bổ sung NTD",
-   "ly_do": "Phụ biểu có trang này nhưng Điều 1 NQ 28/2026 không có nội dung tương ứng (bổ sung giá đất nghĩa trang, nhà tang lễ, cơ sở hỏa táng) — chưa đưa vào bảng giá; chờ đối chiếu bản ký."
+   "bang": "NTD",
+   "loai_dat": "NTD",
+   "ten": "Công viên nghĩa trang thành phố Sơn La (sử dụng để xây dựng nhà điều hành, nhà tang lễ - khu hỏa táng, nhà trình thần linh, nhà chùa)",
+   "xa": "Phường Chiềng Sinh",
+   "gia": 350
   }
  ],
+ "chua_ap_dung": [],
  "chua_khop": []
 }

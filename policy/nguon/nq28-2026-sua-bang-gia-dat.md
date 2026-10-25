@@ -1,10 +1,9 @@
 # NQ 28/2026/NQ-HĐND ngày 19/10/2026 của HĐND tỉnh Sơn La — sửa đổi, bổ sung một số điều của Quy định bảng giá đất kèm NQ 152/2025/NQ-HĐND
 
-Nguồn: tệp Word người dùng cung cấp ngày 25/10/2026 (tên tệp "28.2026.nq_du_thao_nghi_quyet_dieu_chinh_bang_gia_dat.docx" — tên ghi
-"dự thảo"; nội dung có số, ngày, kỳ họp thông qua 19/10/2026). Trích lớp chữ, giữ nguyên câu chữ; bỏ phần Nơi nhận, chữ ký. Phụ lục
-I–V (giá bổ sung, sửa tên, bãi bỏ tuyến) ở `policy/nguon/nq28-2026-sua-bang-gia-dat.json` (đọc từ phụ biểu Excel "kèm DTNQ update
-2-10-2026" bằng `tools/gia-dat/doc-nq28.py`). **Đối chiếu với bản Nghị quyết đã ký, công bố trước khi áp dụng.** Hiệu lực
-01/11/2026 (Điều 4).
+Nguồn: tệp Word người dùng cung cấp ngày 25/10/2026; người dùng xác nhận Nghị quyết **đã ký ban hành**, dùng làm căn cứ pháp lý
+(25/10/2026). Trích lớp chữ, giữ nguyên câu chữ; bỏ phần Nơi nhận, chữ ký. Phụ lục I–V (giá bổ sung, sửa tên, bãi bỏ tuyến) và
+phụ biểu giá đất nghĩa trang, nhà tang lễ, cơ sở hỏa táng ở `policy/nguon/nq28-2026-sua-bang-gia-dat.json` (đọc từ phụ biểu
+Excel bằng `tools/gia-dat/doc-nq28.py`). Hiệu lực 01/11/2026 (Điều 4).
 
 HỘI ĐỒNG NHÂN DÂN TỈNH SƠN LA
 

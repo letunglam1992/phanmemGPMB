@@ -106,6 +106,8 @@ export function KhungVe(p: {
   xaDuAn?: string;
   /** 1.0.7: ghi phạm vi đang nhìn (tọa độ bản đồ) mỗi lần vẽ — dùng cho "In theo khung đang xem". */
   khungNhin?: { current: { minX: number; minY: number; maxX: number; maxY: number } | null };
+  /** 1.3.1: điểm tọa độ tuyến giá đất ghi trong phụ biểu NQ 28/2026 (đã đổi sang VN-2000) — lớp tham khảo */
+  tuyenGia?: { nhan: string; diem: Diem[] }[];
   /** 1.0.7: khung in vẽ bằng chuột (công cụ "Vẽ khung in") — hiện nét đứt cam; null = chưa vẽ. */
   khungIn?: { minX: number; minY: number; maxX: number; maxY: number } | null;
   datKhungIn?: (r: { minX: number; minY: number; maxX: number; maxY: number } | null) => void;
@@ -113,8 +115,9 @@ export function KhungVe(p: {
   const ref = useRef<HTMLCanvasElement>(null);
   const khoa = `gpmb-ban-do-${p.khoaLuu ?? "chung"}`;
   const [cheDo, setCheDo] = useState<"HIEN_TRANG" | "PHAM_VI">("HIEN_TRANG");
-  const [lop, setLop] = useState({ nen: true, thua: true, to: true, ranh: true, nhan: true, diaDanh: true, xa: docLuu<boolean>(`gpmb-ban-do-lop-xa`, true) });
+  const [lop, setLop] = useState({ nen: true, thua: true, to: true, ranh: true, nhan: true, diaDanh: true, xa: docLuu<boolean>(`gpmb-ban-do-lop-xa`, true), tuyenGia: docLuu<boolean>(`gpmb-ban-do-lop-tuyen-gia`, true) });
   useEffect(() => { ghiLuu("gpmb-ban-do-lop-xa", lop.xa); }, [lop.xa]);
+  useEffect(() => { ghiLuu("gpmb-ban-do-lop-tuyen-gia", lop.tuyenGia); }, [lop.tuyenGia]);
   const [lopAn, setLopAn] = useState<Set<number>>(() => new Set(docLuu<number[]>(`${khoa}-lop-an`, [])));
   const [nenToi, setNenToi] = useState<boolean>(() => docLuu(`${khoa}-nen-toi`, false));
   const [mauTheoLop, setMauTheoLop] = useState<boolean>(() => docLuu(`${khoa}-mau-lop`, true));
@@ -339,6 +342,23 @@ export function KhungVe(p: {
         ctx.strokeStyle = coAnh ? "#ff8ee6" : "#a03c8c";
         ctx.stroke();
         ctx.setLineDash([]);
+      }
+      // 1c. 1.3.1: điểm tọa độ tuyến giá đất (phụ biểu NQ 28/2026) — hình thoi cam, tên tuyến
+      if (lop.tuyenGia && p.tuyenGia?.length) {
+        ctx.font = "11px Segoe UI, sans-serif";
+        ctx.textAlign = "left";
+        for (const t of p.tuyenGia) {
+          ctx.fillStyle = "#d35400";
+          ctx.strokeStyle = "#fff";
+          ctx.lineWidth = 1.2;
+          t.diem.forEach((d, i) => {
+            const x = sx(d.x), y = sy(d.y);
+            ctx.beginPath();
+            ctx.moveTo(x, y - 6); ctx.lineTo(x + 6, y); ctx.lineTo(x, y + 6); ctx.lineTo(x - 6, y); ctx.closePath();
+            ctx.fill(); ctx.stroke();
+            if (i === 0) { ctx.fillStyle = coAnh ? "#ffd29e" : "#a04000"; ctx.fillText(t.nhan, x + 8, y - 6); ctx.fillStyle = "#d35400"; }
+          });
+        }
       }
       // 2. Thửa (tô màu theo hiện trạng / phạm vi)
       for (const t of p.dl.kq.thua) {
@@ -632,7 +652,7 @@ export function KhungVe(p: {
     const ro = new ResizeObserver(veLai);
     ro.observe(cv);
     return () => ro.disconnect();
-  }, [nhin, hinhHien, chuHien, p.dl, p.thuHoi, p.vungChon.join("|"), p.thuaChon, p.chon, p.ttThua, p.khoaThua, pham, lop, cheDo, nenToi, mauTheoLop, diemDo, troDo, xongDo, khung, batHien, thongTin, cong, p.thuaQuet, p.ranhThem, p.lopPhu, anhNen, taiO, ranhXa, p.xaDuAn, p.khungIn]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [nhin, hinhHien, chuHien, p.dl, p.thuHoi, p.vungChon.join("|"), p.thuaChon, p.chon, p.ttThua, p.khoaThua, pham, lop, cheDo, nenToi, mauTheoLop, diemDo, troDo, xongDo, khung, batHien, thongTin, cong, p.thuaQuet, p.ranhThem, p.lopPhu, anhNen, taiO, ranhXa, p.xaDuAn, p.khungIn, p.tuyenGia]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const doiToaDo = (e: { clientX: number; clientY: number }): Diem => {
     const cv = ref.current!;
@@ -835,6 +855,7 @@ export function KhungVe(p: {
               ["nen", "Nền địa hình, hạ tầng", "Nét bản vẽ của các lớp DGN đang bật"],
               ["diaDanh", "Địa danh", "Chữ bản vẽ (tên đường, cánh đồng, ghi chú…) của các lớp DGN đang bật"],
               ["xa", "Ranh giới xã, phường", "Ranh 75 xã, phường tỉnh Sơn La (tệp tác giả cung cấp, tham khảo — không dùng xác định ranh giới hành chính); xã của dự án nét đậm; tên xã hiện khi thu nhỏ và ở thanh tọa độ"],
+              ...(p.tuyenGia?.length ? [["tuyenGia", "Tuyến giá đất có tọa độ (NQ 28/2026)", "Điểm đầu, cuối, giữa tuyến ghi trong phụ biểu NQ 28/2026 (WGS-84, đổi sang VN-2000 theo kinh tuyến trục của ảnh nền) — tham khảo, không dùng xác định vị trí thửa"] as const] : []),
             ] as const).map(([k, ten, goiY]) => (
               <label key={k} title={goiY}><input type="checkbox" checked={lop[k]} onChange={(e) => setLop({ ...lop, [k]: e.target.checked })} /> {ten}</label>
             ))}
@@ -912,6 +933,7 @@ export function KhungVe(p: {
             )}
             <span><i style={{ background: "#fff", borderColor: "#c0392b", borderWidth: 2 }} />Ranh GPMB đã chọn</span>
             {lop.xa && <span><i style={{ background: "#fff", borderColor: "#a03c8c", borderStyle: "dashed" }} />Ranh giới xã, phường{loiXa ? ` (lỗi: ${loiXa})` : ""}</span>}
+            {lop.tuyenGia && (p.tuyenGia?.length ?? 0) > 0 && <span data-chu-giai-tuyen-gia><i style={{ background: "#d35400", transform: "rotate(45deg) scale(0.7)" }} />Điểm tuyến giá đất NQ 28/2026 ({p.tuyenGia!.length} tuyến)</span>}
             {p.thuaChon.size > 0 && <span><i style={{ background: "#fff", borderColor: "#c0392b", borderStyle: "dashed" }} />Thửa chọn tay</span>}
             <span><i style={{ background: "#fff", borderColor: "#6a3fb5", borderStyle: "dashed" }} />Ranh ứng viên</span>
           </div>

@@ -27,6 +27,9 @@ import { tenTep } from "../ten-tep";
 import { kiemTraVung } from "@gpmb/gis";
 import { taoId } from "../mo-hinh";
 import { tenDayDu } from "../van-ban/loai-dat";
+import { napSuaNq28 } from "../du-lieu";
+import type { SuaBangGia } from "../bang-gia-nq28";
+import { tuyenCoToaDo, tuyenGanNhat } from "./ban-do/tuyen-gia";
 /** Nạp bản đồ đã lưu của dự án (dùng lại bộ nhớ đệm) — cho bản đồ nhỏ ở màn Dự án. */
 export async function napBanDoDuAn(kho: { docBanDo(id: string): Promise<Uint8Array | null> }, duAn: DuAn): Promise<DuLieuBanDo | null> {
   if (!duAn.banDo) return null;
@@ -153,6 +156,11 @@ export function BanDo({ duAnId }: { duAnId: string }) {
     }),
     [duAn?.banDo?.ghiChu, duAn?.banDo?.diemDo, duAn?.banDo?.ketQuaDo, soSanh],
   );
+  // 1.3.1: điểm tọa độ tuyến giá đất trong phụ biểu NQ 28/2026 của xã dự án (đổi theo kinh tuyến trục của ảnh nền)
+  const [suaNq28, setSuaNq28] = useState<SuaBangGia | null>(null);
+  useEffect(() => { void napSuaNq28().then(setSuaNq28); }, []);
+  const anhNenHe = docCaiDatAnhNen(duAnId);
+  const tuyenGia = useMemo(() => (suaNq28 && duAn ? tuyenCoToaDo(suaNq28, duAn.xa, { kinhTuyenTruc: anhNenHe.kt, mui: anhNenHe.mui }) : []), [suaNq28, duAn?.xa, anhNenHe.kt, anhNenHe.mui]); // eslint-disable-line react-hooks/exhaustive-deps
   const coPhamVi = vungDs.length > 0 || thuaChon.size > 0 || ranhNhap.length > 0;
   const luuRanhVe = (diem: import("@gpmb/gis").Diem[]) => {
     const k = kiemTraVung(diem);
@@ -385,7 +393,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
       )}
       {dl && (
         <div className="ban-do-khung">
-          <KhungVe key={khoaNap} khungNhin={khungNhin} khungIn={khungIn} datKhungIn={(r) => { setKhungIn(r); if (r) setPhamViIn("VE"); }} xaDuAn={duAn.xa} dl={dl} vungChon={maVungChon} thuHoi={thuHoi} khoaThua={khoaThua} chon={chon} setChon={setChon} daLienKet={daLienKet} ttThua={ttThua} thuaDaGiaoCdt={thuaDaGiaoCdt} bamThua={cheDoChonThua && quyen("SUA_HO_SO") ? batTatThua : undefined} thuaChon={thuaChon} khoaLuu={duAnId} ranhThem={ranhVe} luuVung={quyen("SUA_HO_SO") ? luuRanhVe : undefined} batVeVung={veRanh} quet={(ds, them) => setQuet(new Set([...(them ? quet : []), ...ds.map(khoaThua)]))} thuaQuet={quet} phongToi={phongToi} lopPhu={lopPhu} batGhiChu={batGhiChu}
+          <KhungVe key={khoaNap} khungNhin={khungNhin} khungIn={khungIn} datKhungIn={(r) => { setKhungIn(r); if (r) setPhamViIn("VE"); }} xaDuAn={duAn.xa} dl={dl} vungChon={maVungChon} thuHoi={thuHoi} khoaThua={khoaThua} chon={chon} setChon={setChon} daLienKet={daLienKet} ttThua={ttThua} thuaDaGiaoCdt={thuaDaGiaoCdt} bamThua={cheDoChonThua && quyen("SUA_HO_SO") ? batTatThua : undefined} thuaChon={thuaChon} khoaLuu={duAnId} ranhThem={ranhVe} luuVung={quyen("SUA_HO_SO") ? luuRanhVe : undefined} batVeVung={veRanh} quet={(ds, them) => setQuet(new Set([...(them ? quet : []), ...ds.map(khoaThua)]))} thuaQuet={quet} phongToi={phongToi} lopPhu={lopPhu} batGhiChu={batGhiChu} tuyenGia={tuyenGia}
             themGhiChu={quyen("SUA_HO_SO") ? (loai, diem) => setGhiChuMoi({ loai, diem }) : undefined}
             luuDo={quyen("SUA_HO_SO") ? (loai, diem, giaTri) => void luuBanDoDa({ ketQuaDo: [...lopPhu.ketQuaDo, taoKetQuaDo(lopPhu.ketQuaDo, loai, diem, giaTri, nguoiDung)] }) : undefined} />
           <div className="ben-phai">
@@ -497,7 +505,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
                 </table>
               </div>
             </div>}
-            {chon && <ChiTietThua quayLai={() => { setXemLai(chon.ma); setChon(null); }} xoa={quyen("SUA_HO_SO") ? () => void xoaThua([chon]) : undefined} t={chon} th={thuHoi.get(khoaThua(chon))} ho={daLienKet.get(chon.ma)} tt={ttThua.get(chon.ma)} moHo={(h) => di({ ten: "ho", duAnId, hoId: h.id, tab: "thua" })} tomTat={daLienKet.get(chon.ma) ? <TomTatHo duAn={duAn} h={daLienKet.get(chon.ma)!} tt={ttThua.get(chon.ma)} moHo={() => di({ ten: "ho", duAnId, hoId: daLienKet.get(chon.ma)!.id })} /> : undefined} />}
+            {chon && <ChiTietThua quayLai={() => { setXemLai(chon.ma); setChon(null); }} xoa={quyen("SUA_HO_SO") ? () => void xoaThua([chon]) : undefined} t={chon} th={thuHoi.get(khoaThua(chon))} ho={daLienKet.get(chon.ma)} tt={ttThua.get(chon.ma)} moHo={(h) => di({ ten: "ho", duAnId, hoId: h.id, tab: "thua" })} goiYTuyen={(() => { const g = tuyenGanNhat(tuyenGia, chon.tamNhan); return g ? `${g.t.tuyen} — cách điểm ghi trong phụ biểu NQ 28/2026 khoảng ${Math.round(g.m)} m; giá đất ở ${g.t.vt.map((v, i) => `VT${i + 1} ${v ?? "—"}`).join(", ")} nghìn đ/m² (tham khảo — xác nhận vị trí, tuyến theo hồ sơ địa chính)` : undefined; })()} tomTat={daLienKet.get(chon.ma) ? <TomTatHo duAn={duAn} h={daLienKet.get(chon.ma)!} tt={ttThua.get(chon.ma)} moHo={() => di({ ten: "ho", duAnId, hoId: daLienKet.get(chon.ma)!.id })} /> : undefined} />}
           </div>
         </div>
       )}
