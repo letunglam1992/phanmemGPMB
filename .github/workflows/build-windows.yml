@@ -30,7 +30,7 @@ jobs:
 
   giao-dien:
     # Kiểm thử giao diện Playwright (P1-9): kịch bản Giai đoạn 1 trên bản build, Chromium
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # Playwright 1.55 chưa hỗ trợ Ubuntu 26.04 (ubuntu-latest từ 10/2026)
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
