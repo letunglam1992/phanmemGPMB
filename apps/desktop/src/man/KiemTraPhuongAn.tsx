@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { ONgay } from "../thanh-phan/ONgay";
 import { GOI_CO_SAN, GOI_MOI_NHAT, tenBoChinhSach } from "../goi-chinh-sach";
 import { BO_CHINH_SACH, DANH_MUC_XA, donGiaTheoBo, napBangGiaKiemTra, type BangGiaDat } from "../du-lieu";
 import {
@@ -44,6 +45,8 @@ export function KiemTraPhuongAn() {
   const [tep, setTep] = useState<{ ten: string; trang: TrangBang[] } | null>(null);
   const [soTrang, setSoTrang] = useState(0);
   const [xa, setXa] = useState("");
+  /** 1.3.2 (A2): ngày phê duyệt dự kiến — trống thì nhận giá cả hai kỳ (trước/từ 01/11/2026, NQ 28/2026) */
+  const [ngayDuyet, setNgayDuyet] = useState("");
   // Bộ chính sách đối chiếu: phương án duyệt trước 06/10/2026 theo QĐ 106/2025 gốc; sau đó theo QĐ 64/2026 (k2 Điều 3)
   const [bo, setBo] = useState(GOI_MOI_NHAT);
   const [cotTay, setCotTay] = useState<AnhXaCot>({});
@@ -66,8 +69,8 @@ export function KiemTraPhuongAn() {
   const kq = useMemo(() => {
     if (!trang) return null;
     if (dangDung === "NGANG") return kiemTraBangNgang(trang);
-    return kiemTraBang(trang, { donGia: donGiaTheoBo(bo), bangGia, chinhSach: BO_CHINH_SACH[bo], xa: xa || undefined }, Object.keys(cotTay).length ? cotTay : undefined);
-  }, [trang, bangGia, xa, cotTay, bo, dangDung]);
+    return kiemTraBang(trang, { donGia: donGiaTheoBo(bo), bangGia, chinhSach: BO_CHINH_SACH[bo], xa: xa || undefined, ngayPheDuyet: ngayDuyet || undefined }, Object.keys(cotTay).length ? cotTay : undefined);
+  }, [trang, bangGia, xa, cotTay, bo, dangDung, ngayDuyet]);
 
   const napTep = async (f: File) => {
     setDangDoc(true);
@@ -152,6 +155,9 @@ export function KiemTraPhuongAn() {
                 <option value="">— Chọn xã/phường —</option>
                 {(DANH_MUC_XA as string[]).map((x) => <option key={x} value={x}>{x}</option>)}
               </Chon>
+            </O>
+            <O nhan="Ngày phê duyệt phương án dự kiến" goiY="Trống = nhận giá cả hai kỳ bảng giá. Từ 01/11/2026 áp dụng NQ 152 đã sửa đổi bởi NQ 28/2026 (tuyến bãi bỏ, giảm chênh cao → cảnh báo)">
+              <ONgay aria-label="Ngày phê duyệt phương án dự kiến" value={ngayDuyet} onChange={(e) => setNgayDuyet(e.target.value)} />
             </O>
             <O nhan="Dạng bảng" goiY="Ngang: mỗi hộ một dòng, các khoản theo cột (chỉ kiểm số học, tổng)">
               <Chon value={dang} onChange={(e) => setDang_(e.target.value as "" | "DOC" | "NGANG")} aria-label="Dạng bảng">

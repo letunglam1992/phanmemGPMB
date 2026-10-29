@@ -21,6 +21,7 @@ import { taiXuong } from "../tai-xuong";
 import { tenTep } from "../ten-tep";
 import { giaTriNhapThem } from "../van-ban/tao-nhanh";
 import { kiemTraThongNhat } from "../van-ban/thuc-te";
+import { goiYCanCuBangGia } from "../van-ban-can-cu";
 import { CAN_CU_DA_THAY, CAN_CU_MAC_DINH, capNhatCanCu } from "../van-ban/du-lieu";
 import { Chon } from "../thanh-phan/Chon";
 import { chungTheoDot, coDot, dotCuaHo, dsDot, duAnTheoDot, khopDot, tenDot, timDot } from "../dot-thu-hoi";
@@ -191,6 +192,8 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
     .filter((t): t is VanBanDi => !!t)
     .map((t) => `Số ${t.soDayDu} đã cấp cho ${t.tenMau} (${t.duAnTen}${t.hoMa ? `, hộ ${t.hoMa}` : ""}) ngày ${t.ngay.split("-").reverse().join("/")}${t.nguoi ? ` — ${t.nguoi}` : ""} — sổ văn bản đi của đơn vị.`);
   canhBaoTN.push(...canhBaoSo);
+  /** 1.3.2 (A1): gợi ý căn cứ bảng giá đất theo ngày ký — chỉ gợi ý, cán bộ bấm mới thêm vào căn cứ riêng của dự án */
+  const goiYGia = goiYCanCuBangGia(ma, chung.can_cu_du_an ?? "", chung.can_cu_chung ?? "", ngaySo);
   /** 1.3.0 (C2): phiếu kiểm tra trước khi ký */
   const taiPhieuKiemTra = async () => {
     const cc = Array.isArray(duLieuXem.can_cu) ? (duLieuXem.can_cu as string[]) : [];
@@ -454,6 +457,13 @@ export function VanBan({ duAnId, maDau, hoIdDau, nhung, chiDuAn }: { duAnId: str
                     <div className="xt-giay" data-noi-dung-xem-truoc dangerouslySetInnerHTML={{ __html: xemTruoc }} />
                   </div>
                 </HopThoai>
+              )}
+              {goiYGia && (
+                <div className="thong-bao thong-bao-xanh" style={{ marginBottom: 0 }} data-goi-y-can-cu-gia>
+                  <b>Gợi ý căn cứ bảng giá đất:</b> {goiYGia.lyDo}
+                  <div className="chu-nho mt-4"><i>{goiYGia.dong}</i></div>
+                  <button className="nut nut-nho mt-4" onClick={() => { const c = { ...chung, can_cu_du_an: goiYGia.canCuMoi }; setChung(c); void luuDuAn({ ...duAn, vanBan: { ...(duAn.vanBan ?? {}), ...c } }); }}>Thêm vào căn cứ riêng của dự án</button>
+                </div>
               )}
               {canhBaoTN.length > 0 && (
                 <div className="thong-bao thong-bao-vang" style={{ marginBottom: 0 }} aria-label="Kiểm tra thống nhất">

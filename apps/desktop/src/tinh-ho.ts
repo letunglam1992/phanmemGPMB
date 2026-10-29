@@ -51,6 +51,7 @@ import { laSoMay, truongLoi, truongSoDuAn, truongSoHo } from "./so";
 import { boCuaHo, duAnCuaHo } from "./dot-thu-hoi";
 import { BO_CHINH_SACH } from "./du-lieu";
 import { tenDayDu } from "./van-ban/loai-dat";
+import { vanBanGiaDat, viTriGiaDat } from "./nguon-gia";
 
 export const LOAI_DAT_NN = ["LUC", "LUK", "LUN", "BHK", "NHK", "HNK", "CLN", "RSX", "RPH", "RDD", "NTS", "NKH", "LNP"];
 export const laDatNN = (ma: string) => LOAI_DAT_NN.includes(ma.toUpperCase());
@@ -136,7 +137,7 @@ function dongDat(duAn: DuAn, t: Thua): DongTinh {
     giaBangGiaNghinDong: t.gia.giaNghinDong,
     nguonGia: t.gia.nguon,
     heSoDuAn: hs,
-    canCu: [{ vanBan: "NQ 152/2025/NQ-HĐND", viTri: t.gia.nguon }, { vanBan: "Quyết định nghiệp vụ QD-02", viTri: "docs/06" }],
+    canCu: [{ vanBan: vanBanGiaDat(t.gia.nguon), viTri: viTriGiaDat(t.gia.nguon) }, { vanBan: "Quyết định nghiệp vụ QD-02", viTri: "docs/06" }],
   });
   return d;
 }
@@ -184,7 +185,7 @@ function nongLamTruong(cs: BoChinhSach, duAn: DuAn, t: Thua): { ma: string; dat:
     },
     congThuc: "DT tính hỗ trợ (≤ hạn mức) × Giá đất NN theo bảng giá × Số lần",
     thanhTien: dtTinh.mul(gia).mul(lan),
-    canCu: [...canCu, { vanBan: "NQ 152/2025/NQ-HĐND", viTri: t.gia.nguon }],
+    canCu: [...canCu, { vanBan: vanBanGiaDat(t.gia.nguon), viTri: viTriGiaDat(t.gia.nguon) }],
     trangThai: canhBaoHoSo.length ? "CAN_XAC_NHAN" : "TAM_TINH",
     canhBao: [...canhBaoHoSo, ...(dt.gt(han) ? [`DT thu hồi vượt hạn mức: phần ${dinhDang(dt.minus(han), 2)} m² không tính hỗ trợ`] : []), ...(duAn.heSoGiaDat && !D(duAn.heSoGiaDat.heSo).eq(1) ? ["Văn bản quy định theo bảng giá đất: không nhân hệ số điều chỉnh giá đất của dự án"] : [])],
   });
@@ -1009,7 +1010,7 @@ function dongChenhLech(cs: BoChinhSach, duAn: DuAn, ho: Ho, t: Thua): { nhom: "B
           thanhTien: gia.mul(dtTinh),
           trangThai: hs && !chonHs ? "CAN_XAC_NHAN" : "TAM_TINH",
           luaChon: chonHs ? [{ ma: "QD-30", giaTri: chonHs.apDung ? "Nhân hệ số điều chỉnh giá đất của dự án" : "Không nhân hệ số điều chỉnh giá đất của dự án", lyDo: chonHs.lyDo.trim() }] : [],
-          canCu: [...canCu, { vanBan: "NQ 152/2025/NQ-HĐND", viTri: c.nguonGia || "" }],
+          canCu: [...canCu, { vanBan: vanBanGiaDat(c.nguonGia || ""), viTri: viTriGiaDat(c.nguonGia || "") }],
           canhBao: [...canhBao, `Điều kiện: ${c.truongHop === "K10" ? "chuyển mục đích không phải xin phép nhưng chưa đăng ký biến động, chưa bị lập biên bản xử lý vi phạm" : c.diem8 === "b" ? "sử dụng ổn định vào sản xuất NN sau khi cấp GCN đất lâm nghiệp và trước 01/7/2004, không có biên bản xử lý vi phạm, thửa không nằm trong quy hoạch 03 loại rừng" : "sử dụng ổn định vào sản xuất NN trước thời điểm cấp GCN và quy hoạch 03 loại rừng"} — cán bộ xác nhận`],
         }),
         bieu: [{ dvt: "m²", kl: dtTinh, heSo: nhanHs, donGia: donGia.gt(0) ? donGia.mul(1000) : D(0) }],
@@ -1125,7 +1126,7 @@ function dongKhongGiayTo(cs: BoChinhSach, duAn: DuAn, t: Thua): { nhom: "A.I" | 
     if (dt.lte(0)) return;
     if (!gia) return push("A.I", thieu(ma, noiDung, loiGia, vb));
     const g = nhanHs(gia.gia);
-    push("A.I", dong({ ma, noiDung, thamSo: { "Diện tích": `${dinhDang(dt, 2)} m²`, "Giá đất": `${dinhDang(gia.gia)} đ/m² (${gia.nguon})${moTaHs}` }, congThuc: `Diện tích × Giá đất${hs ? " × Hệ số" : ""}`, thanhTien: dt.mul(g), canCu: [...canCu, { vanBan: "NQ 152/2025/NQ-HĐND", viTri: gia.nguon }], ...them }), [{ dvt: "m²", kl: dt, heSo: hs ? D(hs.heSo) : D(1), donGia: gia.gia }]);
+    push("A.I", dong({ ma, noiDung, thamSo: { "Diện tích": `${dinhDang(dt, 2)} m²`, "Giá đất": `${dinhDang(gia.gia)} đ/m² (${gia.nguon})${moTaHs}` }, congThuc: `Diện tích × Giá đất${hs ? " × Hệ số" : ""}`, thanhTien: dt.mul(g), canCu: [...canCu, { vanBan: vanBanGiaDat(gia.nguon), viTri: viTriGiaDat(gia.nguon) }], ...them }), [{ dvt: "m²", kl: dt, heSo: hs ? D(hs.heSo) : D(1), donGia: gia.gia }]);
   };
   const giaCl = k.giaConLai?.giaNghinDong && laSoMay(k.giaConLai.giaNghinDong) ? { gia: D(k.giaConLai.giaNghinDong).mul(1000), nguon: `${k.giaConLai.loaiDat || "?"} — ${k.giaConLai.nguon}` } : null;
 

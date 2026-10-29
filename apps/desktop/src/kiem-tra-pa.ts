@@ -84,6 +84,8 @@ export interface DuLieuKiemTra {
   chinhSach?: BoChinhSach | null;
   /** Xã/phường nơi có đất thu hồi (tên theo NQ 152) — cần để kiểm giá đất, hệ số chuyển đổi nghề */
   xa?: string;
+  /** 1.3.2 (A2): ngày phê duyệt phương án dự kiến (ISO) — đối chiếu giá với đúng kỳ bảng giá (NQ 28/2026 hiệu lực 01/11/2026) */
+  ngayPheDuyet?: string;
 }
 
 /* ============================ Đọc Excel ============================ */
@@ -420,19 +422,19 @@ function laDongDat(d: DongPA): boolean {
   return !!maDatTrong(d.ten) || (/\bdat\b/.test(t) && !/cay|nha|cong trinh|vat kien truc/.test(t) && /m2|m²/.test(chuanDvt(d.dvt) || "m2"));
 }
 
-function giaDatXa(bang: BangGiaDat, xa: string, ma: string | null): { gia: number; nguon: string }[] {
+function giaDatXa(bang: BangGiaDat, xa: string, ma: string | null): { gia: number; nguon: string; ky?: "TRUOC" | "TU" }[] {
   const nx = khongDau(xa);
   const cungXa = (x: string) => khongDau(x) === nx;
-  const kq: { gia: number; nguon: string }[] = [];
+  const kq: { gia: number; nguon: string; ky?: "TRUOC" | "TU" }[] = [];
   for (const r of bang.dat_nong_nghiep)
     if (cungXa(r.xa) && (!ma || r.loai_dat === ma || (ma === "LUN" && r.loai_dat.startsWith("LU")) || (ma === "BHK" && r.loai_dat === "HNK") || (ma === "NHK" && r.loai_dat === "HNK")))
       kq.push({ gia: r.gia, nguon: `NQ 152/2025/NQ-HĐND, Bảng ${r.bang}, STT ${r.stt}, ${r.xa}, ${r.loai_dat}` });
   if (!ma || MA_DAT_O.includes(ma))
     for (const r of bang.dat_o)
-      if (cungXa(r.xa)) r.vt.forEach((g, i) => g != null && kq.push({ gia: g, nguon: `${r.van_ban ?? "NQ 152/2025/NQ-HĐND"}, Bảng ${r.bang}, ${r.xa}, STT ${r.stt}, VT${i + 1}: ${r.tuyen}` }));
+      if (cungXa(r.xa)) r.vt.forEach((g, i) => g != null && kq.push({ gia: g, nguon: `${r.van_ban ?? "NQ 152/2025/NQ-HĐND"}, Bảng ${r.bang}, ${r.xa}, STT ${r.stt}, VT${i + 1}: ${r.tuyen}`, ...(r.ky ? { ky: r.ky } : {}) }));
   if (ma && ["SKC", "TMD"].includes(ma)) {
     for (const r of [...bang.dat_tmdv, ...bang.dat_skc])
-      if (cungXa(r.xa) && (ma === "TMD" ? r.loai_dat.includes("TMD") : r.loai_dat.includes("SKC"))) r.vt.forEach((g, i) => g != null && kq.push({ gia: g, nguon: `${r.van_ban ?? "NQ 152/2025/NQ-HĐND"}, Bảng ${r.bang}, ${r.xa}, STT ${r.stt}, VT${i + 1}` }));
+      if (cungXa(r.xa) && (ma === "TMD" ? r.loai_dat.includes("TMD") : r.loai_dat.includes("SKC"))) r.vt.forEach((g, i) => g != null && kq.push({ gia: g, nguon: `${r.van_ban ?? "NQ 152/2025/NQ-HĐND"}, Bảng ${r.bang}, ${r.xa}, STT ${r.stt}, VT${i + 1}`, ...(r.ky ? { ky: r.ky } : {}) }));
   }
   if (ma && ["SKK", "SKN"].includes(ma)) for (const r of bang.dat_kcn_ccn) if (cungXa(r.xa)) kq.push({ gia: r.gia, nguon: `NQ 152/2025/NQ-HĐND, Bảng ${r.bang}, ${r.ten}` });
   return kq;
@@ -446,8 +448,25 @@ function kiemGiaDat(d: DongPA, dl: DuLieuKiemTra): void {
   if (!dl.bangGia) return void d.phatHien.push({ mucDo: "KHONG_KIEM", loai: "GIA_DAT", noiDung: "Chưa nạp bảng giá đất" });
   const ma = maDatTrong(`${d.ten} ${d.dvt}`);
   const ds = giaDatXa(dl.bangGia, dl.xa, ma);
-  const k = ds.find((x) => trungGia(d.dg!, x.gia));
-  if (k) return void d.phatHien.push({ mucDo: "DUNG", loai: "GIA_DAT", noiDung: `Đơn giá ${dongTien(d.dg!)} đ/m² trùng bảng giá đất`, canCu: k.nguon });
+  const tu = dl.bangGia.nq28_tu;
+  kiemChenhCao(d, dl);
+  // 1.3.2 (A2): có ngày phê duyệt dự kiến → chỉ nhận dòng đúng kỳ; tuyến bãi bỏ / tuyến bổ sung lệch kỳ thì cảnh báo
+  const dungKy = (x: { ky?: "TRUOC" | "TU" }) => !dl.ngayPheDuyet || !tu || !x.ky || (x.ky === "TU" ? dl.ngayPheDuyet >= tu : dl.ngayPheDuyet < tu);
+  const trung = ds.filter((x) => trungGia(d.dg!, x.gia));
+  const k = trung.find(dungKy);
+  if (k) return void d.phatHien.push({ mucDo: "DUNG", loai: "GIA_DAT", noiDung: `Đơn giá ${dongTien(d.dg!)} đ/m² trùng bảng giá đất${dl.ngayPheDuyet && tu ? ` (kỳ ${dl.ngayPheDuyet >= tu ? "từ" : "trước"} ${tu.split("-").reverse().join("/")})` : ""}`, canCu: k.nguon });
+  if (trung.length && tu && dl.ngayPheDuyet) {
+    const x = trung[0]!;
+    const vn = (iso: string) => iso.split("-").reverse().join("/");
+    return void d.phatHien.push({
+      mucDo: "CANH_BAO",
+      loai: "GIA_DAT",
+      noiDung: x.ky === "TRUOC"
+        ? `Đơn giá ${dongTien(d.dg!)} đ/m² trùng tuyến đã bãi bỏ từ ${vn(tu)} (Phụ lục V NQ 28/2026/NQ-HĐND) — phương án phê duyệt ngày ${vn(dl.ngayPheDuyet)} phải áp giá theo tuyến, vị trí còn hiệu lực (khoản 1 Điều 3 NQ 28: chỉ phương án đã phê duyệt trước ${vn(tu)} tiếp tục thực hiện, trừ trường hợp phải điều chỉnh, bổ sung hoặc hủy bỏ)`
+        : `Đơn giá ${dongTien(d.dg!)} đ/m² trùng tuyến bổ sung theo NQ 28/2026/NQ-HĐND, chỉ áp dụng từ ${vn(tu)} — phương án phê duyệt ngày ${vn(dl.ngayPheDuyet)} (trước ngày hiệu lực) áp giá theo NQ 152/2025/NQ-HĐND`,
+      canCu: x.nguon,
+    });
+  }
   if (!ds.length) return void d.phatHien.push({ mucDo: "KHONG_KIEM", loai: "GIA_DAT", noiDung: `Không có giá ${ma ?? "loại đất này"} của ${dl.xa} trong bảng giá đất đã nạp — kiểm tra thủ công` });
   const mucDo: MucDo = ma && MA_DAT_NN.includes(ma) ? "LOI" : "CANH_BAO";
   const lietKe = ds.slice(0, 4).map((x) => `${dongTien(D(x.gia).mul(1000))} đ/m² (${x.nguon.replace(/^NQ 152\/2025\/NQ-HĐND, /, "")})`);
@@ -457,6 +476,17 @@ function kiemGiaDat(d: DongPA, dl: DuLieuKiemTra): void {
     noiDung: `Đơn giá ${dongTien(d.dg!)} đ/m² không trùng bảng giá đất của ${dl.xa}${ma ? ` (${ma})` : ""}: ${lietKe.join("; ")}${ds.length > 4 ? "; …" : ""}. Nếu dự án áp dụng hệ số điều chỉnh hoặc giá đất cụ thể thì đối chiếu với quyết định đó`,
     canCu: "NQ 152/2025/NQ-HĐND (bảng giá đất)",
   });
+}
+
+/**
+ * 1.3.2 (A2): Điều 2 NQ 28/2026/NQ-HĐND bãi bỏ khoản 3 Điều 4 Quy định kèm NQ 152/2025 (giảm giá do chênh cao) từ 01/11/2026.
+ * Phần mềm không có nguyên văn tỷ lệ giảm nên không tự suy từ số — chỉ nhận dòng có ghi "chênh cao".
+ */
+function kiemChenhCao(d: DongPA, dl: DuLieuKiemTra): void {
+  const tu = dl.bangGia?.nq28_tu;
+  if (!tu || !dl.ngayPheDuyet || dl.ngayPheDuyet < tu) return;
+  if (!/chenh (lech )?(do )?cao|chenh cao|khoan 3 dieu 4/.test(khongDau(`${d.ten} ${d.canCu}`))) return;
+  d.phatHien.push({ mucDo: "CANH_BAO", loai: "GIA_DAT", noiDung: `Dòng ghi giảm do chênh cao — khoản 3 Điều 4 Quy định kèm NQ 152/2025/NQ-HĐND bị bãi bỏ từ ${tu.split("-").reverse().join("/")} (Điều 2 NQ 28/2026/NQ-HĐND); phương án phê duyệt ngày ${dl.ngayPheDuyet.split("-").reverse().join("/")} không áp dụng giảm này`, canCu: "Điều 2 NQ 28/2026/NQ-HĐND" });
 }
 
 function heSoChuyenDoiNghe(cs: BoChinhSach, xa: string): { heSo: string; canCu: string; khac?: string[] } | null {

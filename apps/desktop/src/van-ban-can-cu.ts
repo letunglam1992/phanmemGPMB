@@ -53,3 +53,34 @@ export function canhBaoCanCu(canCu: string[], ngay = new Date().toISOString().sl
   }
   return out;
 }
+
+/**
+ * 1.3.2 (A1) — mẫu văn bản dẫn giá đất theo bảng giá (tờ trình, quyết định phê duyệt phương án). Phần mềm chỉ gợi ý dòng
+ * căn cứ, cán bộ bấm mới đưa vào "Căn cứ riêng của dự án". Câu chữ theo trích yếu tại NQ 28/2026/NQ-HĐND (phần mở đầu,
+ * Điều 1) — policy/nguon/nq28-2026-sua-bang-gia-dat.md.
+ */
+export const MAU_DAN_BANG_GIA = new Set(["11", "13", "14", "R4", "R5", "T4", "T5", "T26"]);
+export const NGAY_HIEU_LUC_NQ28 = "2026-11-01";
+const CC_NQ152 = "Căn cứ Nghị quyết số 152/2025/NQ-HĐND ngày 29/12/2025 của Hội đồng nhân dân tỉnh Sơn La ban hành Quy định bảng giá các loại đất trên địa bàn tỉnh áp dụng từ ngày 01/01/2026";
+export const CAN_CU_BANG_GIA_CU = `${CC_NQ152};`;
+export const CAN_CU_BANG_GIA_MOI = `${CC_NQ152}, được sửa đổi, bổ sung bởi Nghị quyết số 28/2026/NQ-HĐND ngày 19/10/2026 của Hội đồng nhân dân tỉnh Sơn La;`;
+
+/**
+ * Gợi ý căn cứ bảng giá đất cho mẫu `ma`, ngày ký `ngay` (ISO; trống = hôm nay). Trả `undefined` khi mẫu không dẫn giá đất
+ * hoặc căn cứ đã đủ; ngược lại trả dòng gợi ý và căn cứ mới sau khi thay (dòng NQ 152 cũ được thay bằng dòng có NQ 28).
+ */
+export function goiYCanCuBangGia(ma: string, canCuDuAn: string, canCuKhac: string, ngay = new Date().toISOString().slice(0, 10)): { dong: string; lyDo: string; canCuMoi: string } | undefined {
+  if (!MAU_DAN_BANG_GIA.has(ma)) return undefined;
+  const moi = ngay >= NGAY_HIEU_LUC_NQ28;
+  const tatCa = `${canCuKhac}\n${canCuDuAn}`;
+  const co152 = coSo(tatCa, "152/2025/NQ-HĐND"), co28 = coSo(tatCa, "28/2026/NQ-HĐND");
+  if (co152 && (co28 || !moi)) return undefined;
+  const dong = moi ? CAN_CU_BANG_GIA_MOI : CAN_CU_BANG_GIA_CU;
+  const ds = canCuDuAn.split("\n").map((s) => s.trim()).filter(Boolean);
+  const i = ds.findIndex((s) => coSo(s, "152/2025/NQ-HĐND"));
+  if (i >= 0) ds[i] = dong; else ds.push(dong);
+  const lyDo = moi
+    ? co152 ? "Ngày ký từ 01/11/2026: căn cứ NQ 152/2025/NQ-HĐND chưa dẫn NQ 28/2026/NQ-HĐND sửa đổi, bổ sung (Điều 4 NQ 28: hiệu lực từ 01/11/2026)." : "Văn bản dẫn giá đất theo bảng giá; ngày ký từ 01/11/2026 áp dụng bảng giá NQ 152/2025/NQ-HĐND đã được sửa đổi, bổ sung bởi NQ 28/2026/NQ-HĐND."
+    : "Văn bản dẫn giá đất theo bảng giá; ngày ký trước 01/11/2026 áp dụng bảng giá NQ 152/2025/NQ-HĐND (NQ 28/2026/NQ-HĐND hiệu lực từ 01/11/2026).";
+  return { dong, lyDo, canCuMoi: ds.join("\n") };
+}

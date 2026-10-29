@@ -9,6 +9,7 @@ import type { DongKetQua, KetQuaHo } from "../tinh-ho";
 import { tenDayDu } from "./loai-dat";
 import { hienSo } from "../so";
 import { hienLyTrinh } from "../ly-trinh";
+import { laGiaK8, moTaNguonGia } from "../nguon-gia";
 import type { Chu, Doan, TaiLieu } from "./tai-lieu-don-gian";
 
 const tien = (d: Decimal | null | undefined) => (d ? dinhDang(d, 0) : "—");
@@ -37,6 +38,19 @@ export function taiLieuBangTinh(duAn: DuAn, h: Ho, kq: KetQuaHo, ngay = new Date
       { kieu: "tong" as const, o: ["", "Cộng", "", "", "", hienSo(h.thua.reduce((s, t) => s.plus(D(t.dienTichThuHoi || "0")), D(0)).toString()), "", ...(coLt ? [""] : [])] },
     ],
   });
+
+  // 1.3.2 (A3): giá đất áp dụng từng thửa — nguồn giá ghi rõ kỳ bảng giá (NQ 152/2025, sửa đổi bởi NQ 28/2026 từ 01/11/2026)
+  const coGia = h.thua.filter((t) => t.gia);
+  if (coGia.length) {
+    const coK8 = coGia.some((t) => laGiaK8(t.gia!.nguon));
+    khoi.push({ loai: "doan", truoc: 6, chu: [{ t: "Giá đất áp dụng:", dam: true }] });
+    khoi.push({
+      loai: "bang",
+      cot: [{ ten: "STT", rong: 5 }, { ten: "Tờ, thửa", rong: 13 }, { ten: "Giá đất (đồng/m²)", rong: 14, so: true }, { ten: "Nguồn giá đất (kỳ áp dụng)", rong: coK8 ? 56 : 68 }, ...(coK8 ? [{ ten: "90% giá đất ở (k8 Đ7)", rong: 12 }] : [])],
+      dong: coGia.map((t, i) => ({ o: [String(i + 1), `Tờ ${t.soTo}, thửa ${t.soThua}`, tien(D(t.gia!.giaNghinDong).mul(1000)), moTaNguonGia(t.gia!.nguon), ...(coK8 ? [laGiaK8(t.gia!.nguon) ? "x" : ""] : [])] })),
+    });
+    if (coK8) khoi.push({ loai: "doan", co: 11, chu: [{ t: "Dòng đánh dấu “x”: đất thương mại, dịch vụ của hộ gia đình, cá nhân sử dụng ổn định lâu dài có nguồn gốc đất ở, giá bằng 90% giá đất ở cùng vị trí, cùng tuyến (khoản 8 Điều 7 Quy định kèm NQ 152/2025/NQ-HĐND, bổ sung bởi khoản 6 Điều 1 NQ 28/2026/NQ-HĐND).", nghieng: true }] });
+  }
 
   // II. Bảng tính
   khoi.push({ loai: "tieu-de", cap: 2, chu: "II. BẢNG TÍNH CHI TIẾT" });

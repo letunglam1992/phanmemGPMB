@@ -60,8 +60,14 @@ export function tuyenBaiBo(sua: SuaBangGia, xa: string): string[] {
 /** Kiểm tra phương án: giá hợp lệ theo một trong hai kỳ (trước / từ hiệu lực NQ 28 — Điều 3 chuyển tiếp). */
 export function bangGiaHaiKy(bang: BangGiaDat, sua: SuaBangGia): BangGiaDat {
   const moi = bangGiaTheoNgay(bang, sua, sua.hieu_luc_tu);
-  const them = (cu: DongGiaTuyen[], m: DongGiaTuyen[]) => [...cu, ...m.filter((r) => r.van_ban)];
-  return { ...bang, dat_o: them(bang.dat_o, moi.dat_o), dat_tmdv: them(bang.dat_tmdv, moi.dat_tmdv), dat_skc: them(bang.dat_skc, moi.dat_skc) };
+  const gop = (b: "05" | "06" | "07") => {
+    const k = KHOA_BANG[b];
+    // 1.3.2 (A2): đánh dấu dòng chỉ đúng một kỳ — tuyến bãi bỏ (Phụ lục V) chỉ đúng trước, tuyến bổ sung (Phụ lục I–III) chỉ đúng từ ngày hiệu lực
+    const bo = new Set(sua.bai_bo.flatMap((x) => (x.khop[b] ? [`${x.xa}|${x.khop[b]!.stt}|${x.khop[b]!.tuyen}`] : [])));
+    const cu = bang[k].map((r) => (bo.has(`${r.xa}|${r.stt}|${r.tuyen}`) ? { ...r, ky: "TRUOC" as const, van_ban: `NQ 152/2025/NQ-HĐND (tuyến bãi bỏ theo Phụ lục V ${sua.van_ban} từ ${vn(sua.hieu_luc_tu)})` } : r));
+    return [...cu, ...moi[k].filter((r) => r.van_ban).map((r) => (r.canh_bao.some((c) => c.startsWith("Bổ sung theo")) ? { ...r, ky: "TU" as const } : r))];
+  };
+  return { ...bang, dat_o: gop("05"), dat_tmdv: gop("06"), dat_skc: gop("07"), nq28_tu: sua.hieu_luc_tu };
 }
 
 /**

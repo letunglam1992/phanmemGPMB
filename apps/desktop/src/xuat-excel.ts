@@ -8,6 +8,7 @@ import { moTaQd } from "./phuong-an";
  */
 import type ExcelJS from "exceljs";
 import { tenDayDu } from "./van-ban/loai-dat";
+import { laGiaK8, moTaNguonGia } from "./nguon-gia";
 import { nguoiCungTen } from "./van-ban/thuc-te";
 import { D } from "@gpmb/core";
 import type Decimal from "decimal.js";
@@ -115,17 +116,22 @@ function trangHo(wb: ExcelJS.Workbook, duAn: DuAn, h: Ho, kq: KetQuaHo, ten: str
   dong("", `Địa chỉ: ${h.diaChi || "…"}   ·   Số định danh: ${h.soDinhDanh || "…"}   ·   Nhân khẩu: ${h.nhanKhau.length}`);
   dong("2.", "Thửa đất bị thu hồi:");
   const dau2 = ws.getRow(r);
-  dau2.values = ["TT", "Tờ / thửa", "Loại đất", "DT thửa (m²)", "", "DT thu hồi (m²)", "", "Nguồn gốc sử dụng"];
+  // 1.3.2 (A3): nguồn giá đất theo kỳ bảng giá; cột đánh dấu giá TMDV gốc đất ở tính 90% (khoản 8 Điều 7, bổ sung bởi NQ 28/2026)
+  dau2.values = ["TT", "Tờ / thửa", "Loại đất", "DT thửa (m²)", "", "DT thu hồi (m²)", "Giá đất (đồng/m²)", "Nguồn gốc sử dụng", "90% giá đất ở (k8 Đ7)", "Nguồn giá đất (kỳ áp dụng)"];
   dau2.font = { name: FONT, bold: true };
-  dongKe(dau2, 1, 8);
+  dau2.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+  dongKe(dau2, 1, N);
   r++;
   h.thua.forEach((t, i) => {
     const row = ws.getRow(r++);
-    row.values = [i + 1, `Tờ ${t.soTo}, thửa ${t.soThua}`, tenDayDu(t.loaiDat), Number(t.dienTich) || null, "", Number(t.dienTichThuHoi) || null, "", t.nguonGoc || ""];
+    row.values = [i + 1, `Tờ ${t.soTo}, thửa ${t.soThua}`, tenDayDu(t.loaiDat), Number(t.dienTich) || null, "", Number(t.dienTichThuHoi) || null, t.gia ? so(D(t.gia.giaNghinDong).mul(1000)) : null, t.nguonGoc || "", laGiaK8(t.gia?.nguon) ? "x" : "", moTaNguonGia(t.gia?.nguon)];
     row.getCell(4).numFmt = "#,##0.00";
     row.getCell(6).numFmt = "#,##0.00";
+    row.getCell(7).numFmt = DINH_DANG_TIEN;
     row.font = { name: FONT };
-    dongKe(row, 1, 8);
+    row.alignment = { vertical: "top", wrapText: true };
+    row.getCell(9).alignment = { horizontal: "center", vertical: "top" };
+    dongKe(row, 1, N);
   });
   r++;
   dong("3.", "Giá trị bồi thường, hỗ trợ:");

@@ -74,6 +74,8 @@ export interface BangGiaDat {
   /** 1.3.1: bảng đã áp dụng NQ 28/2026 (lưu ý về nguồn dữ liệu, cờ) */
   luu_y?: string;
   nq28?: boolean;
+  /** 1.3.2: bảng gộp hai kỳ — ngày hiệu lực NQ 28 (dòng có `ky` chỉ đúng một kỳ) */
+  nq28_tu?: string;
 }
 export interface DongGiaTuyen {
   bang: string;
@@ -88,6 +90,8 @@ export interface DongGiaTuyen {
   van_ban?: string;
   /** 1.3.1: điểm tọa độ ghi trong phụ biểu NQ 28 ([vĩ độ, kinh độ] WGS-84) — đầu, cuối, giữa tuyến; tham khảo */
   toa_do?: [number, number][];
+  /** 1.3.2: bảng gộp hai kỳ (kiểm tra phương án) — dòng chỉ đúng trước ("TRUOC": tuyến bãi bỏ) hoặc từ ("TU": tuyến bổ sung) ngày hiệu lực NQ 28 */
+  ky?: "TRUOC" | "TU";
 }
 
 let bangGia: Promise<BangGiaDat> | null = null;

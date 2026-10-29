@@ -4,6 +4,15 @@ Mỗi phiên bản một mục `## X.Y.Z`. Khi phát hành, quy trình đóng g�
 (`tools/ghi-chu-phat-hanh.mjs`) — thiếu mục của phiên bản đang phát hành thì dừng, không phát hành. Phần mềm hiện các mục
 mới hơn bản đang dùng khi có bản cập nhật.
 
+## 1.3.2
+
+- Văn bản (mẫu tờ trình, quyết định phê duyệt phương án dẫn giá đất): **gợi ý căn cứ bảng giá đất** theo ngày ký — từ 01/11/2026
+  là "NQ 152/2025/NQ-HĐND … được sửa đổi, bổ sung bởi NQ 28/2026/NQ-HĐND …"; bấm **Thêm vào căn cứ riêng của dự án** để đưa vào.
+- Kiểm tra phương án: ô **Ngày phê duyệt phương án dự kiến** — phương án duyệt từ 01/11/2026 mà còn dùng giá tuyến đã bãi bỏ hoặc
+  ghi giảm do chênh cao thì cảnh báo; duyệt trước 01/11/2026 mà dùng tuyến bổ sung theo NQ 28 cũng cảnh báo.
+- Excel phương án và giải trình Word: ghi nguồn giá đất theo kỳ (NQ 152 sửa đổi bởi NQ 28, phụ lục), cột đánh dấu dòng tính 90%
+  giá đất ở (khoản 8 Điều 7).
+
 ## 1.3.1
 
 - Cài đặt → Thẩm quyền phân cấp: **Xuất tệp cấu hình** (`.gpmbtq`) để Sở gửi các xã khi có văn bản thay QĐ 27/2026; xã **Nạp tệp
