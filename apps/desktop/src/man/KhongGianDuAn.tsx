@@ -40,6 +40,7 @@ import { HopGhiThonBan } from "../thanh-phan/OThonBan";
 import { TheDoiChieuDt } from "../thanh-phan/DoiChieuDt";
 import { TheDuBao } from "../thanh-phan/DuBao";
 import { TheQuyTdc } from "../thanh-phan/QuyTdc";
+import { soatQuyTdc } from "../quy-tdc";
 import { TheChiTraKinhPhi } from "../thanh-phan/KinhPhi";
 import { TheKhieuNaiDuAn } from "../thanh-phan/KhieuNaiDuAn";
 import { TheBanGiaoThucDia } from "../thanh-phan/BanGiaoThucDia";
@@ -82,6 +83,8 @@ export function KhongGianDuAn({ duAnId, tab = "tong-quan", ma, hoId }: { duAnId:
   const docMauExcel = useMauExcel();
   const hos = hoCua(duAnId);
   const kq = useMemo(() => (duAn ? hos.map((h) => ({ h, k: tinhHo(chinhSach(duAn), duAn, h) })) : []), [hos, duAn, chinhSach]);
+  // 1.3.4: số cảnh báo mức LỖI của quỹ tái định cư (vd. hai hộ cùng một lô) — hiện badge trên tab để cán bộ thấy không phải mở tab
+  const soLoiTdc = useMemo(() => (duAn ? soatQuyTdc(duAn, hos).filter((c) => c.muc === "LOI").length : 0), [duAn, hos]);
   if (!duAn) return <div className="trang trong">Không tìm thấy dự án. <button className="nut nut-nho" onClick={() => di({ ten: "du-an" })}>Về danh sách dự án</button></div>;
   const tt = duAn.trangThaiDuAn ?? "DANG_TRIEN_KHAI";
   const moThe = (t: string) => di({ ten: "du-an", duAnId, tab: t });
@@ -137,6 +140,7 @@ export function KhongGianDuAn({ duAnId, tab = "tong-quan", ma, hoId }: { duAnId:
               {t.ma === "ho" && <span className="dem">{hos.length}</span>}
               {t.ma === "buoc-chung" && <span className="dem">{BUOC_CHUNG.filter((m) => duAn.tienDoChung?.[m]?.trangThai === "XONG").length}/4</span>}
               {t.ma === "thong-tin" && thieu.length > 0 && <span className="dem" style={{ background: "var(--vang-nen)", color: "var(--vang)" }}>!</span>}
+              {t.ma === "tai-dinh-cu" && soLoiTdc > 0 && <span className="dem" style={{ background: "var(--do-nen)", color: "var(--do-to)" }} title="Cảnh báo quỹ tái định cư (vd. hai hộ cùng một lô)">{soLoiTdc}</span>}
             </button>
           ))}
         </TabCuon>

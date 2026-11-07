@@ -58,6 +58,24 @@ describe("Áp dụng theo ngày", () => {
     const boO = sua.bai_bo.filter((x) => x.khop["05"]).length;
     expect(m.dat_o.length).toBe(bang.dat_o.length + 132 - boO);
   });
+  it("bãi bỏ tuyến đúng từng bảng — không xóa nhầm tuyến khác cùng STT (Chiềng La 4.1, Phiêng Pằn 3.3)", () => {
+    const m = bangGiaTheoNgay(bang, sua, "2026-11-01");
+    // Chiềng La 4.1 "…Lò Văn Xôm…Quàng Văn Đoàn 1km" có ở Bảng 05, 07; Bảng 06 KHÔNG có → bãi bỏ chỉ ở 05, 07
+    const cla = "Từ đất nhà ông Lò Văn Xôm (trừ lô đất giáp QL6B) đến đất ông Quàng Văn Đoàn 1km";
+    expect(tim(bang, "dat_o", "Xã Chiềng La", cla)).toHaveLength(1);
+    expect(tim(bang, "dat_tmdv", "Xã Chiềng La", cla)).toHaveLength(0);
+    expect(tim(bang, "dat_skc", "Xã Chiềng La", cla)).toHaveLength(1);
+    expect(tim(m, "dat_o", "Xã Chiềng La", cla)).toHaveLength(0);
+    expect(tim(m, "dat_skc", "Xã Chiềng La", cla)).toHaveLength(0);
+    // Phiêng Pằn 3.3: bãi bỏ "QL37 ra QL6 cũ (giáp bà Nga)" chỉ ở Bảng 05; STT 3.3 ở Bảng 06, 07 là TUYẾN KHÁC (Đồn Biên phòng) → giữ nguyên
+    const bo33 = "Đoạn đường từ Quốc lộ 37 ra Quốc lộ 6 cũ (giáp bà Nga)";
+    const khac33 = "Đồn Biên phòng Phiêng Pằn";
+    expect(tim(bang, "dat_o", "Xã Phiêng Pằn", bo33)).toHaveLength(1);
+    expect(tim(m, "dat_o", "Xã Phiêng Pằn", bo33)).toHaveLength(0);
+    // tuyến khác cùng STT 3.3 ở Bảng 06, 07 không bị xóa
+    expect(tim(m, "dat_tmdv", "Xã Phiêng Pằn", khac33)).toHaveLength(1);
+    expect(tim(m, "dat_skc", "Xã Phiêng Pằn", khac33)).toHaveLength(1);
+  });
   it("kiểm tra phương án nhận giá cả hai kỳ; khoản 8 Điều 7: TMDV gốc đất ở = 90% giá đất ở", () => {
     const h = bangGiaHaiKy(bang, sua);
     expect(h.dat_o.length).toBeGreaterThan(bang.dat_o.length + 132 - 1);

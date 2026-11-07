@@ -4,6 +4,15 @@ Mỗi phiên bản một mục `## X.Y.Z`. Khi phát hành, quy trình đóng g�
 (`tools/ghi-chu-phat-hanh.mjs`) — thiếu mục của phiên bản đang phát hành thì dừng, không phát hành. Phần mềm hiện các mục
 mới hơn bản đang dùng khi có bản cập nhật.
 
+## 1.3.4
+
+- **Mở dự án lớn không còn treo**: bản đồ thu nhỏ ở trang Tổng quan chỉ đọc, vẽ khi cuộn tới; dự án có bản đồ rất nhiều thửa
+  (tuyến dài) không vẽ hết hàng nghìn hình nữa mà hiện thẻ gọn "bấm để mở màn Bản đồ".
+- **Tái định cư**: tab Tái định cư của dự án hiện badge đỏ số cảnh báo quỹ (ví dụ hai hộ cùng một lô) để cán bộ thấy ngay,
+  không phải mở tab mới biết.
+- Bổ sung **nguyên văn Điều 3, 4, 7 Nghị quyết 152/2025/NQ-HĐND** (nguyên tắc, vị trí, giá đất phi nông nghiệp — gồm khoản 3
+  Điều 4 về giảm 30% do chênh cao đã bị NQ 28/2026 bãi bỏ từ 01/11/2026) vào Trợ lý AI (Hỏi đáp) để tra cứu, trích dẫn đúng.
+
 ## 1.3.3
 
 - **Xóa dự án ngay ở màn Danh sách dự án**: nút xóa (vào thùng rác, có lý do, khôi phục được) hiện trên từng thẻ dự án và từng

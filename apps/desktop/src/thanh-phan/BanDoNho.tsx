@@ -4,24 +4,40 @@ import { napBanDoDuAn, type DuLieuBanDo } from "../man/BanDo";
 import type { DuAn } from "../mo-hinh";
 import { TT_GPMB, type TrangThaiGpmb } from "../trang-thai";
 
-/** Bản đồ nhỏ (SVG) tô thửa theo hiện trạng GPMB; bấm để mở màn Bản đồ. */
+/** 1.3.4 — bản đồ tuyến dài (hàng nghìn thửa) vẽ hết thành SVG ở Tổng quan làm treo khi mở; trên ngưỡng này hiện thẻ gọn. */
+const NGUONG_VE = 400;
+
+/** Bản đồ nhỏ (SVG) tô thửa theo hiện trạng GPMB; bấm để mở màn Bản đồ. Chỉ nạp, vẽ khi lọt vùng nhìn (dự án lớn mở nhanh). */
 export function BanDoNho({ duAn, ttThua }: { duAn: DuAn; ttThua: Map<string, TrangThaiGpmb> }) {
   const { kho, di } = useUngDung();
   const [dl, setDl] = useState<DuLieuBanDo | null>(null);
   const [loi, setLoi] = useState<string | null>(null);
+  const boc = useRef<HTMLDivElement>(null);
+  // 1.3.4: chỉ đọc bản đồ khi khối sắp vào vùng nhìn (môi trường không có IntersectionObserver → đọc ngay)
+  const [gan, setGan] = useState(typeof IntersectionObserver === "undefined");
   // nạp lại chỉ khi đổi dự án hoặc bản đồ (không theo mọi thay đổi khác của dự án)
   const duAnRef = useRef(duAn);
   duAnRef.current = duAn;
   const banDo = duAn.banDo;
+
   useEffect(() => {
-    if (!banDo) return;
+    if (gan) return;
+    const el = boc.current;
+    if (!el) return;
+    const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { setGan(true); io.disconnect(); } }, { rootMargin: "400px 0px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [gan]);
+
+  useEffect(() => {
+    if (!banDo || !gan) return;
     let huy = false;
     napBanDoDuAn(kho, duAnRef.current).then((d) => !huy && setDl(d)).catch((e) => setLoi(String(e.message ?? e)));
     return () => { huy = true; };
-  }, [duAn.id, banDo, kho]);
+  }, [duAn.id, banDo, kho, gan]);
 
   const hinh = useMemo(() => {
-    if (!dl) return null;
+    if (!dl || dl.kq.thua.length > NGUONG_VE) return null;
     const { pham } = dl;
     const W = 360, H = 220, pad = 8;
     const k = Math.min((W - 2 * pad) / (pham.maxX - pham.minX), (H - 2 * pad) / (pham.maxY - pham.minY));
@@ -35,16 +51,28 @@ export function BanDoNho({ duAn, ttThua }: { duAn: DuAn; ttThua: Map<string, Tra
     };
   }, [dl, ttThua, duAn.banDo?.vungChon]);
 
-  if (!duAn.banDo) return <div className="trong chu-nho">Chưa nạp bản đồ. <button className="nut nut-chu nut-nho" onClick={() => di({ ten: "ban-do", duAnId: duAn.id })}>Nạp DGN</button></div>;
-  if (loi) return <div className="thong-bao thong-bao-do">{loi}</div>;
-  if (!hinh) return <div className="trong chu-nho">Đang đọc bản đồ…</div>;
-  return (
-    <svg viewBox={`0 0 ${hinh.W} ${hinh.H}`} style={{ width: "100%", cursor: "pointer", display: "block" }} onClick={() => di({ ten: "ban-do", duAnId: duAn.id })} role="img" aria-label="Bản đồ nhỏ hiện trạng GPMB">
-      <rect width={hinh.W} height={hinh.H} fill="var(--ban-do-nen)" />
-      {hinh.thua.map((t, i) => (
-        <path key={i} d={t.d} fillRule="evenodd" fill={t.tt ? TT_GPMB[t.tt].mau : "var(--xam-nen)"} fillOpacity={t.tt ? 0.75 : 1} stroke="var(--be-mat)" strokeWidth={0.4} />
-      ))}
-      {hinh.ranh && <path d={hinh.ranh} fill="none" stroke="var(--do-to)" strokeWidth={1.6} />}
-    </svg>
-  );
+  const noiDung = () => {
+    if (!duAn.banDo) return <div className="trong chu-nho">Chưa nạp bản đồ. <button className="nut nut-chu nut-nho" onClick={() => di({ ten: "ban-do", duAnId: duAn.id })}>Nạp DGN</button></div>;
+    if (loi) return <div className="thong-bao thong-bao-do">{loi}</div>;
+    if (!gan || (!dl && !loi)) return <div className="trong chu-nho">Đang đọc bản đồ…</div>;
+    // 1.3.4: bản đồ quá nhiều thửa — không vẽ thu nhỏ (tránh treo), bấm để mở màn Bản đồ đầy đủ
+    if (dl && dl.kq.thua.length > NGUONG_VE)
+      return (
+        <button className="trong chu-nho" style={{ width: "100%", cursor: "pointer", border: 0, background: "transparent" }} onClick={() => di({ ten: "ban-do", duAnId: duAn.id })}>
+          Bản đồ lớn ({dl.kq.thua.length.toLocaleString("vi-VN")} thửa) — bấm để mở màn Bản đồ
+        </button>
+      );
+    if (!hinh) return <div className="trong chu-nho">Đang đọc bản đồ…</div>;
+    return (
+      <svg viewBox={`0 0 ${hinh.W} ${hinh.H}`} style={{ width: "100%", cursor: "pointer", display: "block" }} onClick={() => di({ ten: "ban-do", duAnId: duAn.id })} role="img" aria-label="Bản đồ nhỏ hiện trạng GPMB">
+        <rect width={hinh.W} height={hinh.H} fill="var(--ban-do-nen)" />
+        {hinh.thua.map((t, i) => (
+          <path key={i} d={t.d} fillRule="evenodd" fill={t.tt ? TT_GPMB[t.tt].mau : "var(--xam-nen)"} fillOpacity={t.tt ? 0.75 : 1} stroke="var(--be-mat)" strokeWidth={0.4} />
+        ))}
+        {hinh.ranh && <path d={hinh.ranh} fill="none" stroke="var(--do-to)" strokeWidth={1.6} />}
+      </svg>
+    );
+  };
+
+  return <div ref={boc} style={{ minHeight: 120 }}>{noiDung()}</div>;
 }
