@@ -70,6 +70,26 @@ test("P0-4: xóa hồ sơ vào thùng rác, khôi phục; xóa hẳn chưa đủ
   await expect(p.getByText("Không có.").nth(1)).toBeVisible();
 });
 
+test("Xóa dự án ngay ở danh sách, không cần mở dự án (vào thùng rác, khôi phục được)", async ({ page: p }) => {
+  await vao(p);
+  p.on("dialog", (d) => void (d.type() === "prompt" ? d.accept("dự án lỗi, không mở được") : d.accept()));
+  await p.keyboard.press("Alt+2");
+  await expect(p.getByRole("heading", { name: "Danh sách dự án" })).toBeVisible();
+  const the = p.locator(".da-the");
+  await expect(the).toHaveCount(1);
+  // Bấm nút xóa trên thẻ — không được điều hướng vào dự án; dự án chuyển sang trạng thái đã xóa
+  await the.first().getByRole("button", { name: /^Xóa dự án/ }).click();
+  await expect(p.getByRole("heading", { name: "Danh sách dự án" })).toBeVisible();
+  await expect(p.getByText("Chưa có dự án.")).toBeVisible();
+  // Có trong thùng rác, khôi phục lại được
+  await p.getByText(/^Thùng rác/).first().click();
+  const dongRac = p.locator("tbody tr", { hasText: "dự án lỗi, không mở được" }).first();
+  await expect(dongRac).toBeVisible();
+  await dongRac.getByRole("button", { name: "Khôi phục" }).click();
+  await p.keyboard.press("Alt+2");
+  await expect(p.locator(".da-the")).toHaveCount(1);
+});
+
 test("P0-5: sao lưu bắt buộc mật khẩu; mở tệp mã hóa bằng mật khẩu", async ({ page: p }) => {
   await p.addInitScript(() => {
     const w = window as unknown as { __tep: string | null; showSaveFilePicker: unknown };

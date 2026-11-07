@@ -803,6 +803,10 @@ table.bang { width: 100%; border-collapse: collapse; font-size: 13px; }
 .da-bt.lon { width: 52px; height: 52px; border-radius: 13px; }
 .da-ten { display: block; font-size: 14.5px; line-height: 1.35; }
 .da-the-dau .nhan { flex: none; }
+.da-the-xoa { flex: none; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; border: 0; background: transparent; color: var(--chu-mo); cursor: pointer; transition: background var(--dur-fast) ease, color var(--dur-fast) ease; }
+.da-the-xoa:hover, .da-the-xoa:focus-visible { background: var(--do-nen); color: var(--do-to); }
+.nut-bieu-tuong { display: inline-grid; place-items: center; padding: 5px; }
+.nut-bieu-tuong:hover { border-color: var(--do-to); color: var(--do-to); }
 .da-so { display: grid; grid-template-columns: 1fr 1fr 1.3fr; gap: 8px; }
 .da-so > div { display: grid; grid-template-columns: auto 1fr; column-gap: 6px; align-items: center; color: var(--chinh); }
 .da-so b { color: var(--chu); font-size: 15px; font-variant-numeric: tabular-nums; }

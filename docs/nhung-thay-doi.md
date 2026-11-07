@@ -4,6 +4,13 @@ Mỗi phiên bản một mục `## X.Y.Z`. Khi phát hành, quy trình đóng g�
 (`tools/ghi-chu-phat-hanh.mjs`) — thiếu mục của phiên bản đang phát hành thì dừng, không phát hành. Phần mềm hiện các mục
 mới hơn bản đang dùng khi có bản cập nhật.
 
+## 1.3.3
+
+- **Xóa dự án ngay ở màn Danh sách dự án**: nút xóa (vào thùng rác, có lý do, khôi phục được) hiện trên từng thẻ dự án và từng
+  dòng ở dạng bảng — không phải mở dự án mới xóa được. Hữu ích khi một dự án lỗi không mở được (ví dụ dự án rất nhiều hồ sơ, thửa
+  bị treo khi mở). Chỉ hiện với tài khoản có quyền xóa dự án; ràng buộc an toàn giữ nguyên (không xóa được dự án đã có phương án
+  phê duyệt hoặc hộ đã chi trả).
+
 ## 1.3.2
 
 - Văn bản (mẫu tờ trình, quyết định phê duyệt phương án dẫn giá đất): **gợi ý căn cứ bảng giá đất** theo ngày ký — từ 01/11/2026

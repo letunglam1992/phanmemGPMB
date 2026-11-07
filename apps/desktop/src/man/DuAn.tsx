@@ -1,6 +1,6 @@
 import { ONgay } from "../thanh-phan/ONgay";
 import { coDot, dsDot, tenDot } from "../dot-thu-hoi";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type MouseEvent as ReactMouseEvent, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { THOI_HAN_LUAT } from "../du-bao";
 import { D } from "@gpmb/core";
 import type Decimal from "decimal.js";
@@ -27,7 +27,7 @@ type SapXep = "MOI" | "TEN" | "TIEN_DO" | "TIEN";
 
 /** Dự án & hồ sơ: danh sách dự án (thẻ hoặc bảng) + chi tiết dự án đang chọn và bảng hộ, cá nhân, tổ chức. */
 export function ManDuAn({ duAnId: idVao }: { duAnId?: string }) {
-  const { dsDuAn, hoCua, di, chinhSach, quyen, dangTai, kho, taiLai, giayPhep, taoTapHuan } = useUngDung();
+  const { dsDuAn, hoCua, di, chinhSach, quyen, dangTai, kho, taiLai, giayPhep, taoTapHuan, xoaDuAn } = useUngDung();
   const homNay = homNayIso();
   const [timDa, setTimDa] = useState("");
   const [locDa, setLocDa] = useState<TrangThaiDuAn | "">("");
@@ -45,6 +45,24 @@ export function ManDuAn({ duAnId: idVao }: { duAnId?: string }) {
   );
   const duAnId = idVao && dsDuAn.some((d) => d.id === idVao) ? idVao : dsDuAn[0]?.id;
   const chon = (id: string) => di({ ten: "du-an", duAnId: id });
+  // Xóa dự án ngay ở danh sách (không phải mở dự án mới xóa được — hữu ích khi mở dự án bị lỗi). Vào thùng rác, khôi phục được.
+  const xoa = async (e: ReactMouseEvent | ReactKeyboardEvent, d: DuAn) => {
+    e.stopPropagation();
+    const lyDo = prompt(`Đưa dự án "${d.ten}" (kèm hồ sơ) vào thùng rác?\nKhôi phục được trong thùng rác; xóa hẳn chỉ Quản trị, sau 30 ngày.\n\nLý do xóa (bắt buộc):`)?.trim();
+    if (lyDo) await xoaDuAn(d.id, lyDo);
+  };
+  const NutXoa = ({ d, bang }: { d: DuAn; bang?: boolean }) =>
+    quyen("XOA_DU_AN") ? (
+      <button
+        className={bang ? "nut nut-nho nut-bieu-tuong" : "da-the-xoa"}
+        aria-label={`Xóa dự án ${d.ten}`}
+        title="Xóa dự án (đưa vào thùng rác)"
+        onClick={(e) => void xoa(e, d)}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.stopPropagation(); void xoa(e, d); } }}
+      >
+        <BieuTuong ten="thungRac" co={16} />
+      </button>
+    ) : null;
   const hienThiDa = tatCa
     .filter((x) => !locDa || (x.d.trangThaiDuAn ?? "DANG_TRIEN_KHAI") === locDa)
     .filter((x) => !timDa || khongDau(`${x.d.ten} ${x.d.xa} ${x.d.chuDauTu}`).includes(khongDau(timDa.trim())))
@@ -131,6 +149,7 @@ export function ManDuAn({ duAnId: idVao }: { duAnId?: string }) {
                       <div className="chu-nho mo"><BieuTuong ten="viTri" co={13} /> {d.xa || "—"}, tỉnh Sơn La</div>
                     </div>
                     <span className={`nhan ${LOP_TT_DU_AN[tt]}`}>{TEN_TRANG_THAI_DU_AN[tt]}</span>
+                    <NutXoa d={d} />
                   </div>
                   <div className="da-so">
                     <div><BieuTuong ten="vanBan" co={16} /><b>{tk.soHo}</b><small>Hồ sơ</small></div>
@@ -147,7 +166,7 @@ export function ManDuAn({ duAnId: idVao }: { duAnId?: string }) {
         ) : (
           <div className="bang-cuon">
             <table className="bang">
-              <thead><tr><th>Dự án</th><th>Địa điểm</th><th>Trạng thái</th><th className="so">Hồ sơ</th><th className="so">Thửa</th><th className="so">Tổng tạm tính (đ)</th><th style={{ width: 180 }}>Tiến độ chung</th></tr></thead>
+              <thead><tr><th>Dự án</th><th>Địa điểm</th><th>Trạng thái</th><th className="so">Hồ sơ</th><th className="so">Thửa</th><th className="so">Tổng tạm tính (đ)</th><th style={{ width: 180 }}>Tiến độ chung</th>{quyen("XOA_DU_AN") && <th style={{ width: 44 }} aria-label="Xóa" />}</tr></thead>
               <tbody>
                 {hienThiDa.map(({ d, tk, tong }) => {
                   const tt = d.trangThaiDuAn ?? "DANG_TRIEN_KHAI";
@@ -156,6 +175,7 @@ export function ManDuAn({ duAnId: idVao }: { duAnId?: string }) {
                       <td><b>{d.ten}</b></td><td>{d.xa}</td><td><span className={`nhan ${LOP_TT_DU_AN[tt]}`}>{TEN_TRANG_THAI_DU_AN[tt]}</span></td>
                       <td className="so">{tk.soHo}</td><td className="so">{tk.soThua}</td><td className="so">{tien(tong)}</td>
                       <td><div className="td-mini"><span style={{ width: `${Math.round(tk.tienDoChung * 100)}%` }} /></div><span className="chu-nho">{Math.round(tk.tienDoChung * 100)}%</span></td>
+                      {quyen("XOA_DU_AN") && <td className="so" onClick={(e) => e.stopPropagation()}><NutXoa d={d} bang /></td>}
                     </tr>
                   );
                 })}
