@@ -19,6 +19,8 @@ import { taiXuong } from "../tai-xuong";
 import { useUngDung } from "../ung-dung";
 import { O } from "../thanh-phan/chung";
 import { Chon } from "../thanh-phan/Chon";
+import { ONgay } from "../thanh-phan/ONgay";
+import { homNay } from "../bang-gia-theo-ngay";
 
 /**
  * Kiểm tra tệp Excel phương án bồi thường, hỗ trợ, TĐC do đơn vị khác lập: số học, đơn giá, giá đất, hệ số, tổng.
@@ -48,9 +50,14 @@ export function KiemTraPhuongAn() {
   const [bangGia, setBangGia] = useState<BangGiaDat | null>(null);
   const inputTep = useRef<HTMLInputElement>(null);
 
+  /** Ngày phê duyệt (hoặc dự kiến) của phương án đang kiểm — chọn bảng giá NQ 152 / NQ 152 sửa đổi bởi NQ 28/2026 */
+  const [ngayGia, setNgayGia] = useState(homNay);
   useEffect(() => {
-    void napBangGiaDat().then(setBangGia);
-  }, []);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(ngayGia)) return;
+    let huy = false;
+    void napBangGiaDat(ngayGia).then((b) => { if (!huy) setBangGia(b); });
+    return () => { huy = true; };
+  }, [ngayGia]);
 
   const trang = tep?.trang[soTrang];
   const tuDong = useMemo(() => (trang ? nhanDienCot(trang.o) : null), [trang]);
@@ -142,6 +149,9 @@ export function KiemTraPhuongAn() {
                 <option value="">— Chọn xã/phường —</option>
                 {(DANH_MUC_XA as string[]).map((x) => <option key={x} value={x}>{x}</option>)}
               </Chon>
+            </O>
+            <O nhan="Ngày phê duyệt phương án" goiY={bangGia?.ap_dung ? `Bảng giá: ${bangGia.ap_dung.van_ban.join("; ")}` : "Chọn bảng giá đất theo thời điểm"}>
+              <ONgay value={ngayGia} aria-label="Ngày phê duyệt phương án" onChange={(e) => setNgayGia(e.target.value)} />
             </O>
           </div>
           <div className="the-than" style={{ borderTop: "1px solid var(--vien)" }}>

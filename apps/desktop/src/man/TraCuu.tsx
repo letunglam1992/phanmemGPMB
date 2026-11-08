@@ -5,6 +5,8 @@ import { tenLoaiDat } from "../van-ban/loai-dat";
 import { useUngDung } from "../ung-dung";
 import { BieuTuong } from "../thanh-phan/BieuDo";
 import { Chon } from "../thanh-phan/Chon";
+import { ONgay } from "../thanh-phan/ONgay";
+import { homNay } from "../bang-gia-theo-ngay";
 
 /**
  * Tra cứu đơn giá, giá đất, chính sách (bố cục theo mẫu người dùng gửi 28/9/2026):
@@ -65,9 +67,9 @@ function tuGiaDat(bg: BangGiaDat): Muc[] {
     them: [["Xã, phường", r.xa], ["Loại đất", r.loai_dat]], canhBao: [], trich: `Bảng ${r.bang}, STT ${r.stt}, ${r.xa}, ${r.loai_dat}: ${r.gia} nghìn đồng/m²`,
   }));
   const tuyen = (ds: BangGiaDat["dat_o"], ten: string, khoa: string) => ds.forEach((r, i) => out.push({
-    id: `${khoa}#${i}`, tab: "GIA_DAT", ma: `NQ152/B${r.bang}/${r.xa}/${r.stt}`, duong: [r.xa, `Bảng ${r.bang} – ${ten}`, ...(r.nhom ? [r.nhom] : [])], ten: r.tuyen, dvt: "nghìn đ/m²", gia: r.vt[0] ?? null, trang: null,
-    them: [["Xã, phường", r.xa], ...r.vt.map((g, v) => [`Vị trí ${v + 1}`, g === null ? "—" : `${g.toLocaleString("vi-VN")} nghìn đ/m²`] as [string, string])],
-    canhBao: r.canh_bao, trich: `Bảng ${r.bang}, ${r.xa}, STT ${r.stt} (${r.tuyen}): ${r.vt.map((g, v) => `VT${v + 1} ${g ?? "—"}`).join("; ")} nghìn đồng/m²`,
+    id: `${khoa}#${i}`, tab: "GIA_DAT", ma: r.stt ? `NQ152/B${r.bang}/${r.xa}/${r.stt}` : `NQ28/B${r.bang}/${r.xa}/${r.tuyen}`, duong: [r.xa, `Bảng ${r.bang} – ${ten}`, ...(r.nhom ? [r.nhom] : [])], ten: r.tuyen, dvt: "nghìn đ/m²", gia: r.vt[0] ?? null, trang: null,
+    them: [["Xã, phường", r.xa], ["Văn bản", r.van_ban ?? "NQ 152/2025/NQ-HĐND"], ...r.vt.map((g, v) => [`Vị trí ${v + 1}`, g === null ? "—" : `${g.toLocaleString("vi-VN")} nghìn đ/m²`] as [string, string])],
+    canhBao: [...r.canh_bao, ...(r.thay_doi ?? [])], trich: `${r.van_ban ?? "NQ 152/2025/NQ-HĐND"}, Bảng ${r.bang}, ${r.xa}, ${r.stt ? `STT ${r.stt}` : r.can_cu ?? ""} (${r.tuyen}): ${r.vt.map((g, v) => `VT${v + 1} ${g ?? "—"}`).join("; ")} nghìn đồng/m²`,
   }));
   tuyen(bg.dat_o, "Đất ở", "O");
   tuyen(bg.dat_tmdv, "Đất thương mại, dịch vụ", "TM");
@@ -147,7 +149,9 @@ export function TraCuu({ timDau }: { timDau?: string } = {}) {
   const [chiGhim, setChiGhim] = useState(false);
   const [bg, setBg] = useState<BangGiaDat | null>(null);
   const canCuRef = useRef<HTMLDivElement>(null);
-  useEffect(() => { if (tab === "GIA_DAT" && !bg) void napBangGiaDat().then(setBg); }, [tab, bg]);
+  /** Thời điểm áp dụng bảng giá (NQ 152 + sửa đổi có hiệu lực, vd. NQ 28/2026 từ 01/11/2026) */
+  const [ngayGia, setNgayGia] = useState(homNay);
+  useEffect(() => { if (tab === "GIA_DAT" && /^\d{4}-\d{2}-\d{2}$/.test(ngayGia)) { let huy = false; void napBangGiaDat(ngayGia).then((b) => { if (!huy) setBg(b); }); return () => { huy = true; }; } }, [tab, ngayGia]);
 
   const tatCa = useMemo<Muc[]>(() => {
     if (tab === "CS") return [];
@@ -236,6 +240,10 @@ export function TraCuu({ timDau }: { timDau?: string } = {}) {
                     <input value={q} onChange={(e) => { setQ(e.target.value); setNhomMo(null); }} placeholder={tab === "GIA_DAT" ? "Tên xã, tuyến đường, loại đất…" : "Tên, nhóm, mã… (nhiều từ, không dấu)"} aria-label="Từ khóa tra cứu" />
                     {q && <button className="o-xoa" aria-label="Xóa từ khóa" onClick={() => setQ("")}>×</button>}
                   </label>
+                  {tab === "GIA_DAT" && (
+                    <div className="o-nhap mt-4"><label>Bảng giá áp dụng tại ngày</label><ONgay value={ngayGia} aria-label="Ngày áp dụng bảng giá" onChange={(e) => setNgayGia(e.target.value)} />
+                      {bg?.ap_dung && <div className="mo chu-nho">{bg.ap_dung.van_ban.join("; ")}</div>}</div>
+                  )}
                 </div>
                 {tab === "GIA_DAT" && !bg ? <div className="trong">Đang nạp bảng giá đất…</div> : (
                   <ul className="cay">

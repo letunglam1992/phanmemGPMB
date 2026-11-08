@@ -1,0 +1,6180 @@
+{
+ "vanBan": "Nghị quyết số 28/2026/NQ-HĐND ngày 19/10/2026 của HĐND tỉnh Sơn La",
+ "hieuLucTu": "2026-11-01",
+ "nguon": "nq28.xlsx",
+ "plI": [
+  {
+   "xa": "Xã Đoàn Kết",
+   "nhom": "",
+   "ten": "Từ km 46+800 theo Quốc lộ 43 đến Km 45+590",
+   "vt": [
+    640,
+    390,
+    290,
+    190,
+    140
+   ],
+   "ghiChu": "Tách từ tuyến đường 1.4"
+  },
+  {
+   "xa": "Xã Đoàn Kết",
+   "nhom": "",
+   "ten": "Từ Km 45+590 theo quốc lộ 43 đến Nhà Văn Hóa bản đoàn kết",
+   "vt": [
+    700,
+    290,
+    210,
+    150,
+    90
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Đoàn Kết",
+   "nhom": "",
+   "ten": "Tuyến đường liên bản Tà Lại đến Nong Cụt (thuộc xã Tà Lại cũ)",
+   "vt": [
+    480,
+    290,
+    210,
+    150,
+    90
+   ],
+   "ghiChu": "Bổ sung mới sau mục 3"
+  },
+  {
+   "xa": "Xã Đoàn Kết",
+   "nhom": "",
+   "ten": "Khu tái định cư Pa Lay bản Đoàn Kết ( xã Nà Mường cũ)",
+   "vt": [
+    310,
+    250,
+    190,
+    120,
+    90
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Đoàn Kết",
+   "nhom": "",
+   "ten": "Khu tái định cư Trai Sơn bản Suối Mõ ( xã Tà Lại cũ)",
+   "vt": [
+    310,
+    250,
+    190,
+    120,
+    90
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Đoàn Kết",
+   "nhom": "",
+   "ten": "Khu tái định cư Trai Tôn bản Tà Lọt ( xã Tà Lại cũ)",
+   "vt": [
+    310,
+    250,
+    190,
+    120,
+    90
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Cách ngã ba bản Co Súc 500m vào đến hết đường bê tông khu sản xuất Pì Nguộc",
+   "vt": [
+    190,
+    170,
+    150,
+    110
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Từ ngã ba cách trụ sở UBND xã Song Khủa về ba hướng 500m bản Lóng Khủa đường đi hết bản Co Hó cũ",
+   "vt": [
+    170,
+    150,
+    130,
+    100
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Từ ngã ba cách trụ sở UBND xã Song Khủa về ba hướng 500m bản Lóng Khủa đường đi hết đến bờ sông (hết bản Un)",
+   "vt": [
+    180,
+    160,
+    140,
+    110
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Từ ngã ba bản Tầm Phế cũ đường đi bản Liên Hoà cách 500m đi đến hết đường bê tông bản Song Hưng cũ, bản Suối Sấu cũ",
+   "vt": [
+    190,
+    150,
+    120,
+    100
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Từ ngã ba (bản Nôn cũ) đường đi Liên Hoà cách 500m đi đến hết đường bê tông bản Lắn",
+   "vt": [
+    190,
+    150,
+    120,
+    100
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Từ ngã ba cách trụ sở UBND xã Liên Hoà cũ đi Tường Liên 500m vào bản Lắn đến hết Pu Nhay (bản Tà Phù cũ) về ba hướng",
+   "vt": [
+    190,
+    150,
+    120,
+    100
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Từ cách Tỉnh lộ 101 500m đi hết đường bê tông bản Tân Thành",
+   "vt": [
+    190,
+    160,
+    130,
+    100
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Từ cách Tỉnh lộ 101 500m (bản Nhúng cũ) đi hết đường bê tông bản Pù Hiềng",
+   "vt": [
+    160,
+    140,
+    110,
+    90
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Từ cách tỉnh lộ 101 500m bản Chiềng Ban cũ đi hết đường bê tông bản Mường Tiến về ba hướng",
+   "vt": [
+    160,
+    140,
+    110,
+    90
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Từ cách trụ sở UBND xã Quang Minh cũ 500m đi bản To Ngùi; giáp bản Mường Tiến (bản Lòm cũ)",
+   "vt": [
+    160,
+    140,
+    110,
+    90
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Từ cách ngã ba đường đi Đền Hang Miếng 500m đến hết bản Coong",
+   "vt": [
+    160,
+    140,
+    110,
+    90
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "",
+   "ten": "Các tuyến còn lại trên địa bàn các bản (trừ các khu vực đã quy định giá đất)",
+   "vt": [
+    150,
+    130,
+    110,
+    80
+   ],
+   "ghiChu": "Bổ sung sau mục 3"
+  },
+  {
+   "xa": "Xã Tô Múa",
+   "nhom": "Tỉnh lộ 101 (từ QL 6 đến bờ sông đền Hang Miếng)",
+   "ten": "Từ đường rẽ trường Mầm non Tô Múa hết khu dân cư bản Bó Khảm (giáp ranh giới xã Song Khủa cả 2 hướng",
+   "vt": [
+    210,
+    150,
+    130,
+    110,
+    90
+   ],
+   "ghiChu": "Bổ sung mới sau STT 1.4"
+  },
+  {
+   "xa": "Xã Tô Múa",
+   "nhom": "Tỉnh lộ 101 (Quốc lộ 43 đi trung tâm xã Chiềng Khoa cũ)",
+   "ten": "Quốc lộ 43 đoạn hết địa phận phường Vân Sơn Đi bản Tin Tốc (bản Phú Khoa cũ)",
+   "vt": [
+    950,
+    570,
+    350,
+    100,
+    80
+   ],
+   "ghiChu": "Bổ sung mới sau STT 2.2"
+  },
+  {
+   "xa": "Xã Tô Múa",
+   "nhom": "Từ tỉnh lộ 101 đến trung tâm xã Suối Bàng cũ",
+   "ten": "Từ đường rẽ Hợp Nhất đến bản Chiềng Sôi đến ngã 3 bản Pưa Lai (bản Ấm cũ)",
+   "vt": [
+    250,
+    200,
+    160,
+    140,
+    100
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3.5"
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Từ ngã 3 bản Phiêng Bay đến cầu tràn bản Ít Ta Bót",
+   "vt": [
+    110,
+    90,
+    80,
+    70,
+    65
+   ],
+   "ghiChu": "Tiếp giáp mã 2.2"
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Từ ngã 3 bản Pháy Suông đến cụm dân cư Ít Pháy (bản Pháy Suông)",
+   "vt": [
+    110,
+    90,
+    80,
+    70,
+    65
+   ],
+   "ghiChu": "Tiếp giáp mã 2.6"
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Từ ngã 3 bản Có Luông đến cầu tràn bản Ít Ta Bót",
+   "vt": [
+    170,
+    140,
+    100,
+    90,
+    70
+   ],
+   "ghiChu": "Bổ sung mới khi đi điều tra. Tách mã đoạn 2.8 trong Nghị định 152 thành 3 tuyến"
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Từ ngã 3 bản Có Luông đến cống Có Luông",
+   "vt": [
+    170,
+    140,
+    100,
+    90,
+    70
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Từ cống Có Luông đến hết địa phận bản Khâu Pùm",
+   "vt": [
+    110,
+    90,
+    80,
+    70,
+    65
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Tữ ngã 3 đường 107 (cụm dân cư Có Nọi) đến ngã 3 đường đi Khau Pùm",
+   "vt": [
+    130,
+    110,
+    100,
+    90,
+    80
+   ],
+   "ghiChu": "Bổ sung mới khi đi điều tra. Sau STT 2.10"
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Ngã 3 sân thể thao bản Cà Nàng đến ngã 3 đường đi Pho Pha",
+   "vt": [
+    130,
+    110,
+    100,
+    90,
+    80
+   ],
+   "ghiChu": "Bổ sung mới khi đi điều tra. Sau STT 2.10"
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Từ cổng chào bản Ít Ta Bót đến khu dân cư tái định cư Ít Ta Bót",
+   "vt": [
+    170,
+    140,
+    100,
+    90,
+    70
+   ],
+   "ghiChu": "Bổ sung mới khi đi điều tra. Sau STT 2.10"
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Từ ngã 3 nhà văn hóa bản Có Luông đến ngã 3 nhà ông Hoàng Văn Điu (đường đi Ít Ta Bót)",
+   "vt": [
+    130,
+    110,
+    100,
+    90,
+    80
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Từ mét cống thoát nước nhà quán ông Lường Văn Thiết (bản Có Nọi) đến nhà quán ông Hoàng Văn Thuyên (bản Lọng Ố)",
+   "vt": [
+    170,
+    140,
+    100,
+    90,
+    80
+   ],
+   "ghiChu": "Bổ sung mới khi đi điều tra. Sau STT 2.10"
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Đất ở thuộc địa bàn các bản theo trục đường chính nội bản của xã Mường Chiên (trừ khu vực đã quy định giá đất)",
+   "vt": [
+    130,
+    110,
+    100,
+    90,
+    80
+   ],
+   "ghiChu": "Bổ sung mới sau STT 2.10. Theo Báo cáo số 309/BC-UBND xã Mường Chiên"
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "nhom": "",
+   "ten": "Khu dân cư nông thôn bản Mòn, xã Thuận Châu",
+   "vt": [
+    1200
+   ],
+   "ghiChu": "Bổ sung mới sau STT 18.4"
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "nhom": "",
+   "ten": "Đất ven các tuyến đường còn lại trên địa bàn xã Thuận Châu (trừ khu vực đã được quy định giá đất)",
+   "vt": [
+    300,
+    180,
+    138,
+    125,
+    105
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Chiềng La",
+   "nhom": "Các đường nhánh nối với Quốc lộ 6B (Nong Lay - Chiềng La - Chiềng Pha)",
+   "ten": "Các đường nhánh tại các bản: Sen To, Lá Lốm, Chiềng Cang, Liên Minh, Phiêng Nong, Huổi Lọng và bản Cọ (trừ lô đất giáp đường QL 6B)",
+   "vt": [
+    640,
+    380,
+    290,
+    190,
+    130
+   ],
+   "ghiChu": "Bổ sung sau STT 4.8"
+  },
+  {
+   "xa": "Xã Chiềng La",
+   "nhom": "Các đường nhánh nối với Quốc lộ 6B (Nong Lay - Chiềng La - Chiềng Pha)",
+   "ten": "Các tuyến đường còn lại quanh khu vực xã (trừ các khu vực đã được quy định giá đất)",
+   "vt": [
+    130
+   ],
+   "ghiChu": "Bổ sung sau STT 6"
+  },
+  {
+   "xa": "Xã Mường Khiêng",
+   "nhom": "",
+   "ten": "Tuyến đường tỉnh lộ 116 tại Km 27+500 – Km 31+600 (Ngã 3 bản Bó -Ngã 3 bản Nà Sành)",
+   "vt": [
+    500,
+    400,
+    300,
+    200,
+    150
+   ],
+   "ghiChu": "Bổ sung sau STT 1.3"
+  },
+  {
+   "xa": "Xã Mường Khiêng",
+   "nhom": "",
+   "ten": "Tuyến đường nhánh tỉnh lộ 116 tại Km 0 – Km 2+100 (Ngã 3 bản Nà Sành - Tông Cọ cũ)",
+   "vt": [
+    500,
+    400,
+    300,
+    200,
+    150
+   ],
+   "ghiChu": "Bổ sung sau STT 1.3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Đất trục đường QL6 thuộc xã Mường É",
+   "vt": [
+    450,
+    300,
+    180,
+    150
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Ngã ba QL6 rẽ xuống xã đến cổng Trường Tiểu học Mường É",
+   "vt": [
+    300,
+    250,
+    200,
+    150,
+    100
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Cổng Trường Tiểu học Mường É (Trụ sở UBND xã Mường É cũ) đến cầu Ta Ve bản Chiềng Ve",
+   "vt": [
+    700,
+    450,
+    350,
+    250,
+    150
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Từ cầu Ta ve bản Chiềng Ve dọc trục đường TL 117 hết ranh giới bản Phạ Lụ",
+   "vt": [
+    350,
+    300,
+    200,
+    150,
+    100
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Từ đỉnh dốc Pu Kéo Cắm giáp bản Phạ Lụ đến ngã ba Nhà văn hóa bản Mầu Thái",
+   "vt": [
+    300,
+    250,
+    200,
+    150,
+    100
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Ngã ba Nhà văn hóa Mầu Thái đến hết cầu Ta Bó Sản bản Mầu Thái",
+   "vt": [
+    350,
+    300,
+    200,
+    150,
+    100
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Từ cầu Ta Bó Sản bản Mầu Thái đến Ngã ba bản Lặp (đầu điểm rẽ đi bản Nà Khoang)",
+   "vt": [
+    300,
+    250,
+    200,
+    150,
+    100
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Ngã ba bản Lặp đi hướng bản Nà Khoang đến Nhà Văn hóa bản Nà Khoang (TL 117)",
+   "vt": [
+    350,
+    300,
+    200,
+    150,
+    100
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Từ nhà văn hóa bản Nà Khoang dọc trục TL 117 đến đầu cầu bản Nghịu",
+   "vt": [
+    300,
+    250,
+    200,
+    150,
+    100
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Từ đầu cầu bản Nghịu đến hết địa phận xã Mường É (giáp bản Tịm xã Thuận Châu)",
+   "vt": [
+    350,
+    300,
+    250,
+    200,
+    150
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Chợ Phổng Lập về hai hướng gồm: (1). Chợ Phổng Lập đến cầu Hua Lùa, bản Kẹ. (2). Chợ Phổng Lập đến ngã ba bản Lặp (Đường TL117)",
+   "vt": [
+    500,
+    230,
+    150,
+    100,
+    80
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Từ cầu Hua Lùa thuộc bản Lùa, bản Kẹ đến hết địa phận bản Kéo Sáo (giáp bản Ngà Phát xã Bình Thuận)",
+   "vt": [
+    300,
+    250,
+    200,
+    150,
+    100
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Từ ngã ba đường rẽ thuộc bản Nà Khoang (điểm đầu tuyến đường bê tông) đến hết địa phận bản Pá Sàng xã Mường É giáp xã Long Hẹ",
+   "vt": [
+    200,
+    150,
+    100,
+    80
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Điểm rẽ từ đường Long Hẹ - Phổng Lập vào bản Huổi Ít (đến Nhà văn hóa bản)",
+   "vt": [
+    100,
+    80,
+    70
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Điểm rẽ từ đường Long Hẹ - Phổng Lập vào bản Ta Tú (đi qua điểm Trường Mầm Non Ta Tú 300 mét )",
+   "vt": [
+    150,
+    100,
+    80,
+    70
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Long Hẹ",
+   "nhom": "Bản Hua Ty (xã Nậm Lầu) đến bản Cha Mạy (xã Long Hẹ)",
+   "ten": "Từ đất nhà ông Và A Chứ (bản Cha Mạy) đến đất nhà ông Lầu A Thào (bản Cha Mạy)",
+   "vt": [
+    400,
+    240,
+    180,
+    120,
+    80
+   ],
+   "ghiChu": "Bổ sung sau STT 1.2"
+  },
+  {
+   "xa": "Xã Long Hẹ",
+   "nhom": "Đường Long Hẹ - Phổng Lập",
+   "ten": "Từ đất nhà ông Lầu A Thào (bản Cha Mạy) đến đất nhà ông Lầu A Dia (bản Cha Mạy)",
+   "vt": [
+    400,
+    240,
+    180,
+    120,
+    80
+   ],
+   "ghiChu": "Bổ sung sau STT 3"
+  },
+  {
+   "xa": "Xã Mường La",
+   "nhom": "Trung tâm xã Pi Toong, xã Chiềng San, xã Nậm Păm, xã Mường Trai, xã Chiềng Muôn cũ (nay thuộc xã Mường La):",
+   "ten": "Tuyến đường ĐT.111 thuộc khu dân cư bản Lâm, bản Chiến, bản Nong Luồng",
+   "vt": [
+    605,
+    198,
+    182,
+    150,
+    110
+   ],
+   "ghiChu": "Bổ sung sau STT 15.11"
+  },
+  {
+   "xa": "Xã Mường La",
+   "nhom": "Trung tâm xã Pi Toong, xã Chiềng San, xã Nậm Păm, xã Mường Trai, xã Chiềng Muôn cũ (nay thuộc xã Mường La):",
+   "ten": "Tuyến đường trục liên bản (trừ các tuyến đường đã được quy định giá)",
+   "vt": [
+    150,
+    130,
+    110,
+    100,
+    80
+   ],
+   "ghiChu": "Bổ sung sau STT 15.11"
+  },
+  {
+   "xa": "Xã Mường Bú",
+   "nhom": "Trung tâm xã Mường Bú, xã Tạ Bú, xã Mường Chùm (nay thuộc xã Mường Bú)",
+   "ten": "Đường khu dân cư bản Mường Bú",
+   "vt": [
+    5500,
+    4500,
+    2000,
+    1000,
+    700
+   ],
+   "ghiChu": "Bổ sung sau STT 2.13"
+  },
+  {
+   "xa": "Xã Mường Bú",
+   "nhom": "Trung tâm xã Mường Bú, xã Tạ Bú, xã Mường Chùm (nay thuộc xã Mường Bú)",
+   "ten": "Từ bãi đã sẻ đến đầu cầu bản Két cũ (nay thuộc bản Tạ Bú)",
+   "vt": [
+    1600,
+    1000,
+    700,
+    400,
+    250
+   ],
+   "ghiChu": "Bổ sung sau STT 2.13"
+  },
+  {
+   "xa": "Xã Mường Bú",
+   "nhom": "Trung tâm xã Mường Bú, xã Tạ Bú, xã Mường Chùm (nay thuộc xã Mường Bú)",
+   "ten": "Từ ngã ba cầu vạn bú đi qua bản Thẳm Hon cũ (nay thuộc bản Pá Tong) đến hết địa phận xã Mường Bú",
+   "vt": [
+    300,
+    180,
+    150,
+    100,
+    90
+   ],
+   "ghiChu": "Bổ sung sau STT 2.13"
+  },
+  {
+   "xa": "Xã Mường Bú",
+   "nhom": "Trung tâm xã Mường Bú, xã Tạ Bú, xã Mường Chùm (nay thuộc xã Mường Bú)",
+   "ten": "Từ đường QL 279D đến hết địa phận bản Chón",
+   "vt": [
+    200,
+    150,
+    100,
+    90,
+    80
+   ],
+   "ghiChu": "Bổ sung sau STT 2.13"
+  },
+  {
+   "xa": "Xã Bắc Yên",
+   "nhom": "Đường nội thị xã Bắc Yên",
+   "ten": "Từ ngã ba khách sạn Paris Bắc Yên đến khu nhà ông Lường Văn Hoan",
+   "vt": [
+    4000,
+    1980,
+    1490,
+    990,
+    600
+   ],
+   "ghiChu": "Bổ sung sau STT 6.6"
+  },
+  {
+   "xa": "Xã Bắc Yên",
+   "nhom": "Đường nội thị xã Bắc Yên",
+   "ten": "Từ khu nhà ông Lường Văn Hoan đến Bệnh viện Đa Khoa Bắc Yên",
+   "vt": [
+    3500,
+    1850,
+    1390,
+    930,
+    560
+   ],
+   "ghiChu": "Bổ sung sau STT 6.6"
+  },
+  {
+   "xa": "Xã Bắc Yên",
+   "nhom": "Đường nội thị xã Bắc Yên",
+   "ten": "Từ hết đất Bệnh viện Đa Khoa Bắc Yên đến ngã ba đấu nối với Quốc lộ 37",
+   "vt": [
+    2870,
+    990,
+    750,
+    500,
+    300
+   ],
+   "ghiChu": "Bổ sung sau STT 6.6"
+  },
+  {
+   "xa": "Xã Bắc Yên",
+   "nhom": "Tỉnh lộ 112 xã Bắc Yên đi các bản",
+   "ten": "Từ điểm Tạp hóa Bão Hòa đến ngã ba điểm\"Có một đồi hoa\"",
+   "vt": [
+    590,
+    250,
+    200,
+    120,
+    80
+   ],
+   "ghiChu": "Bổ sung sau STT 9.2"
+  },
+  {
+   "xa": "Xã Bắc Yên",
+   "nhom": "Tỉnh lộ 112 xã Bắc Yên đi các bản",
+   "ten": "Từ ngã ba điểm \"Có một đồi hoa\" đến A Chu Homestay",
+   "vt": [
+    500,
+    150,
+    100,
+    90,
+    80
+   ],
+   "ghiChu": "Bổ sung sau STT 9.2"
+  },
+  {
+   "xa": "Xã Bắc Yên",
+   "nhom": "Tỉnh lộ 112 xã Bắc Yên đi các bản",
+   "ten": "Từ điểm ngã ba Có một đồi hoa đến Thảo Nguyên Xanh Homestay",
+   "vt": [
+    500,
+    150,
+    100,
+    90,
+    80
+   ],
+   "ghiChu": "Bổ sung sau STT 9.2"
+  },
+  {
+   "xa": "Xã Bắc Yên",
+   "nhom": "Tỉnh lộ 112 xã Bắc Yên đi các bản",
+   "ten": "Từ điểm Thảo Nguyên Xanh Homestay đến Nhà Máy Thuỷ Điện Suối Sập 1",
+   "vt": [
+    450,
+    150,
+    100,
+    90,
+    80
+   ],
+   "ghiChu": "Bổ sung sau STT 9.2"
+  },
+  {
+   "xa": "Xã Tà Xùa",
+   "nhom": "Các đường khu vực xã Tà Xùa",
+   "ten": "Từ hết đất bản Tà Xùa (Khu Mống Vàng) đến hết đất bản Bẹ (dọc theo tuyến đường bê tông)",
+   "vt": [
+    590,
+    250,
+    200,
+    120,
+    80
+   ],
+   "ghiChu": "Bổ sung sau STT 2.11"
+  },
+  {
+   "xa": "Xã Tà Xùa",
+   "nhom": "Các đường khu vực xã Tà Xùa",
+   "ten": "Từ hết đất bản Bẹ đến đập thủy điện Suối Sập 1 (bản Thảo Nguyên), dọc theo tuyến đường bê tông",
+   "vt": [
+    590,
+    250,
+    200,
+    120,
+    80
+   ],
+   "ghiChu": "Bổ sung sau STT 2.11"
+  },
+  {
+   "xa": "Xã Phù Yên",
+   "nhom": "",
+   "ten": "Tuyến đường xung quanh hồ Noong Bua",
+   "vt": [
+    null,
+    1700,
+    450,
+    300
+   ],
+   "ghiChu": "Bổ sung vị trí 2, 3, 4"
+  },
+  {
+   "xa": "Xã Gia Phù",
+   "nhom": "Trung tâm ngã ba gia phù đi 3 hướng",
+   "ten": "Từ cầu suối Hòng Cà (Bản Tạo) đến cầu Suối Hiền (Bản Nhọt)",
+   "vt": [
+    890,
+    690,
+    460,
+    310,
+    200
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Gia Phù",
+   "nhom": "Từ cầu suối Bùa (Bản Bùa Chung) đến nhà Từ nhà Lò Văn Phường (Bản Bùa Chung)",
+   "ten": "Từ nhà Lò Văn Phường (Bản Bùa Chung) đến giáp đất xã Tường Hạ (Bản Bùa Hạ)",
+   "vt": [
+    2260,
+    1350,
+    1010,
+    500,
+    330
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Gia Phù",
+   "nhom": "Từ cầu suối Bùa (Bản Bùa Chung) đến nhà Từ nhà Lò Văn Phường (Bản Bùa Chung)",
+   "ten": "Từ nhà Lò Văn Phường (Bản Bùa Chung) đến nhà Hoàng Văn Thịnh (Bản Bùa Chung)",
+   "vt": [
+    2200,
+    1320,
+    1000,
+    400,
+    310
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Yên Châu",
+   "nhom": "",
+   "ten": "Ngã ba (nhà Kẻo Liên) trên tuyến đường Thao trường bắn đến ngã ba Trường THCS (bản Pút) đi Trụ sở xã Chiềng Khoi cũ",
+   "vt": [
+    200,
+    160,
+    120,
+    100,
+    80
+   ],
+   "ghiChu": "Bổ sung mới sau STT cuối cùng 13.2"
+  },
+  {
+   "xa": "Xã Yên Châu",
+   "nhom": "",
+   "ten": "Đường Q.L.6 đi bản Na Pa, xã Sặp Vạt trước đây (nay là xã Yên Châu) tuyến đường dài 8 km",
+   "vt": [
+    200,
+    160,
+    120,
+    100,
+    80
+   ],
+   "ghiChu": "Bổ sung mới sau STT cuối cùng 13.2"
+  },
+  {
+   "xa": "Xã Yên Châu",
+   "nhom": "",
+   "ten": "Đường Q.L.6 (cầu Chiềng Đông 1) đi bản Na Pản, tuyến đường dài 2 km",
+   "vt": [
+    330,
+    200,
+    160,
+    100,
+    80
+   ],
+   "ghiChu": "Bổ sung mới sau STT cuối cùng 13.2"
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "Tuyến đường liên bản Bản Cố Nông - cầu bản Cố Nông",
+   "ten": "Bản Cố Nông - cầu bản Cố Nông",
+   "vt": [
+    330
+   ],
+   "ghiChu": "Bổ sung mới sau STT 5"
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "Tuyến đường thị trấn Bản Cang",
+   "ten": "Từ ngã 3 đường bản Cang đến qua cầu 200m",
+   "vt": [
+    650
+   ],
+   "ghiChu": "Bổ sung mới sau STT 5"
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "Tuyến đường thị trấn Bản Cang",
+   "ten": "Từ ngã 3 đi bản Pa Hốc đến giáp địa phận xã Yên Châu",
+   "vt": [
+    200
+   ],
+   "ghiChu": "Bổ sung mới sau STT 5"
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "",
+   "ten": "Từ ngã 3 Pa Hốc đến giáp bản Suối Phà Đường nội bản bản Pa Hốc",
+   "vt": [
+    150
+   ],
+   "ghiChu": "Bổ sung mới sau STT 5"
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "Trục đường giao thông tại các bản",
+   "ten": "Tuyến bản Na Khoang (cũ), Chiềng Ban 1,2 (cũ) nay là bản Chiềng Ban trục đường giao thông nông thôn chính",
+   "vt": [
+    240
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "Trục đường giao thông tại các bản",
+   "ten": "Đường giao thông nông thôn chính nối các bản Huổi Mong, Suối Phà",
+   "vt": [
+    200
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "Trục đường giao thông tại các bản",
+   "ten": "Đường nội bản bản Bó Kiếng, Co Sáy",
+   "vt": [
+    150
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "Trục đường giao thông tại các bản",
+   "ten": "Đường nội bản bản Tà Vài; Văng Lùng (trục đường chính)",
+   "vt": [
+    600
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "Trục đường giao thông tại các bản",
+   "ten": "Đường Nội bản bản Tà Làng Cao ( từ đầu bản đến đầu cầu bản Tà Làng Cao (dọc trục đường chính",
+   "vt": [
+    350
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "Trục đường giao thông tại các bản",
+   "ten": "Tuyến đường nội bản các bản, bản Dảo, bản Ôn Ốc (tính từ đầu bản đến hết đường bê tông)",
+   "vt": [
+    150
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "Trục đường giao thông tại các bản",
+   "ten": "Tuyến đường nội bản Nà Ngà",
+   "vt": [
+    450
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Lóng Phiêng",
+   "nhom": "Tuyến đường dọc theo Quốc Lộ 6C",
+   "ten": "Từ địa phận giáp ranh xã Chiềng Hặc cho đến hết đất bản Mỏ Than (ngoại trừ khu vực trung tâm xã đã có quy định giá riêng)",
+   "vt": [
+    840,
+    590,
+    420,
+    180,
+    120
+   ],
+   "ghiChu": "Bổ sung mới sau STT 2"
+  },
+  {
+   "xa": "Xã Mai Sơn",
+   "nhom": "Đường Cà Văn Khum",
+   "ten": "Từ ngã tư Nông trường dọc theo đường Hát Lót-Tà Hộc + 450 m",
+   "vt": [
+    12350,
+    8400,
+    5900,
+    4200,
+    3000
+   ],
+   "ghiChu": "Bổ sung sau tuyến: Từ ngã tư nông trường + 450 m (Đường Hát Lót - Tà Hộc) đến ngã ba Viện Lao + 400 m (hết ranh giới xã Mai Sơn)"
+  },
+  {
+   "xa": "Xã Mai Sơn",
+   "nhom": "Đường bản Dôm",
+   "ten": "Từ ngã ba (Quốc lộ 6) đi về hướng trường Phổ thông Trung học Mai Sơn 300 m",
+   "vt": [
+    5800,
+    2900,
+    2200,
+    1500,
+    1000
+   ],
+   "ghiChu": "Bổ sung sau tuyến: Từ hết ranh giới nhà Giang Len (phía ra Hát Lót) đến cách Quốc lộ 6 300m"
+  },
+  {
+   "xa": "Xã Mai Sơn",
+   "nhom": "Quốc Lộ 37",
+   "ten": "Từ Đài tưởng niệm Thanh niên xung phong đi 200m theo hướng đi bản Nong Quỳnh đến hết địa phận xã Mai Sơn",
+   "vt": [
+    700,
+    500,
+    300,
+    200,
+    100
+   ],
+   "ghiChu": "Bổ sung sau tuyến: Từ Đài tưởng niệm Thanh niên xung phong đi 200m theo hướng đi bản Nong Quỳnh"
+  },
+  {
+   "xa": "Xã Mai Sơn",
+   "nhom": "Quốc Lộ 37",
+   "ten": "Từ Quốc lộ 6 cũ đến Ngã Ba Dốc đá (Km2 + 150m Tỉnh lộ 103 cũ)",
+   "vt": [
+    1600,
+    800,
+    600,
+    400,
+    200
+   ],
+   "ghiChu": "Bổ sung sau tuyến: Từ Đài tưởng niệm Thanh niên xung phong đi 200m theo hướng đi bản Nong Quỳnh"
+  },
+  {
+   "xa": "Xã Mai Sơn",
+   "nhom": "Quốc Lộ 37",
+   "ten": "Từ Km2 + 150m đến hết địa phận xã Mai Sơn",
+   "vt": [
+    600,
+    400,
+    250,
+    200,
+    140
+   ],
+   "ghiChu": "Bổ sung sau tuyến: Từ Đài tưởng niệm Thanh niên xung phong đi 200m theo hướng đi bản Nong Quỳnh"
+  },
+  {
+   "xa": "Xã Mai Sơn",
+   "nhom": "Các đường nhánh khác",
+   "ten": "Các tuyến đường còn lại thuộc khu vực thị trấn Hát Lót cũ",
+   "vt": [
+    1000,
+    700,
+    490,
+    340,
+    240
+   ],
+   "ghiChu": "Bổ sung sau tuyến: Đoạn từ hết địa phận thị trấn Hát Lót (cũ) đến bản Nà Sẳng (hết tuyến đường nhựa)"
+  },
+  {
+   "xa": "Xã Mai Sơn",
+   "nhom": "Các đường nhánh khác",
+   "ten": "Các tuyến đường còn lại thuộc khu vực xã Hát Lót cũ và xã Cò Nòi cũ",
+   "vt": [
+    650,
+    420,
+    290,
+    200,
+    140
+   ],
+   "ghiChu": "Bổ sung sau tuyến: Đoạn từ hết địa phận thị trấn Hát Lót (cũ) đến bản Nà Sẳng (hết tuyến đường nhựa)"
+  },
+  {
+   "xa": "Xã Mai Sơn",
+   "nhom": "Đường Hát Lót - Chiềng Mung",
+   "ten": "Từ ngã ba địa chất (Km 277 + 300m Quốc lộ 6) + 40m đến hết đoàn địa chất 305",
+   "vt": [
+    700,
+    400,
+    300,
+    200,
+    150
+   ],
+   "ghiChu": "bổ sung tuyến mới"
+  },
+  {
+   "xa": "Xã Mai Sơn",
+   "nhom": "Đường Hát Lót - Chiềng Mung",
+   "ten": "Từ hết đất đoàn địa chất 305 đến ngã ba bản Nà Tiến (cũ)",
+   "vt": [
+    840,
+    360,
+    270,
+    180,
+    120
+   ],
+   "ghiChu": "Bổ sung sau tuyến: Từ ngã ba địa chất (Km 277 + 300m Quốc lộ 6) + 40m đến hết đoàn địa chất 305"
+  },
+  {
+   "xa": "Xã Phiêng Pằn",
+   "nhom": "Trục đường giao thông chính, khu dân cư:",
+   "ten": "Tuyến đường Quốc Lộ 37 đi bản Chi đến Quốc lộ 6C",
+   "vt": [
+    750,
+    550,
+    450,
+    250,
+    150
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3.6"
+  },
+  {
+   "xa": "Xã Phiêng Pằn",
+   "nhom": "Trục đường giao thông chính, khu dân cư:",
+   "ten": "Tuyến đường từ trung tâm xã Phiêng Pằn (Két Hay - Pá Nó) đi đến trạm Cọ (Quốc lộ 4G)",
+   "vt": [
+    750,
+    550,
+    450,
+    250,
+    150
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3.6"
+  },
+  {
+   "xa": "Xã Chiềng Mung",
+   "nhom": "Quốc lộ 4G",
+   "ten": "Đường từ ngã ba bản Mạt (ngã 3, 4G) đi trung tâm cai nghiện tỉnh hết địa phận xã Chiềng Mung",
+   "vt": [
+    1500,
+    1050,
+    700,
+    500,
+    400
+   ],
+   "ghiChu": "Bổ sung mới sau STT 2.3"
+  },
+  {
+   "xa": "Xã Chiềng Mung",
+   "nhom": "Đường tỉnh lộ 118",
+   "ten": "Từ ngã ba Quốc lộ 6 + 40m bản Bôm Cưa đi khu Công nghiệp Mai Sơn",
+   "vt": [
+    1100,
+    770,
+    540,
+    380,
+    270
+   ],
+   "ghiChu": "Bổ sung sau tuyến: Từ giáp địa phận xã Mai Sơn đến đến hết xã Chiềng Mung"
+  },
+  {
+   "xa": "Xã Chiềng Khương",
+   "nhom": "",
+   "ten": "Từ Quốc lộ 4G đến cửa khẩu Chiềng Khương",
+   "vt": [
+    350,
+    210,
+    160,
+    110,
+    90
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3.13"
+  },
+  {
+   "xa": "Xã Sông Mã",
+   "nhom": "Trục đường giao thông chính; khu dân cư :",
+   "ten": "Đường Lê Văn Lương: Đoạn từ hết đất nhà ông Trần Văn Tiến số nhà 20 đến hết đường",
+   "vt": [
+    2040,
+    1540,
+    1020,
+    510,
+    300
+   ],
+   "ghiChu": "Bổ sung mới sau STT 24.17"
+  },
+  {
+   "xa": "Xã Sông Mã",
+   "nhom": "Trục đường giao thông chính; khu dân cư :",
+   "ten": "Từ hết quán Tam Dinh đến hết đất ông Tường Thế Tá và đoạn hết quán Tam Dinh đến ngã ba nhà ông Quyền Hoan",
+   "vt": [
+    1570,
+    940,
+    710,
+    480,
+    240
+   ],
+   "ghiChu": "Bổ sung mới sau STT 24.17"
+  },
+  {
+   "xa": "Xã Sông Mã",
+   "nhom": "Trục đường giao thông chính; khu dân cư :",
+   "ten": "Từ hết nhà ông Tường Thế Tá (số nhà 20) đến ngã ba nhà ông Hải Thuyên",
+   "vt": [
+    2040,
+    1200,
+    740,
+    450,
+    270
+   ],
+   "ghiChu": "Bổ sung mới sau STT 24.17"
+  },
+  {
+   "xa": "Xã Sông Mã",
+   "nhom": "Trục đường giao thông chính; khu dân cư :",
+   "ten": "Đường Lê Quý Đôn (Đoạn từ hết đất nhà ông Đỗ Ngọc Thảo đến hết đường (Trường THPT Sông Mã phân hiệu 2)",
+   "vt": [
+    2400,
+    1500,
+    860,
+    520,
+    350
+   ],
+   "ghiChu": "Bổ sung mới sau STT 24.17"
+  },
+  {
+   "xa": "Xã Sông Mã",
+   "nhom": "Trục đường giao thông chính; khu dân cư :",
+   "ten": "Đường Chu Văn An (Đoạn từ hết đất nhà ông Lò Văn Chính đến ngã ba giao nhau với đường Lê Quý Đôn)",
+   "vt": [
+    2360,
+    1420,
+    850,
+    520,
+    320
+   ],
+   "ghiChu": "Bổ sung mới sau STT 24.17"
+  },
+  {
+   "xa": "Xã Sông Mã",
+   "nhom": "Trục đường giao thông chính; khu dân cư :",
+   "ten": "Đất các khu dân cư ven trục giao thông chính trên địa bàn xã Sông Mã (trừ các khu vực đã quy định giá đất)",
+   "vt": [
+    140,
+    120,
+    100,
+    90,
+    80
+   ],
+   "ghiChu": "Bổ sung mới sau STT 24.17"
+  },
+  {
+   "xa": "Xã Sốp Cộp",
+   "nhom": "Đường khu tái định cư D18-D19-D78-D79 (khu TT hành chính xã Sốp Cộp)",
+   "ten": "Từ D16 (Ngã tư Ngân hàng An Bình) đi D18 đến đất Thuế cơ sở 5, hai bên đường",
+   "vt": [
+    520,
+    450
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3.3"
+  },
+  {
+   "xa": "Xã Sốp Cộp",
+   "nhom": "Các đoạn đường ven trung tâm xã Sốp Cộp",
+   "ten": "Từ hết đất ông Cà Văn Bình bản Nà Dìa đến ngã ba hướng đi bản Tông Hùm, hai bên đường",
+   "vt": [
+    220,
+    160,
+    110,
+    90,
+    70
+   ],
+   "ghiChu": "Bổ sung mới sau STT 8.9"
+  },
+  {
+   "xa": "Xã Sốp Cộp",
+   "nhom": "Các đoạn đường ven trung tâm xã Sốp Cộp",
+   "ten": "Các tuyến đường còn lại đi vào các bản (trừ các tuyến đã được quy định chi tiết tại bảng giá đất)",
+   "vt": [
+    150,
+    120,
+    90,
+    80,
+    70
+   ],
+   "ghiChu": "Bổ sung mới sau STT 8.9"
+  },
+  {
+   "xa": "Xã Sốp Cộp",
+   "nhom": "Các đoạn đường ven trung tâm xã Sốp Cộp",
+   "ten": "Các tuyến đường tại các bản: Bản Hua Mường, bản Sốp Cộp, bản Nà Lốc, bản Sốp Nặm, bản Nà Sài, bản Ban, bản Pe và bản Nà Dìa (xã Sốp Cộp cũ), hai bên đường",
+   "vt": [
+    200,
+    150,
+    120,
+    90,
+    70
+   ],
+   "ghiChu": "Bổ sung mới sau STT 8.9"
+  },
+  {
+   "xa": "Phường Tô Hiệu",
+   "nhom": "Đường giao thông 2A, 2B, 2C Khu quy hoạch dân cư OC - 01 và OC - 04",
+   "ten": "Đường quy hoạch rộng 11,5 m",
+   "vt": [
+    17000
+   ],
+   "ghiChu": "Bổ sung sau tuyến: Đường quy hoạch rộng 38m"
+  },
+  {
+   "xa": "Phường Chiềng An",
+   "nhom": "",
+   "ten": "Từ đầu đường Lò Văn Giá (cạnh trường THCS Chiềng An) đến đường asphalt bên kè từ bản Hài xuống đến bản Phiêng Ngùa",
+   "vt": [
+    3420,
+    2100,
+    1500,
+    1000,
+    700
+   ],
+   "ghiChu": "Bổ sung mới sau STT 11.17"
+  },
+  {
+   "xa": "Phường Chiềng An",
+   "nhom": "",
+   "ten": "Khu dân cư bản Có Thé; bản Nam Nghè; bản Nam Giáng phường Chiềng An",
+   "vt": [
+    150
+   ],
+   "ghiChu": "Bổ sung mới sau STT 11"
+  },
+  {
+   "xa": "Phường Chiềng Sinh",
+   "nhom": "",
+   "ten": "Tuyến đường từ chân dốc Noong Đúc đến hết ngã tư bản Pắc Ma (đoạn giao nhau giữa đường rẽ đi tổ 4 và đường đi tổ 7 phường Chiềng Sinh",
+   "vt": [
+    3000,
+    2100,
+    1470,
+    1029,
+    750
+   ],
+   "ghiChu": "Bổ sung mới sau STT cuối cùng 13.2"
+  },
+  {
+   "xa": "Phường Mộc Châu",
+   "nhom": "",
+   "ten": "Đường từ Ngã ba rẽ vào cầu kính Bạch Long (ĐT.102) đến hết địa phận phường Mộc Châu",
+   "vt": [
+    6500,
+    6000,
+    4500,
+    3500,
+    2500
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 9"
+  },
+  {
+   "xa": "Phường Mộc Châu",
+   "nhom": "",
+   "ten": "Từ Ngã ba QL 43 rẽ vào chùa Vạt Hồng đến hết thửa đất số 118 tờ bản đồ số 57 (Bản đồ 1999-2000)",
+   "vt": [
+    2500,
+    1800,
+    1200,
+    800,
+    600
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 9"
+  },
+  {
+   "xa": "Phường Mộc Sơn",
+   "nhom": "Khu Tái định cư tổ dân phố 5 phường Mộc Sơn (thuộc Dự án xây dựng kết cấu hạ tầng và san nền khu dân cư tiểu khu 1)",
+   "ten": "Tuyến đường trục chính đô thị - nội thị",
+   "vt": [
+    7100
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 10.4"
+  },
+  {
+   "xa": "Phường Mộc Sơn",
+   "nhom": "Khu Tái định cư tổ dân phố 5 phường Mộc Sơn (thuộc Dự án xây dựng kết cấu hạ tầng và san nền khu dân cư tiểu khu 1)",
+   "ten": "Tuyến đường nội thị khu Tái định cư tổ dân phố 5 (quy hoạch 13,5m)",
+   "vt": [
+    4000
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 10.4"
+  },
+  {
+   "xa": "Phường Mộc Sơn",
+   "nhom": "Khu Tái định cư tổ dân phố 5 phường Mộc Sơn (thuộc Dự án xây dựng kết cấu hạ tầng và san nền khu dân cư tiểu khu 1)",
+   "ten": "Tuyến đường nội thị khu Tái định cư tổ dân phố 5 (quy hoạch 11,5m)",
+   "vt": [
+    2300
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 10.4"
+  },
+  {
+   "xa": "Phường Mộc Sơn",
+   "nhom": "",
+   "ten": "Tuyến đường bờ kè 34",
+   "vt": [
+    4000
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 10"
+  },
+  {
+   "xa": "Phường Vân Sơn",
+   "nhom": "Phố Tô Vĩnh Diện",
+   "ten": "Từ Ngã tư khách sạn Trường Giang (hướng đi về xưởng bột) đến hết địa phận xã Vân Sơn",
+   "vt": [
+    7480,
+    5640,
+    3680,
+    2530,
+    1500
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 7"
+  },
+  {
+   "xa": "Phường Vân Sơn",
+   "nhom": "Các tuyến đường nội thị khác",
+   "ten": "Đường từ Quốc lộ 6 đến hết địa phận phường Vân Sơn (giáp địa phận bản Thuông Cuông, xã Vân Hồ) (quy hoạch 30 m)",
+   "vt": [
+    10100
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 10.5"
+  },
+  {
+   "xa": "Phường Vân Sơn",
+   "nhom": "Các tuyến đường nội thị khác",
+   "ten": "Đường từ Quốc lộ 6 đến hết địa phận phường Vân Sơn (giáp địa phận bản Thuông Cuông, xã Vân Hồ) (quy hoạch trên 6 m đến 9 m)",
+   "vt": [
+    7200
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 10.5"
+  },
+  {
+   "xa": "Phường Vân Sơn",
+   "nhom": "Các tuyến đường nội thị khác",
+   "ten": "Đường từ Quốc lộ 6 đến hết địa phận phường Vân Sơn, tỉnh Sơn La (giáp địa phận bản Thuông Cuông, xã Vân Hồ) (quy hoạch 6 m)",
+   "vt": [
+    5000
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 10.5"
+  },
+  {
+   "xa": "Phường Vân Sơn",
+   "nhom": "Các tuyến đường nội thị khác",
+   "ten": "Đường Tỉnh lộ 101b (Từ ngã ba Km 64 đến giáp địa phận xã Vân Hồ)",
+   "vt": [
+    4130,
+    2750,
+    1130,
+    750,
+    500
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 10.5"
+  },
+  {
+   "xa": "Phường Vân Sơn",
+   "nhom": "Khu dân cư thuộc quy hoạch Hạ tầng bến xe khách Mộc Châu và khu dân cư lân cận tại tổ dân phố Hoa Đào, phường Vân Sơn",
+   "ten": "Tuyến đường nội thị khu dân cư quy hoạch 8,5 m",
+   "vt": [
+    7200
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 11"
+  },
+  {
+   "xa": "Phường Vân Sơn",
+   "nhom": "Khu dân cư thuộc quy hoạch Hạ tầng bến xe khách Mộc Châu và khu dân cư lân cận tại tổ dân phố Hoa Đào, phường Vân Sơn",
+   "ten": "Tuyến đường nội thị khu dân cư quy hoạch 5,5 m",
+   "vt": [
+    5000
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 11"
+  },
+  {
+   "xa": "Xã Phiêng Khoài",
+   "nhom": "Trung tâm xã Phiêng Khoài",
+   "ten": "Dọc tuyến đường QL6C (trừ trung tâm xã Phiêng Khoài)",
+   "vt": [
+    330,
+    300,
+    280,
+    220,
+    180
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 2.12"
+  },
+  {
+   "xa": "Xã Phiêng Khoài",
+   "nhom": "Trung tâm xã Phiêng Khoài",
+   "ten": "Đất ở nông thôn còn lại trên địa bàn xã Phiêng Khoài",
+   "vt": [
+    140,
+    110,
+    100,
+    90,
+    80
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 2.12"
+  }
+ ],
+ "plII": [
+  {
+   "xa": "Xã Đoàn Kết",
+   "nhom": "",
+   "ten": "Từ km 46+800 theo Quốc lộ 43 đến Km 45+590",
+   "vt": [
+    410,
+    250,
+    190,
+    120,
+    85
+   ],
+   "ghiChu": "Tách từ tuyến đường 1.4"
+  },
+  {
+   "xa": "Xã Đoàn Kết",
+   "nhom": "",
+   "ten": "Từ Km 45+590 theo quốc lộ 43 đến Nhà Văn Hóa bản đoàn kết",
+   "vt": [
+    595,
+    190,
+    140,
+    95,
+    85
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Đoàn Kết",
+   "nhom": "",
+   "ten": "Tuyến đường liên bản Tà Lại đến Nong Cụt (thuộc xã Tà Lại cũ)",
+   "vt": [
+    310,
+    190,
+    140,
+    95,
+    85
+   ],
+   "ghiChu": "Bổ sung mới sau mục 3"
+  },
+  {
+   "xa": "Xã Đoàn Kết",
+   "nhom": "",
+   "ten": "Khu tái định cư Pa Lay bản Đoàn Kết ( xã Nà Mường cũ)",
+   "vt": [
+    200,
+    155,
+    120,
+    105,
+    85
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Đoàn Kết",
+   "nhom": "",
+   "ten": "Khu tái định cư Trai Sơn bản Suối Mõ ( xã Tà Lại cũ)",
+   "vt": [
+    200,
+    155,
+    120,
+    105,
+    85
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Đoàn Kết",
+   "nhom": "",
+   "ten": "Khu tái định cư Trai Tôn bản Tà Lọt ( xã Tà Lại cũ)",
+   "vt": [
+    200,
+    155,
+    120,
+    105,
+    85
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Cách ngã ba bản Co Súc 500m vào đến hết đường bê tông khu sản xuất Pì Nguộc",
+   "vt": [
+    160,
+    140,
+    130,
+    90
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Từ ngã ba cách trụ sở UBND xã Song Khủa về ba hướng 500m bản Lóng Khủa đường đi hết bản Co Hó cũ",
+   "vt": [
+    140,
+    130,
+    110,
+    90
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Từ ngã ba cách trụ sở UBND xã Song Khủa về ba hướng 500m bản Lóng Khủa đường đi hết đến bờ sông (hết bản Un)",
+   "vt": [
+    150,
+    140,
+    120,
+    90
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Từ ngã ba bản Tầm Phế cũ đường đi bản Liên Hoà cách 500m đi đến hết đường bê tông bản Song Hưng cũ, bản Suối Sấu cũ",
+   "vt": [
+    160,
+    130,
+    100,
+    90
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Từ ngã ba (bản Nôn cũ) đường đi Liên Hoà cách 500m đi đến hết đường bê tông bản Lắn",
+   "vt": [
+    160,
+    130,
+    100,
+    90
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Từ ngã ba cách trụ sở UBND xã Liên Hoà cũ đi Tường Liên 500m vào bản Lắn đến hết Pu Nhay (bản Tà Phù cũ) về ba hướng",
+   "vt": [
+    160,
+    130,
+    100,
+    90
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Từ cách Tỉnh lộ 101 500m đi hết đường bê tông bản Tân Thành",
+   "vt": [
+    160,
+    140,
+    110,
+    90
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Từ cách Tỉnh lộ 101 500m (bản Nhúng cũ) đi hết đường bê tông bản Pù Hiềng",
+   "vt": [
+    140,
+    120,
+    90,
+    80
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Từ cách tỉnh lộ 101 500m bản Chiềng Ban cũ đi hết đường bê tông bản Mường Tiến về ba hướng",
+   "vt": [
+    140,
+    120,
+    90,
+    80
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Từ cách trụ sở UBND xã Quang Minh cũ 500m đi bản To Ngùi; giáp bản Mường Tiến (bản Lòm cũ)",
+   "vt": [
+    140,
+    120,
+    90,
+    80
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Từ cách ngã ba đường đi Đền Hang Miếng 500m đến hết bản Coong",
+   "vt": [
+    140,
+    120,
+    90,
+    80
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "",
+   "ten": "Các khu dân cư còn lại trên địa bàn xã (trừ các khu vực đã quy định giá đất)",
+   "vt": [
+    130,
+    110,
+    90,
+    70
+   ],
+   "ghiChu": "Bổ sung sau mục 3"
+  },
+  {
+   "xa": "Xã Tô Múa",
+   "nhom": "Tỉnh lộ 101 (từ QL 6 đến bờ sông đền Hang Miếng)",
+   "ten": "Từ đường rẽ trường Mầm non Tô Múa hết khu dân cư bản Bó Khảm (giáp ranh giới xã Song Khủa cả 2 hướng",
+   "vt": [
+    170,
+    140,
+    105,
+    85,
+    70
+   ],
+   "ghiChu": "Bổ sung mới sau STT 1.4"
+  },
+  {
+   "xa": "Xã Tô Múa",
+   "nhom": "Tỉnh lộ 101 (Quốc lộ 43 đi trung tâm xã Chiềng Khoa cũ)",
+   "ten": "Quốc lộ 43 đoạn hết địa phận phường Vân Sơn Đi bản Tin Tốc (bản Phú Khoa cũ)",
+   "vt": [
+    765,
+    120,
+    95,
+    80,
+    60
+   ],
+   "ghiChu": "Bổ sung mới sau STT 2.2"
+  },
+  {
+   "xa": "Xã Tô Múa",
+   "nhom": "Từ tỉnh lộ 101 đến trung tâm xã Suối Bàng cũ",
+   "ten": "Từ đường rẽ Hợp Nhất đến bản Chiềng Sôi đến ngã 3 bản Pưa Lai (bản Ấm cũ)",
+   "vt": [
+    215,
+    170,
+    130,
+    115,
+    85
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3.5"
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Từ ngã 3 bản Phiêng Bay đến cầu tràn bản Ít Ta Bót",
+   "vt": [
+    100,
+    80,
+    70,
+    65,
+    60
+   ],
+   "ghiChu": "Tiếp giáp mã 2.2"
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Từ ngã 3 bản Pháy Suông đến cụm dân cư Ít Pháy (bản Pháy Suông)",
+   "vt": [
+    100,
+    80,
+    70,
+    65,
+    60
+   ],
+   "ghiChu": "Tiếp giáp mã 2.6"
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Từ ngã 3 bản Có Luông đến cầu tràn bản Ít Ta Bót",
+   "vt": [
+    140,
+    105,
+    80,
+    70,
+    60
+   ],
+   "ghiChu": "Bổ sung mới khi đi điều tra. Tách mã đoạn 2.8 trong Nghị định 152 thành 3 tuyến"
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Từ ngã 3 bản Có Luông đến cống Có Luông",
+   "vt": [
+    140,
+    105,
+    80,
+    70,
+    60
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Từ cống Có Luông đến hết địa phận bản Khâu Pùm",
+   "vt": [
+    100,
+    80,
+    70,
+    65,
+    60
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Tữ ngã 3 đường 107 (cụm dân cư Có Nọi) đến ngã 3 đường đi Khau Pùm",
+   "vt": [
+    120,
+    100,
+    80,
+    70,
+    60
+   ],
+   "ghiChu": "Bổ sung mới khi đi điều tra. Sau STT 2.10"
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Ngã 3 sân thể thao bản Cà Nàng đến ngã 3 đường đi Pho Pha",
+   "vt": [
+    120,
+    100,
+    80,
+    70,
+    60
+   ],
+   "ghiChu": "Bổ sung mới khi đi điều tra. Sau STT 2.10"
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Từ cổng chào bản Ít Ta Bót đến khu dân cư tái định cư Ít Ta Bót",
+   "vt": [
+    140,
+    105,
+    80,
+    70,
+    60
+   ],
+   "ghiChu": "Bổ sung mới khi đi điều tra. Sau STT 2.10"
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Từ ngã 3 nhà văn hóa bản Có Luông đến ngã 3 nhà ông Hoàng Văn Điu (đường đi Ít Ta Bót)",
+   "vt": [
+    120,
+    100,
+    80,
+    70,
+    60
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Từ mét cống thoát nước nhà quán ông Lường Văn Thiết (bản Có Nọi) đến nhà quán ông Hoàng Văn Thuyên (bản Lọng Ố)",
+   "vt": [
+    140,
+    105,
+    80,
+    70,
+    60
+   ],
+   "ghiChu": "Bổ sung mới khi đi điều tra. Sau STT 2.10"
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Đất ở thuộc địa bàn các bản theo trục đường chính nội bản của xã Mường Chiên (trừ khu vực đã quy định giá đất)",
+   "vt": [
+    120,
+    100,
+    80,
+    70,
+    60
+   ],
+   "ghiChu": "Bổ sung mới sau STT 2.10. Theo Báo cáo số 309/BC-UBND xã Mường Chiên"
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "nhom": "",
+   "ten": "Khu dân cư nông thôn bản Mòn, xã Thuận Châu",
+   "vt": [
+    850
+   ],
+   "ghiChu": "Bổ sung mới sau STT 18.4"
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "nhom": "",
+   "ten": "Đất ven các tuyến đường còn lại trên địa bàn xã Thuận Châu (trừ khu vực đã được quy định giá đất)",
+   "vt": [
+    260,
+    150,
+    120,
+    110,
+    90
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Chiềng La",
+   "nhom": "Các đường nhánh nối với Quốc lộ 6B (Nong Lay - Chiềng La - Chiềng Pha)",
+   "ten": "Các đường nhánh tại các bản: Sen To, Lá Lốm, Chiềng Cang, Liên Minh, Phiêng Nong, Huổi Lọng và bản Cọ (trừ lô đất giáp đường QL 6B)",
+   "vt": [
+    550,
+    330,
+    250,
+    170,
+    120
+   ],
+   "ghiChu": "Bổ sung sau STT 4.8"
+  },
+  {
+   "xa": "Xã Chiềng La",
+   "nhom": "Các đường nhánh nối với Quốc lộ 6B (Nong Lay - Chiềng La - Chiềng Pha)",
+   "ten": "Các tuyến đường còn lại quanh khu vực xã Chiềng La (trừ các khu vực đã được quy định giá đất)",
+   "vt": [
+    115
+   ],
+   "ghiChu": "Bổ sung sau STT 6"
+  },
+  {
+   "xa": "Xã Mường Khiêng",
+   "nhom": "",
+   "ten": "Tuyến đường tỉnh lộ 116 tại Km 27+500 – Km 31+600 (Ngã 3 bản Bó -Ngã 3 bản Nà Sành)",
+   "vt": [
+    430,
+    340,
+    260,
+    170,
+    130
+   ],
+   "ghiChu": "Bổ sung sau STT 1.3"
+  },
+  {
+   "xa": "Xã Mường Khiêng",
+   "nhom": "",
+   "ten": "Tuyến đường nhánh tỉnh lộ 116 tại Km 0 – Km 2+100 (Ngã 3 bản Nà Sành - Tông Cọ cũ)",
+   "vt": [
+    430,
+    340,
+    260,
+    170,
+    130
+   ],
+   "ghiChu": "Bổ sung sau STT 1.3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Đất trục đường QL6 thuộc xã Mường É",
+   "vt": [
+    380,
+    260,
+    150,
+    130
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Ngã ba QL6 rẽ xuống xã đến cổng Trường Tiểu học Mường É",
+   "vt": [
+    260,
+    210,
+    165,
+    120,
+    90
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Cổng Trường Tiểu học Mường É (Trụ sở UBND xã Mường É cũ) đến cầu Ta Ve bản Chiềng Ve",
+   "vt": [
+    600,
+    380,
+    300,
+    210,
+    130
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Từ cầu Ta ve bản Chiềng Ve dọc trục đường TL 117 hết ranh giới bản Phạ Lụ",
+   "vt": [
+    300,
+    260,
+    165,
+    120,
+    90
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Từ đỉnh dốc Pu Kéo Cắm giáp bản Phạ Lụ đến ngã ba Nhà văn hóa bản Mầu Thái",
+   "vt": [
+    260,
+    210,
+    165,
+    120,
+    90
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Ngã ba Nhà văn hóa Mầu Thái đến hết cầu Ta Bó Sản bản Mầu Thái",
+   "vt": [
+    300,
+    260,
+    165,
+    120,
+    90
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Từ cầu Ta Bó Sản bản Mầu Thái đến Ngã ba bản Lặp (đầu điểm rẽ đi bản Nà Khoang)",
+   "vt": [
+    260,
+    210,
+    165,
+    120,
+    90
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Ngã ba bản Lặp đi hướng bản Nà Khoang đến Nhà Văn hóa bản Nà Khoang (TL 117)",
+   "vt": [
+    300,
+    260,
+    165,
+    120,
+    90
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Từ nhà văn hóa bản Nà Khoang dọc trục TL 117 đến đầu cầu bản Nghịu",
+   "vt": [
+    260,
+    210,
+    165,
+    120,
+    90
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Từ đầu cầu bản Nghịu đến hết địa phận xã Mường É (giáp bản Tịm xã Thuận Châu)",
+   "vt": [
+    300,
+    260,
+    210,
+    170,
+    130
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Chợ Phổng Lập về hai hướng gồm: (1). Chợ Phổng Lập đến cầu Hua Lùa, bản Kẹ. (2). Chợ Phổng Lập đến ngã ba bản Lặp (Đường TL117)",
+   "vt": [
+    430,
+    200,
+    120,
+    90,
+    70
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Từ cầu Hua Lùa thuộc bản Lùa, bản Kẹ đến hết địa phận bản Kéo Sáo (giáp bản Ngà Phát xã Bình Thuận)",
+   "vt": [
+    260,
+    210,
+    165,
+    120,
+    90
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Từ ngã ba đường rẽ thuộc bản Nà Khoang (điểm đầu tuyến đường bê tông) đến hết địa phận bản Pá Sàng xã Mường É giáp xã Long Hẹ",
+   "vt": [
+    165,
+    120,
+    90,
+    70
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Điểm rẽ từ đường Long Hẹ - Phổng Lập vào bản Huổi Ít (đến Nhà văn hóa bản)",
+   "vt": [
+    90,
+    70,
+    60
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Điểm rẽ từ đường Long Hẹ - Phổng Lập vào bản Ta Tú (đi qua điểm Trường Mầm Non Ta Tú 300 mét )",
+   "vt": [
+    120,
+    90,
+    70,
+    60
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Long Hẹ",
+   "nhom": "Bản Hua Ty (xã Nậm Lầu) đến bản Cha Mạy (xã Long Hẹ)",
+   "ten": "Từ đất nhà ông Và A Chứ (bản Cha Mạy) đến đất nhà ông Lầu A Thào (bản Cha Mạy)",
+   "vt": [
+    340,
+    210,
+    160,
+    110,
+    70
+   ],
+   "ghiChu": "Bổ sung sau STT 1.2"
+  },
+  {
+   "xa": "Xã Long Hẹ",
+   "nhom": "Đường Long Hẹ - Phổng Lập",
+   "ten": "Từ đất nhà ông Lầu A Thào (bản Cha Mạy) đến đất nhà ông Lầu A Dia (bản Cha Mạy)",
+   "vt": [
+    340,
+    210,
+    160,
+    110,
+    70
+   ],
+   "ghiChu": "Bổ sung sau STT 3"
+  },
+  {
+   "xa": "Xã Mường La",
+   "nhom": "Trung tâm xã Pi Toong, xã Chiềng San, xã Nậm Păm, xã Mường Trai, xã Chiềng Muôn cũ (nay thuộc xã Mường La)",
+   "ten": "Tuyến đường ĐT.111 thuộc khu dân cư bản Lâm, bản Chiến, bản Nong Luồng",
+   "vt": [
+    170,
+    140,
+    105,
+    80,
+    70
+   ],
+   "ghiChu": "Bổ sung sau STT 15.11"
+  },
+  {
+   "xa": "Xã Mường La",
+   "nhom": "Trung tâm xã Pi Toong, xã Chiềng San, xã Nậm Păm, xã Mường Trai, xã Chiềng Muôn cũ (nay thuộc xã Mường La)",
+   "ten": "Tuyến đường trục liên bản (trừ các tuyến đường đã được quy định giá)",
+   "vt": [
+    130,
+    110,
+    90,
+    90,
+    70
+   ],
+   "ghiChu": "Bổ sung sau STT 15.11"
+  },
+  {
+   "xa": "Xã Mường Bú",
+   "nhom": "Trung tâm xã Mường Bú, xã Tạ Bú, xã Mường Chùm (nay thuộc xã Mường Bú)",
+   "ten": "Đường khu dân cư bản Mường Bú",
+   "vt": [
+    4680,
+    3830,
+    1700,
+    850,
+    600
+   ],
+   "ghiChu": "Bổ sung sau STT 2.13"
+  },
+  {
+   "xa": "Xã Mường Bú",
+   "nhom": "Trung tâm xã Mường Bú, xã Tạ Bú, xã Mường Chùm (nay thuộc xã Mường Bú)",
+   "ten": "Từ bãi đã sẻ đến đầu cầu bản Két cũ (nay thuộc bản Tạ Bú)",
+   "vt": [
+    1360,
+    850,
+    600,
+    340,
+    210
+   ],
+   "ghiChu": "Bổ sung sau STT 2.13"
+  },
+  {
+   "xa": "Xã Mường Bú",
+   "nhom": "Trung tâm xã Mường Bú, xã Tạ Bú, xã Mường Chùm (nay thuộc xã Mường Bú)",
+   "ten": "Từ ngã ba cầu vạn bú đi qua bản Thẳm Hon cũ (nay thuộc bản Pá Tong) đến hết địa phận xã Mường Bú",
+   "vt": [
+    260,
+    160,
+    130,
+    90,
+    80
+   ],
+   "ghiChu": "Bổ sung sau STT 2.13"
+  },
+  {
+   "xa": "Xã Mường Bú",
+   "nhom": "Trung tâm xã Mường Bú, xã Tạ Bú, xã Mường Chùm (nay thuộc xã Mường Bú)",
+   "ten": "Từ đường QL 279D đến hết địa phận bản chón",
+   "vt": [
+    170,
+    130,
+    90,
+    80,
+    70
+   ],
+   "ghiChu": "Bổ sung sau STT 2.13"
+  },
+  {
+   "xa": "Xã Bắc Yên",
+   "nhom": "Đường nội thị xã Bắc Yên",
+   "ten": "Từ ngã ba khách sạn Paris Bắc Yên đến khu nhà ông Lường Văn Hoan",
+   "vt": [
+    3400,
+    1680,
+    1270,
+    840,
+    510
+   ],
+   "ghiChu": "Bổ sung sau STT 6.6"
+  },
+  {
+   "xa": "Xã Bắc Yên",
+   "nhom": "Đường nội thị xã Bắc Yên",
+   "ten": "Từ khu nhà ông Lường Văn Hoan đến Bệnh viện Đa Khoa Bắc Yên",
+   "vt": [
+    2980,
+    1570,
+    1180,
+    790,
+    480
+   ],
+   "ghiChu": "Bổ sung sau STT 6.6"
+  },
+  {
+   "xa": "Xã Bắc Yên",
+   "nhom": "Đường nội thị xã Bắc Yên",
+   "ten": "Từ hết đất Bệnh viện Đa Khoa Bắc Yên đến ngã ba đấu nối với Quốc lộ 37",
+   "vt": [
+    2440,
+    840,
+    640,
+    430,
+    260
+   ],
+   "ghiChu": "Bổ sung sau STT 6.6"
+  },
+  {
+   "xa": "Xã Bắc Yên",
+   "nhom": "Tỉnh lộ 112 xã Bắc Yên đi các bản",
+   "ten": "Từ điểm Tạp hóa Bão Hòa đến ngã ba Có một đồi hoa",
+   "vt": [
+    500,
+    210,
+    170,
+    100,
+    70
+   ],
+   "ghiChu": "Bổ sung sau STT 9.2"
+  },
+  {
+   "xa": "Xã Bắc Yên",
+   "nhom": "Tỉnh lộ 112 xã Bắc Yên đi các bản",
+   "ten": "Từ ngã ba điểm Có một đồi hoa đến A Chu Homestay",
+   "vt": [
+    430,
+    130,
+    90,
+    75,
+    70
+   ],
+   "ghiChu": "Bổ sung sau STT 9.2"
+  },
+  {
+   "xa": "Xã Bắc Yên",
+   "nhom": "Tỉnh lộ 112 xã Bắc Yên đi các bản",
+   "ten": "Từ điểm ngã ba Có một đồi hoa đến Thảo Nguyên Xanh Homestay",
+   "vt": [
+    430,
+    130,
+    90,
+    75,
+    70
+   ],
+   "ghiChu": "Bổ sung sau STT 9.2"
+  },
+  {
+   "xa": "Xã Bắc Yên",
+   "nhom": "Tỉnh lộ 112 xã Bắc Yên đi các bản",
+   "ten": "Từ điểm Thảo Nguyên Xanh Homestay đến Nhà Máy Thuỷ Điện Suối Sập 1",
+   "vt": [
+    380,
+    130,
+    90,
+    75,
+    70
+   ],
+   "ghiChu": "Bổ sung sau STT 9.2"
+  },
+  {
+   "xa": "Xã Tà Xùa",
+   "nhom": "Các đường khu vực xã Tà Xùa",
+   "ten": "Từ hết đất bản Tà Xùa (Khu Mống Vàng) đến hết đất bản Bẹ (dọc theo tuyến đường bê tông)",
+   "vt": [
+    440,
+    190,
+    150,
+    110,
+    70
+   ],
+   "ghiChu": "Bổ sung sau STT 2.11"
+  },
+  {
+   "xa": "Xã Tà Xùa",
+   "nhom": "Các đường khu vực xã Tà Xùa",
+   "ten": "Từ hết đất bản Bẹ đến đập thủy điện Suối Sập 1 (bản Thảo Nguyên), dọc theo tuyến đường bê tông",
+   "vt": [
+    440,
+    190,
+    150,
+    110,
+    70
+   ],
+   "ghiChu": "Bổ sung sau STT 2.11"
+  },
+  {
+   "xa": "Xã Phù Yên",
+   "nhom": "",
+   "ten": "Tuyến đường xung quanh hồ Noong Bua",
+   "vt": [
+    null,
+    550,
+    350,
+    260
+   ],
+   "ghiChu": "Bổ sung vị trí 2, 3, 4"
+  },
+  {
+   "xa": "Xã Gia Phù",
+   "nhom": "Trung tâm ngã ba gia phù đi 3 hướng",
+   "ten": "Từ cầu suối Hòng Cà (Bản Tạo) đến cầu Suối Hiền (Bản Nhọt)",
+   "vt": [
+    690,
+    540,
+    360,
+    240,
+    105
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Gia Phù",
+   "nhom": "Từ cầu suối Bùa (Bản Bùa Chung) đến nhà Từ nhà Lò Văn Phường (Bản Bùa Chung)",
+   "ten": "Từ nhà Lò Văn Phường (Bản Bùa Chung) đến giáp đất xã Tường Hạ (Bản Bùa Hạ)",
+   "vt": [
+    1405,
+    850,
+    640,
+    390,
+    260
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Gia Phù",
+   "nhom": "Từ cầu suối Bùa (Bản Bùa Chung) đến nhà Từ nhà Lò Văn Phường (Bản Bùa Chung)",
+   "ten": "Từ nhà Lò Văn Phường (Bản Bùa Chung) đến nhà Hoàng Văn Thịnh (Bản Bùa Chung)",
+   "vt": [
+    1690,
+    1010,
+    690,
+    310,
+    240
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Yên Châu",
+   "nhom": "",
+   "ten": "Ngã ba (nhà Kẻo Liên) trên tuyến đường Thao trường bắn đến ngã ba Trường THCS (bản Pút) đi Trụ sở xã Chiềng Khoi cũ",
+   "vt": [
+    155,
+    120,
+    95,
+    80,
+    75
+   ],
+   "ghiChu": "Bổ sung mới sau STT cuối cùng 13.2"
+  },
+  {
+   "xa": "Xã Yên Châu",
+   "nhom": "",
+   "ten": "Đường Q.L.6 đi bản Na Pa, xã Sặp Vạt trước đây (nay là xã Yên Châu) tuyến đường dài 8 km",
+   "vt": [
+    155,
+    120,
+    95,
+    80,
+    75
+   ],
+   "ghiChu": "Bổ sung mới sau STT cuối cùng 13.2"
+  },
+  {
+   "xa": "Xã Yên Châu",
+   "nhom": "",
+   "ten": "Đường Q.L.6 (cầu Chiềng Đông 1) đi bản Na Pản, tuyến đường dài 2 km",
+   "vt": [
+    260,
+    155,
+    120,
+    80,
+    75
+   ],
+   "ghiChu": "Bổ sung mới sau STT cuối cùng 13.2"
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "Tuyến đường liên bản Bản Cố Nông - cầu bản Cố Nông",
+   "ten": "Bản Cố Nông - cầu bản Cố Nông (trục đường chính)",
+   "vt": [
+    280
+   ],
+   "ghiChu": "Bổ sung mới sau STT 5"
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "Tuyến đường thị trấn Bản Cang",
+   "ten": "Từ ngã 3 đường bản Cang đến qua cầu 200m",
+   "vt": [
+    550
+   ],
+   "ghiChu": "Bổ sung mới sau STT 5"
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "Tuyến đường thị trấn Bản Cang",
+   "ten": "Từ ngã 3 đi bản Pa Hốc đến giáp địa phận xã Yên Châu",
+   "vt": [
+    170
+   ],
+   "ghiChu": "Bổ sung mới sau STT 5"
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "",
+   "ten": "Từ ngã 3 Pa Hốc đến giáp bản Suối Phà Đường nội bản bản Pa Hốc",
+   "vt": [
+    130
+   ],
+   "ghiChu": "Bổ sung mới sau STT 5"
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "Trục đường giao thông tại các bản",
+   "ten": "Tuyến bản Na Khoang (cũ), Chiềng Ban 1,2 (cũ) nay là bản Chiềng Ban trục đường giao thông nông thôn chính",
+   "vt": [
+    200
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "Trục đường giao thông tại các bản",
+   "ten": "Đường giao thông nông thôn chính nối các bản Huổi Mong, Suối Phà",
+   "vt": [
+    170
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "Trục đường giao thông tại các bản",
+   "ten": "Đường nội bản bản Bó Kiếng, Co Sáy",
+   "vt": [
+    130
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "Trục đường giao thông tại các bản",
+   "ten": "Đường nội bản bản Tà Vài; Văng Lùng (trục đường chính)",
+   "vt": [
+    510
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "Trục đường giao thông tại các bản",
+   "ten": "Đường Nội bản bản Tà Làng Cao ( từ đầu bản đến đầu cầu bản Tà Làng Cao (dọc trục đường chính",
+   "vt": [
+    300
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "Trục đường giao thông tại các bản",
+   "ten": "Tuyến đường nội bản các bản, bản Dảo, bản Ôn Ốc (tính từ đầu bản đến hết đường bê tông)",
+   "vt": [
+    130
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "Trục đường giao thông tại các bản",
+   "ten": "Tuyến đường nội bản Nà Ngà",
+   "vt": [
+    380
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Lóng Phiêng",
+   "nhom": "Tuyến đường dọc theo Quốc Lộ 6C",
+   "ten": "Từ địa phận giáp ranh xã Chiềng Hặc cho đến hết đất bản Mỏ Than (ngoại trừ khu vực trung tâm xã đã có quy định giá riêng)",
+   "vt": [
+    710,
+    500,
+    360,
+    150,
+    100
+   ],
+   "ghiChu": "Bổ sung mới sau STT 2"
+  },
+  {
+   "xa": "Xã Mai Sơn",
+   "nhom": "Đường Cà Văn Khum",
+   "ten": "Từ ngã tư Nông trường dọc theo đường Hát Lót-Tà Hộc + 450 m",
+   "vt": [
+    6885,
+    3445,
+    2585,
+    1726,
+    1150
+   ],
+   "ghiChu": "Bổ sung sau tuyến: Từ ngã tư nông trường + 450 m (Đường Hát Lót - Tà Hộc) đến ngã ba Viện Lao + 400 m (hết ranh giới xã Mai Sơn)"
+  },
+  {
+   "xa": "Xã Mai Sơn",
+   "nhom": "Đường bản Dôm",
+   "ten": "Từ ngã ba (Quốc lộ 6) đi về hướng trường Phổ thông Trung học Mai Sơn 300 m",
+   "vt": [
+    4645,
+    2330,
+    1745,
+    1165,
+    775
+   ],
+   "ghiChu": "Bổ sung sau tuyến: Từ hết ranh giới nhà Giang Len (phía ra Hát Lót) đến cách Quốc lộ 6 300m"
+  },
+  {
+   "xa": "Xã Mai Sơn",
+   "nhom": "Quốc Lộ 37",
+   "ten": "Từ Đài tưởng niệm Thanh niên xung phong đi 200m theo hướng đi bản Nong Quỳnh đến hết địa phận xã Mai Sơn",
+   "vt": [
+    600,
+    430,
+    260,
+    170,
+    90
+   ],
+   "ghiChu": "Bổ sung sau tuyến: Từ Đài tưởng niệm Thanh niên xung phong đi 200m theo hướng đi bản Nong Quỳnh"
+  },
+  {
+   "xa": "Xã Mai Sơn",
+   "nhom": "Quốc Lộ 37",
+   "ten": "Từ Quốc lộ 6 cũ đến Ngã Ba Dốc đá (Km2 + 150m Tỉnh lộ 103 cũ)",
+   "vt": [
+    715,
+    425,
+    325,
+    215,
+    145
+   ],
+   "ghiChu": "Bổ sung sau tuyến: Từ Đài tưởng niệm Thanh niên xung phong đi 200m theo hướng đi bản Nong Quỳnh"
+  },
+  {
+   "xa": "Xã Mai Sơn",
+   "nhom": "Quốc Lộ 37",
+   "ten": "Từ Km2 + 150m đến hết địa phận xã Mai Sơn",
+   "vt": [
+    510,
+    340,
+    210,
+    145,
+    120
+   ],
+   "ghiChu": "Bổ sung sau tuyến: Từ Đài tưởng niệm Thanh niên xung phong đi 200m theo hướng đi bản Nong Quỳnh"
+  },
+  {
+   "xa": "Xã Mai Sơn",
+   "nhom": "Các đường nhánh khác",
+   "ten": "Các tuyến đường còn lại thuộc khu vực thị trấn Hát Lót cũ",
+   "vt": [
+    850,
+    600,
+    420,
+    290,
+    200
+   ],
+   "ghiChu": "Bổ sung sau tuyến: Đoạn từ hết địa phận thị trấn Hát Lót (cũ) đến bản Nà Sẳng (hết tuyến đường nhựa)"
+  },
+  {
+   "xa": "Xã Mai Sơn",
+   "nhom": "Các đường nhánh khác",
+   "ten": "Các tuyến đường còn lại thuộc khu vực xã Hát Lót cũ và xã Cò Nòi cũ",
+   "vt": [
+    550,
+    360,
+    250,
+    170,
+    120
+   ],
+   "ghiChu": "Bổ sung sau tuyến: Đoạn từ hết địa phận thị trấn Hát Lót (cũ) đến bản Nà Sẳng (hết tuyến đường nhựa)"
+  },
+  {
+   "xa": "Xã Mai Sơn",
+   "nhom": "Đường Hát Lót - Chiềng Mung",
+   "ten": "Từ ngã ba địa chất (Km 277 + 300m Quốc lộ 6) + 40m đến hết đoàn địa chất 305",
+   "vt": [
+    600,
+    310,
+    230,
+    155,
+    105
+   ],
+   "ghiChu": "bổ sung tuyến mới"
+  },
+  {
+   "xa": "Xã Mai Sơn",
+   "nhom": "Đường Hát Lót - Chiềng Mung",
+   "ten": "Từ hết đất đoàn địa chất 305 đến ngã ba bản Nà Tiến (cũ)",
+   "vt": [
+    710,
+    310,
+    230,
+    150,
+    100
+   ],
+   "ghiChu": "Bổ sung sau tuyến: Từ ngã ba địa chất (Km 277 + 300m Quốc lộ 6) + 40m đến hết đoàn địa chất 305"
+  },
+  {
+   "xa": "Xã Phiêng Pằn",
+   "nhom": "Trục đường giao thông chính, khu dân cư",
+   "ten": "Tuyến đường Quốc Lộ 37 đi bản Chi đến Quốc lộ 6C",
+   "vt": [
+    640,
+    470,
+    390,
+    220,
+    130
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3.6"
+  },
+  {
+   "xa": "Xã Phiêng Pằn",
+   "nhom": "Trục đường giao thông chính, khu dân cư",
+   "ten": "Tuyến đường từ trung tâm xã Phiêng Pằn (Két Hay - Pá Nó) đi đến trạm Cọ (Quốc lộ 4G)",
+   "vt": [
+    640,
+    470,
+    390,
+    220,
+    130
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3.6"
+  },
+  {
+   "xa": "Xã Chiềng Mung",
+   "nhom": "Quốc lộ 4G",
+   "ten": "Đường từ ngã ba bản Mạt (ngã 3, 4G) đi trung tâm cai nghiện tỉnh hết địa phận xã Chiềng Mung",
+   "vt": [
+    640,
+    255,
+    196,
+    130,
+    85
+   ],
+   "ghiChu": "Bổ sung mới sau STT 2.3"
+  },
+  {
+   "xa": "Xã Chiềng Mung",
+   "nhom": "Đường tỉnh lộ 118",
+   "ten": "Từ ngã ba Quốc lộ 6 + 40m bản Bôm Cưa đi khu Công nghiệp Mai Sơn",
+   "vt": [
+    940,
+    660,
+    460,
+    330,
+    230
+   ],
+   "ghiChu": "Bổ sung sau tuyến: Từ giáp địa phận xã Mai Sơn đến đến hết xã Chiềng Mung"
+  },
+  {
+   "xa": "Xã Chiềng Khương",
+   "nhom": "",
+   "ten": "Từ Quốc lộ 4G đến cửa khẩu Chiềng Khương",
+   "vt": [
+    215,
+    170,
+    130,
+    100,
+    85
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3.13"
+  },
+  {
+   "xa": "Xã Sông Mã",
+   "nhom": "Trục đường giao thông chính; khu dân cư",
+   "ten": "Đường Lê Văn Lương: Đoạn từ hết đất nhà ông Trần Văn Tiến số nhà 20 đến hết đường",
+   "vt": [
+    1730,
+    1310,
+    870,
+    430,
+    260
+   ],
+   "ghiChu": "Bổ sung mới sau STT 24.17"
+  },
+  {
+   "xa": "Xã Sông Mã",
+   "nhom": "Trục đường giao thông chính; khu dân cư",
+   "ten": "Từ hết quán Tam Dinh đến hết đất ông Tường Thế Tá và đoạn hết quán Tam Dinh đến ngã ba nhà ông Quyền Hoan",
+   "vt": [
+    1330,
+    800,
+    600,
+    410,
+    200
+   ],
+   "ghiChu": "Bổ sung mới sau STT 24.17"
+  },
+  {
+   "xa": "Xã Sông Mã",
+   "nhom": "Trục đường giao thông chính; khu dân cư",
+   "ten": "Từ hết nhà ông Tường Thế Tá (số nhà 20) đến ngã ba nhà ông Hải Thuyên",
+   "vt": [
+    1730,
+    1020,
+    630,
+    380,
+    230
+   ],
+   "ghiChu": "Bổ sung mới sau STT 24.17"
+  },
+  {
+   "xa": "Xã Sông Mã",
+   "nhom": "Trục đường giao thông chính; khu dân cư",
+   "ten": "Đường Lê Quý Đôn (Đoạn từ hết đất nhà ông Đỗ Ngọc Thảo đến hết đường (Trường THPT Sông Mã phân hiệu 2)",
+   "vt": [
+    2040,
+    1280,
+    730,
+    440,
+    300
+   ],
+   "ghiChu": "Bổ sung mới sau STT 24.17"
+  },
+  {
+   "xa": "Xã Sông Mã",
+   "nhom": "Trục đường giao thông chính; khu dân cư",
+   "ten": "Đường Chu Văn An (Đoạn từ hết đất nhà ông Lò Văn Chính đến ngã ba giao nhau với đường Lê Quý Đôn)",
+   "vt": [
+    2010,
+    1210,
+    720,
+    440,
+    270
+   ],
+   "ghiChu": "Bổ sung mới sau STT 24.17"
+  },
+  {
+   "xa": "Xã Sông Mã",
+   "nhom": "Trục đường giao thông chính; khu dân cư",
+   "ten": "Đất các khu dân cư ven trục giao thông chính trên địa bàn xã Sông Mã (trừ các khu vực đã quy định giá đất)",
+   "vt": [
+    120,
+    100,
+    90,
+    80,
+    70
+   ],
+   "ghiChu": "Bổ sung mới sau STT 24.17"
+  },
+  {
+   "xa": "Xã Sốp Cộp",
+   "nhom": "Đường khu tái định cư D18-D19-D78-D79 (khu TT hành chính xã Sốp Cộp)",
+   "ten": "Từ D16 (Ngã tư Ngân hàng An Bình) đi D18 đến đất Thuế cơ sở 5, hai bên đường",
+   "vt": [
+    440,
+    380
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3.3"
+  },
+  {
+   "xa": "Xã Sốp Cộp",
+   "nhom": "Các đoạn đường ven trung tâm xã Sốp Cộp",
+   "ten": "Từ hết đất ông Cà Văn Bình bản Nà Dìa đến ngã ba hướng đi bản Tông Hùm, hai bên đường",
+   "vt": [
+    190,
+    140,
+    90,
+    80,
+    65
+   ],
+   "ghiChu": "Bổ sung mới sau STT 8.9"
+  },
+  {
+   "xa": "Xã Sốp Cộp",
+   "nhom": "Các đoạn đường ven trung tâm xã Sốp Cộp",
+   "ten": "Các tuyến đường còn lại đi vào các bản (trừ các tuyến đã được quy định chi tiết tại bảng giá đất)",
+   "vt": [
+    130,
+    100,
+    80,
+    70,
+    60
+   ],
+   "ghiChu": "Bổ sung mới sau STT 8.9"
+  },
+  {
+   "xa": "Xã Sốp Cộp",
+   "nhom": "Các đoạn đường ven trung tâm xã Sốp Cộp",
+   "ten": "Các tuyến đường tại các bản: Bản Hua Mường, bản Sốp Cộp, bản Nà Lốc, bản Sốp Nặm, bản Nà Sài, bản Ban, bản Pe và bản Nà Dìa (xã Sốp Cộp cũ), hai bên đường",
+   "vt": [
+    170,
+    130,
+    100,
+    80,
+    60
+   ],
+   "ghiChu": "Bổ sung mới sau STT 8.9"
+  },
+  {
+   "xa": "Phường Tô Hiệu",
+   "nhom": "Đường giao thông 2A, 2B, 2C Khu quy hoạch dân cư OC - 01 và OC - 04",
+   "ten": "Đường quy hoạch rộng 11,5 m",
+   "vt": [
+    14450
+   ],
+   "ghiChu": "Bổ sung sau tuyến: Đường quy hoạch rộng 38m"
+  },
+  {
+   "xa": "Phường Chiềng An",
+   "nhom": "",
+   "ten": "Từ đầu đường Lò Văn Giá (cạnh trường THCS Chiềng An) đến đường asphalt bên kè từ bản Hài xuống đến bản Phiêng Ngùa",
+   "vt": [
+    2910,
+    1785,
+    1275,
+    850,
+    595
+   ],
+   "ghiChu": "Bổ sung mới sau STT 11.17"
+  },
+  {
+   "xa": "Phường Chiềng An",
+   "nhom": "",
+   "ten": "Khu dân cư bản Có Thé; bản Nam Nghè; bản Nam Giáng phường Chiềng An",
+   "vt": [
+    130
+   ],
+   "ghiChu": "Bổ sung mới sau STT 11"
+  },
+  {
+   "xa": "Phường Chiềng Sinh",
+   "nhom": "",
+   "ten": "Tuyến đường từ chân dốc Noong Đúc đến hết ngã tư bản Pắc Ma (đoạn giao nhau giữa đường rẽ đi tổ 4 và đường đi tổ 7 phường Chiềng Sinh",
+   "vt": [
+    2550,
+    1790,
+    1250,
+    870,
+    640
+   ],
+   "ghiChu": "Bổ sung mới sau STT cuối cùng 13.2"
+  },
+  {
+   "xa": "Phường Mộc Châu",
+   "nhom": "",
+   "ten": "Đường từ Ngã ba rẽ vào cầu kính Bạch Long (ĐT.102) đến hết địa phận phường Mộc Châu",
+   "vt": [
+    5530,
+    5100,
+    3830,
+    2980,
+    2130
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 9"
+  },
+  {
+   "xa": "Phường Mộc Châu",
+   "nhom": "",
+   "ten": "Từ Ngã ba QL 43 rẽ vào chùa Vạt Hồng đến hết thửa đất số 118 tờ bản đồ số 57 (Bản đồ 1999-2000)",
+   "vt": [
+    2130,
+    1530,
+    1020,
+    680,
+    510
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 9"
+  },
+  {
+   "xa": "Phường Mộc Sơn",
+   "nhom": "Khu Tái định cư tổ dân phố 5 phường Mộc Sơn (thuộc Dự án xây dựng kết cấu hạ tầng và san nền khu dân cư tiểu khu 1)",
+   "ten": "Tuyến đường trục chính đô thị - nội thị",
+   "vt": [
+    6040
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 10.4"
+  },
+  {
+   "xa": "Phường Mộc Sơn",
+   "nhom": "Khu Tái định cư tổ dân phố 5 phường Mộc Sơn (thuộc Dự án xây dựng kết cấu hạ tầng và san nền khu dân cư tiểu khu 1)",
+   "ten": "Tuyến đường nội thị khu Tái định cư tổ dân phố 5 (quy hoạch 13,5m)",
+   "vt": [
+    3400
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 10.4"
+  },
+  {
+   "xa": "Phường Mộc Sơn",
+   "nhom": "Khu Tái định cư tổ dân phố 5 phường Mộc Sơn (thuộc Dự án xây dựng kết cấu hạ tầng và san nền khu dân cư tiểu khu 1)",
+   "ten": "Tuyến đường nội thị khu Tái định cư tổ dân phố 5 (quy hoạch 11,5m)",
+   "vt": [
+    1960
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 10.4"
+  },
+  {
+   "xa": "Phường Mộc Sơn",
+   "nhom": "",
+   "ten": "Tuyến đường bờ kè 34",
+   "vt": [
+    3400
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 10"
+  },
+  {
+   "xa": "Phường Vân Sơn",
+   "nhom": "Phố Tô Vĩnh Diện",
+   "ten": "Từ Ngã tư khách sạn Trường Giang (hướng đi về xưởng bột) đến hết địa phận xã Vân Sơn",
+   "vt": [
+    6360,
+    4790,
+    3130,
+    2150,
+    1280
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 7"
+  },
+  {
+   "xa": "Phường Vân Sơn",
+   "nhom": "Các tuyến đường nội thị khác",
+   "ten": "Đường từ Quốc lộ 6 đến hết địa phận phường Vân Sơn (giáp địa phận bản Thuông Cuông, xã Vân Hồ) (quy hoạch 30 m)",
+   "vt": [
+    8590
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 10.5"
+  },
+  {
+   "xa": "Phường Vân Sơn",
+   "nhom": "Các tuyến đường nội thị khác",
+   "ten": "Đường từ Quốc lộ 6 đến hết địa phận phường Vân Sơn (giáp địa phận bản Thuông Cuông, xã Vân Hồ) (quy hoạch trên 6 m đến 9 m)",
+   "vt": [
+    6120
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 10.5"
+  },
+  {
+   "xa": "Phường Vân Sơn",
+   "nhom": "Các tuyến đường nội thị khác",
+   "ten": "Đường từ Quốc lộ 6 đến hết địa phận phường Vân Sơn, tỉnh Sơn La (giáp địa phận bản Thuông Cuông, xã Vân Hồ) (quy hoạch 6 m)",
+   "vt": [
+    4250
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 10.5"
+  },
+  {
+   "xa": "Phường Vân Sơn",
+   "nhom": "Các tuyến đường nội thị khác",
+   "ten": "Đường Tỉnh lộ 101b (Từ ngã ba Km 64 đến giáp địa phận xã Vân Hồ)",
+   "vt": [
+    3510,
+    2340,
+    960,
+    640,
+    430
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 10.5"
+  },
+  {
+   "xa": "Phường Vân Sơn",
+   "nhom": "Khu dân cư thuộc quy hoạch Hạ tầng bến xe khách Mộc Châu và khu dân cư lân cận tại tổ dân phố Hoa Đào, phường Vân Sơn",
+   "ten": "Tuyến đường nội thị khu dân cư quy hoạch 8,5 m",
+   "vt": [
+    6120
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 11"
+  },
+  {
+   "xa": "Phường Vân Sơn",
+   "nhom": "Khu dân cư thuộc quy hoạch Hạ tầng bến xe khách Mộc Châu và khu dân cư lân cận tại tổ dân phố Hoa Đào, phường Vân Sơn",
+   "ten": "Tuyến đường nội thị khu dân cư quy hoạch 5,5 m",
+   "vt": [
+    4250
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 11"
+  },
+  {
+   "xa": "Xã Phiêng Khoài",
+   "nhom": "Trung tâm xã Phiêng Khoài",
+   "ten": "Dọc tuyến đường QL6C (trừ trung tâm xã Phiêng Khoài)",
+   "vt": [
+    280,
+    260,
+    240,
+    190,
+    150
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 2.12"
+  },
+  {
+   "xa": "Xã Phiêng Khoài",
+   "nhom": "Trung tâm xã Phiêng Khoài",
+   "ten": "Đất ở nông thôn còn lại trên địa bàn xã Phiêng Khoài",
+   "vt": [
+    120,
+    90,
+    85,
+    80,
+    70
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 2.12"
+  }
+ ],
+ "plIII": [
+  {
+   "xa": "Xã Đoàn Kết",
+   "nhom": "",
+   "ten": "Từ km 46+800 theo Quốc lộ 43 đến Km 45+590",
+   "vt": [
+    340,
+    205,
+    155,
+    100,
+    80
+   ],
+   "ghiChu": "Tách từ tuyến đường 1.4"
+  },
+  {
+   "xa": "Xã Đoàn Kết",
+   "nhom": "",
+   "ten": "Từ Km 45+590 theo quốc lộ 43 đến Nhà Văn Hóa bản đoàn kết",
+   "vt": [
+    490,
+    155,
+    115,
+    90,
+    80
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Đoàn Kết",
+   "nhom": "",
+   "ten": "Tuyến đường liên bản Tà Lại đến Nong Cụt (thuộc xã Tà Lại cũ)",
+   "vt": [
+    255,
+    155,
+    115,
+    90,
+    80
+   ],
+   "ghiChu": "Bổ sung mới sau mục 3"
+  },
+  {
+   "xa": "Xã Đoàn Kết",
+   "nhom": "",
+   "ten": "Khu tái định cư Pa Lay bản Đoàn Kết ( xã Nà Mường cũ)",
+   "vt": [
+    165,
+    130,
+    100,
+    85,
+    80
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Đoàn Kết",
+   "nhom": "",
+   "ten": "Khu tái định cư Trai Sơn bản Suối Mõ ( xã Tà Lại cũ)",
+   "vt": [
+    165,
+    130,
+    100,
+    85,
+    80
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Đoàn Kết",
+   "nhom": "",
+   "ten": "Khu tái định cư Trai Tôn bản Tà Lọt ( xã Tà Lại cũ)",
+   "vt": [
+    165,
+    130,
+    100,
+    85,
+    80
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Cách ngã ba bản Co Súc 500m vào đến hết đường bê tông khu sản xuất Pì Nguộc",
+   "vt": [
+    130,
+    120,
+    110,
+    80
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Từ ngã ba cách trụ sở UBND xã Song Khủa về ba hướng 500m bản Lóng Khủa đường đi hết bản Co Hó cũ",
+   "vt": [
+    120,
+    110,
+    90,
+    70
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Từ ngã ba cách trụ sở UBND xã Song Khủa về ba hướng 500m bản Lóng Khủa đường đi hết đến bờ sông (hết bản Un)",
+   "vt": [
+    130,
+    110,
+    100,
+    80
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Từ ngã ba bản Tầm Phế cũ đường đi bản Liên Hoà cách 500m đi đến hết đường bê tông bản Song Hưng cũ, bản Suối Sấu cũ",
+   "vt": [
+    130,
+    110,
+    80,
+    70
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Từ ngã ba (bản Nôn cũ) đường đi Liên Hoà cách 500m đi đến hết đường bê tông bản Lắn",
+   "vt": [
+    130,
+    110,
+    80,
+    70
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Từ ngã ba cách trụ sở UBND xã Liên Hoà cũ đi Tường Liên 500m vào bản Lắn đến hết Pu Nhay (bản Tà Phù cũ) về ba hướng",
+   "vt": [
+    130,
+    110,
+    80,
+    70
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Từ cách Tỉnh lộ 101 500m đi hết đường bê tông bản Tân Thành",
+   "vt": [
+    130,
+    110,
+    90,
+    70
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Từ cách Tỉnh lộ 101 500m (bản Nhúng cũ) đi hết đường bê tông bản Pù Hiềng",
+   "vt": [
+    110,
+    100,
+    80,
+    60
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Từ cách tỉnh lộ 101 500m bản Chiềng Ban cũ đi hết đường bê tông bản Mường Tiến về ba hướng",
+   "vt": [
+    110,
+    100,
+    80,
+    60
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Từ cách trụ sở UBND xã Quang Minh cũ 500m đi bản To Ngùi; giáp bản Mường Tiến (bản Lòm cũ)",
+   "vt": [
+    110,
+    100,
+    80,
+    60
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "Các tuyến đường trục chính, khu dân cư trên địa bàn xã",
+   "ten": "Từ cách ngã ba đường đi Đền Hang Miếng 500m đến hết bản Coong",
+   "vt": [
+    110,
+    100,
+    80,
+    60
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "nhom": "",
+   "ten": "Các khu dân cư còn lại trên địa bàn xã (trừ các khu vực đã quy định giá đất)",
+   "vt": [
+    110,
+    90,
+    80,
+    60
+   ],
+   "ghiChu": "Bổ sung sau mục 3"
+  },
+  {
+   "xa": "Xã Tô Múa",
+   "nhom": "Tỉnh lộ 101 (từ QL 6 đến bờ sông đền Hang Miếng)",
+   "ten": "Từ đường rẽ trường Mầm non Tô Múa hết khu dân cư bản Bó Khảm (giáp ranh giới xã Song Khủa cả 2 hướng",
+   "vt": [
+    140,
+    115,
+    85,
+    70,
+    60
+   ],
+   "ghiChu": "Bổ sung mới sau STT 1.4"
+  },
+  {
+   "xa": "Xã Tô Múa",
+   "nhom": "Tỉnh lộ 101 (Quốc lộ 43 đi trung tâm xã Chiềng Khoa cũ)",
+   "ten": "Quốc lộ 43 đoạn hết địa phận phường Vân Sơn Đi bản Tin Tốc (bản Phú Khoa cũ)",
+   "vt": [
+    630,
+    100,
+    80,
+    70,
+    60
+   ],
+   "ghiChu": "Bổ sung mới sau STT 2.2"
+  },
+  {
+   "xa": "Xã Tô Múa",
+   "nhom": "Từ tỉnh lộ 101 đến trung tâm xã Suối Bàng cũ",
+   "ten": "Từ đường rẽ Hợp Nhất đến bản Chiềng Sôi đến ngã 3 bản Pưa Lai (bản Ấm cũ)",
+   "vt": [
+    175,
+    140,
+    105,
+    95,
+    70
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3.5"
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Từ ngã 3 bản Phiêng Bay đến cầu tràn bản Ít Ta Bót",
+   "vt": [
+    80,
+    70,
+    65,
+    60,
+    55
+   ],
+   "ghiChu": "Tiếp giáp mã 2.2"
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Từ ngã 3 bản Pháy Suông đến cụm dân cư Ít Pháy (bản Pháy Suông)",
+   "vt": [
+    80,
+    70,
+    65,
+    60,
+    55
+   ],
+   "ghiChu": "Tiếp giáp mã 2.6"
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Từ ngã 3 bản Có Luông đến cầu tràn bản Ít Ta Bót",
+   "vt": [
+    120,
+    85,
+    65,
+    60,
+    55
+   ],
+   "ghiChu": "Bổ sung mới khi đi điều tra. Tách mã đoạn 2.8 trong Nghị định 152 thành 3 tuyến"
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Từ ngã 3 bản Có Luông đến cống Có Luông",
+   "vt": [
+    120,
+    85,
+    65,
+    60,
+    55
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Từ cống Có Luông đến hết địa phận bản Khâu Pùm",
+   "vt": [
+    80,
+    70,
+    65,
+    60,
+    55
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Tữ ngã 3 đường 107 (cụm dân cư Có Nọi) đến ngã 3 đường đi Khau Pùm",
+   "vt": [
+    100,
+    80,
+    70,
+    60,
+    55
+   ],
+   "ghiChu": "Bổ sung mới khi đi điều tra. Sau STT 2.10"
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Ngã 3 sân thể thao bản Cà Nàng đến ngã 3 đường đi Pho Pha",
+   "vt": [
+    100,
+    80,
+    70,
+    60,
+    55
+   ],
+   "ghiChu": "Bổ sung mới khi đi điều tra. Sau STT 2.10"
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Từ cổng chào bản Ít Ta Bót đến khu dân cư tái định cư Ít Ta Bót",
+   "vt": [
+    120,
+    85,
+    65,
+    60,
+    55
+   ],
+   "ghiChu": "Bổ sung mới khi đi điều tra. Sau STT 2.10"
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Từ ngã 3 nhà văn hóa bản Có Luông đến ngã 3 nhà ông Hoàng Văn Điu (đường đi Ít Ta Bót)",
+   "vt": [
+    100,
+    80,
+    70,
+    60,
+    55
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Từ mét cống thoát nước nhà quán ông Lường Văn Thiết (bản Có Nọi) đến nhà quán ông Hoàng Văn Thuyên (bản Lọng Ố)",
+   "vt": [
+    120,
+    85,
+    65,
+    60,
+    55
+   ],
+   "ghiChu": "Bổ sung mới khi đi điều tra. Sau STT 2.10"
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "nhom": "",
+   "ten": "Đất ở thuộc địa bàn các bản theo trục đường chính nội bản của xã Mường Chiên (trừ khu vực đã quy định giá đất)",
+   "vt": [
+    100,
+    80,
+    70,
+    60,
+    55
+   ],
+   "ghiChu": "Bổ sung mới sau STT 2.10. Theo Báo cáo số 309/BC-UBND xã Mường Chiên"
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "nhom": "",
+   "ten": "Khu dân cư nông thôn bản Mòn, xã Thuận Châu",
+   "vt": [
+    700
+   ],
+   "ghiChu": "Bổ sung mới sau STT 18.4"
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "nhom": "",
+   "ten": "Đất ven các tuyến đường còn lại trên địa bàn xã Thuận Châu (trừ khu vực đã được quy định giá đất)",
+   "vt": [
+    210,
+    130,
+    100,
+    90,
+    70
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Chiềng La",
+   "nhom": "Các đường nhánh nối với Quốc lộ 6B (Nong Lay - Chiềng La - Chiềng Pha)",
+   "ten": "Các đường nhánh tại các bản: Sen To, Lá Lốm, Chiềng Cang, Liên Minh, Phiêng Nong, Huổi Lọng và bản Cọ (trừ lô đất giáp đường QL 6B)",
+   "vt": [
+    450,
+    270,
+    210,
+    140,
+    100
+   ],
+   "ghiChu": "Bổ sung sau STT 4.8"
+  },
+  {
+   "xa": "Xã Chiềng La",
+   "nhom": "Các đường nhánh nối với Quốc lộ 6B (Nong Lay - Chiềng La - Chiềng Pha)",
+   "ten": "Các tuyến đường còn lại quanh khu vực xã Chiềng La (trừ các khu vực đã được quy định giá đất)",
+   "vt": [
+    100
+   ],
+   "ghiChu": "Bổ sung sau STT 6"
+  },
+  {
+   "xa": "Xã Mường Khiêng",
+   "nhom": "",
+   "ten": "Tuyến đường tỉnh lộ 116 tại Km 27+500 – Km 31+600 (Ngã 3 bản Bó -Ngã 3 bản Nà Sành)",
+   "vt": [
+    350,
+    280,
+    210,
+    140,
+    110
+   ],
+   "ghiChu": "Bổ sung sau STT 1.3"
+  },
+  {
+   "xa": "Xã Mường Khiêng",
+   "nhom": "",
+   "ten": "Tuyến đường nhánh tỉnh lộ 116 tại Km 0 – Km 2+100 (Ngã 3 bản Nà Sành - Tông Cọ cũ)",
+   "vt": [
+    350,
+    280,
+    210,
+    140,
+    110
+   ],
+   "ghiChu": "Bổ sung sau STT 1.3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Đất trục đường QL6 thuộc xã Mường É",
+   "vt": [
+    320,
+    210,
+    130,
+    110
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Ngã ba QL6 rẽ xuống xã đến cổng Trường Tiểu học Mường É",
+   "vt": [
+    210,
+    170,
+    135,
+    100,
+    70
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Cổng Trường Tiểu học Mường É (Trụ sở UBND xã Mường É cũ) đến cầu Ta Ve bản Chiềng Ve",
+   "vt": [
+    490,
+    320,
+    250,
+    170,
+    110
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Từ cầu Ta ve bản Chiềng Ve dọc trục đường TL 117 hết ranh giới bản Phạ Lụ",
+   "vt": [
+    250,
+    210,
+    135,
+    100,
+    70
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Từ đỉnh dốc Pu Kéo Cắm giáp bản Phạ Lụ đến ngã ba Nhà văn hóa bản Mầu Thái",
+   "vt": [
+    210,
+    170,
+    135,
+    100,
+    70
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Ngã ba Nhà văn hóa Mầu Thái đến hết cầu Ta Bó Sản bản Mầu Thái",
+   "vt": [
+    250,
+    210,
+    135,
+    100,
+    70
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Từ cầu Ta Bó Sản bản Mầu Thái đến Ngã ba bản Lặp (đầu điểm rẽ đi bản Nà Khoang)",
+   "vt": [
+    210,
+    170,
+    135,
+    100,
+    70
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Ngã ba bản Lặp đi hướng bản Nà Khoang đến Nhà Văn hóa bản Nà Khoang (TL 117)",
+   "vt": [
+    250,
+    210,
+    135,
+    100,
+    70
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Từ nhà văn hóa bản Nà Khoang dọc trục TL 117 đến đầu cầu bản Nghịu",
+   "vt": [
+    210,
+    170,
+    135,
+    100,
+    70
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Từ đầu cầu bản Nghịu đến hết địa phận xã Mường É (giáp bản Tịm xã Thuận Châu)",
+   "vt": [
+    250,
+    210,
+    170,
+    135,
+    100
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Chợ Phổng Lập về hai hướng gồm: (1). Chợ Phổng Lập đến cầu Hua Lùa, bản Kẹ. (2). Chợ Phổng Lập đến ngã ba bản Lặp (Đường TL117)",
+   "vt": [
+    350,
+    160,
+    100,
+    70,
+    65
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Từ cầu Hua Lùa thuộc bản Lùa, bản Kẹ đến hết địa phận bản Kéo Sáo (giáp bản Ngà Phát xã Bình Thuận)",
+   "vt": [
+    210,
+    170,
+    135,
+    100,
+    70
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Từ ngã ba đường rẽ thuộc bản Nà Khoang (điểm đầu tuyến đường bê tông) đến hết địa phận bản Pá Sàng xã Mường É giáp xã Long Hẹ",
+   "vt": [
+    135,
+    100,
+    70,
+    65
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Điểm rẽ từ đường Long Hẹ - Phổng Lập vào bản Huổi Ít (đến Nhà văn hóa bản)",
+   "vt": [
+    70,
+    65,
+    60
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Mường É",
+   "nhom": "",
+   "ten": "Điểm rẽ từ đường Long Hẹ - Phổng Lập vào bản Ta Tú (đi qua điểm Trường Mầm Non Ta Tú 300 mét )",
+   "vt": [
+    100,
+    70,
+    65,
+    60
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3"
+  },
+  {
+   "xa": "Xã Long Hẹ",
+   "nhom": "Bản Hua Ty (xã Nậm Lầu) đến bản Cha Mạy (xã Long Hẹ)",
+   "ten": "Từ đất nhà ông Và A Chứ (bản Cha Mạy) đến đất nhà ông Lầu A Thào (bản Cha Mạy)",
+   "vt": [
+    280,
+    170,
+    130,
+    90,
+    60
+   ],
+   "ghiChu": "Bổ sung sau STT 1.2"
+  },
+  {
+   "xa": "Xã Long Hẹ",
+   "nhom": "Đường Long Hẹ - Phổng Lập",
+   "ten": "Từ đất nhà ông Lầu A Thào (bản Cha Mạy) đến đất nhà ông Lầu A Dia (bản Cha Mạy)",
+   "vt": [
+    280,
+    170,
+    130,
+    90,
+    60
+   ],
+   "ghiChu": "Bổ sung sau STT 3"
+  },
+  {
+   "xa": "Xã Mường La",
+   "nhom": "Trung tâm xã Pi Toong, xã Chiềng San, xã Nậm Păm, xã Mường Trai, xã Chiềng Muôn cũ (nay thuộc xã Mường La)",
+   "ten": "Tuyến đường ĐT.111 thuộc khu dân cư bản Lâm, bản Chiến, bản Nong Luồng",
+   "vt": [
+    140,
+    115,
+    85,
+    75,
+    65
+   ],
+   "ghiChu": "Bổ sung sau STT 15.11"
+  },
+  {
+   "xa": "Xã Mường La",
+   "nhom": "Trung tâm xã Pi Toong, xã Chiềng San, xã Nậm Păm, xã Mường Trai, xã Chiềng Muôn cũ (nay thuộc xã Mường La)",
+   "ten": "Tuyến đường trục liên bản (trừ các tuyến đường đã được quy định giá)",
+   "vt": [
+    110,
+    90,
+    80,
+    70,
+    65
+   ],
+   "ghiChu": "Bổ sung sau STT 15.11"
+  },
+  {
+   "xa": "Xã Mường Bú",
+   "nhom": "Trung tâm xã Mường Bú, xã Tạ Bú, xã Mường Chùm (nay thuộc xã Mường Bú)",
+   "ten": "Đường khu dân cư bản Mường Bú",
+   "vt": [
+    3850,
+    3150,
+    1400,
+    700,
+    490
+   ],
+   "ghiChu": "Bổ sung sau STT 2.13"
+  },
+  {
+   "xa": "Xã Mường Bú",
+   "nhom": "Trung tâm xã Mường Bú, xã Tạ Bú, xã Mường Chùm (nay thuộc xã Mường Bú)",
+   "ten": "Từ bãi đã sẻ đến đầu cầu bản Két cũ (nay thuộc bản Tạ Bú)",
+   "vt": [
+    1120,
+    700,
+    490,
+    280,
+    180
+   ],
+   "ghiChu": "Bổ sung sau STT 2.13"
+  },
+  {
+   "xa": "Xã Mường Bú",
+   "nhom": "Trung tâm xã Mường Bú, xã Tạ Bú, xã Mường Chùm (nay thuộc xã Mường Bú)",
+   "ten": "Từ ngã ba cầu vạn bú đi qua bản Thẳm Hon cũ (nay thuộc bản Pá Tong) đến hết địa phận xã Mường Bú",
+   "vt": [
+    210,
+    130,
+    110,
+    80,
+    70
+   ],
+   "ghiChu": "Bổ sung sau STT 2.13"
+  },
+  {
+   "xa": "Xã Mường Bú",
+   "nhom": "Trung tâm xã Mường Bú, xã Tạ Bú, xã Mường Chùm (nay thuộc xã Mường Bú)",
+   "ten": "Từ đường QL 279D đến hết địa phận bản Chón",
+   "vt": [
+    140,
+    110,
+    80,
+    70,
+    65
+   ],
+   "ghiChu": "Bổ sung sau STT 2.13"
+  },
+  {
+   "xa": "Xã Bắc Yên",
+   "nhom": "Đường nội thị xã Bắc Yên",
+   "ten": "Từ ngã ba khách sạn Paris Bắc Yên đến khu nhà ông Lường Văn Hoan",
+   "vt": [
+    2800,
+    1390,
+    1040,
+    690,
+    420
+   ],
+   "ghiChu": "Bổ sung sau STT 6.6"
+  },
+  {
+   "xa": "Xã Bắc Yên",
+   "nhom": "Đường nội thị xã Bắc Yên",
+   "ten": "Từ khu nhà ông Lường Văn Hoan đến Bệnh viện Đa Khoa Bắc Yên",
+   "vt": [
+    2450,
+    1300,
+    970,
+    650,
+    390
+   ],
+   "ghiChu": "Bổ sung sau STT 6.6"
+  },
+  {
+   "xa": "Xã Bắc Yên",
+   "nhom": "Đường nội thị xã Bắc Yên",
+   "ten": "Từ hết đất Bệnh viện Đa Khoa Bắc Yên đến ngã ba đấu nối với Quốc lộ 37",
+   "vt": [
+    2010,
+    690,
+    530,
+    350,
+    210
+   ],
+   "ghiChu": "Bổ sung sau STT 6.6"
+  },
+  {
+   "xa": "Xã Bắc Yên",
+   "nhom": "Tỉnh lộ 112 xã Bắc Yên đi các bản",
+   "ten": "Từ điểm Tạp hóa Bão Hòa đến ngã ba Có một đồi hoa",
+   "vt": [
+    410,
+    180,
+    140,
+    80,
+    65
+   ],
+   "ghiChu": "Bổ sung sau STT 9.2"
+  },
+  {
+   "xa": "Xã Bắc Yên",
+   "nhom": "Tỉnh lộ 112 xã Bắc Yên đi các bản",
+   "ten": "Từ ngã ba điểm Có một đồi hoa đến A Chu Homestay",
+   "vt": [
+    350,
+    110,
+    80,
+    70,
+    65
+   ],
+   "ghiChu": "Bổ sung sau STT 9.2"
+  },
+  {
+   "xa": "Xã Bắc Yên",
+   "nhom": "Tỉnh lộ 112 xã Bắc Yên đi các bản",
+   "ten": "Từ điểm ngã ba Có một đồi hoa đến Thảo Nguyên Xanh Homestay",
+   "vt": [
+    350,
+    110,
+    80,
+    70,
+    65
+   ],
+   "ghiChu": "Bổ sung sau STT 9.2"
+  },
+  {
+   "xa": "Xã Bắc Yên",
+   "nhom": "Tỉnh lộ 112 xã Bắc Yên đi các bản",
+   "ten": "Từ điểm Thảo Nguyên Xanh Homestay đến Nhà Máy Thuỷ Điện Suối Sập 1",
+   "vt": [
+    320,
+    110,
+    80,
+    70,
+    65
+   ],
+   "ghiChu": "Bổ sung sau STT 9.2"
+  },
+  {
+   "xa": "Xã Tà Xùa",
+   "nhom": "Các đường khu vực xã Tà Xùa",
+   "ten": "Từ hết đất bản Tà Xùa (Khu Mống Vàng) đến hết đất bản Bẹ (dọc theo tuyến đường bê tông)",
+   "vt": [
+    360,
+    160,
+    120,
+    90,
+    60
+   ],
+   "ghiChu": "Bổ sung sau STT 2.11"
+  },
+  {
+   "xa": "Xã Tà Xùa",
+   "nhom": "Các đường khu vực xã Tà Xùa",
+   "ten": "Từ hết đất bản Bẹ đến đập thủy điện Suối Sập 1 (bản Thảo Nguyên), dọc theo tuyến đường bê tông",
+   "vt": [
+    360,
+    160,
+    120,
+    90,
+    60
+   ],
+   "ghiChu": "Bổ sung sau STT 2.11"
+  },
+  {
+   "xa": "Xã Phù Yên",
+   "nhom": "",
+   "ten": "Tuyến đường xung quanh hồ Noong Bua",
+   "vt": [
+    null,
+    450,
+    290,
+    210
+   ],
+   "ghiChu": "Bổ sung vị trí 2, 3, 4"
+  },
+  {
+   "xa": "Xã Gia Phù",
+   "nhom": "Trung tâm ngã ba gia phù đi 3 hướng",
+   "ten": "Từ cầu suối Hòng Cà (Bản Tạo) đến cầu Suối Hiền (Bản Nhọt)",
+   "vt": [
+    570,
+    450,
+    295,
+    200,
+    85
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Gia Phù",
+   "nhom": "Từ cầu suối Bùa (Bản Bùa Chung) đến nhà Từ nhà Lò Văn Phường (Bản Bùa Chung)",
+   "ten": "Từ nhà Lò Văn Phường (Bản Bùa Chung) đến giáp đất xã Tường Hạ (Bản Bùa Hạ)",
+   "vt": [
+    1160,
+    700,
+    530,
+    320,
+    210
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Gia Phù",
+   "nhom": "Từ cầu suối Bùa (Bản Bùa Chung) đến nhà Từ nhà Lò Văn Phường (Bản Bùa Chung)",
+   "ten": "Từ nhà Lò Văn Phường (Bản Bùa Chung) đến nhà Hoàng Văn Thịnh (Bản Bùa Chung)",
+   "vt": [
+    1390,
+    840,
+    570,
+    260,
+    200
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Yên Châu",
+   "nhom": "",
+   "ten": "Ngã ba (nhà Kẻo Liên) trên tuyến đường Thao trường bắn đến ngã ba Trường THCS (bản Pút) đi Trụ sở xã Chiềng Khoi cũ",
+   "vt": [
+    130,
+    100,
+    80,
+    75,
+    70
+   ],
+   "ghiChu": "Bổ sung mới sau STT cuối cùng 13.2"
+  },
+  {
+   "xa": "Xã Yên Châu",
+   "nhom": "",
+   "ten": "Đường Q.L.6 đi bản Na Pa, xã Sặp Vạt trước đây (nay là xã Yên Châu) tuyến đường dài 8 km",
+   "vt": [
+    130,
+    100,
+    80,
+    75,
+    70
+   ],
+   "ghiChu": "Bổ sung mới sau STT cuối cùng 13.2"
+  },
+  {
+   "xa": "Xã Yên Châu",
+   "nhom": "",
+   "ten": "Đường Q.L.6 (cầu Chiềng Đông 1) đi bản Na Pản, tuyến đường dài 2 km",
+   "vt": [
+    210,
+    130,
+    100,
+    75,
+    70
+   ],
+   "ghiChu": "Bổ sung mới sau STT cuối cùng 13.2"
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "Tuyến đường liên bản Bản Cố Nông - cầu bản Cố Nông",
+   "ten": "Bản Cố Nông - cầu bản Cố Nông (trục đường chính)",
+   "vt": [
+    230
+   ],
+   "ghiChu": "Bổ sung mới sau STT 5"
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "Tuyến đường thị trấn Bản Cang",
+   "ten": "Từ ngã 3 đường bản Cang đến qua cầu 200m",
+   "vt": [
+    460
+   ],
+   "ghiChu": "Bổ sung mới sau STT 5"
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "Tuyến đường thị trấn Bản Cang",
+   "ten": "Từ ngã 3 đi bản Pa Hốc đến giáp địa phận xã Yên Châu",
+   "vt": [
+    140
+   ],
+   "ghiChu": "Bổ sung mới sau STT 5"
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "",
+   "ten": "Từ ngã 3 Pa Hốc đến giáp bản Suối Phà Đường nội bản bản Pa Hốc",
+   "vt": [
+    110
+   ],
+   "ghiChu": "Bổ sung mới sau STT 5"
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "Trục đường giao thông tại các bản",
+   "ten": "Tuyến bản Na Khoang (cũ), Chiềng Ban 1,2 (cũ) nay là bản Chiềng Ban trục đường giao thông nông thôn chính",
+   "vt": [
+    170
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "Trục đường giao thông tại các bản",
+   "ten": "Đường giao thông nông thôn chính nối các bản Huổi Mong, Suối Phà",
+   "vt": [
+    140
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "Trục đường giao thông tại các bản",
+   "ten": "Đường nội bản bản Bó Kiếng, Co Sáy",
+   "vt": [
+    110
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "Trục đường giao thông tại các bản",
+   "ten": "Đường nội bản bản Tà Vài; Văng Lùng (trục đường chính)",
+   "vt": [
+    420
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "Trục đường giao thông tại các bản",
+   "ten": "Đường Nội bản bản Tà Làng Cao ( từ đầu bản đến đầu cầu bản Tà Làng Cao (dọc trục đường chính",
+   "vt": [
+    250
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "Trục đường giao thông tại các bản",
+   "ten": "Tuyến đường nội bản các bản, bản Dảo, bản Ôn Ốc (tính từ đầu bản đến hết đường bê tông)",
+   "vt": [
+    110
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "nhom": "Trục đường giao thông tại các bản",
+   "ten": "Tuyến đường nội bản Nà Ngà",
+   "vt": [
+    320
+   ],
+   "ghiChu": ""
+  },
+  {
+   "xa": "Xã Lóng Phiêng",
+   "nhom": "Tuyến đường dọc theo Quốc Lộ 6C",
+   "ten": "Từ địa phận giáp ranh xã Chiềng Hặc cho đến hết đất bản Mỏ Than (ngoại trừ khu vực trung tâm xã đã có quy định giá riêng)",
+   "vt": [
+    590,
+    410,
+    290,
+    130,
+    80
+   ],
+   "ghiChu": "Bổ sung mới sau STT 2"
+  },
+  {
+   "xa": "Xã Mai Sơn",
+   "nhom": "Đường Cà Văn Khum",
+   "ten": "Từ ngã tư Nông trường dọc theo đường Hát Lót-Tà Hộc + 450 m",
+   "vt": [
+    5670,
+    2835,
+    2130,
+    1425,
+    945
+   ],
+   "ghiChu": "Bổ sung sau tuyến: Từ ngã tư nông trường + 450 m (Đường Hát Lót - Tà Hộc) đến ngã ba Viện Lao + 400 m (hết ranh giới xã Mai Sơn)"
+  },
+  {
+   "xa": "Xã Mai Sơn",
+   "nhom": "Đường bản Dôm",
+   "ten": "Từ ngã ba (Quốc lộ 6) đi về hướng trường Phổ thông Trung học Mai Sơn 300 m",
+   "vt": [
+    3825,
+    1915,
+    1435,
+    960,
+    640
+   ],
+   "ghiChu": "Bổ sung sau tuyến: Từ hết ranh giới nhà Giang Len (phía ra Hát Lót) đến cách Quốc lộ 6 300m"
+  },
+  {
+   "xa": "Xã Mai Sơn",
+   "nhom": "Quốc Lộ 37",
+   "ten": "Từ Đài tưởng niệm Thanh niên xung phong đi 200m theo hướng đi bản Nong Quỳnh đến hết địa phận xã Mai Sơn",
+   "vt": [
+    490,
+    350,
+    210,
+    140,
+    70
+   ],
+   "ghiChu": "Bổ sung sau tuyến: Từ Đài tưởng niệm Thanh niên xung phong đi 200m theo hướng đi bản Nong Quỳnh"
+  },
+  {
+   "xa": "Xã Mai Sơn",
+   "nhom": "Quốc Lộ 37",
+   "ten": "Từ Quốc lộ 6 cũ đến Ngã Ba Dốc đá (Km2 + 150m Tỉnh lộ 103 cũ) (Tuyến đường Quốc Lộ 37 đi xã Phiêng Pằn)",
+   "vt": [
+    590,
+    350,
+    270,
+    175,
+    120
+   ],
+   "ghiChu": "Bổ sung sau tuyến: Từ Đài tưởng niệm Thanh niên xung phong đi 200m theo hướng đi bản Nong Quỳnh"
+  },
+  {
+   "xa": "Xã Mai Sơn",
+   "nhom": "Quốc Lộ 37",
+   "ten": "Từ Km2 + 150m đến hết địa phận xã Mai Sơn (Tuyến đường Quốc Lộ 37 đi xã Phiêng Pằn)",
+   "vt": [
+    420,
+    280,
+    180,
+    120,
+    100
+   ],
+   "ghiChu": "Bổ sung sau tuyến: Từ Đài tưởng niệm Thanh niên xung phong đi 200m theo hướng đi bản Nong Quỳnh"
+  },
+  {
+   "xa": "Xã Mai Sơn",
+   "nhom": "Các đường nhánh khác",
+   "ten": "Các tuyến đường còn lại thuộc khu vực thị trấn Hát Lót cũ",
+   "vt": [
+    700,
+    490,
+    340,
+    240,
+    170
+   ],
+   "ghiChu": "Bổ sung sau tuyến: Đoạn từ hết địa phận thị trấn Hát Lót (cũ) đến bản Nà Sẳng (hết tuyến đường nhựa)"
+  },
+  {
+   "xa": "Xã Mai Sơn",
+   "nhom": "Các đường nhánh khác",
+   "ten": "Các tuyến đường còn lại thuộc khu vực xã Hát Lót cũ và xã Cò Nòi cũ",
+   "vt": [
+    460,
+    290,
+    200,
+    140,
+    100
+   ],
+   "ghiChu": "Bổ sung sau tuyến: Đoạn từ hết địa phận thị trấn Hát Lót (cũ) đến bản Nà Sẳng (hết tuyến đường nhựa)"
+  },
+  {
+   "xa": "Xã Mai Sơn",
+   "nhom": "Đường Hát Lót - Chiềng Mung",
+   "ten": "Từ ngã ba địa chất (Km 277 + 300m Quốc lộ 6) + 40m đến hết đoàn địa chất 305",
+   "vt": [
+    490,
+    255,
+    190,
+    130,
+    85
+   ],
+   "ghiChu": "bổ sung tuyến mới"
+  },
+  {
+   "xa": "Xã Mai Sơn",
+   "nhom": "Đường Hát Lót - Chiềng Mung",
+   "ten": "Từ hết đất đoàn địa chất 305 đến ngã ba bản Nà Tiến (cũ)",
+   "vt": [
+    590,
+    250,
+    190,
+    130,
+    80
+   ],
+   "ghiChu": "Bổ sung sau tuyến: Từ ngã ba địa chất (Km 277 + 300m Quốc lộ 6) + 40m đến hết đoàn địa chất 305"
+  },
+  {
+   "xa": "Xã Phiêng Pằn",
+   "nhom": "Trục đường giao thông chính, khu dân cư",
+   "ten": "Tuyến đường Quốc Lộ 37 đi bản Chi đến Quốc lộ 6C",
+   "vt": [
+    530,
+    390,
+    320,
+    180,
+    110
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3.6"
+  },
+  {
+   "xa": "Xã Phiêng Pằn",
+   "nhom": "Trục đường giao thông chính, khu dân cư",
+   "ten": "Tuyến đường từ trung tâm xã Phiêng Pằn (Két Hay - Pá Nó) đi đến trạm Cọ (Quốc lộ 4G)",
+   "vt": [
+    530,
+    390,
+    320,
+    180,
+    110
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3.6"
+  },
+  {
+   "xa": "Xã Chiềng Mung",
+   "nhom": "Quốc lộ 4G",
+   "ten": "Đường từ ngã ba bản Mạt (ngã 3, 4G) đi trung tâm cai nghiện tỉnh hết địa phận xã Chiềng Mung",
+   "vt": [
+    525,
+    210,
+    165,
+    105,
+    70
+   ],
+   "ghiChu": "Bổ sung mới sau STT 2.3"
+  },
+  {
+   "xa": "Xã Chiềng Mung",
+   "nhom": "Đường tỉnh lộ 118",
+   "ten": "Từ ngã ba Quốc lộ 6 + 40m bản Bôm Cưa đi khu Công nghiệp Mai Sơn",
+   "vt": [
+    770,
+    540,
+    380,
+    270,
+    190
+   ],
+   "ghiChu": "Bổ sung sau tuyến: Từ giáp địa phận xã Mai Sơn đến đến hết xã Chiềng Mung"
+  },
+  {
+   "xa": "Xã Chiềng Khương",
+   "nhom": "",
+   "ten": "Từ Quốc lộ 4G đến cửa khẩu Chiềng Khương",
+   "vt": [
+    175,
+    140,
+    105,
+    95,
+    70
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3.13"
+  },
+  {
+   "xa": "Xã Sông Mã",
+   "nhom": "Trục đường giao thông chính; khu dân cư",
+   "ten": "Đường Lê Văn Lương: Đoạn từ hết đất nhà ông Trần Văn Tiến số nhà 20 đến hết đường",
+   "vt": [
+    1430,
+    1080,
+    710,
+    360,
+    210
+   ],
+   "ghiChu": "Bổ sung mới sau STT 24.17"
+  },
+  {
+   "xa": "Xã Sông Mã",
+   "nhom": "Trục đường giao thông chính; khu dân cư",
+   "ten": "Từ hết quán Tam Dinh đến hết đất ông Tường Thế Tá và đoạn hết quán Tam Dinh đến ngã ba nhà ông Quyền Hoan",
+   "vt": [
+    1100,
+    660,
+    500,
+    340,
+    170
+   ],
+   "ghiChu": "Bổ sung mới sau STT 24.17"
+  },
+  {
+   "xa": "Xã Sông Mã",
+   "nhom": "Trục đường giao thông chính; khu dân cư",
+   "ten": "Từ hết nhà ông Tường Thế Tá (số nhà 20) đến ngã ba nhà ông Hải Thuyên",
+   "vt": [
+    1430,
+    840,
+    520,
+    320,
+    190
+   ],
+   "ghiChu": "Bổ sung mới sau STT 24.17"
+  },
+  {
+   "xa": "Xã Sông Mã",
+   "nhom": "Trục đường giao thông chính; khu dân cư",
+   "ten": "Đường Lê Quý Đôn (Đoạn từ hết đất nhà ông Đỗ Ngọc Thảo đến hết đường (Trường THPT Sông Mã phân hiệu 2)",
+   "vt": [
+    1680,
+    1050,
+    600,
+    360,
+    250
+   ],
+   "ghiChu": "Bổ sung mới sau STT 24.17"
+  },
+  {
+   "xa": "Xã Sông Mã",
+   "nhom": "Trục đường giao thông chính; khu dân cư",
+   "ten": "Đường Chu Văn An (Đoạn từ hết đất nhà ông Lò Văn Chính đến ngã ba giao nhau với đường Lê Quý Đôn)",
+   "vt": [
+    1650,
+    990,
+    600,
+    360,
+    220
+   ],
+   "ghiChu": "Bổ sung mới sau STT 24.17"
+  },
+  {
+   "xa": "Xã Sông Mã",
+   "nhom": "Trục đường giao thông chính; khu dân cư",
+   "ten": "Đất các khu dân cư ven trục giao thông chính trên địa bàn xã Sông Mã (trừ các khu vực đã quy định giá đất)",
+   "vt": [
+    100,
+    85,
+    80,
+    75,
+    70
+   ],
+   "ghiChu": "Bổ sung mới sau STT 24.17"
+  },
+  {
+   "xa": "Xã Sốp Cộp",
+   "nhom": "Đường khu tái định cư D18-D19-D78-D79 (khu TT hành chính xã Sốp Cộp)",
+   "ten": "Từ D16 (Ngã tư Ngân hàng An Bình) đi D18 đến đất Thuế cơ sở 5, hai bên đường",
+   "vt": [
+    360,
+    320
+   ],
+   "ghiChu": "Bổ sung mới sau STT 3.3"
+  },
+  {
+   "xa": "Xã Sốp Cộp",
+   "nhom": "Các đoạn đường ven trung tâm xã Sốp Cộp",
+   "ten": "Từ hết đất ông Cà Văn Bình bản Nà Dìa đến ngã ba hướng đi bản Tông Hùm, hai bên đường",
+   "vt": [
+    150,
+    110,
+    80,
+    70,
+    60
+   ],
+   "ghiChu": "Bổ sung mới sau STT 8.9"
+  },
+  {
+   "xa": "Xã Sốp Cộp",
+   "nhom": "Các đoạn đường ven trung tâm xã Sốp Cộp",
+   "ten": "Các tuyến đường còn lại đi vào các bản (trừ các tuyến đã được quy định chi tiết tại bảng giá đất)",
+   "vt": [
+    110,
+    80,
+    75,
+    70,
+    55
+   ],
+   "ghiChu": "Bổ sung mới sau STT 8.9"
+  },
+  {
+   "xa": "Xã Sốp Cộp",
+   "nhom": "Các đoạn đường ven trung tâm xã Sốp Cộp",
+   "ten": "Các tuyến đường tại các bản: Bản Hua Mường, bản Sốp Cộp, bản Nà Lốc, bản Sốp Nặm, bản Nà Sài, bản Ban, bản Pe và bản Nà Dìa (xã Sốp Cộp cũ), hai bên đường",
+   "vt": [
+    140,
+    110,
+    80,
+    70,
+    55
+   ],
+   "ghiChu": "Bổ sung mới sau STT 8.9"
+  },
+  {
+   "xa": "Phường Tô Hiệu",
+   "nhom": "Đường giao thông 2A, 2B, 2C Khu quy hoạch dân cư OC - 01 và OC - 04",
+   "ten": "Đường quy hoạch rộng 11,5 m",
+   "vt": [
+    11900
+   ],
+   "ghiChu": "Bổ sung sau tuyến: Đường quy hoạch rộng 38m"
+  },
+  {
+   "xa": "Phường Chiềng An",
+   "nhom": "",
+   "ten": "Từ đầu đường Lò Văn Giá (cạnh trường THCS Chiềng An) đến đường asphalt bên kè từ bản Hài xuống đến bản Phiêng Ngùa",
+   "vt": [
+    2395,
+    1470,
+    1050,
+    700,
+    490
+   ],
+   "ghiChu": "Bổ sung mới sau STT 11.17"
+  },
+  {
+   "xa": "Phường Chiềng An",
+   "nhom": "",
+   "ten": "Khu dân cư bản Có Thé; bản Nam Nghè; bản Nam Giáng phường Chiềng An",
+   "vt": [
+    110
+   ],
+   "ghiChu": "Bổ sung mới sau STT 11"
+  },
+  {
+   "xa": "Phường Chiềng Sinh",
+   "nhom": "",
+   "ten": "Tuyến đường từ chân dốc Noong Đúc đến hết ngã tư bản Pắc Ma (đoạn giao nhau giữa đường rẽ đi tổ 4 và đường đi tổ 7 phường Chiềng Sinh",
+   "vt": [
+    2100,
+    1470,
+    1030,
+    720,
+    530
+   ],
+   "ghiChu": "Bổ sung mới sau STT cuối cùng 13.2"
+  },
+  {
+   "xa": "Phường Mộc Châu",
+   "nhom": "",
+   "ten": "Đường từ Ngã ba rẽ vào cầu kính Bạch Long (ĐT.102) đến hết địa phận phường Mộc Châu",
+   "vt": [
+    4550,
+    4200,
+    3150,
+    2450,
+    1750
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 9"
+  },
+  {
+   "xa": "Phường Mộc Châu",
+   "nhom": "",
+   "ten": "Từ Ngã ba QL 43 rẽ vào chùa Vạt Hồng đến hết thửa đất số 118 tờ bản đồ số 57 (Bản đồ 1999-2000)",
+   "vt": [
+    1750,
+    1260,
+    840,
+    560,
+    420
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 9"
+  },
+  {
+   "xa": "Phường Mộc Sơn",
+   "nhom": "Khu Tái định cư tổ dân phố 5 phường Mộc Sơn (thuộc Dự án xây dựng kết cấu hạ tầng và san nền khu dân cư tiểu khu 1)",
+   "ten": "Tuyến đường trục chính đô thị - nội thị",
+   "vt": [
+    4970
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 10.4"
+  },
+  {
+   "xa": "Phường Mộc Sơn",
+   "nhom": "Khu Tái định cư tổ dân phố 5 phường Mộc Sơn (thuộc Dự án xây dựng kết cấu hạ tầng và san nền khu dân cư tiểu khu 1)",
+   "ten": "Tuyến đường nội thị khu Tái định cư tổ dân phố 5 (quy hoạch 13,5m)",
+   "vt": [
+    2800
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 10.4"
+  },
+  {
+   "xa": "Phường Mộc Sơn",
+   "nhom": "Khu Tái định cư tổ dân phố 5 phường Mộc Sơn (thuộc Dự án xây dựng kết cấu hạ tầng và san nền khu dân cư tiểu khu 1)",
+   "ten": "Tuyến đường nội thị khu Tái định cư tổ dân phố 5 (quy hoạch 11,5m)",
+   "vt": [
+    1610
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 10.4"
+  },
+  {
+   "xa": "Phường Mộc Sơn",
+   "nhom": "",
+   "ten": "Tuyến đường bờ kè 34",
+   "vt": [
+    2800
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 10"
+  },
+  {
+   "xa": "Phường Vân Sơn",
+   "nhom": "Phố Tô Vĩnh Diện",
+   "ten": "Từ Ngã tư khách sạn Trường Giang (hướng đi về xưởng bột) đến hết địa phận xã Vân Sơn",
+   "vt": [
+    5240,
+    3950,
+    2580,
+    1770,
+    1050
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 7"
+  },
+  {
+   "xa": "Phường Vân Sơn",
+   "nhom": "Các tuyến đường nội thị khác",
+   "ten": "Đường từ Quốc lộ 6 đến hết địa phận phường Vân Sơn (giáp địa phận bản Thuông Cuông, xã Vân Hồ) (quy hoạch 30 m)",
+   "vt": [
+    7070
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 10.5"
+  },
+  {
+   "xa": "Phường Vân Sơn",
+   "nhom": "Các tuyến đường nội thị khác",
+   "ten": "Đường từ Quốc lộ 6 đến hết địa phận phường Vân Sơn (giáp địa phận bản Thuông Cuông, xã Vân Hồ) (quy hoạch trên 6 m đến 9 m)",
+   "vt": [
+    5040
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 10.5"
+  },
+  {
+   "xa": "Phường Vân Sơn",
+   "nhom": "Các tuyến đường nội thị khác",
+   "ten": "Đường từ Quốc lộ 6 đến hết địa phận phường Vân Sơn, tỉnh Sơn La (giáp địa phận bản Thuông Cuông, xã Vân Hồ) (quy hoạch 6 m)",
+   "vt": [
+    3500
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 10.5"
+  },
+  {
+   "xa": "Phường Vân Sơn",
+   "nhom": "Các tuyến đường nội thị khác",
+   "ten": "Đường Tỉnh lộ 101b (Từ ngã ba Km 64 đến giáp địa phận xã Vân Hồ)",
+   "vt": [
+    2890,
+    1930,
+    790,
+    530,
+    350
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 10.5"
+  },
+  {
+   "xa": "Phường Vân Sơn",
+   "nhom": "Khu dân cư thuộc quy hoạch Hạ tầng bến xe khách Mộc Châu và khu dân cư lân cận tại tổ dân phố Hoa Đào, phường Vân Sơn",
+   "ten": "Tuyến đường nội thị khu dân cư quy hoạch 8,5 m",
+   "vt": [
+    5040
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 11"
+  },
+  {
+   "xa": "Phường Vân Sơn",
+   "nhom": "Khu dân cư thuộc quy hoạch Hạ tầng bến xe khách Mộc Châu và khu dân cư lân cận tại tổ dân phố Hoa Đào, phường Vân Sơn",
+   "ten": "Tuyến đường nội thị khu dân cư quy hoạch 5,5 m",
+   "vt": [
+    3500
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 11"
+  },
+  {
+   "xa": "Xã Phiêng Khoài",
+   "nhom": "Trung tâm xã Phiêng Khoài",
+   "ten": "Dọc tuyến đường QL6C (trừ trung tâm xã Phiêng Khoài)",
+   "vt": [
+    230,
+    210,
+    200,
+    150,
+    130
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 2.12"
+  },
+  {
+   "xa": "Xã Phiêng Khoài",
+   "nhom": "Trung tâm xã Phiêng Khoài",
+   "ten": "Đất ở nông thôn còn lại trên địa bàn xã Phiêng Khoài",
+   "vt": [
+    100,
+    85,
+    80,
+    75,
+    70
+   ],
+   "ghiChu": "Bổ sung tuyến mới sau STT 2.12"
+  }
+ ],
+ "plIV": [
+  {
+   "xa": "Xã Đoàn Kết",
+   "stt": "1",
+   "cu": "Quốc lộ 43 từ bản Muống Phiêng Luông đến Bến phà Vạn Yên",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Đoàn Kết",
+   "stt": "1.5",
+   "cu": "Từ Nhà văn hóa bản Đoàn Kết đến hết đất nhà Ông Thoan Bích (bản Đoàn Kết)",
+   "moi": "Từ Nhà văn hóa bản đoàn kết đến hết đất nhà ông Mùi Văn Hòa (bản Kè Tèo)"
+  },
+  {
+   "xa": "Xã Đoàn Kết",
+   "stt": "2",
+   "cu": "Khu Trung tâm xã Đoàn Kết, xã Chiềng Chung cũ (nay thuộc xã Đoàn Kết)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Đoàn Kết",
+   "stt": "2.9",
+   "cu": "Từ hướng đi xã Tà Lại (cũ) (nay thuộc xã Đoàn Kết) +100m đến đường rẽ vào UBND xã Tà Lại (cũ) (nay thuộc xã Đoàn Kết) + 200m",
+   "moi": "Sửa đổi STT (từ mục 2.8 xuống mục 2.9)"
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "stt": "2",
+   "cu": "Tỉnh lộ 101",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "stt": "2.5",
+   "cu": "Từ cách đường lên trụ sở UBND xã Liên Hòa 500m đến hết đường bê tông đi bản Tường Liên",
+   "moi": "Từ cách đường lên trụ sở UBND xã Liên Hòa cũ (nay thuộc xã Song Khủa) 500m đến hết đường bê tông đi bản Tân Hợp"
+  },
+  {
+   "xa": "Xã Tô Múa",
+   "stt": "2",
+   "cu": "Tỉnh lộ 101 (Quốc lộ 43 đi trung tâm xã Chiềng Khoa cũ)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Tô Múa",
+   "stt": "2.2",
+   "cu": "Từ hết đất nhà máy chế biến nông sản Sơn Hà đến ngã ba bản Mường Khoa",
+   "moi": "Từ hết đất nhà máy chế biến nông sản Sơn Hà đến ngã ba bản Mường Khoa (rẽ đi xã Vân Hồ)"
+  },
+  {
+   "xa": "Xã Tô Múa",
+   "stt": "3",
+   "cu": "Từ tỉnh lộ 101 đến trung tâm xã Suối Bàng cũ",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Tô Múa",
+   "stt": "3.2",
+   "cu": "Từ hết đất nhà máy chè Tô Múa đến hết đất khu dân cư bản Liên Hưng",
+   "moi": "Từ hết đất nhà máy chè Tô Múa đến hết đất khu dân cư bản Hợp Nhất"
+  },
+  {
+   "xa": "Xã Tô Múa",
+   "stt": "3.3",
+   "cu": "Từ hết đất khu dân cư bản Liên Hưng xã Tô Múa đến cách cổng trụ sở UBND xã Suối Bàng cũ 500m",
+   "moi": "Từ hết đất khu dân cư bản Hợp Nhất xã Tô Múa đến cách cổng trụ sở UBND xã Suối Bàng cũ 500m"
+  },
+  {
+   "xa": "Xã Tô Múa",
+   "stt": "4",
+   "cu": "Tỉnh lộ 101 (đi xã Vân Hồ)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Tô Múa",
+   "stt": "4.1",
+   "cu": "Từ ngã ba đường đi bản Khòng đến đường lên UBND xã Mường Men cũ (nay thuộc xã Vân Hồ) 5000m",
+   "moi": "Từ ngã ba đường đi bản Nà Chá đến Ngã 3 bản Khòng"
+  },
+  {
+   "xa": "Xã Tô Múa",
+   "stt": "4.3",
+   "cu": "Từ ngã ba đi bản Chiềng Khòng đến cách đường lên trụ sở UBND xã Mường Men 500m (thuộc địa phận xã Tô Múa)",
+   "moi": "Từ ngã ba đi bản Khòng đến cách đường lên trụ sở UBND xã Mường Men 500m (thuộc địa phận xã Tô Múa)"
+  },
+  {
+   "xa": "Xã Xuân Nha",
+   "stt": "1",
+   "cu": "Tỉnh lộ 102 (đi xã Chiềng Sơn)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Xuân Nha",
+   "stt": "1.1",
+   "cu": "Tính từ địa phận xã Xuân Nha đên ngã ba bản Nà Hiềng (đi Chiềng Sơn)",
+   "moi": "Tính từ địa phận xã Xuân Nha đến ngã ba Nà Hiềng bản Xuân Nha (đi Chiềng Sơn)"
+  },
+  {
+   "xa": "Xã Xuân Nha",
+   "stt": "1.2",
+   "cu": "Từ ngã ba bản Nà Hiềng đến hết địa phận bản Chiềng Hin, xã Xuân Nha (đi chiềng Sơn)",
+   "moi": "Từ ngã ba Nà Hiềng bản Xuân Nha đến hết địa phận Chiềng Hin bản Chiềng Chung, xã Xuân Nha (đi chiềng Sơn)"
+  },
+  {
+   "xa": "Xã Xuân Nha",
+   "stt": "1.3",
+   "cu": "Từ ngã ba Nà Hiềng (Tỉnh lộ 102) đến ngã ba đi bản Tưn - Pù Lầu",
+   "moi": "Từ ngã ba Nà Hiềng bản Xuân Nha (Tỉnh lộ 102) đến ngã ba Mắn Ỏi đi bản Pù Tưn"
+  },
+  {
+   "xa": "Xã Xuân Nha",
+   "stt": "1.4",
+   "cu": "Từ ngã ba bản Tưn - Pù Lầu đến hết cầu bản Bướt",
+   "moi": "Từ ngã ba Mắn Ỏi bản Pù Tưn đến hết cầu Bướt bản Tân Xuân"
+  },
+  {
+   "xa": "Xã Xuân Nha",
+   "stt": "1.5",
+   "cu": "Cầu bản Bướt đến nhà văn hóa bản Ngà",
+   "moi": "Cầu khu Bướt đến nhà văn hóa khu Ngà bản Tân Xuân"
+  },
+  {
+   "xa": "Xã Xuân Nha",
+   "stt": "1.6",
+   "cu": "Nhà văn hóa bản Ngà đến hết khu dân cư bản Cột Mốc",
+   "moi": "Nhà văn hóa khu Ngà bản Tân Xuân đến hết khu dân cư bản Cột Mốc"
+  },
+  {
+   "xa": "Xã Xuân Nha",
+   "stt": "1.7",
+   "cu": "Cầu bản Bướt đến điểm y tế bản Bướt",
+   "moi": "Cầu khu Bướt đến điểm y tế bản Tân Xuân"
+  },
+  {
+   "xa": "Xã Xuân Nha",
+   "stt": "1.8",
+   "cu": "Từ điểm y tế bản Bướt đến hết khu dân cư bản Sa Lai",
+   "moi": "Từ điểm y tế bản Tân Xuân đến hết khu dân cư bản Sa Lai"
+  },
+  {
+   "xa": "Xã Xuân Nha",
+   "stt": "1.9",
+   "cu": "Ngã ba bản Tư đến hết khu dân cư bản Pù Lầu",
+   "moi": "Ngã ba Mắn Ỏi bản Pù Tưn đến hết khu dân cư Pù Lầu bản Pù Tưn"
+  },
+  {
+   "xa": "Xã Xuân Nha",
+   "stt": "1.11",
+   "cu": "Các tuyến đường nội bản các bản: Mường An, Nà An, bản Thín, Chiềng Hin, Chiềng Nưa, Nà Hiềng, bản Tưn, Thắm Tôn, bản Bướt, bản Ngà (trừ khu vực đã quy định giá đất)",
+   "moi": "Các tuyên đường nội bản các bản: Mường An, bản Xuân Nha, Chiềng Chung, bản Pù Tưn, Thắm Tôn, bản Tân Xuân (trừ khu vực đã quy định gia đất)"
+  },
+  {
+   "xa": "Xã Quỳnh Nhai",
+   "stt": "4",
+   "cu": "Khu đất trường Mầm non cũ xã Chiềng Khoang cũ (nay thuộc xã Quỳnh Nhai)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Quỳnh Nhai",
+   "stt": "4.2",
+   "cu": "Từ Quốc lộ 6B lên bản Sảng, xã Chiềng Khoang cũ (nay thuộc xã Quỳnh Nhai)",
+   "moi": "Từ Quốc lộ 6B lên bản Hoa Sản, xã Chiềng Khoang cũ (nay thuộc xã Quỳnh Nhai)."
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "stt": "1",
+   "cu": "Trục đường Tỉnh lộ 107",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "stt": "1.2",
+   "cu": "Từ hết địa phận xã Mường Giôn đến hết địa phận đất nhà công vụ xã Mường Chiên (nay thuộc xã Mường Chiên)",
+   "moi": "Từ hết địa phận xã Mường Giôn đến mép cống thoát nước nhà quán ông Lường Văn Thiết (bản Có Nọi)"
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "stt": "1.3",
+   "cu": "Từ ngã 3 Huổi Kẹm, bản Phiêng Pay đến hết địa phận xã Chiềng Khay cũ (nay thuộc xã Mường Chiên) (giáp ranh giới Lai Châu)",
+   "moi": "Đường 107: Từ ngã 3 Huổi Kẹm, bản Phiêng Pay đến hết địa phận xã Chiềng Khay cũ (nay thuộc xã Mường Chiên) (giáp ranh giới Lai Châu)"
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "stt": "2",
+   "cu": "Trục đường chính",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "stt": "2.9",
+   "cu": "Từ cổng chào văn hóa bản Có Luông đi bản Khâu Pùm (hết địa phận xã Mường Chiên)",
+   "moi": "Từ Chân dốc Đông Hiêm đến cống bản Có Luông"
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "stt": "1",
+   "cu": "Đoạn từ cầu trên đường Tây Bắc giáp chợ hướng Sơn La (Cae 2 bên đường)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "stt": "1.1",
+   "cu": "Đường Tây Bắc (Hướng đi Sơn La)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "stt": "-",
+   "cu": "Từ Km 335 + 750m (từ cầu suối cạn đi đường Trung Dũng - Tiểu khu 6) đến đường vào Bệnh viện đa khoa khu vực Thuận Châu",
+   "moi": "Từ Km 335 + 750m (từ cầu suối cạn đi đường Trung Dũng - thôn 5) đến đường vào Bệnh viện đa khoa khu vực Thuận Châu"
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "stt": "1.3",
+   "cu": "Đường Tây Bắc (Hướng đi Điện Biên)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "stt": "-",
+   "cu": "Từ hết Km 335+750m (từ cầu suối cạn đường vào phòng Giáo dục tiểu khu 6 thị trấn đến Km 336+100m (đến đầu lên phố Nguyễn Lương Bằng)",
+   "moi": "Từ hết Km 335+750m (từ cầu suối cạn đi đường Trung Dũng - thôn 5) đến Km 336+100m (đến đầu lên phố Nguyễn Lương Bằng)"
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "stt": "2",
+   "cu": "Đường 21-11 (Hướng đi Điện Biên)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "stt": "2.1",
+   "cu": "Từ hết Km 336 + 530m (Từ cách ngã ba đường 21-11 đường đi Co Mạ hướng đi Điện Biên 20m) đến Km 337 + 420m (đến hết đất hồ Noong Hoi tiểu khu Ta Ngần, xã Thuận Châu)",
+   "moi": "Từ hết Km 336 + 100m (Từ đầu lên phố Nguyễn Lương Bằng) đến Km 336 + 280m (đến khu đất hạt 108)"
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "stt": "2.3",
+   "cu": "Từ hết Km 336 + 530m (Từ cách ngã ba đường 21-11 đường đi Co Mạ hướng đi Điện Biên 20m) đến Km 338 + 260m (đến hết đất hồ Noong Hoi bản Bó xã Chiềng Ly)",
+   "moi": "Từ hết Km 336 + 530m (Từ cách ngã ba đường 21-11 đường đi Co Mạ hướng đi Điện Biên 20m) đến Km 337 + 420m (đến hết đất hồ Noong Hoi bản Bó, xã Thuận Châu)"
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "stt": "2.4",
+   "cu": "Từ Km 337+420m (Từ khu vực hồ Noong Hoi, tiểu khu Ta Ngần, xã Thuận Châu) đến Km 338 + 260m (Đến khu vực nghĩa trang bản Coóng)",
+   "moi": "Từ Km 337+420m (Từ khu vực hồ Noong Hoi, bản Bó, xã Thuận Châu) đến Km 338 + 260m (Đến khu vực nghĩa trang bản Coóng)"
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "stt": "11",
+   "cu": "Phố Lê Hữu Trác (Cả hai bên)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "stt": "11.3",
+   "cu": "Các tuyến đường thuộc khu dân cư Tiểu khu 9",
+   "moi": "Các tuyến đường thuộc khu dân cư Tiểu khu 9, thị trấn Thuận Châu cũ"
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "stt": "15",
+   "cu": "Từ ngã 3 Quốc lộ 6 hướng đi Sơn La (hai bên đường)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "stt": "15.2",
+   "cu": "Từ hết Km 327+400m (hết khu đất chợ) đến Km 327+300m (đến hết đất nhà ông Nhã Loan Tiểu khu 1 Tông Lạnh)",
+   "moi": "Từ hết Km 327+400m (hết khu đất chợ) đến Km 327+220m (Đến hết cây xăng dầu Lương Thực - Thôn 1)"
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "stt": "15.4",
+   "cu": "Từ hết Km 327+220m (từ giáp đất cây xăng dầu Lương Thực TK 1 đến Km 326+775m (Giáp cầu Vòm Chiềng Pấc)",
+   "moi": "Từ hết Km 327+220m (từ giáp đất cây xăng dầu Lương Thực Tiểu khu 1 Tông Lạnh cũ đến Km 326+775m (Giáp cầu Vòm (Chiềng Pấc cũ))"
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "stt": "16",
+   "cu": "Từ Trung tâm đường Quốc Lộ 6 hướng đi Quỳnh Nhai (hai bên đường Quốc lộ 6B)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "stt": "16.2",
+   "cu": "Từ hết Km 00+ 250m (từ giáp đất nhà ông Dung Bản cũ) đến ngã ba bản Bai (giao với đường Quốc Lộ 6B) (Tiểu khu 4 Tông Lạnh)",
+   "moi": "Từ hết Km 00+250m (từ giáp đất nhà ông Dung Bản cũ) đến ngã ba bản Bai (giao với đường Quốc Lộ 6B) (Tiểu khu 4 Tông Lạnh cũ)"
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "stt": "17",
+   "cu": "Trung tâm ngã ba đường Quốc lộ 6 hướng đi Thuận Châu",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "stt": "17.1",
+   "cu": "Từ ngã ba Quốc lộ 6 Km 328+200m (Đường đi Quỳnh Nhai) đến Km 328+400 m (Đến hết đất của hàng xăng dầu Tiểu khu 3 Tông Lạnh)",
+   "moi": "Từ ngã ba Quốc lộ 6 Km 328+200m (Đường đi Quỳnh Nhai) đến Km 328+400 m (Đến hết đất cửa hàng xăng dầu (Tiểu khu 3 Tông Lạnh cũ))"
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "stt": "17.2",
+   "cu": "Từ hết Km 328 + 360m (Từ giáp đất cửa hàng xăng dầu Tiểu khu 3 Tông Lạnh) đến Km 328 + 600m (Đến hết đất nhà ông Quàng Sơ bản Cuông Mường xã Tông lạnh)",
+   "moi": "Từ hết Km 328 + 360m (Từ giáp đất cửa hàng xăng dầu - Thôn 3) đến Km 328 + 600m (Đến hết đất nhà ông Quàng Sơ bản Công Mường, xã Thuận Châu"
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "stt": "17.3",
+   "cu": "Từ Km 328 + 600m (hết đất nhà ông Quàng Sơ bản Cuông Mường xã Tông Lạnh cũ) đến khu đất ao quốc phòng",
+   "moi": "Từ Km 328 + 600m (hết đất nhà ông Quàng Sơ bản Cuông Mường xã Tông Lạnh cũ) đến hết đất quán ăn Hương Rừng"
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "stt": "19",
+   "cu": "Trung tâm xã Chiềng Pấc, xã Phổng Ly, xã Thôm Mòn cũ (nay thuộc xã Thuận Châu)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "stt": "19.2",
+   "cu": "Từ cách cổng nhà máy Xi măng 100m hướng đi Thuận Châu đến hết đất Trung tâm dịch vụ nông nghiệp (đường vào bản Xi Măng)",
+   "moi": "Từ cách cổng nhà máy Xi măng 100m hướng đi Thuận Châu đến hết đất Trung tâm giáo dục thường xuyên Thuận Châu (đường vào bản Xi Măng)"
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "stt": "19.3",
+   "cu": "Từ hết đất Trung tâm dịch vụ nông nghiệp (đường vào bản Xi Măng) đến cầu Vòm",
+   "moi": "Từ hết đất Trung tâm giáo dục thường xuyên Thuận Châu (đường vào bản Xi Măng) đến Cầu Vòm"
+  },
+  {
+   "xa": "Xã Chiềng La",
+   "stt": "1",
+   "cu": "Quốc lộ 6B (cả 2 bên)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Chiềng La",
+   "stt": "1.9",
+   "cu": "Đoạn đường từ cầu bản Hình đến hết đất nhà Đinh Văn Hùng",
+   "moi": "Đoạn đường từ cầu bản Hình đến giáp đất xã Thuận Châu"
+  },
+  {
+   "xa": "Xã Chiềng La",
+   "stt": "2",
+   "cu": "Quốc lộ 6B Nong Lay - Chiềng La - Chiềng Pha (cả 2 bên)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Chiềng La",
+   "stt": "2.1",
+   "cu": "Từ đất nhà ông Cà văn Thuận đến hết đất ông Bạc Cầm Cấp",
+   "moi": "Từ đất nhà ông Cà Văn Thuận ( ngã 3 Chiềng Cang) đến hết đất ông Bạc Cầm Cấp"
+  },
+  {
+   "xa": "Xã Chiềng La",
+   "stt": "3",
+   "cu": "Tỉnh lộ 116 (cả 2 bên)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Chiềng La",
+   "stt": "3.1",
+   "cu": "Từ đất nhà Lò Văn Xôm đến đất nhà ông Quàng Văn Ngấn",
+   "moi": "Đoạn đường từ cầu bản Hình đến giáp đất xã Mường Khiêng"
+  },
+  {
+   "xa": "Xã Chiềng La",
+   "stt": "3.2",
+   "cu": "Từ đất nhà ông Lò Văn Hoá đến giáp đất xã Mường Khiêng",
+   "moi": "Từ đất nhà ông Lò Văn Hoá (bản Mện) đến giáp đất xã Mường Khiêng"
+  },
+  {
+   "xa": "Xã Chiềng La",
+   "stt": "4",
+   "cu": "Các đường nhánh nối với Quốc lộ 6B",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Chiềng La",
+   "stt": "4.2",
+   "cu": "Từ Cổng trào bản Cọ đến Cổng trào bản Phé 2,5 km",
+   "moi": "Từ Cổng trào bản Cọ đến hết đất ông Quàng Văn Tom (trừ lô đất giáp đường QL 6B)"
+  },
+  {
+   "xa": "Xã Chiềng La",
+   "stt": "4.3",
+   "cu": "Từ nhà ông Pẩu đến nhà ông Sai 1km",
+   "moi": "Từ đầu ngõ nhà ông Pẩu (Nhâm) đến hết đất Nhà văn hoá bản Phé (trừ lô đất giáp đường QL 6B)"
+  },
+  {
+   "xa": "Xã Chiềng La",
+   "stt": "4.4",
+   "cu": "Từ nhà xưởng ông Cường đến nhà ông Óng 0,9 km",
+   "moi": "Từ đầu ngõ nhà xưởng ông Cường đến hết đất ông Quàng Văn Tiếng bản Phé (trừ lô đất giáp đường QL 6B)"
+  },
+  {
+   "xa": "Xã Chiềng La",
+   "stt": "4.5",
+   "cu": "Từ nhà ông Bốn đến nhà ông Chỉnh 1km",
+   "moi": "Từ đầu ngõ nhà ông Bốn đến hết đất ông Chỉnh Anh (trừ lô đất giáp đường QL 6B)"
+  },
+  {
+   "xa": "Xã Chiềng La",
+   "stt": "4.6",
+   "cu": "Từ nhà bà Lệ đến nhà ông Thích 0,5 km",
+   "moi": "Từ đầu ngõ nhà bà Lệ đến hết đất ông Pẩu (trừ lô đất giáp đường QL 6B)"
+  },
+  {
+   "xa": "Xã Chiềng La",
+   "stt": "4.8",
+   "cu": "Từ nhà ông Lánh đến nhà ông Dũng 0,2km",
+   "moi": "Từ đầu ngõ nhà ông Lánh đến hết đất ông Lò Văn Sơ bản Bó Mạ (trừ lô đất giáp đường QL 6B)"
+  },
+  {
+   "xa": "Xã Chiềng La",
+   "stt": "5",
+   "cu": "Các đường nhánh nối với Quốc lộ 6B (Nong Lay - Chiềng La - Chiềng Pha)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Chiềng La",
+   "stt": "5.1",
+   "cu": "Từ nhà ông Chiến đến nhà ông Thoan Huy 0,8 km",
+   "moi": "Từ nhà ông Chiến (chỉnh) đến nhà ông Thoan Huy bản Chiềng La (trừ lô đất giáp QL6B)"
+  },
+  {
+   "xa": "Xã Chiềng La",
+   "stt": "5.2",
+   "cu": "Từ nhà ao ông Túng đến hết cuối bản Song 4,5km",
+   "moi": "Từ hết đất ông Hoa đến hết đất ông Lò Văn Đôi bản Song (trừ lô đất giáp QL6B)"
+  },
+  {
+   "xa": "Xã Chiềng La",
+   "stt": "5.3",
+   "cu": "Từ nhà ông Nính ( Hương) đi ra quốc lộ 6 b 1,5km",
+   "moi": "Từ ngã ba đi Nong Lanh đi ra Quốc lộ 6b hướng qua bản Nong Lanh cũ đến đầu đường QL6B (trừ lô đất giáp QLộ 6B)"
+  },
+  {
+   "xa": "Xã Chiềng La",
+   "stt": "6",
+   "cu": "Các đường nhánh nối với đường tỉnh lộ 116",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Chiềng La",
+   "stt": "6.1",
+   "cu": "Từ nhà ông Kiên Nhẫn đi vào bản Huổi táp 1,5km",
+   "moi": "Từ ngõ nhà ông Kiên Nhẫn đi vào bản Huổi Táp (1,5km) (trừ lô đất giáp đường tỉnh lộ 116)"
+  },
+  {
+   "xa": "Xã Chiềng La",
+   "stt": "6.2",
+   "cu": "Từ ngã ba bản Lè đi vào bản Bay giáp xã Chiềng Đen Thành Phố 9km",
+   "moi": "Từ ngã ba bản Lè đi vào bản Bay đến giáp xã Chiềng Đen Thành Phố Sơn La (cũ) (9km) trừ lô đất giáp đường tỉnh lộ 116)"
+  },
+  {
+   "xa": "Xã Long Hẹ",
+   "stt": "1",
+   "cu": "Bản Hua Ty (xã Nậm Lầu cũ) đến bản Cha Mạy (xã Long Hẹ)",
+   "moi": "Bản Hua Ty (xã Nậm Lầu) đến bản Cha Mạy (xã Long Hẹ)"
+  },
+  {
+   "xa": "Xã Long Hẹ",
+   "stt": "1.2",
+   "cu": "Từ nhà ông Thào Chứ Trịa (bản Co Nhừ) đến nhà thờ Bác Hồ (Cha Mạy)",
+   "moi": "Từ nhà ông Thào A Thành (bản Co Nhừ) đến nhà thờ Bác Hồ (bản Cha Mạy)"
+  },
+  {
+   "xa": "Xã Mường La",
+   "stt": "15",
+   "cu": "Trung tâm xã Pi Toong, xã Chiềng San, xã Nậm Păm, xã Mường Trai, xã Chiềng Muôn cũ (nay thuộc xã Mường La)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Mường La",
+   "stt": "15.1",
+   "cu": "Từ ngã ba điểm trạm y tế Pi Toong đi các hướng trục chính 800m",
+   "moi": "Từ ngã ba điểm trạm y tế Pi Toong đi các hướng trục chính 1.500m"
+  },
+  {
+   "xa": "Xã Mường La",
+   "stt": "15.9",
+   "cu": "Từ cổng trường bán trú TH&THCS Mường Trai đến điểm trạm y tế Mường Trai",
+   "moi": "Các trục đường chính trong khu dân cư của bản Mường Trai"
+  },
+  {
+   "xa": "Xã Mường Bú",
+   "stt": "2",
+   "cu": "Trung tâm xã Mường Bú, xã Tạ Bú, xã Mường Chùm (nay thuộc xã Mường Bú)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Mường Bú",
+   "stt": "2.10",
+   "cu": "Từ cổng UBND Tạ Bú cũ (nay thuộc xã Mường Bú) đi các hướng trục chính 200m",
+   "moi": "Từ cầu bản Mòn đến trụ sở UBND xã Tạ Bú cũ"
+  },
+  {
+   "xa": "Xã Tà Xùa",
+   "stt": "1",
+   "cu": "Tỉnh lộ 112 xã Tà Xùa",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Tà Xùa",
+   "stt": "1.2",
+   "cu": "Đoạn từ nhà ông Trịnh Xuân Lộc ngã ba Tỉnh lộ 112 - Háng Đồng dài 800m",
+   "moi": "Tỉnh lộ 112: Đoạn từ nhà ông Trịnh Xuân Lộc đến ngã ba Tỉnh lộ 112 đi Háng Đồng dài 800m"
+  },
+  {
+   "xa": "Xã Tà Xùa",
+   "stt": "1.3",
+   "cu": "Đoạn tiếp giáp ngã ba tỉnh lộ 112 - Háng Đồng, theo Tỉnh lộ 112 đi về phía xã Làng Chếu cũ (nay thuộc xã Tà Xùa) 300m",
+   "moi": "Đoạn tiếp giáp ngã ba tỉnh lộ 112 - Háng Đồng, theo Tỉnh lộ 112 đi về phía xã Làng Chếu cũ 300m"
+  },
+  {
+   "xa": "Xã Tà Xùa",
+   "stt": "1.5",
+   "cu": "Đoạn từ nhà ông Phông đến Cua bể nước đầu nguồn Suối Cao thuộc bản Cáo A xã Làng Chếu cũ (nay thuộc xã Tà Xùa) dài 500m",
+   "moi": "Đoạn từ nhà ông Phông đến Cua bể nước đầu nguồn Suối Cao thuộc bản Làng Cao (bản Cáo A xã Làng Chếu cũ) dài 500m"
+  },
+  {
+   "xa": "Xã Tà Xùa",
+   "stt": "1.10",
+   "cu": "Đoạn từ ngã ba 112 đi hướng xã Háng Đồng cũ (nay thuộc xã Tà Xùa) dài 400m",
+   "moi": "Đoạn từ ngã ba 112 đi hướng xã Háng Đồng cũ dài 400m"
+  },
+  {
+   "xa": "Xã Tà Xùa",
+   "stt": "2",
+   "cu": "Các đường khu vực xã Háng Đồng, xã Làng Chếu cũ (nay thuộc xã Tà Xùa)",
+   "moi": "Các đường khu vực xã Tà Xùa"
+  },
+  {
+   "xa": "Xã Tà Xùa",
+   "stt": "2.1",
+   "cu": "Từ cổng trụ sở UBND xã Háng Đồng cũ (nay thuộc xã Tà Xùa) đi về hai hướng mỗi bên 150m",
+   "moi": "Từ cổng trụ sở UBND xã Háng Đồng cũ đi về hai hướng mỗi bên 150m"
+  },
+  {
+   "xa": "Xã Tà Xùa",
+   "stt": "2.3",
+   "cu": "Đoạn từ ngã ba đi Xím Vàng đến cách trụ sở UBND xã Làng Chếu cũ (nay thuộc xã Tà Xùa) 200m",
+   "moi": "Đoạn từ ngã ba đi Xím Vàng đến cách trụ sở UBND xã Làng Chếu cũ 200m"
+  },
+  {
+   "xa": "Xã Tà Xùa",
+   "stt": "2.6",
+   "cu": "Đoạn từ ngã ba đi UBND xã Làng Chếu cũ (nay thuộc xã Tà Xùa) đến hết bản Cáo B theo Tỉnh lộ 112",
+   "moi": "Đoạn từ ngã ba đi UBND xã Làng Chếu cũ đến hết bản Cáo B theo Tỉnh lộ 112"
+  },
+  {
+   "xa": "Xã Tà Xùa",
+   "stt": "2.10",
+   "cu": "Từ đường tiểu học Làng Chếu đến trung tâm bản trang Dua Hang (khu 1,2)",
+   "moi": "Từ trường tiểu học Làng Chếu đến trung tâm bản Trang Dua Hang cũ (bản Làng Cao)"
+  },
+  {
+   "xa": "Xã Tạ Khoa",
+   "stt": "1",
+   "cu": "Tuyến dọc quốc lộ 37",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Tạ Khoa",
+   "stt": "1.1",
+   "cu": "Đoạn cầu Tạ Khom đến Pom Đồn",
+   "moi": "Đoạn cầu Tạ Khoa đến Pom Đồn"
+  },
+  {
+   "xa": "Xã Tạ Khoa",
+   "stt": "1.3",
+   "cu": "Từ cầu Suối Pót +300m đến ngã ba bản Cái Khẻ",
+   "moi": "Từ cầu Suối Pót +300m đến ngã ba bản Cáy Khẻ"
+  },
+  {
+   "xa": "Xã Tạ Khoa",
+   "stt": "1.4",
+   "cu": "Từ đỉnh đèo Chẹn đến ngã ba bản Cái Khẻ",
+   "moi": "Từ đỉnh đèo Chẹn đến ngã ba bản Cáy Khẻ"
+  },
+  {
+   "xa": "Xã Pắc Ngà",
+   "stt": "1",
+   "cu": "Các đường khu vực xã Pắc Ngà, xã Chim Vàn cũ (nay thuộc xã Pắc Ngà)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Pắc Ngà",
+   "stt": "1.1",
+   "cu": "Đoạn từ cổng chào bản Bước (1) vào trung tâm xã đến đường rẽ vào Trường Mầm non Hướng Dương theo hướng bản Ảng",
+   "moi": "Đoạn từ cổng chào bản Bước (1) vào trung tâm xã đến đường rẽ vào Trường Mầm non Pắc Ngà theo hướng bản Sải Ảng"
+  },
+  {
+   "xa": "Xã Pắc Ngà",
+   "stt": "-",
+   "cu": "Đoạn từ đường rẽ vào trường Mầm non Hướng Dương đến Suối Ngà bản Bước theo hướng đi bản Ảng",
+   "moi": "Đoạn từ đường rẽ vào trường Mầm non Pắc Ngà đến Suối Ngà ban Bước theo hướng đi bản Sài Ảng"
+  },
+  {
+   "xa": "Xã Pắc Ngà",
+   "stt": "-",
+   "cu": "Đoạn Từ Suối Ngà bản Bước đến nhà ông Uồn bản Ảng",
+   "moi": "Đoạn Từ Suối Ngà bản Bước đến nhà ông Uồn bản Sài Ảng"
+  },
+  {
+   "xa": "Xã Pắc Ngà",
+   "stt": "-",
+   "cu": "Đoạn từ nhà ông Uồn bản Ảng đến suối Tà Đông bản Nà Sài",
+   "moi": "Đoạn từ nhà ông Uồn bản Ảng đến suối Tà Đông bản Sài Ảng"
+  },
+  {
+   "xa": "Xã Pắc Ngà",
+   "stt": "1.3",
+   "cu": "Đoạn từ nhà ông Khoán đến cổng chào bản Nà Tiến (đầu cầu Suối Chim)",
+   "moi": "Đoạn từ nhà ông Khoán đến cổng chào bản Thượng Tiến (đầu cầu Suối Chim)"
+  },
+  {
+   "xa": "Xã Pắc Ngà",
+   "stt": "1.8",
+   "cu": "Đoạn từ ngã ba trụ sở Công an xã đến nhà ông Giang theo hướng tỉnh lộ 111",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Pắc Ngà",
+   "stt": "-",
+   "cu": "Đoạn từ nhà ông Ển đến nhà ông Sủ bản Suối Lẹ theo hướng xã Bắc Yên",
+   "moi": "Đoạn từ nhà ông Ển đến nhà ông Sủ bản Suối Cải theo hướng xã Bắc Yên"
+  },
+  {
+   "xa": "Xã Pắc Ngà",
+   "stt": "-",
+   "cu": "Đoạn từ nhà ông Sủ đến ông Ư bản Suối Lẹ theo hướng xã Bắc Yên",
+   "moi": "Đoạn từ nhà ông Sủ đến ông Ư bản Suối Cải theo hướng xã Bắc Yên"
+  },
+  {
+   "xa": "Xã Pắc Ngà",
+   "stt": "-",
+   "cu": "Đoạn từ ông Ư bản Suối Lẹ đến nhà ông Quang bản Suối Cải theo hướng xã Bắc Yên",
+   "moi": "Đoạn từ ông Ư bản Suối Cải đến nhà ông Quang bản Suối Cải theo hướng xã Bắc Yên"
+  },
+  {
+   "xa": "Xã Phù Yên",
+   "stt": "28",
+   "cu": "Đất ở nông thôn còn lại tại địa bàn xã Phù Yên",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Phù Yên",
+   "stt": "28.1",
+   "cu": "Các tuyến đường trên địa bàn bản Sáy Tú, Núi Hồng, Suối Pai, Suối Nhúng, Suối Cù (trừ khu vực đã quy định giá đất)",
+   "moi": "Các tuyến đường đối với các bản còn lại trên địa bàn xã Phù Yên (trừ khu vực đã quy định giá đất)"
+  },
+  {
+   "xa": "Xã Phù Yên",
+   "stt": "28.2",
+   "cu": "Các tuyến đường đối với các bản còn lại trên địa bàn xã Phù Yên (trừ khu vực đã quy định giá đất)",
+   "moi": "Các tuyến đường trên địa bàn bản Sáy Tú, Núi Hồng, Suối Pai, Suối Nhúng, Suối Cù (trừ khu vực đã quy định giá đất)"
+  },
+  {
+   "xa": "Xã Gia Phù",
+   "stt": "1",
+   "cu": "Khu vực trung tâm xã Gia Phù, xã Tường Phù, xã Suối Bau cũ (nay thuộc xã Tường Phù)",
+   "moi": "Khu vực trung tâm xã Gia Phù, xã Tường Phù, xã Suối Bau cũ (nay thuộc xã Gia Phù)"
+  },
+  {
+   "xa": "Xã Gia Phù",
+   "stt": "1.1",
+   "cu": "Trung tâm ngã ba gia phù đi 3 hướng",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Gia Phù",
+   "stt": "-",
+   "cu": "Từ mét 151 đến mét 441 (Giáp Nhà văn hóa phố Tân Lập cũ)",
+   "moi": "Từ mét 151 đến mét 441 (Giáp Trạm Y tế)"
+  },
+  {
+   "xa": "Xã Gia Phù",
+   "stt": "-",
+   "cu": "Từ nhà ông Thịnh Toan đến cầu suối Hiền (bản Nhọt)",
+   "moi": "Từ nhà ông Thịnh Toan (Bản Gia Phù) đến cầu suối Hòng Cà (Bản Tạo)"
+  },
+  {
+   "xa": "Xã Tường Hạ",
+   "stt": "1",
+   "cu": "Trung tâm xã Tường Hạ, xã Tường Thượng cũ (nay thuộc xã Tường Hạ)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Tường Hạ",
+   "stt": "1.2",
+   "cu": "Trụ sở UBND xã Tường Hạ đến cầu bản Cóc 1",
+   "moi": "Trụ sở UBND xã Tường Hạ đến Trụ sở công an xã Tường Hạ"
+  },
+  {
+   "xa": "Xã Tường Hạ",
+   "stt": "1.4",
+   "cu": "Trụ sở UBND xã Tường Thượng cũ (nay thuộc xã Tường Hạ) hướng đi Vạn Yên đến hết ngã ba rẽ bản Chượp (giáp cánh đồng)",
+   "moi": "Trụ sở UBND xã Tường Thượng cũ (nay thuộc xã Tường Hạ) hướng đi Vạn Yên đến hết ngã ba rẽ bản Tường Thượng (giáp cánh đồng)"
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "stt": "2",
+   "cu": "Tuyến đường Chiềng Khoi - Phiêng Khoài",
+   "moi": "Tuyến đường liên xã Chiềng Hặc - Mường Lựm - Tân Lập"
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "stt": "3",
+   "cu": "Trung tâm xã Chiềng Hặc, xã Tú Nang cũ (nay thuộc xã Chiềng Hặc)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "stt": "3.2",
+   "cu": "Từ cống cây xăng Thắng Thủy đến qua cổng UBND xã Chiềng Hặc 500m (dọc Quốc lộ 6)",
+   "moi": "Từ cống cây xăng Thắng Thủy đến qua cổng UBND xã Chiềng Hặc 200m (dọc Quốc lộ 6)"
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "stt": "3.3",
+   "cu": "Từ UBND xã Chiềng Hặc 100m (dọc theo Quốc lộ 6) đến cầu Nà Ngà 1",
+   "moi": "Từ UBND xã Chiềng Hặc 200m (dọc theo Quốc lộ 6) đến qua cầu Huổi Mong 50m"
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "stt": "3.4",
+   "cu": "Từ ngã ba Quốc lộ 6 đi Nà Khoang đến Cầu đi bản Tin Tốc",
+   "moi": "Từ nhà văn hóa bản Cung Giao Thông Đông Khùa cũ đến trụ sở UBND xã Tú Nang cũ"
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "stt": "3.5",
+   "cu": "Từ cầu đi bản Tin Tốc đến qua ngã ba Quốc lộ 6 đi Chiềng Ban 100m (đến cống thoát nước) hướng đi Hà Nội.",
+   "moi": "Từ cầu đi bản Cố Nông đến qua ngã ba Quốc lộ 6 đi Chiềng Ban 100m (đến cống thoát nước) hướng đi Hà Nội."
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "stt": "3.9",
+   "cu": "Từ đường rẽ cầu treo bản Suối Phà dọc theo Quốc lộ 6 đi hướng Hà Nội 1000m, hướng đi Sơn La qua nhà văn hóa bản Suối Bưn 300m",
+   "moi": "Từ đường rẽ cầu treo bản Suối Phà dọc theo Quốc lộ 6 đi hướng Hà Nội 1000m, hướng đi Sơn La qua nhà văn hóa bản Suối Phà 300m"
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "stt": "5",
+   "cu": "Tuyến đường nông thôn còn lại xã Chiềng Hặc",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Chiềng Hặc",
+   "stt": "-",
+   "cu": "Trung tâm xã Mường Lựm cũ (nay thuộc xã Chiềng Hặc): Từ đầu đập hồ mường lựm tới UBND xã Mường Lựm",
+   "moi": "Trung tâm xã Mường Lựm cũ (nay thuộc xã Chiềng Hặc): Từ đầu đập hồ Mường Lựm tới UBND xã Mường Lựm cũ"
+  },
+  {
+   "xa": "Xã Chiềng Mai",
+   "stt": "3",
+   "cu": "Trục đường giao thông chính, khu dân cư",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Chiềng Mai",
+   "stt": "3.1",
+   "cu": "Từ ao cạn địa phận xã Chiềng Ban cũ (bản Hợp 3 Văn Tiên) đến hết địa phận xã Chiềng Mai (đoạn tuyến tránh QL 6 từ Km 293 + 470 đến Km 295 +860)",
+   "moi": "Đường Quốc lộ 6"
+  },
+  {
+   "xa": "Xã Mai Sơn",
+   "stt": "3.4",
+   "cu": "Đường Cà Văn Khum",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Mai Sơn",
+   "stt": "-",
+   "cu": "Đường Hát Lót - Tà Hộc đến ngã ba Viện Lao + 400 m (hết ranh xã Mai Sơn)",
+   "moi": "Từ ngã tư nông trường + 450 m (Đường Hát Lót - Tà Hộc) đến ngã ba Viện Lao + 400 m (hết ranh giới xã Mai Sơn)"
+  },
+  {
+   "xa": "Xã Chiềng Mung",
+   "stt": "3",
+   "cu": "Đường Hát Lót - Chiềng Mung",
+   "moi": "Đường Hát Lót - Chiềng Mung"
+  },
+  {
+   "xa": "Xã Chiềng Mung",
+   "stt": "-",
+   "cu": "Từ giáp địa phận xã Mai Sơn đến đến hết xã Chiềng Mung",
+   "moi": "Từ ngã ba chợ Chiềng Mung đến ngã ba Bản Xum (đường Hát Lót - Chiềng Mung)"
+  },
+  {
+   "xa": "Xã Chiềng Mung",
+   "stt": "4",
+   "cu": "Đường tỉnh lộ 118",
+   "moi": "Đường Hát Lót - Chiềng Mung"
+  },
+  {
+   "xa": "Xã Chiềng Mung",
+   "stt": "-",
+   "cu": "Từ ngã ba chợ Chiềng Mung đến ngã ba Bản Xum (đường Hát Lót - Chiềng Mung)",
+   "moi": "Từ giáp địa phận xã Mai Sơn đến đến hết xã Chiềng Mung"
+  },
+  {
+   "xa": "Xã Tà Hộc",
+   "stt": "1",
+   "cu": "Đường Hát Lót - Tà Hộc (Tỉnh lộ 110)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Tà Hộc",
+   "stt": "1.3",
+   "cu": "Từ nhà ông chuyên Huệ (đường rẽ vào bản Bó Đươi) +20m đến hết địa phận xã Tà Hộc",
+   "moi": "Từ nhà ông chuyên Huệ (đường rẽ vào bản Bó Đươi) +20m đến mỏ đá bazan (km số 13)"
+  },
+  {
+   "xa": "Xã Tà Hộc",
+   "stt": "1.4",
+   "cu": "Từ hết địa phận bản Cáp Na đến Cảng Tà Hộc",
+   "moi": "Từ mỏ đá bazan (km số 13) đến cảng Tà Hộc"
+  },
+  {
+   "xa": "Xã Tà Hộc",
+   "stt": "2",
+   "cu": "Đường Chiềng Sung (Tỉnh lộ 109)",
+   "moi": "Đường đi xã Chiềng Sung (Tỉnh lộ 110)"
+  },
+  {
+   "xa": "Xã Chiềng Khương",
+   "stt": "2",
+   "cu": "Khu trung tâm xã Chiềng Khương, xã Mường Sại cũ (nay thuộc xã Chiềng Khương)",
+   "moi": "Khu trung tâm xã Chiềng Khương, xã Mường Sai cũ (Nay thuộc xã Chiềng Khương)"
+  },
+  {
+   "xa": "Xã Chiềng Khương",
+   "stt": "2.2",
+   "cu": "Từ hết đất nhà ông Quàng Văn Ngoãn đến hết đất bản Tiên Chung (hướng đi Sông Mã)",
+   "moi": "Từ hết đất nhà ông Quàng Văn Ngoãn đến hết đất bản Tiên Chung (hướng đi Sơn La)"
+  },
+  {
+   "xa": "Xã Chiềng Khương",
+   "stt": "3",
+   "cu": "Trục đường giao thông chính, khu dân cư",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Chiềng Khương",
+   "stt": "3.6",
+   "cu": "Tuyến đường tuần tra biên giới từ ngã ba bản Búa đến hết đất nhà ông Quàng Văn Vui - bản Cỏ",
+   "moi": "Tuyến đường tuần tra biên giới từ cầu cứng bản Búa đến hết đất nhà ông Quàng Văn Vui - bản Cỏ"
+  },
+  {
+   "xa": "Xã Sông Mã",
+   "stt": "24",
+   "cu": "Trục đường giao thông chính; khu dân cư",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Sông Mã",
+   "stt": "24.4",
+   "cu": "Đường Chu Văn An (Từ nhà ông Lường Văn Thuông (từ M21 tính từ đường Cách mạng tháng 8) đến hết đất nhà ông Đỗ Ngọc Thảo)",
+   "moi": "Đường Lê Quý Đôn (Từ nhà ông Lường Văn Thuông (từ M21 tính từ đường Cách mạng tháng 8) đến hết đất nhà ông Đỗ Ngọc Thảo)"
+  },
+  {
+   "xa": "Xã Sông Mã",
+   "stt": "24.13",
+   "cu": "Từ vị trí tiếp giáp đất nhà ông Nguyễn Tiến Dũng (số nhà 19) đến hết đất nhà ông Dương Văn Quảng",
+   "moi": "Từ vị trí tiếp giáp đất nhà ông Nguyễn Tiến Dũng (số nhà 19) đến hết đất nhà ông Xuân Lễ"
+  },
+  {
+   "xa": "Xã Sốp Cộp",
+   "stt": "4",
+   "cu": "Các tuyến đường khu tái định cư Nà Phe (khu TT hành chính xã Sốp Cộp)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Sốp Cộp",
+   "stt": "4.3",
+   "cu": "Từ nhà văn hóa bản Sốp Cộp (cũ) đường 9,5m hướng đi khu dân cư bên phải đường đến hết đất nhà ông Lê Xuân Phú đường 9,5m hướng đi Trường Nội trú hai bên đường",
+   "moi": "Từ nhà văn hóa bản Sốp Cộp đường 9,5m hướng đi khu dân cư bên trái đường đến hết đất nhà ông Lê Xuân Phú"
+  },
+  {
+   "xa": "Xã Sốp Cộp",
+   "stt": "8",
+   "cu": "Các đoạn đường ven trung tâm xã Sốp Cộp",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Sốp Cộp",
+   "stt": "8.7",
+   "cu": "Từ ngã ba nhà ông Lò Văn Chiến hướng đi Sốp Cộp đến hết đất trường cấp I+II hai bên đường",
+   "moi": "Từ ngã ba nhà ông Lò Văn Chiến hướng đi Sốp Cộp đến ngã ba đường đi hướng đi bản Tông Hùm, hai bên đường"
+  },
+  {
+   "xa": "Xã Sốp Cộp",
+   "stt": "8.8",
+   "cu": "Tuyến từ cống giáp nhà ông Lường Văn May đến hết đất nhà ông Lò Văn Tiên hướng đi Mường Lạn hai bên đường",
+   "moi": "Tuyến từ cống giáp nhà ông Lường Văn May đến hết đất bản Tặc Tè hướng đi Mường Lạn, hai bên đường"
+  },
+  {
+   "xa": "Xã Sốp Cộp",
+   "stt": "8.9",
+   "cu": "Từ hết đất nhà máy nước đi vào đến hết đất bản Bán Han ( đường tỉnh lộ 105) Nậm Lạc cũ",
+   "moi": "Từ hết đất nhà máy nước đi vào đến hết đất bản Bánh Han ( đường tỉnh lộ 105), hai bên đường"
+  },
+  {
+   "xa": "Phường Chiềng An",
+   "stt": "5",
+   "cu": "Đường Nguyên Quang Bích",
+   "moi": "Đường Bản Bó"
+  },
+  {
+   "xa": "Phường Chiềng An",
+   "stt": "5.1",
+   "cu": "Tuyến đường trong khu dân cư Tổ 4 phường Chiềng An",
+   "moi": "Đường từ giao Lò Văn Giá đến sân bóng bản Bó"
+  },
+  {
+   "xa": "Phường Chiềng An",
+   "stt": "11",
+   "cu": "Các đường nhánh trên địa bàn phường",
+   "moi": ""
+  },
+  {
+   "xa": "Phường Chiềng An",
+   "stt": "11.5",
+   "cu": "Từ 279D vào Khu dân cư bản Panh",
+   "moi": "Từ Quốc lộ 279d vào khu dân cư đường bê tông trục chính bản Panh"
+  },
+  {
+   "xa": "Phường Chiềng An",
+   "stt": "11.6",
+   "cu": "Từ đường Quốc lộ 6 đến hết đất Trung tâm bản Pảng xã Chiềng Đen cũ (nay thuộc phường Chiềng An)",
+   "moi": "Từ tổ 4, phường Chiềng An cũ đến hết đất trung tâm bản Pảng xã Chiềng Đen cũ (nay thuộc phường Chiềng An)"
+  },
+  {
+   "xa": "Phường Mộc Châu",
+   "stt": "3",
+   "cu": "Đường 20 - 11",
+   "moi": ""
+  },
+  {
+   "xa": "Phường Mộc Châu",
+   "stt": "3.2",
+   "cu": "Từ ngã tư Chợ Bảo Tàng đến Ngã tư đường trục chính Đô thị - Nội thị Mộc Châu",
+   "moi": "Từ Ngã tư chợ Bảo Tàng đến hết thửa đất số 61 tờ bản đồ số 21 (Bản đồ 1999-2000)"
+  },
+  {
+   "xa": "Phường Mộc Châu",
+   "stt": "4",
+   "cu": "Quốc lộ 43",
+   "moi": ""
+  },
+  {
+   "xa": "Phường Mộc Châu",
+   "stt": "4.1",
+   "cu": "Từ Ngã tư đường trục chính Đô thị - Nội thị Mộc Châu đến cầu Nà Bó",
+   "moi": "Từ tiếp giáp thửa đất số 61 tờ bản đồ số 21 (Bản đồ 1999-2000) đến cầu Nà Bó"
+  },
+  {
+   "xa": "Phường Mộc Châu",
+   "stt": "9",
+   "cu": "Khu đất đấu giá, tái định cư",
+   "moi": ""
+  },
+  {
+   "xa": "Phường Mộc Châu",
+   "stt": "9.1",
+   "cu": "Các tuyến đường nội thị khu Trung tâm hành chính mới, phường Mộc Châu (Quy hoạch 17,5m)",
+   "moi": "Tuyến đường nội thị khu Trung tâm hành chính mới, phường Mộc Châu (Quy hoạch 17,5m)"
+  },
+  {
+   "xa": "Phường Mộc Châu",
+   "stt": "9.2",
+   "cu": "Tuyến đường nội thị khu Trung tâm hành chính mới, phường Mộc Châu (Quy hoạch 11,5m)",
+   "moi": "Tuyến đường nội thị khu Trung tâm hành chính mới, phường Mộc Châu (Quy hoạch 15,5m)"
+  },
+  {
+   "xa": "Phường Mộc Châu",
+   "stt": "9.3",
+   "cu": "Tuyến đường nội thị khu Trung tâm hành chính mới, phường Mộc Châu (Quy hoạch 34,5m)",
+   "moi": "Tuyến đường nội thị khu Trung tâm hành chính mới, phường Mộc Châu (Quy hoạch 21,5m)"
+  },
+  {
+   "xa": "Phường Mộc Châu",
+   "stt": "9.4",
+   "cu": "Tuyến đường nội thị khu Trung tâm hành chính mới, phường Mộc Châu (Quy hoạch 21,5m)",
+   "moi": "Tuyến đường nội thị khu Trung tâm hành chính mới, phường Mộc Châu (Quy hoạch 34,5m)"
+  },
+  {
+   "xa": "Phường Mộc Châu",
+   "stt": "9.5",
+   "cu": "Tuyến đường nội thị khu Trung tâm hành chính mới, phường Mộc Châu (Quy hoạch 15,5m)",
+   "moi": "Tuyến đường nội thị khu Trung tâm hành chính mới, phường Mộc Châu (Quy hoạch 13,5m)"
+  },
+  {
+   "xa": "Phường Mộc Châu",
+   "stt": "9.6",
+   "cu": "Tuyến đường nội thị khu Trung tâm hành chính mới, phường Mộc Châu (Quy hoạch 13,5m)",
+   "moi": "Tuyến đường nội thị khu Trung tâm hành chính mới, phường Mộc Châu (Quy hoạch 11,5m)"
+  },
+  {
+   "xa": "Phường Mộc Sơn",
+   "stt": "9",
+   "cu": "Khu vực trung tâm phường Đông Sang cũ (nay thuộc phường Mộc Sơn)",
+   "moi": ""
+  },
+  {
+   "xa": "Phường Mộc Sơn",
+   "stt": "9.1",
+   "cu": "Từ ngã 3 tổ dân phố 34 đến hết đường rẽ vào Đồi Gió",
+   "moi": "Từ số nhà 162 (thửa đất 151 tờ số 36) đến hết đường rẽ vào Đồi Gió"
+  },
+  {
+   "xa": "Phường Thảo Nguyên",
+   "stt": "5",
+   "cu": "Phố Tô Vĩnh Diện",
+   "moi": ""
+  },
+  {
+   "xa": "Phường Thảo Nguyên",
+   "stt": "-",
+   "cu": "Từ ngã 3 Nhà máy sữa đến Bia tưởng niệm, tổ dân phố 19/5",
+   "moi": "Từ ngã 3 xưởng chế biến thức ăn gia súc đến hết đất phường Thảo Nguyên"
+  },
+  {
+   "xa": "Xã Mường Lạn",
+   "stt": "1",
+   "cu": "Trục đường giao thông chính; khu dân cư",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Mường Lạn",
+   "stt": "1.3",
+   "cu": "Từ hết đất trụ sở UBND xã đến ngã ba đi bản Cống, Nà Khi đến hết đất nhà ông Lò Văn Tuấn hướng bàn Cống và 500m hướng đi Nà Khi hai bên đường",
+   "moi": "Từ hết đất trụ sở UBND xã đến nhà ông Vì Văn Pâng hướng bản Cống và hướng đi Nà Khi đến nhà Quàng Thị Hỏa hai bên đường"
+  },
+  {
+   "xa": "Xã Phiêng Khoài",
+   "stt": "2",
+   "cu": "Trung tâm xã Phiêng Khoài",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Phiêng Khoài",
+   "stt": "2.4",
+   "cu": "Từ tiếp giáp đất cây xăng Đức Cường đến đường đi vào nhà ông Hùng vào bản Kim Chung 2 (Trừ khu vực đã có giá)",
+   "moi": "Từ tiếp giáp đất cây xăng Đức Cường đến đường đi vào nhà ông Hùng vào thôn Kim Chung 2 (Trừ khu vực đã có giá)"
+  },
+  {
+   "xa": "Xã Phiêng Khoài",
+   "stt": "2.5",
+   "cu": "Từ tiếp giáp đất đường đi vào nhà ông Hùng vào bản Kim Chung 2 hướng đi Hang Mon 1.000m",
+   "moi": "Từ tiếp giáp đất đường đi vào nhà ông Hùng vào thôn Kim Chung 2 hướng đi Hang Mon 1.000m"
+  },
+  {
+   "xa": "Xã Phiêng Khoài",
+   "stt": "2.9",
+   "cu": "Từ bản Kim Chung đến hết địa phận bản Quỳnh Chung",
+   "moi": "Từ thôn Kim Chung 2 đến hết địa phận bản Quỳnh Chung (cũ)"
+  },
+  {
+   "xa": "Xã Phiêng Khoài",
+   "stt": "2.10",
+   "cu": "Từ nhà văn hóa bản Kim Chung đến trường THCS Phiêng Khoài",
+   "moi": "Từ nhà văn hóa thôn Kim Chung 2 đến trường THCS Phiêng Khoài giáp Quốc lộ 6C"
+  },
+  {
+   "xa": "Xã Phiêng Khoài",
+   "stt": "2.11",
+   "cu": "Điểm đường Tạ Eng từ nhà ông Vi Văn Vầu đến Trường Tiểu học Lao Khô (điểm trường Tạ Ẻng)",
+   "moi": "Điểm đường Tà Ẻn (cũ) từ nhà ông Vì Văn Vầu đến Trường Tiểu học Lao Khô (điểm trường Tà Ẻn)"
+  },
+  {
+   "xa": "Xã Mường Lèo",
+   "stt": "1",
+   "cu": "Trục đường 105",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Mường Lèo",
+   "stt": "1.1",
+   "cu": "Đoạn từ nhà ông Quảng Văn Quân đên hết nhà ông Lò Văn Toàn (bản Mạt) hai bên đường",
+   "moi": "Đoạn từ nhà ông Lò Văn Thiết đến hết nhà ông Lò Văn Chung (bản Mạt) hai bên đường"
+  },
+  {
+   "xa": "Xã Mường Lèo",
+   "stt": "1.2",
+   "cu": "Đoạn từ nhà ông Lường Văn Phong (bản Mạt) đến nhà ông Lường Văn Cương (bản Mạt)",
+   "moi": "Đoạn từ nhà ông Lường Văn Phong (bản Mạt) đến nhà bà Lò Thị Thoại (bản Mạt)"
+  },
+  {
+   "xa": "Xã Mường Lèo",
+   "stt": "1.5",
+   "cu": "Đoạn Lò Văn Minh (Nậm Pừn) khu đất nghĩa địa 2 bên đường đi xã Púng Bánh",
+   "moi": "Đoạn từ đất nhà ông Lò Văn Minh đến hết đất nhà ông Lò Văn Tới (Bản Nặm Pừn) hướng đi bản Chăm Hỳ (cũ) hai bên đường"
+  },
+  {
+   "xa": "Xã Mường Lèo",
+   "stt": "2",
+   "cu": "Đất các khu dân cư ven trục giao thông chính trên địa bàn xã Mường Lèo (trừ khu vực đã quy định giá đất)",
+   "moi": "Các tuyến đường còn lại đi các bản trên địa bàn xã (trừ khu vực đã quy định giá đất)"
+  }
+ ],
+ "plV": [
+  {
+   "xa": "Xã Đoàn Kết",
+   "stt": "1",
+   "cu": "Quốc lộ 43 từ bản Muống Phiêng Luông đến Bến phà Vạn Yên",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Đoàn Kết",
+   "stt": "1.4",
+   "cu": "Từ Km 46+800 theo Quốc lộ 43 đến Nhà văn hóa bản Đoàn Kết",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Đoàn Kết",
+   "stt": "1.6",
+   "cu": "Từ hết đất nhà ông Thoan Bích (bản Đoàn Kết) theo Quốc lộ 43 đến hết đất nhà ông Mùi Văn Hòa (bản Kè Tèo)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Song Khủa",
+   "stt": "3",
+   "cu": "Đất các khu dân cư ven trục giao thông chính trên địa bàn xã Song Khủa (trừ khu vực đã quy định giá đất)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Tô Múa",
+   "stt": "4.2",
+   "cu": "Từ đường rẽ Liên Hưng đến bản Sôi đến ngã 3 bản Ấm",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "stt": "2",
+   "cu": "Trục đường chính",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Mường Chiên",
+   "stt": "2.8",
+   "cu": "Từ chân dốc Đông Hiêm (Nhà bà Hoàng Thị Tiển) đến nhà văm hóa bản Nặm Tấu",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "stt": "15",
+   "cu": "Từ ngã 3 Quốc lộ 6 hướng đi Sơn La (hai bên đường)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "stt": "15.3",
+   "cu": "Từ hết Km 327+300m (từ giáp đất nhà ông Nhã Loan Tiểu khu 1 Tông Lạnh) đến Km 327+220m (Đến hết cây xăng dầu Lương Thực Tiểu khu 1)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "stt": "17",
+   "cu": "Trung tâm ngã ba đường Quốc lộ 6 hướng đi Thuận Châu",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Thuận Châu",
+   "stt": "17.4",
+   "cu": "Từ đất ao Quốc phòng đến hết đất quán ăn Hương Rừng",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Chiềng La",
+   "stt": "4",
+   "cu": "Các đường nhánh nối với Quốc lộ 6B",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Chiềng La",
+   "stt": "4.1",
+   "cu": "Từ đất nhà ông Lò Văn Xôm (trừ lô đất giáp QL6B) đến đất ông Quàng Văn Đoàn 1km",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Chiềng La",
+   "stt": "4.7",
+   "cu": "Từ Quốc lộ 6 đến nhà ông Phương 0,3 km",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Mường É",
+   "stt": "1",
+   "cu": "Khu dân cư Bản Ái Khôm, xã Mường É",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Mường É",
+   "stt": "2",
+   "cu": "Trục đường giao thông chính, khu dân cư",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Mường É",
+   "stt": "2.1",
+   "cu": "Khu đất thuộc bản Kẹ xã Mường É (Trụ sở UBND xã Phổng lập cũ trước chưa xây dựng trụ sở mới tại bản Lặp)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Mường É",
+   "stt": "2.2",
+   "cu": "Khu đất thuộc bản Chiềng Ve, xã Mường É (Trụ sở UBND xã Mường É cũ)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Mường É",
+   "stt": "3",
+   "cu": "Đất các khu dân cư ven trục giao thông chính trên địa bàn xã Mường É (trừ khu vực đã quy định giá đất)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Mường La",
+   "stt": "15",
+   "cu": "Trung tâm xã Pi Toong, xã Chiềng San, xã Nậm Păm, xã Mường Trai, xã Chiềng Muôn cũ (nay thuộc xã Mường La)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Mường La",
+   "stt": "15.2",
+   "cu": "Đường từ cổng Trường THCS Pi Toong đi các hướng 300m",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Mường La",
+   "stt": "15.3",
+   "cu": "Đường từ đầu bản Lâm đi đến cầu Suối Chiến, bản Chiến",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Tà Xùa",
+   "stt": "2",
+   "cu": "Các đường khu vực xã Háng Đồng, xã Làng Chếu cũ (nay thuộc xã Tà Xùa)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Tà Xùa",
+   "stt": "2.11",
+   "cu": "Từ ngã ba bản Suối Vàng đến bản Chim Púa",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Yên Châu",
+   "stt": "5",
+   "cu": "Tuyến đường Chiềng Khoi - Phiêng Khoài",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Yên Châu",
+   "stt": "5.3",
+   "cu": "Tuyến đường Mường Lựm, Yên Châu - Tân Lập, Mộc Châu (địa phận xã Yên Châu)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Phiêng Pằn",
+   "stt": "3",
+   "cu": "Trục đường giao thông chính, khu dân cư",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Phiêng Pằn",
+   "stt": "3.3",
+   "cu": "Đoạn đường từ Quốc lộ 37 ra Quốc lộ 6 cũ (giáp bà Nga)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Chiềng Khương",
+   "stt": "3",
+   "cu": "Trục đường giao thông chính, khu dân cư",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Chiềng Khương",
+   "stt": "3.13",
+   "cu": "Từ trường Trung học Chiềng Khương đến cây xăng Chiềng Khương",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Sốp Cộp",
+   "stt": "1",
+   "cu": "Đường trung tâm xã Sốp Cộp",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Sốp Cộp",
+   "stt": "1.22",
+   "cu": "Tuyến D5 (từ mét 20 đất nhà ông Tòng Văn Tiện đến đất ông Vũ Văn Thắng) hướng đi D45 theo quy hoạch đường 9,5m hai bên đường",
+   "moi": ""
+  },
+  {
+   "xa": "Phường Chiềng An",
+   "stt": "2",
+   "cu": "Đường Bản Bó",
+   "moi": ""
+  },
+  {
+   "xa": "Phường Chiềng An",
+   "stt": "-",
+   "cu": "Đường bản Bó (từ giao đường Lò Văn Giá đến cống nước Bản Bó)",
+   "moi": ""
+  },
+  {
+   "xa": "Phường Chiềng An",
+   "stt": "7",
+   "cu": "Quốc lộ 279D",
+   "moi": ""
+  },
+  {
+   "xa": "Phường Chiềng An",
+   "stt": "7.2",
+   "cu": "Từ Quốc lộ 279D vào khu dân cư bản Pánh",
+   "moi": ""
+  },
+  {
+   "xa": "Phường Chiềng An",
+   "stt": "11",
+   "cu": "Các đường nhánh trên địa bàn phường",
+   "moi": ""
+  },
+  {
+   "xa": "Phường Chiềng An",
+   "stt": "11.7",
+   "cu": "Đoạn từ Quốc lộ 6 đến điểm Tái định cư Quỳnh Phố cũ",
+   "moi": ""
+  },
+  {
+   "xa": "Phường Chiềng An",
+   "stt": "11.8",
+   "cu": "Đoạn từ bản Quỳnh Phố cũ đến điểm trường mầm non bản Pảng",
+   "moi": ""
+  },
+  {
+   "xa": "Phường Chiềng An",
+   "stt": "11.11",
+   "cu": "Từ ngã 3 Quốc lộ 6 đến tổ 4, Phường Chiềng An",
+   "moi": ""
+  },
+  {
+   "xa": "Phường Mộc Sơn",
+   "stt": "8",
+   "cu": "Các tuyến đường nội thị",
+   "moi": ""
+  },
+  {
+   "xa": "Phường Mộc Sơn",
+   "stt": "8.3",
+   "cu": "Đường trục chính Đô thị - Nội thị Mộc Châu (Thuộc địa phận phường Mộc Sơn)",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Mường Lạn",
+   "stt": "1",
+   "cu": "Trục đường giao thông chính; khu dân cư",
+   "moi": ""
+  },
+  {
+   "xa": "Xã Mường Lạn",
+   "stt": "1.4",
+   "cu": "Từ ngã 3 bản Mường Lạn đi bản Cống đến hết cuối bản Nà Vạc",
+   "moi": ""
+  }
+ ]
+}

@@ -78,7 +78,7 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
                     </td>
                     <td>
                       {t.phanLop?.lop.length ? (
-                        <div><b>Phân lớp · {t.phanLop.lop.length} lớp</b> <button className="nut nut-chu nut-nho" onClick={() => setMoRong(t.id)}>Sửa</button><div className="can-cu">Bảng {t.phanLop.tuyen.bang}, STT {t.phanLop.tuyen.stt}: {t.phanLop.tuyen.tuyen}</div></div>
+                        <div><b>Phân lớp · {t.phanLop.lop.length} lớp</b> <button className="nut nut-chu nut-nho" onClick={() => setMoRong(t.id)}>Sửa</button><div className="can-cu">Bảng {t.phanLop.tuyen.bang}, {t.phanLop.tuyen.stt ? `STT ${t.phanLop.tuyen.stt}` : t.phanLop.tuyen.canCu ?? "tuyến bổ sung"}: {t.phanLop.tuyen.tuyen}</div></div>
                       ) : t.gia ? (
                         <div><b>{tien(soD(t.gia.giaNghinDong).mul(1000))} đ/m²</b> <button className="nut nut-chu nut-nho" onClick={() => setChonGia(t.id)}>Đổi</button><div className="can-cu">{t.gia.nguon}</div></div>
                       ) : (
@@ -273,7 +273,7 @@ export function TabThua({ h, duAn, doi }: { h: Ho; duAn: DuAn; doi: (h: Ho) => v
         return (
           <ChonGiaDat xa={duAn.xa} loaiDat={t.loaiDat} dong={() => setChonTuyen(null)} chon={() => undefined}
             chonTuyen={(r) => {
-              sua(t.id, { phanLop: { tuyen: { bang: r.bang, stt: r.stt, xa: r.xa, tuyen: r.tuyen, vt: r.vt }, lop: t.phanLop?.lop ?? [{ id: taoId(), lop: 1, viTri: Math.max(1, r.vt.findIndex((g) => g !== null) + 1), dienTich: "" }] } });
+              sua(t.id, { phanLop: { tuyen: { bang: r.bang, stt: r.stt, xa: r.xa, tuyen: r.tuyen, vt: r.vt, ...(r.van_ban ? { vanBan: r.van_ban } : {}), ...(r.can_cu ? { canCu: r.can_cu } : {}) }, lop: t.phanLop?.lop ?? [{ id: taoId(), lop: 1, viTri: Math.max(1, r.vt.findIndex((g) => g !== null) + 1), dienTich: "" }] } });
               setChonTuyen(null);
               setMoRong(t.id);
             }} />

@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import cs0 from "../../../policy/goi/sonla-2026-03-31.json";
 import {
+  apDungGiamChenhCao,
+  giaTmdvNguonGocDatO,
   type BoChinhSach, boiThuongDat, cayTrong, chiPhiDauTuConLai, chonTheoMoc, chuyenDoiNghe, D, datPnnCoThoiHan,
   diDoiVatNuoi, dieuChinhDatNNXenKep, dieuChinhGiaDatPnn, giaTriXayMoi, hoTroTheoMocXayDung, lamTronDienTich, lamTronTien, moMa, nhaCongTrinhThietHaiThucTe,
   onDinhDoiSong, tamCu, tongHo,
@@ -196,9 +198,30 @@ describe("Giá đất NQ 152 – thứ tự điều chỉnh đã xác nhận (VM
     expect(h(["NGO", "NGO"])).toBe("1.08");
     expect(h(["DUONG", "DUONG", "DUONG"])).toBe("1.2");
   });
-  it("thứ tự: phân lớp → mặt tiếp giáp → chênh cao → đường đất", () => {
-    const r = dieuChinhGiaDatPnn(cs, { loai: "PNN", viTri: 2, giaViTriNghinDong: 1000, dienTichTheoLop: [100, 100], matTiepGiap: ["NGO", "NGO"], chenhCaoMet: "-1.6", matDuongLaDuongDat: true });
+  it("thứ tự: phân lớp → mặt tiếp giáp → chênh cao → đường đất (định giá trước 01/11/2026)", () => {
+    const r = dieuChinhGiaDatPnn(cs, { loai: "PNN", viTri: 2, giaViTriNghinDong: 1000, dienTichTheoLop: [100, 100], matTiepGiap: ["NGO", "NGO"], chenhCaoMet: "-1.6", matDuongLaDuongDat: true, ngayDinhGia: "2026-10-31" });
     expect(r.dieuChinh.map((x) => x.heSo)).toEqual(["0.75", "1.08", "0.7", "0.7"]);
+  });
+  it("GD-09: từ 01/11/2026 không giảm 30% do chênh cao, nêu lý do Điều 2 NQ 28/2026", () => {
+    const r = dieuChinhGiaDatPnn(cs, { loai: "PNN", viTri: 2, giaViTriNghinDong: 1000, chenhCaoMet: "1.6", matDuongLaDuongDat: true, ngayDinhGia: "2026-11-01" });
+    expect(r.dieuChinh.map((x) => x.heSo)).toEqual(["0.7"]); // chỉ còn đường đất
+    expect(r.canhBao.join()).toMatch(/Không giảm 30% do chênh cao.*01\/11\/2026.*Điều 2 NQ 28\/2026/);
+    expect(apDungGiamChenhCao(cs, "2026-10-31").apDung).toBe(true);
+    expect(apDungGiamChenhCao(cs, "2026-11-01").apDung).toBe(false);
+  });
+  it("GD-09: chưa có thời điểm định giá → không tự giảm, Cần xác nhận", () => {
+    const r = dieuChinhGiaDatPnn(cs, { loai: "DAT_O", viTri: 1, giaViTriNghinDong: 1000, chenhCaoMet: "2" });
+    expect(r.dieuChinh).toHaveLength(0);
+    expect(r.canhBao.join()).toMatch(/Cần xác nhận/);
+  });
+  it("chênh cao dưới 1,5 m: không điều chỉnh, không cảnh báo", () => {
+    expect(dieuChinhGiaDatPnn(cs, { loai: "DAT_O", viTri: 1, giaViTriNghinDong: 1000, chenhCaoMet: "1.4", ngayDinhGia: "2026-11-05" }).canhBao).toHaveLength(0);
+  });
+  it("k8 Đ7 (k6 Đ1 NQ 28/2026): TM-DV nguồn gốc đất ở = 90% giá đất ở, chỉ từ 01/11/2026", () => {
+    const g = giaTmdvNguonGocDatO(cs, 85, "2026-11-01")!;
+    expect(g.giaNghinDong).toBe("76.5");
+    expect(g.canCu).toMatch(/khoản 8 Điều 7.*khoản 6 Điều 1 NQ 28\/2026/);
+    expect(giaTmdvNguonGocDatO(cs, 85, "2026-10-31")).toBeNull();
   });
   it("đường đất không áp cho vị trí 1", () => {
     expect(dieuChinhGiaDatPnn(cs, { loai: "PNN", viTri: 1, giaViTriNghinDong: 1000, matDuongLaDuongDat: true }).dieuChinh).toHaveLength(0);

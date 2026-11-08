@@ -31,7 +31,8 @@ export interface GiaThua {
 
 /** Tính đất theo phân lớp (QD-21): cán bộ nhập từng lớp; phần mềm điền giá vị trí × tỷ lệ theo lớp. */
 export interface PhanLopThua {
-  tuyen: { bang: string; stt: string; xa: string; tuyen: string; vt: (number | null)[] };
+  /** `vanBan`, `canCu`: văn bản quy định tuyến (trống = NQ 152/2025) và căn cứ dòng bổ sung (NQ 28/2026, STT trống). */
+  tuyen: { bang: string; stt: string; xa: string; tuyen: string; vt: (number | null)[]; vanBan?: string; canCu?: string };
   lop: { id: string; lop: number; viTri: number; dienTich: string; giaTuyChinh?: string; lyDo?: string }[];
 }
 

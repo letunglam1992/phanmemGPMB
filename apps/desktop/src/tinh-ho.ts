@@ -423,7 +423,7 @@ function tinhHoGoc(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
         const kq = datTheoPhanLop(cs, {
           loaiDat: `${tenDayDu(t.loaiDat)} – ${nhanThua(t)}`,
           nhom: nhomPhanLop(pl.tuyen.bang),
-          nguonTuyen: `Bảng ${pl.tuyen.bang}, ${pl.tuyen.xa}, STT ${pl.tuyen.stt} (${pl.tuyen.tuyen})`,
+          nguonTuyen: `${pl.tuyen.vanBan ? `${pl.tuyen.vanBan}, ` : ""}Bảng ${pl.tuyen.bang}, ${pl.tuyen.xa}, ${sttTuyen(pl.tuyen)} (${pl.tuyen.tuyen})`,
           dienTichThuHoiM2: t.dienTichThuHoi,
           heSoDuAn: hs,
           lop: pl.lop.map((l) => ({
@@ -999,6 +999,9 @@ export function moTaLamTron(cach: string, buoc: number, lyDo?: string): string {
   return lyDo ? `${co} — lựa chọn của dự án: ${lyDo} (VM-36)` : `${co} (QD-03)`;
 }
 
+/** STT tuyến trong bảng giá; tuyến bổ sung theo NQ 28/2026 không có STT → ghi căn cứ phụ lục. */
+const sttTuyen = (t: { stt: string; canCu?: string }) => (t.stt ? `STT ${t.stt}` : t.canCu ?? "tuyến bổ sung");
+
 /** Giá đất ở (đ/m²) của thửa: giá đã chọn, hoặc đơn giá bình quân theo phân lớp. */
 function giaDatOThua(cs: BoChinhSach, t: Thua): { gia: Decimal; nguon: string; binhQuan: boolean } | null {
   if (t.phanLop && t.phanLop.lop.length) {
@@ -1006,13 +1009,13 @@ function giaDatOThua(cs: BoChinhSach, t: Thua): { gia: Decimal; nguon: string; b
     const kq = datTheoPhanLop(cs, {
       loaiDat: t.loaiDat,
       nhom: nhomPhanLop(pl.tuyen.bang),
-      nguonTuyen: `Bảng ${pl.tuyen.bang}, STT ${pl.tuyen.stt}`,
+      nguonTuyen: `Bảng ${pl.tuyen.bang}, ${sttTuyen(pl.tuyen)}`,
       dienTichThuHoiM2: t.dienTichThuHoi,
       lop: pl.lop.map((l) => ({ lop: l.lop, viTri: l.viTri, giaViTriNghinDong: pl.tuyen.vt[l.viTri - 1] ?? 0, dienTichM2: l.dienTich || "0", giaTuyChinhNghinDong: l.giaTuyChinh, lyDo: l.lyDo })),
     });
     const dt = D(t.dienTichThuHoi || "0");
     if (!kq.dong.thanhTien || dt.lte(0)) return null;
-    return { gia: kq.dong.thanhTien.div(dt), nguon: `bình quân phân lớp — Bảng ${pl.tuyen.bang}, STT ${pl.tuyen.stt}`, binhQuan: true };
+    return { gia: kq.dong.thanhTien.div(dt), nguon: `bình quân phân lớp — Bảng ${pl.tuyen.bang}, ${sttTuyen(pl.tuyen)}`, binhQuan: true };
   }
   return t.gia ? { gia: D(t.gia.giaNghinDong).mul(1000), nguon: t.gia.nguon, binhQuan: false } : null;
 }

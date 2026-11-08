@@ -10,7 +10,8 @@
     "QĐ 106/2025/QĐ-UBND (PL I, II, V, VIII)",
     "QĐ 14/2026/QĐ-UBND",
     "QĐ 32/2025/QĐ-UBND",
-    "NQ 152/2025/NQ-HĐND"
+    "NQ 152/2025/NQ-HĐND",
+    "NQ 28/2026/NQ-HĐND (sửa đổi NQ 152, hiệu lực 01/11/2026)"
   ],
   "lamTron": {
     "dienTichSoLe": 2,
@@ -570,6 +571,10 @@
       {
         "vanBan": "NQ 152/2025/NQ-HĐND",
         "viTri": "Điều 4, Điều 6 Quy định kèm theo"
+      },
+      {
+        "vanBan": "NQ 28/2026/NQ-HĐND",
+        "viTri": "Điều 2 (bãi bỏ khoản 3 Điều 4 — giảm 30% do chênh cao, từ 01/11/2026); khoản 6 Điều 1 (bổ sung khoản 8 Điều 7); khoản 1 Điều 3 (chuyển tiếp)"
       }
     ],
     "thuTuDieuChinh": "VI_TRI > PHAN_LOP > MAT_TIEP_GIAP > GIAM_CHENH_CAO_DUONG_DAT > HE_SO_DU_AN",

@@ -30,7 +30,7 @@ export function PhanLop({ t, cs, sua, moChonTuyen }: { t: Thua; cs: BoChinhSach;
     <div>
       <div className="nhom-nut" style={{ alignItems: "center", marginBottom: 6 }}>
         <b className="chu-nho">Tính đất theo phân lớp</b>
-        <span className="chu-nho">Bảng {pl.tuyen.bang}, STT {pl.tuyen.stt}: {pl.tuyen.tuyen}</span>
+        <span className="chu-nho">{pl.tuyen.vanBan ? `${pl.tuyen.vanBan}, ` : ""}Bảng {pl.tuyen.bang}, {pl.tuyen.stt ? `STT ${pl.tuyen.stt}` : pl.tuyen.canCu ?? "tuyến bổ sung"}: {pl.tuyen.tuyen}</span>
         <span className="nhan nhan-duong">{nhom === "DAT_O" ? "Đất ở" : "Đất PNN"}: lớp sau = {Number(tyLeTruoc) * 100}% lớp trước</span>
         <span className="tach" />
         <button className="nut nut-chu nut-nho" onClick={moChonTuyen}>Đổi tuyến</button>

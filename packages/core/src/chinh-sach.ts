@@ -77,9 +77,15 @@ export interface BoChinhSach {
     thuTuDieuChinh: string;
     phanLop: Record<"DAT_O" | "PNN", { mocMet: number[]; tyLeSoVoiLopTruoc: string; canCu: string }>;
     matTiepGiap: { tyLeMoiMat: Record<LoaiMatTiepGiap, string>; haiMatDuong: string; toiDa: string; canCu: string; ghiChu: string };
-    giamChenhCao: { nguongMet: string; heSo: string; canCu: string };
+    /**
+     * GD-09 (k3 Đ4 NQ 152). `baiBoTu`: ngày khoản 3 Điều 4 bị bãi bỏ (Điều 2 NQ 28/2026/NQ-HĐND: 01/11/2026);
+     * bỏ trống = theo `NQ28_2026.hieuLucTu` (gia-dat.ts).
+     */
+    giamChenhCao: { nguongMet: string; heSo: string; canCu: string; baiBoTu?: string; canCuBaiBo?: string };
     duongDat: { heSo: string; apDungViTri: number[]; canCu: string };
     datNNXenKep: { heSo: string; canCu: string };
+    /** k8 Đ7 (bổ sung bởi k6 Đ1 NQ 28/2026): đất TM-DV có nguồn gốc đất ở = tỷ lệ × đơn giá đất ở Bảng 05; bỏ trống = `NQ28_2026`. */
+    tmdvNguonGocDatO?: { tyLe: string; apDungTu: string; canCu: string };
   };
   /** Hỗ trợ tái định cư (Đ111 LĐĐ 2024; Đ23, Đ24 NĐ 88/2024; Đ10, Đ16 PL II QĐ 106; k11 Đ6 QĐ 14/2026). */
   taiDinhCu?: {

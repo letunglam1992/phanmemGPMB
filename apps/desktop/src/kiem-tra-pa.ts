@@ -8,7 +8,7 @@
  */
 import type ExcelJS from "exceljs";
 import type Decimal from "decimal.js";
-import { D, type BoChinhSach } from "@gpmb/core";
+import { D, NQ28_2026, type BoChinhSach } from "@gpmb/core";
 import type { BangGiaDat, DongDonGia } from "./du-lieu";
 import { docSo } from "./nhap-excel";
 import { khongDau } from "./tim-kiem";
@@ -428,11 +428,16 @@ function giaDatXa(bang: BangGiaDat, xa: string, ma: string | null): { gia: numbe
       kq.push({ gia: r.gia, nguon: `NQ 152/2025/NQ-HĐND, Bảng ${r.bang}, STT ${r.stt}, ${r.xa}, ${r.loai_dat}` });
   if (!ma || MA_DAT_O.includes(ma))
     for (const r of bang.dat_o)
-      if (cungXa(r.xa)) r.vt.forEach((g, i) => g != null && kq.push({ gia: g, nguon: `NQ 152/2025/NQ-HĐND, Bảng ${r.bang}, ${r.xa}, STT ${r.stt}, VT${i + 1}: ${r.tuyen}` }));
+      if (cungXa(r.xa)) r.vt.forEach((g, i) => g != null && kq.push({ gia: g, nguon: `${r.van_ban ?? "NQ 152/2025/NQ-HĐND"}, Bảng ${r.bang}, ${r.xa}, ${r.stt ? `STT ${r.stt}` : r.can_cu ?? ""}, VT${i + 1}: ${r.tuyen}` }));
   if (ma && ["SKC", "TMD"].includes(ma)) {
     for (const r of [...bang.dat_tmdv, ...bang.dat_skc])
-      if (cungXa(r.xa) && (ma === "TMD" ? r.loai_dat.includes("TMD") : r.loai_dat.includes("SKC"))) r.vt.forEach((g, i) => g != null && kq.push({ gia: g, nguon: `NQ 152/2025/NQ-HĐND, Bảng ${r.bang}, ${r.xa}, STT ${r.stt}, VT${i + 1}` }));
+      if (cungXa(r.xa) && (ma === "TMD" ? r.loai_dat.includes("TMD") : r.loai_dat.includes("SKC"))) r.vt.forEach((g, i) => g != null && kq.push({ gia: g, nguon: `${r.van_ban ?? "NQ 152/2025/NQ-HĐND"}, Bảng ${r.bang}, ${r.xa}, ${r.stt ? `STT ${r.stt}` : r.can_cu ?? ""}, VT${i + 1}` }));
   }
+  // k8 Đ7 (bổ sung bởi k6 Đ1 NQ 28/2026): đất TM-DV có nguồn gốc đất ở = 90% đơn giá đất ở cùng vị trí, cùng tuyến
+  const ngay = bang.ap_dung?.ngay;
+  if (ma === "TMD" && ngay && ngay >= NQ28_2026.hieuLucTu)
+    for (const r of bang.dat_o)
+      if (cungXa(r.xa)) r.vt.forEach((g, i) => g != null && kq.push({ gia: D(g).mul(NQ28_2026.tmdvNguonGocDatO.tyLe).toNumber(), nguon: `90% giá đất ở ${r.van_ban ?? "NQ 152/2025/NQ-HĐND"}, Bảng ${r.bang}, ${r.xa}, ${r.stt ? `STT ${r.stt}` : r.can_cu ?? ""}, VT${i + 1} (${NQ28_2026.tmdvNguonGocDatO.canCu})` }));
   if (ma && ["SKK", "SKN"].includes(ma)) for (const r of bang.dat_kcn_ccn) if (cungXa(r.xa)) kq.push({ gia: r.gia, nguon: `NQ 152/2025/NQ-HĐND, Bảng ${r.bang}, ${r.ten}` });
   return kq;
 }
