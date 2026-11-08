@@ -2,7 +2,8 @@
  * Lưu tệp xuất ra máy — MỌI nút xuất tệp (Excel, Word, zip, sao lưu, .txt) đều đi qua hàm này.
  * - Mặc định hỏi nơi lưu: vỏ desktop (Tauri/WebView2) mở hộp thoại "Lưu thành" của Windows (lệnh Rust
  *   `luu_tep_chon_noi`), mở sẵn thư mục lần lưu trước; trình duyệt dùng `showSaveFilePicker` nếu có.
- * - Tắt "Hỏi nơi lưu" (Cài đặt chung): lưu thẳng vào Downloads và mở Explorer chọn sẵn tệp (`luu_tai_xuong`).
+ * - Tắt "Hỏi nơi lưu" (Cài đặt chung / menu Tệp đã xuất): lưu thẳng vào thư mục cán bộ chọn (1.3.5; chưa chọn = Downloads)
+ *   và mở Explorer chọn sẵn tệp (`luu_tai_xuong`).
  * Trả về đường dẫn đã lưu; `null` khi người dùng bấm Hủy ở hộp thoại (nút gọi không báo "đã xuất").
  * Thành công phát sự kiện "gpmb-da-tai" (thông báo đường dẫn); lỗi ném ra để nút gọi báo cho người dùng.
  */
@@ -11,6 +12,32 @@ import { ghiTepDaXuat } from "./tep-da-xuat";
 
 const KHOA_HOI = "gpmb-hoi-noi-luu";
 const KHOA_THU_MUC = "gpmb-thu-muc-luu-cuoi";
+const KHOA_THU_MUC_MAC_DINH = "gpmb-thu-muc-luu-mac-dinh";
+export const SU_KIEN_NOI_LUU = "gpmb-noi-luu";
+
+/** 1.3.5: thư mục lưu thẳng (khi không hỏi nơi lưu); "" = Downloads. Cài đặt theo máy. */
+export function thuMucMacDinh(): string {
+  try {
+    return localStorage.getItem(KHOA_THU_MUC_MAC_DINH) ?? "";
+  } catch {
+    return "";
+  }
+}
+export function datThuMucMacDinh(thuMuc: string) {
+  try {
+    if (thuMuc) localStorage.setItem(KHOA_THU_MUC_MAC_DINH, thuMuc);
+    else localStorage.removeItem(KHOA_THU_MUC_MAC_DINH);
+  } catch {
+    /* bỏ qua */
+  }
+  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent(SU_KIEN_NOI_LUU));
+}
+/** Mở hộp thoại chọn thư mục của Windows (chỉ bản cài). Trả thư mục đã chọn; null khi Hủy hoặc không phải bản cài. */
+export async function chonThuMucLuu(): Promise<string | null> {
+  if (typeof window === "undefined" || !("__TAURI_INTERNALS__" in window)) return null;
+  const { invoke } = await import("@tauri-apps/api/core");
+  return invoke<string | null>("chon_thu_muc_luu", { thuMucDau: thuMucMacDinh() || thuMucCuoi() || null });
+}
 
 /** Có hỏi nơi lưu mỗi lần xuất tệp không (mặc định có). Cài đặt theo máy. */
 export function hoiNoiLuu(): boolean {
@@ -26,6 +53,7 @@ export function datHoiNoiLuu(co: boolean) {
   } catch {
     /* trình duyệt chặn lưu trữ: giữ mặc định */
   }
+  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent(SU_KIEN_NOI_LUU));
 }
 function thuMucCuoi(): string {
   try {
@@ -76,7 +104,7 @@ export async function taiXuong(bytes: Uint8Array, ten: string, loai: string): Pr
       return duongDan;
     }
     try {
-      const duongDan = await invoke<string>("luu_tai_xuong", bytes as never, { headers: { "ten-tep": encodeURIComponent(ten) } });
+      const duongDan = await invoke<string>("luu_tai_xuong", bytes as never, { headers: { "ten-tep": encodeURIComponent(ten), "thu-muc": encodeURIComponent(thuMucMacDinh()) } });
       baoDaLuu(duongDan);
       return duongDan;
     } catch (e) {

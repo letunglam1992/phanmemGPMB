@@ -89,6 +89,7 @@ Quá hạn kế hoạch; bước quá hạn theo luật (thẩm định 30 ngày
 - **Bản đồ DGN V8:** bảng lớp hiện tên lớp đặt trong MicroStation (nếu tệp có); bỏ tích "Màu theo lớp" để xem màu gốc của bản vẽ; kích thước hiện mũi tên hai đầu và chiều dài từng đoạn.
 - **Bản dùng thử, kích hoạt:** chưa kích hoạt thì dùng đủ chức năng với 1 dự án (dự án mẫu không tính). Muốn dùng thêm: mở Giới thiệu, bản quyền (hoặc bấm "Bản dùng thử · …" ở Danh sách dự án) → gửi tên đơn vị và **Mã cài đặt** cho tác giả → dán **mã kích hoạt** nhận được vào ô "Mã kích hoạt" → Kích hoạt (tài khoản Quản trị).
 - **PDF bản đồ có ảnh vệ tinh:** bật "Ảnh vệ tinh (trực tuyến)" trên bản đồ, kiểm tra ảnh khớp thửa (chỉnh dịch Đông/Bắc nếu lệch) → tích **Nền ảnh vệ tinh** cạnh nút Xuất PDF tiến độ. Ảnh chỉ để tham khảo.
+- **Nơi lưu tệp xuất:** bấm nút ⤓ (Tệp đã xuất) trên thanh tiêu đề → chọn **Hỏi nơi lưu mỗi lần** hoặc **Lưu thẳng vào** một thư mục (**Chọn thư mục…**, hoặc **Dùng Downloads**); danh sách bên trên bấm tên tệp để mở, nút **Thư mục** để mở thư mục chứa tệp.
 - **Kết thúc lệnh trên bản đồ:** đang đo, vẽ khung, ghi chú… bấm **chuột phải** để kết thúc phép đo; bấm chuột phải lần nữa để thoát lệnh về công cụ Chọn. Các ô Tệp đã xuất, Thông báo tự đóng khi bấm ra ngoài hoặc nhấn Esc.
 - **Thử phần mềm trên máy thật:** Giới thiệu → **Biểu ghi kết quả thử (Excel)** → điền Đạt / Không đạt / Ghi chú từng việc rồi gửi lại tác giả.
 - **Tìm nhanh (Ctrl + K):** gõ tên, mã hộ, tờ/thửa (5/85 — đúng số tờ, số thửa), 4 số cuối số định danh, hoặc lý trình (Km1+300); Enter mở thẳng thửa tìm được.

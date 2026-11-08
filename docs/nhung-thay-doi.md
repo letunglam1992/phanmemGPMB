@@ -17,6 +17,9 @@ mới hơn bản đang dùng khi có bản cập nhật.
   (vd. TĐ 52-2025, có dấu cách) áp cho mọi thửa của tệp, không phải nhận dạng.
 - **Bản đồ — nhãn kép** (loại đất · số thửa trên gạch ngang · diện tích dưới gạch ngang, ba lớp riêng): gợi ý cấu hình tự nhận đúng
   ba lớp và lớp tên chủ sử dụng đứng riêng.
+- **Chọn nơi lưu tệp tải xuống** ngay ở nút ⤓ (Tệp đã xuất) hoặc Cài đặt chung: *Hỏi nơi lưu mỗi lần* (hộp "Lưu thành") hoặc
+  *Lưu thẳng vào* một thư mục tự chọn ("Chọn thư mục…"; mặc định Downloads). Sửa lỗi danh sách tệp đã xuất chỉ hiện chữ
+  "Thư mục" mà không thấy tên tệp.
 - **Số tờ trong hồ sơ nhập một lần**: thêm thửa tự điền số tờ; nút "Điền tờ … cho các thửa trống"; Dự án → Thêm → "Điền số tờ cho
   thửa chưa có số tờ…"; nhập Excel ô số tờ trống lấy số tờ của dự án (có cảnh báo).
 

@@ -209,15 +209,19 @@ fn ten_chua_co(dir: &std::path::Path, ten: &str) -> PathBuf {
         .unwrap()
 }
 
-/// Tải tệp về máy trong vỏ desktop (WebView2 không tự lưu liên kết blob): ghi vào thư mục Downloads
-/// rồi mở trình quản lý tệp, chọn sẵn tệp vừa lưu. Thân yêu cầu = nội dung tệp; header `ten-tep` = tên.
+/// Tải tệp về máy trong vỏ desktop (WebView2 không tự lưu liên kết blob): ghi vào thư mục cán bộ chọn (header
+/// `thu-muc`, 1.3.5) hoặc Downloads rồi mở trình quản lý tệp, chọn sẵn tệp vừa lưu. Thân yêu cầu = nội dung tệp; `ten-tep` = tên.
 #[tauri::command]
 fn luu_tai_xuong(app: tauri::AppHandle, request: Request<'_>) -> Result<String, String> {
     let InvokeBody::Raw(du_lieu) = request.body() else {
         return Err("Dữ liệu tệp không đúng dạng".into());
     };
     let ten = ten_tep_an_toan(&tieu_de(&request, "ten-tep")?);
-    let dir = thu_muc_tai_ve(&app)?;
+    // 1.3.5: header `thu-muc` = thư mục lưu thẳng cán bộ đã chọn; trống / không còn → Downloads
+    let dir = match tieu_de(&request, "thu-muc").ok().map(PathBuf::from).filter(|p| p.is_absolute() && p.is_dir()) {
+        Some(d) => d,
+        None => thu_muc_tai_ve(&app)?,
+    };
     let dich = ten_chua_co(&dir, &ten);
     fs::write(&dich, du_lieu).map_err(|e| format!("Không ghi được {}: {e}", dich.display()))?;
     mo_explorer_chon(&dich);
@@ -261,6 +265,26 @@ async fn luu_tep_chon_noi(app: tauri::AppHandle, request: Request<'_>) -> Result
     let Some(dich) = chon else { return Ok(None) };
     fs::write(&dich, &du_lieu).map_err(|e| format!("Không ghi được {}: {e}", dich.display()))?;
     Ok(Some(dich.display().to_string()))
+}
+
+/// 1.3.5: chọn thư mục để lưu thẳng tệp xuất (không hỏi mỗi lần). Trả đường dẫn thư mục; `None` khi cán bộ bấm Hủy.
+#[tauri::command]
+async fn chon_thu_muc_luu(app: tauri::AppHandle, thu_muc_dau: Option<String>) -> Result<Option<String>, String> {
+    let dau = thu_muc_dau.map(PathBuf::from).filter(|p| p.is_absolute() && p.is_dir()).or_else(|| thu_muc_tai_ve(&app).ok());
+    let cua_so = app.get_webview_window("main");
+    let chon = tauri::async_runtime::spawn_blocking(move || {
+        let mut hop = rfd::FileDialog::new().set_title("Chọn thư mục lưu tệp xuất");
+        if let Some(w) = cua_so.as_ref() {
+            hop = hop.set_parent(w);
+        }
+        if let Some(d) = dau {
+            hop = hop.set_directory(d);
+        }
+        hop.pick_folder()
+    })
+    .await
+    .map_err(|e| e.to_string())?;
+    Ok(chon.map(|p| p.display().to_string()))
 }
 
 // ---------------- DPAPI (P0-5) ----------------
@@ -444,6 +468,7 @@ pub fn run() {
             mo_thu_muc_sao_luu,
             luu_tai_xuong,
             luu_tep_chon_noi,
+            chon_thu_muc_luu,
             mo_tep_da_xuat,
             mo_noi_luu_tep,
             dpapi_boc,

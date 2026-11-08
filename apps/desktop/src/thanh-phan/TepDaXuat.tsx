@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ChonNoiLuu } from "./NoiLuu";
 import { useDongKhiBamNgoai } from "./dong-khi-bam-ngoai";
 import { useUngDung } from "../ung-dung";
 import { BieuTuong } from "./BieuDo";
@@ -64,6 +65,8 @@ export function NutTepDaXuat() {
             );
           })}
           {!ds.length && <div className="trong" style={{ padding: 16 }}>Chưa xuất tệp nào.</div>}
+          <div className="menu-vach" />
+          <ChonNoiLuu />
           {ds.length > 0 && (
             <>
               <div className="menu-vach" />

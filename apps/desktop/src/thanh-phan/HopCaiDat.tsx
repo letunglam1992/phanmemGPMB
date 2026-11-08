@@ -12,7 +12,7 @@ import type { GiaiDoanTyLe } from "../chi-tra";
 import { deXuatNgayNghi, type LichLamViec, type NgayDacBiet } from "../lich-lam-viec";
 import { Chon } from "./Chon";
 import { KHOA_THE_CAI_DAT } from "./BatDau";
-import { datHoiNoiLuu, hoiNoiLuu } from "../tai-xuong";
+import { ChonNoiLuu } from "./NoiLuu";
 import { DUOI_TEP_TQ, QD27_MAC_DINH, docTepCauHinhThamQuyen, loiCauHinh, tepCauHinhThamQuyen, type CauHinhThamQuyen } from "../van-ban/tham-quyen";
 import { taiXuong } from "../tai-xuong";
 import { ChonTep } from "./ChonTep";
@@ -449,15 +449,12 @@ function TheTyLeCham() {
 /** Ảnh nền thanh tiêu đề: mặc định là tranh núi đồi tự vẽ; đơn vị có thể chọn ảnh chụp riêng (lưu trong cài đặt, không gửi ra ngoài). */
 /** Nơi lưu tệp xuất (Excel, Word, zip, sao lưu thủ công) — cài đặt theo máy. */
 function TheLuuTep() {
-  const [hoi, setHoi] = useState(hoiNoiLuu());
   return (
     <div>
-      <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        <input type="checkbox" checked={hoi} onChange={(e) => { datHoiNoiLuu(e.target.checked); setHoi(e.target.checked); }} /> Hỏi nơi lưu mỗi lần xuất tệp (Excel, Word, zip, sao lưu thủ công)
-      </label>
+      <ChonNoiLuu gon />
       <p className="mo chu-nho">
-        Bật: mở hộp thoại “Lưu thành” để chọn thư mục và đặt tên tệp; lần sau mở sẵn thư mục đã lưu gần nhất. Bấm Hủy thì không lưu và không ghi số, ngày văn bản vào hồ sơ.
-        <br />Tắt: lưu thẳng vào thư mục Downloads và mở Explorer chọn sẵn tệp. Cài đặt áp dụng cho máy này. Sao lưu tự động vẫn ghi vào thư mục đặt ở thẻ “Tự động sao lưu”.
+        Hỏi nơi lưu: mở hộp thoại “Lưu thành” để chọn thư mục và đặt tên tệp; lần sau mở sẵn thư mục đã lưu gần nhất. Bấm Hủy thì không lưu và không ghi số, ngày văn bản vào hồ sơ.
+        <br />Lưu thẳng: ghi vào thư mục đã chọn (“Chọn thư mục…”; chưa chọn = Downloads), trùng tên thì thêm (1), (2)… và mở Explorer chọn sẵn tệp. Cài đặt áp dụng cho máy này; đổi nhanh ở nút Tệp đã xuất trên thanh tiêu đề. Sao lưu tự động vẫn ghi vào thư mục đặt ở thẻ “Tự động sao lưu”.
       </p>
     </div>
   );

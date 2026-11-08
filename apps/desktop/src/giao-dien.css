@@ -1205,6 +1205,13 @@ kbd.phim { display: inline-block; min-width: 20px; padding: 1px 6px; border: 1px
 .menu-tep .tep-bt { flex: none; width: 28px; height: 28px; border-radius: 7px; display: grid; place-items: center; background: var(--be-mat-2); color: var(--chinh); font-weight: 700; font-size: 12px; }
 .menu-tep .tep-ten { flex: 1; min-width: 0; text-align: left; background: none; border: 0; padding: 0; cursor: pointer; color: inherit; display: block !important; }
 .menu-tep .tep-ten:disabled { cursor: default; }
+/* 1.3.5: nút "Thư mục" không chiếm cả dòng (quy tắc chung .menu-tha button width 100% làm tên tệp bị ẩn) */
+.menu-tep .tep-dong > .nut { width: auto; flex: none; padding: 4px 10px; align-items: center !important; }
+.noi-luu { display: grid; gap: 6px; padding: 6px 10px 4px; }
+.noi-luu-dong { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; cursor: pointer; }
+.noi-luu-dong b { word-break: break-all; }
+.noi-luu-nut { display: flex; gap: 6px; flex-wrap: wrap; padding-left: 24px; }
+.menu-tha .noi-luu-nut button { width: auto; padding: 4px 10px; }
 .menu-tep .tep-ten b { display: block; font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .menu-tep .tep-ten:not(:disabled):hover b { text-decoration: underline; color: var(--chinh); }
 .menu-tep .tep-ten small { display: block; font-size: 11.5px; color: var(--chu-mo); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
