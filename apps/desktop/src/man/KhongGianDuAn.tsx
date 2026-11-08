@@ -110,7 +110,7 @@ export function KhongGianDuAn({ duAnId, tab = "tong-quan", ma, hoId }: { duAnId:
         </div>
         <div className="phai">
           <button className={`nut ${tab === "van-ban" ? "nut-chinh" : ""}`} title="Tờ trình, niêm yết, lấy ý kiến, thẩm định, quyết định phê duyệt phương án… — văn bản của từng hộ soạn trong hồ sơ hộ (thẻ Văn bản)" onClick={() => moThe("van-ban")}><BieuTuong ten="vanBan" co={16} /> Văn bản dự án, đợt</button>
-          <button className="nut" disabled={dangXuat || kq.length === 0} onClick={async () => { setDangXuat(true); try { await xuatExcelDuAn(duAn, kq, undefined, await docMauExcel()); } finally { setDangXuat(false); } }}>{dangXuat ? "Đang xuất…" : "Xuất Excel"}</button>
+          <button className="nut" disabled={dangXuat || kq.length === 0} onClick={async () => { setDangXuat(true); try { await xuatExcelDuAn(duAn, kq, undefined, await docMauExcel(duAn.xa)); } finally { setDangXuat(false); } }}>{dangXuat ? "Đang xuất…" : "Xuất Excel"}</button>
           <div className="menu-nguoi">
             <button className="nut" aria-expanded={menuThem} onClick={() => setMenuThem(!menuThem)}><BieuTuong ten="baCham" co={16} /> Thêm</button>
             {menuThem && (
@@ -396,7 +396,7 @@ function TheHo({ duAn, kq }: { duAn: DuAn; kq: Kq }) {
   const xuatChon = async () => {
     setDangXuatChon(true);
     try {
-      await xuatExcelDuAn(duAn, kq.filter((x) => chon.has(x.h.id)), undefined, await docMauExcelChon());
+      await xuatExcelDuAn(duAn, kq.filter((x) => chon.has(x.h.id)), undefined, await docMauExcelChon(duAn.xa));
     } catch (e) {
       bao(`Không xuất được Excel: ${(e as Error).message}`, "loi");
     } finally {

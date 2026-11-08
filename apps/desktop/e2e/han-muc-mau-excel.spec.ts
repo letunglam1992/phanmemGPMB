@@ -41,7 +41,7 @@ test("hạn mức đất ở theo Phụ lục I: chọn vị trí thửa → Đi
   await expect(k.locator("[data-tom-tat-kgt]")).toContainText("khoản 1 Điều 8");
 });
 
-test("biểu mẫu Excel của đơn vị: thay mẫu (điền thử), báo trường lạ, khôi phục", async ({ page: p }) => {
+test("biểu mẫu Excel của đơn vị: thay mẫu chung (điền thử), báo trường lạ, khôi phục", async ({ page: p }) => {
   await vao(p);
   await p.getByRole("button", { name: "Thêm", exact: true }).click();
   await p.getByRole("menuitem", { name: "Biểu mẫu Excel…" }).click();
@@ -51,9 +51,36 @@ test("biểu mẫu Excel của đơn vị: thay mẫu (điền thử), báo trư
   const ws = wb.addWorksheet("TH");
   ws.getCell("A1").value = "{{ten_du_an}} {{truong_la}}";
   ws.getRow(2).values = ["{{#ho}}{{stt}}", "{{ten}}", "{{tong_lam_tron}}"];
-  await hop.getByLabel("Chọn tệp mẫu Excel").setInputFiles({ name: "mau-don-vi.xlsx", mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", buffer: Buffer.from(await wb.xlsx.writeBuffer()) });
-  await expect(hop.locator("[data-mau-excel]")).toContainText("mẫu của đơn vị — mau-don-vi.xlsx");
+  await hop.locator("[data-pham-vi-mau]").selectOption("");
+  await hop.getByLabel("Chọn tệp mẫu Excel").setInputFiles({ name: "mau-don-vi.xlsx", mimeType: XLSX, buffer: Buffer.from(await wb.xlsx.writeBuffer()) });
+  await expect(hop.locator("[data-mau-excel]")).toContainText("mẫu chung của đơn vị — mau-don-vi.xlsx");
   await expect(hop).toContainText("{{truong_la}}");
-  await hop.getByRole("button", { name: "Khôi phục bố cục của phần mềm" }).click();
+  await hop.locator("tr[data-mau-xa='']").getByRole("button", { name: "Bỏ mẫu" }).click();
   await expect(hop.locator("[data-mau-excel]")).toContainText("bố cục của phần mềm");
+});
+
+const XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+test("mẫu riêng của xã: nhập tệp phương án sẵn có (không có trường) → tự nhận diện, dự án ở xã đó dùng mẫu của xã", async ({ page: p }) => {
+  await vao(p);
+  await p.getByRole("button", { name: "Thêm", exact: true }).click();
+  await p.getByRole("menuitem", { name: "Biểu mẫu Excel…" }).click();
+  const hop = p.locator("[role=dialog]", { hasText: "Biểu mẫu Excel phương án" });
+  const xa = await hop.locator("[data-pham-vi-mau]").inputValue();
+  expect(xa).not.toBe("");
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet("Ho 1");
+  ws.getCell("A1").value = "PHƯƠNG ÁN CHI TIẾT CỦA XÃ";
+  ws.getCell("A3").value = "Họ và tên: Người giả";
+  ws.getRow(5).values = ["STT", "Nội dung", "ĐVT", "Khối lượng", "Đơn giá", "Thành tiền", "Căn cứ"];
+  ws.getRow(6).values = [1, "Đất", "m²", 100, 50000, 5000000, "QĐ"];
+  ws.getRow(7).values = ["", "Tổng cộng", "", "", "", 5000000, ""];
+  await hop.getByLabel("Chọn tệp mẫu Excel").setInputFiles({ name: "phuong-an-xa.xlsx", mimeType: XLSX, buffer: Buffer.from(await wb.xlsx.writeBuffer()) });
+  await expect(hop.locator("[data-mau-excel]")).toContainText(`mẫu riêng của ${xa} — phuong-an-xa (nhận diện).xlsx`);
+  await expect(hop.locator("[data-mo-ta-nhan-dien]")).toContainText("bảng chi tiết của hộ");
+  await expect(hop.locator(`tr[data-mau-xa='${xa}']`)).toBeVisible();
+  await hop.locator("[data-xem-truoc-excel]").click();
+  const xem = p.locator("[role=dialog]", { hasText: "Xem trước biểu Excel" });
+  await expect(xem.locator("[data-noi-dung-xem-truoc-excel]")).toContainText("PHƯƠNG ÁN CHI TIẾT CỦA XÃ");
+  await expect(xem.locator("[data-noi-dung-xem-truoc-excel]")).toContainText("Tổng cộng");
 });

@@ -6,6 +6,10 @@ mới hơn bản đang dùng khi có bản cập nhật.
 
 ## 1.3.5
 
+- **Mẫu Excel phương án riêng của từng xã, phường**: Hồ sơ dự án → Thêm → Biểu mẫu Excel… → *Mẫu theo xã, phường*: chọn xã rồi
+  **nhập tệp phương án sẵn có của xã** (không cần sửa, không cần trường {{…}}) — phần mềm tự nhận bảng chi tiết của hộ (cột Đơn giá,
+  Thành tiền), bảng tổng hợp (cột Họ và tên, số tiền), dòng Tổng cộng, Làm tròn, ô Họ và tên, Địa chỉ…, giữ nguyên tiêu đề, phông
+  chữ, khung, chữ ký của xã. Khi xuất Excel, dự án ở xã nào tự dùng mẫu của xã đó; xã chưa có mẫu dùng mẫu chung của đơn vị.
 - **Thông tin dự án — hạn mức đất nông nghiệp theo loại đất**: ba ô theo khoản 1 Điều 7 Phụ lục I QĐ 106/2025 (cây hằng năm,
   nuôi trồng thủy sản; cây lâu năm; rừng sản xuất là rừng trồng, rừng phòng hộ) kèm căn cứ, nút **Điền theo Điều 7 Phụ lục I**
   theo xã/phường của dự án. Hỗ trợ chuyển đổi nghề, đất không có giấy tờ, nông lâm trường, chênh lệch giá đất tự lấy hạn mức

@@ -91,7 +91,7 @@ export function TabTinhToan({ h, duAn, kq }: { h: Ho; duAn: DuAn; kq: KetQuaHo }
           </span>
           <div className="phai">
             {!moGt && <button className="nut nut-nho" title="Mở khung giải trình bên phải (hoặc bấm một dòng)" onClick={() => datMoGt(true)}>Giải trình ‹</button>}
-            <button className="nut nut-nho" onClick={async () => xuatExcelHo(duAn, h, kq, await docMauExcel())}>Xuất Excel phương án chi tiết</button>
+            <button className="nut nut-nho" onClick={async () => xuatExcelHo(duAn, h, kq, await docMauExcel(duAn.xa))}>Xuất Excel phương án chi tiết</button>
             <button className="nut nut-nho" title="Bảng tính chi tiết kèm giải trình từng khoản (công thức, tham số, căn cứ) — tệp Word" onClick={async () => {
               const tl = taiLieuBangTinh(duAn, h, kq);
               if (await taiXuong(taoDocx(tl), tenTep(`Bang-tinh-giai-trinh_${h.ma} ${h.ten}.docx`), "application/vnd.openxmlformats-officedocument.wordprocessingml.document")) bao("Đã xuất Word bảng tính, giải trình");
