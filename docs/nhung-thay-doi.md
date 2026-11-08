@@ -13,6 +13,12 @@ mới hơn bản đang dùng khi có bản cập nhật.
 - **Vị trí đất ở để tính hạn mức**: chọn một lần cho dự án (trung tâm xã, giáp quốc lộ, đường tỉnh / chỉ giáp đường xã / vị trí
   còn lại; ở phường: giáp quốc lộ, đường tỉnh, đường từ 13 m / còn lại) → phần mềm hiện và áp hạn mức công nhận đất ở theo Điều 3
   hoặc Điều 4 (theo thời điểm sử dụng của thửa) và hạn mức giao đất ở theo Điều 5 (xã) hoặc Điều 6 (phường).
+- **Bản đồ — số tờ**: ô **Số tờ bản đồ của tệp** có ngay trong "Cấu hình lớp" (và hộp sau khi nạp, Tờ bản đồ); số tờ ghi ở khung tờ
+  (vd. TĐ 52-2025, có dấu cách) áp cho mọi thửa của tệp, không phải nhận dạng.
+- **Bản đồ — nhãn kép** (loại đất · số thửa trên gạch ngang · diện tích dưới gạch ngang, ba lớp riêng): gợi ý cấu hình tự nhận đúng
+  ba lớp và lớp tên chủ sử dụng đứng riêng.
+- **Số tờ trong hồ sơ nhập một lần**: thêm thửa tự điền số tờ; nút "Điền tờ … cho các thửa trống"; Dự án → Thêm → "Điền số tờ cho
+  thửa chưa có số tờ…"; nhập Excel ô số tờ trống lấy số tờ của dự án (có cảnh báo).
 
 ## 1.3.4
 

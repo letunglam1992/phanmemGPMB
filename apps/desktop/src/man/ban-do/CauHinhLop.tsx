@@ -19,6 +19,9 @@ const DOI_TUONG: { k: KhoaDoiTuong; ten: string; ngan: string; hinh?: boolean }[
   { k: "nhanHienTrang", ten: "Nhãn hiện trạng GPMB", ngan: "Hiện trạng" },
 ];
 
+/** 1.3.5: số tờ nhập tay của tệp — chữ, số, dấu cách . / - (vd. "TĐ 52-2025"), ≤ 24 ký tự. */
+export const loiSoToTep = (s: string) => (s.trim() && !/^[\p{L}\d][\p{L}\d ./-]{0,23}$/u.test(s.trim()) ? "Số tờ chỉ gồm chữ, số, dấu cách, dấu . / - (≤ 24 ký tự)" : null);
+
 export const dsLop = (x: string) => [...new Set(x.split(/[,;\s]+/).filter(Boolean).map(Number).filter((n) => Number.isInteger(n) && n >= 0))];
 
 /**
@@ -28,7 +31,7 @@ export const dsLop = (x: string) => [...new Set(x.split(/[,;\s]+/).filter(Boolea
 export function HopCachGanLop(p: { tep: string; soThua: number; thieuSoTo: number; soTo: string; chon: (cach: "TU_DONG" | "CHON", soTo: string) => void; dong: () => void }) {
   const [cach, setCach] = useState<"TU_DONG" | "CHON">("TU_DONG");
   const [soTo, setSoTo] = useState(p.soTo);
-  const loiSoTo = soTo.trim() && !/^[\p{L}\d][\p{L}\d./-]{0,15}$/u.test(soTo.trim()) ? "Số tờ chỉ gồm chữ, số, dấu . / - (≤ 16 ký tự)" : null;
+  const loiSoTo = loiSoToTep(soTo);
   return (
     <HopThoai tieuDe={`Đã nạp bản đồ: ${p.tep}`} dong={p.dong} rong={620} chan={<><button className="nut" onClick={p.dong}>Để sau</button><button className="nut nut-chinh" disabled={!!loiSoTo} onClick={() => p.chon(cach, soTo)}>Tiếp tục</button></>}>
       <p className="mt-0">Phần mềm dựng được <b>{p.soThua}</b> thửa{p.thieuSoTo ? <>, trong đó <b>{p.thieuSoTo}</b> thửa không đọc được số tờ</> : ""}. Chọn cách gán lớp (level) của bản đồ cho từng đối tượng:</p>
@@ -40,8 +43,8 @@ export function HopCachGanLop(p: { tep: string; soThua: number; thieuSoTo: numbe
         <input type="radio" name="cach-gan-lop" checked={cach === "CHON"} onChange={() => setCach("CHON")} />
         <span><b>Tự chọn lớp cho từng đối tượng</b><br /><span className="mo chu-nho">Bản đồ không theo quy chuẩn lớp: tích lớp nào là ranh thửa, nhãn thửa, số thửa, số tờ, loại đất, diện tích, chủ sử dụng, ranh GPMB — có chữ mẫu từng lớp để đối chiếu.</span></span>
       </label>
-      <O nhan="Số tờ bản đồ của tệp (khi bản đồ không ghi số tờ)" goiY="Chỉ dùng cho thửa không đọc được số tờ trên bản đồ; sửa được ở “Tờ bản đồ” (mỗi tệp một số tờ)." className="mt-10">
-        <input value={soTo} aria-label="Số tờ bản đồ của tệp" className={loiSoTo ? "loi-nhap" : ""} placeholder="vd. 21" onChange={(e) => setSoTo(e.target.value)} />
+      <O nhan="Số tờ bản đồ của tệp" goiY="Số tờ ghi ở khung tờ bản đồ (vd. TĐ 52-2025) — áp cho mọi thửa của tệp, không phải nhận dạng; bỏ trống thì đọc số tờ theo lớp chữ. Sửa được ở “Cấu hình lớp”, “Tờ bản đồ”." className="mt-10">
+        <input value={soTo} aria-label="Số tờ bản đồ của tệp" className={loiSoTo ? "loi-nhap" : ""} placeholder="vd. TĐ 52-2025" onChange={(e) => setSoTo(e.target.value)} />
       </O>
       {loiSoTo && <div className="thong-bao thong-bao-do chu-nho">{loiSoTo}</div>}
     </HopThoai>
@@ -49,7 +52,9 @@ export function HopCachGanLop(p: { tep: string; soThua: number; thieuSoTo: numbe
 }
 
 /** Cấu hình lớp: thống kê lớp trong tệp để cán bộ chọn; gợi ý tự động chỉ là điểm xuất phát. */
-export function HopCauHinhLop(p: { dl: DuLieuBanDo; sua: boolean; apDung: (ch: CauHinhLop | null) => void; dong: () => void }) {
+export function HopCauHinhLop(p: { dl: DuLieuBanDo; sua: boolean; soTo: string; coTepGhep: boolean; apDung: (ch: CauHinhLop | null, soTo: string) => void; dong: () => void }) {
+  const [soTo, setSoTo] = useState(p.soTo);
+  const loiSoTo = loiSoToTep(soTo);
   const tk = useMemo(() => thongKeLop(p.dl.ban), [p.dl.ban]);
   const c0 = p.dl.cauHinh;
   const [f, setF] = useState(() => ({
@@ -84,6 +89,7 @@ export function HopCauHinhLop(p: { dl: DuLieuBanDo; sua: boolean; apDung: (ch: C
   }
   if (new Set(Object.values(dongNut)).size !== Object.values(dongNut).length) loi.push("Hai trường của nút thuộc tính trùng dòng.");
   if (lopNut.length && !Object.keys(dongNut).length) loi.push("Đã chọn lớp nút thuộc tính nhưng chưa chọn dòng nào.");
+  if (loiSoTo) loi.push(loiSoTo);
   const ketQua = (): CauHinhLop => ({
     ranhThua: dsLop(f.ranhThua),
     nhanThua: dsLop(f.nhanThua),
@@ -114,21 +120,24 @@ export function HopCauHinhLop(p: { dl: DuLieuBanDo; sua: boolean; apDung: (ch: C
       dong={p.dong}
       chan={
         <>
-          {!p.dl.laGoiY && p.sua && <button className="nut" onClick={() => p.apDung(null)}>Bỏ chốt, dùng gợi ý</button>}
+          {!p.dl.laGoiY && p.sua && <button className="nut" disabled={!!loiSoTo} onClick={() => p.apDung(null, soTo)}>Bỏ chốt, dùng gợi ý</button>}
           <button className="nut" onClick={p.dong}>Đóng</button>
-          {p.sua && <button className="nut nut-chinh" disabled={loi.length > 0} onClick={() => p.apDung(ketQua())}>Chốt cấu hình và dựng lại thửa</button>}
+          {p.sua && <button className="nut nut-chinh" disabled={loi.length > 0} onClick={() => p.apDung(ketQua(), soTo)}>Chốt cấu hình và dựng lại thửa</button>}
         </>
       }
     >
       <div className="luoi" style={{ gap: 16, alignItems: "start", gridTemplateColumns: "minmax(0, 1fr)" }}>
         <div style={{ display: "grid", gap: 10, minWidth: 0 }}>
-          <div className="mo chu-nho">Tích lớp cho từng đối tượng ở bảng bên phải, hoặc gõ số lớp (nhiều lớp cách nhau bằng dấu phẩy). Nhãn thửa nhiều nội dung cùng một lớp (vd. “CLN”, “13” trên “1310,0”, “Lèo Văn Pản”): chọn lớp đó làm Nhãn thửa — chữ cái là loại đất, số gần diện tích hình học là diện tích, số còn lại là số thửa, chữ từ hai từ trở lên là chủ sử dụng (khi không chọn lớp chủ riêng). {p.dl.laGoiY ? "Các giá trị đang là gợi ý từ cấu trúc tệp — cán bộ đối chiếu bảng thống kê bên phải trước khi chốt." : "Cấu hình đã được chốt cho tệp này."}</div>
+          <div className="mo chu-nho">Tích lớp cho từng đối tượng ở bảng bên phải, hoặc gõ số lớp (nhiều lớp cách nhau bằng dấu phẩy). <b>Nhãn kép</b> (dạng phân số: loại đất bên cạnh, số thửa trên gạch ngang, diện tích dưới gạch ngang — vd. “CLN”, “16” trên “14308,9”; không có chủ sử dụng, số tờ): nếu ba phần ở ba lớp riêng thì chọn Loại đất (riêng), Số thửa (riêng), Diện tích (riêng); nếu cùng một lớp thì chọn lớp đó làm Nhãn thửa — chữ cái là loại đất, số thập phân / số gần diện tích hình học là diện tích, số còn lại là số thửa (chữ từ hai từ trở lên, nếu có, là chủ sử dụng). Số tờ ghi ở khung tờ → nhập ở “Số tờ bản đồ của tệp”. {p.dl.laGoiY ? "Các giá trị đang là gợi ý từ cấu trúc tệp — cán bộ đối chiếu bảng thống kê bên phải trước khi chốt." : "Cấu hình đã được chốt cho tệp này."}</div>
+          <O nhan={p.coTepGhep ? "Số tờ bản đồ của tệp chính" : "Số tờ bản đồ của tệp"} goiY={`Ghi ở khung tờ bản đồ (vd. TĐ 52-2025) — áp cho mọi thửa của tệp, không phải nhận dạng; bỏ trống thì đọc số tờ theo lớp “Số tờ”.${p.coTepGhep ? " Tờ ghép: nhập ở “Tờ bản đồ”." : ""}`}>
+            <input value={soTo} aria-label="Số tờ bản đồ của tệp" className={loiSoTo ? "loi-nhap" : ""} placeholder="vd. TĐ 52-2025" onChange={(e) => setSoTo(e.target.value)} disabled={!p.sua} />
+          </O>
           <div className="luoi" style={{ gap: 8, gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}>
             {truong("ranhThua", "Ranh thửa", "đường khép thửa")}
             {truong("nhanThua", "Nhãn thửa", "loại đất, số thửa, DT")}
             {truong("ranhGpmb", "Ranh GPMB / thửa thu hồi", "vùng khép kín")}
             {truong("soThua", "Số thửa (riêng)", "")}
-            {truong("soTo", "Số tờ (riêng)", "")}
+            {truong("soTo", "Số tờ (riêng)", "bỏ trống khi đã nhập số tờ của tệp")}
             {truong("chuSuDung", "Chủ sử dụng (riêng)", "")}
             {truong("loaiDat", "Loại đất (riêng)", "vd. CLN tách khỏi số thửa")}
             {truong("dienTich", "Diện tích (riêng)", "nhận cả số nguyên")}

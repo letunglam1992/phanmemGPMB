@@ -7,6 +7,7 @@ import { taoId, type DuAn, type Ho, type Thua } from "../../mo-hinh";
 import { ChonGiaDat } from "../../thanh-phan/ChonGiaDat";
 import { tien } from "../../thanh-phan/chung";
 import { PhanLop } from "./PhanLop";
+import { dienSoToTrong, soToGoiY } from "../../so-to";
 import { TEN_CHENH_LECH, hanMucDatNNThua, hanMucDatOThua, hanMucNNDuAn, laDatNN } from "../../tinh-ho";
 import { TEN_NHOM_HANH_LANG, TEN_TRUONG_HOP_NN, TEN_VI_TRI_HAN_MUC, dinhDang, laPhuong, type ViTriHanMuc, phanBoDatNN, phanBoDatO, type NhomDatHanhLang, type TruongHopDatNN } from "@gpmb/core";
 import { TEN_KHONG_GIAY_TO } from "../../tinh-ho";
@@ -44,21 +45,27 @@ export function TabThua({ h, duAn, doi, noiBat }: { h: Ho; duAn: DuAn; doi: (h: 
   const [chonGiaHT, setChonGiaHT] = useState<string | null>(null);
   const [xemBanDo, setXemBanDo] = useState<string | null>(null);
   const [chonGiaKgt, setChonGiaKgt] = useState<{ id: string; loai: "KD" | "CL"; loaiDat: string } | null>(null);
-  const { chinhSach } = useUngDung();
+  const { chinhSach, hoCua } = useUngDung();
   const cs = chinhSach(duAnTheoBoHo(duAn, h));
+  // 1.3.5: số tờ nhập một lần — thửa mới tự lấy số tờ gợi ý; nút điền cho thửa còn trống
+  const toGoiY = soToGoiY(duAn, hoCua(duAn.id), h);
+  const soTrong = h.thua.filter((t) => !t.soTo.trim()).length;
   const sua = (id: string, p: Partial<Thua>) => doi({ ...h, thua: h.thua.map((t) => (t.id === id ? { ...t, ...p } : t)) });
   // 1.0.6: hồ sơ nhiều thửa — chỉ dựng các thửa đang nhìn thấy (mỗi thửa một tbody để đo đúng chiều cao)
   const khoaThua = useMemo(() => h.thua.map((t) => t.id), [h.thua]);
   const cuaSo = useCuaSo(khoaThua, 80, 8);
   const them = () =>
-    doi({ ...h, thua: [...h.thua, { id: taoId(), soTo: "", soThua: "", loaiDat: "CLN", dienTich: "", dienTichThuHoi: "", nguonGoc: "", gia: null }] });
+    doi({ ...h, thua: [...h.thua, { id: taoId(), soTo: toGoiY, soThua: "", loaiDat: "CLN", dienTich: "", dienTichThuHoi: "", nguonGoc: "", gia: null }] });
   const thuaChon = h.thua.find((t) => t.id === chonGia);
   return (
     <div className="the">
       <div className="the-dau">
         <h2>Thửa đất bị thu hồi</h2>
         <span className="mo chu-nho">Diện tích làm tròn 2 chữ số thập phân khi tính (QD-03)</span>
-        <div className="phai"><button className="nut nut-nho" onClick={them}>+ Thêm thửa</button></div>
+        <div className="phai">
+          {soTrong > 0 && toGoiY && <button className="nut nut-nho" data-dien-so-to title="Điền số tờ cho các thửa chưa ghi số tờ của hồ sơ này (thửa đã có giữ nguyên)" onClick={() => doi(dienSoToTrong([h], toGoiY)[0] ?? h)}>Điền tờ {toGoiY} cho {soTrong} thửa trống</button>}
+          <button className="nut nut-nho" onClick={them}>+ Thêm thửa</button>
+        </div>
       </div>
       <div className="bang-cuon">
         <table className="bang" ref={(e) => void (cuaSo.bang.current = e)}>

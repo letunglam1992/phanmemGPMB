@@ -41,6 +41,7 @@ import { TheDoiChieuDt } from "../thanh-phan/DoiChieuDt";
 import { TheDuBao } from "../thanh-phan/DuBao";
 import { TheQuyTdc } from "../thanh-phan/QuyTdc";
 import { soatQuyTdc } from "../quy-tdc";
+import { HopDienSoTo } from "../thanh-phan/DienSoTo";
 import { TheChiTraKinhPhi } from "../thanh-phan/KinhPhi";
 import { TheKhieuNaiDuAn } from "../thanh-phan/KhieuNaiDuAn";
 import { TheBanGiaoThucDia } from "../thanh-phan/BanGiaoThucDia";
@@ -80,6 +81,7 @@ export function KhongGianDuAn({ duAnId, tab = "tong-quan", ma, hoId }: { duAnId:
   const [keHoach, setKeHoach] = useState(false);
   const [capNhatTd, setCapNhatTd] = useState<null | "chung" | "hang-loat">(null);
   const [hopMauExcel, setHopMauExcel] = useState(false);
+  const [dienSoTo, setDienSoTo] = useState(false);
   const docMauExcel = useMauExcel();
   const hos = hoCua(duAnId);
   const kq = useMemo(() => (duAn ? hos.map((h) => ({ h, k: tinhHo(chinhSach(duAn), duAn, h) })) : []), [hos, duAn, chinhSach]);
@@ -93,6 +95,7 @@ export function KhongGianDuAn({ duAnId, tab = "tong-quan", ma, hoId }: { duAnId:
   return (
     <div className="trang kg-trang">
       {hopMauExcel && <HopMauExcel duAn={duAn} ds={kq} dong={() => setHopMauExcel(false)} />}
+      {dienSoTo && <HopDienSoTo duAn={duAn} hos={hos} dong={() => setDienSoTo(false)} />}
       <div className="duong-dan"><button onClick={() => di({ ten: "tong-quan" })}>Tổng quan</button> / <button onClick={() => di({ ten: "du-an" })}>Dự án</button> / Hồ sơ</div>
       <div className="the kg-dau">
         <span className="da-bt lon"><BieuTuong ten={BT_LOAI_DU_AN[duAn.loaiDuAn ?? "KHAC"]} co={26} /></span>
@@ -117,6 +120,7 @@ export function KhongGianDuAn({ duAnId, tab = "tong-quan", ma, hoId }: { duAnId:
                 <button role="menuitem" onClick={() => { setKeHoach(true); setMenuThem(false); }}>Lập kế hoạch từng bước</button>
                 <button role="menuitem" onClick={() => { setHopMauExcel(true); setMenuThem(false); }}>Biểu mẫu Excel…</button>
                 <button role="menuitem" onClick={() => { di({ ten: "ds-ho", duAnId }); setMenuThem(false); }}>Danh sách hồ sơ (lọc nâng cao)</button>
+                {quyen("SUA_HO_SO") && <button role="menuitem" onClick={() => { setDienSoTo(true); setMenuThem(false); }}>Điền số tờ cho thửa chưa có số tờ…</button>}
                 {quyen("XOA_DU_AN") && <><div className="menu-vach" /><button role="menuitem" style={{ color: "var(--do-to)" }} onClick={async () => { setMenuThem(false); const lyDo = prompt(`Đưa dự án "${duAn.ten}" (kèm hồ sơ) vào thùng rác?\nKhôi phục được trong thùng rác; xóa hẳn chỉ Quản trị, sau 30 ngày.\n\nLý do xóa (bắt buộc):`)?.trim(); if (lyDo && (await xoaDuAn(duAn.id, lyDo))) di({ ten: "du-an" }); }}>Xóa dự án</button></>}
               </div>
             )}

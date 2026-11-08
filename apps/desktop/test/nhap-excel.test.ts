@@ -86,6 +86,21 @@ describe("Nhập hồ sơ từ Excel", () => {
     expect(k.loi.some((l) => l.muc === "CANH_BAO" && /km hai/.test(l.noiDung))).toBe(true);
   });
 
+  it("1.3.5: ô số tờ để trống → lấy số tờ của dự án (dùng nhiều nhất / tệp bản đồ), có cảnh báo; không có gì để lấy → lỗi", async () => {
+    const { duAn, ho } = taoDuAnMau();
+    const b = await tep((wb) => {
+      them(wb, "Ho", ["H10", "Hộ nhập thử", "Hộ gia đình"]);
+      them(wb, "Thua", ["H10", "", "200", "CLN", 1000, 250]);
+    });
+    const hoTo = ho.map((h) => ({ ...h, thua: h.thua.map((t) => ({ ...t, soTo: "TĐ 52-2025" })) }));
+    const k = await docTepNhap(b, duAn, hoTo);
+    expect(coLoiChan(k)).toBe(false);
+    expect(k.hoMoi.find((h) => h.ma === "H10")!.thua[0]!.soTo).toBe("TĐ 52-2025");
+    expect(k.loi.some((l) => l.muc === "CANH_BAO" && l.noiDung.includes("lấy số tờ TĐ 52-2025"))).toBe(true);
+    const k2 = await docTepNhap(b, { ...duAn, banDo: null }, ho.map((h) => ({ ...h, thua: h.thua.map((t) => ({ ...t, soTo: "" })) })));
+    expect(k2.loi.some((l) => l.noiDung === "Thiếu số tờ")).toBe(true);
+  });
+
   it("báo lỗi theo trang, dòng, cột; không đoán số mơ hồ; còn lỗi thì chặn nhập", async () => {
     const { duAn, ho } = taoDuAnMau();
     const b = await tep((wb) => {

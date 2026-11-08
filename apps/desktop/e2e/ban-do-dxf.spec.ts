@@ -61,4 +61,48 @@ test("Nạp DXF → tự chọn lớp cho từng đối tượng → nhãn nhi�
   await p.getByText("21*-13").first().click();
   await expect(p.getByText("Lèo Văn Pản").first()).toBeVisible();
   await expect(p.getByText("CLN").first()).toBeVisible();
+  // 1.3.5: sửa số tờ ngay trong Cấu hình lớp — số tờ có dấu cách (ghi ở khung tờ), áp cho mọi thửa của tệp
+  await p.getByRole("button", { name: /^Cấu hình lớp/ }).first().click();
+  const o = p.getByLabel("Số tờ bản đồ của tệp");
+  await expect(o).toHaveValue("21");
+  await o.fill("TĐ#52");
+  await expect(p.getByRole("button", { name: "Chốt cấu hình và dựng lại thửa" })).toBeDisabled();
+  await o.fill("TĐ 52-2025");
+  await p.getByRole("button", { name: "Chốt cấu hình và dựng lại thửa" }).click();
+  await expect(p.getByText("TĐ 52-2025*-13").first()).toBeVisible();
+  await expect(p.getByText("TĐ 52-2025*-14").first()).toBeVisible();
+});
+
+test("1.3.5: số tờ nhập một lần — thửa mới lấy số tờ gợi ý; điền cho thửa trống của hồ sơ và của cả dự án", async ({ page: p }) => {
+  await vao(p);
+  await p.keyboard.press("Alt+3");
+  await p.locator("[role=tablist] button", { hasText: "Hộ, cá nhân" }).click();
+  await p.locator("tr[data-ho-id]").first().click();
+  await p.locator("[role=tablist] button", { hasText: "Thửa đất" }).click();
+  const to = p.locator("tr[data-thua-id] td:first-child input");
+  const soCu = await to.count();
+  const giaTri0 = await to.first().inputValue();
+  await p.getByRole("button", { name: "+ Thêm thửa" }).click();
+  await expect(to).toHaveCount(soCu + 1);
+  await expect(to.last()).toHaveValue(giaTri0);
+  await to.last().fill("");
+  await expect(p.locator("[data-dien-so-to]")).toHaveText(`Điền tờ ${giaTri0} cho 1 thửa trống`);
+  await p.locator("[data-dien-so-to]").click();
+  await expect(to.last()).toHaveValue(giaTri0);
+  await expect(p.locator("[data-dien-so-to]")).toHaveCount(0);
+  // cả dự án: để trống số tờ một thửa, lưu; menu Thêm → điền số tờ cho thửa chưa có số tờ
+  await to.last().fill("");
+  await p.getByRole("button", { name: "Lưu hồ sơ" }).click();
+  await expect(p.getByText("Chưa lưu")).toHaveCount(0);
+  await p.keyboard.press("Alt+3");
+  await p.getByRole("button", { name: "Thêm", exact: true }).click();
+  await p.getByRole("menuitem", { name: "Điền số tờ cho thửa chưa có số tờ…" }).click();
+  await expect(p.getByText(/Dự án có 1 thửa \(của 1 hộ\) chưa ghi số tờ/)).toBeVisible();
+  await p.getByLabel("Số tờ điền cho thửa trống").fill("TĐ 52-2025");
+  await p.getByRole("button", { name: "Điền cho 1 thửa" }).click();
+  await expect(p.getByText("Đã điền số tờ TĐ 52-2025 cho 1 thửa của 1 hộ")).toBeVisible();
+  await p.locator("[role=tablist] button", { hasText: "Hộ, cá nhân" }).click();
+  await p.locator("tr[data-ho-id]").first().click();
+  await p.locator("[role=tablist] button", { hasText: "Thửa đất" }).click();
+  await expect(to.last()).toHaveValue("TĐ 52-2025");
 });

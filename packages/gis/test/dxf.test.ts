@@ -102,14 +102,16 @@ describe("Nhãn thửa nhiều nội dung, số tờ nhập tay (0.9.27)", () =>
       expect([t.soThua, t.dienTichGhi]).toEqual(["13", 1310]);
     }
   });
-  test("số tờ cán bộ nhập cho tệp dùng khi bản đồ không ghi; bản đồ có số tờ thì giữ số tờ đọc được", () => {
+  test("số tờ cán bộ nhập cho tệp dùng cho mọi thửa của tệp — 1.3.5: ưu tiên hơn số tờ đọc trên bản đồ; không nhập thì đọc theo lớp", () => {
     const ban = docDgn(bytes(thua("1310,0"), false));
     ban.phanTu.forEach((pt) => (pt.soToTep = "21"));
     const t = dungThua(ban).thua[0]!;
     expect([t.soTo, t.soToNhapTay, t.co.includes("THIEU_SO_TO")]).toEqual(["21", true, false]);
     const ban2 = docDgn(bytes(thua("1310,0", [text("5", "7", 20, 5)]), false));
-    ban2.phanTu.forEach((pt) => (pt.soToTep = "21"));
     expect(dungThua(ban2).thua[0]!.soTo).toBe("7");
+    ban2.phanTu.forEach((pt) => (pt.soToTep = "TĐ 52-2025"));
+    const t2 = dungThua(ban2).thua[0]!;
+    expect([t2.soTo, t2.soToNhapTay, t2.co.includes("NHIEU_SO_TO")]).toEqual(["TĐ 52-2025", true, false]);
   });
   test("lớp loại đất, diện tích riêng do cán bộ chọn", () => {
     const s = dxf({ thucThe: [lw("10", [[0, 0], [40, 0], [40, 32.75], [0, 32.75]]), text("LOAI DAT", "CLN", 5, 15), text("4", "13", 15, 17), text("DIEN TICH", "1310", 14, 12)] });

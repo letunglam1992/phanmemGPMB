@@ -107,7 +107,7 @@ export interface ThuaBanDo {
   co: CoThua[];
   /** Chữ hiện trạng GPMB ghi trên bản đồ trong thửa (lớp nhanHienTrang), nếu có. */
   hienTrangBanDo?: string | null;
-  /** Số tờ lấy theo số tờ cán bộ nhập cho tệp (bản đồ không ghi số tờ trong thửa). */
+  /** Số tờ lấy theo số tờ cán bộ nhập cho tệp (1.3.5: ưu tiên hơn số tờ đọc trên bản đồ). */
   soToNhapTay?: boolean;
 }
 
@@ -335,8 +335,9 @@ export function dungThua(ban: KetQuaDocDgn, ch: CauHinhLop = CAU_HINH_MAC_DINH):
     if (!loaiDatBanDo) co.push("THIEU_LOAI_DAT");
 
     const soToDoc = [...nhanTrong.filter((n) => !n.truongNut && thuoc(ch.soTo, n.lop)), ...tuNut(nhanTrong, "soTo")].map((n) => n.chu);
-    // Bản đồ không ghi số tờ: dùng số tờ cán bộ nhập cho tệp (theo nhãn trong thửa, hoặc chung cả bản vẽ)
-    const soToTep = soToDoc.length ? null : (nhanTrong.find((n) => n.soToTep)?.soToTep ?? soToChung);
+    // 1.3.5: số tờ cán bộ nhập cho tệp (theo nhãn trong thửa, hoặc chung cả bản vẽ) dùng cho mọi thửa của tệp — số tờ thường
+    // ghi ở khung tờ, không ghi trong thửa; chỉ khi tệp không có số tờ nhập tay mới nhận số tờ từ lớp chữ
+    const soToTep = nhanTrong.find((n) => n.soToTep)?.soToTep ?? soToChung;
     const soTo = soToTep ?? motHoacCo(soToDoc, "THIEU_SO_TO", "NHIEU_SO_TO", co);
     const chuRieng = [...nhanTrong.filter((n) => !n.truongNut && thuoc(ch.chuSuDung, n.lop)), ...tuNut(nhanTrong, "chuSuDung")];
     const chuDs = (chuRieng.length ? chuRieng : tenTrongNhan).map((n) => vietHoaDauTu(n.chu));

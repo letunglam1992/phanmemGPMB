@@ -10,6 +10,7 @@ import type { DinhKem } from "../../kho";
 import { xoaMemTep } from "../../dinh-kem-thung-rac";
 import { laAnhXemDuoc, loiTepDinhKem } from "../../thanh-phan/DinhKemHo";
 import { tenTep } from "../../ten-tep";
+import { loiSoToTep } from "./CauHinhLop";
 import { MAU_GHI_CHU } from "./KhungVe";
 import { type DuLieuBanDo, dsSoTo, khoaTepGhep, kiemTraViTriTo, thamChieuThieu } from "./du-lieu";
 import { docBang } from "./RanhGpmb";
@@ -415,7 +416,8 @@ function OSoToTep(p: { giaTri: string; ten: string; sua: boolean; luu: (v: strin
     setV(p.giaTri);
   }, [p.giaTri]);
   const ghi = () => v.trim() !== p.giaTri && p.luu(v);
-  return <input style={{ width: 80 }} value={v} disabled={!p.sua} aria-label={`Số tờ nhập tay của ${p.ten}`} placeholder="—" onChange={(e) => setV(e.target.value.slice(0, 16))} onBlur={ghi} onKeyDown={(e) => e.key === "Enter" && ghi()} />;
+  const loi = loiSoToTep(v);
+  return <input style={{ width: 130 }} value={v} disabled={!p.sua} className={loi ? "loi-nhap" : ""} title={loi ?? undefined} aria-label={`Số tờ nhập tay của ${p.ten}`} placeholder="vd. TĐ 52-2025" onChange={(e) => setV(e.target.value.slice(0, 24))} onBlur={() => !loi && ghi()} onKeyDown={(e) => e.key === "Enter" && !loi && ghi()} />;
 }
 
 /** Tệp DGN ghép thêm vào bản đồ của dự án (tờ khác, mảnh trích đo khác) — docs/08 §9.9. */
@@ -511,7 +513,7 @@ export function HopTepGhep(p: { duAn: DuAn; dl: DuLieuBanDo | null; dong: () => 
         </div>
       )}
       <table className="bang" aria-label="Danh sách tờ bản đồ">
-        <thead><tr><th>Dùng</th><th>Tệp</th><th>Ngày nạp</th><th className="so">Phần tử</th><th title="Dùng cho thửa bản đồ không ghi số tờ">Số tờ (nhập tay)</th><th /></tr></thead>
+        <thead><tr><th>Dùng</th><th>Tệp</th><th>Ngày nạp</th><th className="so">Phần tử</th><th title="Số tờ ghi ở khung tờ — áp cho mọi thửa của tệp (ưu tiên hơn số tờ đọc trên bản đồ)">Số tờ (nhập tay)</th><th /></tr></thead>
         <tbody>
           {banDo && dong("", banDo.tenTep, banDo.ngayNhap, banDo.anTepChinh, true)}
           {ds.map((t) => dong(t.id, t.tenTep, t.ngayNhap, t.an, false))}

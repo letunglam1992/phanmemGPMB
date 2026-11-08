@@ -8,6 +8,7 @@
  *  - Trang Hộ chỉ tạo hồ sơ mới; mã trùng hồ sơ đã có → lỗi. Thửa, kiểm đếm được bổ sung cho hồ sơ đã có
  *    (tham chiếu theo mã hộ); thửa trùng tờ/thửa trong cùng hộ → lỗi.
  */
+import { soToGoiY } from "./so-to";
 import { docLyTrinh } from "./ly-trinh";
 import type ExcelJS from "exceljs";
 import { D } from "@gpmb/core";
@@ -550,9 +551,11 @@ export function kiemTraNhap(tep: TepExcel, ax: AnhXa, duAn: DuAn, hienCoTatCa: H
   const toThua = new Map<string, string>();
   for (const h of hienCo) for (const t of h.thua) toThua.set(`${t.soTo}/${t.soThua}`, h.ma);
   let chuTruoc: { ten: string; diaChi: string; dong: number } | null = null;
+  // 1.3.5: ô số tờ để trống → lấy số tờ gợi ý (số tờ dùng nhiều nhất trong dự án / số tờ nhập cho tệp bản đồ), có cảnh báo
+  const toMacDinh = soToGoiY(duAn, hienCo);
   for (const { dong, o } of doc("Thua")) {
     const loiTruoc = soLoi();
-    const soTo = chuO(o.soTo);
+    let soTo = chuO(o.soTo);
     const soThua = chuO(o.soThua);
     let ten = chuO(o.tenChu);
     let diaChi = chuO(o.diaChiChu);
@@ -582,6 +585,10 @@ export function kiemTraNhap(tep: TepExcel, ax: AnhXa, duAn: DuAn, hienCoTatCa: H
     if (loaiDat && !TEN_LOAI_DAT[loaiDat]) {
       const ma = MA_LOAI_THEO_TEN.get(chuanTen(chuO(o.loaiDat)));
       if (ma) loaiDat = ma;
+    }
+    if (!soTo && toMacDinh) {
+      soTo = toMacDinh;
+      bao("Thua", dong, "soTo", `Không ghi số tờ — lấy số tờ ${toMacDinh} của dự án (số tờ dùng nhiều nhất / số tờ của tệp bản đồ); kiểm tra`, "CANH_BAO");
     }
     if (!soTo) bao("Thua", dong, "soTo", "Thiếu số tờ");
     if (!soThua) bao("Thua", dong, "soThua", "Thiếu số thửa");

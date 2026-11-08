@@ -124,3 +124,34 @@ describe("1.0.7 — ranh thửa vẽ trên nhiều lớp", () => {
   });
 });
 
+
+describe("1.3.5 — nhãn kép trên ba lớp riêng (loại đất · số thửa trên gạch · diện tích dưới gạch)", () => {
+  const ban = () => {
+    const hinh: Uint8Array[] = [
+      ptDuong(6, [d(0, 0), d(30, 0), d(30, 20), d(0, 20), d(0, 0)], { lop: 10 }),
+      ptDuong(3, [d(0, 10), d(30, 10)], { lop: 10 }),
+      ptDuong(3, [d(10, 0), d(10, 20)], { lop: 10 }),
+      ptDuong(3, [d(20, 0), d(20, 20)], { lop: 10 }),
+    ];
+    const chu: Uint8Array[] = [];
+    for (let i = 0; i < 6; i++) {
+      const { x, y } = o(i);
+      chu.push(ptChu("CLN", X0 + x + 1.5, Y0 + y + 5.2, { lop: 2, unicode: true }));
+      chu.push(ptChu(String(i + 1), X0 + x + 6.5, Y0 + y + 6.8, { lop: 13, unicode: true })); // trên gạch ngang
+      chu.push(ptChu("100,0", X0 + x + 5.5, Y0 + y + 3.6, { lop: 4, unicode: true })); // dưới gạch ngang
+      chu.push(ptChu(String(i + 20), X0 + x + 5.5, Y0 + y + 1.2, { lop: 1, unicode: true })); // số khác nằm dưới — không phải số thửa
+      chu.push(ptChu(`Nguyễn Văn ${"ABCDEF"[i]}`, X0 + x + 2, Y0 + y + 8.8, { lop: 54, unicode: true }));
+    }
+    return docDgn(vietDgnV8([hinh, chu]));
+  };
+  test("gợi ý cấu hình: số thửa lớp 13 (trên), diện tích lớp 4, loại đất lớp 2, chủ lớp 54; dựng đủ 6 thửa", () => {
+    const b = ban();
+    const g = goiYCauHinh(b);
+    expect([g.cauHinh.soThua, g.cauHinh.dienTich, g.cauHinh.loaiDat, g.cauHinh.chuSuDung, g.cauHinh.nhanThua]).toEqual([[13], [4], [2], [54], []]);
+    expect(g.ghiChu.join(" ")).toContain("Nhãn kép 6 thửa");
+    for (const pt of b.phanTu) pt.soToTep = "TĐ 52-2025";
+    const ds = dungThua(b, g.cauHinh).thua;
+    expect(ds.map((t) => t.soThua).sort()).toEqual(["1", "2", "3", "4", "5", "6"]);
+    expect(ds.every((t) => t.loaiDatBanDo === "CLN" && t.dienTichGhi === 100 && t.soTo === "TĐ 52-2025" && t.chuSuDung?.startsWith("Nguyễn Văn"))).toBe(true);
+  });
+});

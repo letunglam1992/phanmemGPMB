@@ -92,6 +92,59 @@ export function nhanDangNutThuocTinh(ban: KetQuaDocDgn): (CauHinhNut & { soNut: 
   return tot;
 }
 
+const RE_DT_GHI = /^(\d+[.,]\d+|\d{1,3}([. ]\d{3})+(,\d+)?)$/;
+
+/**
+ * 1.3.5 — Nhãn kép (dạng phân số) trên ba lớp chữ riêng: loại đất bên cạnh, số thửa TRÊN gạch ngang, diện tích DƯỚI gạch
+ * ngang; không có chủ sử dụng, không có số tờ (vd. bản trích đo V8: lớp 2 "CLN", lớp 13 "16", lớp 4 "14308,9"). Nhận dạng:
+ * lớp diện tích (≥ 80% chữ là số thập phân), lớp số thửa (≥ 80% số nguyên) mà với ≥ 60% nhãn diện tích, số gần nhất nằm phía
+ * trên theo cùng một độ lệch (sai khác ≤ max(1 m, 30%)); lớp loại đất (≥ 80% mã loại đất) cùng độ lệch đều. Không dùng chiều cao
+ * chữ (tệp V8 có thể không lưu). Trả null nếu không thấy.
+ */
+export function nhanDangNhanKep(ban: KetQuaDocDgn): { soThua: number; dienTich: number; loaiDat?: number; soNhan: number } | null {
+  type C = { chu: string; x: number; y: number };
+  const theoLop = new Map<number, C[]>();
+  for (const pt of phanTuGoc(ban)) {
+    if (pt.loai !== "CHU" || (pt as PhanTuChu).nut !== undefined) continue;
+    const chu = giaiMaNhan(pt as PhanTuChu).trim();
+    if (!chu) continue;
+    const ds = theoLop.get(pt.lop) ?? [];
+    ds.push({ chu, x: (pt as PhanTuChu).goc.x, y: (pt as PhanTuChu).goc.y });
+    theoLop.set(pt.lop, ds);
+  }
+  const tyLe = (ds: C[], re: RegExp) => ds.filter((d) => re.test(d.chu)).length / ds.length;
+  const lop = (re: RegExp) => [...theoLop].filter(([, ds]) => ds.length >= 3 && tyLe(ds, re) >= 0.8).map(([l, ds]) => ({ l, ds: ds.filter((d) => re.test(d.chu)) }));
+  const trungVi = (a: number[]) => { const b = [...a].sort((x, y) => x - y); return b[Math.floor(b.length / 2)]!; };
+  /** Tỷ lệ nhãn A có chữ gần nhất thuộc B theo một độ lệch đều; `tren`: chữ B phải nằm phía trên. */
+  const deu = (A: C[], B: C[], tren: boolean) => {
+    const off = A.map((a) => {
+      let m = B[0]!, dm = Infinity;
+      for (const b of B) { const d = Math.hypot(b.x - a.x, b.y - a.y); if (d < dm) { dm = d; m = b; } }
+      return { dx: m.x - a.x, dy: m.y - a.y };
+    });
+    const med = { dx: trungVi(off.map((o) => o.dx)), dy: trungVi(off.map((o) => o.dy)) };
+    const dai = Math.hypot(med.dx, med.dy);
+    if (dai > 25 || (tren && med.dy <= 0)) return 0;
+    const sai = Math.max(1, 0.3 * dai);
+    return off.filter((o) => Math.hypot(o.dx - med.dx, o.dy - med.dy) <= sai).length / A.length;
+  };
+  let tot: { soThua: number; dienTich: number; r: number; n: number; A: C[] } | null = null;
+  for (const a of lop(RE_DT_GHI))
+    for (const b of lop(RE_SO)) {
+      if (a.l === b.l || b.ds.length < a.ds.length * 0.5 || b.ds.length > a.ds.length * 2) continue;
+      const r = deu(a.ds, b.ds, true);
+      if (r >= 0.6 && (!tot || r > tot.r || (r === tot.r && a.ds.length > tot.n))) tot = { soThua: b.l, dienTich: a.l, r, n: a.ds.length, A: a.ds };
+    }
+  if (!tot) return null;
+  let loai: { l: number; r: number } | null = null;
+  for (const c of lop(RE_MA_LOAI)) {
+    if (c.l === tot.soThua || c.l === tot.dienTich) continue;
+    const r = deu(tot.A, c.ds, false);
+    if (r >= 0.6 && (!loai || r > loai.r)) loai = { l: c.l, r };
+  }
+  return { soThua: tot.soThua, dienTich: tot.dienTich, ...(loai ? { loaiDat: loai.l } : {}), soNhan: tot.n };
+}
+
 export interface GoiYCauHinh {
   cauHinh: CauHinhLop;
   ghiChu: string[];
@@ -124,6 +177,25 @@ export function goiYCauHinh(ban: KetQuaDocDgn, goc: CauHinhLop = CAU_HINH_MAC_DI
       }
     }
   }
+  let nhanKep = false;
+  // 1.3.5: nhãn kép trên ba lớp riêng — chỉ khi lớp số thửa mặc định không chứa số thửa (tệp không theo cấu hình mặc định)
+  if (!cauHinh.nutThuocTinh && goc.soThua === CAU_HINH_MAC_DINH.soThua) {
+    const chuLop = (ds: number[]) => phanTuGoc(ban).filter((pt) => pt.loai === "CHU" && ds.includes(pt.lop)).map((pt) => giaiMaNhan(pt as PhanTuChu).trim());
+    const soMacDinh = chuLop(goc.soThua);
+    const nk = !soMacDinh.length || soMacDinh.filter((c) => RE_SO.test(c)).length / soMacDinh.length < 0.5 ? nhanDangNhanKep(ban) : null;
+    if (nk) {
+      nhanKep = true;
+      cauHinh.nhanThua = [];
+      cauHinh.soThua = [nk.soThua];
+      cauHinh.dienTich = [nk.dienTich];
+      if (nk.loaiDat !== undefined) cauHinh.loaiDat = [nk.loaiDat];
+      if (!co(cauHinh.soTo, (x) => x.soChu)) cauHinh.soTo = [];
+      if (!co(cauHinh.chuSuDung, (x) => x.soChu)) cauHinh.chuSuDung = [];
+      ghiChu.push(
+        `Nhãn kép ${nk.soNhan} thửa: ${nk.loaiDat !== undefined ? `loại đất lớp ${nk.loaiDat}, ` : ""}số thửa lớp ${nk.soThua} (trên gạch ngang), diện tích lớp ${nk.dienTich} (dưới gạch ngang) — nhãn không có chủ sử dụng, số tờ; nhập số tờ của tệp ở “Số tờ bản đồ của tệp”.`,
+      );
+    }
+  }
   if (!goc.nhanHienTrang?.length) {
     const ht = lopNhanHienTrang(ban);
     if (ht) {
@@ -144,6 +216,20 @@ export function goiYCauHinh(ban: KetQuaDocDgn, goc: CauHinhLop = CAU_HINH_MAC_DI
         cauHinh.ranhGpmb = cauHinh.ranhGpmb.filter((l) => !trung.includes(l));
         ghiChu.push(`Lớp ${trung.join(", ")} là ranh thửa nên không dùng làm lớp ranh GPMB (mặc định) — đã bỏ khỏi lớp ranh GPMB.`);
       }
+    }
+  }
+  // 1.3.5: nhãn kép không có chủ — tìm lớp tên chủ sử dụng đứng riêng trong thửa (sau khi đã ghép lớp ranh thửa)
+  if (nhanKep && !cauHinh.chuSuDung.length) {
+    const ungVien = [...tk.values()].filter((x) => x.soChu >= 3 && x.mau.length && x.mau.filter((m) => RE_NHIEU_TU.test(m)).length / x.mau.length >= 0.8);
+    let tot: { lop: number; n: number; tong: number } | null = null;
+    for (const x of ungVien) {
+      const ds = dungThua(ban, { ...cauHinh, chuSuDung: [x.lop] }).thua.filter((t) => t.soThua);
+      const n = ds.filter((t) => t.chuSuDung && !t.co.includes("NHIEU_CHU")).length;
+      if (ds.length && n / ds.length >= 0.7 && (!tot || n > tot.n)) tot = { lop: x.lop, n, tong: ds.length };
+    }
+    if (tot) {
+      cauHinh.chuSuDung = [tot.lop];
+      ghiChu.push(`Lớp ${tot.lop} là tên chủ sử dụng ghi riêng trong thửa (${tot.n}/${tot.tong} thửa có đúng một tên) — cán bộ xác nhận.`);
     }
   }
   if (!co(cauHinh.ranhGpmb, (x) => x.soDuong + x.soVung)) {

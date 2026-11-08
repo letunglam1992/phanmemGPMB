@@ -289,8 +289,18 @@ export function BanDo({ duAnId }: { duAnId: string }) {
     }
   };
 
-  const apDungCauHinh = async (ch: CauHinhLop | null) => {
+  const apDungCauHinh = async (ch: CauHinhLop | null, soTo?: string) => {
     if (!dl || !duAn.banDo) return;
+    // 1.3.5: đổi số tờ của tệp chính → lưu cùng cấu hình; khóa bộ nhớ bản đồ đổi nên tệp được đọc lại với số tờ mới
+    const soToMoi = soTo === undefined ? duAn.banDo.soTo : soTo.trim() || undefined;
+    if (soToMoi !== duAn.banDo.soTo) {
+      const { cauHinh: _c, ...con } = duAn.banDo;
+      await luuDuAn({ ...duAn, banDo: ch ? { ...con, soTo: soToMoi, cauHinh: ch } : { ...con, soTo: soToMoi } });
+      setMoCauHinh(false);
+      setChon(null);
+      bao(ch ? "Đã chốt cấu hình lớp, số tờ của tệp — đang dựng lại thửa" : "Đã quay về cấu hình gợi ý, lưu số tờ của tệp — đang dựng lại thửa");
+      return;
+    }
     const goiY = ch ? null : goiYCauHinh(dl.ban, CAU_HINH_MAC_DINH);
     const d = locThuaXoa({ ...dungLai(dl.ban, ch ?? goiY!.cauHinh, !ch, goiY?.ghiChu ?? []), tep: dl.tep }, duAn.banDo.thuaXoa);
     boNho.set(duAnId, { ngayNhap: khoaNapBanDo(duAn.banDo), d });
@@ -522,7 +532,7 @@ export function BanDo({ duAnId }: { duAnId: string }) {
           }}
         />
       )}
-      {moCauHinh && dl && <HopCauHinhLop dl={dl} sua={quyen("SUA_HO_SO")} apDung={apDungCauHinh} dong={() => setMoCauHinh(false)} />}
+      {moCauHinh && dl && duAn.banDo && <HopCauHinhLop dl={dl} sua={quyen("SUA_HO_SO")} soTo={duAn.banDo.soTo ?? ""} coTepGhep={!!duAn.banDo.tepGhep?.length} apDung={(ch, soTo) => void apDungCauHinh(ch, soTo)} dong={() => setMoCauHinh(false)} />}
       {thieuPhamVi && dl && (
         <HopThoai tieuDe="Chưa xác định thửa thu hồi" dong={() => setThieuPhamVi(false)} rong={640} chan={<button className="nut nut-chinh" onClick={() => setThieuPhamVi(false)}>Đã hiểu</button>}>
           <p className="mt-0">Để tạo hồ sơ, phần mềm cần biết thửa nào thuộc diện thu hồi. Chọn một trong hai cách ở mục <b>Phạm vi thu hồi</b> (cột bên phải):</p>
