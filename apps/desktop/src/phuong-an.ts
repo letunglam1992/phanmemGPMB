@@ -77,7 +77,7 @@ export interface PhienBanPA {
   /** Lý do lập bản (bắt buộc khi điều chỉnh hộ đã có trong bản phê duyệt). */
   lyDo: string;
   boChinhSach: string;
-  thamSoDuAn: Pick<DuAn, "xa" | "giaGao" | "hanMucNN" | "heSoGiaDat">;
+  thamSoDuAn: Pick<DuAn, "xa" | "giaGao" | "hanMucNN" | "heSoGiaDat"> & Pick<Partial<DuAn>, "hanMucNNLoai">;
   ho: HoChot[];
   tong: string;
   bam: string;
@@ -169,7 +169,7 @@ export async function chotPhuongAn(
   });
   const base = {
     boChinhSach: duAn.boChinhSach,
-    thamSoDuAn: structuredClone({ xa: duAn.xa, giaGao: duAn.giaGao, hanMucNN: duAn.hanMucNN, heSoGiaDat: duAn.heSoGiaDat }),
+    thamSoDuAn: structuredClone({ xa: duAn.xa, giaGao: duAn.giaGao, hanMucNN: duAn.hanMucNN, heSoGiaDat: duAn.heSoGiaDat, ...(duAn.hanMucNNLoai ? { hanMucNNLoai: duAn.hanMucNNLoai } : {}) }),
     ho,
     tong: s(ds.reduce((a, x) => a.plus(x.k.tong.tongLamTron), D(0))),
     ...(dot ? { dotId: dot.id } : {}),
@@ -260,7 +260,7 @@ export async function kiemTraToanVen(p: PhienBanPA): Promise<boolean> {
 }
 
 /** Dựng lại dự án theo tham số đã đóng băng. */
-export const duAnTheoBan = (duAn: DuAn, p: PhienBanPA): DuAn => ({ ...duAn, ...structuredClone(p.thamSoDuAn), boChinhSach: p.boChinhSach });
+export const duAnTheoBan = (duAn: DuAn, p: PhienBanPA): DuAn => ({ ...duAn, hanMucNNLoai: undefined, ...structuredClone(p.thamSoDuAn), boChinhSach: p.boChinhSach });
 
 /**
  * Tính lại từ dữ liệu đã đóng băng và đối chiếu với số đã chốt. Khác nhau nghĩa là phần mềm hoặc bộ chính sách

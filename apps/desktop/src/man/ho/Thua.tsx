@@ -7,7 +7,7 @@ import { taoId, type DuAn, type Ho, type Thua } from "../../mo-hinh";
 import { ChonGiaDat } from "../../thanh-phan/ChonGiaDat";
 import { tien } from "../../thanh-phan/chung";
 import { PhanLop } from "./PhanLop";
-import { TEN_CHENH_LECH, hanMucDatNNThua, hanMucDatOThua, laDatNN } from "../../tinh-ho";
+import { TEN_CHENH_LECH, hanMucDatNNThua, hanMucDatOThua, hanMucNNDuAn, laDatNN } from "../../tinh-ho";
 import { TEN_NHOM_HANH_LANG, TEN_TRUONG_HOP_NN, TEN_VI_TRI_HAN_MUC, dinhDang, laPhuong, type ViTriHanMuc, phanBoDatNN, phanBoDatO, type NhomDatHanhLang, type TruongHopDatNN } from "@gpmb/core";
 import { TEN_KHONG_GIAY_TO } from "../../tinh-ho";
 import { tenDayDu } from "../../van-ban/loai-dat";
@@ -193,7 +193,7 @@ export function TabThua({ h, duAn, doi, noiBat }: { h: Ho; duAn: DuAn; doi: (h: 
                                     </div>
                                   </div>
                                   <div className="o-nhap"><label>Nguồn giá hiện trạng</label><input value={t.chenhLech.nguonGia} onChange={(e) => sua(t.id, { chenhLech: { ...t.chenhLech!, nguonGia: e.target.value } })} /></div>
-                                  <div className="o-nhap"><label>Hạn mức công nhận đất NN cùng loại (m²)</label><OSo className="o-so" value={t.chenhLech.hanMuc ?? ""} placeholder={duAn.hanMucNN ? `Trống = ${duAn.hanMucNN.m2} (dự án)` : "Bắt buộc"} onChange={(v) => sua(t.id, { chenhLech: { ...t.chenhLech!, hanMuc: v || undefined } })} /></div>
+                                  <div className="o-nhap"><label>Hạn mức công nhận đất NN cùng loại (m²)</label><OSo className="o-so" value={t.chenhLech.hanMuc ?? ""} placeholder={hanMucNNDuAn(duAn, t.loaiDat) ? `Trống = ${hanMucNNDuAn(duAn, t.loaiDat)!.m2} (dự án)` : "Bắt buộc"} onChange={(v) => sua(t.id, { chenhLech: { ...t.chenhLech!, hanMuc: v || undefined } })} /></div>
                                   <div className="o-nhap"><label>Căn cứ hạn mức</label><input value={t.chenhLech.canCuHanMuc ?? ""} disabled={!t.chenhLech.hanMuc} onChange={(e) => sua(t.id, { chenhLech: { ...t.chenhLech!, canCuHanMuc: e.target.value } })} /></div>
                                 </>
                               )}
@@ -386,7 +386,7 @@ function KhongGiayToThua({ t, h, duAn, sua, moChonGia }: { t: Thua; h: Ho; duAn:
           <div className="luoi mt-6" style={{ gridTemplateColumns: "repeat(4, minmax(140px, 1fr))", alignItems: "end" }}>
             <div className="o-nhap"><label>DT đã xây nhà ở, công trình đời sống (m²)</label><OSo className="o-so" aria-label="DT đã xây dựng nhà ở" value={k.dtXayDung ?? ""} onChange={(v) => dat({ dtXayDung: v })} /></div>
             {k.dieu !== "D9" && <div className="o-nhap"><label>DT sử dụng SXKD phi NN, TMDV (m²)</label><OSo className="o-so" aria-label="DT sản xuất kinh doanh" value={k.dtSxkd ?? ""} onChange={(v) => dat({ dtSxkd: v })} /></div>}
-            <div className="o-nhap"><label>Hạn mức riêng của thửa (m²)</label><OSo className="o-so" value={k.hanMuc ?? ""} placeholder={k.viTriHanMuc && cs.hanMucPl1 ? "Trống = theo Phụ lục I" : duAn.hanMucDatO ? `Trống = dự án (${duAn.hanMucDatO.congNhan || "—"} / ${duAn.hanMucDatO.giao || "—"})` : "Chọn vị trí thửa"} onChange={(v) => dat({ hanMuc: v || undefined })} /></div>
+            <div className="o-nhap"><label>Hạn mức riêng của thửa (m²)</label><OSo className="o-so" value={k.hanMuc ?? ""} placeholder={(k.viTriHanMuc || duAn.hanMucDatO?.viTri) && cs.hanMucPl1 ? "Trống = theo Phụ lục I" : duAn.hanMucDatO ? `Trống = dự án (${duAn.hanMucDatO.congNhan || "—"} / ${duAn.hanMucDatO.giao || "—"})` : "Chọn vị trí thửa"} onChange={(v) => dat({ hanMuc: v || undefined })} /></div>
             <div className="o-nhap"><label>Căn cứ hạn mức riêng</label><input value={k.canCuHanMuc ?? ""} disabled={!k.hanMuc} onChange={(e) => dat({ canCuHanMuc: e.target.value })} /></div>
           </div>
           {cs.hanMucPl1 && (

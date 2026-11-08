@@ -43,7 +43,8 @@ export interface MucRaSoat {
 const ktHopLyDuAn = (d: DuAn): Omit<MucRaSoat, "duAnId" | "doiTuong">[] => {
   const out: Omit<MucRaSoat, "duAnId" | "doiTuong">[] = [];
   const nhac = (nhan: string, gt: string, noiDung: string) => out.push({ loai: "HOP_LY", nhan, gt, noiDung });
-  if (d.hanMucNN?.m2 && laSoMay(d.hanMucNN.m2) && D(d.hanMucNN.m2).lt(100)) nhac("Hạn mức giao đất NN (m²)", d.hanMucNN.m2, "Nhỏ hơn 100 m² — kiểm tra đơn vị (m², không phải ha) và cách ghi số");
+  const hmNN: [string, string | undefined][] = [["Hạn mức đất NN chung / loại khác (m²)", d.hanMucNN?.m2], ["Hạn mức đất NN: cây hằng năm, NTS (m²)", d.hanMucNNLoai?.hangNam], ["Hạn mức đất NN: cây lâu năm (m²)", d.hanMucNNLoai?.lauNam], ["Hạn mức đất NN: rừng (m²)", d.hanMucNNLoai?.rung]];
+  for (const [nhan, gt] of hmNN) if (gt && laSoMay(gt) && D(gt).lt(100)) nhac(nhan, gt, "Nhỏ hơn 100 m² — kiểm tra đơn vị (m², không phải ha) và cách ghi số");
   if (d.giaGao?.dongKg && laSoMay(d.giaGao.dongKg) && D(d.giaGao.dongKg).lt(1000)) nhac("Giá gạo (đ/kg)", d.giaGao.dongKg, "Nhỏ hơn 1.000 đ/kg — kiểm tra cách ghi số");
   if (d.heSoGiaDat?.heSo && laSoMay(d.heSoGiaDat.heSo) && (D(d.heSoGiaDat.heSo).lte(0) || D(d.heSoGiaDat.heSo).gt(10))) nhac("Hệ số điều chỉnh giá đất", d.heSoGiaDat.heSo, "Ngoài khoảng (0; 10] — kiểm tra");
   return out;

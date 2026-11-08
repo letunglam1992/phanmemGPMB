@@ -139,7 +139,10 @@ export function truongSoHo(h: Ho): TruongSo[] {
 export function truongSoDuAn(d: DuAn): TruongSo[] {
   const ds: TruongSo[] = [];
   them(ds, "Dự án — giá gạo (đ/kg)", d.giaGao, "dongKg");
-  them(ds, "Dự án — hạn mức giao đất NN (m²)", d.hanMucNN, "m2");
+  them(ds, "Dự án — hạn mức đất NN chung / loại khác (m²)", d.hanMucNN, "m2");
+  them(ds, "Dự án — hạn mức đất NN: cây hằng năm, NTS (m²)", d.hanMucNNLoai, "hangNam");
+  them(ds, "Dự án — hạn mức đất NN: cây lâu năm (m²)", d.hanMucNNLoai, "lauNam");
+  them(ds, "Dự án — hạn mức đất NN: rừng sản xuất là rừng trồng, rừng phòng hộ (m²)", d.hanMucNNLoai, "rung");
   them(ds, "Dự án — hạn mức công nhận đất ở (m²)", d.hanMucDatO, "congNhan");
   them(ds, "Dự án — hạn mức giao đất ở (m²)", d.hanMucDatO, "giao");
   them(ds, "Dự án — hệ số điều chỉnh giá đất", d.heSoGiaDat, "heSo");

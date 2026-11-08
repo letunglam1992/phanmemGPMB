@@ -65,6 +65,6 @@ describe("Chuyển đổi dữ liệu cũ, rà soát", () => {
     const h = structuredClone(ho[0]!);
     h.thua[0]!.dienTichThuHoi = String(Number(h.thua[0]!.dienTich) + 10);
     const ds = raSoat([{ ...duAn, hanMucNN: { m2: "20", canCu: "" } }], () => [h]);
-    expect(ds.filter((x) => x.loai === "HOP_LY").map((x) => x.nhan)).toEqual(expect.arrayContaining(["Hạn mức giao đất NN (m²)", expect.stringContaining("DT thu hồi")]));
+    expect(ds.filter((x) => x.loai === "HOP_LY").map((x) => x.nhan)).toEqual(expect.arrayContaining(["Hạn mức đất NN chung / loại khác (m²)", expect.stringContaining("DT thu hồi")]));
   });
 });

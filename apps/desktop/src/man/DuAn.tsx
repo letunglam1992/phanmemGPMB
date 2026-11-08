@@ -20,7 +20,7 @@ export { hoMoi };
 
 export const BT_LOAI_DU_AN: Record<LoaiDuAn, string> = { GIAO_THONG: "duong", CONG_NGHIEP: "nhaMay", TAI_DINH_CU: "nha", DO_THI: "toaNha", THUY_LOI: "nuoc", KHAC: "thua" };
 export const LOP_TT_DU_AN: Record<TrangThaiDuAn, string> = { DANG_TRIEN_KHAI: "nhan-xanh", TAM_DUNG: "nhan-vang", HOAN_THANH: "nhan-duong" };
-export const thieuDuLieu = (d: DuAn) => [!d.giaGao && "giá gạo (ổn định đời sống)", !d.hanMucNN && "hạn mức giao đất NN (chuyển đổi nghề)"].filter(Boolean) as string[];
+export const thieuDuLieu = (d: DuAn) => [!d.giaGao && "giá gạo (ổn định đời sống)", !d.hanMucNN && !d.hanMucNNLoai?.hangNam?.trim() && !d.hanMucNNLoai?.lauNam?.trim() && !d.hanMucNNLoai?.rung?.trim() && "hạn mức giao đất NN (chuyển đổi nghề)"].filter(Boolean) as string[];
 export const tyDong = (v: Decimal) => (v.gte(1e9) ? `${v.div(1e9).toDecimalPlaces(1).toNumber().toLocaleString("vi-VN")} tỷ` : v.gte(1e6) ? `${v.div(1e6).toDecimalPlaces(1).toNumber().toLocaleString("vi-VN")} triệu` : `${tien(v)} đ`);
 
 type SapXep = "MOI" | "TEN" | "TIEN_DO" | "TIEN";

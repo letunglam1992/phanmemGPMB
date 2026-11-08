@@ -83,3 +83,32 @@ export function hanMucKhaiHoangPl1(cs: BoChinhSach, p: { loaiDat: string; xa: st
     return { m2: phuong ? h.rung.phuong : h.rung.xa, canCu: h.canCu, moTa: moTaCc(h.canCu, `điểm c (tại ${noi})`), ...(ma === "RSX" ? { luuY: "Điểm c khoản 1 Điều 7 chỉ áp dụng cho đất rừng sản xuất là rừng trồng — cán bộ xác nhận" } : {}) };
   return null;
 }
+
+/**
+ * 1.3.5 — Nhóm loại đất nông nghiệp theo khoản 1 Điều 7 Phụ lục I: a) cây hằng năm, nuôi trồng thủy sản; b) cây lâu năm;
+ * c) rừng sản xuất là rừng trồng, rừng phòng hộ. Loại khác (rừng đặc dụng, NN khác…) → null.
+ */
+export type NhomDatNN = "HANG_NAM" | "LAU_NAM" | "RUNG";
+export const TEN_NHOM_DAT_NN: Record<NhomDatNN, string> = {
+  HANG_NAM: "đất trồng cây hằng năm, đất nuôi trồng thủy sản",
+  LAU_NAM: "đất trồng cây lâu năm",
+  RUNG: "đất rừng sản xuất là rừng trồng, đất rừng phòng hộ",
+};
+export function nhomDatNN(loaiDat: string): NhomDatNN | null {
+  const ma = loaiDat.trim().toUpperCase();
+  if (HANG_NAM.includes(ma)) return "HANG_NAM";
+  if (ma === "CLN") return "LAU_NAM";
+  if (ma === "RSX" || ma === "RPH") return "RUNG";
+  return null;
+}
+
+/** Mức khoản 1 Điều 7 Phụ lục I theo xã/phường của dự án — để điền sẵn hạn mức theo loại đất (cán bộ sửa được). */
+export function hanMucDieu7TheoNhom(cs: BoChinhSach, xa: string): { m2: Record<NhomDatNN, string>; canCu: string } | null {
+  const h = cs.hanMucPl1?.khaiHoang;
+  if (!h) return null;
+  const phuong = laPhuong(xa);
+  return {
+    m2: { HANG_NAM: h.hangNamNts, LAU_NAM: phuong ? h.lauNam.phuong : h.lauNam.xa, RUNG: phuong ? h.rung.phuong : h.rung.xa },
+    canCu: `${moTaCc(h.canCu, "")} (tại ${phuong ? "phường" : "xã"})`,
+  };
+}

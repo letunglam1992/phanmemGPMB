@@ -476,6 +476,9 @@ fn o_so(loai: &str, v: &Value) -> Vec<(String, Value)> {
     if loai == "duAn" {
         them("giaGao.dongKg".into(), &v["giaGao"]["dongKg"]);
         them("hanMucNN.m2".into(), &v["hanMucNN"]["m2"]);
+        for k in ["hangNam", "lauNam", "rung"] {
+            them(format!("hanMucNNLoai.{k}"), &v["hanMucNNLoai"][k]);
+        }
         them("hanMucDatO.congNhan".into(), &v["hanMucDatO"]["congNhan"]);
         them("hanMucDatO.giao".into(), &v["hanMucDatO"]["giao"]);
         them("heSoGiaDat.heSo".into(), &v["heSoGiaDat"]["heSo"]);

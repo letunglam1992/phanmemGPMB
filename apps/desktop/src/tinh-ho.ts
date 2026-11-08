@@ -36,6 +36,8 @@ import {
   phanBoDatO,
   hanMucDatOPl1,
   hanMucKhaiHoangPl1,
+  nhomDatNN,
+  TEN_NHOM_DAT_NN,
   phanBoDatNN,
   TEN_TRUONG_HOP_NN,
   tongHo,
@@ -165,9 +167,10 @@ function nongLamTruong(cs: BoChinhSach, duAn: DuAn, t: Thua): { ma: string; dat:
     };
   }
   if (!t.gia) return { ma, cayHoTro, canCu, dat: thieu("B13", noiDung, "Chưa chọn giá đất nông nghiệp từ bảng giá", "NQ 152/2025/NQ-HĐND") };
-  if (!duAn.hanMucNN) return { ma, cayHoTro, canCu, dat: thieu("B13", noiDung, "Chưa nhập hạn mức đất nông nghiệp của dự án — diện tích tính hỗ trợ không vượt hạn mức công nhận cùng loại") };
+  const hmB13 = hanMucNNDuAn(duAn, t.loaiDat);
+  if (!hmB13 || !laSoMay(hmB13.m2)) return { ma, cayHoTro, canCu, dat: thieu("B13", noiDung, "Chưa nhập hạn mức đất nông nghiệp của dự án cho loại đất này — diện tích tính hỗ trợ không vượt hạn mức công nhận cùng loại") };
   const dt = lamTronDienTich(t.dienTichThuHoi || "0");
-  const han = D(duAn.hanMucNN.m2);
+  const han = D(hmB13.m2);
   const dtTinh = dt.lt(han) ? dt : han;
   const gia = D(t.gia.giaNghinDong).mul(1000);
   const lan = D(th.datLan);
@@ -177,7 +180,7 @@ function nongLamTruong(cs: BoChinhSach, duAn: DuAn, t: Thua): { ma: string; dat:
     thamSo: {
       "Trường hợp": `${ma} — ${th.ten}`,
       "DT thu hồi": `${dinhDang(dt, 2)} m²`,
-      "Hạn mức công nhận đất NN cùng loại": `${dinhDang(han, 2)} m² (${duAn.hanMucNN.canCu || "chưa ghi căn cứ"})`,
+      "Hạn mức công nhận đất NN cùng loại": `${dinhDang(han, 2)} m² (${hmB13.canCu || "chưa ghi căn cứ"})`,
       "DT tính hỗ trợ": `${dinhDang(dtTinh, 2)} m²`,
       "Giá đất NN theo bảng giá": `${dinhDang(gia)} đ/m² (${t.gia.nguon})`,
       "Số lần giá đất": dinhDang(lan, 2),
@@ -565,22 +568,23 @@ function tinhHoGoc(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
 
     if (ho.hoTro.chuyenDoiNghe && laDatNN(t.loaiDat) && D(t.dienTichThuHoi || "0").gt(0)) {
       let d: DongTinh;
-      if (!duAn.hanMucNN) d = thieu("C06", `Hỗ trợ chuyển đổi nghề – ${tenDayDu(t.loaiDat)} – ${nhanThua(t)}`, "Chưa nhập hạn mức giao đất nông nghiệp của dự án (PL I QĐ 106 – TL-24)");
+      const hmNN = hanMucNNDuAn(duAn, t.loaiDat);
+      if (!hmNN || !laSoMay(hmNN.m2)) d = thieu("C06", `Hỗ trợ chuyển đổi nghề – ${tenDayDu(t.loaiDat)} – ${nhanThua(t)}`, "Chưa nhập hạn mức giao đất nông nghiệp của dự án cho loại đất này (Thông tin dự án — PL I QĐ 106, TL-24)");
       else if (!t.gia) d = thieu("C06", `Hỗ trợ chuyển đổi nghề – ${tenDayDu(t.loaiDat)} – ${nhanThua(t)}`, "Chưa chọn giá đất nông nghiệp cùng loại");
       else
         d = chuyenDoiNghe(cs, {
           xa: duAn.xa,
           loaiDat: `${tenDayDu(t.loaiDat)} – ${nhanThua(t)}`,
           dienTichThuHoiM2: t.dienTichThuHoi,
-          hanMucM2: duAn.hanMucNN.m2,
-          canCuHanMuc: duAn.hanMucNN.canCu,
+          hanMucM2: hmNN.m2,
+          canCuHanMuc: hmNN.canCu,
           giaDatNNNghinDong: t.gia.giaNghinDong,
           thon: t.thonBan,
         });
       let bieu: DongBieu[] | undefined;
-      if (d.thanhTien && duAn.hanMucNN && t.gia) {
+      if (d.thanhTien && hmNN && laSoMay(hmNN.m2) && t.gia) {
         const dt = D(t.dienTichThuHoi).toDecimalPlaces(2);
-        const dtTinh = dt.lt(duAn.hanMucNN.m2) ? dt : D(duAn.hanMucNN.m2);
+        const dtTinh = dt.lt(hmNN.m2) ? dt : D(hmNN.m2);
         const gia = D(t.gia.giaNghinDong).mul(1000);
         bieu = [{ dvt: "m²", kl: dtTinh, heSo: d.thanhTien.div(dtTinh.mul(gia)), donGia: gia }];
       }
@@ -971,8 +975,9 @@ function dongChenhLech(cs: BoChinhSach, duAn: DuAn, ho: Ho, t: Thua): { nhom: "B
   if (!c.giaHienTrang.trim() || !laSoMay(c.giaHienTrang)) return [{ nhom: "B.I", kq: { dong: thieu("B14", ndDat, "Chưa nhập giá đất theo loại đất hiện trạng (bảng giá, nghìn đ/m²)", cvb), cot: "HT_DAT", thuaId: t.id } }];
   const out: { nhom: "B.I" | "B.IV"; kq: DongKetQua }[] = [];
   const dt = lamTronDienTich(t.dienTichThuHoi || "0");
-  const hanStr = c.hanMuc?.trim() || duAn.hanMucNN?.m2 || "";
-  const canCuHan = c.hanMuc?.trim() ? c.canCuHanMuc?.trim() || "chưa ghi căn cứ" : duAn.hanMucNN?.canCu || "";
+  const hmDa = hanMucNNDuAn(duAn, t.loaiDat);
+  const hanStr = c.hanMuc?.trim() || hmDa?.m2 || "";
+  const canCuHan = c.hanMuc?.trim() ? c.canCuHanMuc?.trim() || "chưa ghi căn cứ" : hmDa?.canCu || "";
   const han = hanStr && laSoMay(hanStr) ? D(hanStr) : null;
   const giaHT = D(c.giaHienTrang);
   const giaGcn = t.gia ? D(t.gia.giaNghinDong) : null;
@@ -1076,6 +1081,18 @@ export const TEN_KHONG_GIAY_TO = {
 } as const;
 
 /**
+ * 1.3.5 (QD-46) — hạn mức đất nông nghiệp của dự án áp cho một loại đất: ô theo nhóm loại đất (khoản 1 Điều 7 Phụ lục I
+ * QĐ 106/2025: hằng năm, NTS / cây lâu năm / rừng sản xuất là rừng trồng, rừng phòng hộ) → hạn mức chung `hanMucNN`.
+ */
+export function hanMucNNDuAn(duAn: Pick<DuAn, "hanMucNN" | "hanMucNNLoai">, loaiDat: string): { m2: string; canCu: string } | null {
+  const n = nhomDatNN(loaiDat);
+  const l = duAn.hanMucNNLoai;
+  const v = n && l ? (n === "HANG_NAM" ? l.hangNam : n === "LAU_NAM" ? l.lauNam : l.rung)?.trim() : "";
+  if (n && v) return { m2: v, canCu: `${TEN_NHOM_DAT_NN[n]} — ${l!.canCu.trim() || "chưa ghi căn cứ"}` };
+  return duAn.hanMucNN ? { m2: duAn.hanMucNN.m2, canCu: duAn.hanMucNN.canCu } : null;
+}
+
+/**
  * Hạn mức đất ở của thửa cho Điều 8, 9, 10 NĐ 88. Thứ tự: hạn mức riêng của thửa (kèm căn cứ) → tra Phụ lục I QĐ 106/2025
  * theo vị trí thửa đã chọn, xã/phường của dự án, thời điểm sử dụng (Điều 3, 4: công nhận; Điều 5, 6: giao) → hạn mức nhập ở
  * Thông tin dự án. Dùng chung cho tính toán và phần xem nhanh ở thẻ Thửa đất.
@@ -1086,8 +1103,10 @@ export function hanMucDatOThua(cs: BoChinhSach, duAn: DuAn, k: KhongGiayTo): { h
     return { hmCn: k.hanMuc.trim(), hmGiao: k.hanMuc.trim(), canCuCn: c, canCuGiao: c };
   }
   const duAnCc = duAn.hanMucDatO?.canCu || "chưa ghi căn cứ";
-  const cn = k.viTriHanMuc ? hanMucDatOPl1(cs, { loai: "CONG_NHAN", ngaySuDung: k.ngaySuDung, xa: duAn.xa, viTri: k.viTriHanMuc }) : null;
-  const giao = k.viTriHanMuc ? hanMucDatOPl1(cs, { loai: "GIAO", ngaySuDung: k.ngaySuDung, xa: duAn.xa, viTri: k.viTriHanMuc }) : null;
+  // 1.3.5: vị trí của thửa (nếu cán bộ chọn) → vị trí chọn chung ở Thông tin dự án
+  const viTri = k.viTriHanMuc ?? duAn.hanMucDatO?.viTri;
+  const cn = viTri ? hanMucDatOPl1(cs, { loai: "CONG_NHAN", ngaySuDung: k.ngaySuDung, xa: duAn.xa, viTri }) : null;
+  const giao = viTri ? hanMucDatOPl1(cs, { loai: "GIAO", ngaySuDung: k.ngaySuDung, xa: duAn.xa, viTri }) : null;
   return {
     hmCn: cn?.m2 ?? duAn.hanMucDatO?.congNhan ?? "",
     hmGiao: giao?.m2 ?? duAn.hanMucDatO?.giao ?? "",
@@ -1106,7 +1125,8 @@ export function hanMucDatNNThua(cs: BoChinhSach, duAn: DuAn, t: Thua, k: KhongGi
     const r = hanMucKhaiHoangPl1(cs, { loaiDat: t.loaiDat, xa: duAn.xa });
     return r ? { m2: r.m2, canCu: r.moTa, luuY: r.luuY } : { m2: "", canCu: "" };
   }
-  return { m2: duAn.hanMucNN?.m2 || "", canCu: duAn.hanMucNN?.canCu || "" };
+  const r = hanMucNNDuAn(duAn, t.loaiDat);
+  return { m2: r?.m2 || "", canCu: r?.canCu || "" };
 }
 
 /**

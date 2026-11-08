@@ -7,7 +7,7 @@ import { useRef, useState } from "react";
 import { TienDoTinhNen } from "../thanh-phan/CongTinhNen";
 import { homNayIso } from "../trang-thai";
 import { NhacGiayPhep } from "../thanh-phan/GiayPhep";
-import { D } from "@gpmb/core";
+import { D, TEN_VI_TRI_HAN_MUC, hanMucDatOPl1, hanMucDieu7TheoNhom, laPhuong, type ViTriHanMuc } from "@gpmb/core";
 import { useUngDung } from "../ung-dung";
 import { TEN_CACH_LAM_TRON } from "../tinh-ho";
 import { TEN_LOAI_DU_AN, TEN_TRANG_THAI_DU_AN, taoId, type DuAn } from "../mo-hinh";
@@ -15,7 +15,7 @@ import { CAC_CHANG, THU_TU_TRANG_THAI, TT_GPMB, type TrangThaiGpmb } from "../tr
 import { useTongHop, type MucCanhBao } from "../thanh-phan/dung-canh-bao";
 import { BieuTuong, PhanBoTrangThai, VongTienDo } from "../thanh-phan/BieuDo";
 import { taoDuAnMau } from "../du-lieu-mau";
-import { DANH_MUC_XA } from "../du-lieu";
+import { BO_CHINH_SACH, DANH_MUC_XA } from "../du-lieu";
 import { HopThoai, O, ngayVN, tien } from "../thanh-phan/chung";
 import { Chon } from "../thanh-phan/Chon";
 import { OSo } from "../thanh-phan/OSo";
@@ -252,6 +252,23 @@ export function kiemTraDuAn(d: DuAn) {
 /** Các trường thông tin dự án (dùng trong hộp "Dự án mới" và thẻ Thông tin dự án ở không gian Hồ sơ). */
 export function FormDuAn({ d, setD }: { d: DuAn; setD: (d: DuAn) => void }) {
   const { heSoKhac1, thieuLyDoLamTron } = kiemTraDuAn(d);
+  const cs = BO_CHINH_SACH[d.boChinhSach] ?? BO_CHINH_SACH[GOI_MOI_NHAT];
+  const phuong = laPhuong(d.xa);
+  const dieu7 = cs ? hanMucDieu7TheoNhom(cs, d.xa) : null;
+  const nho100 = (v: string) => (Number(v) < 100 ? "Nhỏ hơn 100 m² — kiểm tra đơn vị (m², không phải ha) và cách ghi số" : null);
+  const datNNL = (k: "hangNam" | "lauNam" | "rung" | "canCu", v: string) => {
+    const c = { canCu: "", ...d.hanMucNNLoai, [k]: k === "canCu" ? v : v || undefined };
+    setD({ ...d, hanMucNNLoai: !c.hangNam && !c.lauNam && !c.rung && !c.canCu.trim() ? undefined : c });
+  };
+  const vt = d.hanMucDatO?.viTri;
+  const vtHien: ViTriHanMuc | undefined = phuong && vt === "DUONG_XA" ? "CON_LAI" : vt;
+  const hmO = (() => {
+    if (!vtHien || !cs?.hanMucPl1) return null;
+    const a = hanMucDatOPl1(cs, { loai: "CONG_NHAN", ngaySuDung: "1980-01-01", xa: d.xa, viTri: vtHien });
+    const b = hanMucDatOPl1(cs, { loai: "CONG_NHAN", ngaySuDung: "1990-01-01", xa: d.xa, viTri: vtHien });
+    const g = hanMucDatOPl1(cs, { loai: "GIAO", ngaySuDung: "2000-01-01", xa: d.xa, viTri: vtHien });
+    return a && b && g ? { cn1980: a.m2, mt1980: a.moTa, cn1993: b.m2, mt1993: b.moTa, giao: g.m2, mtGiao: g.moTa } : null;
+  })();
   return (
       <div className="luoi luoi-2">
         <O nhan="Tên dự án *" className="ca-hang"><input value={d.ten} onChange={(e) => setD({ ...d, ten: e.target.value })} /></O>
@@ -279,17 +296,51 @@ export function FormDuAn({ d, setD }: { d: DuAn; setD: (d: DuAn) => void }) {
           <OSo canhBao={(v) => (Number(v) < 1000 ? "Nhỏ hơn 1.000 đ/kg — kiểm tra cách ghi số" : null)} value={d.giaGao?.dongKg ?? ""} onChange={(v) => setD({ ...d, giaGao: v ? { dongKg: v, nguon: d.giaGao?.nguon ?? "" } : null })} />
         </O>
         <O nhan="Văn bản giá gạo"><input value={d.giaGao?.nguon ?? ""} disabled={!d.giaGao} onChange={(e) => setD({ ...d, giaGao: { dongKg: d.giaGao!.dongKg, nguon: e.target.value } })} /></O>
-        <O nhan="Hạn mức giao đất NN (m²)" goiY="Dùng giới hạn diện tích hỗ trợ chuyển đổi nghề">
-          <OSo canhBao={(v) => (Number(v) < 100 ? "Nhỏ hơn 100 m² — kiểm tra đơn vị (m²) và cách ghi số" : null)} value={d.hanMucNN?.m2 ?? ""} onChange={(v) => setD({ ...d, hanMucNN: v ? { m2: v, canCu: d.hanMucNN?.canCu ?? "" } : null })} />
+        {/* 1.3.5 (QD-46): hạn mức đất nông nghiệp theo nhóm loại đất (khoản 1 Điều 7 Phụ lục I QĐ 106/2025) */}
+        <div className="ca-hang" data-han-muc-nn>
+          <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+            <b className="chu-nho">Hạn mức đất nông nghiệp theo loại đất (m²)</b>
+            <button className="nut nut-nho" disabled={!d.xa || !dieu7} title={d.xa ? "Điền mức khoản 1 Điều 7 Phụ lục I QĐ 106/2025 theo xã/phường của dự án — sửa được" : "Chọn xã, phường trước"} onClick={() => dieu7 && setD({ ...d, hanMucNNLoai: { hangNam: dieu7.m2.HANG_NAM, lauNam: dieu7.m2.LAU_NAM, rung: dieu7.m2.RUNG, canCu: dieu7.canCu } })}>Điền theo Điều 7 Phụ lục I ({phuong ? "phường" : "xã"})</button>
+          </div>
+          <div className="goi-y">Thửa đất áp theo nhóm loại đất của thửa: hỗ trợ chuyển đổi nghề, bồi thường đất không có giấy tờ (Điều 12 NĐ 88), đất nông lâm trường, chênh lệch giá đất. Hỗ trợ chuyển đổi nghề dẫn hạn mức giao đất nông nghiệp theo Điều 176 Luật Đất đai (khoản 3 Điều 22 NĐ 88) — đối chiếu, sửa mức và căn cứ nếu áp dụng khác.</div>
+        </div>
+        <O nhan="a) Đất trồng cây hằng năm, nuôi trồng thủy sản"><OSo aria-label="Hạn mức đất NN cây hằng năm, NTS" canhBao={nho100} value={d.hanMucNNLoai?.hangNam ?? ""} onChange={(v) => datNNL("hangNam", v)} /></O>
+        <O nhan="b) Đất trồng cây lâu năm"><OSo aria-label="Hạn mức đất NN cây lâu năm" canhBao={nho100} value={d.hanMucNNLoai?.lauNam ?? ""} onChange={(v) => datNNL("lauNam", v)} /></O>
+        <O nhan="c) Đất rừng sản xuất là rừng trồng; đất rừng phòng hộ (mỗi loại)"><OSo aria-label="Hạn mức đất NN rừng" canhBao={nho100} value={d.hanMucNNLoai?.rung ?? ""} onChange={(v) => datNNL("rung", v)} /></O>
+        <O nhan="Căn cứ hạn mức theo loại đất"><input aria-label="Căn cứ hạn mức đất NN theo loại" value={d.hanMucNNLoai?.canCu ?? ""} disabled={!d.hanMucNNLoai} onChange={(e) => datNNL("canCu", e.target.value)} /></O>
+        <O nhan="Loại đất NN khác / hạn mức chung (m²)" goiY="Dùng cho loại đất không thuộc a, b, c (vd. rừng đặc dụng, đất NN khác) hoặc khi ô a, b, c để trống">
+          <OSo aria-label="Hạn mức đất NN chung" canhBao={nho100} value={d.hanMucNN?.m2 ?? ""} onChange={(v) => setD({ ...d, hanMucNN: v ? { m2: v, canCu: d.hanMucNN?.canCu ?? "" } : null })} />
         </O>
-        <O nhan="Căn cứ hạn mức"><input value={d.hanMucNN?.canCu ?? ""} disabled={!d.hanMucNN} onChange={(e) => setD({ ...d, hanMucNN: { m2: d.hanMucNN!.m2, canCu: e.target.value } })} /></O>
-        <O nhan="Hạn mức công nhận đất ở (m²)" goiY="k5 Đ141 LĐĐ — dùng cho đất có nhà ở không có giấy tờ trước 15/10/1993 (Điều 8, 9 NĐ 88)">
-          <OSo aria-label="Hạn mức công nhận đất ở" value={d.hanMucDatO?.congNhan ?? ""} onChange={(v) => setD({ ...d, hanMucDatO: { congNhan: v, giao: d.hanMucDatO?.giao ?? "", canCu: d.hanMucDatO?.canCu ?? "" } })} />
+        <O nhan="Căn cứ hạn mức chung"><input value={d.hanMucNN?.canCu ?? ""} disabled={!d.hanMucNN} onChange={(e) => setD({ ...d, hanMucNN: { m2: d.hanMucNN!.m2, canCu: e.target.value } })} /></O>
+        {/* 1.3.5 (QD-46): hạn mức đất ở theo vị trí — Điều 3, 4 (công nhận), Điều 5, 6 (giao) Phụ lục I QĐ 106/2025 */}
+        <O nhan="Vị trí đất ở để tính hạn mức (Phụ lục I QĐ 106/2025)" className="ca-hang" goiY={`Một lựa chọn cho cả dự án; thửa chọn vị trí riêng ở chi tiết thửa thì theo thửa. Tại ${phuong ? "phường" : "xã"}.`}>
+          <Chon aria-label="Vị trí hạn mức đất ở của dự án" value={vtHien ?? ""} onChange={(e) => setD({ ...d, hanMucDatO: { congNhan: d.hanMucDatO?.congNhan ?? "", giao: d.hanMucDatO?.giao ?? "", canCu: d.hanMucDatO?.canCu ?? "", viTri: (e.target.value || undefined) as ViTriHanMuc | undefined } })}>
+            <option value="">Tự nhập số hạn mức (không theo Phụ lục I)</option>
+            {(phuong ? (["TRUNG_TAM", "CON_LAI"] as const) : (["TRUNG_TAM", "DUONG_XA", "CON_LAI"] as const)).map((v) => <option key={v} value={v}>{TEN_VI_TRI_HAN_MUC[phuong ? "PHUONG" : "XA"][v]}</option>)}
+          </Chon>
         </O>
-        <O nhan="Hạn mức giao đất ở (m²)" goiY="k2 Đ195, k2 Đ196 LĐĐ — dùng cho giai đoạn 15/10/1993 đến trước 01/7/2014">
-          <OSo aria-label="Hạn mức giao đất ở" value={d.hanMucDatO?.giao ?? ""} onChange={(v) => setD({ ...d, hanMucDatO: { congNhan: d.hanMucDatO?.congNhan ?? "", giao: v, canCu: d.hanMucDatO?.canCu ?? "" } })} />
-        </O>
-        <O nhan="Căn cứ hạn mức đất ở (QĐ của UBND tỉnh)"><input aria-label="Căn cứ hạn mức đất ở" value={d.hanMucDatO?.canCu ?? ""} disabled={!d.hanMucDatO} onChange={(e) => setD({ ...d, hanMucDatO: { ...d.hanMucDatO!, canCu: e.target.value } })} /></O>
+        {vtHien && (
+          <div className="ca-hang thong-bao thong-bao-xanh chu-nho" data-han-muc-dat-o style={{ marginBottom: 0 }}>
+            {hmO ? (
+              <>
+                <div><b>Hạn mức công nhận đất ở</b> (khoản 5 Điều 141 LĐĐ): sử dụng trước 18/12/1980 — <b>{hmO.cn1980} m²</b> ({hmO.mt1980}); từ 18/12/1980 đến trước 15/10/1993 — <b>{hmO.cn1993} m²</b> ({hmO.mt1993}).</div>
+                <div><b>Hạn mức giao đất ở</b> (khoản 2 Điều {phuong ? "196" : "195"} LĐĐ): <b>{hmO.giao} m²</b> ({hmO.mtGiao}) — không áp dụng với giao đất qua đấu giá, giao đất ở tái định cư, dự án nhà ở theo quy hoạch chi tiết, thửa nhỏ hẹp xen kẹt ({phuong ? "khoản 2 Điều 6" : "khoản 3 Điều 5"} Phụ lục I).</div>
+                <div className="mo">Mỗi thửa lấy mức theo thời điểm sử dụng ổn định ghi ở chi tiết thửa (Thửa đất → bồi thường đất không có giấy tờ).</div>
+              </>
+            ) : "Bộ chính sách của dự án chưa có Phụ lục I — chọn \"Tự nhập số hạn mức\"."}
+          </div>
+        )}
+        {!vtHien && (
+          <>
+            <O nhan="Hạn mức công nhận đất ở (m²)" goiY="k5 Đ141 LĐĐ — dùng cho đất có nhà ở không có giấy tờ trước 15/10/1993 (Điều 8, 9 NĐ 88)">
+              <OSo aria-label="Hạn mức công nhận đất ở" value={d.hanMucDatO?.congNhan ?? ""} onChange={(v) => setD({ ...d, hanMucDatO: { ...d.hanMucDatO, congNhan: v, giao: d.hanMucDatO?.giao ?? "", canCu: d.hanMucDatO?.canCu ?? "" } })} />
+            </O>
+            <O nhan="Hạn mức giao đất ở (m²)" goiY="k2 Đ195, k2 Đ196 LĐĐ — dùng cho giai đoạn 15/10/1993 đến trước 01/7/2014">
+              <OSo aria-label="Hạn mức giao đất ở" value={d.hanMucDatO?.giao ?? ""} onChange={(v) => setD({ ...d, hanMucDatO: { ...d.hanMucDatO, congNhan: d.hanMucDatO?.congNhan ?? "", giao: v, canCu: d.hanMucDatO?.canCu ?? "" } })} />
+            </O>
+            <O nhan="Căn cứ hạn mức đất ở (QĐ của UBND tỉnh)"><input aria-label="Căn cứ hạn mức đất ở" value={d.hanMucDatO?.canCu ?? ""} disabled={!d.hanMucDatO} onChange={(e) => setD({ ...d, hanMucDatO: { ...d.hanMucDatO!, canCu: e.target.value } })} /></O>
+          </>
+        )}
         <O nhan="Hệ số điều chỉnh giá đất" goiY="Mặc định 1. Khác 1 phải ghi văn bản (QD-02)">
           <OSo className="o-so" value={d.heSoGiaDat?.heSo ?? "1"} onChange={(v) => setD({ ...d, heSoGiaDat: { heSo: v, vanBan: d.heSoGiaDat?.vanBan ?? "" } })} />
         </O>

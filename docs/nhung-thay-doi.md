@@ -4,6 +4,16 @@ Mỗi phiên bản một mục `## X.Y.Z`. Khi phát hành, quy trình đóng g�
 (`tools/ghi-chu-phat-hanh.mjs`) — thiếu mục của phiên bản đang phát hành thì dừng, không phát hành. Phần mềm hiện các mục
 mới hơn bản đang dùng khi có bản cập nhật.
 
+## 1.3.5
+
+- **Thông tin dự án — hạn mức đất nông nghiệp theo loại đất**: ba ô theo khoản 1 Điều 7 Phụ lục I QĐ 106/2025 (cây hằng năm,
+  nuôi trồng thủy sản; cây lâu năm; rừng sản xuất là rừng trồng, rừng phòng hộ) kèm căn cứ, nút **Điền theo Điều 7 Phụ lục I**
+  theo xã/phường của dự án. Hỗ trợ chuyển đổi nghề, đất không có giấy tờ, nông lâm trường, chênh lệch giá đất tự lấy hạn mức
+  theo loại đất của từng thửa. Ô hạn mức cũ giữ làm "loại đất khác / hạn mức chung".
+- **Vị trí đất ở để tính hạn mức**: chọn một lần cho dự án (trung tâm xã, giáp quốc lộ, đường tỉnh / chỉ giáp đường xã / vị trí
+  còn lại; ở phường: giáp quốc lộ, đường tỉnh, đường từ 13 m / còn lại) → phần mềm hiện và áp hạn mức công nhận đất ở theo Điều 3
+  hoặc Điều 4 (theo thời điểm sử dụng của thửa) và hạn mức giao đất ở theo Điều 5 (xã) hoặc Điều 6 (phường).
+
 ## 1.3.4
 
 - **Mở dự án lớn không còn treo**: bản đồ thu nhỏ ở trang Tổng quan chỉ đọc, vẽ khi cuộn tới; dự án có bản đồ rất nhiều thửa

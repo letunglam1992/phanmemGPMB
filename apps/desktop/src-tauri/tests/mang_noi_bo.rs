@@ -419,6 +419,10 @@ async fn may_chu_lich_su_luoc_do() {
     sai_loai["loai"] = json!("KHAC");
     assert_eq!(m.goi("PUT", "/api/ho/h1", Some(&cb), json!({ "duLieu": sai_loai })).await.0, 400);
     assert_eq!(m.goi("PUT", "/api/du-an/da1", Some(&cb), json!({ "duLieu": { "id": "da1", "ten": "Dự án", "giaGao": { "dongKg": "15.000,5" } }, "phienBanTruoc": 1 })).await.0, 400);
+    // 1.3.5: hạn mức đất NN theo loại đất (Điều 7 Phụ lục I) cũng là ô số chuẩn máy
+    let (ma, v) = m.goi("PUT", "/api/du-an/da1", Some(&cb), json!({ "duLieu": { "id": "da1", "ten": "Dự án", "giaGao": { "dongKg": "15000" }, "hanMucNNLoai": { "lauNam": "300.000,5", "canCu": "x" } }, "phienBanTruoc": 1 })).await;
+    assert_eq!(ma, 400, "{v}");
+    assert!(v["loi"].as_str().unwrap().contains("hanMucNNLoai.lauNam"), "{v}");
     // giá trị sai có sẵn (dữ liệu cũ, quản trị đưa lên) không chặn việc sửa trường khác; giá trị sai MỚI thì chặn
     assert_eq!(m.goi("POST", "/api/lo", Some(&qt), json!({ "ghiDe": true, "ghi": [{ "loai": "ho", "duLieu": h }] })).await.0, 200);
     let mut h2 = h.clone();

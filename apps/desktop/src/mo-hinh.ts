@@ -622,9 +622,19 @@ export interface DuAn {
   ngayThongBao: string;
   boChinhSach: string;
   giaGao: { dongKg: string; nguon: string } | null;
+  /** Hạn mức đất nông nghiệp chung — dùng cho loại đất chưa có ô riêng ở `hanMucNNLoai` (dữ liệu trước 1.3.5: dùng cho mọi loại). */
   hanMucNN: { m2: string; canCu: string } | null;
-  /** Hạn mức công nhận đất ở (k5 Đ141 LĐĐ) và hạn mức giao đất ở (k2 Đ195, k2 Đ196 LĐĐ) do UBND tỉnh quy định — Điều 8, 9 NĐ 88. */
-  hanMucDatO?: { congNhan: string; giao: string; canCu: string };
+  /**
+   * 1.3.5 (QD-46): hạn mức đất nông nghiệp theo nhóm loại đất của khoản 1 Điều 7 Phụ lục I QĐ 106/2025 (m²): hằng năm, NTS;
+   * cây lâu năm; rừng sản xuất là rừng trồng, rừng phòng hộ. Ô trống → dùng `hanMucNN`.
+   */
+  hanMucNNLoai?: { hangNam?: string; lauNam?: string; rung?: string; canCu: string };
+  /**
+   * Hạn mức công nhận đất ở (k5 Đ141 LĐĐ) và hạn mức giao đất ở (k2 Đ195, k2 Đ196 LĐĐ) do UBND tỉnh quy định — Điều 8, 9 NĐ 88.
+   * 1.3.5: `viTri` chọn vị trí theo Phụ lục I QĐ 106/2025 → công nhận theo Điều 3/4 (thời điểm sử dụng của thửa), giao theo
+   * Điều 5 (xã) / Điều 6 (phường); khi đã chọn vị trí, `congNhan`, `giao` chỉ dùng khi Phụ lục I không có mức (vd. sau 15/10/1993).
+   */
+  hanMucDatO?: { congNhan: string; giao: string; canCu: string; viTri?: import("@gpmb/core").ViTriHanMuc };
   heSoGiaDat: { heSo: string; vanBan: string } | null;
   /**
    * VM-36: cách làm tròn tổng tiền từng hộ của dự án. Bỏ trống = theo bộ chính sách (QD-03: làm tròn lên
