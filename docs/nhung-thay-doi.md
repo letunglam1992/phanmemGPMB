@@ -6,6 +6,10 @@ mới hơn bản đang dùng khi có bản cập nhật.
 
 ## 1.3.6
 
+- **Hỗ trợ đào tạo, chuyển đổi nghề — hạn mức cộng dồn theo hộ** (QD-49): diện tích tính hỗ trợ của các thửa cùng nhóm loại đất
+  (cây hằng năm, NTS / cây lâu năm / rừng) của một hộ cộng lại không vượt hạn mức của nhóm đó theo Điều 7 Phụ lục I QĐ 106/2025
+  (ở phường cũng theo Điều 7). Hạn mức dùng dần theo thứ tự thửa trong hồ sơ; thửa vượt hiện rõ phần đã dùng, phần còn lại, phần
+  không tính. Trước đây mỗi thửa so riêng với hạn mức — hộ có nhiều thửa nhỏ có thể được tính quá hạn mức.
 - **Mẫu Excel theo xã, phường — tên xã ghi lệch vẫn nhận đúng mẫu**: "Chiềng Mung", "xã Chiềng Mung", "UBND xã Chiềng Mung", thừa
   dấu cách, khác chữ hoa, gõ không dấu… đều hiểu là "Xã Chiềng Mung" theo danh mục xã, phường của tỉnh. Mẫu đã lưu ở bản 1.3.5
   vẫn dùng được.

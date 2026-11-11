@@ -1,3 +1,4 @@
+import type Decimal from "decimal.js";
 import { heSoChuyenDoiNghe, nhomDiaBan, type BoChinhSach, type DiChuyen } from "./chinh-sach";
 import { dong } from "./dong";
 import { D, dinhDang, lamTronDienTich, type SoVao } from "./so";
@@ -66,17 +67,30 @@ export function onDinhDoiSong(
   });
 }
 
-/** C06 – hỗ trợ đào tạo, chuyển đổi nghề: hệ số theo nhóm địa bàn × giá đất NN × min(DT thu hồi, hạn mức). */
+/**
+ * C06 – hỗ trợ đào tạo, chuyển đổi nghề: hệ số theo nhóm địa bàn × giá đất NN × min(DT thu hồi, hạn mức còn lại).
+ * 1.3.6 (QD-49): hạn mức cộng dồn theo hộ — `hanMucDaDungM2` là phần hạn mức cùng nhóm loại đất đã tính cho các thửa trước của hộ.
+ */
+export function hanMucConLaiCdn(hanMucM2: SoVao, daDungM2?: SoVao): Decimal {
+  const con = D(hanMucM2).minus(daDungM2 ?? 0);
+  return con.gt(0) ? con : D(0);
+}
+
 export function chuyenDoiNghe(
   cs: BoChinhSach,
-  p: { xa: string; loaiDat: string; dienTichThuHoiM2: SoVao; hanMucM2: SoVao; canCuHanMuc: string; giaDatNNNghinDong: SoVao; thon?: string[] },
+  p: { xa: string; loaiDat: string; dienTichThuHoiM2: SoVao; hanMucM2: SoVao; canCuHanMuc: string; giaDatNNNghinDong: SoVao; thon?: string[]; hanMucDaDungM2?: SoVao },
 ): DongTinh {
   const k = cs.chuyenDoiNghe;
   const hs = heSoChuyenDoiNghe(cs, p.xa, p.thon);
   const heSo = D(hs.heSo);
   const dt = lamTronDienTich(p.dienTichThuHoiM2);
-  const dtTinh = dt.lt(p.hanMucM2) ? dt : D(p.hanMucM2);
+  const daDung = D(p.hanMucDaDungM2 ?? 0);
+  const con = hanMucConLaiCdn(p.hanMucM2, daDung);
+  const dtTinh = dt.lt(con) ? dt : con;
   const gia = D(p.giaDatNNNghinDong).mul(1000);
+  const canhBaoHm = daDung.gt(0) && dt.gt(con)
+    ? [`Hạn mức cộng dồn theo hộ (QD-49): các thửa trước của hộ đã dùng ${dinhDang(daDung, 2)} m² — thửa này chỉ còn ${dinhDang(con, 2)} m²; phần ${dinhDang(dt.minus(con), 2)} m² không tính`]
+    : [];
   return dong({
     ma: "C06",
     noiDung: `Hỗ trợ đào tạo, chuyển đổi nghề – ${p.loaiDat}`,
@@ -84,13 +98,14 @@ export function chuyenDoiNghe(
       "Địa bàn": `${hs.moTa}, hệ số ${heSo}${hs.canCu ? ` (${hs.canCu})` : ""}`,
       "Diện tích thu hồi": `${dinhDang(dt, 2)} m²`,
       "Hạn mức": `${dinhDang(p.hanMucM2, 2)} m² (${p.canCuHanMuc})`,
+      ...(daDung.gt(0) ? { "Hạn mức đã tính cho thửa khác của hộ": `${dinhDang(daDung, 2)} m²`, "Hạn mức còn lại": `${dinhDang(con, 2)} m²` } : {}),
       "Diện tích tính": `${dinhDang(dtTinh, 2)} m²`,
       "Giá đất NN cùng loại": `${dinhDang(gia)} đ/m²`,
     },
-    congThuc: "Hệ số × Giá đất NN × min(DT thu hồi; hạn mức)",
+    congThuc: daDung.gt(0) ? "Hệ số × Giá đất NN × min(DT thu hồi; hạn mức − phần đã tính cho thửa khác của hộ)" : "Hệ số × Giá đất NN × min(DT thu hồi; hạn mức)",
     thanhTien: heSo.mul(gia).mul(dtTinh),
     canCu: k.canCu,
-    ...(hs.canXacNhan ? { trangThai: "CAN_XAC_NHAN" as const, canhBao: [hs.canXacNhan] } : {}),
+    ...(hs.canXacNhan ? { trangThai: "CAN_XAC_NHAN" as const, canhBao: [hs.canXacNhan, ...canhBaoHm] } : canhBaoHm.length ? { canhBao: canhBaoHm } : {}),
   });
 }
 

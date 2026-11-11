@@ -10,6 +10,7 @@ import {
   cayTrongXenCanh,
   datTheoPhanLop,
   chuyenDoiNghe,
+  hanMucConLaiCdn,
   D,
   diDoiVatNuoi,
   dinhDang,
@@ -422,8 +423,13 @@ function tinhHoGoc(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
     { ma: "B.VII", ten: "Hỗ trợ khác (Điều 6 QĐ 14/2026; Phụ lục II QĐ 106/2025)", dong: [] },
   ];
   const n = (ma: string) => nhom.find((x) => x.ma === ma)!;
+  // 1.3.6 (QD-49): hạn mức hỗ trợ chuyển đổi nghề cộng dồn theo hộ, riêng từng nhóm loại đất (khoản 1 Điều 7 PL I QĐ 106/2025);
+  // dùng hạn mức theo thứ tự thửa trong hồ sơ.
+  const hmCdnDaDung = new Map<string, Decimal>();
 
   for (const t of ho.thua) {
+    const khoaCdn = nhomDatNN(t.loaiDat) ?? "KHAC";
+    const daDungCdn = hmCdnDaDung.get(khoaCdn) ?? D(0);
     const b13 = nongLamTruong(cs, duAn, t);
     if (b13 && D(t.dienTichThuHoi || "0").gt(0)) {
       n("B.I").dong.push({ dong: b13.dat, bieu: b13.bieu, cot: "HT_DAT", thuaId: t.id });
@@ -464,7 +470,7 @@ function tinhHoGoc(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
     }
     if (t.chiPhiDauTu) n("A.I").dong.push({ dong: dongChiPhiDauTu(cs, ho, t), cot: "BT_DAT", thuaId: t.id });
     if (t.hanhLang) n("A.I").dong.push({ dong: dongHanhLang(cs, duAn, t), cot: "BT_DAT", thuaId: t.id });
-    if (t.chenhLech && D(t.dienTichThuHoi || "0").gt(0)) for (const x of dongChenhLech(cs, duAn, ho, t)) n(x.nhom).dong.push(x.kq);
+    if (t.chenhLech && D(t.dienTichThuHoi || "0").gt(0)) for (const x of dongChenhLech(cs, duAn, ho, t, daDungCdn)) n(x.nhom).dong.push(x.kq);
     const tsThua = ho.taiSan.filter((x) => x.thuaId === t.id);
     for (const ts of tsThua) {
       if (ts.khongBtHt) {
@@ -580,11 +586,18 @@ function tinhHoGoc(cs: BoChinhSach, duAn: DuAn, ho: Ho): KetQuaHo {
           canCuHanMuc: hmNN.canCu,
           giaDatNNNghinDong: t.gia.giaNghinDong,
           thon: t.thonBan,
+          hanMucDaDungM2: daDungCdn,
         });
-      let bieu: DongBieu[] | undefined;
-      if (d.thanhTien && hmNN && laSoMay(hmNN.m2) && t.gia) {
+      if (hmNN && laSoMay(hmNN.m2)) {
+        const con = hanMucConLaiCdn(hmNN.m2, daDungCdn);
         const dt = D(t.dienTichThuHoi).toDecimalPlaces(2);
-        const dtTinh = dt.lt(hmNN.m2) ? dt : D(hmNN.m2);
+        hmCdnDaDung.set(khoaCdn, daDungCdn.plus(dt.lt(con) ? dt : con));
+      }
+      let bieu: DongBieu[] | undefined;
+      if (d.thanhTien && d.thanhTien.gt(0) && hmNN && laSoMay(hmNN.m2) && t.gia) {
+        const dt = D(t.dienTichThuHoi).toDecimalPlaces(2);
+        const con = hanMucConLaiCdn(hmNN.m2, daDungCdn);
+        const dtTinh = dt.lt(con) ? dt : con;
         const gia = D(t.gia.giaNghinDong).mul(1000);
         bieu = [{ dvt: "m²", kl: dtTinh, heSo: d.thanhTien.div(dtTinh.mul(gia)), donGia: gia }];
       }
@@ -964,7 +977,7 @@ export const TEN_CHENH_LECH: Record<"K8_RSX" | "K8_RPH_RDD" | "K10", string> = {
  * rừng phòng hộ, đặc dụng: bằng giá hiện trạng), khoản 8 không vượt hạn mức công nhận; chuyển đổi nghề bằng chênh lệch giá
  * đất NN cùng loại trong bảng giá (hiện trạng − theo GCN), không vượt hạn mức, tính theo Điều 14 PL II QĐ 106/2025.
  */
-function dongChenhLech(cs: BoChinhSach, duAn: DuAn, ho: Ho, t: Thua): { nhom: "B.I" | "B.IV"; kq: DongKetQua }[] {
+function dongChenhLech(cs: BoChinhSach, duAn: DuAn, ho: Ho, t: Thua, daDungCdn: Decimal = D(0)): { nhom: "B.I" | "B.IV"; kq: DongKetQua }[] {
   const c = t.chenhLech!;
   const k = cs.hoTroKhac?.chenhLechDat;
   const ten = `${tenDayDu(t.loaiDat)} → hiện trạng ${c.loaiHienTrang ? tenDayDu(c.loaiHienTrang) : "?"} – ${nhanThua(t)}`;
@@ -1032,7 +1045,7 @@ function dongChenhLech(cs: BoChinhSach, duAn: DuAn, ho: Ho, t: Thua): { nhom: "B
     else if (!han) d = thieu("B14.CĐN", ndCdn, "Chưa có hạn mức công nhận quyền sử dụng đất NN cùng loại", cvb);
     else if (giaHT.lte(giaGcn)) d = dong({ ma: "B14.CĐN", noiDung: ndCdn, congThuc: "Chênh lệch giá ≤ 0", thanhTien: D(0), canCu, canhBao: ["Giá đất NN hiện trạng không cao hơn giá theo GCN — không có chênh lệch"] });
     else {
-      const x = chuyenDoiNghe(cs, { xa: duAn.xa, loaiDat: ten, dienTichThuHoiM2: t.dienTichThuHoi, hanMucM2: han.toString(), canCuHanMuc: canCuHan, giaDatNNNghinDong: giaHT.minus(giaGcn).toString(), thon: t.thonBan });
+      const x = chuyenDoiNghe(cs, { xa: duAn.xa, loaiDat: ten, dienTichThuHoiM2: t.dienTichThuHoi, hanMucM2: han.toString(), canCuHanMuc: canCuHan, giaDatNNNghinDong: giaHT.minus(giaGcn).toString(), thon: t.thonBan, hanMucDaDungM2: daDungCdn });
       d = { ...x, ma: "B14.CĐN", noiDung: ndCdn, thamSo: { ...x.thamSo, "Giá đất NN cùng loại (hiện trạng)": `${dinhDang(giaHT.mul(1000))} đ/m²`, "Giá theo GCN": `${dinhDang(giaGcn.mul(1000))} đ/m²` }, congThuc: `${x.congThuc} (giá = chênh lệch hiện trạng − GCN)`, canCu: [...canCu, ...x.canCu] };
     }
     out.push({ nhom: "B.IV", kq: { dong: d, cot: "HT_CDN", thuaId: t.id } });
