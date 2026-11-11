@@ -1,18 +1,30 @@
-# Bàn giao phiên làm việc (08/11/2026) — để mở phiên mới
+# Bàn giao phiên làm việc (cập nhật 11/11/2026) — để mở phiên mới
 
 Dán vào phiên mới: *"Đọc CLAUDE.md và docs/22-ban-giao-phien.md rồi làm tiếp trên nhánh claude/great-rubin-4x4alw."*
 
 ## 1. Trạng thái
 
 - **Nhánh làm việc**: `claude/great-rubin-4x4alw` (dòng 1.3.x đang dùng thật). Không dùng nhánh 0.9.x cũ.
-- **Phiên bản**: 1.3.5. Đã kích hoạt quy trình phát hành ngày 08/11/2026; bản trước là 1.3.4.
+- **Phiên bản trong kho**: 1.3.6 (đã đổi số ở đủ 5 tệp, có mục `## 1.3.6` trong `docs/nhung-thay-doi.md`) — **CHƯA phát hành**.
+  Bản đã phát hành gần nhất: 1.3.5 (08/11/2026). Muốn phát hành 1.3.6: chạy workflow `build-windows.yml` với `phat_hanh=true`.
   - Kiểm tra: `curl -sL https://github.com/letunglam1992/phanmemGPMB/releases/latest/download/latest.json` → `"version": "1.3.5"`.
-- **Kiểm thử lúc bàn giao (đã chạy, đạt hết)**:
+- **Kiểm thử lúc bàn giao 11/11/2026 (đã chạy, đạt hết)**:
   - `npm run typecheck`;
-  - `npm test`: core 89, gis 64, desktop 752;
+  - `npm test`: core 89, gis 64, desktop 760 (1.3.5: 752);
   - eslint `--max-warnings=0`;
   - Playwright 118 kịch bản.
-  - `cargo test` chạy ở commit a731921; Rust không đổi sau đó.
+  - `cargo test` chạy ở commit a731921; Rust không đổi sau đó (phiên 11/11 chỉ đổi số phiên bản trong Cargo.toml/lock, không chạy lại cargo test).
+
+## 1a. Phiên 11/11/2026 — đã làm (1.3.6)
+
+| Việc | Tệp chính | Kiểm thử |
+|---|---|---|
+| Mục 3.3 cũ: tên xã của mẫu Excel chuẩn hóa theo `danh-muc-xa.json` (bỏ "xã/phường/UBND", gọn dấu cách, hoa thường, NFC/NFD, không dấu; khớp nhiều tên thì giữ nguyên). Khóa mẫu `excel-phuong-an@<tên chuẩn>`; vẫn đọc khóa cũ 1.3.5; lưu lại thì xóa khóa cũ | `src/ten-xa.ts`, `thanh-phan/MauExcel.tsx` | `test/ten-xa.test.ts` 4 |
+| Mục 3.2 cũ (một phần): tiêu đề gộp nhiều tầng — ô gộp dọc chứa chữ được thấy ở dòng tiêu đề dưới (`maTran`) | `src/mau-excel-nhan-dien.ts` | `test/mau-excel-bo-cuc-kho.test.ts` |
+| Khối A/B có tiêu đề lặp: phát hiện **lỗi ExcelJS 4.4.0** `spliceRows(tu, so, …)` để sót/không xóa dòng khi số dòng xóa > số dòng chèn + số dòng phía dưới → hàm `spliceDong` (xóa từng dòng rồi chèn) dùng cho cả nhận diện lẫn **điền mẫu** (`mau-excel.ts`: vùng lặp 3 dòng mẫu, 0–1 dòng dữ liệu từng để sót `{{#…}}`) | `src/mau-excel.ts`, `src/mau-excel-nhan-dien.ts` | như trên (đã xác nhận ca kiểm thử hỏng với mã cũ) |
+| Nhiều bảng trên một trang: bảng phía dưới dòng tổng cuối được **báo trong mô tả** ("giữ nguyên, không điền") — chưa tự điền | `src/mau-excel-nhan-dien.ts` `bangKhacSau` | như trên |
+
+Kết quả kiểm thử cuối phiên: xem mục 1 (đã cập nhật số liệu).
 
 ## 2. Nội dung 1.3.5 (các commit 6548b5a → 8023e44)
 
@@ -29,13 +41,10 @@ Dán vào phiên mới: *"Đọc CLAUDE.md và docs/22-ban-giao-phien.md rồi l
    - hỗ trợ chuyển đổi nghề: áp hạn mức theo từng thửa hay cộng dồn theo hộ;
    - đất NN ở phường: Điều 176 Luật Đất đai hay Điều 7 Phụ lục I.
    - Cần người dùng quyết; chưa tự đặt.
-2. **Mẫu Excel theo xã**: chưa thử với tệp phương án **thật** của các xã. Các bố cục sau có thể nhận thiếu:
-   - tiêu đề nhiều tầng gộp;
-   - bảng A/B có dòng tiêu đề lặp lại;
-   - nhiều bảng trên một trang.
-
-   Khi có tệp mẫu (ẩn danh), thêm ca kiểm thử vào `test/mau-excel-nhan-dien.test.ts`.
-3. **Tên xã của mẫu** đang so khớp đúng chuỗi ở Thông tin dự án. Nếu cùng một xã được ghi lệch (có/không có "xã"), cân nhắc chuẩn hóa theo `danh-muc-xa.json`.
+2. **Mẫu Excel theo xã**: ba bố cục khó đã có ca kiểm thử bằng tệp **giả** (1.3.6) nhưng vẫn **chưa thử với tệp phương án thật** của các xã.
+   - Bảng thứ hai trên cùng trang mới chỉ được báo, chưa tách/điền — cần tệp thật để biết nên làm gì (tách trang? coi là bảng tài sản?).
+   - Khi có tệp mẫu (ẩn danh), thêm ca kiểm thử vào `test/mau-excel-bo-cuc-kho.test.ts`.
+3. ~~Tên xã của mẫu~~ — đã làm ở 1.3.6.
 4. Lộ trình tiếp theo lấy từ `docs/17-danh-gia-toan-dien.md` (P0–P3) và `docs/08` mục 9 (bản đồ).
 
 ## 4. Quy ước cần nhớ (bổ sung cho CLAUDE.md)
