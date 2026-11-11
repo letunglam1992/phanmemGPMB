@@ -139,7 +139,7 @@ function dienTrang(ws: ExcelJS.Worksheet, chung: Record<string, GiaTri>, bang: R
         if (g.r2 > cuoi) g.r2 += lechGop;
       }
     }
-    ws.spliceRows(dau, cuoi - dau + 1, ...dong.map(() => []));
+    spliceDong(ws, dau, cuoi - dau + 1, dong.length);
     // dời công thức các dòng còn lại (trước khi điền dòng mới)
     ws.eachRow({ includeEmpty: false }, (row) =>
       row.eachCell({ includeEmpty: false }, (c) => {
@@ -351,4 +351,13 @@ export async function dienMauExcel(bytes: Uint8Array, dl: DuLieuMauExcel): Promi
     wb.removeWorksheet(src.id);
   }
   return { wb, thieu: [...thieu].sort() };
+}
+
+/**
+ * 1.3.6: xóa `so` dòng từ dòng `tu` (1-based) rồi chèn `chen` dòng trống tại đó. ExcelJS 4.4.0 spliceRows(tu, so, …) để sót
+ * dòng cũ (hoặc không xóa) khi số dòng xóa nhiều hơn số dòng chèn cộng số dòng còn lại phía dưới → xóa từng dòng một.
+ */
+export function spliceDong(ws: ExcelJS.Worksheet, tu: number, so: number, chen = 0) {
+  for (let i = 0; i < so; i++) ws.spliceRows(tu, 1);
+  if (chen > 0) ws.spliceRows(tu, 0, ...Array.from({ length: chen }, () => []));
 }

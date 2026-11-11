@@ -12,25 +12,31 @@ import { taiXuong } from "../tai-xuong";
 import { MA_MAU_EXCEL, dienMauExcel } from "../mau-excel";
 import { TRUONG_MAU_EXCEL, duLieuMauExcel, taoMauExcelMacDinh, taoWorkbook } from "../xuat-excel";
 import { nhanDienMauCoSan } from "../mau-excel-nhan-dien";
+import { chuanTenXa } from "../ten-xa";
 import { CSS_XEM_TRUOC_EXCEL, workbookSangHtml, type TrangXemTruoc } from "../xem-truoc-excel";
 
 const XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
-/** 1.3.5: khóa mẫu riêng của một xã, phường. */
-export const maMauExcelXa = (xa: string) => `${MA_MAU_EXCEL}@${xa.trim()}`;
+/** 1.3.5: khóa mẫu riêng của một xã, phường. 1.3.6: tên xã chuẩn hóa theo danh mục (ten-xa.ts). */
+export const maMauExcelXa = (xa: string) => `${MA_MAU_EXCEL}@${chuanTenXa(xa)}`;
+/** Khóa cũ (1.3.5, chưa chuẩn hóa) — vẫn đọc được để mẫu đã lưu không bị mất. */
+const maMauExcelXaCu = (xa: string) => `${MA_MAU_EXCEL}@${xa.trim()}`;
 
 /** Đọc mẫu Excel: mẫu riêng của xã, phường (1.3.5) → mẫu chung của đơn vị → null (bố cục của phần mềm). */
 export function useMauExcel(): (xa?: string) => Promise<Uint8Array | null> {
   const { kho } = useUngDung();
-  return async (xa?: string) => (xa?.trim() ? (await kho.docMau(maMauExcelXa(xa)))?.bytes : undefined) ?? (await kho.docMau(MA_MAU_EXCEL))?.bytes ?? null;
+  return async (xa?: string) =>
+    (xa?.trim() ? ((await kho.docMau(maMauExcelXa(xa))) ?? (await kho.docMau(maMauExcelXaCu(xa))))?.bytes : undefined) ??
+    (await kho.docMau(MA_MAU_EXCEL))?.bytes ??
+    null;
 }
 
 export function HopMauExcel({ duAn, ds, dong }: { duAn: DuAn; ds: { h: Ho; k: KetQuaHo }[]; dong: () => void }) {
   const { kho, quyen, bao, ghiNhatKy } = useUngDung();
-  const xaDuAn = duAn.xa?.trim() ?? "";
+  const xaDuAn = chuanTenXa(duAn.xa);
   /** "" = mẫu chung của đơn vị; tên xã = mẫu riêng của xã đó */
   const [pham, setPham] = useState<string>(xaDuAn);
-  const [dsMau, setDsMau] = useState<{ xa: string; tenTep: string; luc: string }[] | undefined>(undefined);
+  const [dsMau, setDsMau] = useState<{ ma: string; xa: string; tenTep: string; luc: string }[] | undefined>(undefined);
   const [canhBao, setCanhBao] = useState<string[]>([]);
   const [moTa, setMoTa] = useState<string[]>([]);
   const [xem, setXem] = useState<{ ds: TrangXemTruoc[]; chon: number } | null>(null);
@@ -51,7 +57,7 @@ export function HopMauExcel({ duAn, ds, dong }: { duAn: DuAn; ds: { h: Ho; k: Ke
     const ma = (await kho.dsMauTuy()).filter((m) => m === MA_MAU_EXCEL || m.startsWith(`${MA_MAU_EXCEL}@`));
     const kq = await Promise.all(ma.map(async (m) => {
       const t = await kho.docMau(m);
-      return { xa: m === MA_MAU_EXCEL ? "" : m.slice(MA_MAU_EXCEL.length + 1), tenTep: t?.tenTep ?? "", luc: t?.luc ?? "" };
+      return { ma: m, xa: m === MA_MAU_EXCEL ? "" : chuanTenXa(m.slice(MA_MAU_EXCEL.length + 1)), tenTep: t?.tenTep ?? "", luc: t?.luc ?? "" };
     }));
     setDsMau(kq.sort((x, y) => (x.xa === "" ? -1 : y.xa === "" ? 1 : x.xa.localeCompare(y.xa, "vi"))));
   };
@@ -77,23 +83,27 @@ export function HopMauExcel({ duAn, ds, dong }: { duAn: DuAn; ds: { h: Ho; k: Ke
       return;
     }
     const tenTep = mt.length ? f.name.replace(/\.xlsx$/i, "") + " (nhận diện).xlsx" : f.name;
+    const cu = coMau(pham)?.ma;
     await kho.luuMau(maCua(pham), bytes, tenTep);
+    if (cu && cu !== maCua(pham)) await kho.xoaMau(cu);
     await ghiNhatKy(`Thay biểu mẫu Excel phương án — ${tenPham(pham)}`, f.name);
     setCanhBao(thieu);
     setMoTa(mt);
     await tai();
     bao(`Đã lưu ${tenPham(pham)}${mt.length ? " (tự nhận diện bố cục)" : ""}${thieu.length ? `; ${thieu.length} trường không có dữ liệu (để trống khi xuất)` : ""}`);
   };
+  /** khóa đang lưu thật của mẫu (có thể là khóa cũ chưa chuẩn hóa) */
+  const maDangLuu = (xa: string) => coMau(xa)?.ma ?? maCua(xa);
   const xoa = async (xa: string) => {
     if (!confirm(xa ? `Bỏ mẫu riêng của ${xa}? Dự án ở xã này sẽ dùng mẫu chung của đơn vị (nếu có) hoặc bố cục của phần mềm.` : "Bỏ mẫu chung của đơn vị, dùng lại bố cục của phần mềm?")) return;
-    await kho.xoaMau(maCua(xa));
+    await kho.xoaMau(maDangLuu(xa));
     await ghiNhatKy(xa ? `Bỏ mẫu Excel riêng của ${xa}` : "Khôi phục bố cục Excel của phần mềm");
     setCanhBao([]);
     setMoTa([]);
     await tai();
   };
   const taiVe = async (xa: string) => {
-    const m = await kho.docMau(maCua(xa));
+    const m = await kho.docMau(maDangLuu(xa));
     if (m) await taiXuong(m.bytes, m.tenTep || "Mau-Excel-phuong-an.xlsx", XLSX);
   };
 

@@ -13,6 +13,7 @@
 import type ExcelJS from "exceljs";
 import { nhanDienCot, type AnhXaCot, type O } from "./kiem-tra-pa";
 import { khongDau } from "./tim-kiem";
+import { spliceDong } from "./mau-excel";
 
 const chu = (v: O) => (v == null ? "" : khongDau(String(v)).replace(/\s+/g, " ").trim());
 
@@ -30,12 +31,20 @@ function chuO(v: ExcelJS.CellValue): O {
   return null;
 }
 
+/**
+ * Ma trận chữ/số của trang. Ô phụ của vùng gộp → null, trừ ô gộp DỌC chứa chữ (1.3.6: tiêu đề nhiều tầng — "STT",
+ * "Nội dung" gộp dọc qua 3 dòng tiêu đề thì dòng tiêu đề dưới cùng cũng thấy chữ đó).
+ */
 function maTran(ws: ExcelJS.Worksheet): O[][] {
   const o: O[][] = [];
   ws.eachRow({ includeEmpty: true }, (row, r) => {
     const d: O[] = [];
     row.eachCell({ includeEmpty: true }, (c, col) => {
-      d[col - 1] = c.isMerged && c.master.address !== c.address ? null : chuO(c.value);
+      if (!c.isMerged || c.master.address === c.address) d[col - 1] = chuO(c.value);
+      else {
+        const v = c.master.col === c.col ? chuO(c.master.value) : null;
+        d[col - 1] = typeof v === "string" ? v : null;
+      }
     });
     o[r - 1] = d;
   });
@@ -128,6 +137,20 @@ export async function nhanDienMauCoSan(bytes: Uint8Array): Promise<KetQuaNhanDie
   return { bytes: new Uint8Array(await wb.xlsx.writeBuffer()), moTa, daCoTruong: false };
 }
 
+/** 1.3.6: sau dòng tổng cuối còn bảng khác (dòng tiêu đề mới hoặc dòng có số tiền) → báo để cán bộ biết phần đó giữ nguyên. */
+function bangKhacSau(o: O[][], tu: number, cTien: number): number | null {
+  for (let r = tu; r < o.length; r++) {
+    const d = o[r] ?? [];
+    const chuDong = d.map((x) => (typeof x === "string" ? chu(x) : "")).join(" ");
+    if (/don gia/.test(chuDong) && /thanh tien|so tien|gia tri|kinh phi/.test(chuDong)) return r;
+    if (/ho va ten|ho ten|chu su dung/.test(chuDong) && /tien/.test(chuDong)) return r;
+    if (typeof d[cTien] === "number" && d[cTien] !== 0) return r;
+  }
+  return null;
+}
+const canhBaoBangKhac = (r: number | null) =>
+  r === null ? "" : `; phía dưới dòng tổng còn bảng khác (từ dòng ${r + 1}) — giữ nguyên, không điền: nên để mỗi bảng ở một trang hoặc gộp vào bảng chính`;
+
 /** Dòng tổng gần nhất phía dưới dòng dữ liệu đầu: chữ trong 3 ô đầu khớp mẫu tổng. */
 function dongTong(o: O[][], tu: number, mau: [RegExp, string][]): Map<number, string> {
   const kq = new Map<number, string>();
@@ -186,7 +209,8 @@ function datTrangHo(ws: ExcelJS.Worksheet, o: O[][], nd: { dongTieuDe: number; a
   hang.eachCell({ includeEmpty: true }, (c) => { if (!c.isMerged || c.master.address === c.address) c.value = null; });
   cot.forEach(({ c, t }, i) => { hang.getCell(c + 1).value = `${i === 0 ? "{{#dong}}" : ""}{{${t}}}`; });
   const soXoa = cuoi - r0;
-  if (soXoa > 0) ws.spliceRows(r0 + 2, soXoa);
+  const khac = bangKhacSau(o, (tong.size ? Math.max(...tong.keys()) : cuoi) + 1, nd.anhXa.tt!);
+  if (soXoa > 0) spliceDong(ws, r0 + 2, soXoa);
   // dòng tổng (sau khi xóa, dời lên soXoa dòng): cột thành tiền
   const tt = nd.anhXa.tt!;
   for (const [r, truong] of tong) ws.getCell(r - Math.max(0, soXoa) + 1, tt + 1).value = `{{${truong}}}`;
@@ -195,7 +219,7 @@ function datTrangHo(ws: ExcelJS.Worksheet, o: O[][], nd: { dongTieuDe: number; a
   ghiTruongNhan(ws, o, nd.dongTieuDe, [...NHAN_HO, ...NHAN_CHUNG], daGan);
   const tenCu = ws.name;
   ws.name = "{{stt}}. {{ten}}";
-  return `Trang “${tenCu}”: bảng chi tiết của hộ (tiêu đề dòng ${nd.dongTieuDe + 1}; cột ${cot.map((x) => `${x.t}`).join(", ")}) — mỗi hộ một trang; ${tong.size ? `dòng tổng: ${[...tong.values()].join(", ")}` : "không thấy dòng tổng"}${daGan.length ? `; thông tin: ${daGan.join(", ")}` : ""}.`;
+  return `Trang “${tenCu}”: bảng chi tiết của hộ (tiêu đề dòng ${nd.dongTieuDe + 1}; cột ${cot.map((x) => `${x.t}`).join(", ")}) — mỗi hộ một trang; ${tong.size ? `dòng tổng: ${[...tong.values()].join(", ")}` : "không thấy dòng tổng"}${daGan.length ? `; thông tin: ${daGan.join(", ")}` : ""}${canhBaoBangKhac(khac === null ? null : khac - Math.max(0, soXoa))}.`;
 }
 
 function nhanDienTongHop(o: O[][]): { dongTieuDe: number; cot: Map<string, number>; batDau: number } | null {
@@ -230,10 +254,11 @@ function datTrangTongHop(ws: ExcelJS.Worksheet, o: O[][], th: { dongTieuDe: numb
   hang.eachCell({ includeEmpty: true }, (c) => { if (!c.isMerged || c.master.address === c.address) c.value = null; });
   cot.forEach(({ c, t }, i) => { hang.getCell(c + 1).value = `${i === 0 ? "{{#ho}}" : ""}{{${t}}}`; });
   const soXoa = cuoi - r0;
-  if (soXoa > 0) ws.spliceRows(r0 + 2, soXoa);
+  const khac = bangKhacSau(o, (tong.size ? Math.max(...tong.keys()) : cuoi) + 1, cTien);
+  if (soXoa > 0) spliceDong(ws, r0 + 2, soXoa);
   const truongTong: Record<string, string> = { tong_lam_tron: "tong_lam_tron", tong_boi_thuong: "tong_boi_thuong", tong_ho_tro: "tong_ho_tro", dt_thu_hoi: "tong_dt_thu_hoi" };
   for (const [r] of tong) for (const [t, c] of th.cot) if (truongTong[t] && typeof o[r]?.[c] === "number") ws.getCell(r - Math.max(0, soXoa) + 1, c + 1).value = `{{${truongTong[t]}}}`;
   const daGan: string[] = [];
   ghiTruongNhan(ws, o, th.dongTieuDe, NHAN_CHUNG, daGan);
-  return `Trang “${ws.name}”: bảng tổng hợp mỗi hộ một dòng (tiêu đề dòng ${th.dongTieuDe + 1}; cột ${cot.map((x) => x.t).join(", ")})${tong.size ? "; dòng tổng cộng" : ""}.`;
+  return `Trang “${ws.name}”: bảng tổng hợp mỗi hộ một dòng (tiêu đề dòng ${th.dongTieuDe + 1}; cột ${cot.map((x) => x.t).join(", ")})${tong.size ? "; dòng tổng cộng" : ""}${canhBaoBangKhac(khac === null ? null : khac - Math.max(0, soXoa))}.`;
 }

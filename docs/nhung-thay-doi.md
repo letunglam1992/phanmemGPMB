@@ -4,6 +4,17 @@ Mỗi phiên bản một mục `## X.Y.Z`. Khi phát hành, quy trình đóng g�
 (`tools/ghi-chu-phat-hanh.mjs`) — thiếu mục của phiên bản đang phát hành thì dừng, không phát hành. Phần mềm hiện các mục
 mới hơn bản đang dùng khi có bản cập nhật.
 
+## 1.3.6
+
+- **Mẫu Excel theo xã, phường — tên xã ghi lệch vẫn nhận đúng mẫu**: "Chiềng Mung", "xã Chiềng Mung", "UBND xã Chiềng Mung", thừa
+  dấu cách, khác chữ hoa, gõ không dấu… đều hiểu là "Xã Chiềng Mung" theo danh mục xã, phường của tỉnh. Mẫu đã lưu ở bản 1.3.5
+  vẫn dùng được.
+- **Nhận diện tệp phương án sẵn có của xã**: nhận đủ cột khi tiêu đề bảng gộp nhiều tầng (STT, Nội dung gộp dọc; "Giá trị bồi
+  thường" gộp ngang trên Đơn giá, Thành tiền); bảng chia khối A/B có dòng tiêu đề lặp lại và dòng Cộng A, Cộng B không còn sót
+  dòng cũ; trang có thêm bảng thứ hai phía dưới dòng tổng thì mô tả nhận diện báo rõ (phần đó giữ nguyên, không điền).
+- **Sửa lỗi xuất Excel theo mẫu**: vùng lặp có nhiều dòng mẫu (dòng phần, nhóm, chính) mà dữ liệu ít dòng hơn (hoặc không có)
+  có thể để sót dòng mẫu `{{#…}}` ở cuối trang — đã sửa.
+
 ## 1.3.5
 
 - **Mẫu Excel phương án riêng của từng xã, phường**: Hồ sơ dự án → Thêm → Biểu mẫu Excel… → *Mẫu theo xã, phường*: chọn xã rồi
