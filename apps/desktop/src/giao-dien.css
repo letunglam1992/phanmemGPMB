@@ -1253,3 +1253,10 @@ tr.noi-bat > td { background: var(--vang-nen) !important; transition: background
 .soat-qt { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border: 1px solid var(--vien); border-radius: 999px; background: var(--be-mat); color: var(--chu); font-size: 12.5px; cursor: pointer; }
 .soat-qt:hover { background: var(--be-mat-hover); }
 .soat-qt.chon { border-color: var(--chinh); box-shadow: 0 0 0 1px var(--chinh) inset; }
+
+/* 1.3.6: trình nhập bản đồ từng bước */
+.buoc-nhap { display: flex; gap: 6px; list-style: none; padding: 0; margin: 0 0 12px; flex-wrap: wrap; }
+.buoc-nhap li { padding: 4px 10px; border-radius: 999px; border: 1px solid var(--vien, #d0d7de); font-size: 13px; }
+.buoc-nhap li.dang { background: var(--chinh, #1f6f54); border-color: var(--chinh, #1f6f54); }
+.buoc-nhap li.dang button { color: #fff; font-weight: 600; }
+.buoc-nhap li.xong button::before { content: "✓ "; }

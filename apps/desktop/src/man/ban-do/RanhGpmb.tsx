@@ -173,7 +173,7 @@ function HopRanhDgn(p: { dl: DuLieuBanDo; dong: () => void; them: (x: Omit<RanhN
               return (
                 <label key={v.ma} className="nhom-nut giua-doc">
                   <input type="checkbox" checked={chon.has(v.ma)} onChange={(e) => { const s = new Set(chon); if (e.target.checked) s.add(v.ma); else s.delete(v.ma); setChon(s); }} />
-                  <span><b>{so(v.dienTich)} m²</b> <span className="mo chu-nho">· chu vi {so(v.chuVi)} m · {v.nguon === "VUNG_KHEP_KIN" ? "vùng khép kín" : "khép từ đường"}</span>{ngoai && <span className="chu-nho" style={{ color: "var(--do)" }}> · ngoài phạm vi bản đồ</span>}</span>
+                  <span><b>{so(v.dienTich)} m²</b> <span className="mo chu-nho">· chu vi {so(v.chuVi)} m · {v.nguon === "VUNG_KHEP_KIN" ? "vùng khép kín" : v.nguon === "NOI_HAI_DAU" ? "nối đầu mút hai nét mép tuyến" : "khép từ đường"}</span>{ngoai && <span className="chu-nho" style={{ color: "var(--do)" }}> · ngoài phạm vi bản đồ</span>}</span>
                 </label>
               );
             })}

@@ -43,11 +43,11 @@ test("Nạp DXF → tự chọn lớp cho từng đối tượng → nhãn nhi�
   await tep.setInputFiles({ name: "thu.dwg", mimeType: "application/octet-stream", buffer: Buffer.from("AC1032\0\0\0\0\0\0\0\0") });
   await expect(p.getByText(/Save As → AutoCAD DXF/)).toBeVisible();
   await tep.setInputFiles({ name: "thu.dxf", mimeType: "application/octet-stream", buffer: dxf() });
-  await expect(p.getByText("Đã nạp bản đồ: thu.dxf")).toBeVisible();
-  await p.getByText("Tự chọn lớp cho từng đối tượng").click();
-  await p.getByLabel("Số tờ bản đồ của tệp").fill("21");
-  await p.getByRole("button", { name: "Tiếp tục" }).click();
+  // 1.3.6: trình nhập bản đồ từng bước → "Cấu hình lớp chi tiết…" để tự chọn lớp cho từng đối tượng
+  await expect(p.getByText("Nhập bản đồ: thu.dxf")).toBeVisible();
+  await p.getByRole("button", { name: "Cấu hình lớp chi tiết…" }).click();
   await expect(p.getByText("Cấu hình lớp bản đồ")).toBeVisible();
+  await p.getByLabel("Số tờ bản đồ của tệp").fill("21");
   await expect(p.getByRole("cell", { name: "RANH", exact: true })).toBeVisible();
   const lopRanh = (await p.getByRole("row").filter({ has: p.getByRole("cell", { name: "RANH", exact: true }) }).locator("td").first().textContent())!.trim();
   const lopNhan = (await p.getByRole("row").filter({ has: p.getByRole("cell", { name: "NHAN", exact: true }) }).locator("td").first().textContent())!.trim();

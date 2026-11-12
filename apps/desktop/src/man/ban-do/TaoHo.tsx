@@ -62,8 +62,16 @@ export function HopTaoHo(p: {
         gia: null,
         maBanDo: t.ma,
         dienTichBanDo: th.dienTichThuHoi,
-        ghiChu: nghiVan(t).length ? `Nghi vấn khi đọc bản đồ (đã được cán bộ xác nhận kiểm tra): ${nghiVan(t).join(", ")}` : undefined,
+        ghiChu: [
+          nghiVan(t).length ? `Nghi vấn khi đọc bản đồ (đã được cán bộ xác nhận kiểm tra): ${nghiVan(t).join(", ")}` : "",
+          // 1.3.6: thông tin thêm trong nút thuộc tính bản đồ — ghi lại để đối chiếu, không tự thêm nhân khẩu
+          t.dongSuDung ? `Người đồng sử dụng (bản đồ): ${t.dongSuDung}` : "",
+          t.ghiChuBanDo ? `Ghi chú trên bản đồ: ${t.ghiChuBanDo}` : "",
+        ].filter(Boolean).join(". ") || undefined,
       }));
+      // 1.3.6: địa chỉ ghi trong nút thuộc tính (một giá trị cho mọi thửa của hộ thì điền vào hồ sơ)
+      const dc = [...new Set(g.thua.map(({ t }) => t.diaChi?.trim()).filter(Boolean))];
+      if (dc.length === 1) h.diaChi = dc[0]!;
       h.nhatKy = [{ luc: new Date().toISOString(), nguoi: nguoiDung, noiDung: `Tạo từ bản đồ ${p.duAn.banDo?.tenTep ?? ""}: ${h.thua.length} thửa` }];
       dsMoi.push(h);
     }

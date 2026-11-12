@@ -501,6 +501,12 @@ export interface BanDoDuAn {
   vungChonDs?: string[];
   /** Thửa cán bộ chọn trực tiếp là thửa thu hồi (mã thửa bản đồ) — dùng khi bản đồ không có ranh GPMB. */
   thuaChon?: string[];
+  /**
+   * 1.3.6: phạm vi thu hồi = các thửa KHÔNG bị lớp này phủ (lớp tô "thửa ngoài phạm vi GPMB / chưa thu hồi đợt này" của bản đồ
+   * trích đo; tổng diện tích phần còn lại khớp số ghi ở khung tờ). Cán bộ bật ở trình nhập bản đồ; sửa tay một thửa thì chuyển
+   * thành danh sách thửa chọn tay.
+   */
+  thuaNgoaiTheoLop?: number;
   /** Cấu hình lớp cán bộ đã chốt cho tệp này; chưa có thì dùng gợi ý tự động (goiYCauHinh). */
   cauHinh?: CauHinhLop;
   /**

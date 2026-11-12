@@ -13,6 +13,8 @@ import UnaryUnionOp from "jsts/org/locationtech/jts/operation/union/UnaryUnionOp
 import Polygonizer from "jsts/org/locationtech/jts/operation/polygonize/Polygonizer.js";
 import InteriorPointArea from "jsts/org/locationtech/jts/algorithm/InteriorPointArea.js";
 import OverlayOp from "jsts/org/locationtech/jts/operation/overlay/OverlayOp.js";
+import DistanceOp from "jsts/org/locationtech/jts/operation/distance/DistanceOp.js";
+import IsValidOp from "jsts/org/locationtech/jts/operation/valid/IsValidOp.js";
 import type Geometry from "jsts/org/locationtech/jts/geom/Geometry.js";
 import PolygonCls from "jsts/org/locationtech/jts/geom/Polygon.js";
 type Polygon = PolygonCls;
@@ -45,9 +47,18 @@ export interface CauHinhLop {
   loaiDat?: number[];
   /** 0.9.27: lớp chữ diện tích riêng (nhận cả số nguyên "1310"). */
   dienTich?: number[];
+  /**
+   * 1.3.6: dung sai nối đầu mút ranh thửa (m) — đầu mút cách đường khác không quá giá trị này thì được kéo nối vào (bản vẽ
+   * không bắt điểm). 0 / bỏ trống = không nối (mặc định). Là tham số kỹ thuật vẽ do cán bộ chọn, không phải quy định.
+   */
+  dungSaiNoi?: number;
 }
 
-export type TruongNut = "soTo" | "soThua" | "loaiDat" | "chuSuDung";
+/**
+ * Trường của nút thuộc tính. 1.3.6: thêm diện tích, người đồng sử dụng (dòng tên thứ hai, vd. vợ/chồng), địa chỉ, ghi chú
+ * (vd. "Ngoài") — đối chiếu 4 tệp trích đo gCadas V8 thật (đọc tại chỗ, không lưu vào kho).
+ */
+export type TruongNut = "soTo" | "soThua" | "loaiDat" | "chuSuDung" | "chuSuDung2" | "dienTich" | "diaChi" | "ghiChu";
 export interface CauHinhNut {
   lop: number[];
   dong: Partial<Record<TruongNut, number>>;
@@ -77,7 +88,11 @@ export type CoThua =
   | "LECH_DIEN_TICH"
   | "THIEU_LOAI_DAT"
   | "NHIEU_CHU"
-  | "THIEU_CHU";
+  | "THIEU_CHU"
+  /** 1.3.6: chữ ở vị trí loại đất không phải ký hiệu loại đất (vd. "Mương", "2L") — giữ nguyên để cán bộ đối chiếu. */
+  | "LOAI_DAT_LA"
+  /** 1.3.6: nút / nhãn nằm ngoài mọi thửa, gán cho thửa gần nhất chưa có nhãn — cán bộ xác nhận. */
+  | "GAN_THEO_KHOANG_CACH";
 
 export interface NhanDoc {
   lop: number;
@@ -109,6 +124,12 @@ export interface ThuaBanDo {
   hienTrangBanDo?: string | null;
   /** Số tờ lấy theo số tờ cán bộ nhập cho tệp (1.3.5: ưu tiên hơn số tờ đọc trên bản đồ). */
   soToNhapTay?: boolean;
+  /** 1.3.6: người đồng sử dụng (dòng tên thứ hai trong nút, hoặc tên thứ hai trong thửa). */
+  dongSuDung?: string | null;
+  /** 1.3.6: địa chỉ ghi trong nút thuộc tính. */
+  diaChi?: string | null;
+  /** 1.3.6: ghi chú trong nút thuộc tính (vd. "Ngoài"). Chỉ để đối chiếu, phần mềm không suy ra phạm vi thu hồi. */
+  ghiChuBanDo?: string | null;
 }
 
 /** Phân loại chữ hiện trạng trên bản đồ: "Đã GPMB" → DA; "Chưa GPMB", "NQH" (ghi chú thửa chưa GPMB) → CHUA. */
@@ -122,7 +143,8 @@ export function loaiHienTrangBanDo(chu: string | null | undefined): "DA" | "CHUA
 
 export interface VungUngVien {
   ma: string;
-  nguon: "VUNG_KHEP_KIN" | "KHEP_TU_DUONG";
+  /** 1.3.6: NOI_HAI_DAU — ranh dạng tuyến (hai nét song song không khép đầu): nối đầu mút hai nét dài nhất thành vùng. */
+  nguon: "VUNG_KHEP_KIN" | "KHEP_TU_DUONG" | "NOI_HAI_DAU";
   sttPhanTu: number[];
   dienTich: number;
   chuVi: number;
@@ -164,8 +186,8 @@ export function diemTrongThua(d: Diem, vong: Diem[][]): boolean {
   return true;
 }
 
-/** Khép vùng từ tập đường (tự cắt tại giao điểm). */
-function khepVung(duong: Geometry[]): Polygon[] {
+/** Khép vùng từ tập đường (tự cắt tại giao điểm). `treo` nhận các đầu mút treo (đường không khép được). */
+function khepVung(duong: Geometry[], treo?: Diem[]): Polygon[] {
   if (duong.length === 0) return [];
   const hop = UnaryUnionOp.union(gf.createGeometryCollection(duong));
   const pz = new Polygonizer();
@@ -173,7 +195,80 @@ function khepVung(duong: Geometry[]): Polygon[] {
   const out: Polygon[] = [];
   const it = pz.getPolygons().iterator();
   while (it.hasNext()) out.push(it.next() as Polygon);
+  if (treo) {
+    // Đầu mút của đường treo có bậc 1 (không nối đường nào khác) — chỗ hở cần xem
+    const dem = new Map<string, { d: Diem; n: number }>();
+    const di = pz.getDangles().iterator();
+    while (di.hasNext()) {
+      const cs = (di.next() as unknown as { getCoordinates(): Coordinate[] }).getCoordinates();
+      for (const c of [cs[0], cs[cs.length - 1]]) {
+        if (!c) continue;
+        const k = `${c.x},${c.y}`;
+        const x = dem.get(k) ?? { d: { x: c.x, y: c.y }, n: 0 };
+        x.n++;
+        dem.set(k, x);
+      }
+    }
+    // điểm xuất hiện đúng một lần trong các đường treo và không nằm trên cạnh vùng nào là đầu tự do
+    for (const { d, n } of dem.values()) if (n === 1) treo.push(d);
+  }
   return out;
+}
+
+/**
+ * 1.3.6 — Nối đầu mút: đầu mút cách một đoạn của đường khác (hoặc của chính đường đó, trừ đoạn kề) không quá `dungSai` (m) thì
+ * kéo dài tới điểm chiếu trên đoạn đó, vượt thêm 1 mm để phép giao chắc chắn cắt (đoạn vượt là đường treo, bị bỏ khi khép vùng).
+ * Trả số đầu mút đã nối. Không đổi tọa độ các đỉnh có sẵn.
+ */
+export function noiDauMut(ds: Diem[][], dungSai: number): { duong: Diem[][]; soNoi: number; diemNoi: Diem[]; diemVuot: Diem[] } {
+  if (!(dungSai > 0)) return { duong: ds, soNoi: 0, diemNoi: [], diemVuot: [] };
+  const o = Math.max(1, dungSai * 4);
+  const luoi = new Map<string, number[]>();
+  const khoa = (x: number, y: number) => `${Math.floor(x / o)},${Math.floor(y / o)}`;
+  ds.forEach((l, i) => {
+    for (let j = 0; j + 1 < l.length; j++) {
+      const a = l[j]!, b = l[j + 1]!;
+      for (let x = Math.floor((Math.min(a.x, b.x) - dungSai) / o); x <= Math.floor((Math.max(a.x, b.x) + dungSai) / o); x++)
+        for (let y = Math.floor((Math.min(a.y, b.y) - dungSai) / o); y <= Math.floor((Math.max(a.y, b.y) + dungSai) / o); y++) {
+          const k = `${x},${y}`;
+          const v = luoi.get(k);
+          if (v) v.push(i, j);
+          else luoi.set(k, [i, j]);
+        }
+    }
+  });
+  const out = ds.map((l) => [...l]);
+  const diemNoi: Diem[] = [];
+  const diemVuot: Diem[] = [];
+  ds.forEach((l, i) => {
+    if (l.length < 2) return;
+    for (const cuoi of [false, true]) {
+      const e = cuoi ? l[l.length - 1]! : l[0]!;
+      let tot: { p: Diem; d: number } | null = null;
+      let dinhSan = false;
+      const v = luoi.get(khoa(e.x, e.y)) ?? [];
+      for (let q = 0; q < v.length; q += 2) {
+        const li = v[q]!, j = v[q + 1]!;
+        if (li === i && (cuoi ? j === l.length - 2 : j === 0)) continue;
+        const ll = ds[li]!;
+        const a = ll[j]!, b = ll[j + 1]!;
+        const dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + dy * dy;
+        const t = L2 ? Math.max(0, Math.min(1, ((e.x - a.x) * dx + (e.y - a.y) * dy) / L2)) : 0;
+        const p = { x: a.x + t * dx, y: a.y + t * dy };
+        const d = Math.hypot(p.x - e.x, p.y - e.y);
+        if (d < 1e-6) { dinhSan = true; break; }
+        if (d <= dungSai && (!tot || d < tot.d)) tot = { p, d };
+      }
+      if (dinhSan || !tot) continue;
+      const ux = (tot.p.x - e.x) / tot.d, uy = (tot.p.y - e.y) / tot.d;
+      const q = { x: tot.p.x + ux * 0.001, y: tot.p.y + uy * 0.001 };
+      if (cuoi) out[i]!.push(q);
+      else out[i]!.unshift(q);
+      diemNoi.push(e);
+      diemVuot.push(q);
+    }
+  });
+  return { duong: out, soNoi: diemNoi.length, diemNoi, diemVuot };
 }
 
 /**
@@ -213,13 +308,26 @@ export interface KetQuaDungThua {
   thua: ThuaBanDo[];
   vungGpmb: VungUngVien[];
   nhanNgoaiThua: NhanDoc[];
-  thongKe: { soDuongRanh: number; soVungTruocLoc: number; soVungBiLoai: number };
+  thongKe: {
+    soDuongRanh: number;
+    soVungTruocLoc: number;
+    soVungBiLoai: number;
+    /** 1.3.6: vùng nhỏ hơn ngưỡng nhưng có nút / nhãn số thửa — giữ lại (thửa nhỏ thật, vd. 0,1 m²). */
+    soVungNhoGiuLai?: number;
+    /** 1.3.6: số đầu mút đã nối theo dung sai. */
+    soNoi?: number;
+  };
+  /** 1.3.6: đầu mút ranh thửa suýt chạm đường khác (≤ 0,5 m, chưa chạm) — chỗ hở do vẽ không bắt điểm, để cán bộ xem. */
+  dauTreo?: Diem[];
 }
+
+/** 1.3.6: ký hiệu loại đất (chữ in hoa 2–4 ký tự, có thể ghép "+"), vd. "CLN", "ODT+CLN". */
+export const RE_KY_HIEU_LOAI_DAT = /^[A-ZĐ]{2,4}(\+[A-ZĐ]{2,4})*$/u;
 
 export function dungThua(ban: KetQuaDocDgn, ch: CauHinhLop = CAU_HINH_MAC_DINH): KetQuaDungThua {
   const thuoc = (ds: number[], lop: number) => ds.includes(lop);
 
-  const duongRanh: Geometry[] = [];
+  const duongRanhDiem: Diem[][] = [];
   const nhan: NhanDoc[] = [];
   const nutCh = ch.nutThuocTinh?.lop.length ? ch.nutThuocTinh : null;
   const truongTheoDong = new Map<number, TruongNut>();
@@ -228,10 +336,7 @@ export function dungThua(ban: KetQuaDocDgn, ch: CauHinhLop = CAU_HINH_MAC_DINH):
   const neo = new Map<number, Diem>(); // stt nút -> vị trí dòng đầu
   const nhanHt: NhanDoc[] = []; // chữ hiện trạng GPMB trên bản đồ
   for (const pt of phanTuGoc(ban)) {
-    if (thuoc(ch.ranhThua, pt.lop) && laHinhTuyen(pt)) {
-      const g = thanhDuong(pt.diem);
-      if (g) duongRanh.push(g);
-    }
+    if (thuoc(ch.ranhThua, pt.lop) && laHinhTuyen(pt)) duongRanhDiem.push(pt.diem);
     if (pt.loai === "CHU") {
       if (nutCh && pt.nut !== undefined && thuoc(nutCh.lop, pt.lop)) {
         const i = dongTrongNut.get(pt.nut) ?? 0;
@@ -254,21 +359,71 @@ export function dungThua(ban: KetQuaDocDgn, ch: CauHinhLop = CAU_HINH_MAC_DINH):
   // Số tờ cán bộ nhập cho tệp: một giá trị cho cả bản vẽ thì dùng cho thửa không có nhãn mang số tờ
   const soToCacTep = new Set(phanTuGoc(ban).map((pt) => pt.soToTep).filter((x): x is string => !!x));
   const soToChung = soToCacTep.size === 1 ? [...soToCacTep][0]! : null;
+  const noi = noiDauMut(duongRanhDiem, ch.dungSaiNoi ?? 0);
+  const duongRanh = noi.duong.map(thanhDuong).filter((g): g is Geometry => !!g);
   const vung = khepVung(duongRanh);
-  const giuLai = vung.filter((p) => p.getArea() > ch.dienTichToiThieu);
+  // Chỗ hở: đầu mút suýt chạm đường khác (0 < khoảng cách ≤ 0,5 m) — vẽ không bắt điểm. Không tính đầu mút tự do của nét đứng
+  // riêng (gạch nhãn phân số, ký hiệu điểm) hay nét vượt qua đường khác (tệp thật TD111: 466 đầu tự do, phần lớn là gạch nhãn).
+  const dauTreo = noiDauMut(noi.duong, 0.5).diemNoi.filter((d) => !noi.diemVuot.some((q) => Math.hypot(q.x - d.x, q.y - d.y) < 0.002));
+  // 1.3.6: vùng nhỏ hơn ngưỡng vẫn giữ nếu có nút thuộc tính / nhãn số thửa (thửa nhỏ thật: 0,1–4,7 m² ở tệp trích đo thật)
+  const neoThua = nhan.filter((n) => n.neoNut ? n.truongNut === "soThua" : thuoc(ch.soThua, n.lop) || thuoc(ch.nhanThua, n.lop)).map((n) => n.neoNut ?? n.diem);
+  const coNeo = (p: Polygon) => {
+    const env = p.getEnvelopeInternal();
+    const v = vongCua(p);
+    return neoThua.some((d) => env.contains(d.x, d.y) && diemTrongThua(d, v));
+  };
+  let soNhoGiu = 0;
+  const giuLai = vung.filter((p) => {
+    if (p.getArea() > ch.dienTichToiThieu) return true;
+    if (p.getArea() > 0.01 && coNeo(p)) return ++soNhoGiu > 0;
+    return false;
+  });
   const daGan = new Set<number>();
 
-  const thua: ThuaBanDo[] = giuLai.map((p, i) => {
+  // Nhãn đơn: theo vị trí của chính nhãn; dòng của nút thuộc tính: theo vị trí dòng đầu của nút
+  const nhanCua = giuLai.map((p) => {
     const vong = vongCua(p);
     const env = p.getEnvelopeInternal();
-    // Nhãn đơn: theo vị trí của chính nhãn; dòng của nút thuộc tính: theo vị trí dòng đầu của nút
-    const nhanTrong = nhan.filter((n) => {
+    const ds = nhan.filter((n) => {
       const d = n.neoNut ?? n.diem;
       return d.x >= env.getMinX() && d.x <= env.getMaxX() && d.y >= env.getMinY() && d.y <= env.getMaxY() && diemTrongThua(d, vong);
     });
-    nhanTrong.forEach((n) => daGan.add(n.stt));
+    ds.forEach((n) => daGan.add(n.stt));
+    return ds;
+  });
+  // 1.3.6: nút thuộc tính nằm ngoài mọi thửa (đặt lệch ra ngoài thửa nhỏ / hẹp) → thửa gần nhất (≤ 2 m) chưa có nút, gắn cờ để
+  // cán bộ xác nhận. Nhãn rời (không thuộc nút) KHÔNG gán theo khoảng cách: trên tệp thật chúng thường là bộ nhãn khác (bản đồ
+  // giao đất lâm nghiệp, hiện trạng cũ) đặt ngoài thửa — gán sẽ sai.
+  const ganKc = new Set<number>();
+  if (nutCh) {
+    const moCoi = new Map<string, NhanDoc[]>();
+    for (const n of nhan) if (n.neoNut && !daGan.has(n.stt)) {
+      const k = `${n.neoNut.x},${n.neoNut.y}`;
+      moCoi.set(k, [...(moCoi.get(k) ?? []), n]);
+    }
+    const coNut = nhanCua.map((ds) => ds.some((n) => n.truongNut));
+    for (const ds of moCoi.values()) {
+      const d = ds[0]!.neoNut!;
+      const pt = gf.createPoint(new Coordinate(d.x, d.y));
+      let tot = -1, kc = 2;
+      giuLai.forEach((p, i) => {
+        if (coNut[i]) return;
+        const k = DistanceOp.distance(p, pt);
+        if (k <= kc) [tot, kc] = [i, k];
+      });
+      if (tot < 0) continue;
+      nhanCua[tot]!.push(...ds);
+      ds.forEach((n) => daGan.add(n.stt));
+      coNut[tot] = true;
+      ganKc.add(tot);
+    }
+  }
+
+  const thua: ThuaBanDo[] = giuLai.map((p, i) => {
+    const vong = vongCua(p);
+    const nhanTrong = nhanCua[i]!;
     const dtHinhHoc = p.getArea();
-    const co: CoThua[] = [];
+    const co: CoThua[] = ganKc.has(i) ? ["GAN_THEO_KHOANG_CACH"] : [];
 
     // Nhãn thửa: dạng gộp "LOẠI SỐ/DT" hoặc tách rời (loại, số, diện tích là 3 nhãn riêng)
     const gop: { loai: string; so: string; dt: number; n: NhanDoc }[] = [];
@@ -299,6 +454,7 @@ export function dungThua(ban: KetQuaDocDgn, ch: CauHinhLop = CAU_HINH_MAC_DINH):
       }
     }
     loai.push(...tuNut(nhanTrong, "loaiDat").filter((n) => RE_LOAI.test(n.chu)));
+    for (const n of tuNut(nhanTrong, "dienTich")) if (RE_DT.test(n.chu) || RE_DT_VN.test(n.chu) || RE_SO.test(n.chu)) dt.push({ dt: soThuc(n.chu), n });
     const soLop4 = [
       ...nhanTrong.filter((n) => !n.truongNut && thuoc(ch.soThua, n.lop) && RE_SO.test(n.chu)),
       ...tuNut(nhanTrong, "soThua").filter((n) => RE_SO.test(n.chu)),
@@ -333,6 +489,7 @@ export function dungThua(ban: KetQuaDocDgn, ch: CauHinhLop = CAU_HINH_MAC_DINH):
 
     const loaiDatBanDo = gopKhop ? gopKhop.loai : (ganNhat(loai)?.chu ?? null);
     if (!loaiDatBanDo) co.push("THIEU_LOAI_DAT");
+    else if (!RE_KY_HIEU_LOAI_DAT.test(loaiDatBanDo)) co.push("LOAI_DAT_LA");
 
     const soToDoc = [...nhanTrong.filter((n) => !n.truongNut && thuoc(ch.soTo, n.lop)), ...tuNut(nhanTrong, "soTo")].map((n) => n.chu);
     // 1.3.5: số tờ cán bộ nhập cho tệp (theo nhãn trong thửa, hoặc chung cả bản vẽ) dùng cho mọi thửa của tệp — số tờ thường
@@ -342,6 +499,9 @@ export function dungThua(ban: KetQuaDocDgn, ch: CauHinhLop = CAU_HINH_MAC_DINH):
     const chuRieng = [...nhanTrong.filter((n) => !n.truongNut && thuoc(ch.chuSuDung, n.lop)), ...tuNut(nhanTrong, "chuSuDung")];
     const chuDs = (chuRieng.length ? chuRieng : tenTrongNhan).map((n) => vietHoaDauTu(n.chu));
     const chuSuDung = motHoacCo(chuDs, "THIEU_CHU", "NHIEU_CHU", co);
+    // người đồng sử dụng: dòng tên thứ hai của nút; không có nút thì các tên khác cùng thửa (vẫn giữ cờ "Nhiều chủ")
+    const chu2 = [...new Set([...tuNut(nhanTrong, "chuSuDung2").map((n) => vietHoaDauTu(n.chu)), ...(nutCh?.dong.chuSuDung2 === undefined ? chuDs : [])])].filter((x) => x !== chuSuDung);
+    const motGiaTri = (t: TruongNut) => [...new Set(tuNut(nhanTrong, t).map((n) => n.chu.trim()).filter(Boolean))].join("; ") || null;
 
     const tam = InteriorPointArea.getInteriorPoint(p);
     return {
@@ -358,12 +518,16 @@ export function dungThua(ban: KetQuaDocDgn, ch: CauHinhLop = CAU_HINH_MAC_DINH):
       co: [...new Set(co)],
       hienTrangBanDo: nhanHt.length ? ([...new Set(nhanHt.filter((n) => diemTrongThua(n.diem, vong)).map((n) => n.chu))].join("; ") || null) : undefined,
       ...(soToTep ? { soToNhapTay: true } : {}),
+      ...(chu2.length ? { dongSuDung: chu2.join("; ") } : {}),
+      ...(nutCh?.dong.diaChi !== undefined ? { diaChi: motGiaTri("diaChi") } : {}),
+      ...(nutCh?.dong.ghiChu !== undefined ? { ghiChuBanDo: motGiaTri("ghiChu") } : {}),
     };
   });
 
   // Vùng ranh GPMB ứng viên: vùng khép kín trên lớp ranh + vùng khép từ các đường
   const vungGpmb: VungUngVien[] = [];
   const duongGpmb: Geometry[] = [];
+  const diemGpmb: Diem[][] = [];
   const sttGpmb: number[] = [];
   for (const pt of phanTuGoc(ban)) {
     if (!thuoc(ch.ranhGpmb, pt.lop) || !laHinhTuyen(pt)) continue;
@@ -386,9 +550,17 @@ export function dungThua(ban: KetQuaDocDgn, ch: CauHinhLop = CAU_HINH_MAC_DINH):
         });
     }
     const g = thanhDuong(pt.diem);
-    if (g) duongGpmb.push(g);
+    if (g) {
+      duongGpmb.push(g);
+      if (!khepKin) diemGpmb.push(pt.diem);
+    }
   }
-  khepVung(duongGpmb)
+  const khepDuoc = khepVung(duongGpmb).filter((p) => p.getArea() > ch.dienTichToiThieu);
+  if (!khepDuoc.length && !vungGpmb.length) {
+    const v = khepHaiDau(diemGpmb);
+    if (v && v.getArea() > ch.dienTichToiThieu) vungGpmb.push({ ma: "N1", nguon: "NOI_HAI_DAU", sttPhanTu: sttGpmb, dienTich: v.getArea(), chuVi: v.getLength(), vong: vongCua(v) });
+  }
+  khepDuoc
     .filter((p) => p.getArea() > ch.dienTichToiThieu)
     .forEach((p, i) =>
       vungGpmb.push({
@@ -412,8 +584,36 @@ export function dungThua(ban: KetQuaDocDgn, ch: CauHinhLop = CAU_HINH_MAC_DINH):
     thua,
     vungGpmb,
     nhanNgoaiThua: nhan.filter((n) => !daGan.has(n.stt)),
-    thongKe: { soDuongRanh: duongRanh.length, soVungTruocLoc: vung.length, soVungBiLoai: vung.length - giuLai.length },
+    thongKe: { soDuongRanh: duongRanh.length, soVungTruocLoc: vung.length, soVungBiLoai: vung.length - giuLai.length, soVungNhoGiuLai: soNhoGiu, soNoi: noi.soNoi },
+    dauTreo,
   };
+}
+
+const dai = (d: Diem[]) => d.reduce((a, p, i) => (i ? a + Math.hypot(p.x - d[i - 1]!.x, p.y - d[i - 1]!.y) : 0), 0);
+
+/**
+ * 1.3.6 (BĐ-9) — Ranh GPMB dạng tuyến (đường, kênh): hai nét mép tuyến không khép đầu. Lấy hai nét dài nhất (nét nối liền nhau
+ * trước đó: nét gấp khúc), nối đầu mút theo cặp ngắn hơn (đầu–đầu, cuối–cuối hoặc chéo) thành vùng. Chỉ nhận khi mỗi đoạn nối
+ * ngắn hơn 1/4 chiều dài nét ngắn và vùng hợp lệ (không tự cắt). Cán bộ xác nhận — không phải ranh do cơ quan có thẩm quyền vẽ.
+ */
+export function khepHaiDau(ds: Diem[][]): Polygon | null {
+  const net = ds.filter((d) => d.length >= 2).sort((a, b) => dai(b) - dai(a));
+  if (net.length < 2) return null;
+  const [a, b] = [net[0]!, net[1]!];
+  const kc = (p: Diem, q: Diem) => Math.hypot(p.x - q.x, p.y - q.y);
+  const [a0, a1, b0, b1] = [a[0]!, a[a.length - 1]!, b[0]!, b[b.length - 1]!];
+  const cung = kc(a1, b1) + kc(a0, b0); // a → b ngược
+  const cheo = kc(a1, b0) + kc(a0, b1); // a → b xuôi
+  const vong = cung <= cheo ? [...a, ...[...b].reverse()] : [...a, ...b];
+  const noi = cung <= cheo ? [kc(a1, b1), kc(a0, b0)] : [kc(a1, b0), kc(a0, b1)];
+  if (Math.max(...noi) > Math.min(dai(a), dai(b)) / 4) return null;
+  vong.push(vong[0]!);
+  try {
+    const pg = gf.createPolygon(gf.createLinearRing(vong.map((d) => new Coordinate(d.x, d.y))));
+    return new IsValidOp(pg).isValid() ? pg : null;
+  } catch {
+    return null;
+  }
 }
 
 function thanhDaGiac(vong: Diem[][]): Polygon {

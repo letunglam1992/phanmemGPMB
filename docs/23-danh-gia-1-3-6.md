@@ -1,5 +1,12 @@
 # 23. Đánh giá toàn diện ở phiên bản 1.3.6 (12/11/2026) — trọng tâm: nhập và nhận diện bản đồ
 
+> **Cập nhật cùng ngày — Đợt 1, Đợt 2 bản đồ đã làm** (docs/08 §10, QD-50): BĐ-1 (dò lớp tổng quát), BĐ-2 (nối đầu mút, chỗ hở),
+> BĐ-3 (nút lệch ≤ 2 m; nhãn rời **không** gán — tệp thật cho thấy là bộ nhãn khác), BĐ-4 (chủ thứ hai, địa chỉ), BĐ-5 (loại đất
+> lạ — chưa có bảng quy đổi mã cũ: cần người dùng cung cấp kèm căn cứ), BĐ-6 (trình nhập từng bước), BĐ-7 (thẻ Rà lỗi), BĐ-8 (mẫu
+> cấu hình), BĐ-9 (ranh tuyến khép hai đầu; chưa làm "tim tuyến + bề rộng"), BĐ-10 (luồng nền; chưa làm dựng lại từng phần),
+> BĐ-14 (kiểm thử). Chưa làm: BĐ-11 (lọc màu / kiểu nét), BĐ-12, BĐ-13. Thêm ngoài danh sách: dùng **diện tích ghi ở khung tờ**
+> để tìm ranh GPMB / phạm vi và đối chiếu; giữ thửa nhỏ có nút; chấm lớp ranh thửa theo nút.
+
 Thay cho `docs/17` (viết ở 0.3.0, phần lớn P0–P1 trong đó đã làm xong). Mọi nhận định dưới đây ghi rõ mức kiểm chứng:
 **[Đã tái hiện]** = chạy thử thật trong phiên này (tệp giả, không dùng dữ liệu thật); **[Đọc mã]** = đọc mã nguồn, chưa chạy;
 **[Đo]** = số đo trong phiên. Chưa thử trên tệp bản đồ thật của người dùng (không có trong kho).

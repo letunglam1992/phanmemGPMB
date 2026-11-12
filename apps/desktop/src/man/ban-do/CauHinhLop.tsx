@@ -3,7 +3,16 @@ import { thongKeLop, tenLopPl21, type CauHinhLop, type TruongNut } from "@gpmb/g
 import { HopThoai, O } from "../../thanh-phan/chung";
 import { type DuLieuBanDo } from "./du-lieu";
 
-export const TEN_TRUONG_NUT: Record<TruongNut, string> = { soTo: "Số tờ", soThua: "Số thửa", loaiDat: "Loại đất", chuSuDung: "Chủ sử dụng" };
+export const TEN_TRUONG_NUT: Record<TruongNut, string> = {
+  soTo: "Số tờ",
+  soThua: "Số thửa",
+  loaiDat: "Loại đất",
+  dienTich: "Diện tích",
+  chuSuDung: "Chủ sử dụng",
+  chuSuDung2: "Người đồng sử dụng",
+  diaChi: "Địa chỉ",
+  ghiChu: "Ghi chú",
+};
 
 type KhoaDoiTuong = "ranhThua" | "nhanThua" | "soThua" | "soTo" | "chuSuDung" | "ranhGpmb" | "nhanHienTrang" | "loaiDat" | "dienTich";
 /** Đối tượng thể hiện trên bản đồ — mỗi đối tượng chọn một hay nhiều lớp. `hinh`: đối tượng là đường/vùng (còn lại là chữ). */
@@ -70,15 +79,18 @@ export function HopCauHinhLop(p: { dl: DuLieuBanDo; sua: boolean; soTo: string; 
     dienTichToiThieu: String(c0.dienTichToiThieu),
     lechPhanTram: String(Math.round(c0.lechDienTichChoPhep * 1000) / 10),
     lopNut: c0.nutThuocTinh?.lop.join(", ") ?? "",
-    dong: Object.fromEntries((["soTo", "soThua", "loaiDat", "chuSuDung"] as TruongNut[]).map((k) => [k, c0.nutThuocTinh?.dong[k] !== undefined ? String(c0.nutThuocTinh.dong[k]! + 1) : ""])) as Record<TruongNut, string>,
+    dong: Object.fromEntries((Object.keys(TEN_TRUONG_NUT) as TruongNut[]).map((k) => [k, c0.nutThuocTinh?.dong[k] !== undefined ? String(c0.nutThuocTinh.dong[k]! + 1) : ""])) as Record<TruongNut, string>,
+    dungSaiNoi: c0.dungSaiNoi ? String(c0.dungSaiNoi).replace(".", ",") : "",
   }));
   const dat = (k: keyof typeof f, v: string) => setF({ ...f, [k]: v });
   const dtMin = Number(f.dienTichToiThieu.replace(",", "."));
   const lech = Number(f.lechPhanTram.replace(",", "."));
+  const dungSai = f.dungSaiNoi.trim() ? Number(f.dungSaiNoi.replace(",", ".")) : 0;
   const loi: string[] = [];
   if (!dsLop(f.ranhThua).length) loi.push("Chưa có lớp ranh thửa.");
   if (!(dtMin >= 0)) loi.push("Diện tích tối thiểu không hợp lệ.");
   if (!(lech > 0 && lech < 100)) loi.push("Tỷ lệ lệch diện tích phải trong khoảng (0; 100) %.");
+  if (!(dungSai >= 0 && dungSai <= 1)) loi.push("Dung sai nối đầu mút phải từ 0 đến 1 m.");
   const lopNut = dsLop(f.lopNut);
   const dongNut: Partial<Record<TruongNut, number>> = {};
   for (const [k, v] of Object.entries(f.dong)) {
@@ -103,6 +115,7 @@ export function HopCauHinhLop(p: { dl: DuLieuBanDo; sua: boolean; soTo: string; 
     dienTichToiThieu: dtMin,
     lechDienTichChoPhep: lech / 100,
     nutThuocTinh: lopNut.length ? { lop: lopNut, dong: dongNut } : null,
+    ...(dungSai > 0 ? { dungSaiNoi: dungSai } : {}),
   });
   /** 0.9.27: tích chọn lớp cho từng đối tượng ngay trên bảng thống kê lớp (đồng bộ với ô nhập). */
   const coLop = (k: KhoaDoiTuong, lop: number) => dsLop(f[k]).includes(lop);
@@ -155,9 +168,10 @@ export function HopCauHinhLop(p: { dl: DuLieuBanDo; sua: boolean; soTo: string; 
               ))}
             </div>
           </div>
-          <div className="luoi" style={{ gap: 8, gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
+          <div className="luoi" style={{ gap: 8, gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}>
             <O nhan="Bỏ vùng nhỏ hơn (m²)" goiY="mảnh vụn do vẽ chồng nét"><input value={f.dienTichToiThieu} onChange={(e) => dat("dienTichToiThieu", e.target.value)} disabled={!p.sua} /></O>
             <O nhan="Cờ lệch DT ghi/hình học (%)"><input value={f.lechPhanTram} onChange={(e) => dat("lechPhanTram", e.target.value)} disabled={!p.sua} /></O>
+            <O nhan="Nối đầu mút hở (m)" goiY={`bản vẽ không bắt điểm: đầu mút cách đường khác không quá giá trị này thì nối vào (vd. 0,05); trống = không nối. Hiện có ${p.dl.kq.dauTreo?.length ?? 0} đầu mút treo (vòng đỏ trên bản đồ)`}><input value={f.dungSaiNoi} aria-label="Dung sai nối đầu mút" inputMode="decimal" placeholder="trống = không nối" onChange={(e) => dat("dungSaiNoi", e.target.value)} disabled={!p.sua} /></O>
           </div>
           {loi.length > 0 && <div className="thong-bao thong-bao-do chu-nho">{loi.join(" ")}</div>}
           {p.dl.ghiChuGoiY.length > 0 && <div className="mo chu-nho">Gợi ý: {p.dl.ghiChuGoiY.join(" ")}</div>}

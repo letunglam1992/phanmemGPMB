@@ -42,7 +42,7 @@ export function phanLopPl21(dl: DuLieuBanDo): { ok: boolean | "canh"; ten: strin
   };
 }
 
-export function KiemTraBanDo({ dl, coPhamVi, soVung, moCauHinh, ttThua }: { dl: DuLieuBanDo; coPhamVi: boolean; soVung: number; moCauHinh: () => void; ttThua: Map<string, TrangThaiGpmb> }) {
+export function KiemTraBanDo({ dl, coPhamVi, soVung, moCauHinh, ttThua, tongThuHoi }: { dl: DuLieuBanDo; coPhamVi: boolean; soVung: number; moCauHinh: () => void; ttThua: Map<string, TrangThaiGpmb>; tongThuHoi?: number | null }) {
   const [mo, setMo] = useState(true);
   const ds = dl.kq.thua;
   const n = ds.length;
@@ -62,6 +62,16 @@ export function KiemTraBanDo({ dl, coPhamVi, soVung, moCauHinh, ttThua }: { dl: 
     { ok: pt(du((t) => t.chuSuDung)) >= 80 ? true : "canh", ten: "Chủ sử dụng", chiTiet: `${du((t) => t.chuSuDung)}/${n} thửa; ${du((t) => t.co.includes("NHIEU_CHU"))} thửa tên khác nhau giữa hai nguồn` },
     { ok: coPhamVi ? true : soVung ? "canh" : false, ten: "Phạm vi thu hồi", chiTiet: coPhamVi ? "Đã chọn vùng / thửa thu hồi" : soVung ? `Có ${soVung} vùng trên lớp ${dl.cauHinh.ranhGpmb.join(", ")} — chưa chọn` : `Lớp ${dl.cauHinh.ranhGpmb.join(", ")} không có vùng khép kín — chọn lớp khác hoặc chọn thửa trực tiếp`, lam: !soVung ? <button className="nut nut-chu nut-nho" onClick={moCauHinh}>Chọn lớp ranh</button> : undefined },
     phanLopPl21(dl),
+    // 1.3.6: đối chiếu tổng diện tích phạm vi đã chọn với diện tích trong phạm vi GPMB ghi ở khung tờ (sai khác ≤ 0,1%)
+    ...(dl.khung?.dienTichGpmbGhi && tongThuHoi != null
+      ? [(() => {
+          const g = dl.khung!.dienTichGpmbGhi!;
+          const lech = tongThuHoi - g.dienTich;
+          const ok = Math.abs(lech) <= Math.max(0.5, g.dienTich * 0.001);
+          const so = (n: number) => n.toLocaleString("vi-VN", { maximumFractionDigits: 1 });
+          return { ok: ok ? true : ("canh" as const), ten: "Đối chiếu diện tích ghi ở khung tờ", chiTiet: `Phạm vi đã chọn ${so(tongThuHoi)} m²; bản đồ ghi “${g.chu}” — ${ok ? "khớp" : `lệch ${so(lech)} m²: xem lại vùng / thửa đã chọn`}` };
+        })()]
+      : []),
     ...(dl.cauHinh.nhanHienTrang?.length ? [{ ok: (lech.length ? "canh" : true) as boolean | "canh", ten: "Nhãn hiện trạng trên bản đồ", chiTiet: `${coHt.length} thửa (lớp ${dl.cauHinh.nhanHienTrang.join(", ")}); ${lech.length} thửa khác tiến độ trong phần mềm — chỉ đối chiếu, không ghi đè` }] : []),
   ];
   const soLoi = muc.filter((m) => m.ok === false).length;

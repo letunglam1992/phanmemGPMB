@@ -6,6 +6,16 @@ mới hơn bản đang dùng khi có bản cập nhật.
 
 ## 1.3.6
 
+- **Bản đồ — nhập và nhận diện tốt hơn hẳn** (thử trên 4 tệp trích đo thật): bản trích đo gCadas dựng đủ thửa (vd. 594/594,
+  205/205, 56/56 thửa — trước đây thiếu thửa nhỏ, thiếu cạnh nằm ở lớp khác, hoặc ra mảnh vụn); đọc đủ **diện tích, người đồng sử
+  dụng, địa chỉ, ghi chú** trong nút thuộc tính; tự gợi ý **số tờ** từ số hiệu mảnh ("TĐ111-2026"); tự tìm **ranh GPMB** khớp
+  "Diện tích trong phạm vi GPMB" ghi ở khung tờ, hoặc các thửa còn lại khi bản đồ tô thửa ngoài phạm vi; bản đồ DXF đặt tên lớp
+  tùy ý cũng tự dò được lớp; ranh tuyến hai nét mép được khép hai đầu.
+- **Trình nhập bản đồ từng bước** ngay sau khi nạp: 1. Thửa đất → 2. Nút, nhãn thửa (đổi được dòng nào là trường nào) → 3. Ranh
+  GPMB → 4. Số tờ, chốt; lưu cấu hình thành **mẫu của đơn vị** để lần sau tự dùng. Đọc bản đồ chạy nền, không đứng màn hình.
+- **Thẻ "Rà lỗi nhận diện"**: thửa theo từng loại cờ (bấm để phóng tới), chỗ hở trên ranh thửa (vòng đỏ), lọc chỉ thửa trong phạm
+  vi thu hồi. **Kiểm tra bản đồ** đối chiếu tổng diện tích thu hồi đã chọn với số ghi ở khung tờ.
+- Tạo hồ sơ từ bản đồ điền **địa chỉ** và ghi người đồng sử dụng, ghi chú trên bản đồ vào ghi chú thửa.
 - **Hỗ trợ đào tạo, chuyển đổi nghề — hạn mức cộng dồn theo hộ** (QD-49): diện tích tính hỗ trợ của các thửa cùng nhóm loại đất
   (cây hằng năm, NTS / cây lâu năm / rừng) của một hộ cộng lại không vượt hạn mức của nhóm đó theo Điều 7 Phụ lục I QĐ 106/2025
   (ở phường cũng theo Điều 7). Hạn mức dùng dần theo thứ tự thửa trong hồ sơ; thửa vượt hiện rõ phần đã dùng, phần còn lại, phần

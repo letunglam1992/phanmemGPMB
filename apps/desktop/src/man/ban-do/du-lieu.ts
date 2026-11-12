@@ -1,5 +1,6 @@
-import { CAU_HINH_MAC_DINH, docDgn, dungThua, ghepBanDo, goiYCauHinh, timThamChieu, type CauHinhLop, type KetQuaDocDgn, type KetQuaDungThua } from "@gpmb/gis";
+import { CAU_HINH_MAC_DINH, dienTichGpmbGhi, docDgn, dungThua, ghepBanDo, goiYCauHinh, timThamChieu, type CauHinhLop, type GoiYCauHinh, type KetQuaDocDgn, type KetQuaDungThua } from "@gpmb/gis";
 import { type DuAn, type ThuaXoa } from "../../mo-hinh";
+import { phanTichNen } from "./phan-tich-nen";
 import type { ThuaBanDo } from "@gpmb/gis";
 
 export interface DuLieuBanDo {
@@ -13,6 +14,23 @@ export interface DuLieuBanDo {
   ghiChuGoiY: string[];
   /** Các tệp (tờ bản đồ) đã dựng chung — thông tin từng tệp. */
   tep?: ThongTinTep[];
+  /**
+   * 1.3.6: thông tin đọc ở khung tờ (số tờ gợi ý, diện tích trong phạm vi GPMB ghi trên bản đồ, lớp tô thửa ngoài phạm vi) và
+   * mẫu cấu hình đã dùng (nếu cấu hình gợi ý lấy theo mẫu của đơn vị).
+   */
+  khung?: Pick<GoiYCauHinh, "soToGoiY" | "dienTichGpmbGhi" | "lopThuaNgoai"> & { theoMau?: string };
+}
+
+/** 1.3.6 (BĐ-8): mẫu cấu hình lớp đã chốt, lưu theo đơn vị đo đạc / kiểu bản đồ để dùng lại cho tệp sau. */
+export interface MauCauHinh {
+  ten: string;
+  cauHinh: CauHinhLop;
+}
+export const MA_MAU_CAU_HINH = "cau-hinh-ban-do";
+
+/** Điểm một cấu hình trên bản vẽ: số thửa có số thửa, không cờ nặng (thiếu số thửa, nhiều số thửa, nhãn lạ). */
+export function diemCauHinh(ban: KetQuaDocDgn, ch: CauHinhLop): number {
+  return dungThua(ban, ch).thua.filter((t) => t.soThua && !t.co.some((c) => c === "NHIEU_SO_THUA" || c === "LOAI_DAT_LA")).length;
 }
 
 export interface ThongTinTep {
@@ -81,11 +99,12 @@ export async function napTatCa(kho: { docBanDo(id: string): Promise<Uint8Array |
     if (b) ds.push({ khoa: t.id, ten: t.tenTep, bytes: b, soTo: t.soTo });
   }
   if (!ds.length) ds.push({ khoa: "", ten: duAn.banDo.tenTep, bytes: chinh, soTo });
-  return locThuaXoa(phanTichNhieu(ds, duAn.banDo.cauHinh), duAn.banDo.thuaXoa);
+  // 1.3.6: dựng ở luồng nền (gợi ý cấu hình trên tệp lớn mất vài giây)
+  return locThuaXoa(await phanTichNen(ds, duAn.banDo.cauHinh), duAn.banDo.thuaXoa);
 }
 
 /** Dựng thửa từ một hay nhiều tệp (tờ bản đồ) cùng hệ VN-2000. */
-export function phanTichNhieu(ds: { khoa?: string; ten: string; bytes: Uint8Array; soTo?: string }[], daChot?: CauHinhLop): DuLieuBanDo {
+export function phanTichNhieu(ds: { khoa?: string; ten: string; bytes: Uint8Array; soTo?: string }[], daChot?: CauHinhLop, mau: MauCauHinh[] = []): DuLieuBanDo {
   const doc = ds.map((x) => {
     const ban = docDgn(x.bytes);
     // 0.9.27: số tờ cán bộ nhập cho tệp — dùng cho thửa bản đồ không ghi số tờ (dungThua)
@@ -94,8 +113,21 @@ export function phanTichNhieu(ds: { khoa?: string; ten: string; bytes: Uint8Arra
   });
   const tep = ds.map((x, i) => thongTinTep(x.khoa ?? "", x.ten, x.bytes, doc[i]!.ban));
   const ban = doc.length === 1 ? doc[0]!.ban : ghepBanDo(doc);
-  const goiY = daChot ? null : goiYCauHinh(ban, CAU_HINH_MAC_DINH);
-  return { ...dungLai(ban, daChot ?? goiY!.cauHinh, !daChot, goiY?.ghiChu ?? []), tep };
+  const goiY = daChot ? null : goiYCauHinh(ban, CAU_HINH_MAC_DINH, ds[0]?.ten ?? "");
+  // 1.3.6: mẫu cấu hình của đơn vị — dùng mẫu cho nhiều thửa đủ số thửa hơn gợi ý tự động (cán bộ vẫn xem, chốt)
+  let theoMau: MauCauHinh | undefined;
+  if (!daChot && mau.length) {
+    let tot = diemCauHinh(ban, goiY!.cauHinh);
+    for (const m of mau) {
+      const d = diemCauHinh(ban, m.cauHinh);
+      // mẫu do cán bộ đã chốt: hòa điểm với gợi ý tự động thì vẫn dùng mẫu
+      if (d > 0 && (d > tot || (d === tot && !theoMau))) [tot, theoMau] = [d, m];
+    }
+  }
+  const ch = daChot ?? theoMau?.cauHinh ?? goiY!.cauHinh;
+  const ghiChu = theoMau ? [`Dùng mẫu cấu hình “${theoMau.ten}” của đơn vị (dựng được không ít thửa có số thửa hơn gợi ý tự động).`, ...(goiY?.ghiChu ?? [])] : (goiY?.ghiChu ?? []);
+  const khung = goiY ? { soToGoiY: goiY.soToGoiY, dienTichGpmbGhi: goiY.dienTichGpmbGhi, lopThuaNgoai: theoMau ? null : goiY.lopThuaNgoai, ...(theoMau ? { theoMau: theoMau.ten } : {}) } : { dienTichGpmbGhi: dienTichGpmbGhi(ban) };
+  return { ...dungLai(ban, ch, !daChot, ghiChu), tep, khung };
 }
 
 /** Các số tờ đọc được trên bản đồ đã dựng: số thửa, phạm vi — để chọn, phóng tới từng tờ. */
@@ -134,11 +166,13 @@ export const TEN_CO: Record<string, string> = {
   THIEU_LOAI_DAT: "Thiếu loại đất",
   NHIEU_CHU: "Nhiều chủ",
   THIEU_CHU: "Thiếu chủ",
+  LOAI_DAT_LA: "Loại đất lạ",
+  GAN_THEO_KHOANG_CACH: "Nút ngoài thửa (gán gần nhất)",
 };
 
 /** Đọc tệp và dựng thửa; không có cấu hình đã chốt thì dùng cấu hình gợi ý từ cấu trúc tệp. */
-export function phanTich(bytes: Uint8Array, daChot?: CauHinhLop, ten = "", soTo?: string): DuLieuBanDo {
-  return phanTichNhieu([{ khoa: "", ten, bytes, soTo }], daChot);
+export function phanTich(bytes: Uint8Array, daChot?: CauHinhLop, ten = "", soTo?: string, mau: MauCauHinh[] = []): DuLieuBanDo {
+  return phanTichNhieu([{ khoa: "", ten, bytes, soTo }], daChot, mau);
 }
 
 export function dungLai(ban: KetQuaDocDgn, cauHinh: CauHinhLop, laGoiY: boolean, ghiChuGoiY: string[]): DuLieuBanDo {

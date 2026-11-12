@@ -559,6 +559,18 @@ export function KhungVe(p: {
           ctx.fillText(x.ten, tx, ty);
         }
       }
+      // 5b. 1.3.6: đầu mút treo của ranh thửa (chỗ hở, nét thừa) — vòng đỏ, để cán bộ rà
+      if (lop.thua && p.dl.kq.dauTreo?.length) {
+        ctx.strokeStyle = "#d62728";
+        ctx.lineWidth = 2;
+        for (const d of p.dl.kq.dauTreo) {
+          const x = sx(d.x), y = sy(d.y);
+          if (x < -10 || y < -10 || x > W + 10 || y > H + 10) continue;
+          ctx.beginPath();
+          ctx.arc(x, y, 6, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
       // 6. Đo đạc
       const dsDo = xongDo || !troDo ? diemDo : [...diemDo, troDo];
       if (dsDo.length) {

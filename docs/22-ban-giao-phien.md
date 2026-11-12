@@ -10,9 +10,9 @@ Dán vào phiên mới: *"Đọc CLAUDE.md và docs/22-ban-giao-phien.md rồi l
   - Kiểm tra: `curl -sL https://github.com/letunglam1992/phanmemGPMB/releases/latest/download/latest.json` → `"version": "1.3.5"`.
 - **Kiểm thử lúc bàn giao 11/11/2026 (đã chạy, đạt hết)**:
   - `npm run typecheck`;
-  - `npm test`: core 89, gis 64, desktop 763 (1.3.5: 752);
+  - `npm test`: core 89, gis 78, desktop 763 (1.3.5: gis 64, desktop 752);
   - eslint `--max-warnings=0`;
-  - Playwright 118 kịch bản (toàn bộ, trước QD-49); sau QD-49 chạy lại han-muc-du-an, qd64-2026, qd14-k3-k10 (4 kịch bản) đạt.
+  - Playwright 119 kịch bản, toàn bộ, sau phần bản đồ (12/11).
   - `cargo test` chạy ở commit a731921; Rust không đổi sau đó (phiên 11/11 chỉ đổi số phiên bản trong Cargo.toml/lock, không chạy lại cargo test).
 
 ## 1a. Phiên 11/11/2026 — đã làm (1.3.6)
@@ -25,6 +25,10 @@ Dán vào phiên mới: *"Đọc CLAUDE.md và docs/22-ban-giao-phien.md rồi l
 | Nhiều bảng trên một trang: bảng phía dưới dòng tổng cuối được **báo trong mô tả** ("giữ nguyên, không điền") — chưa tự điền | `src/mau-excel-nhan-dien.ts` `bangKhacSau` | như trên |
 
 | **VM-42 → QD-49** (người dùng quyết định 11/11): hạn mức chuyển đổi nghề **cộng dồn theo hộ** (riêng từng nhóm loại đất, dùng dần theo thứ tự thửa); đất NN ở phường áp **Điều 7 PL I** | `packages/core/src/ho-tro.ts`, `tinh-ho.ts` | `test/han-muc-cdn-cong-don.test.ts` 3 |
+
+| **Bản đồ Đợt 1 + Đợt 2** (12/11, người dùng yêu cầu, kèm 4 tệp trích đo thật — chỉ đọc trong thư mục tạm, KHÔNG đưa vào kho): chấm lớp ranh theo nút, giữ thửa nhỏ có nút, nút đủ trường, DT ghi ở khung → ranh GPMB / phạm vi, số tờ gợi ý, dò lớp tổng quát, ranh tuyến khép hai đầu; trình nhập từng bước, thẻ Rà lỗi, mẫu cấu hình, luồng nền (QD-50) | `packages/gis/src/{goi-y-cau-hinh,thua,khung-to}.ts`, `man/ban-do/{NhanDien,RaLoi,phan-tich-nen}.tsx/ts`, `phan-tich.worker.ts` | `packages/gis/test/nhan-dien-1-3-6.test.ts` 14; Playwright `ban-do-nhan-dien.spec.ts` |
+
+Đánh giá toàn diện 12/11: `docs/23-danh-gia-1-3-6.md` (thay `docs/17`). Kết quả trên 4 tệp thật: `docs/08` §10.
 
 Kết quả kiểm thử cuối phiên: xem mục 1 (đã cập nhật số liệu).
 
@@ -44,6 +48,10 @@ Kết quả kiểm thử cuối phiên: xem mục 1 (đã cập nhật số li�
    - Bảng thứ hai trên cùng trang mới chỉ được báo, chưa tách/điền — cần tệp thật để biết nên làm gì (tách trang? coi là bảng tài sản?).
    - Khi có tệp mẫu (ẩn danh), thêm ca kiểm thử vào `test/mau-excel-bo-cuc-kho.test.ts`.
 3. ~~Tên xã của mẫu~~ — đã làm ở 1.3.6.
+3b. **Bản đồ còn mở** (docs/23, docs/08 §10): BĐ-11 lọc theo màu / kiểu nét; BĐ-12 xuất DXF/GeoJSON; BĐ-13 sơ đồ thửa từng hộ;
+   BĐ-9 "tim tuyến + bề rộng"; BĐ-5 bảng quy đổi mã loại đất cũ (cần người dùng cung cấp kèm căn cứ); TĐ48 thật còn 6 vùng chứa
+   2 nút + 18 mảnh — xem cạnh thửa ở lớp nào (gửi kèm ghi chú thửa nào sai nếu cần sửa tiếp). Muốn kiểm lại trên tệp thật: đặt
+   tệp ngoài kho, chạy script trong thư mục tạm gọi `docDgn` + `goiYCauHinh` + `dungThua` (xem docs/08 §10.2 để so số liệu).
 4. Lộ trình tiếp theo lấy từ **`docs/23-danh-gia-1-3-6.md`** (đánh giá 12/11/2026, trọng tâm bản đồ: BĐ-1…BĐ-14, K-1…K-9, M-1…M-5); `docs/17` đã lỗi thời.
 
 ## 4. Quy ước cần nhớ (bổ sung cho CLAUDE.md)

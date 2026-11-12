@@ -156,3 +156,61 @@ Tình trạng: hạng mục **1** (ranh GPMB nhập ngoài: tọa độ mốc, D
 | 8 | So sánh hai bản đồ (trích đo lần đầu và bổ sung): tô thửa thay đổi hình dạng/diện tích | Kiểm soát điều chỉnh phương án |
 | 9 | Ghép nhiều tờ/tệp trong một dự án, đọc tham chiếu ngoài — 0.9.9: hộp "Tờ bản đồ" chọn tờ dùng (bật/tắt từng tờ, "Chỉ tờ này"), phóng tới tờ/số tờ, dò tên tệp tham chiếu chưa nạp (tham chiếu ngoài vẫn không dựng — nạp chính các tệp đó làm tờ) | Dự án tuyến dài nhiều tờ |
 | 10 | Bắt điểm nâng cao (trung điểm, giao điểm, vuông góc), lưu kết quả đo | Đo kiểm nhanh hơn |
+
+## 10. Nhận diện bản đồ trích đo gCadas V8 — đối chiếu 4 tệp thật (1.3.6, 12/11/2026)
+
+Người dùng cung cấp 4 tệp trích đo DGN V8 (TĐ18, TĐ48, TĐ74, TĐ111 năm 2026); **chỉ đọc trong thư mục tạm của phiên, không đưa
+vào kho**. Các ca dưới đây đã dựng lại bằng tệp tổng hợp trong `packages/gis/test/nhan-dien-1-3-6.test.ts` và
+`apps/desktop/e2e/ban-do-nhan-dien.spec.ts`.
+
+### 10.1 Phát hiện
+
+| Phát hiện | Tệp | Hậu quả trước 1.3.6 |
+|---|---|---|
+| Lớp 11 là **ký hiệu nhãn thửa** (ô: vòng tròn + 8 đoạn quanh số thửa), không phải ranh thửa | cả 4 | gợi ý cũ có lúc thêm lớp 11 vào ranh thửa → mảnh vụn |
+| Cạnh thửa nằm ở lớp khác lớp 10: ranh GPMB (TĐ74 lớp 30), khung trích đo (TĐ111 lớp 8), lớp 13/23/32/50 (TĐ48) | cả 4 | thiếu thửa (TĐ74: 50/56), hoặc 445 mảnh rác (TĐ48) |
+| Thửa thật rất nhỏ 0,1–4,7 m² bị ngưỡng "bỏ vùng < 5 m²" loại | TĐ18 (15), TĐ111 (10) | mất thửa, nút rơi ra ngoài |
+| Nút thuộc tính có dòng **diện tích**, **chủ thứ hai** (đồng sử dụng), **địa chỉ**, **ghi chú** ("Ngoài"); bố cục dòng khác nhau giữa các đơn vị đo | cả 4 | không đọc DT (303 thửa TĐ111 báo thiếu), lấy nhầm chủ thứ hai (TĐ74) |
+| Khung tờ ghi **"Diện tích trong phạm vi GPMB: …"** / "Tổng diện đo đạc GPMB: …" | TĐ74, TĐ48, TĐ111 | không dùng |
+| TĐ74: lớp 30 khép đúng 15.321,3 m² = số ghi 15.321,2 m² | TĐ74 | gợi ý cũ **bỏ** lớp 30 khỏi ranh GPMB vì đã là cạnh thửa |
+| TĐ111: lớp 40 tô các thửa **ngoài** phạm vi ("Phần đất chưa thu hồi đợt này"); các thửa còn lại 156.288,1 m² ≈ số ghi 156.361,2 m² (lệch 0,05%) | TĐ111 | không xác định được phạm vi |
+| Số tờ chỉ ghi ở khung ("TĐ18-2026"), nút không có dòng số tờ | TĐ18, TĐ111 | 100% thửa "Thiếu số tờ" |
+| Nhãn rời nằm ngoài thửa (150–250 nhãn/tệp) **không thuộc** thửa gần nhất (chỉ 0–24 khớp DT; cách thửa trùng số 5–200 m) — bộ nhãn bản đồ khác (TĐ111 chú giải: "theo bản đồ Giao đất Lâm nghiệp") | TĐ74, TĐ18, TĐ111 | — (1.3.6 quyết định **không** gán theo khoảng cách) |
+| Không có chỗ hở do vẽ không bắt điểm đáng kể (TĐ111: 9 điểm suýt chạm ≤ 0,5 m; TĐ48: 1) | cả 4 | — |
+
+### 10.2 Kết quả gợi ý tự động (không chỉnh tay)
+
+| Tệp | Nút | Trước 1.3.6 | 1.3.6 | Ranh GPMB / phạm vi | Số tờ |
+|---|---|---|---|---|---|
+| TĐ18 | 205 | 190 thửa | **205/205**, 203 đủ 4 nhãn | khung ghi trống → cán bộ chọn | gợi ý "TĐ18-2026" |
+| TĐ111 | 594 | 581 | **594/594**, 584 đủ nhãn | lớp 40 = thửa ngoài phạm vi → 340 thửa, **khớp** số ghi | gợi ý "TĐ111-2026" |
+| TĐ74 | 56 | 50, mất ranh GPMB | **56/56** | lớp 30, vùng 15.321,3 m² **khớp** | có trong nút |
+| TĐ48 | 139 | 445 mảnh rác | **121/139** chứa đúng một nút (6 vùng còn 2 nút, 18 mảnh không nút) | không lớp nào khớp 382.667,0 m² → cán bộ chọn, phần mềm đối chiếu | có trong nút |
+
+Đo trên Node: gợi ý + dựng thửa TĐ111 ≈ 4 s; trên giao diện chạy ở luồng nền (Web Worker), nạp tệp đến lúc mở trình nhập 5,5 s.
+
+### 10.3 Quy tắc mới (QD-50)
+
+1. **Chấm điểm lớp ranh thửa** theo điểm neo (dòng đầu nút thuộc tính / nhãn số thửa): điểm = số thửa chứa đúng một neo − số vùng
+   chứa nhiều neo − ½ số vùng (> ngưỡng) không có neo; thêm dần lớp có lợi (≤ 20 lớp nhiều đường nhất, tối đa 3 vòng), bỏ lớp chỉ
+   gồm thành phần của ô (ký hiệu). Thay cách chấm "số thửa khớp diện tích ghi" của 1.0.7.
+2. Lớp ranh GPMB cũng là cạnh thửa: **giữ** làm ranh GPMB nếu tự khép được vùng (không khép được — mép suối — thì bỏ như trước).
+3. Vùng nhỏ hơn ngưỡng **có nút / nhãn số thửa** được giữ (thửa nhỏ thật).
+4. Nút thuộc tính: phân loại từng dòng theo giá trị — số nguyên (tờ: ít giá trị khác nhau; thửa: nhiều), số thập phân (DT), ký
+   hiệu loại đất, họ tên (dòng tên thứ hai = người đồng sử dụng), địa chỉ (tổ, bản, tiểu khu, thôn…), ghi chú (ít giá trị). Cán
+   bộ sửa ở bước 2 trình nhập.
+5. **Diện tích trong phạm vi GPMB ghi ở khung** (bỏ dòng "ngoài phạm vi"): lớp khép vùng đúng diện tích (sai khác ≤ 0,1%) → gợi ý
+   ranh GPMB; hoặc lớp tô thửa mà **phần còn lại** khớp → gợi ý phạm vi = các thửa không bị lớp đó phủ (`banDo.thuaNgoaiTheoLop`);
+   thẻ Kiểm tra bản đồ luôn đối chiếu tổng DT thu hồi với số ghi. Nhiều lớp cùng khớp → không tự chọn.
+6. Số tờ gợi ý = số hiệu mảnh "TĐxx-yyyy" ghi trên bản vẽ trùng tên tệp (hoặc duy nhất), không có thì theo tên tệp; chỉ gợi ý
+   khi ≥ 80% thửa không đọc được số tờ. Cán bộ xác nhận ở bước 4.
+7. Nút nằm ngoài mọi thửa → thửa gần nhất (≤ 2 m) chưa có nút, cờ "Nút ngoài thửa (gán gần nhất)". **Nhãn rời không gán theo
+   khoảng cách** (mục 10.1).
+8. Chữ ở vị trí loại đất không phải ký hiệu (2–4 chữ in hoa, ghép "+") → cờ "Loại đất lạ", giữ nguyên chữ.
+9. Chỗ hở = đầu mút ranh thửa suýt chạm đường khác (0 < d ≤ 0,5 m) — vòng đỏ trên bản đồ, danh sách ở thẻ Rà lỗi; "Nối đầu mút
+   hở" (m, mặc định không nối) kéo đầu mút tới đường gần nhất. Không tính đầu tự do của nét đứng riêng (gạch nhãn phân số).
+10. Ranh GPMB dạng tuyến: không khép được vùng nào thì nối đầu mút hai nét dài nhất (đoạn nối < ¼ nét ngắn, vùng hợp lệ) — vùng
+    "nối đầu mút hai nét mép tuyến", cán bộ xác nhận.
+11. Tệp không theo số lớp mặc định, không có nút: dò lớp nhãn (chữ dạng số thửa / DT / ký hiệu / nhãn gộp), lớp ranh (chấm như
+    mục 1, cộng điểm tên lớp DXF "ranh", "thua"), lớp chủ (≥ 60% họ tên), lớp ranh GPMB theo tên lớp ("gpmb", "thu hoi").
+12. Mẫu cấu hình của đơn vị (lưu ở bước 4) được thử khi nạp tệp mới; mẫu dựng được không ít thửa có số thửa hơn gợi ý thì dùng mẫu.
