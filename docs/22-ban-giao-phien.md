@@ -44,7 +44,7 @@ Kết quả kiểm thử cuối phiên: xem mục 1 (đã cập nhật số li�
    - Bảng thứ hai trên cùng trang mới chỉ được báo, chưa tách/điền — cần tệp thật để biết nên làm gì (tách trang? coi là bảng tài sản?).
    - Khi có tệp mẫu (ẩn danh), thêm ca kiểm thử vào `test/mau-excel-bo-cuc-kho.test.ts`.
 3. ~~Tên xã của mẫu~~ — đã làm ở 1.3.6.
-4. Lộ trình tiếp theo lấy từ `docs/17-danh-gia-toan-dien.md` (P0–P3) và `docs/08` mục 9 (bản đồ).
+4. Lộ trình tiếp theo lấy từ **`docs/23-danh-gia-1-3-6.md`** (đánh giá 12/11/2026, trọng tâm bản đồ: BĐ-1…BĐ-14, K-1…K-9, M-1…M-5); `docs/17` đã lỗi thời.
 
 ## 4. Quy ước cần nhớ (bổ sung cho CLAUDE.md)
 
