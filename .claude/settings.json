@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./node_modules/**)",
+      "Read(./dist/**)",
+      "Read(./package-lock.json)",
+      "Read(./apps/desktop/src-tauri/Cargo.lock)",
+      "Read(./apps/desktop/src-tauri/target/**)",
+      "Read(./apps/desktop/src-tauri/icons/**)",
+      "Read(./docs/anh/**)",
+      "Read(./templates/nguon/*.docx)",
+      "Read(./apps/desktop/public/mau-van-ban/*.docx)",
+      "Read(./policy/nguon/nq152-2025-bang-gia-dat.json)",
+      "Read(./policy/nguon/qd32-2025-don-gia-nha-cong-trinh.json)",
+      "Read(./policy/nguon/qd106-2025-pl8-cay-trong-thuy-san.json)"
+    ]
+  }
+}
