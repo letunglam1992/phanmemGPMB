@@ -8,7 +8,7 @@ on:
 
 jobs:
   kiem-thu:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -23,7 +23,7 @@ jobs:
 
   giao-dien:
     # Kiểm thử giao diện Playwright (P1-9): kịch bản Giai đoạn 1 trên bản build, Chromium
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
